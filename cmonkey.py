@@ -30,6 +30,14 @@ class CMonkey:
         else:
             self.configuration = configuration
 
+    def is_verbose(self):
+        """determine whether we are running in verbose mode"""
+        return self.configuration['verbose']
+
+    def num_iterations(self):
+        """configured number of iterations"""
+        return self.configuration['num_iterations']
+
     @classmethod
     def make_default_config(cls):
         """creates default configuration"""
@@ -38,25 +46,26 @@ class CMonkey:
                 'operon.shift': True, 'background.order': 3,
                 'recalc.background': True, 'row.scaling': 6,
                 'seed.method.rows': 'kmeans', 'seed.method.cols': 'best',
-                'post.adjust': True}
+                'post.adjust': True,
+                'verbose': True}
 
     def run(self):
         """start a run"""
         self.seed_clusters()
-        finished = False
-        while not finished:
+        current_iteration = 0
+
+        if self.is_verbose():
+            print "# iterations: %d" % self.num_iterations()
+
+        while current_iteration < self.num_iterations():
             self.iterate()
-            finished = not self.results_changed_in_last_iteration()
+            current_iteration += 1
+
         self.run_finished = True
 
     def seed_clusters(self):
         """seed clusters using the selected row and column methods"""
         pass
-
-    def results_changed_in_last_iteration(self):
-        """Determine whether the last iteration resulted in a change
-        over the previous iteration"""
-        return False
     
     def iterate(self):
         """iteration step in cMonkey
