@@ -18,6 +18,13 @@ class CMonkeyTest(unittest.TestCase):
         self.assertFalse(cmonkey.run_finished)
         self.assertEquals('homo sapiens', cmonkey.configuration['organism'])
 
+    def test_run_cmonkey_simple(self):
+        """run CMonkey in the simplest way"""
+        cmonkey = CMonkey([])
+        cmonkey.run()
+        self.assertTrue(cmonkey.run_finished)
+
+
 class MembershipTest(unittest.TestCase):
     """Test class for Membership"""
 

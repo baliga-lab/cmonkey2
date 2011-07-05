@@ -42,7 +42,73 @@ class CMonkey:
 
     def run(self):
         """start a run"""
+        self.seed_clusters()
+        finished = False
+        while not finished:
+            self.iterate()
+            finished = not self.results_changed_in_last_iteration()
         self.run_finished = True
+
+    def seed_clusters(self):
+        """seed clusters using the selected row and column methods"""
+        pass
+
+    def results_changed_in_last_iteration(self):
+        """Determine whether the last iteration resulted in a change
+        over the previous iteration"""
+        return False
+    
+    def iterate(self):
+        """iteration step in cMonkey
+        This is run over and over until no improvements can be achieved"""
+        self.compute_all_scores()
+        self.combine_scores()
+        self.fuzzify_scores()       
+
+    def compute_all_scores(self):
+        """compute scores on microarray data and clusters"""
+        self.compute_microarray_scores()
+        self.compute_cluster_scores()
+
+    def compute_microarray_scores(self):
+        """compute scores on microarray data"""
+        self.compute_row_scores()
+        self.compute_column_scores()
+
+    def compute_row_scores(self):
+        """compute row scores on microarray data"""
+        pass
+
+    def compute_column_scores(self):
+        """compute column scores on microarray data"""
+        pass
+
+    def compute_cluster_scores(self):
+        """compute scores for clusters"""
+        self.compute_meme_scores()
+        self.compute_mot_scores()
+        self.compute_net_scores()        
+
+    def compute_meme_scores(self):
+        """compute meme scores on clusters"""
+        pass
+
+    def compute_mot_scores(self):
+        """computes mot.scores, using the output from the meme scoring"""
+        pass
+
+    def compute_net_scores(self):
+        """compute net.scores from STRING, add weighted scores for other
+        networks if they exist"""
+        pass
+    def combine_scores(self):
+        """combine the computed scores"""
+        pass
+
+    def fuzzify_scores(self):
+        """fuzzify scores a bit for stochasticity
+        fuzz should be between 0.2 and 0 (decreasing with iter)"""
+        pass
 
 class Membership:
     """Algorithms for cluster membership"""
@@ -69,29 +135,3 @@ class Membership:
                 result_row.append(i in matrix_row)
 
         return result
-            
-
-###########################################################################
-##### CLUSTER SEEDING METHODS
-####################################
-class ClusterSeedingKMeans:
-    """k-means cluster seeding"""
-
-    def __init__(self, kcluster):
-        """initialize seeding method"""
-        self.kcluster = kcluster
-
-    def run(self):
-        """run a seed"""
-        pass
-
-class ClusterSeedingBest:
-    """k-means cluster seeding"""
-
-    def __init__(self, cluster_size):
-        """initialize seeding method"""
-        self.kcluster = kcluster
-
-    def run(self):
-        """run a seed"""
-        pass
