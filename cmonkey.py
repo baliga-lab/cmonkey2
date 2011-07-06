@@ -25,10 +25,39 @@ class CMonkey:
         """create a cMonkey object"""
         self.run_finished = False
         self.ratio_matrices = ratio_matrices
+        self.init_configuration(configuration)
+
+        # run data
+        self.stats       = None
+        self.row_scores  = None
+        self.col_scores  = None
+        self.mot_scores  = None
+        self.net_scores  = None
+        self.r_scores    = None
+        self.row_scaling = [0 for _ in range(self.num_iterations())]
+        self.mot_scaling = [0 for _ in range(self.num_iterations())]
+        self.net_scaling = [0 for _ in range(self.num_iterations())]
+        self.fuzzy_index = [0 for _ in range(self.num_iterations())]
+
+
+    def init_configuration(self, configuration):
+        """creates default configuration"""
         if not configuration:
-            self.configuration = CMonkey.make_default_config()
-        else:
-            self.configuration = configuration
+            configuration = {}
+
+        # meaningful defaults
+        configuration.setdefault('organism',          'hpy')
+        configuration.setdefault('num_iterations',    2000)
+        configuration.setdefault('clusters_per_row',  2)
+        configuration.setdefault('operon.shift',      True)
+        configuration.setdefault('background.order',  3)
+        configuration.setdefault('recalc.background', True)
+        configuration.setdefault('row.scaling',       6)
+        configuration.setdefault('seed_method.rows',  'kmeans')
+        configuration.setdefault('seed_method.cols',  'best')
+        configuration.setdefault('post.adjust',       True)
+        configuration.setdefault('verbose',           True)
+        self.configuration = configuration        
 
     def is_verbose(self):
         """determine whether we are running in verbose mode"""
@@ -36,18 +65,7 @@ class CMonkey:
 
     def num_iterations(self):
         """configured number of iterations"""
-        return self.configuration['num_iterations']
-
-    @classmethod
-    def make_default_config(cls):
-        """creates default configuration"""
-        return {'organism': 'hpy', 'cog.organism': '?', 'rsat.species': '?',
-                'num_iterations': 2000, 'clusters_per_row': 2,
-                'operon.shift': True, 'background.order': 3,
-                'recalc.background': True, 'row.scaling': 6,
-                'seed.method.rows': 'kmeans', 'seed.method.cols': 'best',
-                'post.adjust': True,
-                'verbose': True}
+        return self.configuration.get('num_iterations', 2000)
 
     def run(self):
         """start a run"""
