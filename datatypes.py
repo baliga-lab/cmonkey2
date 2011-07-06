@@ -1,5 +1,6 @@
 """ Data types for cMonkey """
 
+
 class DataMatrix:
     """
     A 2 dimensional data matrix class, with optional row and column names
@@ -28,21 +29,58 @@ class DataMatrix:
     def num_rows(self):
         """returns the number of rows"""
         return len(self.values)
+
     def num_columns(self):
         """returns the number of columns"""
         if self.num_rows() == 0:
             return 0
         else:
             return len(self.values[0])
+
     def value_at(self, row, column):
         """retrieve the value at the specified position"""
         return self.values[row][column]
+
     def set_value_at(self, row, column, value):
         """set the value at the specified position"""
         self.values[row][column] = value
+
     def row_name(self, row):
         """retrieve the name for the specified row"""
         return self.row_names[row]
+
     def column_name(self, row):
         """retrieve the name for the specified column"""
         return self.column_names[row]
+
+
+class DataMatrixCollection:
+    """A collection of DataMatrix objects containing gene expression values
+    It also offers functionality to combine the comtained matrices
+    """
+    def __init__(self, matrices):
+        self.matrices = matrices
+        self.unique_row_names = self.make_unique_names(
+            lambda matrix: matrix.row_names)
+        self.unique_column_names = self.make_unique_names(
+            lambda matrix: matrix.column_names)
+
+    def num_unique_rows(self):
+        """returns the number of unique rows"""
+        return len(self.unique_row_names)
+
+    def num_unique_columns(self):
+        """returns the number of unique columns"""
+        return len(self.unique_column_names)
+
+    def make_unique_names(self, name_extract_fun):
+        """helper method to create a unique name list
+        name_extract_fun is a function to return a list of names from
+        a matrix"""
+        result = []
+        for matrix in self.matrices:
+            names = name_extract_fun(matrix)
+            for name in names:
+                result.append(name)
+        result.sort()
+        return result

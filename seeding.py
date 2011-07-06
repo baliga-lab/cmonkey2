@@ -1,5 +1,6 @@
 """Cluster Seeding Methods"""
 
+
 class ClusterSeedingKMeans:
     """k-means cluster seeding"""
 
@@ -10,6 +11,7 @@ class ClusterSeedingKMeans:
     def run(self):
         """run a seed"""
         pass
+
 
 class ClusterSeedingBest:
     """k-means cluster seeding"""

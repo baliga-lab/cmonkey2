@@ -1,5 +1,6 @@
 """cMonkey top-level module"""
 
+
 class CMonkey:
     """
     The cMonkey object controls the overall execution of the cMonkey
@@ -16,29 +17,21 @@ class CMonkey:
     """
     CMONKEY_VERSION = '4.0'
     RSAT_URLS = [
-        'http://rsat.ccb.sickkids.ca/', 'http://rsat.ulb.ac.be/rsat/', 
+        'http://rsat.ccb.sickkids.ca/', 'http://rsat.ulb.ac.be/rsat/',
         'http://embnet.ccg.unam.mx/rsa-tools'
         ]
     KEGG_FTP = 'ftp://ftp.genome.jp/pub/kegg/genes/taxonomy'
 
-    def __init__(self, ratio_matrices, configuration=None):        
-        """create a cMonkey object"""
+    def __init__(self, ratio_matrices, configuration=None):
+        """create a cMonkey object
+        ratio_matrices: a MatrixCollection object containing gene expression
+                        values
+        configuration: a dictionary of configuration values
+        """
         self.run_finished = False
         self.ratio_matrices = ratio_matrices
         self.init_configuration(configuration)
-
-        # run data
-        self.stats       = None
-        self.row_scores  = None
-        self.col_scores  = None
-        self.mot_scores  = None
-        self.net_scores  = None
-        self.r_scores    = None
-        self.row_scaling = [0 for _ in range(self.num_iterations())]
-        self.mot_scaling = [0 for _ in range(self.num_iterations())]
-        self.net_scaling = [0 for _ in range(self.num_iterations())]
-        self.fuzzy_index = [0 for _ in range(self.num_iterations())]
-
+        self.init_run_data()
 
     def init_configuration(self, configuration):
         """creates default configuration"""
@@ -57,7 +50,22 @@ class CMonkey:
         configuration.setdefault('seed_method.cols',  'best')
         configuration.setdefault('post.adjust',       True)
         configuration.setdefault('verbose',           True)
-        self.configuration = configuration        
+        self.configuration = configuration
+        self.kcluster = 20
+        self.ks = range(1, self.kcluster + 1)
+
+    def init_run_data(self):
+        """initialize the data structures to run the algorithm"""
+        self.stats = None
+        self.row_scores = None
+        self.col_scores = None
+        self.mot_scores = None
+        self.net_scores = None
+        self.r_scores = None
+        self.row_scaling = [0 for _ in range(self.num_iterations())]
+        self.mot_scaling = [0 for _ in range(self.num_iterations())]
+        self.net_scaling = [0 for _ in range(self.num_iterations())]
+        self.fuzzy_index = [0 for _ in range(self.num_iterations())]
 
     def is_verbose(self):
         """determine whether we are running in verbose mode"""
@@ -84,13 +92,13 @@ class CMonkey:
     def seed_clusters(self):
         """seed clusters using the selected row and column methods"""
         pass
-    
+
     def iterate(self):
         """iteration step in cMonkey
         This is run over and over until no improvements can be achieved"""
         self.compute_all_scores()
         self.combine_scores()
-        self.fuzzify_scores()       
+        self.fuzzify_scores()
 
     def compute_all_scores(self):
         """compute scores on microarray data and clusters"""
@@ -114,7 +122,7 @@ class CMonkey:
         """compute scores for clusters"""
         self.compute_meme_scores()
         self.compute_mot_scores()
-        self.compute_net_scores()        
+        self.compute_net_scores()
 
     def compute_meme_scores(self):
         """compute meme scores on clusters"""
@@ -128,6 +136,7 @@ class CMonkey:
         """compute net.scores from STRING, add weighted scores for other
         networks if they exist"""
         pass
+
     def combine_scores(self):
         """combine the computed scores"""
         pass
@@ -136,6 +145,7 @@ class CMonkey:
         """fuzzify scores a bit for stochasticity
         fuzz should be between 0.2 and 0 (decreasing with iter)"""
         pass
+
 
 class Membership:
     """Algorithms for cluster membership"""

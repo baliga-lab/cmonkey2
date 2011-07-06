@@ -2,6 +2,7 @@
 import unittest
 from cmonkey import CMonkey, Membership
 
+
 class CMonkeyTest(unittest.TestCase):
     """Test class for CMonkey"""
 
@@ -29,7 +30,7 @@ class MembershipTest(unittest.TestCase):
     """Test class for Membership"""
 
     def test_map_to_is_member_matrix(self):
-        in_matrix = [[1, 2],[2, 3]]
+        in_matrix = [[1, 2], [2, 3]]
         out = Membership.map_to_is_member_matrix(in_matrix, 3)
         self.assertEquals([[True, False], [True, True], [False, True]], out)
 
