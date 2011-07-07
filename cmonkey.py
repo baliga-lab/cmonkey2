@@ -1,5 +1,6 @@
 """cMonkey top-level module"""
 
+from scipy.stats import scoreatpercentile
 
 class CMonkey:
     """
@@ -21,8 +22,9 @@ class CMonkey:
         'http://embnet.ccg.unam.mx/rsa-tools'
         ]
     KEGG_FTP = 'ftp://ftp.genome.jp/pub/kegg/genes/taxonomy'
+    AVG_CLUSTER_SIZE = 20
 
-    def __init__(self, ratio_matrices, configuration=None):
+    def __init__(self, ratio_matrices, config=None):
         """create a cMonkey object
         ratio_matrices: a MatrixCollection object containing gene expression
                         values
@@ -30,32 +32,10 @@ class CMonkey:
         """
         self.run_finished = False
         self.ratio_matrices = ratio_matrices
-        self.init_configuration(configuration)
-        self.init_run_data()
-
-    def init_configuration(self, configuration):
-        """creates default configuration"""
-        if not configuration:
-            configuration = {}
-
-        # meaningful defaults
-        configuration.setdefault('organism',          'hpy')
-        configuration.setdefault('num_iterations',    2000)
-        configuration.setdefault('clusters_per_row',  2)
-        configuration.setdefault('operon.shift',      True)
-        configuration.setdefault('background.order',  3)
-        configuration.setdefault('recalc.background', True)
-        configuration.setdefault('row.scaling',       6)
-        configuration.setdefault('seed_method.rows',  'kmeans')
-        configuration.setdefault('seed_method.cols',  'best')
-        configuration.setdefault('post.adjust',       True)
-        configuration.setdefault('verbose',           True)
-        self.configuration = configuration
-        self.kcluster = 20
-        self.ks = range(1, self.kcluster + 1)
-
-    def init_run_data(self):
-        """initialize the data structures to run the algorithm"""
+        self.configuration = self.init_configuration(config)
+        self.num_biclusters = self.configuration['num_biclusters']
+        print "# biclusters: %d" % self.num_biclusters
+        self.ks = range(self.num_biclusters)
         self.stats = None
         self.row_scores = None
         self.col_scores = None
@@ -66,6 +46,40 @@ class CMonkey:
         self.mot_scaling = [0 for _ in range(self.num_iterations())]
         self.net_scaling = [0 for _ in range(self.num_iterations())]
         self.fuzzy_index = [0 for _ in range(self.num_iterations())]
+
+    def init_configuration(self, config):
+        """sets meaningful defaults in the configuration"""
+        configuration = config or {}
+        configuration.setdefault('organism',             'hpy')
+        configuration.setdefault('num_iterations',       2000)
+        configuration.setdefault('biclusters_per_gene',  2)
+        configuration.setdefault('num_biclusters',
+                                 self.compute_num_biclusters(configuration))
+        configuration.setdefault('operon.shift',         True)
+        configuration.setdefault('background.order',     3)
+        configuration.setdefault('recalc.background',    True)
+        configuration.setdefault('row.scaling',          6)
+        configuration.setdefault('seed_method.rows',     'kmeans')
+        configuration.setdefault('seed_method.cols',     'best')
+        configuration.setdefault('post.adjust',          True)
+        configuration.setdefault('verbose',              True)
+        return configuration
+
+    def compute_num_biclusters(self, config):
+        """computes the number of biclusters to optimize"""
+        return int(round(self.ratio_matrices.num_unique_rows() *
+                     float(config['biclusters_per_gene']) /
+                     CMonkey.AVG_CLUSTER_SIZE))
+
+    @classmethod
+    def make_matrix(cls, row_names, num_columns, init_value=0):
+        """creates a two-dimensional matrix with len(row_names) rows and
+        num_cols columns, where all fields are initialized with
+        init_value. The rows are accessed by row name"""
+        result = {}
+        for name in row_names:
+            result[name] = [init_value for _ in range(num_columns)]
+        return result
 
     def is_verbose(self):
         """determine whether we are running in verbose mode"""
@@ -112,11 +126,25 @@ class CMonkey:
 
     def compute_row_scores(self):
         """compute row scores on microarray data"""
-        pass
+        self.row_scores = self.init_row_col_score_matrix(self.row_scores)
+        for row_name in self.row_scores:
+            pass
 
     def compute_column_scores(self):
         """compute column scores on microarray data"""
-        pass
+        self.col_scores = self.init_row_col_score_matrix(self.col_scores)
+
+    def init_row_col_score_matrix(self, score_matrix):
+        """generic initialization of row/column score matrix"""
+        if score_matrix:
+            for row_name in score_matrix:
+                for col in self.ks:
+                    score_matrix[row_name][col] = 0
+        else:
+            score_matrix = CMonkey.make_matrix(
+                self.ratio_matrices.unique_row_names,
+                max(self.ks) + 1)
+        return score_matrix
 
     def compute_cluster_scores(self):
         """compute scores for clusters"""
@@ -172,3 +200,8 @@ class Membership:
                 result_row.append(i in matrix_row)
 
         return result
+
+
+# utility functions
+def quantile(values, probability):
+    return round(scoreatpercentile(values, probability * 100), 6)

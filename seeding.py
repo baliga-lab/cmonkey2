@@ -4,9 +4,9 @@
 class ClusterSeedingKMeans:
     """k-means cluster seeding"""
 
-    def __init__(self, kcluster):
+    def __init__(self, num_biclusters):
         """initialize seeding method"""
-        self.kcluster = kcluster
+        self.num_biclusters
 
     def run(self):
         """run a seed"""
@@ -14,11 +14,11 @@ class ClusterSeedingKMeans:
 
 
 class ClusterSeedingBest:
-    """k-means cluster seeding"""
+    """best cluster seeding"""
 
-    def __init__(self, kcluster):
+    def __init__(self, num_biclusters):
         """initialize seeding method"""
-        self.kcluster = kcluster
+        self.num_biclusters
 
     def run(self):
         """run a seed"""
