@@ -1,0 +1,18 @@
+cMonkey Python - Python port of the cMonkey biclustering algorithm
+
+This is the Python implementation of the cMonkey algorithm.
+
+-- Wei-ju Wu, July 2011
+
+R implementation: David Reiss, Institute for Systems Biology
+
+System requirements
+-------------------
+- Developed and tested with Python 2.7.2
+- scipy >= 0.9.0
+- numpy >= 1.6.0
+
+To run the unit tests:
+
+./run_tests.sh
+

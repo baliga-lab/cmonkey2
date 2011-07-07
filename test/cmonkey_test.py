@@ -1,7 +1,7 @@
 """unit test module for cmonkey"""
 import unittest
 from datatypes import DataMatrix, DataMatrixCollection
-from cmonkey import CMonkey, Membership, quantile
+from cmonkey import CMonkey, Membership, quantile, make_matrix
 
 # setting up some simple dummy test input
 # approximately 1 bicluster per 10 genes
@@ -36,7 +36,7 @@ class CMonkeyTest(unittest.TestCase):
 
     def test_make_matrix(self):
         """tests the make_matrix function"""
-        matrix = CMonkey.make_matrix(["row1", "row2"], 3)
+        matrix = make_matrix(["row1", "row2"], 3)
         self.assertEquals(2, len(matrix))
         self.assertEquals(3, len(matrix['row1']))
         self.assertEquals(0, matrix['row1'][0])

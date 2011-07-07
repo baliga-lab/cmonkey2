@@ -1,6 +1,6 @@
 """cMonkey top-level module"""
-
 from scipy.stats import scoreatpercentile
+
 
 class CMonkey:
     """
@@ -42,6 +42,7 @@ class CMonkey:
         self.mot_scores = None
         self.net_scores = None
         self.r_scores = None
+        self.gene_weights = None
         self.row_scaling = [0 for _ in range(self.num_iterations())]
         self.mot_scaling = [0 for _ in range(self.num_iterations())]
         self.net_scaling = [0 for _ in range(self.num_iterations())]
@@ -70,16 +71,6 @@ class CMonkey:
         return int(round(self.ratio_matrices.num_unique_rows() *
                      float(config['biclusters_per_gene']) /
                      CMonkey.AVG_CLUSTER_SIZE))
-
-    @classmethod
-    def make_matrix(cls, row_names, num_columns, init_value=0):
-        """creates a two-dimensional matrix with len(row_names) rows and
-        num_cols columns, where all fields are initialized with
-        init_value. The rows are accessed by row name"""
-        result = {}
-        for name in row_names:
-            result[name] = [init_value for _ in range(num_columns)]
-        return result
 
     def is_verbose(self):
         """determine whether we are running in verbose mode"""
@@ -127,8 +118,13 @@ class CMonkey:
     def compute_row_scores(self):
         """compute row scores on microarray data"""
         self.row_scores = self.init_row_col_score_matrix(self.row_scores)
-        for row_name in self.row_scores:
-            pass
+        for gene_name in self.row_scores:
+            if self.has_gene_weight(gene_name):
+                # TODO
+                pass
+
+    def has_gene_weight(self, gene_name):
+        return self.gene_weights and self.gene_weights.get(gene_name)
 
     def compute_column_scores(self):
         """compute column scores on microarray data"""
@@ -141,7 +137,7 @@ class CMonkey:
                 for col in self.ks:
                     score_matrix[row_name][col] = 0
         else:
-            score_matrix = CMonkey.make_matrix(
+            score_matrix = make_matrix(
                 self.ratio_matrices.unique_row_names,
                 max(self.ks) + 1)
         return score_matrix
@@ -204,4 +200,17 @@ class Membership:
 
 # utility functions
 def quantile(values, probability):
+    """does the same as R's quantile function.
+    values a list of numeric values
+    probability a value in the range between 0 and 1
+    """
     return round(scoreatpercentile(values, probability * 100), 6)
+
+def make_matrix(row_names, num_columns, init_value=0):
+    """creates a two-dimensional matrix with len(row_names) rows and
+    num_cols columns, where all fields are initialized with
+    init_value. The rows are accessed by row name"""
+    result = {}
+    for name in row_names:
+        result[name] = [init_value for _ in range(num_columns)]
+    return result
