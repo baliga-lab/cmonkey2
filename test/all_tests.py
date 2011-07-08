@@ -2,7 +2,9 @@
 import unittest
 from datatypes_test import DataMatrixTest, DataMatrixCollectionTest
 from cmonkey_test import CMonkeyTest, MembershipTest
-from util_test import DelimitedFileTest, OrganismCodeMappingTest
+from util_test import DelimitedFileTest
+from util_test import LevenshteinDistanceTest, BestMatchingLinksTest
+from data_providers_test import OrganismCodeMappingTest
 
 if __name__ == '__main__':
     SUITE = []
@@ -15,4 +17,8 @@ if __name__ == '__main__':
             DelimitedFileTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
             OrganismCodeMappingTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
+            LevenshteinDistanceTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
+            BestMatchingLinksTest))
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))

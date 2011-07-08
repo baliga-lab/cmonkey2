@@ -9,28 +9,29 @@ NUM_GENES = 10
 NUM_COLS = 2
 GENE_NAMES = ['gene' + str(i) for i in range(NUM_GENES)]
 COL_NAMES = ['cond' + str(i) for i in range(NUM_COLS)]
-ratios = DataMatrix(NUM_GENES, NUM_COLS, GENE_NAMES, COL_NAMES)
-ratio_matrices = DataMatrixCollection([ratios])
+RATIOS = DataMatrix(NUM_GENES, NUM_COLS, GENE_NAMES, COL_NAMES)
+RATIO_MATRICES = DataMatrixCollection([RATIOS])
 
-class CMonkeyTest(unittest.TestCase):
+
+class CMonkeyTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for CMonkey"""
 
     def test_create_cmonkey(self):
         """create a CMonkey object"""
-        cmonkey = CMonkey(ratio_matrices)
+        cmonkey = CMonkey(RATIO_MATRICES)
         self.assertFalse(cmonkey.run_finished)
         self.assertEquals('hpy', cmonkey.configuration['organism'])
 
     def test_create_cmonkey_with_config(self):
         """create CMonkey object, specifying an organism"""
         config = {'organism': 'homo sapiens'}
-        cmonkey = CMonkey(ratio_matrices, config)
+        cmonkey = CMonkey(RATIO_MATRICES, config)
         self.assertFalse(cmonkey.run_finished)
         self.assertEquals('homo sapiens', cmonkey.configuration['organism'])
 
     def test_run_cmonkey_simple(self):
         """run CMonkey in the simplest way"""
-        cmonkey = CMonkey(ratio_matrices)
+        cmonkey = CMonkey(RATIO_MATRICES)
         cmonkey.run()
         self.assertTrue(cmonkey.run_finished)
 
@@ -43,18 +44,20 @@ class CMonkeyTest(unittest.TestCase):
 
     def test_quantile(self):
         """tests the quantile function"""
-        input = [1, 2, 3, 4, 5]
-        self.assertEquals(1, quantile(input, 0))
-        self.assertEquals(1.8, quantile(input, 0.2))
-        self.assertEquals(2, quantile(input, 0.25))
-        self.assertEquals(3, quantile(input, 0.5))
-        self.assertEquals(4, quantile(input, 0.75))
-        self.assertEquals(5, quantile(input, 1))
+        data = [1, 2, 3, 4, 5]
+        self.assertEquals(1, quantile(data, 0))
+        self.assertEquals(1.8, quantile(data, 0.2))
+        self.assertEquals(2, quantile(data, 0.25))
+        self.assertEquals(3, quantile(data, 0.5))
+        self.assertEquals(4, quantile(data, 0.75))
+        self.assertEquals(5, quantile(data, 1))
 
-class MembershipTest(unittest.TestCase):
+
+class MembershipTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for Membership"""
 
     def test_map_to_is_member_matrix(self):
+        """tests the map_to_is_member_matrix function"""
         in_matrix = [[1, 2], [2, 3]]
         out = Membership.map_to_is_member_matrix(in_matrix, 3)
         self.assertEquals([[True, False], [True, True], [False, True]], out)

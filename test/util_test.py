@@ -1,8 +1,9 @@
 """Test classes for util module"""
 import unittest
-from util import DelimitedFile, get_organism_for_code
+from util import DelimitedFile, levenshtein_distance, best_matching_links
 
-class DelimitedFileTest(unittest.TestCase):
+
+class DelimitedFileTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for DelimitedFile"""
 
     def test_read_with_tabs(self):
@@ -46,20 +47,26 @@ class DelimitedFileTest(unittest.TestCase):
         self.assertEquals(["value11", "value12"], lines[0])
         self.assertEquals(["value21", "value22"], lines[1])
 
-TAXONOMY_FILE_PATH = "testdata/KEGG_taxonomy"
 
-class OrganismCodeMappingTest(unittest.TestCase):
-    """Test class for get_organism_for_code"""
+class LevenshteinDistanceTest(unittest.TestCase):  # pylint: disable-msg=R0904
+    """Test class for levenshtein_distance"""
 
-    def test_get_existing_organism(self):
-        """retrieve existing organism"""
-        dfile = DelimitedFile.read(TAXONOMY_FILE_PATH, sep='\t',
-                                   has_header=True, comment='#')
-        self.assertEquals('Helicobacter pylori 26695',
-                          get_organism_for_code(dfile, 'hpy'))
+    def test_kitten_sitting(self):
+        """compare kitten with sitting"""
+        self.assertEquals(3, levenshtein_distance('sitting', 'kitten'))
 
-    def test_get_non_existing_organism(self):
-        """retrieve non-existing organism"""
-        dfile = DelimitedFile.read(TAXONOMY_FILE_PATH, sep='\t',
-                                   has_header=True, comment='#')
-        self.assertIsNone(get_organism_for_code(dfile, 'nope'))
+    def test_saturday_sunday(self):
+        """compare Saturday with Sunday"""
+        self.assertEquals(3, levenshtein_distance('Sunday', 'Saturday'))
+
+
+RSAT_LIST_FILE_PATH = "testdata/RSAT_genomes_listing.txt"
+
+
+class BestMatchingLinksTest(unittest.TestCase):  # pylint: disable-msg=R0904
+    """Test class for best_matching_links"""
+
+    def test_best_rsat_matches(self):
+        """test the best_matching_links function"""
+        matches = best_matching_links('Halobacterium', RSAT_LIST_FILE_PATH)
+        self.assertEquals("Halobacterium_sp/", matches[0])

@@ -3,7 +3,7 @@ import unittest
 from datatypes import DataMatrix, DataMatrixCollection
 
 
-class DataMatrixTest(unittest.TestCase):
+class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for DataMatrix"""
 
     def test_create_without_names(self):
@@ -46,7 +46,7 @@ class DataMatrixTest(unittest.TestCase):
         self.assertEquals(42.0, matrix.value_at(0, 1))
 
 
-class DataMatrixCollectionTest(unittest.TestCase):
+class DataMatrixCollectionTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for MatrixCollection"""
 
     def test_create_with_one(self):

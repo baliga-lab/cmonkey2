@@ -1,4 +1,6 @@
-"""cMonkey utility module"""
+"""cMonkey utility module. General purpose utilities."""
+from BeautifulSoup import BeautifulSoup
+from operator import attrgetter
 
 
 def next_non_comment_index(lines, comment, line_index):
@@ -69,14 +71,61 @@ class DelimitedFile:  # pylint: disable-msg=R0913
         return self.header
 
 
-def get_organism_for_code(taxonomy_file, code):
-    """using a KEGG taxonomy file, lookup the organism code to
-    return the full name. taxonomy_file should be an instance of
-    DelimitedFile"""
-    for line in taxonomy_file.get_lines():
-        if line[1] == code:
-            return line[3]
-    return None
+def levenshtein_distance(str1, str2):
+    """computes the Levenshtein distance. This is used in order
+    to make approximate string comparisons"""
+    strlen1 = len(str1)
+    strlen2 = len(str2)
+
+    dist = [[0 for _ in range(strlen2 + 1)] for _ in range(strlen1 + 1)]
+    for row in range(strlen1 + 1):
+        dist[row][0] = row
+    for col in range(strlen2 + 1):
+        dist[0][col] = col
+
+    for col in range(strlen2):
+        for row in range(strlen1):
+            if str1[row] == str2[col]:
+                dist[row + 1][col + 1] = dist[row][col]
+            else:
+                dist[row + 1][col + 1] = min(dist[row][col + 1] + 1,
+                                             dist[row + 1][col] + 1,
+                                             dist[row][col] + 1)
+    return dist[strlen1][strlen2]
 
 
-__all__ = ['DelimitedFile', 'get_organism_for_code']
+class RankedAnchor:  # pylint: disable-msg=R0903
+    """A hyperlink with a Levenshtein score"""
+    def __init__(self, score, anchor):
+        """Creates a GenomeListEntry with a given Levenshtein distance
+        and a BeautifulSoup anchor tag"""
+        self.score = score
+        self.anchor = anchor
+
+    def __str__(self):
+        return "(score: %d, %s)" % (self.score, str(self.anchor))
+
+    def __repr__(self):
+        return str(self)
+
+
+def best_matching_links(search_string, html_file_path):
+    """given a search string and an HTML file, extract the
+    best matching href"""
+    with open(html_file_path) as inputfile:
+        html = inputfile.read()
+    soup = BeautifulSoup(html)
+    links = []
+    for anchor in soup.findAll('a'):
+        score = levenshtein_distance(search_string, anchor['href'])
+        links.append(RankedAnchor(score, anchor))
+    result = sorted(links, key=attrgetter('score'))
+    num_results = len(result)
+    if num_results > 0:
+        best_score = result[0].score
+        num_best = 1
+        while num_best < num_results and result[num_best].score == best_score:
+            num_best += 1
+    return [entry.anchor['href'] for entry in result[0:num_best]]
+
+__all__ = ['DelimitedFile', 'best_matching_links']

@@ -2,7 +2,7 @@
 from scipy.stats import scoreatpercentile
 
 
-class CMonkey:
+class CMonkey:  # pylint: disable-msg=R0902
     """
     The cMonkey object controls the overall execution of the cMonkey
     algorithm.
@@ -34,8 +34,7 @@ class CMonkey:
         self.ratio_matrices = ratio_matrices
         self.configuration = self.init_configuration(config)
         self.num_biclusters = self.configuration['num_biclusters']
-        print "# biclusters: %d" % self.num_biclusters
-        self.ks = range(self.num_biclusters)
+        self.cluster_nums = range(self.num_biclusters)
         self.stats = None
         self.row_scores = None
         self.col_scores = None
@@ -135,12 +134,12 @@ class CMonkey:
         """generic initialization of row/column score matrix"""
         if score_matrix:
             for row_name in score_matrix:
-                for col in self.ks:
+                for col in self.cluster_nums:
                     score_matrix[row_name][col] = 0
         else:
             score_matrix = make_matrix(
                 self.ratio_matrices.unique_row_names,
-                max(self.ks) + 1)
+                max(self.cluster_nums) + 1)
         return score_matrix
 
     def compute_cluster_scores(self):
