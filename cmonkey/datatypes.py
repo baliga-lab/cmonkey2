@@ -84,3 +84,5 @@ class DataMatrixCollection:
                 result.append(name)
         result.sort()
         return result
+
+__all__ = ['DataMatrix', 'DataMatrixCollection']

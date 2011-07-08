@@ -124,6 +124,7 @@ class CMonkey:
                 pass
 
     def has_gene_weight(self, gene_name):
+        """determine if a weight was specified for the given gene"""
         return self.gene_weights and self.gene_weights.get(gene_name)
 
     def compute_column_scores(self):
@@ -206,6 +207,7 @@ def quantile(values, probability):
     """
     return round(scoreatpercentile(values, probability * 100), 6)
 
+
 def make_matrix(row_names, num_columns, init_value=0):
     """creates a two-dimensional matrix with len(row_names) rows and
     num_cols columns, where all fields are initialized with
@@ -214,3 +216,5 @@ def make_matrix(row_names, num_columns, init_value=0):
     for name in row_names:
         result[name] = [init_value for _ in range(num_columns)]
     return result
+
+__all__ = ['CMonkey', 'Membership', 'quantile', 'make_matrix']
