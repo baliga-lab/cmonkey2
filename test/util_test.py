@@ -1,6 +1,6 @@
 """Test classes for util module"""
 import unittest
-from util import DelimitedFile
+from util import DelimitedFile, get_organism_for_code
 
 class DelimitedFileTest(unittest.TestCase):
     """Test class for DelimitedFile"""
@@ -35,3 +35,31 @@ class DelimitedFileTest(unittest.TestCase):
         lines = dfile.get_lines()
         self.assertEquals(["value11", "value12"], lines[0])
         self.assertEquals(["value21", "value22"], lines[1])
+
+    def test_read_with_empty_lines(self):
+        """Reads a semicolon delimited file containing emptylines"""
+        dfile = DelimitedFile.read("testdata/withemptylines.ssv", sep=';',
+                                   has_header=True, comment='#', quote='"')
+        lines = dfile.get_lines()
+        self.assertEquals(["header1", "header2"], dfile.get_header())
+        self.assertEquals(2, len(lines))
+        self.assertEquals(["value11", "value12"], lines[0])
+        self.assertEquals(["value21", "value22"], lines[1])
+
+TAXONOMY_FILE_PATH = "testdata/KEGG_taxonomy"
+
+class OrganismCodeMappingTest(unittest.TestCase):
+    """Test class for get_organism_for_code"""
+
+    def test_get_existing_organism(self):
+        """retrieve existing organism"""
+        dfile = DelimitedFile.read(TAXONOMY_FILE_PATH, sep='\t',
+                                   has_header=True, comment='#')
+        self.assertEquals('Helicobacter pylori 26695',
+                          get_organism_for_code(dfile, 'hpy'))
+
+    def test_get_non_existing_organism(self):
+        """retrieve non-existing organism"""
+        dfile = DelimitedFile.read(TAXONOMY_FILE_PATH, sep='\t',
+                                   has_header=True, comment='#')
+        self.assertIsNone(get_organism_for_code(dfile, 'nope'))

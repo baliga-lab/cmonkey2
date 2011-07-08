@@ -3,13 +3,15 @@
 
 def next_non_comment_index(lines, comment, line_index):
     """utility method that takes a list of strings and returns the next
-    line index of a non-comment line
+    line index of a non-comment line. it also skips empty lines
     """
     if comment:
-        line = lines[line_index]
-        while line.lstrip().startswith(comment):
+        num_lines = len(lines)
+        line = lines[line_index].lstrip()
+        while line_index < num_lines and (len(line) == 0 or
+                                          line.startswith(comment)):
             line_index += 1
-            line = lines[line_index]
+            line = lines[line_index].lstrip()
     return line_index
 
 
@@ -66,4 +68,15 @@ class DelimitedFile:  # pylint: disable-msg=R0913
         """returns the header in the file"""
         return self.header
 
-__all__ = ['DelimitedFile']
+
+def get_organism_for_code(taxonomy_file, code):
+    """using a KEGG taxonomy file, lookup the organism code to
+    return the full name. taxonomy_file should be an instance of
+    DelimitedFile"""
+    for line in taxonomy_file.get_lines():
+        if line[1] == code:
+            return line[3]
+    return None
+
+
+__all__ = ['DelimitedFile', 'get_organism_for_code']

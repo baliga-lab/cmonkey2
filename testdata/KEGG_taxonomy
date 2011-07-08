@@ -1,0 +1,15 @@
+## Animals
+### Vertebrates
+#### Mammals
+T01001	hsa	H.sapiens	Homo sapiens (human)
+T01002	mmu	M.musculus	Mus musculus (mouse)
+T01003	rno	R.norvegicus	Rattus norvegicus (rat)
+#### Bees
+T01057	ame	A.mellifera	Apis mellifera (honey bee)
+
+#### Budding yeasts
+T00005(1997)	sce	S.cerevisiae	Saccharomyces cerevisiae
+#### Epsilon
+T00008(1997)	hpy	H.pylori	Helicobacter pylori 26695
+T00038(2000)	hal	Halobacterium	Halobacterium sp. NRC-1
+T00662(2008)	hsl	H.salinarum	Halobacterium salinarum R1

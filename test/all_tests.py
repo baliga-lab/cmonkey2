@@ -2,7 +2,7 @@
 import unittest
 from datatypes_test import DataMatrixTest, DataMatrixCollectionTest
 from cmonkey_test import CMonkeyTest, MembershipTest
-from util_test import DelimitedFileTest
+from util_test import DelimitedFileTest, OrganismCodeMappingTest
 
 if __name__ == '__main__':
     SUITE = []
@@ -13,4 +13,6 @@ if __name__ == '__main__':
             DataMatrixCollectionTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
             DelimitedFileTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
+            OrganismCodeMappingTest))
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))
