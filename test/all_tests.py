@@ -4,7 +4,8 @@ from datatypes_test import DataMatrixTest, DataMatrixCollectionTest
 from cmonkey_test import CMonkeyTest, MembershipTest
 from util_test import DelimitedFileTest
 from util_test import LevenshteinDistanceTest, BestMatchingLinksTest
-from data_providers_test import OrganismCodeMappingTest
+from data_providers_test import KeggOrganismCodeMappingTest
+from data_providers_test import GoTaxonomyMappingTest
 
 if __name__ == '__main__':
     SUITE = []
@@ -16,7 +17,9 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
             DelimitedFileTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
-            OrganismCodeMappingTest))
+            KeggOrganismCodeMappingTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
+            GoTaxonomyMappingTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
             LevenshteinDistanceTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
