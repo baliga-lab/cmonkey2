@@ -1,6 +1,7 @@
 """Test classes for util module"""
 import unittest
 from util import DelimitedFile, levenshtein_distance, best_matching_links
+from util import quantile, make_matrix
 
 
 class DelimitedFileTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -70,3 +71,24 @@ class BestMatchingLinksTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """test the best_matching_links function"""
         matches = best_matching_links('Halobacterium', RSAT_LIST_FILE_PATH)
         self.assertEquals("Halobacterium_sp/", matches[0])
+
+
+class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
+    """Test class for utility functions"""
+
+    def test_make_matrix(self):
+        """tests the make_matrix function"""
+        matrix = make_matrix(["row1", "row2"], 3)
+        self.assertEquals(2, len(matrix))
+        self.assertEquals(3, len(matrix['row1']))
+        self.assertEquals(0, matrix['row1'][0])
+
+    def test_quantile(self):
+        """tests the quantile function"""
+        data = [1, 2, 3, 4, 5]
+        self.assertEquals(1, quantile(data, 0))
+        self.assertEquals(1.8, quantile(data, 0.2))
+        self.assertEquals(2, quantile(data, 0.25))
+        self.assertEquals(3, quantile(data, 0.5))
+        self.assertEquals(4, quantile(data, 0.75))
+        self.assertEquals(5, quantile(data, 1))

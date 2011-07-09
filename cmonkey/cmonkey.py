@@ -1,5 +1,5 @@
 """cMonkey top-level module"""
-from scipy.stats import scoreatpercentile
+from util import make_matrix
 
 
 class CMonkey:  # pylint: disable-msg=R0902
@@ -24,13 +24,14 @@ class CMonkey:  # pylint: disable-msg=R0902
     KEGG_FTP = 'ftp://ftp.genome.jp/pub/kegg/genes/taxonomy'
     AVG_CLUSTER_SIZE = 20
 
-    def __init__(self, ratio_matrices, config=None):
+    def __init__(self, organism, ratio_matrices, config=None):
         """create a cMonkey object
         ratio_matrices: a MatrixCollection object containing gene expression
                         values
         configuration: a dictionary of configuration values
         """
         self.run_finished = False
+        self.organism = organism
         self.ratio_matrices = ratio_matrices
         self.configuration = self.init_configuration(config)
         self.num_biclusters = self.configuration['num_biclusters']
@@ -199,21 +200,5 @@ class Membership:
 
 
 # utility functions
-def quantile(values, probability):
-    """does the same as R's quantile function.
-    values a list of numeric values
-    probability a value in the range between 0 and 1
-    """
-    return round(scoreatpercentile(values, probability * 100), 6)
 
-
-def make_matrix(row_names, num_columns, init_value=0):
-    """creates a two-dimensional matrix with len(row_names) rows and
-    num_cols columns, where all fields are initialized with
-    init_value. The rows are accessed by row name"""
-    result = {}
-    for name in row_names:
-        result[name] = [init_value for _ in range(num_columns)]
-    return result
-
-__all__ = ['CMonkey', 'Membership', 'quantile', 'make_matrix']
+__all__ = ['CMonkey', 'Membership']

@@ -1,6 +1,7 @@
 """cMonkey utility module. General purpose utilities."""
 from BeautifulSoup import BeautifulSoup
 from operator import attrgetter
+from scipy.stats import scoreatpercentile
 
 
 def next_non_comment_index(lines, comment, line_index):
@@ -128,4 +129,23 @@ def best_matching_links(search_string, html_file_path):
             num_best += 1
     return [entry.anchor['href'] for entry in result[0:num_best]]
 
-__all__ = ['DelimitedFile', 'best_matching_links']
+
+def quantile(values, probability):
+    """does the same as R's quantile function.
+    values a list of numeric values
+    probability a value in the range between 0 and 1
+    """
+    return round(scoreatpercentile(values, probability * 100), 6)
+
+
+def make_matrix(row_names, num_columns, init_value=0):
+    """creates a two-dimensional matrix with len(row_names) rows and
+    num_cols columns, where all fields are initialized with
+    init_value. The rows are accessed by row name"""
+    result = {}
+    for name in row_names:
+        result[name] = [init_value for _ in range(num_columns)]
+    return result
+
+
+__all__ = ['DelimitedFile', 'best_matching_links', 'quantile', 'make_matrix']

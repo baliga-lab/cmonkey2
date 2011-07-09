@@ -21,4 +21,26 @@ def get_go_taxonomy_id(go_taxonomy_file, organism_name):
             return line[1]
     return None
 
-__all__ = ['get_organism_for_code', 'get_go_taxonomy_id']
+
+class Organism:
+    """Abstraction of an organism in cMonkey. It captures all organism-specific
+    aspects"""
+    def __init__(self, code):
+        """create an Organism instance"""
+        self.code = code
+
+    def is_prokaryote(self):
+        """determine whether this organism is a prokaryote"""
+        return True
+
+    def is_eukaryote(self):
+        """determine whether this organism is a eukaryote"""
+        return not self.is_prokaryote()
+
+    @classmethod
+    def create(cls, organism_code):
+        """factory method to create an organism from a code"""
+        return Organism(organism_code)
+
+
+__all__ = ['get_organism_for_code', 'get_go_taxonomy_id', 'Organism']

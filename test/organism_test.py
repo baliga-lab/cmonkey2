@@ -1,7 +1,7 @@
 """Test classes for data_providers module"""
 import unittest
 from util import DelimitedFile
-from data_providers import get_kegg_organism_for_code, get_go_taxonomy_id
+from organism import get_kegg_organism_for_code, get_go_taxonomy_id, Organism
 
 TAXONOMY_FILE_PATH = "testdata/KEGG_taxonomy"
 PROT2TAXID_FILE_PATH = "testdata/proteome2taxid"
@@ -41,3 +41,14 @@ class GoTaxonomyMappingTest(unittest.TestCase):  # pylint: disable-msg=R0904
         dfile = DelimitedFile.read(PROT2TAXID_FILE_PATH, sep='\t',
                                    has_header=False)
         self.assertIsNone(get_go_taxonomy_id(dfile, 'does not exist'))
+
+
+class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
+    """Test class for Organism"""
+
+    def test_create(self):
+        """tests the create function"""
+        organism = Organism.create('hpy')
+        self.assertEquals('hpy', organism.code)
+        self.assertTrue(organism.is_prokaryote())
+        self.assertFalse(organism.is_eukaryote())
