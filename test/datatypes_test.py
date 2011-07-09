@@ -1,4 +1,8 @@
-"""Test classes for datatypes module"""
+"""datatypes_test.py - test classes for datatypes module
+
+This file is part of cMonkey Python. Please see README and LICENSE for
+more information and licensing details.
+"""
 import unittest
 from datatypes import DataMatrix, DataMatrixCollection
 

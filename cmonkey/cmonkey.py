@@ -1,4 +1,8 @@
-"""cMonkey top-level module"""
+"""cmonkey.py - cMonkey top-level module
+
+This file is part of cMonkey Python. Please see README and LICENSE for
+more information and licensing details.
+"""
 from util import make_matrix
 
 

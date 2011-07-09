@@ -1,4 +1,8 @@
-"""Test classes for data_providers module"""
+"""organism_test.py - unit tests for organism module
+
+This file is part of cMonkey Python. Please see README and LICENSE for
+more information and licensing details.
+"""
 import unittest
 from util import DelimitedFile
 from organism import get_kegg_organism_for_code, get_go_taxonomy_id, Organism

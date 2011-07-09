@@ -1,4 +1,8 @@
-"""unit test module for cmonkey"""
+"""cmonkey_test.py - unit test module for cmonkey module
+
+This file is part of cMonkey Python. Please see README and LICENSE for
+more information and licensing details.
+"""
 import unittest
 from datatypes import DataMatrix, DataMatrixCollection
 from cmonkey import CMonkey, Membership

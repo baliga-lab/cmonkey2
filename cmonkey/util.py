@@ -1,4 +1,8 @@
-"""cMonkey utility module. General purpose utilities."""
+"""util.py - cMonkey utility module
+
+This file is part of cMonkey Python. Please see README and LICENSE for
+more information and licensing details.
+"""
 from BeautifulSoup import BeautifulSoup
 from operator import attrgetter
 from scipy.stats import scoreatpercentile

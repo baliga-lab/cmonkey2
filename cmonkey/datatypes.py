@@ -1,4 +1,8 @@
-""" Data types for cMonkey """
+"""datatypes.py - data types for cMonkey
+
+This file is part of cMonkey Python. Please see README and LICENSE for
+more information and licensing details.
+"""
 
 
 class DataMatrix:

@@ -1,4 +1,8 @@
-"""Test classes for util module"""
+"""util_test.py - test classes for util module
+
+This file is part of cMonkey Python. Please see README and LICENSE for
+more information and licensing details.
+"""
 import unittest
 from util import DelimitedFile, levenshtein_distance, best_matching_links
 from util import quantile, make_matrix

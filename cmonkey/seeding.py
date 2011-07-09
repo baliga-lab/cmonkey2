@@ -1,4 +1,8 @@
-"""Cluster Seeding Methods"""
+"""seeding.py - cMonkey cluster seeding methods
+
+This file is part of cMonkey Python. Please see README and LICENSE for
+more information and licensing details.
+"""
 
 
 class ClusterSeedingKMeans:

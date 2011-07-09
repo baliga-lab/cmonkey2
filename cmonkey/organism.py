@@ -1,5 +1,8 @@
-"""The data_providers module contains functionality related to
-integrating with 3rd party data providers"""
+"""organism.py - organism-specific functionality in cMonkey
+
+This file is part of cMonkey Python. Please see README and LICENSE for
+more information and licensing details.
+"""
 
 
 def get_kegg_organism_for_code(kegg_taxonomy_file, code):

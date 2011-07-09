@@ -1,4 +1,8 @@
-"""Run all tests in the project"""
+"""all_tests.py - run all unit tests in the project
+
+This file is part of cMonkey Python. Please see README and LICENSE for
+more information and licensing details.
+"""
 import unittest
 from datatypes_test import DataMatrixTest, DataMatrixCollectionTest
 from cmonkey_test import CMonkeyTest, MembershipTest
