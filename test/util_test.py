@@ -73,7 +73,9 @@ class BestMatchingLinksTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_best_rsat_matches(self):
         """test the best_matching_links function"""
-        matches = best_matching_links('Halobacterium', RSAT_LIST_FILE_PATH)
+        with open(RSAT_LIST_FILE_PATH) as inputfile:
+            html = inputfile.read()
+        matches = best_matching_links('Halobacterium', html)
         self.assertEquals("Halobacterium_sp/", matches[0])
 
 

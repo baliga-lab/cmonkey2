@@ -132,11 +132,9 @@ class RankedAnchor:  # pylint: disable-msg=R0903
         return str(self)
 
 
-def best_matching_links(search_string, html_file_path):
-    """given a search string and an HTML file, extract the
-    best matching href"""
-    with open(html_file_path) as inputfile:
-        html = inputfile.read()
+def best_matching_links(search_string, html):
+    """given a search string and an HTML text, extract the best matching
+    href"""
     soup = BeautifulSoup(html)
     links = []
     for anchor in soup.findAll('a'):

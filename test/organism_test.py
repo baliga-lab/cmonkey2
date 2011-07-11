@@ -6,10 +6,11 @@ more information and licensing details.
 import unittest
 from util import DelimitedFile
 from organism import KeggCodeMapper, GoTaxonomyMapper
-from organism import OrganismFactory
+from organism import RsatOrganismMapper, OrganismFactory
 
 TAXONOMY_FILE_PATH = "testdata/KEGG_taxonomy"
 PROT2TAXID_FILE_PATH = "testdata/proteome2taxid"
+RSAT_LIST_FILE_PATH = "testdata/RSAT_genomes_listing.txt"
 
 
 # pylint: disable-msg=R0904
@@ -50,6 +51,17 @@ class GoTaxonomyMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904
         mapper = GoTaxonomyMapper(dfile)
         self.assertIsNone(mapper.get_taxonomy_id('does not exist'))
 
+
+class RsatOrganismMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904
+    """Tests the RsatOrganismMapper class"""
+
+    def test_get_organism(self):
+        """tests the get_organism method for an existing organism"""
+        with open(RSAT_LIST_FILE_PATH) as inputfile:
+            html = inputfile.read()
+        mapper = RsatOrganismMapper(html)
+        self.assertEquals('Halobacterium_sp',
+                          mapper.get_organism('Halobacterium'))
 
 class MockKeggOrganismMapper:
     """mock KEGG organism mapper"""

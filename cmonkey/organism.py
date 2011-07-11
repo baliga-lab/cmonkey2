@@ -3,7 +3,7 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-from util import DelimitedFileMapper
+from util import DelimitedFileMapper, best_matching_links
 
 
 class KeggCodeMapper:
@@ -20,7 +20,7 @@ class KeggCodeMapper:
 
 
 class GoTaxonomyMapper:
-    """A class to map an organism name to a GO taxonomy id"""
+    """A class to map an RSAT organism name to a GO taxonomy id"""
 
     def __init__(self, delimited_file):
         """Creates an instance of the mapper class"""
@@ -33,6 +33,18 @@ class GoTaxonomyMapper:
         return self.file_mapper.lookup(organism_name)
 
 
+class RsatOrganismMapper:
+    """A class to map a KEGG organism name to an RSAT organism name"""
+
+    def __init__(self, html):
+        """Creates a mapper instance with an HTML text"""
+        self.html = html
+
+    def get_organism(self, kegg_organism):
+        """find the RSAT organism which best matches the given KEGG
+        organism name"""
+        return best_matching_links(kegg_organism, self.html)[0].rstrip('/')
+
 class OrganismFactory:
     """Factory to create an organism. Construction of an organism
     instance is relatively complex and costly, so it is coordinated
@@ -43,6 +55,7 @@ class OrganismFactory:
     def __init__(self, kegg_organism_mapper,
                  rsat_organism_mapper,
                  go_taxonomy_mapper):
+        """create a OrganismFactory instance"""
         self.kegg_organism_mapper = kegg_organism_mapper
         self.rsat_organism_mapper = rsat_organism_mapper
         self.go_taxonomy_mapper = go_taxonomy_mapper
