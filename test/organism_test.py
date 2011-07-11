@@ -5,7 +5,7 @@ more information and licensing details.
 """
 import unittest
 from util import DelimitedFile
-from organism import get_kegg_organism_for_code, get_go_taxonomy_id
+from organism import KeggCodeMapper, GoTaxonomyMapper
 from organism import OrganismFactory
 
 TAXONOMY_FILE_PATH = "testdata/KEGG_taxonomy"
@@ -13,39 +13,42 @@ PROT2TAXID_FILE_PATH = "testdata/proteome2taxid"
 
 
 # pylint: disable-msg=R0904
-class KeggOrganismCodeMappingTest(unittest.TestCase):
-    """Test class for get_kegg_organism_for_code"""
+class KeggOrganismCodeMapperTest(unittest.TestCase):
+    """Test class for KeggCodeMapper"""
 
     def test_get_existing_organism(self):
         """retrieve existing organism"""
         dfile = DelimitedFile.read(TAXONOMY_FILE_PATH, sep='\t',
                                    has_header=True, comment='#')
+        mapper = KeggCodeMapper(dfile)
         self.assertEquals('Helicobacter pylori 26695',
-                          get_kegg_organism_for_code(dfile, 'hpy'))
+                          mapper.get_organism('hpy'))
 
     def test_get_non_existing_organism(self):
         """retrieve non-existing organism"""
         dfile = DelimitedFile.read(TAXONOMY_FILE_PATH, sep='\t',
                                    has_header=True, comment='#')
-        self.assertIsNone(get_kegg_organism_for_code(dfile, 'nope'))
+        mapper = KeggCodeMapper(dfile)
+        self.assertIsNone(mapper.get_organism('nope'))
 
 
-class GoTaxonomyMappingTest(unittest.TestCase):  # pylint: disable-msg=R0904
+class GoTaxonomyMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for get_go_taxonomy_id"""
 
     def test_get_existing(self):
         """retrieve an existing id"""
         dfile = DelimitedFile.read(PROT2TAXID_FILE_PATH, sep='\t',
                                    has_header=False)
+        mapper = GoTaxonomyMapper(dfile)
         self.assertEquals('64091',
-                          get_go_taxonomy_id(dfile,
-                                             'Halobacterium salinarium'))
+                          mapper.get_taxonomy_id('Halobacterium salinarium'))
 
     def test_get_non_existing(self):
         """retrieve None for a non-existing organism"""
         dfile = DelimitedFile.read(PROT2TAXID_FILE_PATH, sep='\t',
                                    has_header=False)
-        self.assertIsNone(get_go_taxonomy_id(dfile, 'does not exist'))
+        mapper = GoTaxonomyMapper(dfile)
+        self.assertIsNone(mapper.get_taxonomy_id('does not exist'))
 
 
 class MockKeggOrganismMapper:

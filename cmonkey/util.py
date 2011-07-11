@@ -76,6 +76,24 @@ class DelimitedFile:  # pylint: disable-msg=R0913
         return self.header
 
 
+class DelimitedFileMapper:
+    """A class that linearly searches a key in a DelimitedFile and for
+    the first row found, returns the value in the specified column"""
+
+    def __init__(self, delimited_file, key_column, value_column):
+        """Creates an instance of the mapper class using a DelimitedFile"""
+        self.taxonomy_file = delimited_file
+        self.key_column = key_column
+        self.value_column = value_column
+
+    def lookup(self, key):
+        """looks for the key in the key column"""
+        for line in self.taxonomy_file.get_lines():
+            if line[self.key_column] == key:
+                return line[self.value_column]
+        return None
+
+
 def levenshtein_distance(str1, str2):
     """computes the Levenshtein distance. This is used in order
     to make approximate string comparisons"""

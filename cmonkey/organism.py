@@ -3,26 +3,34 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
+from util import DelimitedFileMapper
 
 
-def get_kegg_organism_for_code(kegg_taxonomy_file, code):
-    """using a KEGG taxonomy file, lookup the organism code to
-    return the full name. taxonomy_file should be an instance of
-    DelimitedFile"""
-    for line in kegg_taxonomy_file.get_lines():
-        if line[1] == code:
-            return line[3]
-    return None
+class KeggCodeMapper:
+    """A class to map an organism code to a KEGG organism name. It uses
+    a KEGG taxonomy file to do this"""
+
+    def __init__(self, delimited_file):
+        """Creates an instance of the mapper class using a DelimitedFile"""
+        self.file_mapper = DelimitedFileMapper(delimited_file, 1, 3)
+
+    def get_organism(self, code):
+        """lookup the organism code to return the full name"""
+        return self.file_mapper.lookup(code)
 
 
-def get_go_taxonomy_id(go_taxonomy_file, organism_name):
-    """using a GO proteome2taxid file, look up the taxonomy id for a given
-    organism name. Note that organism names are not necessarily unique.
-    This will return the first one found"""
-    for line in go_taxonomy_file.get_lines():
-        if line[0] == organism_name:
-            return line[1]
-    return None
+class GoTaxonomyMapper:
+    """A class to map an organism name to a GO taxonomy id"""
+
+    def __init__(self, delimited_file):
+        """Creates an instance of the mapper class"""
+        self.file_mapper = DelimitedFileMapper(delimited_file, 0, 1)
+
+    def get_taxonomy_id(self, organism_name):
+        """look up the taxonomy id for a given organism name. Note that
+        organism names are not necessarily unique.
+        This will return the first one found"""
+        return self.file_mapper.lookup(organism_name)
 
 
 class OrganismFactory:
@@ -67,5 +75,4 @@ class Organism:
         return not self.is_prokaryote()
 
 
-__all__ = ['get_organism_for_code', 'get_go_taxonomy_id', 'Organism',
-           'OrganismFactory']
+__all__ = ['KeggCodeMaper', 'GoTaxonomyMapper', 'Organism', 'OrganismFactory']

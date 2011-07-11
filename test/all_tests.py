@@ -8,8 +8,8 @@ from datatypes_test import DataMatrixTest, DataMatrixCollectionTest
 from cmonkey_test import CMonkeyTest, MembershipTest
 from util_test import DelimitedFileTest, UtilsTest
 from util_test import LevenshteinDistanceTest, BestMatchingLinksTest
-from organism_test import KeggOrganismCodeMappingTest
-from organism_test import GoTaxonomyMappingTest, OrganismTest
+from organism_test import KeggOrganismCodeMapperTest
+from organism_test import GoTaxonomyMapperTest, OrganismTest
 
 if __name__ == '__main__':
     SUITE = []
@@ -22,9 +22,9 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
             DelimitedFileTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
-            KeggOrganismCodeMappingTest))
+            KeggOrganismCodeMapperTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
-            GoTaxonomyMappingTest))
+            GoTaxonomyMapperTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
             LevenshteinDistanceTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
