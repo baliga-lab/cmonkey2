@@ -63,6 +63,7 @@ class RsatOrganismMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals('Halobacterium_sp',
                           mapper.get_organism('Halobacterium'))
 
+
 class MockKeggOrganismMapper:
     """mock KEGG organism mapper"""
 
@@ -97,6 +98,7 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                   MockGoTaxonomyMapper())
         organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
+        self.assertEquals('Hpy', organism.get_cog_organism())
         self.assertEquals('KEGG organism', organism.kegg_organism)
         self.assertEquals('RSAT organism', organism.rsat_organism)
         self.assertEquals('GO taxonomy id', organism.go_taxonomy_id)

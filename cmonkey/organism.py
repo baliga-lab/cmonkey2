@@ -4,6 +4,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 from util import DelimitedFileMapper, best_matching_links
+import urllib
 
 
 class KeggCodeMapper:
@@ -45,6 +46,7 @@ class RsatOrganismMapper:
         organism name"""
         return best_matching_links(kegg_organism, self.html)[0].rstrip('/')
 
+
 class OrganismFactory:
     """Factory to create an organism. Construction of an organism
     instance is relatively complex and costly, so it is coordinated
@@ -72,12 +74,17 @@ class OrganismFactory:
 class Organism:
     """Abstraction of an organism in cMonkey. It captures all organism-specific
     aspects"""
+
     def __init__(self, code, kegg_organism, rsat_organism, go_taxonomy_id):
         """create an Organism instance"""
         self.code = code
         self.kegg_organism = kegg_organism
         self.rsat_organism = rsat_organism
         self.go_taxonomy_id = go_taxonomy_id
+
+    def get_cog_organism(self):
+        """returns the COG organism name"""
+        return self.code.capitalize()
 
     def is_prokaryote(self):
         """determine whether this organism is a prokaryote"""
@@ -88,4 +95,26 @@ class Organism:
         return not self.is_prokaryote()
 
 
-__all__ = ['KeggCodeMaper', 'GoTaxonomyMapper', 'Organism', 'OrganismFactory']
+class RsatDatabase:
+    """abstract interface to access an RSAT mirror"""
+    DIR_PATH = 'data/genomes'
+    ORGANISM_FILE_PATH = 'genome/organism.tab'
+
+    def __init__(self, base_url):
+        """create an RsatDatabase instance based on a mirror URL"""
+        self.base_url = base_url
+
+    def get_directory_html(self):
+        """returns the HTML page for the directory listing"""
+        return urllib.urlopen("/".join([self.base_url,
+                                        RsatDatabase.DIR_PATH])).read()
+
+    def get_organism_file(self, organism):
+        """returns the file contents for the specified organism"""
+        return urllib.urlopen(
+            "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
+                      RsatDatabase.ORGANISM_FILE_PATH])).read()
+
+
+__all__ = ['KeggCodeMaper', 'GoTaxonomyMapper', 'Organism', 'OrganismFactory',
+           'RsatDatabase']
