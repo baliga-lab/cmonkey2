@@ -5,6 +5,7 @@ more information and licensing details.
 """
 from util import DelimitedFileMapper, best_matching_links
 import urllib
+import re
 
 
 class KeggCodeMapper:
@@ -37,14 +38,21 @@ class GoTaxonomyMapper:
 class RsatOrganismMapper:
     """A class to map a KEGG organism name to an RSAT organism name"""
 
-    def __init__(self, html):
-        """Creates a mapper instance with an HTML text"""
-        self.html = html
+    def __init__(self, rsat_database):
+        """Creates a mapper instance with an attached RSAT database"""
+        self.rsatdb = rsat_database
 
     def get_organism(self, kegg_organism):
         """find the RSAT organism which best matches the given KEGG
         organism name"""
-        return best_matching_links(kegg_organism, self.html)[0].rstrip('/')
+        return best_matching_links(
+            kegg_organism,
+            self.rsatdb.get_directory_html())[0].rstrip('/')
+
+    def is_eukaryotic(self, rsat_organism):
+        """determine whether the given RSAT organism is eukaryotic"""
+        organism_text = self.rsatdb.get_organism_file(rsat_organism)
+        return re.search('Eukaryota', organism_text)
 
 
 class OrganismFactory:
@@ -67,8 +75,13 @@ class OrganismFactory:
         kegg_organism = self.kegg_organism_mapper.get_organism(organism_code)
         rsat_organism = self.rsat_organism_mapper.get_organism(kegg_organism)
         go_taxonomy_id = self.go_taxonomy_mapper.get_taxonomy_id(rsat_organism)
-        return Organism(organism_code, kegg_organism, rsat_organism,
-                        go_taxonomy_id)
+        is_eukaryote = self.rsat_organism_mapper.is_eukaryote(rsat_organism)
+        if is_eukaryote:
+            return Eukaryote(organism_code, kegg_organism, rsat_organism,
+                             go_taxonomy_id)
+        else:
+            return Prokaryote(organism_code, kegg_organism, rsat_organism,
+                              go_taxonomy_id)
 
 
 class Organism:
@@ -86,13 +99,21 @@ class Organism:
         """returns the COG organism name"""
         return self.code.capitalize()
 
-    def is_prokaryote(self):
-        """determine whether this organism is a prokaryote"""
+
+class Eukaryote(Organism):
+    """Class to represent eukaryotes"""
+
+    def is_eukaryote(self):  # pylint: disable-msg=R0201
+        """always returns true"""
         return True
 
-    def is_eukaryote(self):
-        """determine whether this organism is a eukaryote"""
-        return not self.is_prokaryote()
+
+class Prokaryote(Organism):
+    """Class to represent prokaryotes"""
+
+    def is_eukaryote(self):  # pylint: disable-msg=R0201
+        """always returns false"""
+        return False
 
 
 class RsatDatabase:

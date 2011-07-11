@@ -12,7 +12,7 @@ class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
     service and will therefore run relatively slowly. Should be run
     as part of an integration test suite and not of the unit test suite"""
 
-    def setUp(self):
+    def setUp(self):  # pylint: disable-msg=C0103
         """test fixture"""
         self.database = RsatDatabase('http://rsat.ccb.sickkids.ca')
 
@@ -24,5 +24,4 @@ class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_get_organism_file(self):
         """test get_directory_html method"""
         text = self.database.get_organism_file('Helicobacter_pylori_26695')
-        print text
         self.assertIsNotNone(text)
