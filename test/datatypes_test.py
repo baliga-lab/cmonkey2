@@ -5,6 +5,7 @@ more information and licensing details.
 """
 import unittest
 from datatypes import DataMatrix, DataMatrixCollection, DataMatrixFactory
+from datatypes import nochange_filter
 from copy import deepcopy
 
 
@@ -50,6 +51,31 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         matrix.set_value_at(0, 1, 42.0)
         self.assertEquals(42.0, matrix.value_at(0, 1))
 
+    def test_set_values_none(self):
+        """invoke set_values() with None should result in ValueError"""
+        matrix = DataMatrix(2, 2)
+        self.assertRaises(ValueError, matrix.set_values, None)
+
+    def test_set_values_wrong_row_count(self):
+        """invoke set_values() with wrong row count should result in
+        ValueError"""
+        matrix = DataMatrix(2, 2)
+        self.assertRaises(ValueError, matrix.set_values, [[1, 2]])
+
+    def test_set_values_wrong_column_count(self):
+        """invoke set_values() with wrong row count should result in
+        ValueError"""
+        matrix = DataMatrix(2, 2)
+        self.assertRaises(ValueError, matrix.set_values,
+                          [[1, 2], [2, 3, 4]])
+
+    def test_set_values_ok(self):
+        """invoke set_values() with wrong row count should result in
+        ValueError"""
+        matrix = DataMatrix(2, 2)
+        matrix.set_values([[1, 2], [2, 3]])
+        self.assertEquals([[1, 2], [2, 3]], matrix.values)
+
 
 class DataMatrixCollectionTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for MatrixCollection"""
@@ -81,6 +107,9 @@ class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """text fixture"""
         self.dfile = MockDelimitedFile(["H1", "H2", "H3"],
                                        [["R1", 1, 2], ["R2", 3, 4]])
+        self.dfile_with_na = MockDelimitedFile(["H1", "H2", "H3"],
+                                               [["R1", 'NA', 2],
+                                                ["R2", 'NA', 4]])
 
     def test_no_filters(self):
         """test a factory without filters"""
@@ -92,6 +121,17 @@ class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals(["R1", "R2"], matrix.row_names)
         self.assertEquals([1, 2], matrix.values[0])
         self.assertEquals([3, 4], matrix.values[1])
+
+    def test_with_na_values(self):
+        """test a factory with a DelimitedFile containing NA values"""
+        factory = DataMatrixFactory([])
+        matrix = factory.create_from(self.dfile_with_na)
+        self.assertEquals(2, matrix.num_rows())
+        self.assertEquals(2, matrix.num_columns())
+        self.assertEquals(["H2", "H3"], matrix.column_names)
+        self.assertEquals(["R1", "R2"], matrix.row_names)
+        self.assertEquals([None, 2], matrix.values[0])
+        self.assertEquals([None, 4], matrix.values[1])
 
     def test_simple_filter(self):
         """test a factory using a single filter"""
@@ -112,3 +152,34 @@ def times2(matrix):
         for col in range(matrix.num_columns()):
             result.set_value_at(row, col, matrix.value_at(row, col) * 2)
     return result
+
+
+class NoChangeFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
+    """Test class for nochange_filter"""
+
+    def test_simple(self):
+        """simplest test case: everything kept"""
+        matrix = DataMatrix(2, 2, ['R1', 'R2'], ['C1', 'C2'])
+        matrix.set_values([[0.24, -0.35], [-0.42, 0.42]])
+        filtered = nochange_filter(matrix)
+        self.assertEquals(2, filtered.num_rows())
+        self.assertEquals(2, filtered.num_columns())
+        self.assertEquals([[0.24, -0.35], [-0.42, 0.42]], filtered.values)
+
+    def test_remove_row(self):
+        """simplest test case: remove one row"""
+        matrix = DataMatrix(2, 2, ['R1', 'R2'], ['C1', 'C2'])
+        matrix.set_values([[0.24, -0.35], [-0.001, None]])
+        filtered = nochange_filter(matrix)
+        self.assertEquals(1, filtered.num_rows())
+        self.assertEquals(2, filtered.num_columns())
+        self.assertEquals([[0.24, -0.35]], filtered.values)
+
+    def test_remove_column(self):
+        """simplest test case: remove one column"""
+        matrix = DataMatrix(2, 2, ['R1', 'R2'], ['C1', 'C2'])
+        matrix.set_values([[0.001, -0.35], [0, 0.42]])
+        filtered = nochange_filter(matrix)
+        self.assertEquals(2, filtered.num_rows())
+        self.assertEquals(1, filtered.num_columns())
+        self.assertEquals([[-0.35], [0.42]], filtered.values)
