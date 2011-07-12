@@ -4,7 +4,8 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-from datatypes import DataMatrix, DataMatrixCollection
+from datatypes import DataMatrix, DataMatrixCollection, DataMatrixFactory
+from copy import deepcopy
 
 
 class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -62,3 +63,52 @@ class DataMatrixCollectionTest(unittest.TestCase):  # pylint: disable-msg=R0904
                           coll.unique_column_names)
         self.assertEquals(2, coll.num_unique_rows())
         self.assertEquals(3, coll.num_unique_columns())
+
+
+class MockDelimitedFile:  # pylint: disable-msg=R0903
+    """Mock DelimitedFile"""
+
+    def __init__(self, header, lines):
+        """create a mock instance"""
+        self.header = header
+        self.lines = lines
+
+
+class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
+    """Test class for DataMatrixFactory"""
+
+    def setUp(self):  # pylint: disable-msg=C0103
+        """text fixture"""
+        self.dfile = MockDelimitedFile(["H1", "H2", "H3"],
+                                       [["R1", 1, 2], ["R2", 3, 4]])
+
+    def test_no_filters(self):
+        """test a factory without filters"""
+        factory = DataMatrixFactory([])
+        matrix = factory.create_from(self.dfile)
+        self.assertEquals(2, matrix.num_rows())
+        self.assertEquals(2, matrix.num_columns())
+        self.assertEquals(["H2", "H3"], matrix.column_names)
+        self.assertEquals(["R1", "R2"], matrix.row_names)
+        self.assertEquals([1, 2], matrix.values[0])
+        self.assertEquals([3, 4], matrix.values[1])
+
+    def test_simple_filter(self):
+        """test a factory using a single filter"""
+        factory = DataMatrixFactory([times2])
+        matrix = factory.create_from(self.dfile)
+        self.assertEquals(2, matrix.num_rows())
+        self.assertEquals(2, matrix.num_columns())
+        self.assertEquals(["H2", "H3"], matrix.column_names)
+        self.assertEquals(["R1", "R2"], matrix.row_names)
+        self.assertEquals([2, 4], matrix.values[0])
+        self.assertEquals([6, 8], matrix.values[1])
+
+
+def times2(matrix):
+    """a simple filter that multiplies all values in the matrix by 2"""
+    result = deepcopy(matrix)
+    for row in range(matrix.num_rows()):
+        for col in range(matrix.num_columns()):
+            result.set_value_at(row, col, matrix.value_at(row, col) * 2)
+    return result

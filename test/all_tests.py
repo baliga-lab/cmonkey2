@@ -5,6 +5,7 @@ more information and licensing details.
 """
 import unittest
 from datatypes_test import DataMatrixTest, DataMatrixCollectionTest
+from datatypes_test import DataMatrixFactoryTest
 from cmonkey_test import CMonkeyTest, MembershipTest
 from util_test import DelimitedFileTest, UtilsTest
 from util_test import LevenshteinDistanceTest, BestMatchingLinksTest
@@ -14,6 +15,8 @@ from organism_test import GoTaxonomyMapperTest, OrganismTest
 if __name__ == '__main__':
     SUITE = []
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DataMatrixTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
+            DataMatrixFactoryTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(CMonkeyTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(MembershipTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(OrganismTest))

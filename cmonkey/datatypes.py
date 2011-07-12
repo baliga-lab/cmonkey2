@@ -89,4 +89,41 @@ class DataMatrixCollection:
         result.sort()
         return result
 
-__all__ = ['DataMatrix', 'DataMatrixCollection']
+
+class DataMatrixFactory:
+    """Reader class for creating a DataMatrix from a delimited file,
+    applying all supplied filters. Currently, the assumption is
+    that all input ratio files have a header row and the first column
+    denotes the gene names.
+    (To be moved to filter class comments):
+    There are a couple of constraints and special things to consider:
+    - Row names are unique, throw out rows with names that are already
+      in the matrix, first come, first in. This is to throw out the second
+      probe of a gene in certain cases
+    """
+    FILTER_THRESHOLD = 0.98
+
+    def __init__(self, filters):
+        """create a reader instance with the specified filters"""
+        self.filters = filters
+
+    def create_from(self, delimited_file):
+        """creates and returns an initialized, filtered DataMatrix instance"""
+        lines = delimited_file.lines
+        header = delimited_file.header
+        nrows = len(lines)
+        ncols = len(header) - 1
+        colnames = header[1:len(header)]
+        rownames = []
+        for row in range(nrows):
+            rownames.append(delimited_file.lines[row][0])
+        data_matrix = DataMatrix(nrows, ncols, rownames, colnames)
+        for row in range(nrows):
+            for col in range(ncols):
+                data_matrix.set_value_at(row, col, float(lines[row][col + 1]))
+
+        for matrix_filter in self.filters:
+            data_matrix = matrix_filter(data_matrix)
+        return data_matrix
+
+__all__ = ['DataMatrix', 'DataMatrixCollection', '']
