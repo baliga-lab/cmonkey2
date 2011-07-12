@@ -5,7 +5,7 @@ more information and licensing details.
 """
 import unittest
 from datatypes import DataMatrix, DataMatrixCollection, DataMatrixFactory
-from datatypes import nochange_filter
+from datatypes import nochange_filter, center_median_filter
 from copy import deepcopy
 
 
@@ -75,6 +75,20 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         matrix = DataMatrix(2, 2)
         matrix.set_values([[1, 2], [2, 3]])
         self.assertEquals([[1, 2], [2, 3]], matrix.values)
+
+    def test_get_row_values(self):
+        """tests the get_row_values"""
+        matrix = DataMatrix(2, 2)
+        matrix.set_values([[1, 2], [2, 3]])
+        self.assertEquals([1, 2], matrix.get_row_values(0))
+        self.assertEquals([2, 3], matrix.get_row_values(1))
+
+    def test_get_column_values(self):
+        """tests the get_column_values"""
+        matrix = DataMatrix(2, 2)
+        matrix.set_values([[3, 7], [8, 9]])
+        self.assertEquals([3, 8], matrix.get_column_values(0))
+        self.assertEquals([7, 9], matrix.get_column_values(1))
 
 
 class DataMatrixCollectionTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -167,7 +181,7 @@ class NoChangeFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals([[0.24, -0.35], [-0.42, 0.42]], filtered.values)
 
     def test_remove_row(self):
-        """simplest test case: remove one row"""
+        """remove one row"""
         matrix = DataMatrix(2, 2, ['R1', 'R2'], ['C1', 'C2'])
         matrix.set_values([[0.24, -0.35], [-0.001, None]])
         filtered = nochange_filter(matrix)
@@ -176,10 +190,20 @@ class NoChangeFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals([[0.24, -0.35]], filtered.values)
 
     def test_remove_column(self):
-        """simplest test case: remove one column"""
+        """remove one column"""
         matrix = DataMatrix(2, 2, ['R1', 'R2'], ['C1', 'C2'])
         matrix.set_values([[0.001, -0.35], [0, 0.42]])
         filtered = nochange_filter(matrix)
         self.assertEquals(2, filtered.num_rows())
         self.assertEquals(1, filtered.num_columns())
         self.assertEquals([[-0.35], [0.42]], filtered.values)
+
+class CenterMedianFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
+    """Test class for center_median_filter"""
+
+    def test_filter(self):
+        """test the centering"""
+        matrix = DataMatrix(2, 2, ['R1', 'R2'], ['C1', 'C2'])
+        matrix.set_values([[2, 3], [3, 4]])
+        filtered = center_median_filter(matrix)
+        self.assertEquals([[-0.5, 0.5], [-0.5, 0.5]], filtered.values)

@@ -5,7 +5,7 @@ more information and licensing details.
 """
 import unittest
 from util import DelimitedFile, levenshtein_distance, best_matching_links
-from util import quantile, make_matrix
+from util import quantile, make_matrix, r_stddev
 
 
 class DelimitedFileTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -98,3 +98,7 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals(3, quantile(data, 0.5))
         self.assertEquals(4, quantile(data, 0.75))
         self.assertEquals(5, quantile(data, 1))
+
+    def test_r_stddev(self):
+        """tests the standard deviation function"""
+        self.assertEquals(0.1, r_stddev([0.1, 0.2, 0.3]))

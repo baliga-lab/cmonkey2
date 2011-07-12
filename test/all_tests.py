@@ -6,6 +6,7 @@ more information and licensing details.
 import unittest
 from datatypes_test import DataMatrixTest, DataMatrixCollectionTest
 from datatypes_test import DataMatrixFactoryTest, NoChangeFilterTest
+from datatypes_test import CenterMedianFilterTest
 from cmonkey_test import CMonkeyTest, MembershipTest
 from util_test import DelimitedFileTest, UtilsTest
 from util_test import LevenshteinDistanceTest, BestMatchingLinksTest
@@ -19,6 +20,7 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DataMatrixCollectionTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DataMatrixFactoryTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(NoChangeFilterTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(CenterMedianFilterTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(CMonkeyTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(MembershipTest))

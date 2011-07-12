@@ -6,6 +6,7 @@ more information and licensing details.
 from BeautifulSoup import BeautifulSoup
 from operator import attrgetter
 from scipy.stats import scoreatpercentile
+from numpy import std, sqrt
 
 
 def next_non_comment_index(lines, comment, line_index):
@@ -156,6 +157,14 @@ def quantile(values, probability):
     probability a value in the range between 0 and 1
     """
     return round(scoreatpercentile(values, probability * 100), 6)
+
+
+def r_stddev(values):
+    """This is a standard deviation function, adjusted so it will
+    return approximately the same value as R's sd() function would"""
+    num_values = len(values)
+    return round(std(values) / sqrt(float(num_values - 1) / float(num_values)),
+                 8)
 
 
 def make_matrix(row_names, num_columns, init_value=0):

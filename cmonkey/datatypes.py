@@ -3,6 +3,8 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
+from scipy import median
+from util import r_stddev
 
 
 class DataMatrix:
@@ -40,6 +42,17 @@ class DataMatrix:
             return 0
         else:
             return len(self.values[0])
+
+    def get_row_values(self, row):
+        """returns the specified row values"""
+        return self.values[row]
+
+    def get_column_values(self, column):
+        """returns the specified column values"""
+        result = []
+        for row_index in range(self.num_rows()):
+            result.append(self.value_at(row_index, column))
+        return result
 
     def value_at(self, row, column):
         """retrieve the value at the specified position"""
@@ -178,7 +191,8 @@ def nochange_filter_rows(data_matrix):
             value = data_matrix.value_at(row_index, col_index)
             if value == None or abs(value) <= ROW_THRESHOLD:
                 count += 1
-        if (float(count) / data_matrix.num_columns()) < FILTER_THRESHOLD:
+        mean = float(count) / data_matrix.num_columns()
+        if mean < FILTER_THRESHOLD:
             keep.append(row_index)
     return keep
 
@@ -192,9 +206,29 @@ def nochange_filter_columns(data_matrix):
             value = data_matrix.value_at(row_index, col_index)
             if value == None or abs(value) <= COLUMN_THRESHOLD:
                 count += 1
-        if (float(count) / data_matrix.num_rows()) < FILTER_THRESHOLD:
+        mean = float(count) / data_matrix.num_rows()
+        if mean < FILTER_THRESHOLD:
             keep.append(col_index)
     return keep
 
+
+def center_median_filter(matrix):
+    """center the values of each row around their median"""
+    values = []
+    for row_index in range(matrix.num_rows()):
+        row = [value for value in matrix.get_row_values(row_index)
+               if value != None]
+        row_center = median(row)
+        values.append([(value - row_center) for value in row])
+    result = DataMatrix(matrix.num_rows(), matrix.num_columns(),
+                        matrix.row_names, matrix.column_names)
+    result.set_values(values)
+    return result
+
+
+def scale_stddev_filter(matrix):
+    """scale the values of each row by their standard deviation"""
+    pass
+
 __all__ = ['DataMatrix', 'DataMatrixCollection', 'DataMatrixFactory',
-           'nochange_filter']
+           'nochange_filter', 'center_median_filter', 'scale_stddev_filter']
