@@ -4,8 +4,8 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-from datatypes import DataMatrix, DataMatrixCollection, DataMatrixFactory
-from datatypes import nochange_filter, center_scale_filter
+from datamatrix import DataMatrix, DataMatrixCollection, DataMatrixFactory
+from datamatrix import nochange_filter, center_scale_filter
 from copy import deepcopy
 
 

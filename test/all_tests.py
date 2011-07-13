@@ -4,9 +4,9 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-from datatypes_test import DataMatrixTest, DataMatrixCollectionTest
-from datatypes_test import DataMatrixFactoryTest, NoChangeFilterTest
-from datatypes_test import CenterScaleFilterTest
+from datamatrix_test import DataMatrixTest, DataMatrixCollectionTest
+from datamatrix_test import DataMatrixFactoryTest, NoChangeFilterTest
+from datamatrix_test import CenterScaleFilterTest
 from cmonkey_test import CMonkeyTest, MembershipTest
 from util_test import DelimitedFileTest, UtilsTest
 from util_test import LevenshteinDistanceTest, BestMatchingLinksTest
