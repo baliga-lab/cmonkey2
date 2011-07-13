@@ -8,51 +8,31 @@ import urllib
 import re
 
 
-class KeggCodeMapper:
-    """A class to map an organism code to a KEGG organism name. It uses
-    a KEGG taxonomy file to do this"""
-
-    def __init__(self, delimited_file):
-        """Creates an instance of the mapper class using a DelimitedFile"""
-        self.file_mapper = DelimitedFileMapper(delimited_file, 1, 3)
-
-    def get_organism(self, code):
-        """lookup the organism code to return the full name"""
-        return self.file_mapper.lookup(code)
+def make_kegg_code_mapper(dfile):
+    """returns a function that maps an organism code to a KEGG organism
+    name"""
+    return DelimitedFileMapper(dfile, 1, 3).lookup
 
 
-class GoTaxonomyMapper:
-    """A class to map an RSAT organism name to a GO taxonomy id"""
-
-    def __init__(self, delimited_file):
-        """Creates an instance of the mapper class"""
-        self.file_mapper = DelimitedFileMapper(delimited_file, 0, 1)
-
-    def get_taxonomy_id(self, organism_name):
-        """look up the taxonomy id for a given organism name. Note that
-        organism names are not necessarily unique.
-        This will return the first one found"""
-        return self.file_mapper.lookup(organism_name)
+def make_go_taxonomy_mapper(dfile):
+    """returns a function that maps an RSAT organism name to a GO
+    taxonomy id"""
+    return DelimitedFileMapper(dfile, 0, 1).lookup
 
 
-class RsatOrganismMapper:
-    """A class to map a KEGG organism name to an RSAT organism name"""
-
-    def __init__(self, rsat_database):
-        """Creates a mapper instance with an attached RSAT database"""
-        self.rsatdb = rsat_database
-
-    def get_organism(self, kegg_organism):
-        """find the RSAT organism which best matches the given KEGG
-        organism name"""
-        return best_matching_links(
+def make_rsat_organism_mapper(rsatdb):
+    """return a function that maps from a KEGG organism name to
+    related RSAT information"""
+    def mapper_fun(kegg_organism):
+        """Mapper function to return basic information about an organism
+        stored in the RSAT database"""
+        rsat_organism = best_matching_links(
             kegg_organism,
-            self.rsatdb.get_directory_html())[0].rstrip('/')
-
-    def is_eukaryotic(self, rsat_organism):
-        """determine whether the given RSAT organism is eukaryotic"""
-        organism_text = self.rsatdb.get_organism_file(rsat_organism)
-        return re.search('Eukaryota', organism_text)
+            rsatdb.get_directory_html())[0].rstrip('/')
+        organism_text = rsatdb.get_organism_file(rsat_organism)
+        is_eukaryote = re.search('Eukaryota', organism_text) != None
+        return (rsat_organism, is_eukaryote)
+    return mapper_fun
 
 
 class OrganismFactory:
@@ -62,20 +42,19 @@ class OrganismFactory:
     which are provided to the factory as configuration parameters.
     """
 
-    def __init__(self, kegg_organism_mapper,
-                 rsat_organism_mapper,
-                 go_taxonomy_mapper):
+    def __init__(self, code2kegg_organism,
+                 rsat_organism_info,
+                 get_go_taxonomy_id):
         """create a OrganismFactory instance"""
-        self.kegg_organism_mapper = kegg_organism_mapper
-        self.rsat_organism_mapper = rsat_organism_mapper
-        self.go_taxonomy_mapper = go_taxonomy_mapper
+        self.code2kegg_organism = code2kegg_organism
+        self.rsat_organism_info = rsat_organism_info
+        self.get_taxonomy_id = get_go_taxonomy_id
 
     def create(self, organism_code):
         """factory method to create an organism from a code"""
-        kegg_organism = self.kegg_organism_mapper.get_organism(organism_code)
-        rsat_organism = self.rsat_organism_mapper.get_organism(kegg_organism)
-        go_taxonomy_id = self.go_taxonomy_mapper.get_taxonomy_id(rsat_organism)
-        is_eukaryote = self.rsat_organism_mapper.is_eukaryote(rsat_organism)
+        kegg_organism = self.code2kegg_organism(organism_code)
+        rsat_organism, is_eukaryote = self.rsat_organism_info(kegg_organism)
+        go_taxonomy_id = self.get_taxonomy_id(rsat_organism)
         if is_eukaryote:
             return Eukaryote(organism_code, kegg_organism, rsat_organism,
                              go_taxonomy_id)
@@ -137,5 +116,6 @@ class RsatDatabase:
                       RsatDatabase.ORGANISM_FILE_PATH])).read()
 
 
-__all__ = ['KeggCodeMaper', 'GoTaxonomyMapper', 'Organism', 'OrganismFactory',
-           'RsatDatabase']
+__all__ = ['make_kegg_code_mapper', 'make_go_taxonomy_mapper',
+           'make_rsat_organism_mapper',
+           'Organism', 'OrganismFactory', 'RsatDatabase']

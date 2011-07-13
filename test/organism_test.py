@@ -5,8 +5,8 @@ more information and licensing details.
 """
 import unittest
 from util import DelimitedFile
-from organism import KeggCodeMapper, GoTaxonomyMapper
-from organism import RsatOrganismMapper, OrganismFactory
+from organism import make_kegg_code_mapper, make_go_taxonomy_mapper
+from organism import make_rsat_organism_mapper, OrganismFactory
 
 TAXONOMY_FILE_PATH = "testdata/KEGG_taxonomy"
 PROT2TAXID_FILE_PATH = "testdata/proteome2taxid"
@@ -21,16 +21,15 @@ class KeggOrganismCodeMapperTest(unittest.TestCase):
         """retrieve existing organism"""
         dfile = DelimitedFile.read(TAXONOMY_FILE_PATH, sep='\t',
                                    has_header=True, comment='#')
-        mapper = KeggCodeMapper(dfile)
-        self.assertEquals('Helicobacter pylori 26695',
-                          mapper.get_organism('hpy'))
+        mapper = make_kegg_code_mapper(dfile)
+        self.assertEquals('Helicobacter pylori 26695', mapper('hpy'))
 
     def test_get_non_existing_organism(self):
         """retrieve non-existing organism"""
         dfile = DelimitedFile.read(TAXONOMY_FILE_PATH, sep='\t',
                                    has_header=True, comment='#')
-        mapper = KeggCodeMapper(dfile)
-        self.assertIsNone(mapper.get_organism('nope'))
+        mapper = make_kegg_code_mapper(dfile)
+        self.assertIsNone(mapper('nope'))
 
 
 class GoTaxonomyMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -40,16 +39,15 @@ class GoTaxonomyMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """retrieve an existing id"""
         dfile = DelimitedFile.read(PROT2TAXID_FILE_PATH, sep='\t',
                                    has_header=False)
-        mapper = GoTaxonomyMapper(dfile)
-        self.assertEquals('64091',
-                          mapper.get_taxonomy_id('Halobacterium salinarium'))
+        mapper = make_go_taxonomy_mapper(dfile)
+        self.assertEquals('64091', mapper('Halobacterium salinarium'))
 
     def test_get_non_existing(self):
         """retrieve None for a non-existing organism"""
         dfile = DelimitedFile.read(PROT2TAXID_FILE_PATH, sep='\t',
                                    has_header=False)
-        mapper = GoTaxonomyMapper(dfile)
-        self.assertIsNone(mapper.get_taxonomy_id('does not exist'))
+        mapper = make_go_taxonomy_mapper(dfile)
+        self.assertIsNone(mapper('does not exist'))
 
 
 class MockRsatDatabase:
@@ -74,24 +72,12 @@ class RsatOrganismMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """test fixture"""
         with open(RSAT_LIST_FILE_PATH) as inputfile:
             html = inputfile.read()
-        self.mapper = RsatOrganismMapper(MockRsatDatabase(html))
+        self.mapper = make_rsat_organism_mapper(MockRsatDatabase(html))
 
-    def test_get_organism(self):
+    def test_mapper(self):
         """tests the get_organism method for an existing organism"""
-        self.assertEquals('Halobacterium_sp',
-                          self.mapper.get_organism('Halobacterium'))
-
-    def test_is_eukaryotic(self):
-        """tests the is_eukaryotic method"""
-        self.assertTrue(self.mapper.is_eukaryotic('Halobacterium'))
-
-
-class MockKeggOrganismMapper:  # pylint: disable-msg=W0232
-    """mock KEGG organism mapper"""
-
-    def get_organism(self, _):  # pylint: disable-msg=R0201
-        """returns an organism for the given code"""
-        return "KEGG organism"
+        self.assertEquals(('Halobacterium_sp', True),
+                          self.mapper('Halobacterium'))
 
 
 class MockRsatOrganismMapper:
@@ -110,22 +96,14 @@ class MockRsatOrganismMapper:
         return self.is_eukaryotic
 
 
-class MockGoTaxonomyMapper:  # pylint: disable-msg=W0232
-    """mock GO taxonomy mapper"""
-
-    def get_taxonomy_id(self, _):  # pylint: disable-msg=R0201
-        """returns a taxonomy id for an RSAT organism"""
-        return "GO taxonomy id"
-
-
 class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for Organism"""
 
     def test_create_prokaryote(self):
         """tests creating a Prokaryote"""
-        factory = OrganismFactory(MockKeggOrganismMapper(),
-                                  MockRsatOrganismMapper(False),
-                                  MockGoTaxonomyMapper())
+        factory = OrganismFactory(lambda _: 'KEGG organism',
+                                  lambda _: ('RSAT organism', False),
+                                  lambda _: 'GO taxonomy id')
         organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
         self.assertEquals('Hpy', organism.get_cog_organism())
@@ -136,9 +114,9 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_create_eukaryote(self):
         """tests creating an eukaryote"""
-        factory = OrganismFactory(MockKeggOrganismMapper(),
-                                  MockRsatOrganismMapper(True),
-                                  MockGoTaxonomyMapper())
+        factory = OrganismFactory(lambda _: 'KEGG organism',
+                                  lambda _: ('RSAT organism', True),
+                                  lambda _: 'GO taxonomy id')
         organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
         self.assertTrue(organism.is_eukaryote())
