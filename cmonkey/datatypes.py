@@ -212,23 +212,30 @@ def nochange_filter_columns(data_matrix):
     return keep
 
 
-def center_median_filter(matrix):
-    """center the values of each row around their median"""
+def row_filter(matrix, fun):
+    """generalize a matrix filter that is applying a function for each row"""
     values = []
     for row_index in range(matrix.num_rows()):
         row = [value for value in matrix.get_row_values(row_index)
                if value != None]
-        row_center = median(row)
-        values.append([(value - row_center) for value in row])
+        values.append(fun(row))
     result = DataMatrix(matrix.num_rows(), matrix.num_columns(),
                         matrix.row_names, matrix.column_names)
     result.set_values(values)
     return result
 
 
-def scale_stddev_filter(matrix):
-    """scale the values of each row by their standard deviation"""
-    pass
+def center_scale_filter(matrix):
+    """center the values of each row around their median and scale
+    by their standard deviation"""
+
+    def center_scale(row):
+        """centers the provided row around the median"""
+        center = median(row)
+        scale = r_stddev(row)
+        return [((value - center) / scale) for value in row]
+
+    return row_filter(matrix, center_scale)
 
 __all__ = ['DataMatrix', 'DataMatrixCollection', 'DataMatrixFactory',
-           'nochange_filter', 'center_median_filter', 'scale_stddev_filter']
+           'nochange_filter', 'center_scale_filter']

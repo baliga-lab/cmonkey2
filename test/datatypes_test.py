@@ -5,7 +5,7 @@ more information and licensing details.
 """
 import unittest
 from datatypes import DataMatrix, DataMatrixCollection, DataMatrixFactory
-from datatypes import nochange_filter, center_median_filter
+from datatypes import nochange_filter, center_scale_filter
 from copy import deepcopy
 
 
@@ -198,12 +198,16 @@ class NoChangeFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals(1, filtered.num_columns())
         self.assertEquals([[-0.35], [0.42]], filtered.values)
 
-class CenterMedianFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
+
+class CenterScaleFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for center_median_filter"""
 
     def test_filter(self):
         """test the centering"""
         matrix = DataMatrix(2, 2, ['R1', 'R2'], ['C1', 'C2'])
         matrix.set_values([[2, 3], [3, 4]])
-        filtered = center_median_filter(matrix)
-        self.assertEquals([[-0.5, 0.5], [-0.5, 0.5]], filtered.values)
+        filtered = center_scale_filter(matrix)
+        self.assertAlmostEqual(-0.70710678237309499, filtered.value_at(0, 0))
+        self.assertAlmostEqual(0.70710678237309499, filtered.value_at(0, 1))
+        self.assertAlmostEqual(-0.70710678237309499, filtered.value_at(1, 0))
+        self.assertAlmostEqual(0.70710678237309499, filtered.value_at(1, 1))
