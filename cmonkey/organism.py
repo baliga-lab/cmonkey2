@@ -54,7 +54,7 @@ class OrganismFactory:
         """factory method to create an organism from a code"""
         kegg_organism = self.code2kegg_organism(organism_code)
         rsat_organism, is_eukaryote = self.rsat_organism_info(kegg_organism)
-        go_taxonomy_id = self.get_taxonomy_id(rsat_organism)
+        go_taxonomy_id = self.get_taxonomy_id(rsat_organism.replace('_', ' '))
         if is_eukaryote:
             return Eukaryote(organism_code, kegg_organism, rsat_organism,
                              go_taxonomy_id)

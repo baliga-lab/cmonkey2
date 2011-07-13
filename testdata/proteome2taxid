@@ -1,9 +1,3 @@
-Haemophilus somnus 129Pt	205914	25682.H_somnus_129Pt.goa
-Haemophilus somnus 2336	228400	30537.H_somnus_2336.goa
-Hahella chejuensis	349521	22516.H_chejuensis.goa
-Halalkalicoccus jeotgali	795797	36910.H_jeotgali.goa
-Halanaerobium praevalens	572479	71050.H_praevalens.goa
-Halanaerobium sp.	656519	77702.Halanaerobium_sp.goa
 Haliangium ochraceum	502025	33223.H_ochraceum.goa
 Haloarcula marismortui	272569	20560.H_marismortui.goa
 Halobacterium salinarium	64091	22.H_salinarium.goa
@@ -21,6 +15,26 @@ Halothermothrix orenii	373903	32172.H_orenii.goa
 Halothiobacillus neapolitanus	555778	32942.H_neapolitanus.goa
 Hamiltonella defensa	572265	33984.H_defensa.goa
 Helicobacter acinonychis	382638	25793.H_acinonychis.goa
+Helicobacter felis	936155	79763.H_felis.goa
+Helicobacter hepaticus	235279	139.H_hepaticus.goa
+Helicobacter mustelae	679897	35881.H_mustelae.goa
+Helicobacter pylori 26695	85962	23.H_pylori_26695.goa
+Helicobacter pylori 35A	585535	36760.H_pylori_35A.goa
+Helicobacter pylori 51	290847	35019.H_pylori_51.goa
+Helicobacter pylori 52	684950	35027.H_pylori_52.goa
+Helicobacter pylori 908	869727	64890.H_pylori_908.goa
+Helicobacter pylori B38	592205	34333.H_pylori_B38.goa
+Helicobacter pylori B8	693745	37228.H_pylori_B8.goa
+Helicobacter pylori Cuz20	765964	71046.H_pylori_Cuz20.goa
+Helicobacter pylori F16	866344	79805.H_pylori_F16.goa
+Helicobacter pylori F30	866345	79807.H_pylori_F30.goa
+Helicobacter pylori F32	102608	79809.H_pylori_F32.goa
+Helicobacter pylori F57	866346	79811.H_pylori_F57.goa
+Helicobacter pylori G27	563041	31636.H_pylori_G27.goa
+Helicobacter pylori Gambia94/24	907240	83227.H_pylori_Gambia94-24.goa
+Helicobacter pylori HPAG1	357544	23349.H_pylori_HPAG1.goa
+Helicobacter pylori India7	907238	83225.H_pylori_India7.goa
+Helicobacter pylori J99	85963	24.H_pylori_J99.goa
 Helicobacter pylori Lithuania75	907237	83229.H_pylori_Lithuania75.goa
 Helicobacter pylori P12	570508	31793.H_pylori_P12.goa
 Helicobacter pylori PeCan4	765963	71044.H_pylori_PeCan4.goa
@@ -30,5 +44,10 @@ Helicobacter pylori Shi470	512562	31097.H_pylori_Shi470.goa
 Helicobacter pylori SouthAfrica7	907239	83231.H_pylori_SouthAfrica7.goa
 Helicobacter pylori v225d	637913	37178.H_pylori_v225d.goa
 Heliobacterium modesticaldum	498761	30449.H_modesticaldum.goa
-Zymomonas mobilis NCIB 11163	622759	34729.Z_mobilis_NCIB_11163.goa
-cyanobacterium UCYN-A	713887	35470.c_UCYN-A.goa
+Hemiselmis andersenii	464988	30191.H_andersenii.goa
+Herbaspirillum seropedicae	757424	37026.H_seropedicae.goa
+Herminiimonas arsenicoxydans	204773	29215.H_arsenicoxydans.goa
+Herpetosiphon aurantiacus	316274	30197.H_aurantiacus.goa
+Hirschia baltica	582402	34323.H_baltica.goa
+Hodgkinia cicadicola	573234	34315.H_cicadicola.goa
+Homo sapiens	9606	25.H_sapiens.goa

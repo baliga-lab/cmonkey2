@@ -96,26 +96,35 @@ class MockRsatOrganismMapper:
         return self.is_eukaryotic
 
 
+def mock_go_mapper(rsat_organism):
+    """A simple GO mock mapper to test whether the underscore is replaced
+    in the factory"""
+    if rsat_organism == 'RSAT organism':
+        return 'GO taxonomy id'
+    else:
+        return None
+
+
 class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for Organism"""
 
     def test_create_prokaryote(self):
         """tests creating a Prokaryote"""
         factory = OrganismFactory(lambda _: 'KEGG organism',
-                                  lambda _: ('RSAT organism', False),
-                                  lambda _: 'GO taxonomy id')
+                                  lambda _: ('RSAT_organism', False),
+                                  mock_go_mapper)
         organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
         self.assertEquals('Hpy', organism.get_cog_organism())
         self.assertEquals('KEGG organism', organism.kegg_organism)
-        self.assertEquals('RSAT organism', organism.rsat_organism)
+        self.assertEquals('RSAT_organism', organism.rsat_organism)
         self.assertEquals('GO taxonomy id', organism.go_taxonomy_id)
         self.assertFalse(organism.is_eukaryote())
 
     def test_create_eukaryote(self):
         """tests creating an eukaryote"""
         factory = OrganismFactory(lambda _: 'KEGG organism',
-                                  lambda _: ('RSAT organism', True),
+                                  lambda _: ('RSAT_organism', True),
                                   lambda _: 'GO taxonomy id')
         organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
