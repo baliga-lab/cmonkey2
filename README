@@ -19,5 +19,11 @@ System requirements
 
 To run the unit tests:
 
-./run_tests.sh
+./run_tests.sh (for TDD)
+./run_integration_tests.sh (slow, run occacionally)
+
+There is a startup script for cMonkey to run the current integrated
+system
+
+./run_cmonkey.sh
 

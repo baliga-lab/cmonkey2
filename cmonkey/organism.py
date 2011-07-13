@@ -78,6 +78,13 @@ class Organism:
         """returns the COG organism name"""
         return self.code.capitalize()
 
+    def __str__(self):
+        result = "%s:\n" % self.__class__.__name__
+        result += ("Code: '%s' KEGG: '%s' RSAT: '%s' GO Taxonomy Id: %s" %
+                   (self.code, self.kegg_organism, self.rsat_organism,
+                    self.go_taxonomy_id))
+        return result
+
 
 class Eukaryote(Organism):
     """Class to represent eukaryotes"""

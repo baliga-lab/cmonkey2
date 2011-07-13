@@ -3,7 +3,12 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-from util import make_matrix
+from util import make_matrix, DelimitedFile
+from datamatrix import DataMatrixFactory, nochange_filter, center_scale_filter
+from organism import RsatDatabase, OrganismFactory
+from organism import make_kegg_code_mapper, make_go_taxonomy_mapper
+from organism import make_rsat_organism_mapper
+import sys
 
 
 class CMonkey:  # pylint: disable-msg=R0902
@@ -203,6 +208,38 @@ class Membership:
         return result
 
 
-# utility functions
-
 __all__ = ['CMonkey', 'Membership']
+
+
+KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
+GO_FILE_PATH = 'testdata/proteome2taxid'
+RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
+
+
+def init_cmonkey():
+    """init of the cMonkey system"""
+    # initialization
+    matrix_factory = DataMatrixFactory([nochange_filter,
+                                        center_scale_filter])
+    infile = DelimitedFile.read(sys.argv[1], has_header=True)
+    matrix = matrix_factory.create_from(infile)
+    print("Normalized input matrix:")
+    print(matrix)
+
+    keggfile = DelimitedFile.read(KEGG_FILE_PATH, comment='#')
+    gofile = DelimitedFile.read(GO_FILE_PATH)
+    rsatdb = RsatDatabase(RSAT_BASE_URL)
+    org_factory = OrganismFactory(make_kegg_code_mapper(keggfile),
+                                  make_rsat_organism_mapper(rsatdb),
+                                  make_go_taxonomy_mapper(gofile))
+    organism = org_factory.create(sys.argv[2])
+    print(organism)
+
+if __name__ == '__main__':
+    print('cMonkey (Python port) (c) 2011, Institute for Systems Biology')
+    print('This program is licensed under the General Public License V3.')
+    print('See README and LICENSE for details.\n')
+    if len(sys.argv) <= 2:
+        print('Usage: ./run_cmonkey.sh <ratio-file> <organism-code>')
+    else:
+        init_cmonkey()

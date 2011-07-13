@@ -84,6 +84,16 @@ class DataMatrix:
         """retrieve the name for the specified column"""
         return self.column_names[row]
 
+    def __str__(self):
+        """returns a string representation of this matrix"""
+        result = 'Gene\t' + '\t'.join(self.column_names) + '\n'
+        for row_index in range(self.num_rows()):
+            result += self.row_names[row_index] + '\t'
+            result += '\t'.join([str(value)
+                                 for value in self.get_row_values(row_index)])
+            result += '\n'
+        return result
+
 
 class DataMatrixCollection:
     """A collection of DataMatrix objects containing gene expression values
