@@ -4,7 +4,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-from organism import RsatDatabase
+from rsat import RsatDatabase
 
 
 class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -22,6 +22,12 @@ class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertIsNotNone(html)
 
     def test_get_organism_file(self):
-        """test get_directory_html method"""
+        """test get_organism_file method"""
         text = self.database.get_organism_file('Helicobacter_pylori_26695')
+        self.assertIsNotNone(text)
+
+    def test_get_organism_names_file(self):
+        """test get_organism_names_file method"""
+        text = self.database.get_organism_names_file(
+            'Helicobacter_pylori_26695')
         self.assertIsNotNone(text)

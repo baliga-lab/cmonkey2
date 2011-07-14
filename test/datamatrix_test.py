@@ -12,6 +12,12 @@ from copy import deepcopy
 class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for DataMatrix"""
 
+    def test_create_with_0_row_size(self):
+        """create DataMatrix with a 0 row size"""
+        matrix = DataMatrix(0, 3)
+        self.assertEquals(0, matrix.num_rows())
+        self.assertEquals(0, matrix.num_columns())
+
     def test_create_without_names(self):
         """create DataMatrix without row and column names"""
         matrix = DataMatrix(3, 4)
@@ -34,6 +40,7 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals("MyRow2", matrix.row_name(1))
         self.assertEquals("MyCol1", matrix.column_name(0))
         self.assertEquals("MyCol2", matrix.column_name(1))
+        self.assertIsNotNone(str(matrix))
 
     def test_create_with_wrong_row_name_count(self):
         """create DataMatrix, providing the wrong number of row names"""

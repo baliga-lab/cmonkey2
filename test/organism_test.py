@@ -115,11 +115,12 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                   mock_go_mapper)
         organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
-        self.assertEquals('Hpy', organism.get_cog_organism())
+        self.assertEquals('Hpy', organism.cog_organism())
         self.assertEquals('KEGG organism', organism.kegg_organism)
         self.assertEquals('RSAT_organism', organism.rsat_organism)
         self.assertEquals('GO taxonomy id', organism.go_taxonomy_id)
         self.assertFalse(organism.is_eukaryote())
+        self.assertIsNotNone(str(organism))
 
     def test_create_eukaryote(self):
         """tests creating an eukaryote"""

@@ -5,10 +5,20 @@ more information and licensing details.
 """
 from util import make_matrix, DelimitedFile
 from datamatrix import DataMatrixFactory, nochange_filter, center_scale_filter
-from organism import RsatDatabase, OrganismFactory
+from organism import OrganismFactory
 from organism import make_kegg_code_mapper, make_go_taxonomy_mapper
 from organism import make_rsat_organism_mapper
+from rsat import RsatDatabase
 import sys
+
+
+CMONKEY_VERSION = '4.0'
+AVG_CLUSTER_SIZE = 20
+KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
+GO_FILE_PATH = 'testdata/proteome2taxid'
+RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
+# KEGG_FTP = 'ftp://ftp.genome.jp/pub/kegg/genes/taxonomy'
+COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 
 
 class CMonkey:  # pylint: disable-msg=R0902
@@ -17,21 +27,13 @@ class CMonkey:  # pylint: disable-msg=R0902
     algorithm.
     This top-level class takes configuration and inputs to provide
     them for the actual execution
+    organism: Organism instance to use for computation
+    ratio_matrices: a list of DataMatrix instances containing gene expressions
     configuration is a dictionary with the following keys:
-    'organism'         - organism to use for computation
-    'cog.organism'     - organism for NCBI COG
-    'rsat.species'     - species for RSAT
     'num_iterations'   - # of iterations
     'clusters_per_row' - # of clusters/row
     ...
     """
-    CMONKEY_VERSION = '4.0'
-    RSAT_URLS = [
-        'http://rsat.ccb.sickkids.ca/', 'http://rsat.ulb.ac.be/rsat/',
-        'http://embnet.ccg.unam.mx/rsa-tools'
-        ]
-    KEGG_FTP = 'ftp://ftp.genome.jp/pub/kegg/genes/taxonomy'
-    AVG_CLUSTER_SIZE = 20
 
     def __init__(self, organism, ratio_matrices, config=None):
         """create a cMonkey object
@@ -78,8 +80,8 @@ class CMonkey:  # pylint: disable-msg=R0902
     def compute_num_biclusters(self, config):
         """computes the number of biclusters to optimize"""
         return int(round(self.ratio_matrices.num_unique_rows() *
-                     float(config['biclusters_per_gene']) /
-                     CMonkey.AVG_CLUSTER_SIZE))
+                         float(config['biclusters_per_gene']) /
+                         AVG_CLUSTER_SIZE))
 
     def is_verbose(self):
         """determine whether we are running in verbose mode"""
@@ -209,11 +211,6 @@ class Membership:
 
 
 __all__ = ['CMonkey', 'Membership']
-
-
-KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
-GO_FILE_PATH = 'testdata/proteome2taxid'
-RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 
 
 def init_cmonkey():

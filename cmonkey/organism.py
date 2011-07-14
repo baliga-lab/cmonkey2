@@ -4,7 +4,6 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 from util import DelimitedFileMapper, best_matching_links
-import urllib
 import re
 
 
@@ -74,15 +73,16 @@ class Organism:
         self.rsat_organism = rsat_organism
         self.go_taxonomy_id = go_taxonomy_id
 
-    def get_cog_organism(self):
+    def cog_organism(self):
         """returns the COG organism name"""
         return self.code.capitalize()
 
     def __str__(self):
-        result = "%s:\n" % self.__class__.__name__
-        result += ("Code: '%s' KEGG: '%s' RSAT: '%s' GO Taxonomy Id: %s" %
+        result = "Organism Type: %s\n" % self.__class__.__name__
+        result += (("Code: '%s'\nKEGG: '%s'\nRSAT: '%s'\nCOG: '%s'\n" +
+                   "GO Taxonomy Id: %s") %
                    (self.code, self.kegg_organism, self.rsat_organism,
-                    self.go_taxonomy_id))
+                    self.cog_organism(), self.go_taxonomy_id))
         return result
 
 
@@ -102,27 +102,6 @@ class Prokaryote(Organism):
         return False
 
 
-class RsatDatabase:
-    """abstract interface to access an RSAT mirror"""
-    DIR_PATH = 'data/genomes'
-    ORGANISM_FILE_PATH = 'genome/organism.tab'
-
-    def __init__(self, base_url):
-        """create an RsatDatabase instance based on a mirror URL"""
-        self.base_url = base_url
-
-    def get_directory_html(self):
-        """returns the HTML page for the directory listing"""
-        return urllib.urlopen("/".join([self.base_url,
-                                        RsatDatabase.DIR_PATH])).read()
-
-    def get_organism_file(self, organism):
-        """returns the file contents for the specified organism"""
-        return urllib.urlopen(
-            "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
-                      RsatDatabase.ORGANISM_FILE_PATH])).read()
-
-
 __all__ = ['make_kegg_code_mapper', 'make_go_taxonomy_mapper',
            'make_rsat_organism_mapper',
-           'Organism', 'OrganismFactory', 'RsatDatabase']
+           'Organism', 'OrganismFactory']
