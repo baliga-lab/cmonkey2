@@ -15,37 +15,49 @@ class DataMatrix:
     Names and values of a matrix instance can be modified
     DataMatrix does not make any assumptions about its value or name types
     """
-    def __init__(self, nrows, ncols, row_names=None, column_names=None):
+    def __init__(self, nrows, ncols, row_names=None, col_names=None):
         """create a DataMatrix instance"""
-        self.values = [[0.0 for _ in range(ncols)] for _ in range(nrows)]
+        self.__values = [[0.0 for _ in range(ncols)] for _ in range(nrows)]
         if not row_names:
-            self.row_names = ["Row " + str(i) for i in range(nrows)]
+            self.__row_names = ["Row " + str(i) for i in range(nrows)]
         else:
             if len(row_names) != nrows:
                 raise ValueError("number of row names should be %d" % nrows)
-            self.row_names = row_names
+            self.__row_names = row_names
 
-        if not column_names:
-            self.column_names = ["Column " + str(i) for i in range(ncols)]
+        if not col_names:
+            self.__column_names = ["Column " + str(i) for i in range(ncols)]
         else:
-            if len(column_names) != ncols:
+            if len(col_names) != ncols:
                 raise ValueError("number of column names should be %d" % ncols)
-            self.column_names = column_names
+            self.__column_names = col_names
 
     def num_rows(self):
         """returns the number of rows"""
-        return len(self.values)
+        return len(self.__values)
 
     def num_columns(self):
         """returns the number of columns"""
         if self.num_rows() == 0:
             return 0
         else:
-            return len(self.values[0])
+            return len(self.__values[0])
+
+    def row_names(self):
+        """return the row names"""
+        return self.__row_names
+
+    def column_names(self):
+        """return the column names"""
+        return self.__column_names
+
+    def values(self):
+        """returns this matrix's values"""
+        return self.__values
 
     def get_row_values(self, row):
         """returns the specified row values"""
-        return self.values[row]
+        return self.__values[row]
 
     def get_column_values(self, column):
         """returns the specified column values"""
@@ -56,11 +68,11 @@ class DataMatrix:
 
     def value_at(self, row, column):
         """retrieve the value at the specified position"""
-        return self.values[row][column]
+        return self.__values[row][column]
 
     def set_value_at(self, row, column, value):
         """set the value at the specified position"""
-        self.values[row][column] = value
+        self.__values[row][column] = value
 
     def set_values(self, values):
         """Sets values from a two-dimensional list"""
@@ -78,17 +90,17 @@ class DataMatrix:
 
     def row_name(self, row):
         """retrieve the name for the specified row"""
-        return self.row_names[row]
+        return self.__row_names[row]
 
     def column_name(self, row):
         """retrieve the name for the specified column"""
-        return self.column_names[row]
+        return self.__column_names[row]
 
     def __str__(self):
         """returns a string representation of this matrix"""
-        result = 'Gene\t' + '\t'.join(self.column_names) + '\n'
+        result = 'Gene\t' + '\t'.join(self.__column_names) + '\n'
         for row_index in range(self.num_rows()):
-            result += self.row_names[row_index] + '\t'
+            result += self.__row_names[row_index] + '\t'
             result += '\t'.join([str(value)
                                  for value in self.get_row_values(row_index)])
             result += '\n'
@@ -102,9 +114,9 @@ class DataMatrixCollection:
     def __init__(self, matrices):
         self.matrices = matrices
         self.unique_row_names = self.make_unique_names(
-            lambda matrix: matrix.row_names)
+            lambda matrix: matrix.row_names())
         self.unique_column_names = self.make_unique_names(
-            lambda matrix: matrix.column_names)
+            lambda matrix: matrix.column_names())
 
     def num_unique_rows(self):
         """returns the number of unique rows"""
@@ -230,7 +242,7 @@ def row_filter(matrix, fun):
                if value != None]
         values.append(fun(row))
     result = DataMatrix(matrix.num_rows(), matrix.num_columns(),
-                        matrix.row_names, matrix.column_names)
+                        matrix.row_names(), matrix.column_names())
     result.set_values(values)
     return result
 
