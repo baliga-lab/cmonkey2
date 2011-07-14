@@ -4,7 +4,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-from rsat import RsatDatabase
+from rsat import RsatDatabase, DocumentNotFound
 
 
 class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -31,3 +31,15 @@ class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
         text = self.database.get_organism_names_file(
             'Helicobacter_pylori_26695')
         self.assertIsNotNone(text)
+
+    def test_get_ensembl_organism_names_file(self):
+        """test get_ensembl_organism_names_file method"""
+        text = self.database.get_ensembl_organism_names_file(
+            'Saccharomyces_cerevisiae')
+        self.assertIsNotNone(text)
+
+    def test_get_ensembl_organism_names_file_404(self):
+        """test get_ensembl_organism_names_file method with not found"""
+        self.assertRaises(DocumentNotFound,
+                          self.database.get_ensembl_organism_names_file,
+                          'nonexist')
