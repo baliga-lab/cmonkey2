@@ -19,6 +19,15 @@ def make_go_taxonomy_mapper(dfile):
     return DelimitedFileMapper(dfile, 0, 1).lookup
 
 
+class RsatSpeciesInfo:
+    """A class to access species information from an RSAT database mirror.
+    This interprets the data stored in the RSAT data files"""
+
+    def __init__(self, species, is_eukaryote):
+        self.species = species
+        self.is_eukaryote = is_eukaryote
+
+
 def make_rsat_organism_mapper(rsatdb):
     """return a function that maps from a KEGG organism name to
     related RSAT information"""
@@ -27,10 +36,10 @@ def make_rsat_organism_mapper(rsatdb):
         stored in the RSAT database"""
         rsat_organism = best_matching_links(
             kegg_organism,
-            rsatdb.get_directory_html())[0].rstrip('/')
-        organism_text = rsatdb.get_organism_file(rsat_organism)
+            rsatdb.get_directory())[0].rstrip('/')
+        organism_text = rsatdb.get_organism(rsat_organism)
         is_eukaryote = re.search('Eukaryota', organism_text) != None
-        return (rsat_organism, is_eukaryote)
+        return RsatSpeciesInfo(rsat_organism, is_eukaryote)
     return mapper_fun
 
 
@@ -52,13 +61,15 @@ class OrganismFactory:
     def create(self, organism_code):
         """factory method to create an organism from a code"""
         kegg_organism = self.code2kegg_organism(organism_code)
-        rsat_organism, is_eukaryote = self.rsat_organism_info(kegg_organism)
-        go_taxonomy_id = self.get_taxonomy_id(rsat_organism.replace('_', ' '))
-        if is_eukaryote:
-            return Eukaryote(organism_code, kegg_organism, rsat_organism,
+        rsat_info = self.rsat_organism_info(kegg_organism)
+        self.rsat_organism_info(kegg_organism)
+        go_taxonomy_id = self.get_taxonomy_id(
+            rsat_info.species.replace('_', ' '))
+        if rsat_info.is_eukaryote:
+            return Eukaryote(organism_code, kegg_organism, rsat_info,
                              go_taxonomy_id)
         else:
-            return Prokaryote(organism_code, kegg_organism, rsat_organism,
+            return Prokaryote(organism_code, kegg_organism, rsat_info,
                               go_taxonomy_id)
 
 
@@ -66,11 +77,11 @@ class Organism:
     """Abstraction of an organism in cMonkey. It captures all organism-specific
     aspects"""
 
-    def __init__(self, code, kegg_organism, rsat_organism, go_taxonomy_id):
+    def __init__(self, code, kegg_organism, rsat_info, go_taxonomy_id):
         """create an Organism instance"""
         self.code = code
         self.kegg_organism = kegg_organism
-        self.rsat_organism = rsat_organism
+        self.rsat_info = rsat_info
         self.go_taxonomy_id = go_taxonomy_id
 
     def cog_organism(self):
@@ -81,7 +92,7 @@ class Organism:
         result = "Organism Type: %s\n" % self.__class__.__name__
         result += (("Code: '%s'\nKEGG: '%s'\nRSAT: '%s'\nCOG: '%s'\n" +
                    "GO Taxonomy Id: %s") %
-                   (self.code, self.kegg_organism, self.rsat_organism,
+                   (self.code, self.kegg_organism, self.rsat_info.species,
                     self.cog_organism(), self.go_taxonomy_id))
         return result
 
