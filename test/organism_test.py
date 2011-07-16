@@ -65,6 +65,10 @@ class MockRsatDatabase:
         """returns the organism file's content"""
         return 'foo bar; Eukaryota; something else'
 
+    def get_organism_names(self, _):
+        """returns a simulation of the organism_names.tab file"""
+        return '4711\tRSAT organism'
+
 
 class RsatOrganismMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Tests the RsatOrganismMapper class"""
@@ -80,6 +84,7 @@ class RsatOrganismMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904
         info = self.mapper('Halobacterium')
         self.assertEquals('Halobacterium_sp', info.species)
         self.assertTrue(info.is_eukaryote)
+        self.assertEquals('4711', info.taxonomy_id)
 
 
 class MockRsatOrganismMapper:
@@ -113,7 +118,7 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_create_prokaryote(self):
         """tests creating a Prokaryote"""
         factory = OrganismFactory(lambda _: 'KEGG organism',
-                                  lambda _: RsatSpeciesInfo('RSAT_organism', False),
+                                  lambda _: RsatSpeciesInfo('RSAT_organism', False, 4711),
                                   mock_go_mapper)
         organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
@@ -122,13 +127,15 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals('RSAT_organism', organism.rsat_info.species)
         self.assertEquals('GO taxonomy id', organism.go_taxonomy_id)
         self.assertFalse(organism.is_eukaryote())
+        self.assertEquals(4711, organism.rsat_info.taxonomy_id)
         self.assertIsNotNone(str(organism))
 
     def test_create_eukaryote(self):
         """tests creating an eukaryote"""
         factory = OrganismFactory(lambda _: 'KEGG organism',
-                                  lambda _: RsatSpeciesInfo('RSAT_organism', True),
+                                  lambda _: RsatSpeciesInfo('RSAT_organism', True, 4711),
                                   lambda _: 'GO taxonomy id')
         organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
         self.assertTrue(organism.is_eukaryote())
+        self.assertEquals(4711, organism.rsat_info.taxonomy_id)

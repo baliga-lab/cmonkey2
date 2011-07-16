@@ -40,6 +40,7 @@ class RsatDatabase:
     ORGANISM_PATH = 'genome/organism.tab'
     ORGANISM_NAMES_PATH = 'genome/organism_names.tab'
     FEATURE_PATH = 'genome/feature.tab'
+    FEATURE_NAMES_PATH = 'genome/feature_names.tab'
 
     def __init__(self, base_url):
         """create an RsatDatabase instance based on a mirror URL"""
@@ -70,9 +71,19 @@ class RsatDatabase:
                                   RsatDatabase.ORGANISM_NAMES_PATH]))
 
     def get_features(self, organism):
-        """returns the specified organism's feature file contents"""
+        """returns the specified organism's feature file contents
+        Note: the current version only tries to read from feature.tab
+        while the original cMonkey will fall back to cds.tab
+        if that fails
+        """
         return read_url("/".join([self.base_url, RsatDatabase.DIR_PATH,
                                   organism,
                                   RsatDatabase.FEATURE_PATH]))
+
+    def get_feature_names(self, organism):
+        """returns the specified organism's feature name file contents"""
+        return read_url("/".join([self.base_url, RsatDatabase.DIR_PATH,
+                                  organism,
+                                  RsatDatabase.FEATURE_NAMES_PATH]))
 
 __all__ = ['RsatDatabase']

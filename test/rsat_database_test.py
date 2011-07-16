@@ -51,3 +51,8 @@ class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """test get_features method"""
         text = self.database.get_features('Helicobacter_pylori_26695')
         self.assertIsNotNone(text)
+
+    def test_get_feature_names(self):
+        """test get_feature_names method"""
+        text = self.database.get_feature_names('Helicobacter_pylori_26695')
+        self.assertIsNotNone(text)

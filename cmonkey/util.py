@@ -19,7 +19,8 @@ def next_non_comment_index(lines, comment, line_index):
         while line_index < num_lines and (len(line) == 0 or
                                           line.startswith(comment)):
             line_index += 1
-            line = lines[line_index].lstrip()
+            if (line_index < num_lines):
+                line = lines[line_index].lstrip()
     return line_index
 
 
@@ -29,6 +30,28 @@ def remove_quotes(astring, quote):
         return astring.replace(quote, "")
     else:
         return astring
+
+
+def make_delimited_file_from_lines(lines, sep, has_header, comment, quote):
+    """Creates a delimited file from a list of lines"""
+    file_header = None
+    file_lines = []
+    line_index = next_non_comment_index(lines, comment, 0)
+    if has_header:
+        file_header = lines[line_index].rstrip().split(sep)
+        file_header = [remove_quotes(elem, quote) for elem in file_header]
+        line_index += 1
+
+    num_lines = len(lines)
+    while line_index < num_lines:
+        line_index = next_non_comment_index(lines, comment, line_index)
+        if line_index < num_lines:
+            line = lines[line_index].rstrip().split(sep)
+            line = [remove_quotes(elem, quote) for elem in line]
+            file_lines.append(line)
+            line_index += 1
+
+    return DelimitedFile(file_lines, file_header)
 
 
 class DelimitedFile:  # pylint: disable-msg=R0913
@@ -42,31 +65,21 @@ class DelimitedFile:  # pylint: disable-msg=R0913
         self.header = header
 
     @classmethod
+    def create_from_text(cls, text, sep='\t', has_header=False,
+                         comment=None, quote=None):
+        """creates a DelimitedFile instance from a text"""
+        return make_delimited_file_from_lines(text.split('\n'), sep,
+                                              has_header, comment, quote)
+
+    @classmethod
     def read(cls, filepath, sep='\t', has_header=False, comment=None,
              quote=None):
         """Creates the reader object"""
-        file_header = None
-        file_lines = []
         lines = None
         with open(filepath) as inputfile:
             lines = inputfile.readlines()
-
-        line_index = next_non_comment_index(lines, comment, 0)
-        if has_header:
-            file_header = lines[line_index].rstrip().split(sep)
-            file_header = [remove_quotes(elem, quote) for elem in file_header]
-            line_index += 1
-
-        num_lines = len(lines)
-        while line_index < num_lines:
-            line_index = next_non_comment_index(lines, comment, line_index)
-            if line_index < num_lines:
-                line = lines[line_index].rstrip().split(sep)
-                line = [remove_quotes(elem, quote) for elem in line]
-                file_lines.append(line)
-                line_index += 1
-
-        return DelimitedFile(file_lines, file_header)
+        return make_delimited_file_from_lines(lines, sep, has_header,
+                                              comment, quote)
 
     def get_lines(self):
         """returns the lines in the file"""

@@ -3,7 +3,7 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-from util import DelimitedFileMapper, best_matching_links
+from util import DelimitedFile, DelimitedFileMapper, best_matching_links
 import re
 
 
@@ -23,9 +23,10 @@ class RsatSpeciesInfo:
     """A class to access species information from an RSAT database mirror.
     This interprets the data stored in the RSAT data files"""
 
-    def __init__(self, species, is_eukaryote):
+    def __init__(self, species, is_eukaryote, taxonomy_id):
         self.species = species
         self.is_eukaryote = is_eukaryote
+        self.taxonomy_id = taxonomy_id
 
 
 def make_rsat_organism_mapper(rsatdb):
@@ -39,7 +40,12 @@ def make_rsat_organism_mapper(rsatdb):
             rsatdb.get_directory())[0].rstrip('/')
         organism_text = rsatdb.get_organism(rsat_organism)
         is_eukaryote = re.search('Eukaryota', organism_text) != None
-        return RsatSpeciesInfo(rsat_organism, is_eukaryote)
+        print "RSAT ORGANISM = '%s'" % rsat_organism
+        organism_names_dfile = DelimitedFile.create_from_text(
+            rsatdb.get_organism_names(rsat_organism), comment='--')
+        taxonomy_id = organism_names_dfile.lines[0][0]
+        print "RSAT TAX ID = %s" % taxonomy_id
+        return RsatSpeciesInfo(rsat_organism, is_eukaryote, taxonomy_id)
     return mapper_fun
 
 
@@ -62,7 +68,6 @@ class OrganismFactory:
         """factory method to create an organism from a code"""
         kegg_organism = self.code2kegg_organism(organism_code)
         rsat_info = self.rsat_organism_info(kegg_organism)
-        self.rsat_organism_info(kegg_organism)
         go_taxonomy_id = self.get_taxonomy_id(
             rsat_info.species.replace('_', ' '))
         if rsat_info.is_eukaryote:
