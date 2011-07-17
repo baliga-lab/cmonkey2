@@ -19,20 +19,23 @@ def make_go_taxonomy_mapper(dfile):
     return DelimitedFileMapper(dfile, 0, 1).lookup
 
 
-class RsatSpeciesInfo:
-    """A class to access species information from an RSAT database mirror.
-    This interprets the data stored in the RSAT data files"""
+class RsatSpeciesInfo:  # pylint: disable-msg=R0903
+    """A class to store species information retrieved from an RSAT database
+    mirror. This is a mere value object"""
 
     def __init__(self, species, is_eukaryote, taxonomy_id,
-                 features):
+                 features, contigs):
+        """create an instance of RsatSpeciesInfo"""
+        # pylint: disable-msg=R0913
         self.species = species
         self.is_eukaryote = is_eukaryote
         self.taxonomy_id = taxonomy_id
         self.features = features
+        self.contigs = contigs
 
 
-class Feature:
-    """representation of a feature"""
+class Feature:  # pylint: disable-msg=R0903
+    """representation of a feature. Just a value object"""
 
     def __init__(self, feature_id, feature_type, name, contig):
         """Create a Feature instance"""
@@ -46,14 +49,19 @@ def make_rsat_organism_mapper(rsatdb):
     """return a function that maps from a KEGG organism name to
     related RSAT information"""
 
-    def read_rsat_features(dfile):
+    def read_rsat_features_and_contigs(dfile):
         """Reads RSAT features from a feature.tab file and returns a
         dictionary with feature ids as keys"""
-        result = {}
+        features = {}
+        contigs = []
         for line in dfile.lines:
             feature_id = line[0]
-            result[feature_id] = Feature(feature_id, line[1], line[2], line[3])
-        return result
+            contig = line[3]
+            features[feature_id] = Feature(feature_id, line[1], line[2],
+                                           contig)
+            if contig not in contigs:
+                contigs.append(contig)
+        return (features, contigs)
 
     def mapper_fun(kegg_organism):
         """Mapper function to return basic information about an organism
@@ -68,9 +76,11 @@ def make_rsat_organism_mapper(rsatdb):
         taxonomy_id = organism_names_dfile.lines[0][0]
         feature_dfile = DelimitedFile.create_from_text(
             rsatdb.get_features(rsat_organism), comment='--')
-        features = read_rsat_features(feature_dfile)
+        features, contigs = read_rsat_features_and_contigs(feature_dfile)
+        for contig in contigs:
+            rsatdb.cache_contig_sequence(rsat_organism, contig)
         return RsatSpeciesInfo(rsat_organism, is_eukaryote, taxonomy_id,
-                               features)
+                               features, contigs)
     return mapper_fun
 
 
@@ -128,9 +138,10 @@ class Organism:
     def __str__(self):
         result = "Organism Type: %s\n" % self.__class__.__name__
         result += (("Code: '%s'\nKEGG: '%s'\nRSAT: '%s'\nCOG: '%s'\n" +
-                   "GO Taxonomy Id: %s") %
+                   "GO Taxonomy Id: %s\nContigs: %s\n") %
                    (self.code, self.kegg_organism, self.rsat_info.species,
-                    self.cog_organism(), self.go_taxonomy_id))
+                    self.cog_organism(), self.go_taxonomy_id,
+                    str(self.rsat_info.contigs)))
         return result
 
 

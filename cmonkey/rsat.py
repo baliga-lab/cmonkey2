@@ -4,6 +4,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import urllib
+import os
 
 
 class DocumentNotFound(Exception):
@@ -42,9 +43,10 @@ class RsatDatabase:
     FEATURE_PATH = 'genome/feature.tab'
     FEATURE_NAMES_PATH = 'genome/feature_names.tab'
 
-    def __init__(self, base_url):
+    def __init__(self, base_url, cache_dir):
         """create an RsatDatabase instance based on a mirror URL"""
         self.base_url = base_url
+        self.cache_dir = cache_dir.rstrip('/')
 
     def get_directory(self):
         """returns the HTML page for the directory listing"""
@@ -85,5 +87,17 @@ class RsatDatabase:
         return read_url("/".join([self.base_url, RsatDatabase.DIR_PATH,
                                   organism,
                                   RsatDatabase.FEATURE_NAMES_PATH]))
+
+    def cache_contig_sequence(self, organism, contig):
+        """downloads the specified contig sequence to the cache directory
+        if it does not yet exist"""
+        cache_file = "/".join([self.cache_dir, organism + '_' + contig])
+        if not os.path.exists(cache_file):
+            url = "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
+                            'genome', contig + '.raw'])
+            print "RETRIEVE URL: %s" % url
+            CMonkeyURLopener().retrieve(url, cache_file)
+        else:
+            print "found existing cache file: '%s'" % cache_file
 
 __all__ = ['RsatDatabase']

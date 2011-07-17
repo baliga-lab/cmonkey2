@@ -10,6 +10,7 @@ from organism import make_kegg_code_mapper, make_go_taxonomy_mapper
 from organism import make_rsat_organism_mapper
 from rsat import RsatDatabase
 import sys
+import os
 
 
 CMONKEY_VERSION = '4.0'
@@ -19,6 +20,7 @@ GO_FILE_PATH = 'testdata/proteome2taxid'
 RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 # KEGG_FTP = 'ftp://ftp.genome.jp/pub/kegg/genes/taxonomy'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
+CACHE_DIR = 'cache'
 
 
 class CMonkey:  # pylint: disable-msg=R0902
@@ -215,7 +217,9 @@ __all__ = ['CMonkey', 'Membership']
 
 def init_cmonkey():
     """init of the cMonkey system"""
-    # initialization
+    if not os.path.exists(CACHE_DIR):
+        os.mkdir(CACHE_DIR)
+
     matrix_factory = DataMatrixFactory([nochange_filter,
                                         center_scale_filter])
     infile = DelimitedFile.read(sys.argv[1], has_header=True)
@@ -225,7 +229,7 @@ def init_cmonkey():
 
     keggfile = DelimitedFile.read(KEGG_FILE_PATH, comment='#')
     gofile = DelimitedFile.read(GO_FILE_PATH)
-    rsatdb = RsatDatabase(RSAT_BASE_URL)
+    rsatdb = RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
     org_factory = OrganismFactory(make_kegg_code_mapper(keggfile),
                                   make_rsat_organism_mapper(rsatdb),
                                   make_go_taxonomy_mapper(gofile))
