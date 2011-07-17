@@ -23,15 +23,38 @@ class RsatSpeciesInfo:
     """A class to access species information from an RSAT database mirror.
     This interprets the data stored in the RSAT data files"""
 
-    def __init__(self, species, is_eukaryote, taxonomy_id):
+    def __init__(self, species, is_eukaryote, taxonomy_id,
+                 features):
         self.species = species
         self.is_eukaryote = is_eukaryote
         self.taxonomy_id = taxonomy_id
+        self.features = features
+
+
+class Feature:
+    """representation of a feature"""
+
+    def __init__(self, feature_id, feature_type, name, contig):
+        """Create a Feature instance"""
+        self.feature_id = feature_id
+        self.feature_type = feature_type
+        self.name = name
+        self.contig = contig
 
 
 def make_rsat_organism_mapper(rsatdb):
     """return a function that maps from a KEGG organism name to
     related RSAT information"""
+
+    def read_rsat_features(dfile):
+        """Reads RSAT features from a feature.tab file and returns a
+        dictionary with feature ids as keys"""
+        result = {}
+        for line in dfile.lines:
+            feature_id = line[0]
+            result[feature_id] = Feature(feature_id, line[1], line[2], line[3])
+        return result
+
     def mapper_fun(kegg_organism):
         """Mapper function to return basic information about an organism
         stored in the RSAT database"""
@@ -40,12 +63,14 @@ def make_rsat_organism_mapper(rsatdb):
             rsatdb.get_directory())[0].rstrip('/')
         organism_text = rsatdb.get_organism(rsat_organism)
         is_eukaryote = re.search('Eukaryota', organism_text) != None
-        print "RSAT ORGANISM = '%s'" % rsat_organism
         organism_names_dfile = DelimitedFile.create_from_text(
             rsatdb.get_organism_names(rsat_organism), comment='--')
         taxonomy_id = organism_names_dfile.lines[0][0]
-        print "RSAT TAX ID = %s" % taxonomy_id
-        return RsatSpeciesInfo(rsat_organism, is_eukaryote, taxonomy_id)
+        feature_dfile = DelimitedFile.create_from_text(
+            rsatdb.get_features(rsat_organism), comment='--')
+        features = read_rsat_features(feature_dfile)
+        return RsatSpeciesInfo(rsat_organism, is_eukaryote, taxonomy_id,
+                               features)
     return mapper_fun
 
 
@@ -54,6 +79,13 @@ class OrganismFactory:
     instance is relatively complex and costly, so it is coordinated
     here. Information has to be pulled together from various databases
     which are provided to the factory as configuration parameters.
+    Note: this factory is biased towards microbial organisms and
+    pulls information from
+    - RSAT
+    - STRING
+    - GO
+    - Microbes Online
+    For other types of organisms, a different factory should be used
     """
 
     def __init__(self, code2kegg_organism,

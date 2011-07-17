@@ -69,6 +69,10 @@ class MockRsatDatabase:
         """returns a simulation of the organism_names.tab file"""
         return '4711\tRSAT organism'
 
+    def get_features(self, _):
+        """returns a fake feature.tab file"""
+        return 'NP_206803.1\tCDS\tnusB\tNC_000915.1\t123\t456'
+
 
 class RsatOrganismMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Tests the RsatOrganismMapper class"""
@@ -85,6 +89,7 @@ class RsatOrganismMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals('Halobacterium_sp', info.species)
         self.assertTrue(info.is_eukaryote)
         self.assertEquals('4711', info.taxonomy_id)
+        self.assertIsNotNone(info.features['NP_206803.1'])
 
 
 class MockRsatOrganismMapper:
@@ -118,7 +123,8 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_create_prokaryote(self):
         """tests creating a Prokaryote"""
         factory = OrganismFactory(lambda _: 'KEGG organism',
-                                  lambda _: RsatSpeciesInfo('RSAT_organism', False, 4711),
+                                  lambda _: RsatSpeciesInfo('RSAT_organism',
+                                                            False, 4711, {}),
                                   mock_go_mapper)
         organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
@@ -133,7 +139,8 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_create_eukaryote(self):
         """tests creating an eukaryote"""
         factory = OrganismFactory(lambda _: 'KEGG organism',
-                                  lambda _: RsatSpeciesInfo('RSAT_organism', True, 4711),
+                                  lambda _: RsatSpeciesInfo('RSAT_organism',
+                                                            True, 4711, {}),
                                   lambda _: 'GO taxonomy id')
         organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
