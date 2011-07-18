@@ -2,3 +2,4 @@
 lintlog
 *.log
 .coverage
+cache

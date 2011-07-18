@@ -4,7 +4,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-from rsat_database_test import RsatDatabaseTest
+from rsat_test import RsatDatabaseTest
 
 if __name__ == '__main__':
     SUITE = []

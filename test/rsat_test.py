@@ -17,7 +17,7 @@ class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def setUp(self):  # pylint: disable-msg=C0103
         """test fixture"""
-        self.database = RsatDatabase('http://rsat.ccb.sickkids.ca')
+        self.database = RsatDatabase('http://rsat.ccb.sickkids.ca', 'testcache')
 
     def test_get_directory(self):
         """test get_directory method"""
