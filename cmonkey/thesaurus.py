@@ -5,38 +5,35 @@ more information and licensing details.
 """
 
 
-class DelimitedFileThesaurusFactory1:
+def create_from_delimited_file1(dfile):
     """creates a thesaurus from a delimited file where the format is
     <alternative>SEPARATOR<original>
-    ...
-    """
-
-    def __init__(self, dfile):
-        """creates an instance of this factory"""
-        self.dfile = dfile
-
-    def create(self):
-        """returns a thesaurus dictionary"""
-        result = {}
-        for line in self.dfile.lines():
-            result[line[0]] = line[1]
-        return result
+    ..."""
+    result = {}
+    for line in dfile.lines():
+        result[line[0]] = line[1]
+    return result
 
 
-class DelimitedFileThesaurusFactory2:
+def create_from_delimited_file2(dfile):
     """creates a thesaurus from a delimited file where the format is
     <original>SEPARATOR<alt1>;<alt2>;...
-    ...
-    """
+    ..."""
+    result = {}
+    for line in dfile.lines():
+        for alternative in line[1].split(';'):
+            result[alternative] = line[0]
+    return result
 
-    def __init__(self, dfile):
-        """creates an instance of this factory"""
-        self.dfile = dfile
 
-    def create(self):
-        """returns a thesaurus dictionary"""
-        result = {}
-        for line in self.dfile.lines():
-            for alternative in line[1].split(';'):
-                result[alternative] = line[0]
-        return result
+def create_from_rsat_feature_names(dfile):
+    """Uses a feature_names.tab file from RSAT to create a Thesaurus"""
+    result = {}
+    for line in dfile.lines():
+        if line[2] == 'alternate':
+            result[line[1]] = line[0]
+    return result
+
+
+__all__ = ['create_from_delimited_file1', 'create_from_delimited_file2',
+           'create_from_rsat_feature_names']
