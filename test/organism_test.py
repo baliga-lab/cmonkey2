@@ -63,15 +63,19 @@ class MockRsatDatabase:
 
     def get_organism(self, _):  # pylint: disable-msg=R0201
         """returns the organism file's content"""
-        return 'foo bar; Eukaryota; something else'
+        return '-- comment\nfoo bar; Eukaryota; something else'
 
     def get_organism_names(self, _):
         """returns a simulation of the organism_names.tab file"""
-        return '4711\tRSAT organism'
+        return '-- comment\n4711\tRSAT organism'
 
     def get_features(self, _):
         """returns a fake feature.tab file"""
-        return 'NP_206803.1\tCDS\tnusB\tNC_000915.1\t123\t456'
+        return '-- comment\nNP_206803.1\tCDS\tnusB\tNC_000915.1\t123\t456'
+
+    def get_feature_names(self, _):
+        """returns a fake feature_names.tab file"""
+        return "-- comment\ngene1\tgene1\tprimary\ngene1\talt1\talternate"
 
     def cache_contig_sequence(self, organism, contig):
         """does nothing"""
@@ -130,7 +134,7 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
         factory = OrganismFactory(lambda _: 'KEGG organism',
                                   lambda _: RsatSpeciesInfo('RSAT_organism',
                                                             False, 4711, {},
-                                                            []),
+                                                            [], {}),
                                   mock_go_mapper)
         organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
@@ -147,7 +151,7 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
         factory = OrganismFactory(lambda _: 'KEGG organism',
                                   lambda _: RsatSpeciesInfo('RSAT_organism',
                                                             True, 4711, {},
-                                                            []),
+                                                            [], {}),
                                   lambda _: 'GO taxonomy id')
         organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)

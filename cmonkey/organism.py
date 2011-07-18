@@ -5,6 +5,7 @@ more information and licensing details.
 """
 from util import DelimitedFile, DelimitedFileMapper, best_matching_links
 import re
+import thesaurus
 
 
 def make_kegg_code_mapper(dfile):
@@ -24,7 +25,7 @@ class RsatSpeciesInfo:  # pylint: disable-msg=R0903
     mirror. This is a mere value object"""
 
     def __init__(self, species, is_eukaryote, taxonomy_id,
-                 features, contigs):
+                 features, contigs, thes):
         """create an instance of RsatSpeciesInfo"""
         # pylint: disable-msg=R0913
         self.species = species
@@ -32,6 +33,7 @@ class RsatSpeciesInfo:  # pylint: disable-msg=R0903
         self.taxonomy_id = taxonomy_id
         self.features = features
         self.contigs = contigs
+        self.thesaurus = thes
 
 
 class Feature:  # pylint: disable-msg=R0903
@@ -77,10 +79,15 @@ def make_rsat_organism_mapper(rsatdb):
         feature_dfile = DelimitedFile.create_from_text(
             rsatdb.get_features(rsat_organism), comment='--')
         features, contigs = read_rsat_features_and_contigs(feature_dfile)
+
+        feature_names_dfile = DelimitedFile.create_from_text(
+            rsatdb.get_feature_names(rsat_organism), comment='--')
+        thes = thesaurus.create_from_rsat_feature_names(feature_names_dfile)
+
         for contig in contigs:
             rsatdb.cache_contig_sequence(rsat_organism, contig)
         return RsatSpeciesInfo(rsat_organism, is_eukaryote, taxonomy_id,
-                               features, contigs)
+                               features, contigs, thes)
     return mapper_fun
 
 
