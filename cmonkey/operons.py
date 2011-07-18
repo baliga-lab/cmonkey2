@@ -6,7 +6,7 @@ various services.
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-from util import read_url_cached
+from util import read_url_cached, DelimitedFile
 
 
 MICROBES_ONLINE_BASE_URL = 'http://www.microbesonline.org'
@@ -28,3 +28,10 @@ class MicrobesOnline:
         cache_file = '/'.join([self.cache_dir,
                               'gnc%s.named' % str(organism_id)])
         return read_url_cached(url, cache_file)
+
+
+def read_from_microbes_online(microbes_online, organism_id):
+    """reads operon predictions from Microbes Online"""
+    preds = microbes_online.get_operon_predictions_for(organism_id)
+    dfile = DelimitedFile.create_from_text(preds, has_header=True)
+    return [(line[2], line[3]) for line in dfile.lines() if line[6] == 'TRUE']

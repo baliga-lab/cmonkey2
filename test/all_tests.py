@@ -13,6 +13,7 @@ from util_test import LevenshteinDistanceTest, BestMatchingLinksTest
 from organism_test import KeggOrganismCodeMapperTest, RsatOrganismMapperTest
 from organism_test import GoTaxonomyMapperTest, OrganismTest
 from thesaurus_test import DelimitedFileFactoryTest
+from operon_test import ReadMicrobesOnlineTest
 
 # pylint: disable-msg=C0301
 if __name__ == '__main__':
@@ -37,5 +38,7 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(OrganismTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DelimitedFileFactoryTest))
+
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ReadMicrobesOnlineTest))
 
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))

@@ -61,6 +61,16 @@ class DelimitedFileTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals(["value21", "value22"], lines[1])
         self.assertIsNone(dfile.header())
 
+    def test_create_from_text_empty_line_at_end(self):
+        """Reads a tab delimited file from a text"""
+        dfile = DelimitedFile.create_from_text(
+            "value11\tvalue12\nvalue21\tvalue22\n")
+        lines = dfile.lines()
+        self.assertEquals(2, len(lines))
+        self.assertEquals(["value11", "value12"], lines[0])
+        self.assertEquals(["value21", "value22"], lines[1])
+        self.assertIsNone(dfile.header())
+
 
 class LevenshteinDistanceTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for levenshtein_distance"""
