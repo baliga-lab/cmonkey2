@@ -157,14 +157,14 @@ class DataMatrixFactory:
 
     def create_from(self, delimited_file):
         """creates and returns an initialized, filtered DataMatrix instance"""
-        lines = delimited_file.lines
-        header = delimited_file.header
+        lines = delimited_file.lines()
+        header = delimited_file.header()
         nrows = len(lines)
         ncols = len(header) - 1
         colnames = header[1:len(header)]
         rownames = []
         for row in range(nrows):
-            rownames.append(delimited_file.lines[row][0])
+            rownames.append(lines[row][0])
         data_matrix = DataMatrix(nrows, ncols, rownames, colnames)
         for row in range(nrows):
             for col in range(ncols):

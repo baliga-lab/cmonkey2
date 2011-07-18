@@ -117,8 +117,16 @@ class MockDelimitedFile:  # pylint: disable-msg=R0903
 
     def __init__(self, header, lines):
         """create a mock instance"""
-        self.header = header
-        self.lines = lines
+        self.__header = header
+        self.__lines = lines
+
+    def header(self):
+        """returns the header"""
+        return self.__header
+
+    def lines(self):
+        """returns thes lines"""
+        return self.__lines
 
 
 class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
