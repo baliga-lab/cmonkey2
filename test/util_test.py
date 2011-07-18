@@ -14,31 +14,31 @@ class DelimitedFileTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_read_with_tabs(self):
         """Reads a tab delimited file"""
         dfile = DelimitedFile.read("testdata/simple.tsv")
-        lines = dfile.get_lines()
+        lines = dfile.lines()
         self.assertEquals(["value11", "value12"], lines[0])
         self.assertEquals(["value21", "value22"], lines[1])
-        self.assertIsNone(dfile.get_header())
+        self.assertIsNone(dfile.header())
 
     def test_read_with_tabs_and_header(self):
         """Reads a tab delimited file with a header"""
         dfile = DelimitedFile.read("testdata/simple.tsv", has_header=True)
-        lines = dfile.get_lines()
+        lines = dfile.lines()
         self.assertEquals(1, len(lines))
-        self.assertEquals(["value11", "value12"], dfile.get_header())
+        self.assertEquals(["value11", "value12"], dfile.header())
 
     def test_read_with_semicolon_header_and_comments(self):
         """Reads a semicolon delimited file with a header and comments"""
         dfile = DelimitedFile.read("testdata/withcomments.ssv", sep=';',
                                     has_header=True, comment='#')
-        lines = dfile.get_lines()
+        lines = dfile.lines()
         self.assertEquals(2, len(lines))
-        self.assertEquals(["header1", "header2"], dfile.get_header())
+        self.assertEquals(["header1", "header2"], dfile.header())
 
     def test_read_with_quotes(self):
         """Reads a semicolon delimited file with quotes"""
         dfile = DelimitedFile.read("testdata/withquotes.ssv", sep=';',
                                    has_header=False, comment='#', quote='"')
-        lines = dfile.get_lines()
+        lines = dfile.lines()
         self.assertEquals(["value11", "value12"], lines[0])
         self.assertEquals(["value21", "value22"], lines[1])
 
@@ -46,8 +46,8 @@ class DelimitedFileTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """Reads a semicolon delimited file containing emptylines"""
         dfile = DelimitedFile.read("testdata/withemptylines.ssv", sep=';',
                                    has_header=True, comment='#', quote='"')
-        lines = dfile.get_lines()
-        self.assertEquals(["header1", "header2"], dfile.get_header())
+        lines = dfile.lines()
+        self.assertEquals(["header1", "header2"], dfile.header())
         self.assertEquals(2, len(lines))
         self.assertEquals(["value11", "value12"], lines[0])
         self.assertEquals(["value21", "value22"], lines[1])
@@ -55,10 +55,10 @@ class DelimitedFileTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_create_from_text(self):
         """Reads a tab delimited file from a text"""
         dfile = DelimitedFile.create_from_text("value11\tvalue12\nvalue21\tvalue22")
-        lines = dfile.get_lines()
+        lines = dfile.lines()
         self.assertEquals(["value11", "value12"], lines[0])
         self.assertEquals(["value21", "value22"], lines[1])
-        self.assertIsNone(dfile.get_header())
+        self.assertIsNone(dfile.header())
 
 
 class LevenshteinDistanceTest(unittest.TestCase):  # pylint: disable-msg=R0904

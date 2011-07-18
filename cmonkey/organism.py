@@ -54,7 +54,7 @@ def make_rsat_organism_mapper(rsatdb):
         dictionary with feature ids as keys"""
         features = {}
         contigs = []
-        for line in dfile.lines:
+        for line in dfile.lines():
             feature_id = line[0]
             contig = line[3]
             features[feature_id] = Feature(feature_id, line[1], line[2],
@@ -73,7 +73,7 @@ def make_rsat_organism_mapper(rsatdb):
         is_eukaryote = re.search('Eukaryota', organism_text) != None
         organism_names_dfile = DelimitedFile.create_from_text(
             rsatdb.get_organism_names(rsat_organism), comment='--')
-        taxonomy_id = organism_names_dfile.lines[0][0]
+        taxonomy_id = organism_names_dfile.lines()[0][0]
         feature_dfile = DelimitedFile.create_from_text(
             rsatdb.get_features(rsat_organism), comment='--')
         features, contigs = read_rsat_features_and_contigs(feature_dfile)

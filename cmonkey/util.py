@@ -61,8 +61,8 @@ class DelimitedFile:  # pylint: disable-msg=R0913
     headers.
     Create a DelimitedFile instance by calling DelimitedFile.read()."""
     def __init__(self, lines, header):
-        self.lines = lines
-        self.header = header
+        self.__lines = lines
+        self.__header = header
 
     @classmethod
     def create_from_text(cls, text, sep='\t', has_header=False,
@@ -81,13 +81,13 @@ class DelimitedFile:  # pylint: disable-msg=R0913
         return make_delimited_file_from_lines(lines, sep, has_header,
                                               comment, quote)
 
-    def get_lines(self):
+    def lines(self):
         """returns the lines in the file"""
-        return self.lines
+        return self.__lines
 
-    def get_header(self):
+    def header(self):
         """returns the header in the file"""
-        return self.header
+        return self.__header
 
 
 class DelimitedFileMapper:
@@ -102,7 +102,7 @@ class DelimitedFileMapper:
 
     def lookup(self, key):
         """looks for the key in the key column"""
-        for line in self.taxonomy_file.get_lines():
+        for line in self.taxonomy_file.lines():
             if line[self.key_column] == key:
                 return line[self.value_column]
         return None
