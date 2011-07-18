@@ -54,7 +54,8 @@ class DelimitedFileTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_create_from_text(self):
         """Reads a tab delimited file from a text"""
-        dfile = DelimitedFile.create_from_text("value11\tvalue12\nvalue21\tvalue22")
+        dfile = DelimitedFile.create_from_text(
+            "value11\tvalue12\nvalue21\tvalue22")
         lines = dfile.lines()
         self.assertEquals(["value11", "value12"], lines[0])
         self.assertEquals(["value21", "value22"], lines[1])

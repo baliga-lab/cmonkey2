@@ -1,10 +1,11 @@
-"""rsat_database_test.py - unit tests for RsatDatabase class
+"""rsat_test.py - unit tests for RsatDatabase class
 
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-from rsat import RsatDatabase, DocumentNotFound
+from rsat import RsatDatabase
+from util import DocumentNotFound
 
 
 class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904

@@ -3,36 +3,8 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import urllib
 import os
-
-
-class DocumentNotFound(Exception):
-    """An exception indicating that the requested document does not exist"""
-    pass
-
-
-class CMonkeyURLopener(urllib.FancyURLopener):
-    """An URL opener that can detect 404 errors"""
-
-    def http_error_default(self, url, fp, errcode, errmsg, headers):
-        # pylint: disable-msg=R0913
-        # pylint: disable-msg=C0103
-        """overriding the default error handling method to handle HTTP 404
-        errors"""
-        if (errcode == 404):
-            raise DocumentNotFound(url)
-
-        # call super class handler.
-        # note that urllib.FancyURLopener is not a new-style class
-        return urllib.FancyURLopener.http_error_default(
-            self, url, fp, errcode, errmsg, headers)
-
-
-def read_url(url):
-    """convenience method to read a document from a URL using the
-    CMonkeyURLopener"""
-    return CMonkeyURLopener().open(url).read()
+from util import read_url, CMonkeyURLopener
 
 
 class RsatDatabase:
