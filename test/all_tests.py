@@ -12,6 +12,8 @@ from util_test import DelimitedFileTest, UtilsTest
 from util_test import LevenshteinDistanceTest, BestMatchingLinksTest
 from organism_test import KeggOrganismCodeMapperTest, RsatOrganismMapperTest
 from organism_test import GoTaxonomyMapperTest, OrganismTest
+from seqtools_test import SeqtoolsTest
+
 from thesaurus_test import DelimitedFileFactoryTest
 from operon_test import ReadMicrobesOnlineTest
 
@@ -36,6 +38,7 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(RsatOrganismMapperTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(GoTaxonomyMapperTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(OrganismTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(SeqtoolsTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DelimitedFileFactoryTest))
 

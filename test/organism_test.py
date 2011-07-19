@@ -71,15 +71,15 @@ class MockRsatDatabase:
 
     def get_features(self, _):
         """returns a fake feature.tab file"""
-        return '-- comment\nNP_206803.1\tCDS\tnusB\tNC_000915.1\t123\t456'
+        return '-- comment\nNP_206803.1\tCDS\tnusB\tNC_000915.1\t123\t456\tD'
 
     def get_feature_names(self, _):
         """returns a fake feature_names.tab file"""
         return "-- comment\ngene1\tgene1\tprimary\ngene1\talt1\talternate"
 
-    def cache_contig_sequence(self, organism, contig):
-        """does nothing"""
-        pass
+    def get_contig_sequence(self, organism, contig):
+        """return a contig sequence"""
+        return "ACGTTTAAAAGAGAGAGAGACACAGTATATATTTTTTTAAAA"
 
 
 class RsatOrganismMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904

@@ -7,7 +7,6 @@ import unittest
 import os
 import shutil
 from operons import MicrobesOnline, MICROBES_ONLINE_BASE_URL
-from util import DocumentNotFound
 
 
 class MicrobesOnlineTest(unittest.TestCase):  # pylint: disable-msg=R0904

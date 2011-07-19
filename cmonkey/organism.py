@@ -6,6 +6,7 @@ more information and licensing details.
 from util import DelimitedFile, DelimitedFileMapper, best_matching_links
 import re
 import thesaurus
+from seqtools import extract_upstream
 
 
 def make_kegg_code_mapper(dfile):
@@ -36,18 +37,28 @@ class RsatSpeciesInfo:  # pylint: disable-msg=R0903
         self.thesaurus = thes
 
 
-class Feature:  # pylint: disable-msg=R0903
+class Feature:  # pylint: disable-msg=R0902,R0903
     """representation of a feature. Just a value object"""
 
-    def __init__(self, feature_id, feature_type, name, contig):
+    def __init__(self, feature_id, feature_type, name, contig,
+                 start, end, reverse):
         """Create a Feature instance"""
+        # pylint: disable-msg=R0913
         self.feature_id = feature_id
         self.feature_type = feature_type
         self.name = name
         self.contig = contig
+        self.start = start
+        self.end = end
+        self.reverse = reverse
+        self.sequence = None
+
+    def set_sequence(self, seq):
+        """Sets this Feature's sequence"""
+        self.sequence = seq
 
 
-def make_rsat_organism_mapper(rsatdb):
+def make_rsat_organism_mapper(rsatdb, distance=(-30, 250)):
     """return a function that maps from a KEGG organism name to
     related RSAT information"""
 
@@ -59,11 +70,30 @@ def make_rsat_organism_mapper(rsatdb):
         for line in dfile.lines():
             feature_id = line[0]
             contig = line[3]
+            is_reverse = False
+            if line[6] == 'R':
+                is_reverse = True
+
             features[feature_id] = Feature(feature_id, line[1], line[2],
-                                           contig)
+                                           contig,
+                                           int(line[4]), int(line[5]),
+                                           is_reverse)
             if contig not in contigs:
                 contigs.append(contig)
         return (features, contigs)
+
+    def add_seqs_to_features(rsat_organism, contigs, features):
+        """for each feature, extract and set its sequence"""
+        contig_seqs = {}
+        for contig in contigs:
+            contig_seqs[contig] = rsatdb.get_contig_sequence(rsat_organism,
+                                                             contig)
+        for feature_id in features:
+            feature = features[feature_id]
+            feature.set_sequence(extract_upstream(contig_seqs[feature.contig],
+                                                  feature.start, feature.end,
+                                                  feature.reverse,
+                                                  distance))
 
     def mapper_fun(kegg_organism):
         """Mapper function to return basic information about an organism
@@ -83,9 +113,8 @@ def make_rsat_organism_mapper(rsatdb):
         feature_names_dfile = DelimitedFile.create_from_text(
             rsatdb.get_feature_names(rsat_organism), comment='--')
         thes = thesaurus.create_from_rsat_feature_names(feature_names_dfile)
+        add_seqs_to_features(rsat_organism, contigs, features)
 
-        for contig in contigs:
-            rsatdb.cache_contig_sequence(rsat_organism, contig)
         return RsatSpeciesInfo(rsat_organism, is_eukaryote, taxonomy_id,
                                features, contigs, thes)
     return mapper_fun
@@ -169,5 +198,5 @@ class Prokaryote(Organism):
 
 
 __all__ = ['make_kegg_code_mapper', 'make_go_taxonomy_mapper',
-           'make_rsat_organism_mapper',
+           'make_rsat_organism_mapper', 'subsequence'
            'Organism', 'OrganismFactory']

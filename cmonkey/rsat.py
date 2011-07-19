@@ -4,7 +4,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import os
-from util import read_url, CMonkeyURLopener
+from util import read_url, read_url_cached, CMonkeyURLopener
 
 
 class RsatDatabase:
@@ -59,6 +59,13 @@ class RsatDatabase:
         return read_url("/".join([self.base_url, RsatDatabase.DIR_PATH,
                                   organism,
                                   RsatDatabase.FEATURE_NAMES_PATH]))
+
+    def get_contig_sequence(self, organism, contig):
+        """returns the specified contig sequence"""
+        cache_file = "/".join([self.cache_dir, organism + '_' + contig])
+        url = "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
+                        'genome', contig + '.raw'])
+        return read_url_cached(url, cache_file).upper()
 
     def cache_contig_sequence(self, organism, contig):
         """downloads the specified contig sequence to the cache directory

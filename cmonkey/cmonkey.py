@@ -224,8 +224,9 @@ def init_cmonkey():
                                         center_scale_filter])
     infile = DelimitedFile.read(sys.argv[1], has_header=True)
     matrix = matrix_factory.create_from(infile)
-    print("Normalized input matrix:")
-    print(matrix)
+    print("Normalized input matrix has %d rows and %d columns:" %
+          (matrix.num_rows(), matrix.num_columns()))
+    #print(matrix)
 
     keggfile = DelimitedFile.read(KEGG_FILE_PATH, comment='#')
     gofile = DelimitedFile.read(GO_FILE_PATH)
