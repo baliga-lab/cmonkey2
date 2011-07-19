@@ -29,7 +29,7 @@ class MockRsatFeatureNameFile:
     def lines(self):
         """mocked lines() method"""
         return [['NAME1', 'PRIME1', 'primary'], ['NAME1', 'ALT1', 'alternate'],
-                ['NAME2', 'PRIME2', 'primary']]
+                ['NAME2', 'PRIME2', 'primary'], ['NAME2', 'VNG2664Gm']]
 
 
 class DelimitedFileFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -49,10 +49,20 @@ class DelimitedFileFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals('gene1', thes['alt2'])
         self.assertEquals('gene2', thes['alt3'])
 
-    def test_create_from_rsat_feature_names(self):
+    def test_create_from_rsat_feature_names_no_transform(self):
         """test the creation from RSAT feature names file"""
         thes = thesaurus.create_from_rsat_feature_names(
             MockRsatFeatureNameFile())
         self.assertEquals('NAME1', thes['PRIME1'])
         self.assertEquals('NAME1', thes['ALT1'])
         self.assertEquals('NAME2', thes['PRIME2'])
+        self.assertEquals('NAME2', thes['VNG2664Gm'])
+
+    def test_create_from_rsat_feature_names_with_transform(self):
+        """test the creation from RSAT feature names using a key transformer"""
+        thes = thesaurus.create_from_rsat_feature_names(
+            MockRsatFeatureNameFile(), [lambda x: x.rstrip('m')])
+        self.assertEquals('NAME1', thes['PRIME1'])
+        self.assertEquals('NAME1', thes['ALT1'])
+        self.assertEquals('NAME2', thes['PRIME2'])
+        self.assertEquals('NAME2', thes['VNG2664G'])
