@@ -8,12 +8,12 @@ from seqtools import subsequence, extract_upstream
 
 
 class SeqtoolsTest(unittest.TestCase):  # pylint: disable-msg=R0904
-    """Test class for seqtools"""
+    """Test class for seqtools."""
 
     def test_simple(self):
         """tests with a simple coordinate"""
-        self.assertEquals('TTAG', subsequence("ATTAGCA", 1, 4))
+        self.assertEquals('TTAG', subsequence("ATTAGCA", 2, 6))
 
     def test_reverse(self):
         """tests with simple coordinate, setting reverse flag"""
-        self.assertEquals('CTAA', subsequence("ATTAGCA", 1, 4, reverse=True))
+        self.assertEquals('CTAA', subsequence("ATTAGCA", 2, 6, reverse=True))

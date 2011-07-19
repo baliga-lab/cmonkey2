@@ -6,17 +6,26 @@ more information and licensing details.
 
 
 def extract_upstream(source, start, end, reverse, distance):
-    """rule for upstream extraction"""
-    return subsequence(source, start + (distance[0] - 1),
-                       end + (distance[1] - 1), reverse)
+    """Extract a subsequence of the specified  size from the source sequence
+    Depending on the strand orientation, the sequence is cut around either
+    the start or the end position"""
+    if reverse:
+        winstart = end + 1 + distance[0]
+        winend = end + 1 + distance[1]
+    else:
+        winstart = start - 1 - distance[1]
+        winend = start - 1 - distance[0]
+
+    return subsequence(source, winstart, winend, reverse)
 
 
 def subsequence(sequence, start, stop, reverse=False):
     """extracts a subsequence from a longer genomic sequence by coordinates.
     If reverse is True, the result string's reverse complement is
-    calculated
+    calculated. Not that the start/stop positions are shifted to comply with
+    the original cMonkey's behavior
     """
-    result = sequence[start:(stop + 1)]
+    result = sequence[start - 1:stop - 1]
     if reverse:
         result = revcomp(result)
     return result

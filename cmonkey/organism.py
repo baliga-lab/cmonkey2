@@ -59,7 +59,9 @@ class Feature:  # pylint: disable-msg=R0902,R0903
 
 def make_rsat_organism_mapper(rsatdb, distance=(-30, 250)):
     """return a function that maps from a KEGG organism name to
-    related RSAT information"""
+    related RSAT information
+    TODO: we also need to retrieve operon sequences if available
+    """
     # pylint: disable-msg=R0912
 
     def read_rsat_features_and_contigs(rsat_organism, gene_names, synonyms):
@@ -68,7 +70,7 @@ def make_rsat_organism_mapper(rsatdb, distance=(-30, 250)):
         are in gene_names are actually read"""
         features = {}
         contigs = []
-        id_names = [synonyms[name] for name in gene_names]
+        id_names = [synonyms[name] for name in gene_names if name in synonyms]
 
         dfile = DelimitedFile.create_from_text(
             rsatdb.get_features(rsat_organism), comment='--')
@@ -76,6 +78,7 @@ def make_rsat_organism_mapper(rsatdb, distance=(-30, 250)):
             feature_id = line[0]
             if feature_id in id_names:
                 add_feature_and_contig(features, contigs, feature_id, line)
+
         return (features, contigs)
 
     def add_feature_and_contig(features, contigs, feature_id, line):
@@ -107,11 +110,19 @@ def make_rsat_organism_mapper(rsatdb, distance=(-30, 250)):
                                                   feature.reverse,
                                                   distance))
 
+    def strip_vng_modification(gene):
+        """strips 'm' modifier off a VNG name"""
+        if re.match('VNG\d{4}.m$', gene):
+            return gene.rstrip('m')
+        else:
+            return gene
+
     def read_synonyms(rsat_organism):
         """reads the thesaurus from a feature_names file"""
         feature_names_dfile = DelimitedFile.create_from_text(
             rsatdb.get_feature_names(rsat_organism), comment='--')
-        return thesaurus.create_from_rsat_feature_names(feature_names_dfile)
+        return thesaurus.create_from_rsat_feature_names(
+            feature_names_dfile, [strip_vng_modification])
 
     def is_eukaryote(rsat_organism):
         """determine whether this organism is an eukaryote"""
@@ -136,6 +147,15 @@ def make_rsat_organism_mapper(rsatdb, distance=(-30, 250)):
                                                            gene_names,
                                                            synonyms)
         add_seqs_to_features(rsat_organism, contigs, features)
+        # just debugging
+        """
+        for name in sorted(gene_names):
+            if name in synonyms:
+                feature = features[synonyms[name]]
+                print("'%s' -> '%s' [%d, %d] contig: %s, rev: %s = '%s'" %
+                      (name, synonyms[name], feature.start, feature.end,
+                       feature.contig, str(feature.reverse), feature.sequence))
+                       """
         return RsatSpeciesInfo(rsat_organism, is_eukaryote(rsat_organism),
                                get_taxonomy_id(rsat_organism),
                                features, contigs)
