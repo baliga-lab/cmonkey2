@@ -28,8 +28,8 @@ class MockRsatFeatureNameFile:
 
     def lines(self):
         """mocked lines() method"""
-        return [['NAME1', 'NAME1', 'primary'], ['NAME1', 'ALT1', 'alternate'],
-                ['NAME2', 'NAME2', 'primary']]
+        return [['NAME1', 'PRIME1', 'primary'], ['NAME1', 'ALT1', 'alternate'],
+                ['NAME2', 'PRIME2', 'primary']]
 
 
 class DelimitedFileFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -53,4 +53,6 @@ class DelimitedFileFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """test the creation from RSAT feature names file"""
         thes = thesaurus.create_from_rsat_feature_names(
             MockRsatFeatureNameFile())
+        self.assertEquals('NAME1', thes['PRIME1'])
         self.assertEquals('NAME1', thes['ALT1'])
+        self.assertEquals('NAME2', thes['PRIME2'])

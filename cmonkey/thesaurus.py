@@ -30,8 +30,7 @@ def create_from_rsat_feature_names(dfile):
     """Uses a feature_names.tab file from RSAT to create a Thesaurus"""
     result = {}
     for line in dfile.lines():
-        if line[2] == 'alternate':
-            result[line[1]] = line[0]
+        result[line[1]] = line[0]
     return result
 
 
