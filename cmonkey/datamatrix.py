@@ -188,6 +188,35 @@ COLUMN_THRESHOLD = 0.1
 def nochange_filter(matrix):
     """returns a new filtered DataMatrix containing only the columns and
     rows that have large enough measurements"""
+
+    def nochange_filter_rows(data_matrix):
+        """subfunction of nochange_filter to filter row-wise"""
+        keep = []
+        for row_index in range(data_matrix.num_rows()):
+            count = 0
+            for col_index in range(data_matrix.num_columns()):
+                value = data_matrix.value_at(row_index, col_index)
+                if value == None or abs(value) <= ROW_THRESHOLD:
+                    count += 1
+            mean = float(count) / data_matrix.num_columns()
+            if mean < FILTER_THRESHOLD:
+                keep.append(row_index)
+        return keep
+
+    def nochange_filter_columns(data_matrix):
+        """subfunction of nochange_filter to filter column-wise"""
+        keep = []
+        for col_index in range(data_matrix.num_columns()):
+            count = 0
+            for row_index in range(data_matrix.num_rows()):
+                value = data_matrix.value_at(row_index, col_index)
+                if value == None or abs(value) <= COLUMN_THRESHOLD:
+                    count += 1
+            mean = float(count) / data_matrix.num_rows()
+            if mean < FILTER_THRESHOLD:
+                keep.append(col_index)
+        return keep
+
     rows_to_keep = nochange_filter_rows(matrix)
     cols_to_keep = nochange_filter_columns(matrix)
     colnames = [matrix.column_name(col) for col in cols_to_keep]
@@ -202,36 +231,6 @@ def nochange_filter(matrix):
                                     cols_to_keep[col_index])
             result.set_value_at(row_index, col_index, value)
     return result
-
-
-def nochange_filter_rows(data_matrix):
-    """subfunction of nochange_filter to filter row-wise"""
-    keep = []
-    for row_index in range(data_matrix.num_rows()):
-        count = 0
-        for col_index in range(data_matrix.num_columns()):
-            value = data_matrix.value_at(row_index, col_index)
-            if value == None or abs(value) <= ROW_THRESHOLD:
-                count += 1
-        mean = float(count) / data_matrix.num_columns()
-        if mean < FILTER_THRESHOLD:
-            keep.append(row_index)
-    return keep
-
-
-def nochange_filter_columns(data_matrix):
-    """subfunction of nochange_filter to filter column-wise"""
-    keep = []
-    for col_index in range(data_matrix.num_columns()):
-        count = 0
-        for row_index in range(data_matrix.num_rows()):
-            value = data_matrix.value_at(row_index, col_index)
-            if value == None or abs(value) <= COLUMN_THRESHOLD:
-                count += 1
-        mean = float(count) / data_matrix.num_rows()
-        if mean < FILTER_THRESHOLD:
-            keep.append(col_index)
-    return keep
 
 
 def row_filter(matrix, fun):

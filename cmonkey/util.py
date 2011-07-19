@@ -11,31 +11,30 @@ import urllib
 import os
 
 
-def next_non_comment_index(lines, comment, line_index):
-    """utility method that takes a list of strings and returns the next
-    line index of a non-comment line. it also skips empty lines
-    """
-    if comment:
-        num_lines = len(lines)
-        line = lines[line_index].lstrip()
-        while line_index < num_lines and (len(line) == 0 or
-                                          line.startswith(comment)):
-            line_index += 1
-            if (line_index < num_lines):
-                line = lines[line_index].lstrip()
-    return line_index
-
-
-def remove_quotes(astring, quote):
-    """removes the quote character from the input string if given"""
-    if quote:
-        return astring.replace(quote, "")
-    else:
-        return astring
-
-
 def make_delimited_file_from_lines(lines, sep, has_header, comment, quote):
     """Creates a delimited file from a list of lines"""
+
+    def remove_quotes(astring, quote):
+        """removes the quote character from the input string if given"""
+        if quote:
+            return astring.replace(quote, "")
+        else:
+            return astring
+
+    def next_non_comment_index(lines, comment, line_index):
+        """utility method that takes a list of strings and returns the next
+        line index of a non-comment line. it also skips empty lines
+        """
+        if comment:
+            num_lines = len(lines)
+            line = lines[line_index].lstrip()
+            while line_index < num_lines and (len(line) == 0 or
+                                              line.startswith(comment)):
+                line_index += 1
+                if (line_index < num_lines):
+                    line = lines[line_index].lstrip()
+        return line_index
+
     file_header = None
     file_lines = []
     line_index = next_non_comment_index(lines, comment, 0)

@@ -60,6 +60,7 @@ class Feature:  # pylint: disable-msg=R0902,R0903
 def make_rsat_organism_mapper(rsatdb, distance=(-30, 250)):
     """return a function that maps from a KEGG organism name to
     related RSAT information"""
+    # pylint: disable-msg=R0912
 
     def read_rsat_features_and_contigs(rsat_organism, gene_names, synonyms):
         """Reads RSAT features from a feature.tab file and returns a

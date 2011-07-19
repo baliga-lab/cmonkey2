@@ -35,3 +35,6 @@ def read_from_microbes_online(microbes_online, organism_id):
     preds = microbes_online.get_operon_predictions_for(organism_id)
     dfile = DelimitedFile.create_from_text(preds, has_header=True)
     return [(line[2], line[3]) for line in dfile.lines() if line[6] == 'TRUE']
+
+
+__all__ = ['MicrobesOnline', 'read_from_microbes_online']
