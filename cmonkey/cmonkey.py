@@ -234,7 +234,7 @@ def init_cmonkey():
     org_factory = OrganismFactory(make_kegg_code_mapper(keggfile),
                                   make_rsat_organism_mapper(rsatdb),
                                   make_go_taxonomy_mapper(gofile))
-    organism = org_factory.create(sys.argv[2])
+    organism = org_factory.create(sys.argv[2], matrix.row_names())
     print(organism)
 
 if __name__ == '__main__':

@@ -26,7 +26,7 @@ class RsatSpeciesInfo:  # pylint: disable-msg=R0903
     mirror. This is a mere value object"""
 
     def __init__(self, species, is_eukaryote, taxonomy_id,
-                 features, contigs, thes):
+                 features, contigs):
         """create an instance of RsatSpeciesInfo"""
         # pylint: disable-msg=R0913
         self.species = species
@@ -34,7 +34,6 @@ class RsatSpeciesInfo:  # pylint: disable-msg=R0903
         self.taxonomy_id = taxonomy_id
         self.features = features
         self.contigs = contigs
-        self.thesaurus = thes
 
 
 class Feature:  # pylint: disable-msg=R0902,R0903
@@ -62,25 +61,37 @@ def make_rsat_organism_mapper(rsatdb, distance=(-30, 250)):
     """return a function that maps from a KEGG organism name to
     related RSAT information"""
 
-    def read_rsat_features_and_contigs(dfile):
+    def read_rsat_features_and_contigs(rsat_organism, gene_names, synonyms):
         """Reads RSAT features from a feature.tab file and returns a
-        dictionary with feature ids as keys"""
+        dictionary with feature ids as keys only the features that
+        are in gene_names are actually read"""
         features = {}
         contigs = []
+        id_names = [synonyms[name] for name in gene_names]
+
+        dfile = DelimitedFile.create_from_text(
+            rsatdb.get_features(rsat_organism), comment='--')
         for line in dfile.lines():
             feature_id = line[0]
-            contig = line[3]
-            is_reverse = False
-            if line[6] == 'R':
-                is_reverse = True
-
-            features[feature_id] = Feature(feature_id, line[1], line[2],
-                                           contig,
-                                           int(line[4]), int(line[5]),
-                                           is_reverse)
-            if contig not in contigs:
-                contigs.append(contig)
+            if feature_id in id_names:
+                add_feature_and_contig(features, contigs, feature_id, line)
         return (features, contigs)
+
+    def add_feature_and_contig(features, contigs, feature_id, line):
+        """Creates and adds a feature and associated contig from current
+        DelimitedFile line"""
+        contig = line[3]
+        is_reverse = False
+        if line[6] == 'R':
+            is_reverse = True
+
+        features[feature_id] = Feature(feature_id, line[1],
+                                       line[2],
+                                       contig,
+                                       int(line[4]), int(line[5]),
+                                       is_reverse)
+        if contig not in contigs:
+            contigs.append(contig)
 
     def add_seqs_to_features(rsat_organism, contigs, features):
         """for each feature, extract and set its sequence"""
@@ -95,28 +106,38 @@ def make_rsat_organism_mapper(rsatdb, distance=(-30, 250)):
                                                   feature.reverse,
                                                   distance))
 
-    def mapper_fun(kegg_organism):
+    def read_synonyms(rsat_organism):
+        """reads the thesaurus from a feature_names file"""
+        feature_names_dfile = DelimitedFile.create_from_text(
+            rsatdb.get_feature_names(rsat_organism), comment='--')
+        return thesaurus.create_from_rsat_feature_names(feature_names_dfile)
+
+    def is_eukaryote(rsat_organism):
+        """determine whether this organism is an eukaryote"""
+        organism_text = rsatdb.get_organism(rsat_organism)
+        return re.search('Eukaryota', organism_text) != None
+
+    def get_taxonomy_id(rsat_organism):
+        """Determine the taxonomy data from the RSAT database"""
+        organism_names_dfile = DelimitedFile.create_from_text(
+            rsatdb.get_organism_names(rsat_organism), comment='--')
+        return organism_names_dfile.lines()[0][0]
+
+    def mapper_fun(kegg_organism, gene_names):
         """Mapper function to return basic information about an organism
-        stored in the RSAT database"""
+        stored in the RSAT database. Only the genes in gene_names will
+        be considered in the construction"""
         rsat_organism = best_matching_links(
             kegg_organism,
             rsatdb.get_directory())[0].rstrip('/')
-        organism_text = rsatdb.get_organism(rsat_organism)
-        is_eukaryote = re.search('Eukaryota', organism_text) != None
-        organism_names_dfile = DelimitedFile.create_from_text(
-            rsatdb.get_organism_names(rsat_organism), comment='--')
-        taxonomy_id = organism_names_dfile.lines()[0][0]
-        feature_dfile = DelimitedFile.create_from_text(
-            rsatdb.get_features(rsat_organism), comment='--')
-        features, contigs = read_rsat_features_and_contigs(feature_dfile)
-
-        feature_names_dfile = DelimitedFile.create_from_text(
-            rsatdb.get_feature_names(rsat_organism), comment='--')
-        thes = thesaurus.create_from_rsat_feature_names(feature_names_dfile)
+        synonyms = read_synonyms(rsat_organism)
+        features, contigs = read_rsat_features_and_contigs(rsat_organism,
+                                                           gene_names,
+                                                           synonyms)
         add_seqs_to_features(rsat_organism, contigs, features)
-
-        return RsatSpeciesInfo(rsat_organism, is_eukaryote, taxonomy_id,
-                               features, contigs, thes)
+        return RsatSpeciesInfo(rsat_organism, is_eukaryote(rsat_organism),
+                               get_taxonomy_id(rsat_organism),
+                               features, contigs)
     return mapper_fun
 
 
@@ -142,10 +163,10 @@ class OrganismFactory:
         self.rsat_organism_info = rsat_organism_info
         self.get_taxonomy_id = get_go_taxonomy_id
 
-    def create(self, organism_code):
+    def create(self, organism_code, gene_names):
         """factory method to create an organism from a code"""
         kegg_organism = self.code2kegg_organism(organism_code)
-        rsat_info = self.rsat_organism_info(kegg_organism)
+        rsat_info = self.rsat_organism_info(kegg_organism, gene_names)
         go_taxonomy_id = self.get_taxonomy_id(
             rsat_info.species.replace('_', ' '))
         if rsat_info.is_eukaryote:
