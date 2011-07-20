@@ -7,7 +7,7 @@ import unittest
 from util import DelimitedFile
 from organism import make_kegg_code_mapper, make_go_taxonomy_mapper
 from organism import make_rsat_organism_mapper, OrganismFactory
-from organism import RsatSpeciesInfo
+from organism import RsatSpeciesInfo, Organism
 
 TAXONOMY_FILE_PATH = "testdata/KEGG_taxonomy"
 PROT2TAXID_FILE_PATH = "testdata/proteome2taxid"
@@ -77,7 +77,9 @@ class MockRsatDatabase:
 
     def get_feature_names(self, _):
         """returns a fake feature_names.tab file"""
-        return "-- comment\nNP_206803.1\tNP_206803.1\tprimary\ngene1\talt1\talternate"
+        return ("-- comment\nNP_206803.1\tNP_206803.1\tprimary\n" +
+                "NP_206803.1\tVNG12345G\talternate\n" +
+                "gene1\talt1\talternate")
 
     def get_contig_sequence(self, organism, contig):
         """return a contig sequence"""
@@ -95,13 +97,10 @@ class RsatOrganismMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_mapper(self):
         """tests the get_organism method for an existing organism"""
-        info = self.mapper('Halobacterium', ['NP_206803.1'])
+        info = self.mapper('Halobacterium')
         self.assertEquals('Halobacterium_sp', info.species)
         self.assertTrue(info.is_eukaryote)
         self.assertEquals('4711', info.taxonomy_id)
-        self.assertIsNotNone(info.features['NP_206803.1'])
-        self.assertEquals(1, len(info.features))
-        self.assertEquals(['NC_000915.1'], info.contigs)
 
 
 class MockRsatOrganismMapper:
@@ -129,36 +128,50 @@ def mock_go_mapper(rsat_organism):
         return None
 
 
-class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
-    """Test class for Organism"""
+class OrganismFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
+    """Test class for OrganismFactory"""
 
     def test_create_prokaryote(self):
         """tests creating a Prokaryote"""
         factory = OrganismFactory(
             lambda _: 'KEGG organism',
-            lambda org, genes: RsatSpeciesInfo('RSAT_organism',
-                                               False, 4711, {},
-                                               []),
+            lambda _: RsatSpeciesInfo(MockRsatDatabase(''),
+                                      'RSAT_organism',
+                                      False, 4711),
             mock_go_mapper)
-        organism = factory.create('hpy', [])
+        organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
         self.assertEquals('Hpy', organism.cog_organism())
         self.assertEquals('KEGG organism', organism.kegg_organism)
-        self.assertEquals('RSAT_organism', organism.rsat_info.species)
+        self.assertEquals('RSAT_organism', organism.species())
         self.assertEquals('GO taxonomy id', organism.go_taxonomy_id)
         self.assertFalse(organism.is_eukaryote())
-        self.assertEquals(4711, organism.rsat_info.taxonomy_id)
         self.assertIsNotNone(str(organism))
 
     def test_create_eukaryote(self):
         """tests creating an eukaryote"""
         factory = OrganismFactory(
             lambda _: 'KEGG organism',
-            lambda org, genes: RsatSpeciesInfo('RSAT_organism',
-                                               True, 4711, {},
-                                               []),
+            lambda _: RsatSpeciesInfo(MockRsatDatabase(''),
+                                      'RSAT_organism',
+                                      True, 4711),
             lambda _: 'GO taxonomy id')
-        organism = factory.create('hpy', [])
+        organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
         self.assertTrue(organism.is_eukaryote())
-        self.assertEquals(4711, organism.rsat_info.taxonomy_id)
+
+
+class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
+    """Test class for Organism"""
+
+    def test_init_genome(self):
+        organism = Organism('hal', 'Halobacterium SP',
+                            RsatSpeciesInfo(MockRsatDatabase(''),
+                                            'Halobacterium_SP',
+                                            False,
+                                            12345), 12345)
+        organism.init_genome(['VNG12345G'])
+        self.assertTrue(len(organism.synonyms()) > 0)
+        self.assertIsNotNone(organism.features()['NP_206803.1'])
+        self.assertEquals(1, len(organism.features()))
+        self.assertEquals(['NC_000915.1'], organism.contigs())

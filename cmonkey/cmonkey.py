@@ -234,8 +234,12 @@ def init_cmonkey():
     org_factory = OrganismFactory(make_kegg_code_mapper(keggfile),
                                   make_rsat_organism_mapper(rsatdb),
                                   make_go_taxonomy_mapper(gofile))
-    organism = org_factory.create(sys.argv[2], matrix.row_names())
+    organism = org_factory.create(sys.argv[2])
     print(organism)
+    organism.init_genome(matrix.row_names())
+    print "Contigs: %s" % str(organism.contigs())
+    print "# Features read: %d" % len(organism.features())
+
 
 if __name__ == '__main__':
     print('cMonkey (Python port) (c) 2011, Institute for Systems Biology')
