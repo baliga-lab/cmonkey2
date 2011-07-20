@@ -50,4 +50,40 @@ def revchar(nucleotide):
         raise ValueError('unknown param: %s' % str(nucleotide))
 
 
-__all__ = ['subsequence', 'extract_upstream']
+def subseq_counts(seqs, subseq_len):
+    """return a dictionary containing for each subsequence of length
+    subseq_len their respective count in the input sequences"""
+    counts = {}
+    for seq in seqs:
+        for index in range(0, len(seq) - subseq_len + 1):
+            subseq = seq[index:index + subseq_len]
+            if not subseq in counts:
+                counts[subseq] = 0
+            counts[subseq] += 1
+    return counts
+
+
+def subseq_frequencies(seqs, subseq_len):
+    """return a dictionary containing for each subsequence of
+    length subseq_len their respective frequency within the
+    input sequences"""
+    result = {}
+    counts = subseq_counts(seqs, subseq_len)
+    total = sum([count for count in counts.values()])
+    for subseq, count in counts.items():
+        result[subseq] = float(count) / float(total)
+    return result
+
+
+def markov_background(seqs, order):
+    """computes the markov background model of the specified
+    order for the given input sequences. This is implemented
+    by gathering the frequencies of subsequences of length
+    1,..,(order + 1)"""
+    result = []
+    for subseq_len in range(1, (order + 2)):
+        result.append(subseq_frequencies(seqs, subseq_len))
+    return result
+
+
+__all__ = ['subsequence', 'extract_upstream', 'markov_background']
