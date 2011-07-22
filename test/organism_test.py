@@ -141,7 +141,7 @@ class OrganismFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
             lambda _: RsatSpeciesInfo(MockRsatDatabase(''),
                                       'RSAT_organism',
                                       False, 4711),
-            mock_go_mapper)
+            mock_go_mapper, [])
         organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
         self.assertEquals('Hpy', organism.cog_organism())
@@ -158,7 +158,7 @@ class OrganismFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
             lambda _: RsatSpeciesInfo(MockRsatDatabase(''),
                                       'RSAT_organism',
                                       True, 4711),
-            lambda _: 'GO taxonomy id')
+            lambda _: 'GO taxonomy id', [])
         organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
         self.assertTrue(organism.is_eukaryote())

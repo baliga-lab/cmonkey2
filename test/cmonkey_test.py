@@ -29,6 +29,9 @@ class MockOrganism:
     def contigs(self):
         return []
 
+    def networks(self):
+        return []
+
 
 class CMonkeyTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for CMonkey"""

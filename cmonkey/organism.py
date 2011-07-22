@@ -100,7 +100,7 @@ class OrganismFactory:
     def __init__(self, code2kegg_organism,
                  rsat_organism_info,
                  get_go_taxonomy_id,
-                 network_factories=None):
+                 network_factories):
         """create a OrganismFactory instance"""
         self.code2kegg_organism = code2kegg_organism
         self.rsat_organism_info = rsat_organism_info

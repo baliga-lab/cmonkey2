@@ -12,8 +12,10 @@ from organism import make_rsat_organism_mapper
 from rsat import RsatDatabase
 import sys
 import os
+import logging
 
 
+LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 CMONKEY_VERSION = '4.0'
 AVG_CLUSTER_SIZE = 20
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
@@ -48,7 +50,9 @@ class CMonkey:  # pylint: disable-msg=R0902
         self.__organism = organism
         self.__ratio_matrices = ratio_matrices
         self.__configuration = self.__init_configuration(config)
-        self.__cluster_nums = range(self.__num_biclusters())
+        self.__networks = None
+
+        # we might move these to a result class
         self.__row_scores = None
         self.__col_scores = None
         self.__gene_weights = None
@@ -67,7 +71,6 @@ class CMonkey:  # pylint: disable-msg=R0902
         configuration.setdefault('seed_method.rows',     'kmeans')
         configuration.setdefault('seed_method.cols',     'best')
         configuration.setdefault('post.adjust',          True)
-        configuration.setdefault('verbose',              True)
         return configuration
 
     def __compute_num_biclusters(self, config):
@@ -87,14 +90,15 @@ class CMonkey:  # pylint: disable-msg=R0902
     def run(self):
         """start a run"""
         self.__organism.init_with(self.__input_gene_names())
-        print "Contigs: %s" % str(self.__organism.contigs())
-        print "# Features read: %d" % len(self.__organism.features())
+        self.__retrieve_networks()
+        logging.info("Contigs: %s", str(self.__organism.contigs()))
+        logging.info("# Features read: %d", len(self.__organism.features()))
+        logging.info("# Networks read: %d", len(self.__networks))
 
         self.__seed_clusters()
         current_iteration = 0
 
-        if self.__is_verbose():
-            print "# iterations: %d" % self.__num_iterations()
+        logging.info("# iterations: %d", self.__num_iterations())
 
         while current_iteration < self.__num_iterations():
             self.__iterate()
@@ -105,14 +109,21 @@ class CMonkey:  # pylint: disable-msg=R0902
         """returns the unique gene names used in the input matrices"""
         return self.__ratio_matrices[0].row_names()
 
-    def __is_verbose(self):
-        """determine whether we are running in verbose mode"""
-        return self.__configuration['verbose']
+    def __retrieve_networks(self):
+        """retrieves the networks provided by the organism object and
+        possibly other sources, doing some normalization if necessary"""
+        self.__networks = self.__organism.networks()
+        max_score = 0
+        for network in self.__networks:
+            nw_total = network.total_score
+            if nw_total > max_score:
+                max_score = nw_total
+        for network in self.__networks:
+            network.normalize_scores_to(max_score)
 
     def __num_iterations(self):
         """configured number of iterations"""
         return self.__configuration.get('num_iterations', 2000)
-
 
     def __seed_clusters(self):
         """seed clusters using the selected row and column methods"""
@@ -153,14 +164,15 @@ class CMonkey:  # pylint: disable-msg=R0902
 
     def __init_row_col_score_matrix(self, score_matrix):
         """generic initialization of row/column score matrix"""
+        cluster_nums = range(self.__num_biclusters())
         if score_matrix:
             for row_name in score_matrix:
-                for col in self.__cluster_nums:
+                for col in cluster_nums:
                     score_matrix[row_name][col] = 0
         else:
             score_matrix = make_matrix(
                 self.__ratio_matrices.unique_row_names(),
-                max(self.__cluster_nums) + 1)
+                max(cluster_nums) + 1)
         return score_matrix
 
     def __compute_cluster_scores(self):
@@ -224,6 +236,9 @@ __all__ = ['CMonkey', 'Membership']
 
 def run_cmonkey():
     """init of the cMonkey system"""
+    logging.basicConfig(format=LOG_FORMAT,
+                        datefmt='%Y-%m-%d %H:%M:%S',
+                        level=logging.DEBUG)
     if not os.path.exists(CACHE_DIR):
         os.mkdir(CACHE_DIR)
 
@@ -231,8 +246,8 @@ def run_cmonkey():
                                         center_scale_filter])
     infile = DelimitedFile.read(sys.argv[1], has_header=True)
     matrix = matrix_factory.create_from(infile)
-    print("Normalized input matrix has %d rows and %d columns:" %
-          (matrix.num_rows(), matrix.num_columns()))
+    logging.info("Normalized input matrix has %d rows and %d columns:",
+                 matrix.num_rows(), matrix.num_columns())
     #print(matrix)
 
     keggfile = DelimitedFile.read(KEGG_FILE_PATH, comment='#')
@@ -240,9 +255,10 @@ def run_cmonkey():
     rsatdb = RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
     org_factory = OrganismFactory(make_kegg_code_mapper(keggfile),
                                   make_rsat_organism_mapper(rsatdb),
-                                  make_go_taxonomy_mapper(gofile))
+                                  make_go_taxonomy_mapper(gofile),
+                                  [])
     organism = org_factory.create(sys.argv[2])
-    print(organism)
+    logging.info(organism)
     algorithm = CMonkey(organism, DataMatrixCollection([matrix]))
     algorithm.run()
 
