@@ -36,21 +36,19 @@ class CMonkeyTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_create_cmonkey(self):
         """create a CMonkey object"""
         cmonkey = CMonkey(MockOrganism(), RATIO_MATRICES)
-        self.assertFalse(cmonkey.run_finished)
-        self.assertEquals('hpy', cmonkey.configuration['organism'])
+        self.assertFalse(cmonkey.finished())
 
     def test_create_cmonkey_with_config(self):
         """create CMonkey object, specifying an organism"""
         config = {'organism': 'homo sapiens'}
         cmonkey = CMonkey(MockOrganism(), RATIO_MATRICES, config)
-        self.assertFalse(cmonkey.run_finished)
-        self.assertEquals('homo sapiens', cmonkey.configuration['organism'])
+        self.assertFalse(cmonkey.finished())
 
     def test_run_cmonkey_simple(self):
         """run CMonkey in the simplest way"""
         cmonkey = CMonkey(MockOrganism(), RATIO_MATRICES)
         cmonkey.run()
-        self.assertTrue(cmonkey.run_finished)
+        self.assertTrue(cmonkey.finished())
 
 
 class MembershipTest(unittest.TestCase):  # pylint: disable-msg=R0904

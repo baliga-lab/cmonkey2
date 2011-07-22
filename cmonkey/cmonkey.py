@@ -44,20 +44,22 @@ class CMonkey:  # pylint: disable-msg=R0902
                         values
         configuration: a dictionary of configuration values
         """
-        self.run_finished = False
+        self.__finished = False
         self.__organism = organism
         self.__ratio_matrices = ratio_matrices
-        self.configuration = self.init_configuration(config)
-        self.num_biclusters = self.configuration['num_biclusters']
-        self.cluster_nums = range(self.num_biclusters)
-        self.row_scores = None
-        self.col_scores = None
-        self.gene_weights = None
+        self.__configuration = self.init_configuration(config)
+        self.__cluster_nums = range(self.__num_biclusters())
+        self.__row_scores = None
+        self.__col_scores = None
+        self.__gene_weights = None
+
+    def __num_biclusters(self):
+        """returns the number of biclusters"""
+        return self.__configuration['num_biclusters']
 
     def init_configuration(self, config):
         """sets meaningful defaults in the configuration"""
         configuration = config or {}
-        configuration.setdefault('organism',             'hpy')
         configuration.setdefault('num_iterations',       2)  # 2000 for now
         configuration.setdefault('biclusters_per_gene',  2)
         configuration.setdefault('num_biclusters',
@@ -72,8 +74,12 @@ class CMonkey:  # pylint: disable-msg=R0902
         configuration.setdefault('verbose',              True)
         return configuration
 
+    def finished(self):
+        """returns true if the run was finished"""
+        return self.__finished
+
     def input_gene_names(self):
-        """returns the gene names used in the input"""
+        """returns the unique gene names used in the input matrices"""
         return self.__ratio_matrices[0].row_names()
 
     def compute_num_biclusters(self, config):
@@ -84,11 +90,11 @@ class CMonkey:  # pylint: disable-msg=R0902
 
     def is_verbose(self):
         """determine whether we are running in verbose mode"""
-        return self.configuration['verbose']
+        return self.__configuration['verbose']
 
     def num_iterations(self):
         """configured number of iterations"""
-        return self.configuration.get('num_iterations', 2000)
+        return self.__configuration.get('num_iterations', 2000)
 
     def run(self):
         """start a run"""
@@ -105,8 +111,7 @@ class CMonkey:  # pylint: disable-msg=R0902
         while current_iteration < self.num_iterations():
             self.iterate()
             current_iteration += 1
-
-        self.run_finished = True
+        self.__finished = True
 
     def seed_clusters(self):
         """seed clusters using the selected row and column methods"""
@@ -131,30 +136,30 @@ class CMonkey:  # pylint: disable-msg=R0902
 
     def compute_row_scores(self):
         """compute row scores on microarray data"""
-        self.row_scores = self.init_row_col_score_matrix(self.row_scores)
-        for gene_name in self.row_scores:
+        self.__row_scores = self.init_row_col_score_matrix(self.__row_scores)
+        for gene_name in self.__row_scores:
             if self.has_gene_weight(gene_name):
                 # TODO
                 pass
 
     def has_gene_weight(self, gene_name):
         """determine if a weight was specified for the given gene"""
-        return self.gene_weights and self.gene_weights.get(gene_name)
+        return self.__gene_weights and self.__gene_weights.get(gene_name)
 
     def compute_column_scores(self):
         """compute column scores on microarray data"""
-        self.col_scores = self.init_row_col_score_matrix(self.col_scores)
+        self.__col_scores = self.init_row_col_score_matrix(self.__col_scores)
 
     def init_row_col_score_matrix(self, score_matrix):
         """generic initialization of row/column score matrix"""
         if score_matrix:
             for row_name in score_matrix:
-                for col in self.cluster_nums:
+                for col in self.__cluster_nums:
                     score_matrix[row_name][col] = 0
         else:
             score_matrix = make_matrix(
                 self.__ratio_matrices.unique_row_names(),
-                max(self.cluster_nums) + 1)
+                max(self.__cluster_nums) + 1)
         return score_matrix
 
     def compute_cluster_scores(self):
