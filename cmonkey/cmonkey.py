@@ -5,6 +5,7 @@ more information and licensing details.
 """
 from util import make_matrix, DelimitedFile
 from datamatrix import DataMatrixFactory, nochange_filter, center_scale_filter
+from datamatrix import DataMatrixCollection
 from organism import OrganismFactory
 from organism import make_kegg_code_mapper, make_go_taxonomy_mapper
 from organism import make_rsat_organism_mapper
@@ -44,28 +45,20 @@ class CMonkey:  # pylint: disable-msg=R0902
         configuration: a dictionary of configuration values
         """
         self.run_finished = False
-        self.organism = organism
-        self.ratio_matrices = ratio_matrices
+        self.__organism = organism
+        self.__ratio_matrices = ratio_matrices
         self.configuration = self.init_configuration(config)
         self.num_biclusters = self.configuration['num_biclusters']
         self.cluster_nums = range(self.num_biclusters)
-        self.stats = None
         self.row_scores = None
         self.col_scores = None
-        self.mot_scores = None
-        self.net_scores = None
-        self.r_scores = None
         self.gene_weights = None
-        self.row_scaling = [0 for _ in range(self.num_iterations())]
-        self.mot_scaling = [0 for _ in range(self.num_iterations())]
-        self.net_scaling = [0 for _ in range(self.num_iterations())]
-        self.fuzzy_index = [0 for _ in range(self.num_iterations())]
 
     def init_configuration(self, config):
         """sets meaningful defaults in the configuration"""
         configuration = config or {}
         configuration.setdefault('organism',             'hpy')
-        configuration.setdefault('num_iterations',       2000)
+        configuration.setdefault('num_iterations',       2)  # 2000 for now
         configuration.setdefault('biclusters_per_gene',  2)
         configuration.setdefault('num_biclusters',
                                  self.compute_num_biclusters(configuration))
@@ -79,9 +72,13 @@ class CMonkey:  # pylint: disable-msg=R0902
         configuration.setdefault('verbose',              True)
         return configuration
 
+    def input_gene_names(self):
+        """returns the gene names used in the input"""
+        return self.__ratio_matrices[0].row_names()
+
     def compute_num_biclusters(self, config):
         """computes the number of biclusters to optimize"""
-        return int(round(self.ratio_matrices.num_unique_rows() *
+        return int(round(self.__ratio_matrices.num_unique_rows() *
                          float(config['biclusters_per_gene']) /
                          AVG_CLUSTER_SIZE))
 
@@ -95,6 +92,10 @@ class CMonkey:  # pylint: disable-msg=R0902
 
     def run(self):
         """start a run"""
+        self.__organism.init_with(self.input_gene_names())
+        print "Contigs: %s" % str(self.__organism.contigs())
+        print "# Features read: %d" % len(self.__organism.features())
+
         self.seed_clusters()
         current_iteration = 0
 
@@ -152,7 +153,7 @@ class CMonkey:  # pylint: disable-msg=R0902
                     score_matrix[row_name][col] = 0
         else:
             score_matrix = make_matrix(
-                self.ratio_matrices.unique_row_names,
+                self.__ratio_matrices.unique_row_names(),
                 max(self.cluster_nums) + 1)
         return score_matrix
 
@@ -215,7 +216,7 @@ class Membership:
 __all__ = ['CMonkey', 'Membership']
 
 
-def init_cmonkey():
+def run_cmonkey():
     """init of the cMonkey system"""
     if not os.path.exists(CACHE_DIR):
         os.mkdir(CACHE_DIR)
@@ -236,9 +237,8 @@ def init_cmonkey():
                                   make_go_taxonomy_mapper(gofile))
     organism = org_factory.create(sys.argv[2])
     print(organism)
-    organism.init_genome(matrix.row_names())
-    print "Contigs: %s" % str(organism.contigs())
-    print "# Features read: %d" % len(organism.features())
+    algorithm = CMonkey(organism, DataMatrixCollection([matrix]))
+    algorithm.run()
 
 
 if __name__ == '__main__':
@@ -248,4 +248,4 @@ if __name__ == '__main__':
     if len(sys.argv) <= 2:
         print('Usage: ./run_cmonkey.sh <ratio-file> <organism-code>')
     else:
-        init_cmonkey()
+        run_cmonkey()

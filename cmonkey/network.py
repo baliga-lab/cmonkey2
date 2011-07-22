@@ -48,3 +48,14 @@ class Network:
         for edge in self.__edges:
             total += edge.score()
         return total
+
+    def normalize_scores_to(self, score):
+        """normalizes all edge scores so that they sum up to
+        the specified score"""
+        total = self.total_score()
+        if score != total:
+            # score_e / score_total * score == score_e * (score_total / score)
+            # we use this to save a division per loop iteration
+            scale = float(score) / float(total)
+            for edge in self.__edges:
+                edge.set_score(edge.score() * scale)

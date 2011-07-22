@@ -105,9 +105,9 @@ class DataMatrixCollectionTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """creates a DataMatrixCollection with one matrix"""
         matrix = DataMatrix(2, 3, ["row0", "row1"], ["col0", "col1", "col2"])
         coll = DataMatrixCollection([matrix])
-        self.assertEquals(["row0", "row1"], coll.unique_row_names)
+        self.assertEquals(["row0", "row1"], coll.unique_row_names())
         self.assertEquals(["col0", "col1", "col2"],
-                          coll.unique_column_names)
+                          coll.unique_column_names())
         self.assertEquals(2, coll.num_unique_rows())
         self.assertEquals(3, coll.num_unique_columns())
 

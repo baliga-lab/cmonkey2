@@ -162,7 +162,7 @@ class Organism:
         """Returns this object's contigs"""
         return self.__contigs
 
-    def init_genome(self, gene_names, distance=(-30, 250)):
+    def init_with(self, gene_names, distance=(-30, 250)):
         """initialize this Organism's genome for usage in cMonkey"""
         self.__features, self.__contigs = self.__read_features_and_contigs(
             gene_names)

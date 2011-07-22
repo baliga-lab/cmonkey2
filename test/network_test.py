@@ -34,3 +34,19 @@ class NetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
         network = Network([edge1, edge2])
         self.assertEquals(2, network.num_edges())
         self.assertEquals(357, network.total_score())
+
+    def test_normalize_to_same_score(self):
+        """tests creating a network"""
+        edge1 = NetworkEdge('n1', 'n2', 123)
+        edge2 = NetworkEdge('n3', 'n2', 234)
+        network = Network([edge1, edge2])
+        network.normalize_scores_to(357)
+        self.assertEquals(357, network.total_score())
+
+    def test_normalize_to_different_score(self):
+        """tests creating a network"""
+        edge1 = NetworkEdge('n1', 'n2', 123)
+        edge2 = NetworkEdge('n3', 'n2', 234)
+        network = Network([edge1, edge2])
+        network.normalize_scores_to(400)
+        self.assertEquals(400, network.total_score())

@@ -112,31 +112,42 @@ class DataMatrixCollection:
     It also offers functionality to combine the comtained matrices
     """
     def __init__(self, matrices):
-        self.matrices = matrices
-        self.unique_row_names = self.make_unique_names(
+        self.__matrices = matrices
+        self.__unique_row_names = self.__make_unique_names(
             lambda matrix: matrix.row_names())
-        self.unique_column_names = self.make_unique_names(
+        self.__unique_column_names = self.__make_unique_names(
             lambda matrix: matrix.column_names())
 
-    def num_unique_rows(self):
-        """returns the number of unique rows"""
-        return len(self.unique_row_names)
-
-    def num_unique_columns(self):
-        """returns the number of unique columns"""
-        return len(self.unique_column_names)
-
-    def make_unique_names(self, name_extract_fun):
+    def __make_unique_names(self, name_extract_fun):
         """helper method to create a unique name list
         name_extract_fun is a function to return a list of names from
         a matrix"""
         result = []
-        for matrix in self.matrices:
+        for matrix in self.__matrices:
             names = name_extract_fun(matrix)
             for name in names:
                 result.append(name)
         result.sort()
         return result
+
+    def __getitem__(self, index):
+        return self.__matrices[index]
+
+    def num_unique_rows(self):
+        """returns the number of unique rows"""
+        return len(self.__unique_row_names)
+
+    def num_unique_columns(self):
+        """returns the number of unique columns"""
+        return len(self.__unique_column_names)
+
+    def unique_row_names(self):
+        """returns the unique row names"""
+        return self.__unique_row_names
+
+    def unique_column_names(self):
+        """returns the unique column names"""
+        return self.__unique_column_names
 
 
 class DataMatrixFactory:

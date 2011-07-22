@@ -174,7 +174,7 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                             'Halobacterium_SP',
                                             False,
                                             12345), 12345, [])
-        organism.init_genome(['VNG12345G'])
+        organism.init_with(['VNG12345G'])
         self.assertTrue(len(organism.synonyms()) > 0)
         self.assertIsNotNone(organism.features()['NP_206803.1'])
         self.assertEquals(1, len(organism.features()))

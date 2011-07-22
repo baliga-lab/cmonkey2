@@ -15,7 +15,19 @@ GENE_NAMES = ['gene' + str(i) for i in range(NUM_GENES)]
 COL_NAMES = ['cond' + str(i) for i in range(NUM_COLS)]
 RATIOS = DataMatrix(NUM_GENES, NUM_COLS, GENE_NAMES, COL_NAMES)
 RATIO_MATRICES = DataMatrixCollection([RATIOS])
-DUMMY_ORGANISM = None
+
+
+class MockOrganism:
+    """A mock organism"""
+
+    def init_with(self, gene_names):
+        pass
+
+    def features(self):
+        return {}
+
+    def contigs(self):
+        return []
 
 
 class CMonkeyTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -23,20 +35,20 @@ class CMonkeyTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_create_cmonkey(self):
         """create a CMonkey object"""
-        cmonkey = CMonkey(DUMMY_ORGANISM, RATIO_MATRICES)
+        cmonkey = CMonkey(MockOrganism(), RATIO_MATRICES)
         self.assertFalse(cmonkey.run_finished)
         self.assertEquals('hpy', cmonkey.configuration['organism'])
 
     def test_create_cmonkey_with_config(self):
         """create CMonkey object, specifying an organism"""
         config = {'organism': 'homo sapiens'}
-        cmonkey = CMonkey(DUMMY_ORGANISM, RATIO_MATRICES, config)
+        cmonkey = CMonkey(MockOrganism(), RATIO_MATRICES, config)
         self.assertFalse(cmonkey.run_finished)
         self.assertEquals('homo sapiens', cmonkey.configuration['organism'])
 
     def test_run_cmonkey_simple(self):
         """run CMonkey in the simplest way"""
-        cmonkey = CMonkey(DUMMY_ORGANISM, RATIO_MATRICES)
+        cmonkey = CMonkey(MockOrganism(), RATIO_MATRICES)
         cmonkey.run()
         self.assertTrue(cmonkey.run_finished)
 
