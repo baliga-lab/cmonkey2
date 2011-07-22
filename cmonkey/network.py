@@ -27,6 +27,7 @@ class NetworkEdge:
         return self.__score
 
     def set_score(self, score):
+        """sets a new score for this edge"""
         self.__score = score
 
 

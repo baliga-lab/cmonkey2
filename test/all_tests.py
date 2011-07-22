@@ -17,6 +17,7 @@ from seqtools_test import SeqtoolsTest
 
 from thesaurus_test import DelimitedFileFactoryTest
 from operon_test import ReadMicrobesOnlineTest
+from network_test import NetworkEdgeTest, NetworkTest
 
 # pylint: disable-msg=C0301
 if __name__ == '__main__':
@@ -46,5 +47,8 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DelimitedFileFactoryTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ReadMicrobesOnlineTest))
+
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(NetworkEdgeTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(NetworkTest))
 
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))

@@ -1,3 +1,4 @@
+
 """organism_test.py - unit tests for organism module
 
 This file is part of cMonkey Python. Please see README and LICENSE for
@@ -8,6 +9,8 @@ from util import DelimitedFile
 from organism import make_kegg_code_mapper, make_go_taxonomy_mapper
 from organism import make_rsat_organism_mapper, OrganismFactory
 from organism import RsatSpeciesInfo, Organism
+from network import Network
+
 
 TAXONOMY_FILE_PATH = "testdata/KEGG_taxonomy"
 PROT2TAXID_FILE_PATH = "testdata/proteome2taxid"
@@ -165,13 +168,37 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for Organism"""
 
     def test_init_genome(self):
+        """Tests the init_genome() method"""
         organism = Organism('hal', 'Halobacterium SP',
                             RsatSpeciesInfo(MockRsatDatabase(''),
                                             'Halobacterium_SP',
                                             False,
-                                            12345), 12345)
+                                            12345), 12345, [])
         organism.init_genome(['VNG12345G'])
         self.assertTrue(len(organism.synonyms()) > 0)
         self.assertIsNotNone(organism.features()['NP_206803.1'])
         self.assertEquals(1, len(organism.features()))
         self.assertEquals(['NC_000915.1'], organism.contigs())
+
+    def test_get_networks(self):
+        """tests the networks() method"""
+        mockFactory = MockNetworkFactory()
+        organism = Organism('hal', 'Halobacterium SP',
+                            RsatSpeciesInfo(MockRsatDatabase(''),
+                                            'Halobacterium_SP',
+                                            False,
+                                            12345), 12345,
+                            [mockFactory])
+        networks = organism.networks()
+        self.assertEquals(1, len(networks))
+        self.assertEquals(organism, mockFactory.create_called_with)
+
+
+class MockNetworkFactory:
+    """a mock NetworkFactory"""
+    def __init__(self):
+        self.create_called_with = None
+
+    def create(self, organism):
+        self.create_called_with = organism
+        return Network([])
