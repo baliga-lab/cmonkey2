@@ -47,23 +47,19 @@ class CMonkey:  # pylint: disable-msg=R0902
         self.__finished = False
         self.__organism = organism
         self.__ratio_matrices = ratio_matrices
-        self.__configuration = self.init_configuration(config)
+        self.__configuration = self.__init_configuration(config)
         self.__cluster_nums = range(self.__num_biclusters())
         self.__row_scores = None
         self.__col_scores = None
         self.__gene_weights = None
 
-    def __num_biclusters(self):
-        """returns the number of biclusters"""
-        return self.__configuration['num_biclusters']
-
-    def init_configuration(self, config):
+    def __init_configuration(self, config):
         """sets meaningful defaults in the configuration"""
         configuration = config or {}
         configuration.setdefault('num_iterations',       2)  # 2000 for now
         configuration.setdefault('biclusters_per_gene',  2)
         configuration.setdefault('num_biclusters',
-                                 self.compute_num_biclusters(configuration))
+                                 self.__compute_num_biclusters(configuration))
         configuration.setdefault('operon.shift',         True)
         configuration.setdefault('background.order',     3)
         configuration.setdefault('recalc.background',    True)
@@ -74,83 +70,88 @@ class CMonkey:  # pylint: disable-msg=R0902
         configuration.setdefault('verbose',              True)
         return configuration
 
-    def finished(self):
-        """returns true if the run was finished"""
-        return self.__finished
-
-    def input_gene_names(self):
-        """returns the unique gene names used in the input matrices"""
-        return self.__ratio_matrices[0].row_names()
-
-    def compute_num_biclusters(self, config):
+    def __compute_num_biclusters(self, config):
         """computes the number of biclusters to optimize"""
         return int(round(self.__ratio_matrices.num_unique_rows() *
                          float(config['biclusters_per_gene']) /
                          AVG_CLUSTER_SIZE))
 
-    def is_verbose(self):
-        """determine whether we are running in verbose mode"""
-        return self.__configuration['verbose']
+    def __num_biclusters(self):
+        """returns the number of biclusters"""
+        return self.__configuration['num_biclusters']
 
-    def num_iterations(self):
-        """configured number of iterations"""
-        return self.__configuration.get('num_iterations', 2000)
+    def finished(self):
+        """returns true if the run was finished"""
+        return self.__finished
 
     def run(self):
         """start a run"""
-        self.__organism.init_with(self.input_gene_names())
+        self.__organism.init_with(self.__input_gene_names())
         print "Contigs: %s" % str(self.__organism.contigs())
         print "# Features read: %d" % len(self.__organism.features())
 
-        self.seed_clusters()
+        self.__seed_clusters()
         current_iteration = 0
 
-        if self.is_verbose():
-            print "# iterations: %d" % self.num_iterations()
+        if self.__is_verbose():
+            print "# iterations: %d" % self.__num_iterations()
 
-        while current_iteration < self.num_iterations():
-            self.iterate()
+        while current_iteration < self.__num_iterations():
+            self.__iterate()
             current_iteration += 1
         self.__finished = True
 
-    def seed_clusters(self):
+    def __input_gene_names(self):
+        """returns the unique gene names used in the input matrices"""
+        return self.__ratio_matrices[0].row_names()
+
+    def __is_verbose(self):
+        """determine whether we are running in verbose mode"""
+        return self.__configuration['verbose']
+
+    def __num_iterations(self):
+        """configured number of iterations"""
+        return self.__configuration.get('num_iterations', 2000)
+
+
+    def __seed_clusters(self):
         """seed clusters using the selected row and column methods"""
         pass
 
-    def iterate(self):
+    def __iterate(self):
         """iteration step in cMonkey
         This is run over and over until no improvements can be achieved"""
-        self.compute_all_scores()
-        self.combine_scores()
-        self.fuzzify_scores()
+        self.__compute_all_scores()
+        self.__combine_scores()
+        self.__fuzzify_scores()
 
-    def compute_all_scores(self):
+    def __compute_all_scores(self):
         """compute scores on microarray data and clusters"""
-        self.compute_microarray_scores()
-        self.compute_cluster_scores()
+        self.__compute_microarray_scores()
+        self.__compute_cluster_scores()
 
-    def compute_microarray_scores(self):
+    def __compute_microarray_scores(self):
         """compute scores on microarray data"""
-        self.compute_row_scores()
-        self.compute_column_scores()
+        self.__compute_row_scores()
+        self.__compute_column_scores()
 
-    def compute_row_scores(self):
+    def __compute_row_scores(self):
         """compute row scores on microarray data"""
-        self.__row_scores = self.init_row_col_score_matrix(self.__row_scores)
+        self.__row_scores = self.__init_row_col_score_matrix(self.__row_scores)
         for gene_name in self.__row_scores:
-            if self.has_gene_weight(gene_name):
+            if self.__has_gene_weight(gene_name):
                 # TODO
                 pass
 
-    def has_gene_weight(self, gene_name):
+    def __has_gene_weight(self, gene_name):
         """determine if a weight was specified for the given gene"""
         return self.__gene_weights and self.__gene_weights.get(gene_name)
 
-    def compute_column_scores(self):
+    def __compute_column_scores(self):
         """compute column scores on microarray data"""
-        self.__col_scores = self.init_row_col_score_matrix(self.__col_scores)
+        self.__col_scores = self.__init_row_col_score_matrix(self.__col_scores)
 
-    def init_row_col_score_matrix(self, score_matrix):
+    def __init_row_col_score_matrix(self, score_matrix):
         """generic initialization of row/column score matrix"""
         if score_matrix:
             for row_name in score_matrix:
@@ -162,30 +163,30 @@ class CMonkey:  # pylint: disable-msg=R0902
                 max(self.__cluster_nums) + 1)
         return score_matrix
 
-    def compute_cluster_scores(self):
+    def __compute_cluster_scores(self):
         """compute scores for clusters"""
-        self.compute_meme_scores()
-        self.compute_mot_scores()
-        self.compute_net_scores()
+        self.__compute_meme_scores()
+        self.__compute_mot_scores()
+        self.__compute_net_scores()
 
-    def compute_meme_scores(self):
+    def __compute_meme_scores(self):
         """compute meme scores on clusters"""
         pass
 
-    def compute_mot_scores(self):
+    def __compute_mot_scores(self):
         """computes mot.scores, using the output from the meme scoring"""
         pass
 
-    def compute_net_scores(self):
+    def __compute_net_scores(self):
         """compute net.scores from STRING, add weighted scores for other
         networks if they exist"""
         pass
 
-    def combine_scores(self):
+    def __combine_scores(self):
         """combine the computed scores"""
         pass
 
-    def fuzzify_scores(self):
+    def __fuzzify_scores(self):
         """fuzzify scores a bit for stochasticity
         fuzz should be between 0.2 and 0 (decreasing with iter)"""
         pass
