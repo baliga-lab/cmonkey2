@@ -6,6 +6,7 @@ various services.
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
+import logging
 from util import read_url_cached, DelimitedFile
 
 
@@ -23,6 +24,8 @@ class MicrobesOnline:
 
     def get_operon_predictions_for(self, organism_id):
         """Retrieve operon predictions for the specified organism"""
+        logging.info("MicrobesOnline.get_operon_predictions_for(%s)",
+                     organism_id)
         url = '/'.join([self.base_url, 'operons',
                        'gnc%s.named' % str(organism_id)])
         cache_file = '/'.join([self.cache_dir,
@@ -32,6 +35,7 @@ class MicrobesOnline:
 
 def read_from_microbes_online(microbes_online, organism_id):
     """reads operon predictions from Microbes Online"""
+    logging.info("read_from_microbes_online()")
     preds = microbes_online.get_operon_predictions_for(organism_id)
     dfile = DelimitedFile.create_from_text(preds, has_header=True)
     return [(line[2], line[3]) for line in dfile.lines() if line[6] == 'TRUE']

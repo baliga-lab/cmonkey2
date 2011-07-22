@@ -4,6 +4,8 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
+import os
+import shutil
 from rsat import RsatDatabase
 from util import DocumentNotFound
 
@@ -18,7 +20,14 @@ class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def setUp(self):  # pylint: disable-msg=C0103
         """test fixture"""
+        if not os.path.exists('testcache'):
+            os.mkdir('testcache')
         self.database = RsatDatabase('http://rsat.ccb.sickkids.ca', 'testcache')
+
+    def tearDown(self):  # pylint: disable-msg=C0103
+        """test cleanup"""
+        if os.path.exists('testcache'):
+            shutil.rmtree('testcache')
 
     def test_get_directory(self):
         """test get_directory method"""

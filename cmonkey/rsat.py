@@ -3,8 +3,8 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import os
-from util import read_url, read_url_cached, CMonkeyURLopener
+import logging
+from util import read_url, read_url_cached
 
 
 class RsatDatabase:
@@ -22,24 +22,32 @@ class RsatDatabase:
 
     def get_directory(self):
         """returns the HTML page for the directory listing"""
-        return read_url("/".join([self.base_url,
-                                        RsatDatabase.DIR_PATH]))
+        logging.info('RsatDatabase.get_directory()')
+        cache_file = "/".join([self.cache_dir, 'rsat_dir.html'])
+        return read_url_cached("/".join([self.base_url,
+                                         RsatDatabase.DIR_PATH]),
+                               cache_file)
 
     def get_organism(self, organism):
         """returns the file contents for the specified organism"""
-        return read_url(
+        logging.info('RsatDatabase.get_organism()')
+        cache_file = "/".join([self.cache_dir, 'rsat_' + organism])
+        return read_url_cached(
             "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
-                      RsatDatabase.ORGANISM_PATH]))
+                      RsatDatabase.ORGANISM_PATH]), cache_file)
 
     def get_organism_names(self, organism):
         """returns the specified organism name file contents"""
-        return read_url(
+        logging.info('RsatDatabase.get_organism_names()')
+        cache_file = "/".join([self.cache_dir, 'rsatnames_' + organism])
+        return read_url_cached(
             "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
-                      RsatDatabase.ORGANISM_NAMES_PATH]))
+                      RsatDatabase.ORGANISM_NAMES_PATH]), cache_file)
 
     def get_ensembl_organism_names(self, organism):
         """returns the specified organism name file contents, using
         the EnsEMBL path"""
+        logging.info('RsatDatabase.get_ensembl_organism_names()')
         return read_url("/".join([self.base_url, RsatDatabase.DIR_PATH,
                                   organism + '_EnsEMBL',
                                   RsatDatabase.ORGANISM_NAMES_PATH]))
@@ -50,33 +58,29 @@ class RsatDatabase:
         while the original cMonkey will fall back to cds.tab
         if that fails
         """
-        return read_url("/".join([self.base_url, RsatDatabase.DIR_PATH,
-                                  organism,
-                                  RsatDatabase.FEATURE_PATH]))
+        logging.info('RsatDatabase.get_features()')
+        cache_file = "/".join([self.cache_dir, organism + '_features'])
+        return read_url_cached("/".join([self.base_url, RsatDatabase.DIR_PATH,
+                                         organism,
+                                         RsatDatabase.FEATURE_PATH]),
+                               cache_file)
 
     def get_feature_names(self, organism):
         """returns the specified organism's feature name file contents"""
-        return read_url("/".join([self.base_url, RsatDatabase.DIR_PATH,
-                                  organism,
-                                  RsatDatabase.FEATURE_NAMES_PATH]))
+        logging.info('RsatDatabase.get_feature_names()')
+        cache_file = "/".join([self.cache_dir, organism + '_feature_names'])
+        return read_url_cached("/".join([self.base_url, RsatDatabase.DIR_PATH,
+                                         organism,
+                                         RsatDatabase.FEATURE_NAMES_PATH]),
+                               cache_file)
 
     def get_contig_sequence(self, organism, contig):
         """returns the specified contig sequence"""
+        logging.info('RsatDatabase.get_contig_sequence()')
         cache_file = "/".join([self.cache_dir, organism + '_' + contig])
         url = "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
                         'genome', contig + '.raw'])
         return read_url_cached(url, cache_file).upper()
 
-    def cache_contig_sequence(self, organism, contig):
-        """downloads the specified contig sequence to the cache directory
-        if it does not yet exist"""
-        cache_file = "/".join([self.cache_dir, organism + '_' + contig])
-        if not os.path.exists(cache_file):
-            url = "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
-                            'genome', contig + '.raw'])
-            print "RETRIEVE URL: %s" % url
-            CMonkeyURLopener().retrieve(url, cache_file)
-        else:
-            print "found existing cache file: '%s'" % cache_file
 
 __all__ = ['RsatDatabase']

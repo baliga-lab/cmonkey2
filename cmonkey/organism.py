@@ -5,6 +5,7 @@ more information and licensing details.
 """
 from util import DelimitedFile, DelimitedFileMapper, best_matching_links
 import re
+import logging
 import thesaurus
 from seqtools import extract_upstream
 
@@ -109,10 +110,15 @@ class OrganismFactory:
 
     def create(self, organism_code):
         """factory method to create an organism from a code"""
+        logging.info("Creating organism object for code '%s'...",
+                     organism_code)
         kegg_organism = self.code2kegg_organism(organism_code)
+        logging.info('KEGG organism: %s', kegg_organism)
         rsat_info = self.rsat_organism_info(kegg_organism)
+        logging.info('RSAT info retrieved: %s', rsat_info.species)
         go_taxonomy_id = self.get_taxonomy_id(
             rsat_info.species.replace('_', ' '))
+        logging.info('GO taxonomy id: %s', str(go_taxonomy_id))
         return Organism(organism_code, kegg_organism, rsat_info,
                         go_taxonomy_id, self.__network_factories)
 

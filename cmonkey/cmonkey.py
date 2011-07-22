@@ -64,13 +64,9 @@ class CMonkey:  # pylint: disable-msg=R0902
         configuration.setdefault('biclusters_per_gene',  2)
         configuration.setdefault('num_biclusters',
                                  self.__compute_num_biclusters(configuration))
-        configuration.setdefault('operon.shift',         True)
-        configuration.setdefault('background.order',     3)
-        configuration.setdefault('recalc.background',    True)
         configuration.setdefault('row.scaling',          6)
         configuration.setdefault('seed_method.rows',     'kmeans')
         configuration.setdefault('seed_method.cols',     'best')
-        configuration.setdefault('post.adjust',          True)
         return configuration
 
     def __compute_num_biclusters(self, config):
@@ -115,7 +111,7 @@ class CMonkey:  # pylint: disable-msg=R0902
         self.__networks = self.__organism.networks()
         max_score = 0
         for network in self.__networks:
-            nw_total = network.total_score
+            nw_total = network.total_score()
             if nw_total > max_score:
                 max_score = nw_total
         for network in self.__networks:
@@ -258,7 +254,6 @@ def run_cmonkey():
                                   make_go_taxonomy_mapper(gofile),
                                   [])
     organism = org_factory.create(sys.argv[2])
-    logging.info(organism)
     algorithm = CMonkey(organism, DataMatrixCollection([matrix]))
     algorithm.run()
 

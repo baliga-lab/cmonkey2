@@ -19,6 +19,8 @@ RATIO_MATRICES = DataMatrixCollection([RATIOS])
 
 class MockOrganism:
     """A mock organism"""
+    def __init__(self, networks):
+        self.__networks = networks
 
     def init_with(self, gene_names):
         pass
@@ -30,7 +32,18 @@ class MockOrganism:
         return []
 
     def networks(self):
-        return []
+        return self.__networks
+
+class MockNetwork:
+    """A mock network"""
+    def __init__(self, total_score):
+        self.__total = total_score
+
+    def total_score(self):
+        return self.__total
+
+    def normalize_scores_to(self, score):
+        self.__total = score
 
 
 class CMonkeyTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -38,20 +51,24 @@ class CMonkeyTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_create_cmonkey(self):
         """create a CMonkey object"""
-        cmonkey = CMonkey(MockOrganism(), RATIO_MATRICES)
-        self.assertFalse(cmonkey.finished())
-
-    def test_create_cmonkey_with_config(self):
-        """create CMonkey object, specifying an organism"""
-        config = {'organism': 'homo sapiens'}
-        cmonkey = CMonkey(MockOrganism(), RATIO_MATRICES, config)
+        cmonkey = CMonkey(MockOrganism([]), RATIO_MATRICES)
         self.assertFalse(cmonkey.finished())
 
     def test_run_cmonkey_simple(self):
         """run CMonkey in the simplest way"""
-        cmonkey = CMonkey(MockOrganism(), RATIO_MATRICES)
+        cmonkey = CMonkey(MockOrganism([]), RATIO_MATRICES)
         cmonkey.run()
         self.assertTrue(cmonkey.finished())
+
+    def test_run_cmonkey_with_networks(self):
+        """run CMonkey in the simplest way"""
+        network1 = MockNetwork(3)
+        network2 = MockNetwork(5)
+        cmonkey = CMonkey(MockOrganism([network1, network2]), RATIO_MATRICES)
+        cmonkey.run()
+        self.assertTrue(cmonkey.finished())
+        self.assertEquals(5, network1.total_score())
+        self.assertEquals(5, network2.total_score())
 
 
 class MembershipTest(unittest.TestCase):  # pylint: disable-msg=R0904
