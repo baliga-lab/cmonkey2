@@ -10,6 +10,7 @@ from organism import OrganismFactory
 from organism import make_kegg_code_mapper, make_go_taxonomy_mapper
 from organism import make_rsat_organism_mapper
 import microbes_online
+import stringdb
 from rsat import RsatDatabase
 import sys
 import os
@@ -251,7 +252,10 @@ def run_cmonkey():
     gofile = DelimitedFile.read(GO_FILE_PATH)
     rsatdb = RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
     mo_db = microbes_online.MicrobesOnline()
-    nw_factories = [microbes_online.get_network_factory(mo_db)]
+    # note that for the moment, the STRING factory is hardwired to
+    # a preprocessed Halobacterium SP file
+    nw_factories = [microbes_online.get_network_factory(mo_db),
+                    stringdb.get_network_factory(stringdb.STRING_FILE2)]
     org_factory = OrganismFactory(make_kegg_code_mapper(keggfile),
                                   make_rsat_organism_mapper(rsatdb),
                                   make_go_taxonomy_mapper(gofile),

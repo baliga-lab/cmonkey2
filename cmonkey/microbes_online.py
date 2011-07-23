@@ -1,4 +1,4 @@
-"""operons.py - operon prediction loading cMonkey
+"""microbes_online.py - operon prediction module cMonkey
 For organisms that have operons, cMonkey can read use operon predictions
 to improve its scoring. This module defines access to prediction data through
 various services.
