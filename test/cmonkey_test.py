@@ -34,6 +34,7 @@ class MockOrganism:
     def networks(self):
         return self.__networks
 
+
 class MockNetwork:
     """A mock network"""
     def __init__(self, total_score):
@@ -41,6 +42,9 @@ class MockNetwork:
 
     def total_score(self):
         return self.__total
+
+    def num_edges(self):
+        return 0
 
     def normalize_scores_to(self, score):
         self.__total = score

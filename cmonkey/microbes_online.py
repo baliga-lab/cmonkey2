@@ -8,6 +8,7 @@ more information and licensing details.
 """
 import logging
 from util import read_url_cached, DelimitedFile
+from network import Network, NetworkEdge
 
 
 MICROBES_ONLINE_BASE_URL = 'http://www.microbesonline.org'
@@ -33,11 +34,19 @@ class MicrobesOnline:
         return read_url_cached(url, cache_file)
 
 
-def read_from_microbes_online(microbes_online, organism_id):
-    """reads operon predictions from Microbes Online"""
-    logging.info("read_from_microbes_online()")
-    preds = microbes_online.get_operon_predictions_for(organism_id)
-    dfile = DelimitedFile.create_from_text(preds, has_header=True)
-    return [(line[2], line[3]) for line in dfile.lines() if line[6] == 'TRUE']
+def get_network_factory(microbes_online):
+    """function to create a network factory method"""
+    def make_network(organism):
+        """factory method to create a network from operon predictions"""
+        logging.info("MicrobesOnline - make_network()")
+        preds = microbes_online.get_operon_predictions_for(
+            organism.taxonomy_id())
+        dfile = DelimitedFile.create_from_text(preds, has_header=True)
+        edges = [NetworkEdge(line[2], line[3], 1000) for line in dfile.lines()
+                 if line[6] == 'TRUE']
+        return Network.create('operons', edges)
 
-__all__ = ['MicrobesOnline', 'read_from_microbes_online']
+    return make_network
+
+
+__all__ = ['MicrobesOnline', 'get_network_factory']

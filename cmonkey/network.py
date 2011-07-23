@@ -34,9 +34,18 @@ class NetworkEdge:
 class Network:
     """class to represent a network graph"""
 
-    def __init__(self, edges):
+    def __init__(self, name, edges):
         """creates a network from a list of edges"""
+        self.__name = name
         self.__edges = edges
+
+    def name(self):
+        """returns the name of the network"""
+        return self.__name
+
+    def edges(self):
+        """returns the list of edges"""
+        return self.__edges
 
     def num_edges(self):
         """returns the number of edges in this graph"""
@@ -59,3 +68,25 @@ class Network:
             scale = float(score) / float(total)
             for edge in self.__edges:
                 edge.set_score(edge.score() * scale)
+
+    @classmethod
+    def create(cls, name, edges):
+        """standard Factory method"""
+        added = {}
+        network_edges = []
+
+        def add_edge(edge):
+            """adds an edge to network_edges"""
+            key = "%s:%s" % (edge.source(), edge.target())
+            added[key] = True
+            network_edges.append(edge)
+
+        for edge in edges:
+            key = "%s:%s" % (edge.source(), edge.target())
+            key_rev = "%s:%s" % (edge.target(), edge.source())
+            if key not in added:
+                add_edge(edge)
+            if key_rev not in added:
+                add_edge(NetworkEdge(edge.target(), edge.source(),
+                                     edge.score()))
+        return Network(name, network_edges)

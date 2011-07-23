@@ -22,7 +22,7 @@ class RsatDatabase:
 
     def get_directory(self):
         """returns the HTML page for the directory listing"""
-        logging.info('RsatDatabase.get_directory()')
+        logging.info('RSAT - get_directory()')
         cache_file = "/".join([self.cache_dir, 'rsat_dir.html'])
         return read_url_cached("/".join([self.base_url,
                                          RsatDatabase.DIR_PATH]),
@@ -30,7 +30,7 @@ class RsatDatabase:
 
     def get_organism(self, organism):
         """returns the file contents for the specified organism"""
-        logging.info('RsatDatabase.get_organism()')
+        logging.info('RSAT - get_organism(%s)', organism)
         cache_file = "/".join([self.cache_dir, 'rsat_' + organism])
         return read_url_cached(
             "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
@@ -38,7 +38,7 @@ class RsatDatabase:
 
     def get_organism_names(self, organism):
         """returns the specified organism name file contents"""
-        logging.info('RsatDatabase.get_organism_names()')
+        logging.info('RSAT - get_organism_names(%s)', organism)
         cache_file = "/".join([self.cache_dir, 'rsatnames_' + organism])
         return read_url_cached(
             "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
@@ -47,7 +47,7 @@ class RsatDatabase:
     def get_ensembl_organism_names(self, organism):
         """returns the specified organism name file contents, using
         the EnsEMBL path"""
-        logging.info('RsatDatabase.get_ensembl_organism_names()')
+        logging.info('RSAT - get_ensembl_organism_names(%s)', organism)
         return read_url("/".join([self.base_url, RsatDatabase.DIR_PATH,
                                   organism + '_EnsEMBL',
                                   RsatDatabase.ORGANISM_NAMES_PATH]))
@@ -58,7 +58,7 @@ class RsatDatabase:
         while the original cMonkey will fall back to cds.tab
         if that fails
         """
-        logging.info('RsatDatabase.get_features()')
+        logging.info('RSAT - get_features(%s)', organism)
         cache_file = "/".join([self.cache_dir, organism + '_features'])
         return read_url_cached("/".join([self.base_url, RsatDatabase.DIR_PATH,
                                          organism,
@@ -67,7 +67,7 @@ class RsatDatabase:
 
     def get_feature_names(self, organism):
         """returns the specified organism's feature name file contents"""
-        logging.info('RsatDatabase.get_feature_names()')
+        logging.info('RSAT - get_feature_names(%s)', organism)
         cache_file = "/".join([self.cache_dir, organism + '_feature_names'])
         return read_url_cached("/".join([self.base_url, RsatDatabase.DIR_PATH,
                                          organism,
@@ -76,7 +76,8 @@ class RsatDatabase:
 
     def get_contig_sequence(self, organism, contig):
         """returns the specified contig sequence"""
-        logging.info('RsatDatabase.get_contig_sequence()')
+        logging.info('RSAT - get_contig_sequence(%s, %s)',
+                     organism, contig)
         cache_file = "/".join([self.cache_dir, organism + '_' + contig])
         url = "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
                         'genome', contig + '.raw'])

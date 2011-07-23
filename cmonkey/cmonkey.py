@@ -9,6 +9,7 @@ from datamatrix import DataMatrixCollection
 from organism import OrganismFactory
 from organism import make_kegg_code_mapper, make_go_taxonomy_mapper
 from organism import make_rsat_organism_mapper
+import microbes_online
 from rsat import RsatDatabase
 import sys
 import os
@@ -21,7 +22,6 @@ AVG_CLUSTER_SIZE = 20
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
 GO_FILE_PATH = 'testdata/proteome2taxid'
 RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
-# KEGG_FTP = 'ftp://ftp.genome.jp/pub/kegg/genes/taxonomy'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
 
@@ -111,6 +111,7 @@ class CMonkey:  # pylint: disable-msg=R0902
         self.__networks = self.__organism.networks()
         max_score = 0
         for network in self.__networks:
+            logging.info("Network with %d edges", network.num_edges())
             nw_total = network.total_score()
             if nw_total > max_score:
                 max_score = nw_total
@@ -249,10 +250,12 @@ def run_cmonkey():
     keggfile = DelimitedFile.read(KEGG_FILE_PATH, comment='#')
     gofile = DelimitedFile.read(GO_FILE_PATH)
     rsatdb = RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
+    mo_db = microbes_online.MicrobesOnline()
+    nw_factories = [microbes_online.get_network_factory(mo_db)]
     org_factory = OrganismFactory(make_kegg_code_mapper(keggfile),
                                   make_rsat_organism_mapper(rsatdb),
                                   make_go_taxonomy_mapper(gofile),
-                                  [])
+                                  nw_factories)
     organism = org_factory.create(sys.argv[2])
     algorithm = CMonkey(organism, DataMatrixCollection([matrix]))
     algorithm.run()
