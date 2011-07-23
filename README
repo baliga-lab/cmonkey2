@@ -20,10 +20,10 @@ System requirements
 To run the unit tests:
 
 ./run_tests.sh (for TDD)
-./run_integration_tests.sh (slow, run occacionally)
+./run_integration_tests.sh (slow, run occasionally)
 
 There is a startup script for cMonkey to run the current integrated
 system
 
-./run_cmonkey.sh
+./run_cmonkey.sh halo_ratios.tsv hal
 

@@ -1,6 +1,14 @@
+"""extract_ratios.py - extract ratios from a tab separated file,
+and converting gene names to VNG names to generate a test data set.
+Currently Halobacterium only.
+
+This file is part of cMonkey Python. Please see README and LICENSE for
+more information and licensing details.
+"""
 import sys
 
 def read_oligo_map(filename):
+  """Reads an SBEAMS oligo map file"""
   with open(filename) as infile:
     lines = infile.readlines()
     result = {}
