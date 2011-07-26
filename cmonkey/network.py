@@ -30,6 +30,15 @@ class NetworkEdge:
         """sets a new score for this edge"""
         self.__score = score
 
+    def __str__(self):
+        """returns string representation"""
+        return "%s -> %s w = %s" % (self.__source, self.__target,
+                                    str(self.__score))
+
+    def __repr__(self):
+        """returns string representation"""
+        return str(self)
+
 
 class Network:
     """class to represent a network graph"""
