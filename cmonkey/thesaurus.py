@@ -3,6 +3,7 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
+import re
 
 
 def create_from_delimited_file1(dfile):
@@ -46,6 +47,14 @@ def create_from_rsat_feature_names(dfile, key_transforms=None):
         else:
             result[key] = line[0]
     return result
+
+
+def strip_vng_modification(gene):
+    """strips 'm' modifier off a VNG name"""
+    if re.match('VNG\d{4}.m$', gene):
+        return [gene, gene.rstrip('m')]
+    else:
+        return [gene]
 
 
 __all__ = ['create_from_delimited_file1', 'create_from_delimited_file2',

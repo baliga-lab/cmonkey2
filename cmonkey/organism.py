@@ -133,14 +133,6 @@ class OrganismFactory:
                         go_taxonomy_id, self.__network_factories)
 
 
-def strip_vng_modification(gene):
-    """strips 'm' modifier off a VNG name"""
-    if re.match('VNG\d{4}.m$', gene):
-        return [gene, gene.rstrip('m')]
-    else:
-        return [gene]
-
-
 class Organism:
     """Abstraction of an organism in cMonkey. It captures all organism-specific
     aspects. For now, we assume microbes only, but keep the interface generic
@@ -201,7 +193,7 @@ class Organism:
                 self.__rsatdb().get_feature_names(self.species()),
                 comment='--')
             self.__synonyms = thesaurus.create_from_rsat_feature_names(
-                feature_names_dfile, [strip_vng_modification])
+                feature_names_dfile, [thesaurus.strip_vng_modification])
         return self.__synonyms
 
     def __read_features_and_contigs(self, gene_names):
