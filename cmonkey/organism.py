@@ -136,9 +136,9 @@ class OrganismFactory:
 def strip_vng_modification(gene):
     """strips 'm' modifier off a VNG name"""
     if re.match('VNG\d{4}.m$', gene):
-        return gene.rstrip('m')
+        return [gene, gene.rstrip('m')]
     else:
-        return gene
+        return [gene]
 
 
 class Organism:
@@ -156,7 +156,6 @@ class Organism:
         self.go_taxonomy_id = go_taxonomy_id
         self.__synonyms = None  # lazy load
         self.__features = None
-        self.__contigs = None
         self.__sequences = {}
 
     def species(self):
@@ -175,26 +174,27 @@ class Organism:
         """returns the COG organism name"""
         return self.code.capitalize()
 
-    def features(self):
+    def feature(self, gene_alias):
         """Returns this object's features"""
-        return self.__features
+        return self.__features[self.feature_id_for(gene_alias)]
 
-    def get_feature(self, gene):
-        feature_id = self.synonyms()[gene]
-        print self.features()
-        return self.__features[feature_id]
+    def features_for_genes(self, gene_aliases):
+        """returns a map of features for the specified list of genes aliases"""
+        return self.__read_features_and_contigs(gene_aliases)[0]
 
-    def contigs(self):
-        """Returns this object's contigs"""
-        return self.__contigs
-
-    def init_with(self, gene_names, distance=(-30, 250)):
+    def init_with(self, gene_aliases, distance=(-30, 250)):
         """initialize this Organism's genome for usage in cMonkey"""
-        self.__features, self.__contigs = self.__read_features_and_contigs(
-            gene_names)
-        self.__add_seqs_to_features(self.__contigs, self.__features, distance)
+        self.__features, contigs = self.__read_features_and_contigs(
+            gene_aliases)
+        logging.info("Contigs: %s", str(contigs))
+        logging.info("# Features read: %d", len(self.__features))
+        self.__read_sequences(contigs, self.__features, distance)
 
-    def synonyms(self):
+    def feature_id_for(self, gene_alias):
+        """retrieve the original feature id for a gene alias"""
+        return self.__thesaurus()[gene_alias]
+
+    def __thesaurus(self):
         """reads the thesaurus from a feature_names file"""
         if not self.__synonyms:
             feature_names_dfile = DelimitedFile.create_from_text(
@@ -227,7 +227,7 @@ class Organism:
 
         features = {}
         contigs = []
-        synonyms = self.synonyms()
+        synonyms = self.__thesaurus()
         id_names = [synonyms[name] for name in gene_names if name in synonyms]
 
         dfile = DelimitedFile.create_from_text(
@@ -243,7 +243,7 @@ class Organism:
         """internal method to return the RSAT db link"""
         return self.__rsat_info.rsatdb
 
-    def __add_seqs_to_features(self, contigs, features, distance):
+    def __read_sequences(self, contigs, features, distance):
         """for each feature, extract and set its sequence"""
         contig_seqs = {}
         for contig in contigs:

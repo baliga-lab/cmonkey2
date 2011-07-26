@@ -175,10 +175,9 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                             False,
                                             12345), 12345, [])
         organism.init_with(['VNG12345G'])
-        self.assertTrue(len(organism.synonyms()) > 0)
-        self.assertIsNotNone(organism.features()['NP_206803.1'])
-        self.assertEquals(1, len(organism.features()))
-        self.assertEquals(['NC_000915.1'], organism.contigs())
+        self.assertEquals('NP_206803.1', organism.feature_id_for('NP_206803.1'))
+        self.assertEquals('NP_206803.1', organism.feature_id_for('VNG12345G'))
+        self.assertIsNotNone(organism.feature('NP_206803.1'))
 
     def test_get_networks(self):
         """tests the networks() method"""

@@ -61,7 +61,7 @@ class DelimitedFileFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_create_from_rsat_feature_names_with_transform(self):
         """test the creation from RSAT feature names using a key transformer"""
         thes = thesaurus.create_from_rsat_feature_names(
-            MockRsatFeatureNameFile(), [lambda x: x.rstrip('m')])
+            MockRsatFeatureNameFile(), [lambda x: [x, x.rstrip('m')]])
         self.assertEquals('NAME1', thes['PRIME1'])
         self.assertEquals('NAME1', thes['ALT1'])
         self.assertEquals('NAME2', thes['PRIME2'])

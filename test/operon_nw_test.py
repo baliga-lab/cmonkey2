@@ -31,8 +31,11 @@ class MockOrganism:
     def taxonomy_id(self):
         return self.__taxonomy_id
 
-    def get_feature(self, gene):
-        return self.__feature_map[gene]
+    def features_for_genes(self, gene_names):
+        return self.__feature_map
+
+    def feature_id_for(self, gene_alias):
+        return gene_alias
 
 
 class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -49,15 +52,16 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_make_operon_edges_forward(self):
         """test when all genes of the operon are on the forward strand"""
         operon = ['gene1', 'gene2', 'gene3']
-        organism = MockOrganism('64091', {
-                'gene1': Feature('feature1', 'typ1', 'feature_name1',
-                                  'contig1', 24, 89, False),
-                'gene2': Feature('feature2', 'typ1', 'feature_name2',
-                                  'contig1', 15, 21, False),
-                'gene3': Feature('feature3', 'typ2', 'feature_name3',
-                                  'contig1', 100, 154, False)
-                })
-        edges = make_operon_edges(operon, organism)
+        features = {
+            'gene1': Feature('feature1', 'typ1', 'feature_name1',
+                             'contig1', 24, 89, False),
+            'gene2': Feature('feature2', 'typ1', 'feature_name2',
+                             'contig1', 15, 21, False),
+            'gene3': Feature('feature3', 'typ2', 'feature_name3',
+                             'contig1', 100, 154, False)
+            }
+        organism = MockOrganism('64091', features)
+        edges = make_operon_edges(operon, organism, features)
         self.assertTrue(('gene2', 'gene1') in edges)
         self.assertTrue(('gene2', 'gene2') in edges)
         self.assertTrue(('gene2', 'gene3') in edges)
@@ -66,15 +70,16 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_make_operon_edges_reverse(self):
         """test when all genes of the operon are on the reverse strand"""
         operon = ['gene1', 'gene2', 'gene3']
-        organism = MockOrganism('64091', {
-                'gene1': Feature('feature1', 'typ1', 'feature_name1',
-                                  'contig1', 24, 89, True),
-                'gene2': Feature('feature2', 'typ1', 'feature_name2',
-                                  'contig1', 15, 21, True),
-                'gene3': Feature('feature3', 'typ2', 'feature_name3',
-                                  'contig1', 100, 154, True)
-                })
-        edges = make_operon_edges(operon, organism)
+        features = {
+            'gene1': Feature('feature1', 'typ1', 'feature_name1',
+                             'contig1', 24, 89, True),
+            'gene2': Feature('feature2', 'typ1', 'feature_name2',
+                             'contig1', 15, 21, True),
+            'gene3': Feature('feature3', 'typ2', 'feature_name3',
+                             'contig1', 100, 154, True)
+            }
+        organism = MockOrganism('64091', features)
+        edges = make_operon_edges(operon, organism, features)
         self.assertTrue(('gene3', 'gene1') in edges)
         self.assertTrue(('gene3', 'gene2') in edges)
         self.assertTrue(('gene3', 'gene3') in edges)
