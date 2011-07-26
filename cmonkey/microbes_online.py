@@ -35,10 +35,11 @@ class MicrobesOnline:
         return read_url_cached(url, cache_file)
 
 
-def make_operon_edges(operon, organism, features):
+def make_operon_edges(operon, features):
     """take an operon as a list of gene names, determines the head out of
     these gene names and generates edges from the head to each gene in the
     operon.
+    features is a map from a gene alias/feature id to a Feature object
     The head is is determined as follows:
     1. retrieve the gene coordinates for each gene in the operon
     2. if most genes are on the forward strand, the head is the one
@@ -72,7 +73,7 @@ def make_operon_edges(operon, organism, features):
     feature_map = {}
     num_reverse = 0
     for gene in operon:
-        feature_map[gene] = features[organism.feature_id_for(gene)]
+        feature_map[gene] = features[gene]
         if feature_map[gene].is_reverse():
             num_reverse += 1
     num_total = len(operon)
@@ -126,7 +127,7 @@ def make_edges_from_predictions(predictions, organism):
     operons = build_operons(names1, names2)
     edges = []
     for operon in operons:
-        edges.extend(make_operon_edges(operon, organism, features))
+        edges.extend(make_operon_edges(operon, features))
     return edges
 
 

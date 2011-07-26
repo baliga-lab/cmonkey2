@@ -66,6 +66,20 @@ class Feature:  # pylint: disable-msg=R0902,R0903
         return self.__reverse
 
 
+class ThesaurusBasedMap:  # pylint: disable-msg=R0903
+    """wrapping a thesaurus and a feature id based map for a flexible
+    lookup container that can use any valid gene alias"""
+
+    def __init__(self, synonyms, features):
+        """create new instance"""
+        self.__thesaurus = synonyms
+        self.__features = features
+
+    def __getitem__(self, key):
+        """override the __getitem__ method for dictionary-like behaviour"""
+        return self.__features[self.__thesaurus[key]]
+
+
 def make_rsat_organism_mapper(rsatdb):
     """return a function that maps from a KEGG organism name to
     related RSAT information
@@ -166,7 +180,9 @@ class Organism:
 
     def features_for_genes(self, gene_aliases):
         """returns a map of features for the specified list of genes aliases"""
-        return self.__read_features_and_contigs(gene_aliases)[0]
+        return ThesaurusBasedMap(
+            self.__thesaurus(),
+            self.__read_features_and_contigs(gene_aliases)[0])
 
     def sequences_for_genes(self, gene_aliases, distance=(-30, 250)):
         """get the gene sequences as a map from feature id -> sequence for
@@ -176,11 +192,9 @@ class Organism:
             gene_aliases)
         logging.info("Contigs: %s", str(contigs))
         logging.info("# Features read: %d", len(features))
-        return self.__read_sequences(contigs, features, distance)
-
-    def feature_id_for(self, gene_alias):
-        """retrieve the original feature id for a gene alias"""
-        return self.__thesaurus()[gene_alias]
+        return ThesaurusBasedMap(self.__thesaurus(),
+                                 self.__read_sequences(contigs, features,
+                                                       distance))
 
     def __thesaurus(self):
         """reads the thesaurus from a feature_names file"""

@@ -60,8 +60,7 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
             'gene3': Feature('feature3', 'typ2', 'feature_name3',
                              'contig1', 100, 154, False)
             }
-        organism = MockOrganism('64091', features)
-        edges = make_operon_edges(operon, organism, features)
+        edges = make_operon_edges(operon, features)
         self.assertTrue(('gene2', 'gene1') in edges)
         self.assertTrue(('gene2', 'gene2') in edges)
         self.assertTrue(('gene2', 'gene3') in edges)
@@ -78,8 +77,7 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
             'gene3': Feature('feature3', 'typ2', 'feature_name3',
                              'contig1', 100, 154, True)
             }
-        organism = MockOrganism('64091', features)
-        edges = make_operon_edges(operon, organism, features)
+        edges = make_operon_edges(operon, features)
         self.assertTrue(('gene3', 'gene1') in edges)
         self.assertTrue(('gene3', 'gene2') in edges)
         self.assertTrue(('gene3', 'gene3') in edges)
