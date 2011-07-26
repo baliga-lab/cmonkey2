@@ -86,7 +86,6 @@ class CMonkey:  # pylint: disable-msg=R0902
 
     def run(self):
         """start a run"""
-        self.__organism.init_with(self.__input_gene_names())
         self.__retrieve_networks()
         logging.info("# Networks read: %d", len(self.__networks))
 
