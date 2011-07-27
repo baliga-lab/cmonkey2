@@ -146,7 +146,6 @@ class CMonkey:  # pylint: disable-msg=R0902
         self.__row_scores = self.__init_row_col_score_matrix(self.__row_scores)
         for gene_name in self.__row_scores:
             if self.__has_gene_weight(gene_name):
-                # TODO
                 pass
 
     def __has_gene_weight(self, gene_name):
