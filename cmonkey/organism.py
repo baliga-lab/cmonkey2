@@ -70,14 +70,14 @@ class ThesaurusBasedMap:  # pylint: disable-msg=R0903
     """wrapping a thesaurus and a feature id based map for a flexible
     lookup container that can use any valid gene alias"""
 
-    def __init__(self, synonyms, features):
+    def __init__(self, synonyms, wrapped_dict):
         """create new instance"""
         self.__thesaurus = synonyms
-        self.__features = features
+        self.__wrapped_dict = wrapped_dict
 
     def __getitem__(self, key):
         """override the __getitem__ method for dictionary-like behaviour"""
-        return self.__features[self.__thesaurus[key]]
+        return self.__wrapped_dict[self.__thesaurus[key]]
 
 
 def make_rsat_organism_mapper(rsatdb):

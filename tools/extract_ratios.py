@@ -19,14 +19,21 @@ def read_oligo_map(filename):
 
 
 if __name__ == '__main__':
-  if len(sys.argv) <= 1:
-    print "usage: python %s <matrix_output>"
+  if len(sys.argv) <= 3:
+    print "usage: python %s <matrix_output> <oligomap> <num columns>"
   else:
-    oligo_map = read_oligo_map('halo_oligo.map')
+    num_cols = int(sys.argv[3])
+    oligo_map = read_oligo_map(sys.argv[2])
     with open(sys.argv[1]) as infile:
       lines = infile.readlines()
       header = lines[1].strip().split('\t')
-      print "%s\tCond1\tCond2" % (header[0])
+      first_row = header[0]
+      for col_index in range(num_cols):
+        first_row += ('\tCond%d' % col_index)
+      print first_row
       for index in range(2, len(lines) - 1):
         row = lines[index].strip().split('\t')
-        print "%s\t%s\t%s" % (oligo_map[row[0]], row[3], row[4])
+        out_row = oligo_map[row[0]]
+        for col_index in range(num_cols):
+          out_row += ('\t%s' % row[2 + col_index])
+        print out_row
