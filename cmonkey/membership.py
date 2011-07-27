@@ -3,6 +3,8 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
+import numpy
+from util import column_means
 
 
 class ClusterMembership:
@@ -33,3 +35,28 @@ class ClusterMembership:
     def cluster_for_row(self, row_index, column_index):
         """returns row membership value at the specified position"""
         return self.__row_membership[row_index][column_index]
+
+
+def compute_column_scores(matrix):
+    """For a given matrix, compute the column scores.
+    This is used to compute the column scores of the sub matrices that
+    were determined by the pre-seeding, so typically, matrix is a
+    submatrix of the input matrix that contains only the rows that
+    belong to a certain cluster.
+
+    This function normalizes diff^2 by the mean expression level, similar
+    to "Index of Dispersion", see
+    http://en.wikipedia.org/wiki/Index_of_dispersion
+    for details
+    """
+    colmeans = column_means(matrix)
+    matrix_minus_colmeans = []
+    # subtract each row by the column means
+    for row in matrix:
+        new_row = []
+        matrix_minus_colmeans.append(new_row)
+        for col_index in range(len(row)):
+            new_row.append(row[col_index] - colmeans[col_index])
+    matrix_minus_colmeans_squared = numpy.square(matrix_minus_colmeans)
+    var_norm = numpy.abs(colmeans) + 0.01
+    return column_means(matrix_minus_colmeans_squared) / var_norm

@@ -6,6 +6,7 @@ more information and licensing details.
 import unittest
 from util import DelimitedFile, levenshtein_distance, best_matching_links
 from util import quantile, make_matrix, r_stddev, r_variance_columns
+from util import column_means
 
 
 class DelimitedFileTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -132,3 +133,14 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEqual(0.1482354433, result[1])
         self.assertAlmostEqual(0.8356519353, result[2])
         self.assertAlmostEqual(0.0007737517, result[3])
+
+    def test_column_means(self):
+        """tests the column_means() function"""
+        matrix = [[0.0010, 0.1234, 0.21370, 0.0342],
+                  [0.2123, -0.2135, -0.99980, -0.0213],
+                  [-0.4534, 0.5546, 0.79123, 0.00312321]]
+        result = column_means(matrix)
+        self.assertAlmostEqual(-0.08003333, result[0])
+        self.assertAlmostEqual(0.15483333, result[1])
+        self.assertAlmostEqual(0.00171, result[2])
+        self.assertAlmostEqual(0.00534107, result[3])

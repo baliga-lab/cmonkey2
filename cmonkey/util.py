@@ -6,7 +6,7 @@ more information and licensing details.
 from BeautifulSoup import BeautifulSoup
 from operator import attrgetter
 from scipy.stats import scoreatpercentile
-from numpy import std, sqrt, var
+from numpy import std, sqrt, var, mean
 import urllib
 import os
 
@@ -190,6 +190,11 @@ def r_variance_columns(matrix):
     bias = float(num_rows) / float(num_rows - 1)
     result = var(matrix, 0)
     return [(value * bias) for value in result]
+
+
+def column_means(matrix):
+    """computes the column means of a matrix"""
+    return mean(matrix, 0)
 
 
 def make_matrix(row_names, num_columns, init_value=0):
