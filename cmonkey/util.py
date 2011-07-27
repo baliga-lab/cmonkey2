@@ -6,7 +6,7 @@ more information and licensing details.
 from BeautifulSoup import BeautifulSoup
 from operator import attrgetter
 from scipy.stats import scoreatpercentile
-from numpy import std, sqrt
+from numpy import std, sqrt, var
 import urllib
 import os
 
@@ -181,6 +181,15 @@ def r_stddev(values):
     num_values = len(values)
     return round(std(values) / sqrt(float(num_values - 1) / float(num_values)),
                  8)
+
+
+def r_variance_columns(matrix):
+    """computes the variance over the columns of a matrix, applying
+    a bias of (n/n-1) over the results to match with R"""
+    num_rows = len(matrix)
+    bias = float(num_rows) / float(num_rows - 1)
+    result = var(matrix, 0)
+    return [(value * bias) for value in result]
 
 
 def make_matrix(row_names, num_columns, init_value=0):

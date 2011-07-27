@@ -5,7 +5,7 @@ more information and licensing details.
 """
 import unittest
 from util import DelimitedFile, levenshtein_distance, best_matching_links
-from util import quantile, make_matrix, r_stddev
+from util import quantile, make_matrix, r_stddev, r_variance_columns
 
 
 class DelimitedFileTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -121,3 +121,14 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_r_stddev(self):
         """tests the standard deviation function"""
         self.assertEquals(0.1, r_stddev([0.1, 0.2, 0.3]))
+
+    def test_r_variance_columns(self):
+        """tests the column variance function"""
+        matrix = [[0.0010, 0.1234, 0.21370, 0.0342],
+                  [0.2123, -0.2135, -0.99980, -0.0213],
+                  [-0.4534, 0.5546, 0.79123, 0.00312321]]
+        result = r_variance_columns(matrix)
+        self.assertAlmostEqual(0.1157139233, result[0])
+        self.assertAlmostEqual(0.1482354433, result[1])
+        self.assertAlmostEqual(0.8356519353, result[2])
+        self.assertAlmostEqual(0.0007737517, result[3])
