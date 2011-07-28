@@ -84,6 +84,37 @@ class DataMatrix:
         """retrieve the name for the specified column"""
         return self.__column_names[row]
 
+    def submatrix(self, row_indexes=None, column_indexes=None):
+        """extract a submatrix with the specified rows and columns"""
+        def select_names(names, indexes):
+            """from an array of strings, select the ones given in indexes"""
+            result = []
+            for index in indexes:
+                result.append(names[index])
+            return result
+
+        def make_values(row_indexes, column_indexes):
+            """creates an array from the selected rows and columns"""
+            result = []
+            for row_index in row_indexes:
+                row = []
+                result.append(row)
+                for col_index in column_indexes:
+                    row.append(self.__values[row_index][col_index])
+            return result
+
+        if row_indexes == None:
+            row_indexes = range(self.num_rows())
+        if column_indexes == None:
+            column_indexes = range(self.num_rows())
+        new_row_names = select_names(self.__row_names, row_indexes)
+        new_col_names = select_names(self.__column_names, column_indexes)
+        new_values = make_values(row_indexes, column_indexes)
+        return DataMatrix(len(row_indexes), len(column_indexes),
+                          row_names=new_row_names,
+                          col_names=new_col_names,
+                          values=new_values)
+
     def __str__(self):
         """returns a string representation of this matrix"""
         result = 'Gene\t' + '\t'.join(self.__column_names) + '\n'

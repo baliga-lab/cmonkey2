@@ -83,9 +83,52 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertTrue(numpy.equal(numpy.array([[1, 2], [2, 3]]),
                                     matrix.values()).all())
 
-    #def test_submatrix(self):
-    #    """test creating sub matrices"""
-    #    self.fail('TODO: submatrix')
+    def test_submatrix_rows_only(self):
+        """test creating sub matrices"""
+        matrix = DataMatrix(4, 4,
+                            row_names=['R0', 'R1', 'R2', 'R3'],
+                            values=[[1, 2, 3, 4],
+                                    [4, 5, 6, 7],
+                                    [8, 9, 10, 11],
+                                    [12, 13, 14, 15]])
+        submatrix = matrix.submatrix([0, 2])
+        self.assertEquals(['R0', 'R2'], submatrix.row_names())
+        self.assertTrue(numpy.equal(numpy.array([[1, 2, 3, 4],
+                                                 [8, 9, 10, 11]]),
+                                    submatrix.values()).all())
+
+    def test_submatrix_columns_only(self):
+        """test creating sub matrices"""
+        matrix = DataMatrix(4, 4,
+                            col_names=['C0', 'C1', 'C2', 'C3'],
+                            values=[[1, 2, 3, 4],
+                                    [4, 5, 6, 7],
+                                    [8, 9, 10, 11],
+                                    [12, 13, 14, 15]])
+        submatrix = matrix.submatrix(row_indexes=None, column_indexes=[1, 3])
+        self.assertEquals(['C1', 'C3'], submatrix.column_names())
+        self.assertTrue(numpy.equal(numpy.array([[2, 4],
+                                                 [5, 7],
+                                                 [9, 11],
+                                                 [13, 15]]),
+                                    submatrix.values()).all())
+
+    def test_submatrix_rows_and_cols(self):
+        """test creating sub matrices"""
+        matrix = DataMatrix(4, 4,
+                            row_names=['R0', 'R1', 'R2', 'R3'],
+                            col_names=['C0', 'C1', 'C2', 'C3'],
+                            values=[[1, 2, 3, 4],
+                                    [4, 5, 6, 7],
+                                    [8, 9, 10, 11],
+                                    [12, 13, 14, 15]])
+        submatrix = matrix.submatrix([0, 2], [1, 3])
+        self.assertEquals(['R0', 'R2'], submatrix.row_names())
+        self.assertEquals(['C1', 'C3'], submatrix.column_names())
+        self.assertTrue(numpy.equal(numpy.array([[2, 4],
+                                                 [9, 11]]),
+                                    submatrix.values()).all())
+
 
     #def test_sorted_by_rowname(self):
     #    """Maybe we should just import sorted ???"""
