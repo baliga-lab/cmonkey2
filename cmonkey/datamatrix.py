@@ -3,7 +3,7 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-from scipy import median
+import scipy
 from util import r_stddev
 
 
@@ -17,6 +17,7 @@ class DataMatrix:
     """
     def __init__(self, nrows, ncols, row_names=None, col_names=None):
         """create a DataMatrix instance"""
+        #self.__values = numpy.zeros((nrows, ncols))
         self.__values = [[0.0 for _ in range(ncols)] for _ in range(nrows)]
         if not row_names:
             self.__row_names = ["Row " + str(i) for i in range(nrows)]
@@ -55,20 +56,26 @@ class DataMatrix:
         """returns this matrix's values"""
         return self.__values
 
-    def get_row_values(self, row):
+    def row_values(self, row_index):
         """returns the specified row values"""
-        return self.__values[row]
+        result = []
+        for col_index in range(self.num_columns()):
+            result.append(self.__values[row_index][col_index])
+        return result
 
-    def get_column_values(self, column):
+    def column_values(self, column):
         """returns the specified column values"""
         result = []
         for row_index in range(self.num_rows()):
-            result.append(self.value_at(row_index, column))
+            result.append(self.__values[row_index][column])
         return result
 
-    def value_at(self, row, column):
-        """retrieve the value at the specified position"""
-        return self.__values[row][column]
+    #def value_at(self, row, column):
+    #    """retrieve the value at the specified position"""
+    #    return self.__values[row][column]
+    def __getitem__(self, row_index):
+        """return the row at the specified position"""
+        return self.__values[row_index]
 
     def set_value_at(self, row, column, value):
         """set the value at the specified position"""
@@ -102,7 +109,7 @@ class DataMatrix:
         for row_index in range(self.num_rows()):
             result += self.__row_names[row_index] + '\t'
             result += '\t'.join([str(value)
-                                 for value in self.get_row_values(row_index)])
+                                 for value in self.row_values(row_index)])
             result += '\n'
         return result
 
@@ -206,7 +213,7 @@ def nochange_filter(matrix):
         for row_index in range(data_matrix.num_rows()):
             count = 0
             for col_index in range(data_matrix.num_columns()):
-                value = data_matrix.value_at(row_index, col_index)
+                value = data_matrix[row_index][col_index]
                 if value == None or abs(value) <= ROW_THRESHOLD:
                     count += 1
             mean = float(count) / data_matrix.num_columns()
@@ -220,7 +227,7 @@ def nochange_filter(matrix):
         for col_index in range(data_matrix.num_columns()):
             count = 0
             for row_index in range(data_matrix.num_rows()):
-                value = data_matrix.value_at(row_index, col_index)
+                value = data_matrix[row_index][col_index]
                 if value == None or abs(value) <= COLUMN_THRESHOLD:
                     count += 1
             mean = float(count) / data_matrix.num_rows()
@@ -238,8 +245,7 @@ def nochange_filter(matrix):
     result = DataMatrix(numrows, numcols, rownames, colnames)
     for row_index in range(numrows):
         for col_index in range(numcols):
-            value = matrix.value_at(rows_to_keep[row_index],
-                                    cols_to_keep[col_index])
+            value = matrix[rows_to_keep[row_index]][cols_to_keep[col_index]]
             result.set_value_at(row_index, col_index, value)
     return result
 
@@ -248,7 +254,7 @@ def row_filter(matrix, fun):
     """generalize a matrix filter that is applying a function for each row"""
     values = []
     for row_index in range(matrix.num_rows()):
-        row = [value for value in matrix.get_row_values(row_index)
+        row = [value for value in matrix.row_values(row_index)
                if value != None]
         values.append(fun(row))
     result = DataMatrix(matrix.num_rows(), matrix.num_columns(),
@@ -263,7 +269,7 @@ def center_scale_filter(matrix):
 
     def center_scale(row):
         """centers the provided row around the median"""
-        center = median(row)
+        center = scipy.median(row)
         scale = r_stddev(row)
         return [((value - center) / scale) for value in row]
 

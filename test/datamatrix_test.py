@@ -7,6 +7,7 @@ import unittest
 from datamatrix import DataMatrix, DataMatrixCollection, DataMatrixFactory
 from datamatrix import nochange_filter, center_scale_filter
 from copy import deepcopy
+import numpy
 
 
 class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -23,7 +24,7 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         matrix = DataMatrix(3, 4)
         self.assertEquals(3, matrix.num_rows())
         self.assertEquals(4, matrix.num_columns())
-        self.assertEquals(0.0, matrix.value_at(0, 0))
+        self.assertEquals(0.0, matrix[0][0])
         self.assertEquals("Row 0", matrix.row_name(0))
         self.assertEquals("Row 1", matrix.row_name(1))
         self.assertEquals("Column 0", matrix.column_name(0))
@@ -35,7 +36,7 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                             ["MyCol1", "MyCol2"])
         self.assertEquals(3, matrix.num_rows())
         self.assertEquals(2, matrix.num_columns())
-        self.assertEquals(0.0, matrix.value_at(0, 0))
+        self.assertEquals(0.0, matrix[0][0])
         self.assertEquals("MyRow1", matrix.row_name(0))
         self.assertEquals("MyRow2", matrix.row_name(1))
         self.assertEquals("MyCol1", matrix.column_name(0))
@@ -56,7 +57,7 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """set a value in the matrix"""
         matrix = DataMatrix(3, 4)
         matrix.set_value_at(0, 1, 42.0)
-        self.assertEquals(42.0, matrix.value_at(0, 1))
+        self.assertEquals(42.0, matrix[0][1])
 
     def test_set_values_none(self):
         """invoke set_values() with None should result in ValueError"""
@@ -87,15 +88,15 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """tests the get_row_values"""
         matrix = DataMatrix(2, 2)
         matrix.set_values([[1, 2], [2, 3]])
-        self.assertEquals([1, 2], matrix.get_row_values(0))
-        self.assertEquals([2, 3], matrix.get_row_values(1))
+        self.assertEquals([1, 2], matrix.row_values(0))
+        self.assertEquals([2, 3], matrix.row_values(1))
 
     def test_get_column_values(self):
         """tests the get_column_values"""
         matrix = DataMatrix(2, 2)
         matrix.set_values([[3, 7], [8, 9]])
-        self.assertEquals([3, 8], matrix.get_column_values(0))
-        self.assertEquals([7, 9], matrix.get_column_values(1))
+        self.assertEquals([3, 8], matrix.column_values(0))
+        self.assertEquals([7, 9], matrix.column_values(1))
 
 
 class DataMatrixCollectionTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -179,7 +180,7 @@ def times2(matrix):
     result = deepcopy(matrix)
     for row in range(matrix.num_rows()):
         for col in range(matrix.num_columns()):
-            result.set_value_at(row, col, matrix.value_at(row, col) * 2)
+            result.set_value_at(row, col, matrix[row][col] * 2)
     return result
 
 
@@ -222,7 +223,7 @@ class CenterScaleFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
         matrix = DataMatrix(2, 2, ['R1', 'R2'], ['C1', 'C2'])
         matrix.set_values([[2, 3], [3, 4]])
         filtered = center_scale_filter(matrix)
-        self.assertAlmostEqual(-0.70710678237309499, filtered.value_at(0, 0))
-        self.assertAlmostEqual(0.70710678237309499, filtered.value_at(0, 1))
-        self.assertAlmostEqual(-0.70710678237309499, filtered.value_at(1, 0))
-        self.assertAlmostEqual(0.70710678237309499, filtered.value_at(1, 1))
+        self.assertAlmostEqual(-0.70710678237309499, filtered[0][0])
+        self.assertAlmostEqual(0.70710678237309499, filtered[0][1])
+        self.assertAlmostEqual(-0.70710678237309499, filtered[1][0])
+        self.assertAlmostEqual(0.70710678237309499, filtered[1][1])
