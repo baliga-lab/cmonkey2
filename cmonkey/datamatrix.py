@@ -17,9 +17,18 @@ class DataMatrix:
     The values themselves are implemented as a two-dimensional numpy array
     and returned values are all based on numpy arrays.
     """
-    def __init__(self, nrows, ncols, row_names=None, col_names=None):
+    def __init__(self, nrows, ncols, row_names=None, col_names=None,
+                 values=None):
         """create a DataMatrix instance"""
-        self.__values = numpy.zeros((nrows, ncols))
+        def check_values():
+            """Sets values from a two-dimensional list"""
+            if len(values) != nrows:
+                raise ValueError("number of rows should be %d" % nrows)
+            for row_index in range(nrows):
+                inrow = values[row_index]
+                if len(inrow) != ncols:
+                    raise ValueError("number of columns should be %d" % ncols)
+
         if not row_names:
             self.__row_names = ["Row " + str(i) for i in range(nrows)]
         else:
@@ -34,16 +43,22 @@ class DataMatrix:
                 raise ValueError("number of column names should be %d" % ncols)
             self.__column_names = col_names
 
+        if values == None:
+            self.__values = numpy.zeros((nrows, ncols))
+        else:
+            check_values()
+            self.__values = numpy.array(values)
+
     def num_rows(self):
         """returns the number of rows"""
-        return len(self.__values)
+        return len(self.__row_names)
 
     def num_columns(self):
         """returns the number of columns"""
         if self.num_rows() == 0:
             return 0
         else:
-            return len(self.__values[0])
+            return len(self.__column_names)
 
     def row_names(self):
         """return the row names"""
@@ -60,20 +75,6 @@ class DataMatrix:
     def __getitem__(self, row_index):
         """return the row at the specified position"""
         return self.__values[row_index]
-
-    def set_values(self, values):
-        """Sets values from a two-dimensional list"""
-        if values == None:
-            raise ValueError("values should be a two-dimensional list")
-        if len(values) != self.num_rows():
-            raise ValueError("number of rows should be %d" % self.num_rows())
-        for row_index in range(self.num_rows()):
-            inrow = values[row_index]
-            if len(inrow) != self.num_columns():
-                raise ValueError("number of columns should be %d" %
-                                 self.num_columns())
-            for col_index in range(self.num_columns()):
-                self.__values[row_index][col_index] = inrow[col_index]
 
     def row_name(self, row):
         """retrieve the name for the specified row"""
@@ -238,8 +239,8 @@ def row_filter(matrix, fun):
                if not numpy.isnan(value)]
         values.append(fun(row))
     result = DataMatrix(matrix.num_rows(), matrix.num_columns(),
-                        matrix.row_names(), matrix.column_names())
-    result.set_values(values)
+                        matrix.row_names(), matrix.column_names(),
+                        values=values)
     return result
 
 
