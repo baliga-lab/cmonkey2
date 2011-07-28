@@ -61,10 +61,6 @@ class DataMatrix:
         """return the row at the specified position"""
         return self.__values[row_index]
 
-    def set_value_at(self, row, column, value):
-        """set the value at the specified position"""
-        self.__values[row][column] = value
-
     def set_values(self, values):
         """Sets values from a two-dimensional list"""
         if values == None:
@@ -77,7 +73,7 @@ class DataMatrix:
                 raise ValueError("number of columns should be %d" %
                                  self.num_columns())
             for col_index in range(self.num_columns()):
-                self.set_value_at(row_index, col_index, inrow[col_index])
+                self.__values[row_index][col_index] = inrow[col_index]
 
     def row_name(self, row):
         """retrieve the name for the specified row"""
@@ -175,7 +171,7 @@ class DataMatrixFactory:
                     value = numpy.nan
                 else:
                     value = float(strval)
-                data_matrix.set_value_at(row, col, value)
+                data_matrix[row][col] = value
 
         for matrix_filter in self.filters:
             data_matrix = matrix_filter(data_matrix)
@@ -230,7 +226,7 @@ def nochange_filter(matrix):
     for row_index in range(numrows):
         for col_index in range(numcols):
             value = matrix[rows_to_keep[row_index]][cols_to_keep[col_index]]
-            result.set_value_at(row_index, col_index, value)
+            result[row_index][col_index] = value
     return result
 
 

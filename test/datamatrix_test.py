@@ -56,7 +56,7 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_set_value(self):
         """set a value in the matrix"""
         matrix = DataMatrix(3, 4)
-        matrix.set_value_at(0, 1, 42.0)
+        matrix[0][1] = 42.0
         self.assertEquals(42.0, matrix[0][1])
 
     def test_set_values_none(self):
@@ -84,6 +84,9 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         matrix.set_values([[1, 2], [2, 3]])
         self.assertTrue(numpy.equal(numpy.array([[1, 2], [2, 3]]),
                         matrix.values()).all())
+
+    #def test_submatrix(self):
+    #    self.fail('TODO: submatrix')
 
 
 class DataMatrixCollectionTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -169,7 +172,7 @@ def times2(matrix):
     result = deepcopy(matrix)
     for row in range(matrix.num_rows()):
         for col in range(matrix.num_columns()):
-            result.set_value_at(row, col, matrix[row][col] * 2)
+            result[row][col] = matrix[row][col] * 2
     return result
 
 
