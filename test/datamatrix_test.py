@@ -129,10 +129,35 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                                  [9, 11]]),
                                     submatrix.values()).all())
 
+    def test_sorted_by_rowname(self):
+        matrix = DataMatrix(3, 3,
+                            row_names=['R0', 'R2', 'R1'],
+                            col_names=['C0', 'C1', 'C2'],
+                            values=[[1, 2, 3],
+                                    [4, 5, 6],
+                                    [8, 9, 10]])
+        sorted_matrix = matrix.sorted_by_row_name()
+        self.assertEquals(['R0', 'R1', 'R2'], sorted_matrix.row_names())
+        self.assertTrue(numpy.equal(numpy.array([[1, 2, 3],
+                                                 [8, 9, 10],
+                                                 [4, 5, 6]]),
+                                    sorted_matrix.values()).all())
 
-    #def test_sorted_by_rowname(self):
-    #    """Maybe we should just import sorted ???"""
-    #    self.fail('TODO: sorted_by_rowname')
+    def test_sorted_by_rowname_duplicate_row_names(self):
+        matrix = DataMatrix(4, 3,
+                            row_names=['R0', 'R2', 'R1', 'R1'],
+                            col_names=['C0', 'C1', 'C2'],
+                            values=[[1, 2, 3],
+                                    [4, 5, 6],
+                                    [8, 9, 10],
+                                    [11, 12, 13]])
+        sorted_matrix = matrix.sorted_by_row_name()
+        self.assertEquals(['R0', 'R1', 'R1', 'R2'], sorted_matrix.row_names())
+        self.assertTrue(numpy.equal(numpy.array([[1, 2, 3],
+                                                 [8, 9, 10],
+                                                 [11, 12, 13],
+                                                 [4, 5, 6]]),
+                                    sorted_matrix.values()).all())
 
 
 class DataMatrixCollectionTest(unittest.TestCase):  # pylint: disable-msg=R0904

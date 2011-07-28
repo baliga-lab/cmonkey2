@@ -6,7 +6,7 @@ more information and licensing details.
 from BeautifulSoup import BeautifulSoup
 from operator import attrgetter
 from scipy.stats import scoreatpercentile
-from numpy import std, sqrt, var, mean
+import numpy
 import urllib
 import os
 
@@ -179,8 +179,8 @@ def r_stddev(values):
     """This is a standard deviation function, adjusted so it will
     return approximately the same value as R's sd() function would"""
     num_values = len(values)
-    return round(std(values) / sqrt(float(num_values - 1) / float(num_values)),
-                 8)
+    return round(numpy.std(values) / numpy.sqrt(float(num_values - 1) /
+                                                float(num_values)), 8)
 
 
 def r_variance_columns(matrix):
@@ -188,13 +188,13 @@ def r_variance_columns(matrix):
     a bias of (n/n-1) over the results to match with R"""
     num_rows = len(matrix)
     bias = float(num_rows) / float(num_rows - 1)
-    result = var(matrix, 0)
+    result = numpy.var(matrix, 0)
     return [(value * bias) for value in result]
 
 
 def column_means(matrix):
     """computes the column means of a matrix"""
-    return mean(matrix, 0)
+    return numpy.mean(matrix, 0)
 
 
 def make_matrix(row_names, num_columns, init_value=0):

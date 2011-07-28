@@ -115,12 +115,29 @@ class DataMatrix:
                           col_names=new_col_names,
                           values=new_values)
 
+    def sorted_by_row_name(self):
+        """returns a version of this table, sorted by row name"""
+        row_pairs = []
+        for row_index in range(len(self.__row_names)):
+            row_pairs.append((self.__row_names[row_index], row_index))
+        row_pairs.sort()
+        new_rows = []
+        new_row_names = []
+        for row_pair in row_pairs:
+            new_row_names.append(row_pair[0])
+            new_rows.append(self.__values[row_pair[1]])
+        return DataMatrix(self.num_rows(), self.num_columns(),
+                          new_row_names, self.column_names(),
+                          values=new_rows)
+
     def __str__(self):
         """returns a string representation of this matrix"""
-        result = 'Gene\t' + '\t'.join(self.__column_names) + '\n'
+        result = "%10s" % 'Gene'
+        result += ' '.join([("%10s" % name)
+                            for name in self.__column_names]) + '\n'
         for row_index in range(self.num_rows()):
-            result += self.__row_names[row_index] + '\t'
-            result += '\t'.join([str(value)
+            result += ("%10s" % self.__row_names[row_index]) + ' '
+            result += ' '.join([("%10f" % value)
                                  for value in self.__values[row_index]])
             result += '\n'
         return result

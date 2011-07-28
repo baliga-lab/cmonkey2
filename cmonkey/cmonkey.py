@@ -242,7 +242,7 @@ def run_cmonkey():
     matrix = matrix_factory.create_from(infile)
     logging.info("Normalized input matrix has %d rows and %d columns:",
                  matrix.num_rows(), matrix.num_columns())
-    #print(matrix)
+    print(matrix.sorted_by_row_name())
 
     keggfile = DelimitedFile.read(KEGG_FILE_PATH, comment='#')
     gofile = DelimitedFile.read(GO_FILE_PATH)
