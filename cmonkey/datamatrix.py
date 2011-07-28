@@ -4,21 +4,22 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import scipy
+import numpy
 from util import r_stddev
 
 
 class DataMatrix:
     """
-    A 2 dimensional data matrix class, with optional row and column names
+    A two-dimensional data matrix class, with optional row and column names
     The matrix is initialized with a fixed dimension size and can not
     be resized after initialization.
-    Names and values of a matrix instance can be modified
-    DataMatrix does not make any assumptions about its value or name types
+    Names and values of a matrix instance can be modified.
+    The values themselves are implemented as a two-dimensional numpy array
+    and returned values are all based on numpy arrays.
     """
     def __init__(self, nrows, ncols, row_names=None, col_names=None):
         """create a DataMatrix instance"""
-        #self.__values = numpy.zeros((nrows, ncols))
-        self.__values = [[0.0 for _ in range(ncols)] for _ in range(nrows)]
+        self.__values = numpy.zeros((nrows, ncols))
         if not row_names:
             self.__row_names = ["Row " + str(i) for i in range(nrows)]
         else:
@@ -56,23 +57,6 @@ class DataMatrix:
         """returns this matrix's values"""
         return self.__values
 
-    def row_values(self, row_index):
-        """returns the specified row values"""
-        result = []
-        for col_index in range(self.num_columns()):
-            result.append(self.__values[row_index][col_index])
-        return result
-
-    def column_values(self, column):
-        """returns the specified column values"""
-        result = []
-        for row_index in range(self.num_rows()):
-            result.append(self.__values[row_index][column])
-        return result
-
-    #def value_at(self, row, column):
-    #    """retrieve the value at the specified position"""
-    #    return self.__values[row][column]
     def __getitem__(self, row_index):
         """return the row at the specified position"""
         return self.__values[row_index]
@@ -109,7 +93,7 @@ class DataMatrix:
         for row_index in range(self.num_rows()):
             result += self.__row_names[row_index] + '\t'
             result += '\t'.join([str(value)
-                                 for value in self.row_values(row_index)])
+                                 for value in self.__values[row_index]])
             result += '\n'
         return result
 
@@ -188,7 +172,7 @@ class DataMatrixFactory:
             for col in range(ncols):
                 strval = lines[row][col + 1]
                 if strval == 'NA':
-                    value = None
+                    value = numpy.nan
                 else:
                     value = float(strval)
                 data_matrix.set_value_at(row, col, value)
@@ -214,7 +198,7 @@ def nochange_filter(matrix):
             count = 0
             for col_index in range(data_matrix.num_columns()):
                 value = data_matrix[row_index][col_index]
-                if value == None or abs(value) <= ROW_THRESHOLD:
+                if numpy.isnan(value) or abs(value) <= ROW_THRESHOLD:
                     count += 1
             mean = float(count) / data_matrix.num_columns()
             if mean < FILTER_THRESHOLD:
@@ -228,7 +212,7 @@ def nochange_filter(matrix):
             count = 0
             for row_index in range(data_matrix.num_rows()):
                 value = data_matrix[row_index][col_index]
-                if value == None or abs(value) <= COLUMN_THRESHOLD:
+                if numpy.isnan(value) or abs(value) <= COLUMN_THRESHOLD:
                     count += 1
             mean = float(count) / data_matrix.num_rows()
             if mean < FILTER_THRESHOLD:
@@ -254,8 +238,8 @@ def row_filter(matrix, fun):
     """generalize a matrix filter that is applying a function for each row"""
     values = []
     for row_index in range(matrix.num_rows()):
-        row = [value for value in matrix.row_values(row_index)
-               if value != None]
+        row = [value for value in matrix[row_index]
+               if not numpy.isnan(value)]
         values.append(fun(row))
     result = DataMatrix(matrix.num_rows(), matrix.num_columns(),
                         matrix.row_names(), matrix.column_names())
