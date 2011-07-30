@@ -3,12 +3,13 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-from util import make_matrix, DelimitedFile
+from util import make_matrix, DelimitedFile, DelimitedFileMapper
 from datamatrix import DataMatrixFactory, nochange_filter, center_scale_filter
 from datamatrix import DataMatrixCollection
 from organism import OrganismFactory
 from organism import make_kegg_code_mapper, make_go_taxonomy_mapper
 from organism import make_rsat_organism_mapper
+from membership import ClusterMembership, seed_column_members
 import microbes_online
 import stringdb
 from rsat import RsatDatabase
@@ -239,10 +240,16 @@ def run_cmonkey():
     matrix_factory = DataMatrixFactory([nochange_filter,
                                         center_scale_filter])
     infile = DelimitedFile.read(sys.argv[1], has_header=True)
+    # for now, we set a fixed set of clusters assignments
+    # that matches halo_ratios5.tsv
+    # This is to take out the random component out of the seeding
+    # and make it easier to compare results with R-cMonkey
+    fake_row_membership_seed = DelimitedFileMapper(
+        DelimitedFile.read('clusters.tsv', has_header=False), 0, 1)
     matrix = matrix_factory.create_from(infile)
     logging.info("Normalized input matrix has %d rows and %d columns:",
                  matrix.num_rows(), matrix.num_columns())
-    print(matrix.sorted_by_row_name())
+    #print(matrix.sorted_by_row_name())
 
     keggfile = DelimitedFile.read(KEGG_FILE_PATH, comment='#')
     gofile = DelimitedFile.read(GO_FILE_PATH)
@@ -256,10 +263,41 @@ def run_cmonkey():
                                   make_rsat_organism_mapper(rsatdb),
                                   make_go_taxonomy_mapper(gofile),
                                   nw_factories)
-    organism = org_factory.create(sys.argv[2])
-    algorithm = CMonkey(organism, DataMatrixCollection([matrix]))
-    algorithm.run()
+    # We are using a fake row seed here in order to have reproducible,
+    # deterministic results for development. Since the column seed is
+    # deterministic and dependent on the row seed, we can use the real
+    # column seed implementation here.
+    # We currently assume the halo_ratios5.tsv file as input, and
+    # 43 clusters, so it follows:
+    # n.clust.per.row = 2
+    # n.clust.per.col = k.clust * 2/3 => 43 * 2/3 => 29
+    membership = ClusterMembership(
+        matrix.sorted_by_row_name(), 43, 2,
+        29, fake_seed_row_memberships(fake_row_membership_seed),
+        seed_column_members)
 
+    # uncomment me
+    #organism = org_factory.create(sys.argv[2])
+    #algorithm = CMonkey(organism, DataMatrixCollection([matrix]))
+    #algorithm.run()
+
+
+def fake_seed_row_memberships(fake_mapper):
+    """This method sets the memberships according to a seed that was
+    created by running the original cMonkey on halo_ratios5.tsv with
+    kmeans row seeding. To compromise on its NP complete behavior,
+    kmeans does not always return the same clusters. We bake all random
+    components of cMonkey for development to make it possible to compare
+    results"""
+    def compute(row_membership, _):
+        """pseudo-seed with fixed numbers"""
+        print logging.debug("fake_seed_row_memberships")
+        index = 0
+        for key in sorted(fake_mapper.keys()):
+            row_membership[index][0] = int(fake_mapper[key])
+            index += 1
+        print row_membership
+    return compute
 
 if __name__ == '__main__':
     print('cMonkey (Python port) (c) 2011, Institute for Systems Biology')

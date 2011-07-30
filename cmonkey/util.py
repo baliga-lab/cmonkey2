@@ -99,16 +99,24 @@ class DelimitedFileMapper:
 
     def __init__(self, delimited_file, key_column, value_column):
         """Creates an instance of the mapper class using a DelimitedFile"""
-        self.taxonomy_file = delimited_file
-        self.key_column = key_column
-        self.value_column = value_column
+        self.__values = {}
+        for line in delimited_file.lines():
+            self.__values[line[key_column]] = line[value_column]
 
-    def lookup(self, key):
+    def __getitem__(self, key):
         """looks for the key in the key column"""
-        for line in self.taxonomy_file.lines():
-            if line[self.key_column] == key:
-                return line[self.value_column]
-        return None
+        return self.__values.get(key, None)
+
+    def items(self):
+        """returns the key, value pairs"""
+        return self.__values.items()
+
+    def keys(self):
+        """returns the keys"""
+        return self.__values.keys()
+
+    def __str__(self):
+        return str(self.__values)
 
 
 def levenshtein_distance(str1, str2):

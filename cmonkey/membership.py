@@ -21,20 +21,40 @@ class ClusterMembership:
     entire column membership matrix.
     """
 
-    def __init__(self, data_matrix, num_clusters_per_row,
-                 num_clusters_per_column, seed_row_memberships,
+    def __init__(self, data_matrix,
+                 num_clusters,
+                 num_clusters_per_row,
+                 num_clusters_per_column,
+                 seed_row_memberships,
                  seed_column_memberships):
         """create instance of ClusterMembership"""
         num_rows = data_matrix.num_rows()
-        self.__row_membership = [[0.0 for _ in range(num_clusters_per_row)]
+        self.__row_membership = [[0 for _ in range(num_clusters_per_row)]
                                  for _ in range(num_rows)]
         seed_row_memberships(self.__row_membership, data_matrix)
         self.__column_membership = seed_column_memberships(
-            self.__row_membership, data_matrix, num_clusters_per_column)
+            data_matrix, self.__row_membership, num_clusters)
 
     def cluster_for_row(self, row_index, column_index):
         """returns row membership value at the specified position"""
         return self.__row_membership[row_index][column_index]
+
+
+def seed_column_members(data_matrix, row_membership, num_clusters):
+    """default column membership seeder"""
+    num_rows = data_matrix.num_rows()
+    print "# rows: %d, # clusters: %d" % (num_rows, num_clusters)
+    # create a submatrix for each cluster
+    for cluster_num in range(1, num_clusters + 1):
+        current_cluster_rows = []
+        for row_index in range(num_rows):
+            if row_membership[row_index][0] == cluster_num:
+                current_cluster_rows.append(row_index)
+        submatrix = data_matrix.submatrix(current_cluster_rows,
+                                          range(data_matrix.num_columns()))
+        column_scores = compute_column_scores(submatrix.values())
+        print "COLUMN SCORES, CLUSTER %d" % cluster_num
+        print column_scores
 
 
 def compute_column_scores(matrix):
@@ -59,4 +79,4 @@ def compute_column_scores(matrix):
             new_row.append(row[col_index] - colmeans[col_index])
     matrix_minus_colmeans_squared = numpy.square(matrix_minus_colmeans)
     var_norm = numpy.abs(colmeans) + 0.01
-    return column_means(matrix_minus_colmeans_squared) / var_norm
+    return -(column_means(matrix_minus_colmeans_squared) / var_norm)

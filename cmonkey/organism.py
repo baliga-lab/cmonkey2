@@ -13,13 +13,13 @@ from seqtools import extract_upstream
 def make_kegg_code_mapper(dfile):
     """returns a function that maps an organism code to a KEGG organism
     name"""
-    return DelimitedFileMapper(dfile, 1, 3).lookup
+    return DelimitedFileMapper(dfile, 1, 3).__getitem__
 
 
 def make_go_taxonomy_mapper(dfile):
     """returns a function that maps an RSAT organism name to a GO
     taxonomy id"""
-    return DelimitedFileMapper(dfile, 0, 1).lookup
+    return DelimitedFileMapper(dfile, 0, 1).__getitem__
 
 
 class RsatSpeciesInfo:  # pylint: disable-msg=R0903
