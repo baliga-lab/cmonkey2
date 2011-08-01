@@ -52,7 +52,8 @@ class MockSeedColumnMemberships:
     def __init__(self):
         self.was_called = False
 
-    def __call__(self, data_matrix, row_membership, num_clusters):
+    def __call__(self, data_matrix, row_membership, num_clusters,
+                 num_clusters_per_column):
         self.was_called = True
         return None
 
@@ -76,8 +77,8 @@ class ClusterMembershipTest(unittest.TestCase):
         """tests compute_column_scores"""
         result = compute_column_scores(MATRIX1)
         self.assertEqual(5, len(result))
-        self.assertAlmostEqual(-0.03085775, result[0])
-        self.assertAlmostEqual(-0.05290099, result[1])
-        self.assertAlmostEqual(-0.05277032, result[2])
-        self.assertAlmostEqual(-0.00358045, result[3])
-        self.assertAlmostEqual(-0.03948821, result[4])
+        self.assertAlmostEqual(0.03085775, result[0])
+        self.assertAlmostEqual(0.05290099, result[1])
+        self.assertAlmostEqual(0.05277032, result[2])
+        self.assertAlmostEqual(0.00358045, result[3])
+        self.assertAlmostEqual(0.03948821, result[4])
