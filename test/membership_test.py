@@ -5,6 +5,8 @@ more information and licensing details.
 """
 import unittest
 from membership import ClusterMembership, compute_column_scores
+from membership import seed_column_members
+from datamatrix import DataMatrix
 import numpy
 
 
@@ -31,6 +33,12 @@ class MockDataMatrix:
     def num_columns(self):
         return 5
 
+    def row_names(self):
+        return [('GENE%d' % index) for index in range(self.__num_rows)]
+
+    def column_names(self):
+        return [('COND%d' % index) for index in range(self.num_columns())]
+
     def values(self):
         return MATRIX1
 
@@ -55,7 +63,7 @@ class MockSeedColumnMemberships:
     def __call__(self, data_matrix, row_membership, num_clusters,
                  num_clusters_per_column):
         self.was_called = True
-        return None
+        return [[0], [0], [0], [0], [0]]
 
 
 class ClusterMembershipTest(unittest.TestCase):
@@ -71,7 +79,6 @@ class ClusterMembershipTest(unittest.TestCase):
                                        seed_col_memberships)
         self.assertTrue(seed_row_memberships.was_called)
         self.assertTrue(seed_col_memberships.was_called)
-        self.assertEquals(0.0, membership.cluster_for_row(0, 1))
 
     def test_compute_column_scores(self):
         """tests compute_column_scores"""
@@ -82,3 +89,14 @@ class ClusterMembershipTest(unittest.TestCase):
         self.assertAlmostEqual(0.05277032, result[2])
         self.assertAlmostEqual(0.00358045, result[3])
         self.assertAlmostEqual(0.03948821, result[4])
+
+    def test_seed_column_members(self):
+        """tests seed_column_members"""
+        data_matrix = DataMatrix(3, 2, ["GENE1", "GENE2", "GENE3"],
+                                 ['COL1', 'COL2'], [[1.0, 2.0], [2.0, 1.0],
+                                                    [2.0, 1.0]])
+        row_membership = [[1, 0], [2, 0], [1, 0]]
+        column_members = seed_column_members(data_matrix, row_membership,
+                                             2, 2)
+        self.assertEquals([2, 1], column_members[0])
+        self.assertEquals([2, 1], column_members[1])

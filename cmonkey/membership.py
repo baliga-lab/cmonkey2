@@ -28,21 +28,32 @@ class ClusterMembership:
                  seed_row_memberships,
                  seed_column_memberships):
         """create instance of ClusterMembership"""
+        # using the seeding functions, build the initial membership
+        # dictionaries
         num_rows = data_matrix.num_rows()
-        self.__row_membership = [[0 for _ in range(num_clusters_per_row)]
-                                 for _ in range(num_rows)]
-        seed_row_memberships(self.__row_membership, data_matrix)
-        self.__column_membership = seed_column_memberships(
-            data_matrix, self.__row_membership, num_clusters,
-            num_clusters_per_column)
+        row_membership = [[0 for _ in range(num_clusters_per_row)]
+                          for _ in range(num_rows)]
+        seed_row_memberships(row_membership, data_matrix)
+        column_membership = seed_column_memberships(data_matrix,
+                                                    row_membership,
+                                                    num_clusters,
+                                                    num_clusters_per_column)
+        self.__row_is_member_of = make_member_map(row_membership,
+                                                  data_matrix.row_names())
+        self.__col_is_member_of = make_member_map(column_membership,
+                                                  data_matrix.column_names())
 
-        print "COLUMN MEMBERS: "
-        for row in self.__column_membership:
-            print row
 
-    def cluster_for_row(self, row_index, column_index):
-        """returns row membership value at the specified position"""
-        return self.__row_membership[row_index][column_index]
+def make_member_map(membership, names):
+    """using a membership array, build a dictionary representing
+    the contained memberships for a name"""
+    result = {}
+    for row_index in range(len(names)):
+        row = membership[row_index]
+        result[names[row_index]] = sorted([row[col_index] for col_index
+                                           in range(len(row))
+                                           if row[col_index] > 0])
+    return result
 
 
 def seed_column_members(data_matrix, row_membership, num_clusters,
@@ -50,7 +61,6 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
     """default column membership seeder"""
     num_rows = data_matrix.num_rows()
     num_cols = data_matrix.num_columns()
-    print "# rows: %d, # clusters: %d" % (num_rows, num_clusters)
     # create a submatrix for each cluster
     column_scores = []
     for cluster_num in range(1, num_clusters + 1):
@@ -61,7 +71,6 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
         submatrix = data_matrix.submatrix(current_cluster_rows,
                                           range(data_matrix.num_columns()))
         scores = -compute_column_scores(submatrix.values())
-        print ("%d: " % cluster_num), scores
         column_scores.append(scores)
 
     column_members = []
@@ -76,8 +85,7 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
 def order(alist):
     """a weird R function that gives each item's position in the original list
     if you enumerate each item in a sorted list"""
-    sorted_list = sorted(alist, reverse=True)
-    return [(alist.index(item)) + 1 for item in sorted_list]
+    return [(alist.index(item)) + 1 for item in sorted(alist, reverse=True)]
 
 
 def compute_column_scores(matrix):
