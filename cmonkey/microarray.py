@@ -111,7 +111,7 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
                 current_cluster_rows.append(data_matrix.row_name(row_index))
         submatrix = data_matrix.submatrix_by_name(
             row_names=current_cluster_rows)
-        scores = -compute_column_scores(submatrix.values())
+        scores = (-compute_column_scores(submatrix))[0]
         column_scores.append(scores)
 
     column_members = []
@@ -135,28 +135,36 @@ def compute_column_scores(matrix):
     were determined by the pre-seeding, so typically, matrix is a
     submatrix of the input matrix that contains only the rows that
     belong to a certain cluster.
+    The result is a DataMatrix with one row containing all the
+    column scores
 
     This function normalizes diff^2 by the mean expression level, similar
     to "Index of Dispersion", see
     http://en.wikipedia.org/wiki/Index_of_dispersion
     for details
     """
-    colmeans = column_means(matrix)
+    colmeans = matrix.column_means().values()[0]
     matrix_minus_colmeans_squared = subtract_and_square(matrix, colmeans)
     var_norm = numpy.abs(colmeans) + 0.01
-    return column_means(matrix_minus_colmeans_squared) / var_norm
+    result = column_means(matrix_minus_colmeans_squared) / var_norm
+    return DataMatrix(1, matrix.num_columns(), ['Col. Scores'],
+                      matrix.column_names(), [result])
 
 
 def compute_row_scores(datamatrix, submatrix):
-    """For a given matrix, compute the row scores"""
-    print submatrix.column_means()
+    """For a given matrix, compute the row scores. The second submatrix is
+    used to calculate the column means on and should be derived from
+    datamatrix filtered by the row names and column names of a specific
+    cluster.
+    datamatrix should be filtered by the columns of a specific cluster in
+    order for the column means to be applied properly.
+    The result is a DataMatrix with one row containing all the row scores"""
     colmeans = submatrix.column_means().values()[0]
     matrix_minus_colmeans_squared = subtract_and_square(datamatrix, colmeans)
     scores = numpy.log(row_means(matrix_minus_colmeans_squared) + 1e-99)
-    values = [[score] for score in scores]
-    return DataMatrix(datamatrix.num_rows(), 1,
-                      row_names=datamatrix.row_names(),
-                      col_names=['Row Scores'], values=values)
+    return DataMatrix(1, datamatrix.num_rows(),
+                      row_names=['Row Scores'],
+                      col_names=datamatrix.row_names(), values=[scores])
 
 
 def subtract_and_square(matrix, vector):

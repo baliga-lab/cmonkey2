@@ -138,6 +138,11 @@ class DataMatrix:
                           col_names=self.column_names(),
                           values=[util.column_means(self.values())])
 
+    def __neg__(self):
+        """returns a new DataMatrix with the values in the matrix negated"""
+        return DataMatrix(self.num_rows(), self.num_columns(),
+                          self.row_names(), self.column_names(),
+                          -self.values())
     def __repr__(self):
         """returns a string representation of this matrix"""
         return str(self)

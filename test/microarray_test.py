@@ -95,13 +95,18 @@ class ClusterMembershipTest(unittest.TestCase):
 
     def test_compute_column_scores(self):
         """tests compute_column_scores"""
-        result = compute_column_scores(MATRIX1)
-        self.assertEqual(5, len(result))
-        self.assertAlmostEqual(0.03085775, result[0])
-        self.assertAlmostEqual(0.05290099, result[1])
-        self.assertAlmostEqual(0.05277032, result[2])
-        self.assertAlmostEqual(0.00358045, result[3])
-        self.assertAlmostEqual(0.03948821, result[4])
+        matrix = DataMatrix(10, 5, ['R1', 'R2', 'R3', 'R4', 'R5', 'R6',
+                                    'R7', 'R8', 'R9', 'R10'],
+                            ['C1', 'C2', 'C3', 'C4', 'C5'],
+                            MATRIX1)
+        result = compute_column_scores(matrix)
+        scores = result[0]
+        self.assertEqual(5, len(scores))
+        self.assertAlmostEqual(0.03085775, scores[0])
+        self.assertAlmostEqual(0.05290099, scores[1])
+        self.assertAlmostEqual(0.05277032, scores[2])
+        self.assertAlmostEqual(0.00358045, scores[3])
+        self.assertAlmostEqual(0.03948821, scores[4])
 
     def test_seed_column_members(self):
         """tests seed_column_members"""
