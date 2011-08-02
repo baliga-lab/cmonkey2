@@ -69,14 +69,27 @@ class MockSeedColumnMemberships:
 class ClusterMembershipTest(unittest.TestCase):
     """Test class for ClusterMembership"""
 
+    def test_constructor(self):
+        """tests the constructor"""
+        membership = ClusterMembership({'R1': [1, 3], 'R2': [2, 3]},
+                                       {'C1': [1, 2], 'C2': [2]})
+        self.assertEquals([1, 3], membership.clusters_for_row('R1'))
+        self.assertEquals([2, 3], membership.clusters_for_row('R2'))
+        self.assertEquals([1, 2], membership.clusters_for_column('C1'))
+        self.assertEquals([2], membership.clusters_for_column('C2'))
+        self.assertEquals(['R1'], membership.rows_for_cluster(1))
+        self.assertEquals(['R2'], membership.rows_for_cluster(2))
+        self.assertEquals(['R1', 'R2'], membership.rows_for_cluster(3))
+        self.assertEquals(['C1'], membership.columns_for_cluster(1))
+
     def test_create_membership(self):
         """test creating a ClusterMembership object"""
         datamatrix = MockDataMatrix(3)
         seed_row_memberships = MockSeedRowMemberships()
         seed_col_memberships = MockSeedColumnMemberships()
-        membership = ClusterMembership(datamatrix, 1, 2, 2,
-                                       seed_row_memberships,
-                                       seed_col_memberships)
+        membership = ClusterMembership.create(datamatrix, 1, 2, 2,
+                                              seed_row_memberships,
+                                              seed_col_memberships)
         self.assertTrue(seed_row_memberships.was_called)
         self.assertTrue(seed_col_memberships.was_called)
 

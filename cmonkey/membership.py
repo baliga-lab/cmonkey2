@@ -20,14 +20,24 @@ class ClusterMembership:
     A column seed function is called after this, which generates the
     entire column membership matrix.
     """
+    def __init__(self, row_is_member_of, column_is_member_of):
+        """creates an instance of ClusterMembership"""
+        self.__row_is_member_of = row_is_member_of
+        self.__column_is_member_of = column_is_member_of
+        self.__cluster_row_members = create_cluster_to_names_map(
+            self.__row_is_member_of)
+        self.__cluster_column_members = create_cluster_to_names_map(
+            self.__column_is_member_of)
 
-    def __init__(self, data_matrix,
-                 num_clusters,
-                 num_clusters_per_row,
-                 num_clusters_per_column,
-                 seed_row_memberships,
-                 seed_column_memberships):
-        """create instance of ClusterMembership"""
+    @classmethod
+    def create(cls, data_matrix,
+               num_clusters,
+               num_clusters_per_row,
+               num_clusters_per_column,
+               seed_row_memberships,
+               seed_column_memberships):
+        """create instance of ClusterMembership using
+        the provided seeding algorithms"""
         # using the seeding functions, build the initial membership
         # dictionaries
         num_rows = data_matrix.num_rows()
@@ -38,11 +48,40 @@ class ClusterMembership:
                                                     row_membership,
                                                     num_clusters,
                                                     num_clusters_per_column)
-        self.__row_is_member_of = make_member_map(row_membership,
-                                                  data_matrix.row_names())
-        self.__col_is_member_of = make_member_map(column_membership,
-                                                  data_matrix.column_names())
+        row_is_member_of = make_member_map(row_membership,
+                                           data_matrix.row_names())
+        col_is_member_of = make_member_map(column_membership,
+                                           data_matrix.column_names())
         #print self.__col_is_member_of
+        return ClusterMembership(row_is_member_of, col_is_member_of)
+
+    def clusters_for_row(self, row_name):
+        """determine the clusters for the specified row"""
+        return self.__row_is_member_of[row_name]
+
+    def clusters_for_column(self, column_name):
+        """determine the clusters for the specified column"""
+        return self.__column_is_member_of[column_name]
+
+    def rows_for_cluster(self, cluster):
+        """determine the rows that belong to a cluster"""
+        return self.__cluster_row_members[cluster]
+
+    def columns_for_cluster(self, cluster):
+        """determine the rows that belong to a cluster"""
+        return self.__cluster_column_members[cluster]
+
+
+def create_cluster_to_names_map(name_to_cluster_map):
+    """from a name->cluster-list dictionary, create a cluster->name
+    list dictionary"""
+    result = {}
+    for name, clusters in name_to_cluster_map.items():
+        for cluster in clusters:
+            if cluster not in result:
+                result[cluster] = []
+            result[cluster].append(name)
+    return result
 
 
 def make_member_map(membership, names):
