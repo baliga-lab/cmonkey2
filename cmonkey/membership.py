@@ -42,6 +42,7 @@ class ClusterMembership:
                                                   data_matrix.row_names())
         self.__col_is_member_of = make_member_map(column_membership,
                                                   data_matrix.column_names())
+        #print self.__col_is_member_of
 
 
 def make_member_map(membership, names):
@@ -58,7 +59,9 @@ def make_member_map(membership, names):
 
 def seed_column_members(data_matrix, row_membership, num_clusters,
                         num_clusters_per_column):
-    """default column membership seeder"""
+    """Default column membership seeder
+    In case of multiple input ratio matrices, we assume that these
+    matrices have been combined into data_matrix"""
     num_rows = data_matrix.num_rows()
     num_cols = data_matrix.num_columns()
     # create a submatrix for each cluster
@@ -67,9 +70,9 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
         current_cluster_rows = []
         for row_index in range(num_rows):
             if row_membership[row_index][0] == cluster_num:
-                current_cluster_rows.append(row_index)
-        submatrix = data_matrix.submatrix(current_cluster_rows,
-                                          range(data_matrix.num_columns()))
+                current_cluster_rows.append(data_matrix.row_name(row_index))
+        submatrix = data_matrix.submatrix_by_name(
+            row_names=current_cluster_rows)
         scores = -compute_column_scores(submatrix.values())
         column_scores.append(scores)
 
@@ -101,8 +104,7 @@ def compute_column_scores(matrix):
     for details
     """
     colmeans = column_means(matrix)
-    matrix_minus_colmeans_squared = compute_matrix_minus_vector_squared(
-        matrix, colmeans)
+    matrix_minus_colmeans_squared = subtract_and_square(matrix, colmeans)
     var_norm = numpy.abs(colmeans) + 0.01
     return column_means(matrix_minus_colmeans_squared) / var_norm
 
@@ -110,12 +112,11 @@ def compute_column_scores(matrix):
 def compute_row_scores(matrix):
     """For a given matrix, compute the row scores"""
     colmeans = column_means(matrix)
-    matrix_minus_colmeans_squared = compute_matrix_minus_vector_squared(
-        matrix, colmeans)
+    matrix_minus_colmeans_squared = subtract_and_square(matrix, colmeans)
     return numpy.log(row_means(matrix_minus_colmeans_squared) + 1e-99)
 
 
-def compute_matrix_minus_vector_squared(matrix, vector):
+def subtract_and_square(matrix, vector):
     """reusable function to subtract a vector from each row of
     the input matrix and square the values in the result matrix"""
     result = []

@@ -277,8 +277,8 @@ def run_cmonkey():
         29, fake_seed_row_memberships(fake_row_membership_seed),
         seed_column_members)
 
-    rscores = compute_row_scores(matrix.values())
-    print "# ROWS: %d" % matrix.num_rows()
+    #rscores = compute_row_scores(matrix.values())
+    #print "# ROWS: %d" % matrix.num_rows()
     #print "ROW SCORES: "
     #print rscores
     # uncomment me
@@ -301,7 +301,7 @@ def fake_seed_row_memberships(fake_mapper):
         for key in sorted(fake_mapper.keys()):
             row_membership[index][0] = int(fake_mapper[key])
             index += 1
-        print row_membership
+        #print row_membership
     return compute
 
 if __name__ == '__main__':

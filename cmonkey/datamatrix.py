@@ -84,14 +84,16 @@ class DataMatrix:
         """retrieve the name for the specified column"""
         return self.__column_names[row]
 
-    def submatrix(self, row_indexes=None, column_indexes=None):
-        """extract a submatrix with the specified rows and columns"""
-        def select_names(names, indexes):
-            """from an array of strings, select the ones given in indexes"""
-            result = []
-            for index in indexes:
-                result.append(names[index])
-            return result
+    def submatrix_by_name(self, row_names=None, column_names=None):
+        """extract a submatrix with the specified rows and columns
+        Selecting by name is more common than selecting by index
+        in cMonkey, because submatrices are often selected based
+        on memberships.
+        Note: Currently, no duplicate row names or column names are
+        supported"""
+        def find_indexes(search_names, my_names):
+            """returns the indexes for the specified search names"""
+            return [my_names.index(name) for name in search_names]
 
         def make_values(row_indexes, column_indexes):
             """creates an array from the selected rows and columns"""
@@ -103,16 +105,16 @@ class DataMatrix:
                     row.append(self.__values[row_index][col_index])
             return result
 
-        if row_indexes == None:
-            row_indexes = range(self.num_rows())
-        if column_indexes == None:
-            column_indexes = range(self.num_rows())
-        new_row_names = select_names(self.__row_names, row_indexes)
-        new_col_names = select_names(self.__column_names, column_indexes)
-        new_values = make_values(row_indexes, column_indexes)
-        return DataMatrix(len(row_indexes), len(column_indexes),
-                          row_names=new_row_names,
-                          col_names=new_col_names,
+        if row_names == None:
+            row_names = self.row_names()
+        if column_names == None:
+            column_names = self.column_names()
+        row_indexes = find_indexes(row_names, self.row_names())
+        col_indexes = find_indexes(column_names, self.column_names())
+        new_values = make_values(row_indexes, col_indexes)
+        return DataMatrix(len(row_indexes), len(col_indexes),
+                          row_names=row_names,
+                          col_names=column_names,
                           values=new_values)
 
     def sorted_by_row_name(self):
