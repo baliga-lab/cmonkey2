@@ -5,6 +5,7 @@ more information and licensing details.
 """
 import numpy
 from util import column_means, row_means
+from datamatrix import DataMatrix
 
 
 class ClusterMembership:
@@ -45,10 +46,8 @@ class ClusterMembership:
         row_membership = [[0 for _ in range(num_clusters_per_row)]
                           for _ in range(num_rows)]
         seed_row_memberships(row_membership, data_matrix)
-        column_membership = seed_column_memberships(data_matrix,
-                                                    row_membership,
-                                                    num_clusters,
-                                                    num_clusters_per_column)
+        column_membership = seed_column_memberships(
+            data_matrix, row_membership, num_clusters, num_clusters_per_column)
         row_is_member_of = make_member_map(row_membership,
                                            data_matrix.row_names())
         col_is_member_of = make_member_map(column_membership,
@@ -148,11 +147,16 @@ def compute_column_scores(matrix):
     return column_means(matrix_minus_colmeans_squared) / var_norm
 
 
-def compute_row_scores(matrix):
+def compute_row_scores(datamatrix, submatrix):
     """For a given matrix, compute the row scores"""
-    colmeans = column_means(matrix)
-    matrix_minus_colmeans_squared = subtract_and_square(matrix, colmeans)
-    return numpy.log(row_means(matrix_minus_colmeans_squared) + 1e-99)
+    print submatrix.column_means()
+    colmeans = submatrix.column_means().values()[0]
+    matrix_minus_colmeans_squared = subtract_and_square(datamatrix, colmeans)
+    scores = numpy.log(row_means(matrix_minus_colmeans_squared) + 1e-99)
+    values = [[score] for score in scores]
+    return DataMatrix(datamatrix.num_rows(), 1,
+                      row_names=datamatrix.row_names(),
+                      col_names=['Row Scores'], values=values)
 
 
 def subtract_and_square(matrix, vector):

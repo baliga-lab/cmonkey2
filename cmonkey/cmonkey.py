@@ -277,10 +277,22 @@ def run_cmonkey():
         29, fake_seed_row_memberships(fake_row_membership_seed),
         seed_column_members)
 
-    #rscores = compute_row_scores(matrix.values())
-    #print "# ROWS: %d" % matrix.num_rows()
-    #print "ROW SCORES: "
-    #print rscores
+    # Just for prototyping, row score calculation is put here
+    clusters = [1, 2, 3]
+    for cluster in clusters:
+        sm1 = matrix.submatrix_by_name(
+            row_names=membership.rows_for_cluster(cluster),
+            column_names=membership.columns_for_cluster(cluster))
+        if sm1.num_columns() > 1:
+            matrix_filtered = matrix.submatrix_by_name(
+                column_names=membership.columns_for_cluster(cluster))
+            rscores = compute_row_scores(matrix_filtered, sm1)
+            print "ROW SCORES CLUSTER[%d]: " % cluster
+            print rscores
+        else:
+            # here, add a score list entirely consisting of NaN's
+            pass
+
     # uncomment me
     #organism = org_factory.create(sys.argv[2])
     #algorithm = CMonkey(organism, DataMatrixCollection([matrix]))

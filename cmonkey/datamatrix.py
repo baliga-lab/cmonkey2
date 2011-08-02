@@ -5,7 +5,7 @@ more information and licensing details.
 """
 import scipy
 import numpy
-from util import r_stddev
+import util
 
 
 class DataMatrix:
@@ -131,6 +131,16 @@ class DataMatrix:
         return DataMatrix(self.num_rows(), self.num_columns(),
                           new_row_names, self.column_names(),
                           values=new_rows)
+
+    def column_means(self):
+        """Returns a new DataMatrix containing the column means"""
+        return DataMatrix(1, self.num_columns(), row_names=["Column Means"],
+                          col_names=self.column_names(),
+                          values=[util.column_means(self.values())])
+
+    def __repr__(self):
+        """returns a string representation of this matrix"""
+        return str(self)
 
     def __str__(self):
         """returns a string representation of this matrix"""
@@ -301,7 +311,7 @@ def center_scale_filter(matrix):
     def center_scale(row):
         """centers the provided row around the median"""
         center = scipy.median(row)
-        scale = r_stddev(row)
+        scale = util.r_stddev(row)
         return [((value - center) / scale) for value in row]
 
     return row_filter(matrix, center_scale)
