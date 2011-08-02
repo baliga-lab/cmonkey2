@@ -9,8 +9,8 @@ from datamatrix import DataMatrixCollection
 from organism import OrganismFactory
 from organism import make_kegg_code_mapper, make_go_taxonomy_mapper
 from organism import make_rsat_organism_mapper
-from membership import ClusterMembership, seed_column_members
-from membership import compute_row_scores
+from microarray import ClusterMembership, seed_column_members
+from microarray import compute_row_scores
 import microbes_online
 import stringdb
 from rsat import RsatDatabase
@@ -272,7 +272,7 @@ def run_cmonkey():
     # 43 clusters, so it follows:
     # n.clust.per.row = 2
     # n.clust.per.col = k.clust * 2/3 => 43 * 2/3 => 29
-    membership = ClusterMembership(
+    membership = ClusterMembership.create(
         matrix.sorted_by_row_name(), 43, 2,
         29, fake_seed_row_memberships(fake_row_membership_seed),
         seed_column_members)

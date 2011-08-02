@@ -1,11 +1,11 @@
-"""membership_test.py - unit test module for membership module
+"""microarray_test.py - unit test module for microarray module
 
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-from membership import ClusterMembership, compute_column_scores
-from membership import seed_column_members
+from microarray import ClusterMembership, compute_column_scores
+from microarray import seed_column_members
 from datamatrix import DataMatrix
 import numpy
 

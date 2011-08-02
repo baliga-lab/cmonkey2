@@ -1,4 +1,4 @@
-"""membership.py - cMonkey cluster membership management
+"""microarray.py - cMonkey microarray related processing
 
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
@@ -28,6 +28,7 @@ class ClusterMembership:
             self.__row_is_member_of)
         self.__cluster_column_members = create_cluster_to_names_map(
             self.__column_is_member_of)
+        #print self.__column_is_member_of
 
     @classmethod
     def create(cls, data_matrix,
@@ -52,7 +53,6 @@ class ClusterMembership:
                                            data_matrix.row_names())
         col_is_member_of = make_member_map(column_membership,
                                            data_matrix.column_names())
-        #print self.__col_is_member_of
         return ClusterMembership(row_is_member_of, col_is_member_of)
 
     def clusters_for_row(self, row_name):
