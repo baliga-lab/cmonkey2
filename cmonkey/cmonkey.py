@@ -10,6 +10,7 @@ from organism import OrganismFactory
 from organism import make_kegg_code_mapper, make_go_taxonomy_mapper
 from organism import make_rsat_organism_mapper
 from membership import ClusterMembership, seed_column_members
+from membership import compute_row_scores
 import microbes_online
 import stringdb
 from rsat import RsatDatabase
@@ -276,6 +277,10 @@ def run_cmonkey():
         29, fake_seed_row_memberships(fake_row_membership_seed),
         seed_column_members)
 
+    rscores = compute_row_scores(matrix.values())
+    print "# ROWS: %d" % matrix.num_rows()
+    #print "ROW SCORES: "
+    #print rscores
     # uncomment me
     #organism = org_factory.create(sys.argv[2])
     #algorithm = CMonkey(organism, DataMatrixCollection([matrix]))

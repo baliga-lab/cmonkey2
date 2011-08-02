@@ -4,7 +4,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import numpy
-from util import column_means
+from util import column_means, row_means
 
 
 class ClusterMembership:
@@ -101,13 +101,28 @@ def compute_column_scores(matrix):
     for details
     """
     colmeans = column_means(matrix)
-    matrix_minus_colmeans = []
-    # subtract each row by the column means
-    for row in matrix:
-        new_row = []
-        matrix_minus_colmeans.append(new_row)
-        for col_index in range(len(row)):
-            new_row.append(row[col_index] - colmeans[col_index])
-    matrix_minus_colmeans_squared = numpy.square(matrix_minus_colmeans)
+    matrix_minus_colmeans_squared = compute_matrix_minus_vector_squared(
+        matrix, colmeans)
     var_norm = numpy.abs(colmeans) + 0.01
     return column_means(matrix_minus_colmeans_squared) / var_norm
+
+
+def compute_row_scores(matrix):
+    """For a given matrix, compute the row scores"""
+    colmeans = column_means(matrix)
+    matrix_minus_colmeans_squared = compute_matrix_minus_vector_squared(
+        matrix, colmeans)
+    return numpy.log(row_means(matrix_minus_colmeans_squared) + 1e-99)
+
+
+def compute_matrix_minus_vector_squared(matrix, vector):
+    """reusable function to subtract a vector from each row of
+    the input matrix and square the values in the result matrix"""
+    result = []
+    # subtract each row by the given vector
+    for row in matrix:
+        new_row = []
+        result.append(new_row)
+        for col_index in range(len(row)):
+            new_row.append(row[col_index] - vector[col_index])
+    return numpy.square(result)

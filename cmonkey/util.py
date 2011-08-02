@@ -202,7 +202,12 @@ def r_variance_columns(matrix):
 
 def column_means(matrix):
     """computes the column means of a matrix"""
-    return numpy.mean(matrix, 0)
+    return numpy.mean(matrix, axis=0)
+
+
+def row_means(matrix):
+    """computes the row means of a matrix"""
+    return numpy.mean(matrix, axis=1)
 
 
 def make_matrix(row_names, num_columns, init_value=0):
