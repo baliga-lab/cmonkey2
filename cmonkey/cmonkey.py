@@ -17,6 +17,7 @@ from rsat import RsatDatabase
 import sys
 import os
 import logging
+import numpy
 
 
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
@@ -27,6 +28,7 @@ GO_FILE_PATH = 'testdata/proteome2taxid'
 RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
+NUM_CLUSTERS = 43
 
 
 class CMonkey:  # pylint: disable-msg=R0902
@@ -227,9 +229,6 @@ class Membership:
         return result
 
 
-__all__ = ['CMonkey', 'Membership']
-
-
 def run_cmonkey():
     """init of the cMonkey system"""
     logging.basicConfig(format=LOG_FORMAT,
@@ -277,21 +276,7 @@ def run_cmonkey():
         29, fake_seed_row_memberships(fake_row_membership_seed),
         seed_column_members)
 
-    # Just for prototyping, row score calculation is put here
-    clusters = [1, 2, 3]
-    for cluster in clusters:
-        sm1 = matrix.submatrix_by_name(
-            row_names=membership.rows_for_cluster(cluster),
-            column_names=membership.columns_for_cluster(cluster))
-        if sm1.num_columns() > 1:
-            matrix_filtered = matrix.submatrix_by_name(
-                column_names=membership.columns_for_cluster(cluster))
-            rscores = compute_row_scores(matrix_filtered, sm1)
-            print "ROW SCORES CLUSTER[%d]: " % cluster
-            print rscores
-        else:
-            # here, add a score list entirely consisting of NaN's
-            pass
+    compute_row_scores(membership, matrix, NUM_CLUSTERS)
 
     # uncomment me
     #organism = org_factory.create(sys.argv[2])
@@ -308,12 +293,11 @@ def fake_seed_row_memberships(fake_mapper):
     results"""
     def compute(row_membership, _):
         """pseudo-seed with fixed numbers"""
-        print logging.debug("fake_seed_row_memberships")
+        logging.debug("fake_seed_row_memberships")
         index = 0
         for key in sorted(fake_mapper.keys()):
             row_membership[index][0] = int(fake_mapper[key])
             index += 1
-        #print row_membership
     return compute
 
 if __name__ == '__main__':
@@ -324,3 +308,6 @@ if __name__ == '__main__':
         print('Usage: ./run_cmonkey.sh <ratio-file> <organism-code>')
     else:
         run_cmonkey()
+
+
+__all__ = ['CMonkey', 'Membership']

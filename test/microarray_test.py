@@ -81,6 +81,9 @@ class ClusterMembershipTest(unittest.TestCase):
         self.assertEquals(['R2'], membership.rows_for_cluster(2))
         self.assertEquals(['R1', 'R2'], membership.rows_for_cluster(3))
         self.assertEquals(['C1'], membership.columns_for_cluster(1))
+        self.assertTrue(membership.is_row_member_of('R1', 1))
+        self.assertTrue(membership.is_row_member_of('R2', 2))
+        self.assertFalse(membership.is_row_member_of('R1', 2))
 
     def test_create_membership(self):
         """test creating a ClusterMembership object"""
