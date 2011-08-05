@@ -18,7 +18,7 @@ class DataMatrix:
     and returned values are all based on numpy arrays.
     """
     def __init__(self, nrows, ncols, row_names=None, col_names=None,
-                 values=None):
+                 values=None, init_value=None):
         """create a DataMatrix instance"""
         def check_values():
             """Sets values from a two-dimensional list"""
@@ -43,11 +43,13 @@ class DataMatrix:
                 raise ValueError("number of column names should be %d" % ncols)
             self.__column_names = col_names
 
-        if values == None:
-            self.__values = numpy.zeros((nrows, ncols))
-        else:
+        if values != None:
             check_values()
             self.__values = numpy.array(values)
+        else:
+            self.__values = numpy.zeros((nrows, ncols))
+            if init_value != None:
+                self.__values.fill(init_value)
 
     def num_rows(self):
         """returns the number of rows"""

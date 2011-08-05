@@ -172,7 +172,24 @@ def compute_row_scores(membership, matrix, num_clusters):
     clusters = range(1, num_clusters + 1)
     cluster_row_scores = __compute_row_scores_for_clusters(
         membership, matrix, clusters)
-    __replace_non_numeric_values(cluster_row_scores, membership, clusters)
+    print "# rows: %d # cols: %d" % (cluster_row_scores[0].num_rows(),
+                                     cluster_row_scores[0].num_columns())
+    cluster_row_scores = __replace_non_numeric_values(cluster_row_scores,
+                                                      membership,
+                                                      matrix, clusters)
+
+    # rearrange result into a DataMatrix, where rows are indexed by gene
+    # and columns represent clusters
+    result = DataMatrix(matrix.num_rows(), num_clusters,
+                        row_names=matrix.row_names())
+    for cluster in range(num_clusters):
+        row_scores = cluster_row_scores[cluster]
+        for row_index in range(matrix.num_rows()):
+            result[row_index][cluster] = row_scores[0][row_index]
+    print result.sorted_by_row_name()
+    #for cluster in range(1, num_clusters + 1):
+    #    print "CLUSTER %d" % cluster
+    #    print cluster_row_scores
 
 
 def __compute_row_scores_for_clusters(membership, matrix, clusters):
@@ -210,12 +227,24 @@ def __compute_row_scores_for_submatrix(datamatrix, submatrix):
                       col_names=datamatrix.row_names(), values=[scores])
 
 
-def __replace_non_numeric_values(cluster_row_scores, membership,
+def __replace_non_numeric_values(cluster_row_scores, membership, matrix,
                                  clusters):
     """perform adjustments for NaN or inf values"""
     qvalue = __quantile_normalize_scores(cluster_row_scores, membership,
                                          clusters)
-    print qvalue
+    result = []
+    for row_scores in cluster_row_scores:
+        if not row_scores:
+            result.append(DataMatrix(1, matrix.num_rows(),
+                                     col_names=matrix.row_names(),
+                                     init_value=qvalue))
+        else:
+            for row_index in range(row_scores.num_rows()):
+                for col_index in range(row_scores.num_columns()):
+                    if not numpy.isfinite(row_scores[row_index][col_index]):
+                        row_scores[row_index][col_index] = qvalue
+            result.append(row_scores)
+    return result
 
 
 def __quantile_normalize_scores(cluster_row_scores, membership, clusters):

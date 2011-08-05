@@ -53,6 +53,12 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertRaises(ValueError, DataMatrix,
                           3, 2, col_names=["MyCol1"])
 
+    def test_create_with_init_value(self):
+        """create DataMatrix with an initialization value"""
+        matrix = DataMatrix(2, 2, init_value=42.0)
+        self.assertTrue(numpy.equal(numpy.array([[42.0, 42.0], [42.0, 42.0]]),
+                                    matrix.values()).all())
+
     def test_set_value(self):
         """set a value in the matrix"""
         matrix = DataMatrix(3, 4)
