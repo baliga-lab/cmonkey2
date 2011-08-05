@@ -180,7 +180,7 @@ def quantile(values, probability):
     values a list of numeric values
     probability a value in the range between 0 and 1
     """
-    return round(scoreatpercentile(values, probability * 100), 6)
+    return scoreatpercentile(values, probability * 100)
 
 
 def r_stddev(values):

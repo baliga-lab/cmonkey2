@@ -5,8 +5,9 @@ more information and licensing details.
 """
 import unittest
 from microarray import ClusterMembership, compute_column_scores
-from microarray import seed_column_members
-from datamatrix import DataMatrix
+from microarray import seed_column_members, compute_row_scores
+from datamatrix import DataMatrix, DataMatrixFactory
+from util import DelimitedFile
 import numpy
 
 
@@ -121,3 +122,48 @@ class ClusterMembershipTest(unittest.TestCase):
                                              2, 2)
         self.assertEquals([2, 1], column_members[0])
         self.assertEquals([2, 1], column_members[1])
+
+class ComputeRowScoresTest(unittest.TestCase):
+    """compute_ros_scores"""
+    def __read_members(self):
+        with open('testdata/row_membership.tsv') as member_mapfile:
+            member_lines = member_mapfile.readlines()
+        row_members = {}
+        for line in member_lines:
+            row = line.strip().split('\t')
+            row_members[row[0]] = [int(row[1])]
+
+        with open('testdata/column_membership.tsv') as member_mapfile:
+            member_lines = member_mapfile.readlines()
+        column_members = {}
+        for line in member_lines:
+            row = line.strip().split('\t')
+            column_members[row[0]] = [int(cluster)
+                                      for cluster in row[1].split(':')]
+        return ClusterMembership(row_members, column_members)
+
+    def __read_ratios(self):
+        dfile = DelimitedFile.read('testdata/row_scores_testratios.tsv',
+                                   has_header=True)
+        return DataMatrixFactory([]).create_from(dfile)
+
+    def __read_refresult(self):
+        dfile = DelimitedFile.read('testdata/row_scores_refresult.tsv',
+                                   has_header=True, quote='"')
+        return DataMatrixFactory([]).create_from(dfile)
+
+    def test_compute_row_scores(self):
+        membership = self.__read_members()
+        ratios = self.__read_ratios()
+        print "(reading reference row scores...)"
+        refresult = self.__read_refresult()
+        print "(compute my own row scores...)"
+        result = compute_row_scores(membership, ratios, 43)
+        print "(comparing computed with reference results...)"
+        self.assertEquals(refresult.num_rows(), result.num_rows())
+        self.assertEquals(refresult.num_columns(), result.num_columns())
+        self.assertEquals(refresult.row_names(), result.row_names())
+        for row_index in range(result.num_rows()):
+            for col_index in range(result.num_columns()):            
+                self.assertAlmostEquals(refresult[row_index][col_index],
+                                        result[row_index][col_index], 3)

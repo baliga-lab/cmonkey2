@@ -93,7 +93,7 @@ class CMonkey:  # pylint: disable-msg=R0902
         self.__retrieve_networks()
         logging.info("# Networks read: %d", len(self.__networks))
 
-        self.__seed_clusters()
+        # self.__seed_clusters()
         current_iteration = 0
 
         logging.info("# iterations: %d", self.__num_iterations())
@@ -124,81 +124,9 @@ class CMonkey:  # pylint: disable-msg=R0902
         """configured number of iterations"""
         return self.__configuration.get('num_iterations', 2000)
 
-    def __seed_clusters(self):
-        """seed clusters using the selected row and column methods"""
-        pass
-
     def __iterate(self):
         """iteration step in cMonkey
         This is run over and over until no improvements can be achieved"""
-        self.__compute_all_scores()
-        self.__combine_scores()
-        self.__fuzzify_scores()
-
-    def __compute_all_scores(self):
-        """compute scores on microarray data and clusters"""
-        self.__compute_microarray_scores()
-        self.__compute_cluster_scores()
-
-    def __compute_microarray_scores(self):
-        """compute scores on microarray data"""
-        self.__compute_row_scores()
-        self.__compute_column_scores()
-
-    def __compute_row_scores(self):
-        """compute row scores on microarray data"""
-        self.__row_scores = self.__init_row_col_score_matrix(self.__row_scores)
-        for gene_name in self.__row_scores:
-            if self.__has_gene_weight(gene_name):
-                pass
-
-    def __has_gene_weight(self, gene_name):
-        """determine if a weight was specified for the given gene"""
-        return self.__gene_weights and self.__gene_weights.get(gene_name)
-
-    def __compute_column_scores(self):
-        """compute column scores on microarray data"""
-        self.__col_scores = self.__init_row_col_score_matrix(self.__col_scores)
-
-    def __init_row_col_score_matrix(self, score_matrix):
-        """generic initialization of row/column score matrix"""
-        cluster_nums = range(self.__num_biclusters())
-        if score_matrix:
-            for row_name in score_matrix:
-                for col in cluster_nums:
-                    score_matrix[row_name][col] = 0
-        else:
-            score_matrix = make_matrix(
-                self.__ratio_matrices.unique_row_names(),
-                max(cluster_nums) + 1)
-        return score_matrix
-
-    def __compute_cluster_scores(self):
-        """compute scores for clusters"""
-        self.__compute_meme_scores()
-        self.__compute_mot_scores()
-        self.__compute_net_scores()
-
-    def __compute_meme_scores(self):
-        """compute meme scores on clusters"""
-        pass
-
-    def __compute_mot_scores(self):
-        """computes mot.scores, using the output from the meme scoring"""
-        pass
-
-    def __compute_net_scores(self):
-        """compute net.scores from STRING, add weighted scores for other
-        networks if they exist"""
-        pass
-
-    def __combine_scores(self):
-        """combine the computed scores"""
-        pass
-
-    def __fuzzify_scores(self):
-        """fuzzify scores a bit for stochasticity
-        fuzz should be between 0.2 and 0 (decreasing with iter)"""
         pass
 
 
@@ -276,7 +204,15 @@ def run_cmonkey():
         29, fake_seed_row_memberships(fake_row_membership_seed),
         seed_column_members)
 
-    compute_row_scores(membership, matrix, NUM_CLUSTERS)
+    #first_row = "Gene" + "\t" + "\t".join(matrix.column_names())
+    #print first_row
+    #for row in range(matrix.num_rows()):
+    #    rowstr = matrix.row_names()[row]
+    #    for col in range(matrix.num_columns()):
+    #        rowstr += ('\t%f' % matrix[row][col])
+    #    print rowstr
+
+    #compute_row_scores(membership, matrix, NUM_CLUSTERS)
 
     # uncomment me
     #organism = org_factory.create(sys.argv[2])

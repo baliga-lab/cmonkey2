@@ -1,4 +1,6 @@
 """microarray.py - cMonkey microarray related processing
+This module captures the microarray-specific scoring component
+of cMonkey.
 
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
@@ -172,8 +174,6 @@ def compute_row_scores(membership, matrix, num_clusters):
     clusters = range(1, num_clusters + 1)
     cluster_row_scores = __compute_row_scores_for_clusters(
         membership, matrix, clusters)
-    print "# rows: %d # cols: %d" % (cluster_row_scores[0].num_rows(),
-                                     cluster_row_scores[0].num_columns())
     cluster_row_scores = __replace_non_numeric_values(cluster_row_scores,
                                                       membership,
                                                       matrix, clusters)
@@ -186,10 +186,7 @@ def compute_row_scores(membership, matrix, num_clusters):
         row_scores = cluster_row_scores[cluster]
         for row_index in range(matrix.num_rows()):
             result[row_index][cluster] = row_scores[0][row_index]
-    print result.sorted_by_row_name()
-    #for cluster in range(1, num_clusters + 1):
-    #    print "CLUSTER %d" % cluster
-    #    print cluster_row_scores
+    return result.sorted_by_row_name()
 
 
 def __compute_row_scores_for_clusters(membership, matrix, clusters):
