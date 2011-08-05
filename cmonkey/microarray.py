@@ -115,7 +115,7 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
                 current_cluster_rows.append(data_matrix.row_name(row_index))
         submatrix = data_matrix.submatrix_by_name(
             row_names=current_cluster_rows)
-        scores = (-compute_column_scores(submatrix))[0]
+        scores = (-compute_column_scores_submatrix(submatrix))[0]
         column_scores.append(scores)
 
     column_members = []
@@ -133,7 +133,31 @@ def order(alist):
     return [(alist.index(item)) + 1 for item in sorted(alist, reverse=True)]
 
 
-def compute_column_scores(matrix):
+def compute_column_scores(membership, matrix, num_clusters):
+    """Computes the column scores for the specified number of clusters"""
+    cluster_column_scores = []
+    for cluster in range(1, num_clusters + 1):
+        submatrix = matrix.submatrix_by_name(
+            row_names=membership.rows_for_cluster(cluster))
+        if submatrix.num_rows > 1:
+            cluster_column_scores.append(compute_column_scores_submatrix(
+                    submatrix))
+        else:
+            cluster_column_scores.append(None)
+
+    # TODO: add normalization for NA results
+    # Convert scores into a matrix that have the clusters as columns
+    # and conditions in the rows
+    result = DataMatrix(matrix.num_columns(), num_clusters,
+                        row_names=matrix.column_names())
+    for cluster in range(num_clusters):
+        column_scores = cluster_column_scores[cluster]
+        for row_index in range(matrix.num_columns()):
+            result[row_index][cluster] = column_scores[0][row_index]
+    return result
+
+
+def compute_column_scores_submatrix(matrix):
     """For a given matrix, compute the column scores.
     This is used to compute the column scores of the sub matrices that
     were determined by the pre-seeding, so typically, matrix is a

@@ -4,8 +4,9 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-from microarray import ClusterMembership, compute_column_scores
+from microarray import ClusterMembership, compute_column_scores_submatrix
 from microarray import seed_column_members, compute_row_scores
+from microarray import compute_column_scores
 from datamatrix import DataMatrix, DataMatrixFactory
 from util import DelimitedFile
 import numpy
@@ -97,13 +98,13 @@ class ClusterMembershipTest(unittest.TestCase):
         self.assertTrue(seed_row_memberships.was_called)
         self.assertTrue(seed_col_memberships.was_called)
 
-    def test_compute_column_scores(self):
-        """tests compute_column_scores"""
+    def test_compute_column_scores_submatrix(self):
+        """tests compute_column_scores_submatrix"""
         matrix = DataMatrix(10, 5, ['R1', 'R2', 'R3', 'R4', 'R5', 'R6',
                                     'R7', 'R8', 'R9', 'R10'],
                             ['C1', 'C2', 'C3', 'C4', 'C5'],
                             MATRIX1)
-        result = compute_column_scores(matrix)
+        result = compute_column_scores_submatrix(matrix)
         scores = result[0]
         self.assertEqual(5, len(scores))
         self.assertAlmostEqual(0.03085775, scores[0])
@@ -123,7 +124,8 @@ class ClusterMembershipTest(unittest.TestCase):
         self.assertEquals([2, 1], column_members[0])
         self.assertEquals([2, 1], column_members[1])
 
-class ComputeRowScoresTest(unittest.TestCase):
+
+class ComputeArrayScoresTest(unittest.TestCase):
     """compute_ros_scores"""
     def __read_members(self):
         with open('testdata/row_membership.tsv') as member_mapfile:
@@ -147,8 +149,13 @@ class ComputeRowScoresTest(unittest.TestCase):
                                    has_header=True)
         return DataMatrixFactory([]).create_from(dfile)
 
-    def __read_refresult(self):
+    def __read_rowscores_refresult(self):
         dfile = DelimitedFile.read('testdata/row_scores_refresult.tsv',
+                                   has_header=True, quote='"')
+        return DataMatrixFactory([]).create_from(dfile)
+
+    def __read_colscores_refresult(self):
+        dfile = DelimitedFile.read('testdata/column_scores_refresult.tsv',
                                    has_header=True, quote='"')
         return DataMatrixFactory([]).create_from(dfile)
 
@@ -156,14 +163,27 @@ class ComputeRowScoresTest(unittest.TestCase):
         membership = self.__read_members()
         ratios = self.__read_ratios()
         print "(reading reference row scores...)"
-        refresult = self.__read_refresult()
+        refresult = self.__read_rowscores_refresult()
         print "(compute my own row scores...)"
         result = compute_row_scores(membership, ratios, 43)
         print "(comparing computed with reference results...)"
+        self.__compare_with_refresult(refresult, result)
+
+    def test_compute_column_scores(self):
+        membership = self.__read_members()
+        ratios = self.__read_ratios()
+        refresult = self.__read_colscores_refresult()
+        result = compute_column_scores(membership, ratios, 43)
+        self.__compare_with_refresult(refresult, result)
+
+    def __compare_with_refresult(self, refresult, result):
         self.assertEquals(refresult.num_rows(), result.num_rows())
         self.assertEquals(refresult.num_columns(), result.num_columns())
         self.assertEquals(refresult.row_names(), result.row_names())
         for row_index in range(result.num_rows()):
-            for col_index in range(result.num_columns()):            
+            for col_index in range(result.num_columns()):
+                # note that we reduced the comparison's number of places
+                # That's because the input matrix was created with some
+                # rounding, so we have a slightly higher rounding difference
                 self.assertAlmostEquals(refresult[row_index][col_index],
                                         result[row_index][col_index], 3)

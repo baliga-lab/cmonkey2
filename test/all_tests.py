@@ -18,7 +18,7 @@ from seqtools_test import SeqtoolsTest
 from thesaurus_test import DelimitedFileFactoryTest
 from operon_nw_test import ReadOperonNetworkTest
 from network_test import NetworkEdgeTest, NetworkTest
-from microarray_test import ClusterMembershipTest, ComputeRowScoresTest
+from microarray_test import ClusterMembershipTest, ComputeArrayScoresTest
 
 # pylint: disable-msg=C0301
 if __name__ == '__main__':
@@ -53,6 +53,6 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(NetworkTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ClusterMembershipTest))
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ComputeRowScoresTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ComputeArrayScoresTest))
 
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))
