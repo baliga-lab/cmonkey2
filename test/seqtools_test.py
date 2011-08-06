@@ -4,9 +4,12 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
+import os
 from seqtools import subsequence, extract_upstream, subseq_counts
 from seqtools import subseq_frequencies, markov_background
 from seqtools import read_sequences_from_fasta_string
+from seqtools import read_sequences_from_fasta_file
+from seqtools import write_sequences_to_fasta_file
 
 
 class SeqtoolsTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -64,15 +67,40 @@ class SeqtoolsTest(unittest.TestCase):  # pylint: disable-msg=R0904
 class FastaTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for FASTA related functions"""
 
+    def tearDown(self):
+        """cleanup"""
+        if os.path.exists('/tmp/fasta_tmp.fa'):
+            os.remove('/tmp/fasta_tmp.fa')
+
     def test_read_sequences_from_fasta_string(self):
         """test reading sequences from a string in FASTA format"""
         with open("testdata/fasta_test.fa") as inputfile:
             fasta_string = inputfile.read()
         seqs = read_sequences_from_fasta_string(fasta_string)
-        print sorted(seqs.keys())
         self.assertEquals(7, len(seqs))
         seq = ("CCGAGGAAGACAGACGCAATTTCACATCGAACTCGTGTACGGCATCCTCT" +
                "TTATTGCCGGCTTTGCTTTTCTCGTCTTCCGCGTCGATCCCCGGGTGGCA" +
                "GCGTTCGAAGGAGGTCTCGTCATTGGTTACTTATTGAGAATTTAGGGGAA" +
                "AATGTCAATCTACGAGTGGA")
-        self.assertEquals(seq, seqs['VNG6198H'])
+        self.assertEquals('VNG6198H', seqs[6][0])
+        self.assertEquals(seq, seqs[6][1])
+
+    def test_read_sequences_from_fasta_file(self):
+        """test reading sequences from a string in FASTA format"""
+        with open("testdata/fasta_test.fa") as inputfile:
+            fasta_string = inputfile.read()
+        seqs = read_sequences_from_fasta_file('testdata/fasta_test.fa')
+        self.assertEquals(7, len(seqs))
+        seq = ("CCGAGGAAGACAGACGCAATTTCACATCGAACTCGTGTACGGCATCCTCT" +
+               "TTATTGCCGGCTTTGCTTTTCTCGTCTTCCGCGTCGATCCCCGGGTGGCA" +
+               "GCGTTCGAAGGAGGTCTCGTCATTGGTTACTTATTGAGAATTTAGGGGAA" +
+               "AATGTCAATCTACGAGTGGA")
+        self.assertEquals('VNG6198H', seqs[6][0])
+        self.assertEquals(seq, seqs[6][1])
+
+    def test_write_sequences_to_fasta_file(self):
+        """Tests writing to a FASTA file"""
+        seqs = read_sequences_from_fasta_file('testdata/fasta_test.fa')
+        write_sequences_to_fasta_file(seqs, '/tmp/fasta_tmp.fa')
+        seqs2 = read_sequences_from_fasta_file('/tmp/fasta_tmp.fa')
+        self.assertEquals(seqs, seqs2)

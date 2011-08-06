@@ -89,20 +89,37 @@ def markov_background(seqs, order):
 def read_sequences_from_fasta_string(fasta_string):
     """reads the sequences contained in a FASTA string"""
     lines = fasta_string.split('\n')
-    sequences = {}
+    sequences = []
     seqbuffer = ""
     for line in lines:
         line = line.strip()
         if line.startswith('>'):
             if len(seqbuffer) > 0:
-                sequences[seqname] = seqbuffer
+                sequences.append((seqname, seqbuffer))
                 seqbuffer = ""
             seqname = line[1:]
         elif line and len(line) > 0:
             seqbuffer += line
     # add the last line
     if len(seqbuffer) > 0:
-        sequences[seqname] = seqbuffer
+        sequences.append((seqname, seqbuffer))
     return sequences
 
-__all__ = ['subsequence', 'extract_upstream', 'markov_background']
+
+def read_sequences_from_fasta_file(filepath):
+    with open(filepath) as inputfile:
+        fasta_string = inputfile.read()
+    return read_sequences_from_fasta_string(fasta_string)
+
+
+def write_sequences_to_fasta_file(seqs, filepath):
+    """Write a list of sequence tuples to the specified outputfile"""
+    with open(filepath, 'w') as outputfile:
+        for seq in seqs:
+            outputfile.write('>%s\n' % seq[0])
+            outputfile.write('%s\n' % seq[1])
+
+__all__ = ['subsequence', 'extract_upstream', 'markov_background',
+           'read_sequences_from_fasta_string',
+           'read_sequences_from_fasta_file',
+           'write_sequences_to_fasta_file']
