@@ -13,7 +13,7 @@ from util_test import LevenshteinDistanceTest, BestMatchingLinksTest
 from organism_test import KeggOrganismCodeMapperTest, RsatOrganismMapperTest
 from organism_test import GoTaxonomyMapperTest, OrganismFactoryTest
 from organism_test import OrganismTest
-from seqtools_test import SeqtoolsTest
+from seqtools_test import SeqtoolsTest, FastaTest
 
 from thesaurus_test import DelimitedFileFactoryTest
 from operon_nw_test import ReadOperonNetworkTest
@@ -44,6 +44,7 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(OrganismTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(SeqtoolsTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(FastaTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DelimitedFileFactoryTest))
 

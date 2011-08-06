@@ -6,6 +6,7 @@ more information and licensing details.
 import unittest
 from seqtools import subsequence, extract_upstream, subseq_counts
 from seqtools import subseq_frequencies, markov_background
+from seqtools import read_sequences_from_fasta_string
 
 
 class SeqtoolsTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -58,3 +59,20 @@ class SeqtoolsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals(2, len(background))
         self.assertEquals(4, len(background[0]))
         self.assertEquals(7, len(background[1]))
+
+
+class FastaTest(unittest.TestCase):  # pylint: disable-msg=R0904
+    """Test class for FASTA related functions"""
+
+    def test_read_sequences_from_fasta_string(self):
+        """test reading sequences from a string in FASTA format"""
+        with open("testdata/fasta_test.fa") as inputfile:
+            fasta_string = inputfile.read()
+        seqs = read_sequences_from_fasta_string(fasta_string)
+        print sorted(seqs.keys())
+        self.assertEquals(7, len(seqs))
+        seq = ("CCGAGGAAGACAGACGCAATTTCACATCGAACTCGTGTACGGCATCCTCT" +
+               "TTATTGCCGGCTTTGCTTTTCTCGTCTTCCGCGTCGATCCCCGGGTGGCA" +
+               "GCGTTCGAAGGAGGTCTCGTCATTGGTTACTTATTGAGAATTTAGGGGAA" +
+               "AATGTCAATCTACGAGTGGA")
+        self.assertEquals(seq, seqs['VNG6198H'])

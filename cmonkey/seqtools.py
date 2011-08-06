@@ -86,4 +86,23 @@ def markov_background(seqs, order):
     return result
 
 
+def read_sequences_from_fasta_string(fasta_string):
+    """reads the sequences contained in a FASTA string"""
+    lines = fasta_string.split('\n')
+    sequences = {}
+    seqbuffer = ""
+    for line in lines:
+        line = line.strip()
+        if line.startswith('>'):
+            if len(seqbuffer) > 0:
+                sequences[seqname] = seqbuffer
+                seqbuffer = ""
+            seqname = line[1:]
+        elif line and len(line) > 0:
+            seqbuffer += line
+    # add the last line
+    if len(seqbuffer) > 0:
+        sequences[seqname] = seqbuffer
+    return sequences
+
 __all__ = ['subsequence', 'extract_upstream', 'markov_background']
