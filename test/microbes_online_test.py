@@ -6,7 +6,7 @@ more information and licensing details.
 import unittest
 import os
 import shutil
-from operons import MicrobesOnline, MICROBES_ONLINE_BASE_URL
+import microbes_online as mo
 
 
 class MicrobesOnlineTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -17,7 +17,7 @@ class MicrobesOnlineTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """test fixture"""
         if not os.path.exists('testcache'):
             os.mkdir('testcache')
-        self.service = MicrobesOnline(MICROBES_ONLINE_BASE_URL, 'testcache')
+        self.service = mo.MicrobesOnline(mo.MICROBES_ONLINE_BASE_URL, 'testcache')
 
     def tearDown(self):  # pylint: disable-msg=C0103
         """test cleanup"""

@@ -6,8 +6,8 @@ more information and licensing details.
 import unittest
 import os
 import shutil
-from rsat import RsatDatabase
-from util import DocumentNotFound
+import rsat
+import util
 
 
 class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -22,7 +22,8 @@ class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """test fixture"""
         if not os.path.exists('testcache'):
             os.mkdir('testcache')
-        self.database = RsatDatabase('http://rsat.ccb.sickkids.ca', 'testcache')
+        self.database = rsat.RsatDatabase('http://rsat.ccb.sickkids.ca',
+                                          'testcache')
 
     def tearDown(self):  # pylint: disable-msg=C0103
         """test cleanup"""
@@ -53,7 +54,7 @@ class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_get_ensembl_organism_names_404(self):
         """test get_ensembl_organism_names method with not found"""
-        self.assertRaises(DocumentNotFound,
+        self.assertRaises(util.DocumentNotFound,
                           self.database.get_ensembl_organism_names,
                           'nonexist')
 

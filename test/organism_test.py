@@ -5,11 +5,9 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-from util import DelimitedFile
-from organism import make_kegg_code_mapper, make_go_taxonomy_mapper
-from organism import make_rsat_organism_mapper, OrganismFactory
-from organism import RsatSpeciesInfo, Organism
-from network import Network
+import util
+import network as nw
+import organism as org
 
 
 TAXONOMY_FILE_PATH = "testdata/KEGG_taxonomy"
@@ -23,16 +21,16 @@ class KeggOrganismCodeMapperTest(unittest.TestCase):
 
     def test_get_existing_organism(self):
         """retrieve existing organism"""
-        dfile = DelimitedFile.read(TAXONOMY_FILE_PATH, sep='\t',
-                                   has_header=True, comment='#')
-        mapper = make_kegg_code_mapper(dfile)
+        dfile = util.DelimitedFile.read(TAXONOMY_FILE_PATH, sep='\t',
+                                        has_header=True, comment='#')
+        mapper = org.make_kegg_code_mapper(dfile)
         self.assertEquals('Helicobacter pylori 26695', mapper('hpy'))
 
     def test_get_non_existing_organism(self):
         """retrieve non-existing organism"""
-        dfile = DelimitedFile.read(TAXONOMY_FILE_PATH, sep='\t',
-                                   has_header=True, comment='#')
-        mapper = make_kegg_code_mapper(dfile)
+        dfile = util.DelimitedFile.read(TAXONOMY_FILE_PATH, sep='\t',
+                                        has_header=True, comment='#')
+        mapper = org.make_kegg_code_mapper(dfile)
         self.assertIsNone(mapper('nope'))
 
 
@@ -41,16 +39,16 @@ class GoTaxonomyMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_get_existing(self):
         """retrieve an existing id"""
-        dfile = DelimitedFile.read(PROT2TAXID_FILE_PATH, sep='\t',
-                                   has_header=False)
-        mapper = make_go_taxonomy_mapper(dfile)
+        dfile = util.DelimitedFile.read(PROT2TAXID_FILE_PATH, sep='\t',
+                                        has_header=False)
+        mapper = org.make_go_taxonomy_mapper(dfile)
         self.assertEquals('64091', mapper('Halobacterium salinarium'))
 
     def test_get_non_existing(self):
         """retrieve None for a non-existing organism"""
-        dfile = DelimitedFile.read(PROT2TAXID_FILE_PATH, sep='\t',
-                                   has_header=False)
-        mapper = make_go_taxonomy_mapper(dfile)
+        dfile = util.DelimitedFile.read(PROT2TAXID_FILE_PATH, sep='\t',
+                                        has_header=False)
+        mapper = org.make_go_taxonomy_mapper(dfile)
         self.assertIsNone(mapper('does not exist'))
 
 
@@ -96,7 +94,7 @@ class RsatOrganismMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """test fixture"""
         with open(RSAT_LIST_FILE_PATH) as inputfile:
             html = inputfile.read()
-        self.mapper = make_rsat_organism_mapper(MockRsatDatabase(html))
+        self.mapper = org.make_rsat_organism_mapper(MockRsatDatabase(html))
 
     def test_mapper(self):
         """tests the get_organism method for an existing organism"""
@@ -136,11 +134,11 @@ class OrganismFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_create_prokaryote(self):
         """tests creating a Prokaryote"""
-        factory = OrganismFactory(
+        factory = org.OrganismFactory(
             lambda _: 'KEGG organism',
-            lambda _: RsatSpeciesInfo(MockRsatDatabase(''),
-                                      'RSAT_organism',
-                                      False, 4711),
+            lambda _: org.RsatSpeciesInfo(MockRsatDatabase(''),
+                                          'RSAT_organism',
+                                          False, 4711),
             mock_go_mapper, [])
         organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
@@ -153,11 +151,11 @@ class OrganismFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_create_eukaryote(self):
         """tests creating an eukaryote"""
-        factory = OrganismFactory(
+        factory = org.OrganismFactory(
             lambda _: 'KEGG organism',
-            lambda _: RsatSpeciesInfo(MockRsatDatabase(''),
-                                      'RSAT_organism',
-                                      True, 4711),
+            lambda _: org.RsatSpeciesInfo(MockRsatDatabase(''),
+                                          'RSAT_organism',
+                                          True, 4711),
             lambda _: 'GO taxonomy id', [])
         organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
@@ -169,11 +167,11 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_init_genome(self):
         """Tests the init_genome() method"""
-        organism = Organism('hal', 'Halobacterium SP',
-                            RsatSpeciesInfo(MockRsatDatabase(''),
-                                            'Halobacterium_SP',
-                                            False,
-                                            12345), 12345, [])
+        organism = org.Organism('hal', 'Halobacterium SP',
+                                org.RsatSpeciesInfo(MockRsatDatabase(''),
+                                                    'Halobacterium_SP',
+                                                    False,
+                                                    12345), 12345, [])
         seqs = organism.sequences_for_genes(['VNG12345G'])
         self.assertEquals('ACGTTTAAAAGAGAGAGAGACACAGTATATATTTTTTTAAAA',
                           seqs['NP_206803.1'])
@@ -181,11 +179,11 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_get_networks(self):
         """tests the networks() method"""
         mockFactory = MockNetworkFactory()
-        organism = Organism('hal', 'Halobacterium SP',
-                            RsatSpeciesInfo(MockRsatDatabase(''),
-                                            'Halobacterium_SP',
-                                            False,
-                                            12345), 12345,
+        organism = org.Organism('hal', 'Halobacterium SP',
+                                org.RsatSpeciesInfo(MockRsatDatabase(''),
+                                                    'Halobacterium_SP',
+                                                    False,
+                                                    12345), 12345,
                             [mockFactory])
         networks = organism.networks()
         self.assertEquals(1, len(networks))
@@ -199,4 +197,4 @@ class MockNetworkFactory:
 
     def __call__(self, organism):
         self.create_called_with = organism
-        return Network('network', [])
+        return nw.Network('network', [])

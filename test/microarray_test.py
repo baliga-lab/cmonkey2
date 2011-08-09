@@ -4,11 +4,9 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-from microarray import ClusterMembership, compute_column_scores_submatrix
-from microarray import seed_column_members, compute_row_scores
-from microarray import compute_column_scores
-from datamatrix import DataMatrix, DataMatrixFactory
-from util import DelimitedFile
+import datamatrix as dm
+import util
+import microarray as ma
 import numpy
 
 
@@ -73,8 +71,8 @@ class ClusterMembershipTest(unittest.TestCase):
 
     def test_constructor(self):
         """tests the constructor"""
-        membership = ClusterMembership({'R1': [1, 3], 'R2': [2, 3]},
-                                       {'C1': [1, 2], 'C2': [2]})
+        membership = ma.ClusterMembership({'R1': [1, 3], 'R2': [2, 3]},
+                                          {'C1': [1, 2], 'C2': [2]})
         self.assertEquals([1, 3], membership.clusters_for_row('R1'))
         self.assertEquals([2, 3], membership.clusters_for_row('R2'))
         self.assertEquals([1, 2], membership.clusters_for_column('C1'))
@@ -92,19 +90,19 @@ class ClusterMembershipTest(unittest.TestCase):
         datamatrix = MockDataMatrix(3)
         seed_row_memberships = MockSeedRowMemberships()
         seed_col_memberships = MockSeedColumnMemberships()
-        membership = ClusterMembership.create(datamatrix, 1, 2, 2,
-                                              seed_row_memberships,
-                                              seed_col_memberships)
+        membership = ma.ClusterMembership.create(datamatrix, 1, 2, 2,
+                                                 seed_row_memberships,
+                                                 seed_col_memberships)
         self.assertTrue(seed_row_memberships.was_called)
         self.assertTrue(seed_col_memberships.was_called)
 
     def test_compute_column_scores_submatrix(self):
         """tests compute_column_scores_submatrix"""
-        matrix = DataMatrix(10, 5, ['R1', 'R2', 'R3', 'R4', 'R5', 'R6',
-                                    'R7', 'R8', 'R9', 'R10'],
-                            ['C1', 'C2', 'C3', 'C4', 'C5'],
-                            MATRIX1)
-        result = compute_column_scores_submatrix(matrix)
+        matrix = dm.DataMatrix(10, 5, ['R1', 'R2', 'R3', 'R4', 'R5', 'R6',
+                                       'R7', 'R8', 'R9', 'R10'],
+                               ['C1', 'C2', 'C3', 'C4', 'C5'],
+                               MATRIX1)
+        result = ma.compute_column_scores_submatrix(matrix)
         scores = result[0]
         self.assertEqual(5, len(scores))
         self.assertAlmostEqual(0.03085775, scores[0])
@@ -115,18 +113,18 @@ class ClusterMembershipTest(unittest.TestCase):
 
     def test_seed_column_members(self):
         """tests seed_column_members"""
-        data_matrix = DataMatrix(3, 2, ["GENE1", "GENE2", "GENE3"],
-                                 ['COL1', 'COL2'], [[1.0, 2.0], [2.0, 1.0],
+        data_matrix = dm.DataMatrix(3, 2, ["GENE1", "GENE2", "GENE3"],
+                                    ['COL1', 'COL2'], [[1.0, 2.0], [2.0, 1.0],
                                                     [2.0, 1.0]])
         row_membership = [[1, 0], [2, 0], [1, 0]]
-        column_members = seed_column_members(data_matrix, row_membership,
-                                             2, 2)
+        column_members = ma.seed_column_members(data_matrix, row_membership,
+                                                2, 2)
         self.assertEquals([2, 1], column_members[0])
         self.assertEquals([2, 1], column_members[1])
 
 
 class ComputeArrayScoresTest(unittest.TestCase):
-    """compute_ros_scores"""
+    """compute_row_scores"""
     def __read_members(self):
         with open('testdata/row_membership.tsv') as member_mapfile:
             member_lines = member_mapfile.readlines()
@@ -142,22 +140,22 @@ class ComputeArrayScoresTest(unittest.TestCase):
             row = line.strip().split('\t')
             column_members[row[0]] = [int(cluster)
                                       for cluster in row[1].split(':')]
-        return ClusterMembership(row_members, column_members)
+        return ma.ClusterMembership(row_members, column_members)
 
     def __read_ratios(self):
-        dfile = DelimitedFile.read('testdata/row_scores_testratios.tsv',
-                                   has_header=True)
-        return DataMatrixFactory([]).create_from(dfile)
+        dfile = util.DelimitedFile.read('testdata/row_scores_testratios.tsv',
+                                        has_header=True)
+        return dm.DataMatrixFactory([]).create_from(dfile)
 
     def __read_rowscores_refresult(self):
-        dfile = DelimitedFile.read('testdata/row_scores_refresult.tsv',
-                                   has_header=True, quote='"')
-        return DataMatrixFactory([]).create_from(dfile)
+        dfile = util.DelimitedFile.read('testdata/row_scores_refresult.tsv',
+                                        has_header=True, quote='"')
+        return dm.DataMatrixFactory([]).create_from(dfile)
 
     def __read_colscores_refresult(self):
-        dfile = DelimitedFile.read('testdata/column_scores_refresult.tsv',
-                                   has_header=True, quote='"')
-        return DataMatrixFactory([]).create_from(dfile)
+        dfile = util.DelimitedFile.read('testdata/column_scores_refresult.tsv',
+                                        has_header=True, quote='"')
+        return dm.DataMatrixFactory([]).create_from(dfile)
 
     def test_compute_row_scores(self):
         membership = self.__read_members()
@@ -165,7 +163,7 @@ class ComputeArrayScoresTest(unittest.TestCase):
         print "(reading reference row scores...)"
         refresult = self.__read_rowscores_refresult()
         print "(compute my own row scores...)"
-        result = compute_row_scores(membership, ratios, 43)
+        result = ma.compute_row_scores(membership, ratios, 43)
         print "(comparing computed with reference results...)"
         self.__compare_with_refresult(refresult, result)
 
@@ -173,7 +171,7 @@ class ComputeArrayScoresTest(unittest.TestCase):
         membership = self.__read_members()
         ratios = self.__read_ratios()
         refresult = self.__read_colscores_refresult()
-        result = compute_column_scores(membership, ratios, 43)
+        result = ma.compute_column_scores(membership, ratios, 43)
         self.__compare_with_refresult(refresult, result)
 
     def __compare_with_refresult(self, refresult, result):
