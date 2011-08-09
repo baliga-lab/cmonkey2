@@ -8,8 +8,8 @@ more information and licensing details.
 """
 import sys
 import logging
-from util import read_url_cached, DelimitedFile
-from network import Network, NetworkEdge
+import util
+import network
 
 
 MICROBES_ONLINE_BASE_URL = 'http://www.microbesonline.org'
@@ -32,7 +32,7 @@ class MicrobesOnline:
                        'gnc%s.named' % str(organism_id)])
         cache_file = '/'.join([self.cache_dir,
                               'gnc%s.named' % str(organism_id)])
-        return read_url_cached(url, cache_file)
+        return util.read_url_cached(url, cache_file)
 
 
 def make_operon_edges(operon, features):
@@ -138,12 +138,19 @@ def get_network_factory(microbes_online):
         logging.info("MicrobesOnline - make_network()")
         preds_text = microbes_online.get_operon_predictions_for(
             organism.taxonomy_id())
-        dfile = DelimitedFile.create_from_text(preds_text, has_header=True)
+        dfile = util.DelimitedFile.create_from_text(preds_text,
+                                                    has_header=True)
         preds = [(line[2], line[3]) for line in dfile.lines()
                  if line[6] == 'TRUE']
+        # pred_edges is a list of (head, gene) pairs which
+        # represent an operon relationship for each gene
+        # TODO: make the operon relationship reusable, so it can be
+        # used in motifing too
         pred_edges = make_edges_from_predictions(preds, organism)
-        edges = [NetworkEdge(edge[0], edge[1], 1000) for edge in pred_edges]
-        return Network.create('operons', edges)
+        # this is the part that does not work
+        edges = [network.NetworkEdge(edge[0], edge[1], 1000)
+                 for edge in pred_edges]
+        return network.Network.create('operons', edges)
 
     return make_network
 

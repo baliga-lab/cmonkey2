@@ -78,6 +78,10 @@ class Network:
             for edge in self.__edges:
                 edge.set_score(edge.score() * scale)
 
+    def __repr__(self):
+        return "Network: %s\n# edges: %d\n" % (self.__name,
+                                               len(self.__edges))
+
     @classmethod
     def create(cls, name, edges):
         """standard Factory method"""

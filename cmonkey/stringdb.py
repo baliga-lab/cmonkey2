@@ -3,11 +3,11 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-from util import DelimitedFile
 import logging
 import re
 import math
-from network import NetworkEdge, Network
+import util
+import network
 
 STRING_FILE2 = 'string_links_64091.tab'
 PROTEIN_PREFIX = re.compile('^string:\d+[.]')
@@ -17,7 +17,7 @@ def read_edges(filename):
     """read the edges from a tab separated file. This is the original
     STRING format"""
     logging.info("stringdb.read_edges()")
-    dfile = DelimitedFile.read(filename)
+    dfile = util.DelimitedFile.read(filename)
     result = []
     exists = {}
     max_score = 0.0
@@ -30,7 +30,7 @@ def read_edges(filename):
         if not key in exists:
             exists[key] = True
             score = float(combined_score)
-            result.append(NetworkEdge(protein1, protein2, score))
+            result.append(network.NetworkEdge(protein1, protein2, score))
             if score > max_score:
                 max_score = score
 
@@ -45,10 +45,10 @@ def read_edges(filename):
 def read_edges2(filename):
     """just read a preprocessed file, much faster to debug"""
     logging.info("stringdb.read_edges2()")
-    dfile = DelimitedFile.read(filename)
+    dfile = util.DelimitedFile.read(filename)
     result = []
     for line in dfile.lines():
-        result.append(NetworkEdge(line[0], line[1], float(line[2])))
+        result.append(network.NetworkEdge(line[0], line[1], float(line[2])))
     return result
 
 
@@ -56,7 +56,7 @@ def get_network_factory(filename):
     """temporary STRING network factory"""
     def make_network(_):
         """make network"""
-        return Network.create("STRING", read_edges2(filename))
+        return network.Network.create("STRING", read_edges2(filename))
 
     return make_network
 

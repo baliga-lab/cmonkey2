@@ -3,17 +3,14 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-from util import make_matrix, DelimitedFile, DelimitedFileMapper
-from datamatrix import DataMatrixFactory, nochange_filter, center_scale_filter
-from datamatrix import DataMatrixCollection
-from organism import OrganismFactory
-from organism import make_kegg_code_mapper, make_go_taxonomy_mapper
-from organism import make_rsat_organism_mapper
-from microarray import ClusterMembership, seed_column_members
-from microarray import compute_row_scores, compute_column_scores
+import util
+import datamatrix as dm
+import microarray
+import organism as org
+import motif
 import microbes_online
 import stringdb
-from rsat import RsatDatabase
+import rsat
 import sys
 import os
 import logging
@@ -165,32 +162,32 @@ def run_cmonkey():
     if not os.path.exists(CACHE_DIR):
         os.mkdir(CACHE_DIR)
 
-    matrix_factory = DataMatrixFactory([nochange_filter,
-                                        center_scale_filter])
-    infile = DelimitedFile.read(sys.argv[1], has_header=True)
+    matrix_factory = dm.DataMatrixFactory(
+        [dm.nochange_filter, dm.center_scale_filter])
+    infile = util.DelimitedFile.read(sys.argv[1], has_header=True)
     # for now, we set a fixed set of clusters assignments
     # that matches halo_ratios5.tsv
     # This is to take out the random component out of the seeding
     # and make it easier to compare results with R-cMonkey
-    fake_row_membership_seed = DelimitedFileMapper(
-        DelimitedFile.read('clusters.tsv', has_header=False), 0, 1)
+    fake_row_membership_seed = util.DelimitedFileMapper(
+        util.DelimitedFile.read('clusters.tsv', has_header=False), 0, 1)
     matrix = matrix_factory.create_from(infile)
     logging.info("Normalized input matrix has %d rows and %d columns:",
                  matrix.num_rows(), matrix.num_columns())
     #print(matrix.sorted_by_row_name())
 
-    keggfile = DelimitedFile.read(KEGG_FILE_PATH, comment='#')
-    gofile = DelimitedFile.read(GO_FILE_PATH)
-    rsatdb = RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
+    keggfile = util.DelimitedFile.read(KEGG_FILE_PATH, comment='#')
+    gofile = util.DelimitedFile.read(GO_FILE_PATH)
+    rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
     mo_db = microbes_online.MicrobesOnline()
     # note that for the moment, the STRING factory is hardwired to
     # a preprocessed Halobacterium SP file
     nw_factories = [microbes_online.get_network_factory(mo_db),
                     stringdb.get_network_factory(stringdb.STRING_FILE2)]
-    org_factory = OrganismFactory(make_kegg_code_mapper(keggfile),
-                                  make_rsat_organism_mapper(rsatdb),
-                                  make_go_taxonomy_mapper(gofile),
-                                  nw_factories)
+    org_factory = org.OrganismFactory(org.make_kegg_code_mapper(keggfile),
+                                      org.make_rsat_organism_mapper(rsatdb),
+                                      org.make_go_taxonomy_mapper(gofile),
+                                      nw_factories)
     # We are using a fake row seed here in order to have reproducible,
     # deterministic results for development. Since the column seed is
     # deterministic and dependent on the row seed, we can use the real
@@ -199,26 +196,35 @@ def run_cmonkey():
     # 43 clusters, so it follows:
     # n.clust.per.row = 2
     # n.clust.per.col = k.clust * 2/3 => 43 * 2/3 => 29
-    membership = ClusterMembership.create(
+    membership = microarray.ClusterMembership.create(
         matrix.sorted_by_row_name(), 43, 2,
         29, fake_seed_row_memberships(fake_row_membership_seed),
-        seed_column_members)
+        microarray.seed_column_members)
 
-    #first_row = "Gene" + "\t" + "\t".join(matrix.column_names())
-    #print first_row
-    #for row in range(matrix.num_rows()):
-    #    rowstr = matrix.row_names()[row]
-    #    for col in range(matrix.num_columns()):
-    #        rowstr += ('\t%f' % matrix[row][col])
-    #    print rowstr
+    organism = org_factory.create(sys.argv[2])
 
-    #compute_row_scores(membership, matrix, NUM_CLUSTERS)
-    cscores = compute_column_scores(membership, matrix, NUM_CLUSTERS)
-    print cscores
+    # One iteration
+    # 1. compute microarray scores
+    #microarray.compute_row_scores(membership, matrix, NUM_CLUSTERS)
+    #cscores = microarray.compute_column_scores(membership, matrix,
+    #                                           NUM_CLUSTERS)
+    #print cscores
+
+    # fooling around with operon network
+    #preds_text = mo_db.get_operon_predictions_for(
+    #    organism.taxonomy_id())
+    #dfile = util.DelimitedFile.create_from_text(preds_text, has_header=True)
+    #preds = [(line[2], line[3]) for line in dfile.lines()
+    #         if line[6] == 'TRUE']
+    #print "# PRED PAIRS: %d" % len(preds)
+    operon_network = nw_factories[0](organism)
+    #print operon_network
+
+    # 2. compute motif scores
+    #motif.compute_scores(organism, membership)
 
     # uncomment me
-    #organism = org_factory.create(sys.argv[2])
-    #algorithm = CMonkey(organism, DataMatrixCollection([matrix]))
+    #algorithm = CMonkey(organism, dm.DataMatrixCollection([matrix]))
     #algorithm.run()
 
 

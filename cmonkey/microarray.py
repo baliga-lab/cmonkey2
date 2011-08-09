@@ -6,8 +6,8 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import numpy
-from util import column_means, row_means, quantile
-from datamatrix import DataMatrix
+import datamatrix as dm
+import util
 
 
 class ClusterMembership:
@@ -148,8 +148,8 @@ def compute_column_scores(membership, matrix, num_clusters):
     # TODO: add normalization for NA results
     # Convert scores into a matrix that have the clusters as columns
     # and conditions in the rows
-    result = DataMatrix(matrix.num_columns(), num_clusters,
-                        row_names=matrix.column_names())
+    result = dm.DataMatrix(matrix.num_columns(), num_clusters,
+                           row_names=matrix.column_names())
     for cluster in range(num_clusters):
         column_scores = cluster_column_scores[cluster]
         for row_index in range(matrix.num_columns()):
@@ -174,9 +174,9 @@ def compute_column_scores_submatrix(matrix):
     colmeans = matrix.column_means().values()[0]
     matrix_minus_colmeans_squared = __subtract_and_square(matrix, colmeans)
     var_norm = numpy.abs(colmeans) + 0.01
-    result = column_means(matrix_minus_colmeans_squared) / var_norm
-    return DataMatrix(1, matrix.num_columns(), ['Col. Scores'],
-                      matrix.column_names(), [result])
+    result = util.column_means(matrix_minus_colmeans_squared) / var_norm
+    return dm.DataMatrix(1, matrix.num_columns(), ['Col. Scores'],
+                         matrix.column_names(), [result])
 
 
 def __subtract_and_square(matrix, vector):
@@ -204,8 +204,8 @@ def compute_row_scores(membership, matrix, num_clusters):
 
     # rearrange result into a DataMatrix, where rows are indexed by gene
     # and columns represent clusters
-    result = DataMatrix(matrix.num_rows(), num_clusters,
-                        row_names=matrix.row_names())
+    result = dm.DataMatrix(matrix.num_rows(), num_clusters,
+                           row_names=matrix.row_names())
     for cluster in range(num_clusters):
         row_scores = cluster_row_scores[cluster]
         for row_index in range(matrix.num_rows()):
@@ -232,20 +232,21 @@ def __compute_row_scores_for_clusters(membership, matrix, clusters):
     return result
 
 
-def __compute_row_scores_for_submatrix(datamatrix, submatrix):
+def __compute_row_scores_for_submatrix(matrix, submatrix):
     """For a given matrix, compute the row scores. The second submatrix is
     used to calculate the column means on and should be derived from
     datamatrix filtered by the row names and column names of a specific
     cluster.
-    datamatrix should be filtered by the columns of a specific cluster in
+    matrix should be filtered by the columns of a specific cluster in
     order for the column means to be applied properly.
     The result is a DataMatrix with one row containing all the row scores"""
     colmeans = submatrix.column_means().values()[0]
-    matrix_minus_colmeans_squared = __subtract_and_square(datamatrix, colmeans)
-    scores = numpy.log(row_means(matrix_minus_colmeans_squared) + 1e-99)
-    return DataMatrix(1, datamatrix.num_rows(),
-                      row_names=['Row Scores'],
-                      col_names=datamatrix.row_names(), values=[scores])
+    matrix_minus_colmeans_squared = __subtract_and_square(matrix, colmeans)
+    scores = numpy.log(util.row_means(matrix_minus_colmeans_squared) + 1e-99)
+    return dm.DataMatrix(1, matrix.num_rows(),
+                         row_names=['Row Scores'],
+                         col_names=matrix.row_names(),
+                         values=[scores])
 
 
 def __replace_non_numeric_values(cluster_row_scores, membership, matrix,
@@ -256,9 +257,9 @@ def __replace_non_numeric_values(cluster_row_scores, membership, matrix,
     result = []
     for row_scores in cluster_row_scores:
         if not row_scores:
-            result.append(DataMatrix(1, matrix.num_rows(),
-                                     col_names=matrix.row_names(),
-                                     init_value=qvalue))
+            result.append(dm.DataMatrix(1, matrix.num_rows(),
+                                        col_names=matrix.row_names(),
+                                        init_value=qvalue))
         else:
             for row_index in range(row_scores.num_rows()):
                 for col_index in range(row_scores.num_columns()):
@@ -284,7 +285,7 @@ def __quantile_normalize_scores(cluster_row_scores, membership, clusters):
                 if (numpy.isfinite(score)
                     and membership.is_row_member_of(gene_name, cluster)):
                     values_for_quantile.append(score)
-    return quantile(values_for_quantile, 0.95)
+    return util.quantile(values_for_quantile, 0.95)
 
 __all__ = ['ClusterMembership', 'compute_row_scores', 'compute_column_scores',
            'seed_column_members']

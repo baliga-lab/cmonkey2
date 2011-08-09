@@ -3,10 +3,10 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-from BeautifulSoup import BeautifulSoup
-from operator import attrgetter
-from scipy.stats import scoreatpercentile
+import BeautifulSoup as bs
+import operator
 import numpy
+import scipy.stats
 import urllib
 import os
 
@@ -160,12 +160,12 @@ class RankedAnchor:  # pylint: disable-msg=R0903
 def best_matching_links(search_string, html):
     """given a search string and an HTML text, extract the best matching
     href"""
-    soup = BeautifulSoup(html)
+    soup = bs.BeautifulSoup(html)
     links = []
     for anchor in soup.findAll('a'):
         score = levenshtein_distance(search_string, anchor['href'])
         links.append(RankedAnchor(score, anchor))
-    result = sorted(links, key=attrgetter('score'))
+    result = sorted(links, key=operator.attrgetter('score'))
     num_results = len(result)
     if num_results > 0:
         best_score = result[0].score
@@ -180,7 +180,7 @@ def quantile(values, probability):
     values a list of numeric values
     probability a value in the range between 0 and 1
     """
-    return scoreatpercentile(values, probability * 100)
+    return scipy.stats.scoreatpercentile(values, probability * 100)
 
 
 def r_stddev(values):

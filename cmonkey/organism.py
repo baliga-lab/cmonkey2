@@ -3,23 +3,23 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-from util import DelimitedFile, DelimitedFileMapper, best_matching_links
 import re
 import logging
 import thesaurus
-from seqtools import extract_upstream
+import util
+import seqtools
 
 
 def make_kegg_code_mapper(dfile):
     """returns a function that maps an organism code to a KEGG organism
     name"""
-    return DelimitedFileMapper(dfile, 1, 3).__getitem__
+    return util.DelimitedFileMapper(dfile, 1, 3).__getitem__
 
 
 def make_go_taxonomy_mapper(dfile):
     """returns a function that maps an RSAT organism name to a GO
     taxonomy id"""
-    return DelimitedFileMapper(dfile, 0, 1).__getitem__
+    return util.DelimitedFileMapper(dfile, 0, 1).__getitem__
 
 
 class RsatSpeciesInfo:  # pylint: disable-msg=R0903
@@ -79,6 +79,9 @@ class ThesaurusBasedMap:  # pylint: disable-msg=R0903
         """override the __getitem__ method for dictionary-like behaviour"""
         return self.__wrapped_dict[self.__thesaurus[key]]
 
+    def __repr__(self):
+        return repr(self.__wrapped_dict)
+
 
 def make_rsat_organism_mapper(rsatdb):
     """return a function that maps from a KEGG organism name to
@@ -91,7 +94,7 @@ def make_rsat_organism_mapper(rsatdb):
 
     def get_taxonomy_id(rsat_organism):
         """Determine the taxonomy data from the RSAT database"""
-        organism_names_dfile = DelimitedFile.create_from_text(
+        organism_names_dfile = util.DelimitedFile.create_from_text(
             rsatdb.get_organism_names(rsat_organism), comment='--')
         return organism_names_dfile.lines()[0][0]
 
@@ -99,7 +102,7 @@ def make_rsat_organism_mapper(rsatdb):
         """Mapper function to return basic information about an organism
         stored in the RSAT database. Only the genes in gene_names will
         be considered in the construction"""
-        rsat_organism = best_matching_links(
+        rsat_organism = util.best_matching_links(
             kegg_organism,
             rsatdb.get_directory())[0].rstrip('/')
         return RsatSpeciesInfo(rsatdb, rsat_organism,
@@ -199,7 +202,7 @@ class Organism:
     def __thesaurus(self):
         """reads the thesaurus from a feature_names file"""
         if not self.__synonyms:
-            feature_names_dfile = DelimitedFile.create_from_text(
+            feature_names_dfile = util.DelimitedFile.create_from_text(
                 self.__rsatdb().get_feature_names(self.species()),
                 comment='--')
             self.__synonyms = thesaurus.create_from_rsat_feature_names(
@@ -232,7 +235,7 @@ class Organism:
         synonyms = self.__thesaurus()
         id_names = [synonyms[name] for name in gene_names if name in synonyms]
 
-        dfile = DelimitedFile.create_from_text(
+        dfile = util.DelimitedFile.create_from_text(
             self.__rsatdb().get_features(self.species()), comment='--')
         for line in dfile.lines():
             feature_id = line[0]
@@ -255,7 +258,7 @@ class Organism:
 
         for feature_id in features:
             feature = features[feature_id]
-            sequences[feature_id] = extract_upstream(
+            sequences[feature_id] = seqtools.extract_upstream(
                 contig_seqs[feature.contig()],
                 feature.start(),
                 feature.end(),

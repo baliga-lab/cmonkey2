@@ -91,6 +91,7 @@ def read_sequences_from_fasta_string(fasta_string):
     lines = fasta_string.split('\n')
     sequences = []
     seqbuffer = ""
+    seqname = None
     for line in lines:
         line = line.strip()
         if line.startswith('>'):
@@ -107,6 +108,7 @@ def read_sequences_from_fasta_string(fasta_string):
 
 
 def read_sequences_from_fasta_file(filepath):
+    """Read the sequences from the specified FASTA file"""
     with open(filepath) as inputfile:
         fasta_string = inputfile.read()
     return read_sequences_from_fasta_string(fasta_string)
