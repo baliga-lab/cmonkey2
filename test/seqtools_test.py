@@ -8,6 +8,37 @@ import os
 import seqtools as st
 
 
+class LocationTest(unittest.TestCase):  # pylint: disable-msg=R0904
+    """Test class for Location"""
+
+    def test_equals_true(self):
+        """Tests the equality operator"""
+        location1 = st.Location("contig", 1, 2, True)
+        location2 = st.Location("contig", 1, 2, True)
+
+        self.assertTrue(location1 == location1)
+        self.assertTrue(location1 == location2)
+
+    def test_equals_false(self):
+        """Tests the equality operator"""
+        location1 = st.Location("contig1", 1, 2, True)
+        location2 = st.Location("contig1", 1, 2, False)
+        location3 = st.Location("contig2", 1, 2, True)
+
+        self.assertFalse(location1 == location2)
+        self.assertFalse(location1 == location3)
+
+    def test_notequals(self):
+        """Tests the equality operator"""
+        location1 = st.Location("contig1", 1, 2, True)
+        location2 = st.Location("contig1", 1, 2, False)
+        location3 = st.Location("contig2", 1, 2, True)
+
+        self.assertTrue(location1 != location2)
+        self.assertTrue(location1 != location3)
+        self.assertFalse(location1 != location1)
+
+
 class SeqtoolsTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for seqtools."""
 

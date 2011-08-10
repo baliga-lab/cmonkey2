@@ -15,9 +15,19 @@ class Location:  # pylint: disable-msg=R0903
         self.reverse = reverse
 
     def __repr__(self):
+        """String representation"""
         return ("contig: %s s: %d e: %d rev: %s" %
                 (self.contig, self.start,
                  self.end, str(self.reverse)))
+
+    def __eq__(self, other):
+        """implements the == operation"""
+        return (self.contig == other.contig and self.start == other.start and
+                self.end == other.end and self.reverse == other.reverse)
+
+    def __ne__(self, other):
+        """implements the != operation"""
+        return not self.__eq__(other)
 
 
 class Feature:  # pylint: disable-msg=R0902
@@ -46,18 +56,21 @@ class Feature:  # pylint: disable-msg=R0902
                  self.__name, repr(self.__location)))
 
 
-def extract_upstream(source, start, end, reverse, distance):
+def extract_upstream(source, location, distance):
     """Extract a subsequence of the specified  size from the source sequence
     Depending on the strand orientation, the sequence is cut around either
     the start or the end position"""
-    if reverse:
-        winstart = end + 1 + distance[0]
-        winend = end + 1 + distance[1]
+    if location.reverse:
+        winstart = location.end + 1 + distance[0]
+        winend = location.end + 1 + distance[1]
     else:
-        winstart = start - 1 - distance[1]
-        winend = start - 1 - distance[0]
+        winstart = location.start - 1 - distance[1]
+        winend = location.start - 1 - distance[0]
 
-    return subsequence(source, winstart, winend, reverse)
+    final_location = Location(location.contig, winstart, winend,
+                              location.reverse)
+    return (final_location,
+            subsequence(source, winstart, winend, location.reverse))
 
 
 def subsequence(sequence, start, stop, reverse=False):

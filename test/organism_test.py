@@ -8,6 +8,7 @@ import unittest
 import util
 import network as nw
 import organism as org
+import seqtools as st
 
 
 TAXONOMY_FILE_PATH = "testdata/KEGG_taxonomy"
@@ -184,7 +185,8 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                 MockMicrobesOnline(),
                                 [])
         seqs = organism.sequences_for_genes_upstream(['VNG12345G'], (-30, 250))
-        self.assertEquals('ACGTTTAAAAGAGAGAGAGACACAGTATATATTTTTTTAAAA',
+        self.assertEquals((st.Location('NC_000915.1', -128, 152, False),
+                           'ACGTTTAAAAGAGAGAGAGACACAGTATATATTTTTTTAAAA'),
                           seqs['NP_206803.1'])
 
     def test_get_networks(self):

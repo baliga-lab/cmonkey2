@@ -274,6 +274,7 @@ class ThesaurusBasedMap:  # pylint: disable-msg=R0903
         return repr(self.__wrapped_dict)
 
     def keys(self):
+        """Returns the keys of the wrapped dictionary"""
         return self.__wrapped_dict.keys()
 
 

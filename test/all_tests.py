@@ -39,6 +39,7 @@ if __name__ == '__main__':
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(stt.SeqtoolsTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(stt.FastaTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(stt.LocationTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(tht.DelimitedFileFactoryTest))
 

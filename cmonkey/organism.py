@@ -161,16 +161,17 @@ class Organism:
         """The default sequence retrieval for microbes is to
         fetch their operon sequences"""
         if upstream and motif_finding:
-            return self.__operon_sequences_for_genes(gene_aliases)
+            return self.__operon_sequences_for_genes(gene_aliases, distance)
         else:
             raise Error('not supported yet')
 
-    def __operon_sequences_for_genes(self, gene_aliases):
+    def __operon_sequences_for_genes(self, gene_aliases, distance):
         """returns a map of the gene_aliases to the feature-
         sequence tuple that they are actually mapped to.
         Currently, there is no synonym translation
         """
         def get_operon_pairs():
+            """Extract the (gene, head) pairs that are actually used"""
             operon_map = self.__operon_map()
             synonyms = self.__thesaurus()
             operon_pairs = []
@@ -183,15 +184,17 @@ class Organism:
             return operon_pairs
 
         def get_mapped_locations():
+            """extract the sequences that were actually used"""
             operon_pairs = get_operon_pairs()
             unique_feature_ids = []
-            for gene, head in operon_pairs:
+            for _, head in operon_pairs:
                 if head not in unique_feature_ids:
                     unique_feature_ids.append(head)
-            print "UNIQUE FEATURE IDS"
-            print unique_feature_ids
             features = self.__read_features(unique_feature_ids)
+            seqs = self.__read_sequences(features, distance,
+                                         st.extract_upstream)
             print "FEATURES: ", features
+            print "SEQS: ", seqs
 
         # TODO: NOW extract the unique sequences for the operons
         get_mapped_locations()
@@ -203,9 +206,9 @@ class Organism:
         features = self.__read_features(
             self.__feature_ids_for(gene_aliases))
         logging.info("# Features read: %d", len(features))
-        return util.ThesaurusBasedMap(self.__thesaurus(),
-                                      self.__read_sequences_upstream(features,
-                                                                     distance))
+        return util.ThesaurusBasedMap(
+            self.__thesaurus(),
+            self.__read_sequences(features, distance, st.extract_upstream))
 
     def __operon_map(self):
         """Returns the operon map for this particular organism.
@@ -268,9 +271,10 @@ class Organism:
         """internal method to return the RSAT db link"""
         return self.__rsat_info.rsatdb
 
-    def __read_sequences_upstream(self, features, distance):
+    def __read_sequences(self, features, distance, extractor):
         """for each feature, extract and set its sequence"""
         def unique_contigs():
+            """extract the unique contigs from the input features"""
             result = []
             for feature in features.values():
                 if feature.location().contig not in result:
@@ -285,12 +289,8 @@ class Organism:
 
         for feature in features.values():
             location = feature.location()
-            sequences[feature.id()] = st.extract_upstream(
-                contig_seqs[location.contig],
-                location.start,
-                location.end,
-                location.reverse,
-                distance)
+            sequences[feature.id()] = extractor(
+                contig_seqs[location.contig], location, distance)
         return sequences
 
     def __str__(self):
