@@ -65,6 +65,13 @@ class Feature:  # pylint: disable-msg=R0902,R0903
         """returns whether feature is on the reverse strand"""
         return self.__reverse
 
+    def __repr__(self):
+        """returns the string representation"""
+        return ("%s[%s] - %s, contig: %s s: %d e: %d rev: %s" %
+                (self.__feature_id, self.__feature_type,
+                 self.__name, self.__contig, self.__start,
+                 self.__end, str(self.__reverse)))
+
 
 class ThesaurusBasedMap:  # pylint: disable-msg=R0903
     """wrapping a thesaurus and a feature id based map for a flexible
@@ -81,6 +88,9 @@ class ThesaurusBasedMap:  # pylint: disable-msg=R0903
 
     def __repr__(self):
         return repr(self.__wrapped_dict)
+
+    def keys(self):
+        return self.__wrapped_dict.keys()
 
 
 def make_rsat_organism_mapper(rsatdb):
@@ -128,26 +138,30 @@ class OrganismFactory:
     def __init__(self, code2kegg_organism,
                  rsat_organism_info,
                  get_go_taxonomy_id,
+                 microbes_online_db,
                  network_factories):
         """create a OrganismFactory instance"""
-        self.code2kegg_organism = code2kegg_organism
-        self.rsat_organism_info = rsat_organism_info
-        self.get_taxonomy_id = get_go_taxonomy_id
+        self.__code2kegg_organism = code2kegg_organism
+        self.__rsat_organism_info = rsat_organism_info
+        self.__get_taxonomy_id = get_go_taxonomy_id
+        self.__microbes_online_db = microbes_online_db
         self.__network_factories = network_factories
 
     def create(self, organism_code):
         """factory method to create an organism from a code"""
         logging.info("Creating organism object for code '%s'...",
                      organism_code)
-        kegg_organism = self.code2kegg_organism(organism_code)
+        kegg_organism = self.__code2kegg_organism(organism_code)
         logging.info('KEGG organism: %s', kegg_organism)
-        rsat_info = self.rsat_organism_info(kegg_organism)
+        rsat_info = self.__rsat_organism_info(kegg_organism)
         logging.info('RSAT info retrieved: %s', rsat_info.species)
-        go_taxonomy_id = self.get_taxonomy_id(
+        go_taxonomy_id = self.__get_taxonomy_id(
             rsat_info.species.replace('_', ' '))
         logging.info('GO taxonomy id: %s', str(go_taxonomy_id))
         return Organism(organism_code, kegg_organism, rsat_info,
-                        go_taxonomy_id, self.__network_factories)
+                        go_taxonomy_id,
+                        self.__microbes_online_db,
+                        self.__network_factories)
 
 
 class Organism:
@@ -156,12 +170,14 @@ class Organism:
     so the algorithm will work on any type of organism"""
 
     def __init__(self, code, kegg_organism, rsat_info,
-                 go_taxonomy_id, network_factories):
+                 go_taxonomy_id, microbes_online_db,
+                 network_factories):
         """create an Organism instance"""
         self.code = code
         self.kegg_organism = kegg_organism
         self.__network_factories = network_factories
         self.__rsat_info = rsat_info
+        self.__microbes_online_db = microbes_online_db
         self.go_taxonomy_id = go_taxonomy_id
         self.__synonyms = None  # lazy loaded
 
@@ -198,6 +214,24 @@ class Organism:
         return ThesaurusBasedMap(self.__thesaurus(),
                                  self.__read_sequences(contigs, features,
                                                        distance))
+
+    def sequences_for_features(self, features):
+        """returns a map from feature id -> sequence for the given
+        features"""
+        feature_ids = []
+        for feature_id in features:
+            if feature_id not in feature_ids:
+                feature_ids.append(feature_id)
+        print "FEATURE_IDS"
+        print feature_ids
+        features, contigs = self.__read_features_and_contigs(feature_ids)
+        print "FEATURES: "
+        print features
+        print "CONTIGS: "
+        print contigs
+        return ThesaurusBasedMap(self.__thesaurus(),
+                                 self.__read_sequences(contigs,
+                                                       features, (0, 0)))
 
     def __thesaurus(self):
         """reads the thesaurus from a feature_names file"""

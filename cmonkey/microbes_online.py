@@ -145,6 +145,7 @@ def make_operon_pairs(microbes_online, organism):
 
 
 def make_operon_map(microbes_online, organism):
+    """creates an operon mapping gene -> head"""
     pairs = make_operon_pairs(microbes_online, organism)
     result = {}
     for head, gene in pairs:

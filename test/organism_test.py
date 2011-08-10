@@ -129,6 +129,9 @@ def mock_go_mapper(rsat_organism):
         return None
 
 
+class MockMicrobesOnline:
+    pass
+
 class OrganismFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for OrganismFactory"""
 
@@ -139,7 +142,9 @@ class OrganismFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
             lambda _: org.RsatSpeciesInfo(MockRsatDatabase(''),
                                           'RSAT_organism',
                                           False, 4711),
-            mock_go_mapper, [])
+            mock_go_mapper,
+            MockMicrobesOnline(),
+            [])
         organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
         self.assertEquals('Hpy', organism.cog_organism())
@@ -156,7 +161,9 @@ class OrganismFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
             lambda _: org.RsatSpeciesInfo(MockRsatDatabase(''),
                                           'RSAT_organism',
                                           True, 4711),
-            lambda _: 'GO taxonomy id', [])
+            lambda _: 'GO taxonomy id',
+            MockMicrobesOnline(),
+            [])
         organism = factory.create('hpy')
         self.assertEquals('hpy', organism.code)
         self.assertTrue(organism.is_eukaryote())
@@ -171,7 +178,10 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                 org.RsatSpeciesInfo(MockRsatDatabase(''),
                                                     'Halobacterium_SP',
                                                     False,
-                                                    12345), 12345, [])
+                                                    12345),
+                                12345,
+                                MockMicrobesOnline(),
+                                [])
         seqs = organism.sequences_for_genes(['VNG12345G'])
         self.assertEquals('ACGTTTAAAAGAGAGAGAGACACAGTATATATTTTTTTAAAA',
                           seqs['NP_206803.1'])
@@ -184,7 +194,8 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                                     'Halobacterium_SP',
                                                     False,
                                                     12345), 12345,
-                            [mockFactory])
+                                MockMicrobesOnline(),
+                                [mockFactory])
         networks = organism.networks()
         self.assertEquals(1, len(networks))
         self.assertEquals(organism, mockFactory.create_called_with)
