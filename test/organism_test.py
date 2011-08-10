@@ -132,6 +132,7 @@ def mock_go_mapper(rsat_organism):
 class MockMicrobesOnline:
     pass
 
+
 class OrganismFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for OrganismFactory"""
 

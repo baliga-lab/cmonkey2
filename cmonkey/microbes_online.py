@@ -63,8 +63,8 @@ def make_operon_edges(operon, features):
         max_gene = None
         max_end = 0
         for (gene, feature) in feature_map.items():
-            if feature.end() > max_end:
-                max_end = feature.end()
+            if feature.location().end > max_end:
+                max_end = feature.location().end
                 max_gene = gene
         return max_gene
 
@@ -73,8 +73,8 @@ def make_operon_edges(operon, features):
         min_gene = None
         min_start = sys.maxint
         for (gene, feature) in feature_map.items():
-            if feature.start() < min_start:
-                min_start = feature.start()
+            if feature.location().start < min_start:
+                min_start = feature.location().start
                 min_gene = gene
         return min_gene
 
@@ -82,7 +82,7 @@ def make_operon_edges(operon, features):
     num_reverse = 0
     for gene in operon:
         feature_map[gene] = features[gene]
-        if feature_map[gene].is_reverse():
+        if feature_map[gene].location().reverse:
             num_reverse += 1
     num_total = len(operon)
     percent_reverse = float(num_reverse) / float(num_total)

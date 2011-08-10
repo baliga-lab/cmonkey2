@@ -124,6 +124,7 @@ class Organism:
         self.__microbes_online_db = microbes_online_db
         self.go_taxonomy_id = go_taxonomy_id
         self.__synonyms = None  # lazy loaded
+        self.__operon_mappings = None  # lazy loaded
 
     def species(self):
         """Retrieves the species of this object"""
@@ -147,15 +148,34 @@ class Organism:
             self.__thesaurus(),
             self.__read_features_and_contigs(gene_aliases)[0])
 
-    def sequences_for_genes(self, gene_aliases, distance):
-        return self.__operon_sequences_for_genes(gene_aliases)
+    def sequences_for_genes(self, gene_aliases, distance, upstream=True,
+                            motif_finding=True):
+        """The default sequence retrieval for microbes is to
+        fetch their operon sequences"""
+        if upstream and motif_finding:
+            return self.__operon_sequences_for_genes(gene_aliases)
+        else:
+            raise Error('not supported yet')
 
     def __operon_sequences_for_genes(self, gene_aliases):
         """returns a map of the gene_aliases to the feature-
-        sequence tuple that they are actually mapped to
+        sequence tuple that they are actually mapped to.
+        Currently, there is no synonym translation
         """
-        operon_map = self.__operon_map()
-        #print operon_map
+        def get_operon_pairs():
+            operon_map = self.__operon_map()
+            synonyms = self.__thesaurus()
+            operon_pairs = []
+            for alias in gene_aliases:
+                if alias in synonyms:
+                    gene = synonyms[alias]
+                    operon_pairs.append((gene, operon_map[gene]))
+                else:
+                    logging.info("alias '%s' not found in thesaurus", alias)
+            return operon_pairs
+
+        operon_pairs = get_operon_pairs()
+        print operon_pairs
 
     def sequences_for_genes_upstream(self, gene_aliases, distance):
         """get the gene sequences as a map from feature id -> sequence for
@@ -171,15 +191,21 @@ class Organism:
                                                                      distance))
 
     def __operon_map(self):
-        """Returns the operon map for this particular organism"""
-        pairs = mo.make_operon_pairs(self.__microbes_online_db, self)
-        result = {}
-        for head, gene in pairs:
-            result[gene] = head
-        return result
+        """Returns the operon map for this particular organism.
+        Microbes Online works on VNG names, but RSAT is working on
+        feature ids, so this function also maps VNG names to feature ids"""
+        if not self.__operon_mappings:
+            pairs = mo.make_operon_pairs(self.__microbes_online_db, self)
+            synonyms = self.__thesaurus()
+            self.__operon_mappings = {}
+            for head, gene in pairs:
+                self.__operon_mappings[synonyms[gene]] = synonyms[head]
+        return self.__operon_mappings
 
     def __thesaurus(self):
-        """reads the thesaurus from a feature_names file"""
+        """reads the thesaurus from a feature_names file. The thesaurus
+        is also cached, because it is used many times
+        """
         if not self.__synonyms:
             feature_names_dfile = util.DelimitedFile.create_from_text(
                 self.__rsatdb().get_feature_names(self.species()),
@@ -203,9 +229,10 @@ class Organism:
 
             features[feature_id] = st.Feature(feature_id, line[1],
                                               line[2],
-                                              contig,
-                                              int(line[4]), int(line[5]),
-                                              is_reverse)
+                                              st.Location(contig,
+                                                          int(line[4]),
+                                                          int(line[5]),
+                                                          is_reverse))
             if contig not in contigs:
                 contigs.append(contig)
 
@@ -236,12 +263,12 @@ class Organism:
                 self.species(), contig)
 
         for feature_id in features:
-            feature = features[feature_id]
+            location = features[feature_id].location()
             sequences[feature_id] = st.extract_upstream(
-                contig_seqs[feature.contig()],
-                feature.start(),
-                feature.end(),
-                feature.is_reverse(),
+                contig_seqs[location.contig],
+                location.start,
+                location.end,
+                location.reverse,
                 distance)
         return sequences
 

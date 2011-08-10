@@ -54,11 +54,11 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
         operon = ['gene1', 'gene2', 'gene3']
         features = {
             'gene1': st.Feature('feature1', 'typ1', 'feature_name1',
-                                'contig1', 24, 89, False),
+                                st.Location('contig1', 24, 89, False)),
             'gene2': st.Feature('feature2', 'typ1', 'feature_name2',
-                                'contig1', 15, 21, False),
+                                st.Location('contig1', 15, 21, False)),
             'gene3': st.Feature('feature3', 'typ2', 'feature_name3',
-                                'contig1', 100, 154, False)
+                                st.Location('contig1', 100, 154, False))
             }
         edges = mo.make_operon_edges(operon, features)
         self.assertTrue(('gene2', 'gene1') in edges)
@@ -71,11 +71,11 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
         operon = ['gene1', 'gene2', 'gene3']
         features = {
             'gene1': st.Feature('feature1', 'typ1', 'feature_name1',
-                                'contig1', 24, 89, True),
+                                st.Location('contig1', 24, 89, True)),
             'gene2': st.Feature('feature2', 'typ1', 'feature_name2',
-                                'contig1', 15, 21, True),
+                                st.Location('contig1', 15, 21, True)),
             'gene3': st.Feature('feature3', 'typ2', 'feature_name3',
-                                'contig1', 100, 154, True)
+                                st.Location('contig1', 100, 154, True))
             }
         edges = mo.make_operon_edges(operon, features)
         self.assertTrue(('gene3', 'gene1') in edges)
@@ -88,11 +88,11 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
         predictions = [('gene1', 'gene2'), ('gene2', 'gene3')]
         organism = MockOrganism('64091', {
                 'gene1': st.Feature('feature1', 'typ1', 'feature_name1',
-                                    'contig1', 24, 89, False),
+                                    st.Location('contig1', 24, 89, False)),
                 'gene2': st.Feature('feature2', 'typ1', 'feature_name2',
-                                    'contig1', 15, 21, False),
+                                    st.Location('contig1', 15, 21, False)),
                 'gene3': st.Feature('feature3', 'typ2', 'feature_name3',
-                                    'contig1', 100, 154, False)
+                                    st.Location('contig1', 100, 154, False))
                 })
         edges = mo.make_edges_from_predictions(predictions, organism)
         self.assertEquals([('gene2', 'gene1'), ('gene2', 'gene2'),
@@ -104,10 +104,11 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
         network = mo.get_network_factory(microbes_online)(MockOrganism(
                 '64091',
                  {'gene1': st.Feature('feature1', 'typ1', 'feature_name1',
-                                      'contig1', 24, 89, False),
+                                      st.Location('contig1', 24, 89, False)),
                   'gene2': st.Feature('feature2', 'typ1', 'feature_name2',
-                                      'contig1', 15, 21, False),
+                                      st.Location('contig1', 15, 21, False)),
                   'gene3': st.Feature('feature3', 'typ2', 'feature_name3',
-                                      'contig1', 100, 154, False)}))
+                                      st.Location('contig1', 100, 154, False))
+                  }))
         self.assertEquals(5, network.num_edges())
         self.assertEquals(5000, network.total_score())

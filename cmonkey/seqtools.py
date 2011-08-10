@@ -5,43 +5,41 @@ more information and licensing details.
 """
 
 
-class Feature:  # pylint: disable-msg=R0902,R0903
+class Location:  # pylint: disable-msg=R0903
+    """representation of a genomic position, a simple value object"""
+    def __init__(self, contig, start, end, reverse):
+        """Creates a location instance"""
+        self.contig = contig
+        self.start = start
+        self.end = end
+        self.reverse = reverse
+
+    def __repr__(self):
+        return ("contig: %s s: %d e: %d rev: %s" %
+                (self.contig, self.start,
+                 self.end, str(self.reverse)))
+
+
+class Feature:  # pylint: disable-msg=R0902
     """representation of a feature. Just a value object"""
 
-    def __init__(self, feature_id, feature_type, name, contig,
-                 start, end, reverse):
+    def __init__(self, feature_id, feature_type, name, location):
         """Create a Feature instance"""
         # pylint: disable-msg=R0913
         self.__feature_id = feature_id
         self.__feature_type = feature_type
         self.__name = name
-        self.__contig = contig
-        self.__start = start
-        self.__end = end
-        self.__reverse = reverse
+        self.__location = location
 
-    def contig(self):
-        """returns this feature's contig name"""
-        return self.__contig
-
-    def start(self):
-        """returns this feature's start position on the strand"""
-        return self.__start
-
-    def end(self):
-        """returns this feature's end position on the strand"""
-        return self.__end
-
-    def is_reverse(self):
-        """returns whether feature is on the reverse strand"""
-        return self.__reverse
+    def location(self):
+        """returns this feature's location"""
+        return self.__location
 
     def __repr__(self):
         """returns the string representation"""
-        return ("%s[%s] - %s, contig: %s s: %d e: %d rev: %s" %
+        return ("%s[%s] - %s, %s" %
                 (self.__feature_id, self.__feature_type,
-                 self.__name, self.__contig, self.__start,
-                 self.__end, str(self.__reverse)))
+                 self.__name, repr(self.__location)))
 
 
 def extract_upstream(source, start, end, reverse, distance):
