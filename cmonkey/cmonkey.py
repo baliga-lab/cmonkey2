@@ -14,7 +14,6 @@ import rsat
 import sys
 import os
 import logging
-import numpy
 
 
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
@@ -187,6 +186,7 @@ def run_cmonkey():
     org_factory = org.OrganismFactory(org.make_kegg_code_mapper(keggfile),
                                       org.make_rsat_organism_mapper(rsatdb),
                                       org.make_go_taxonomy_mapper(gofile),
+                                      mo_db,
                                       nw_factories)
     # We are using a fake row seed here in order to have reproducible,
     # deterministic results for development. Since the column seed is
@@ -210,18 +210,8 @@ def run_cmonkey():
     #                                           NUM_CLUSTERS)
     #print cscores
 
-    # fooling around with operon network
-    #preds_text = mo_db.get_operon_predictions_for(
-    #    organism.taxonomy_id())
-    #dfile = util.DelimitedFile.create_from_text(preds_text, has_header=True)
-    #preds = [(line[2], line[3]) for line in dfile.lines()
-    #         if line[6] == 'TRUE']
-    #print "# PRED PAIRS: %d" % len(preds)
-    operon_network = nw_factories[0](organism)
-    #print operon_network
-
     # 2. compute motif scores
-    #motif.compute_scores(organism, membership)
+    motif.compute_scores(organism, membership)
 
     # uncomment me
     #algorithm = CMonkey(organism, dm.DataMatrixCollection([matrix]))

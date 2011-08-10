@@ -35,6 +35,14 @@ class MicrobesOnline:
         return util.read_url_cached(url, cache_file)
 
 
+# Operon calculation functionality.
+# Conceptually, this could go into an Organism class that has operons.
+# It is still placed within the microbes_online module because
+#
+# 1. it is strongly related to the structure of Microbes Online Data
+# 2. computation of operon maps and networks is pretty complicated
+#    and it benefits from separate testing
+
 def make_operon_edges(operon, features):
     """take an operon as a list of gene names, determines the head out of
     these gene names and generates edges from the head to each gene in the
@@ -142,15 +150,6 @@ def make_operon_pairs(microbes_online, organism):
     preds = [(line[2], line[3]) for line in dfile.lines()
              if line[6] == 'TRUE']
     return make_edges_from_predictions(preds, organism)
-
-
-def make_operon_map(microbes_online, organism):
-    """creates an operon mapping gene -> head"""
-    pairs = make_operon_pairs(microbes_online, organism)
-    result = {}
-    for head, gene in pairs:
-        result[gene] = head
-    return result
 
 
 def get_network_factory(microbes_online):

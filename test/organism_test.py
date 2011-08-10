@@ -182,7 +182,7 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                 12345,
                                 MockMicrobesOnline(),
                                 [])
-        seqs = organism.sequences_for_genes(['VNG12345G'])
+        seqs = organism.sequences_for_genes_upstream(['VNG12345G'], (-30, 250))
         self.assertEquals('ACGTTTAAAAGAGAGAGAGACACAGTATATATTTTTTTAAAA',
                           seqs['NP_206803.1'])
 

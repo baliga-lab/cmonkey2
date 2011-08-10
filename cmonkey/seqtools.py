@@ -5,6 +5,45 @@ more information and licensing details.
 """
 
 
+class Feature:  # pylint: disable-msg=R0902,R0903
+    """representation of a feature. Just a value object"""
+
+    def __init__(self, feature_id, feature_type, name, contig,
+                 start, end, reverse):
+        """Create a Feature instance"""
+        # pylint: disable-msg=R0913
+        self.__feature_id = feature_id
+        self.__feature_type = feature_type
+        self.__name = name
+        self.__contig = contig
+        self.__start = start
+        self.__end = end
+        self.__reverse = reverse
+
+    def contig(self):
+        """returns this feature's contig name"""
+        return self.__contig
+
+    def start(self):
+        """returns this feature's start position on the strand"""
+        return self.__start
+
+    def end(self):
+        """returns this feature's end position on the strand"""
+        return self.__end
+
+    def is_reverse(self):
+        """returns whether feature is on the reverse strand"""
+        return self.__reverse
+
+    def __repr__(self):
+        """returns the string representation"""
+        return ("%s[%s] - %s, contig: %s s: %d e: %d rev: %s" %
+                (self.__feature_id, self.__feature_type,
+                 self.__name, self.__contig, self.__start,
+                 self.__end, str(self.__reverse)))
+
+
 def extract_upstream(source, start, end, reverse, distance):
     """Extract a subsequence of the specified  size from the source sequence
     Depending on the strand orientation, the sequence is cut around either
@@ -124,4 +163,4 @@ def write_sequences_to_fasta_file(seqs, filepath):
 __all__ = ['subsequence', 'extract_upstream', 'markov_background',
            'read_sequences_from_fasta_string',
            'read_sequences_from_fasta_file',
-           'write_sequences_to_fasta_file']
+           'write_sequences_to_fasta_file', 'Feature']

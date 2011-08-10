@@ -1,4 +1,6 @@
 """organism.py - organism-specific functionality in cMonkey
+This module captures a microbial organism that receives data
+from Microbes Online and RSAT
 
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
@@ -7,7 +9,8 @@ import re
 import logging
 import thesaurus
 import util
-import seqtools
+import seqtools as st
+import microbes_online as mo
 
 
 def make_kegg_code_mapper(dfile):
@@ -32,65 +35,6 @@ class RsatSpeciesInfo:  # pylint: disable-msg=R0903
         self.species = species
         self.is_eukaryote = is_eukaryote
         self.taxonomy_id = taxonomy_id
-
-
-class Feature:  # pylint: disable-msg=R0902,R0903
-    """representation of a feature. Just a value object"""
-
-    def __init__(self, feature_id, feature_type, name, contig,
-                 start, end, reverse):
-        """Create a Feature instance"""
-        # pylint: disable-msg=R0913
-        self.__feature_id = feature_id
-        self.__feature_type = feature_type
-        self.__name = name
-        self.__contig = contig
-        self.__start = start
-        self.__end = end
-        self.__reverse = reverse
-
-    def contig(self):
-        """returns this feature's contig name"""
-        return self.__contig
-
-    def start(self):
-        """returns this feature's start position on the strand"""
-        return self.__start
-
-    def end(self):
-        """returns this feature's end position on the strand"""
-        return self.__end
-
-    def is_reverse(self):
-        """returns whether feature is on the reverse strand"""
-        return self.__reverse
-
-    def __repr__(self):
-        """returns the string representation"""
-        return ("%s[%s] - %s, contig: %s s: %d e: %d rev: %s" %
-                (self.__feature_id, self.__feature_type,
-                 self.__name, self.__contig, self.__start,
-                 self.__end, str(self.__reverse)))
-
-
-class ThesaurusBasedMap:  # pylint: disable-msg=R0903
-    """wrapping a thesaurus and a feature id based map for a flexible
-    lookup container that can use any valid gene alias"""
-
-    def __init__(self, synonyms, wrapped_dict):
-        """create new instance"""
-        self.__thesaurus = synonyms
-        self.__wrapped_dict = wrapped_dict
-
-    def __getitem__(self, key):
-        """override the __getitem__ method for dictionary-like behaviour"""
-        return self.__wrapped_dict[self.__thesaurus[key]]
-
-    def __repr__(self):
-        return repr(self.__wrapped_dict)
-
-    def keys(self):
-        return self.__wrapped_dict.keys()
 
 
 def make_rsat_organism_mapper(rsatdb):
@@ -199,11 +143,21 @@ class Organism:
 
     def features_for_genes(self, gene_aliases):
         """returns a map of features for the specified list of genes aliases"""
-        return ThesaurusBasedMap(
+        return util.ThesaurusBasedMap(
             self.__thesaurus(),
             self.__read_features_and_contigs(gene_aliases)[0])
 
-    def sequences_for_genes(self, gene_aliases, distance=(-30, 250)):
+    def sequences_for_genes(self, gene_aliases, distance):
+        return self.__operon_sequences_for_genes(gene_aliases)
+
+    def __operon_sequences_for_genes(self, gene_aliases):
+        """returns a map of the gene_aliases to the feature-
+        sequence tuple that they are actually mapped to
+        """
+        operon_map = self.__operon_map()
+        #print operon_map
+
+    def sequences_for_genes_upstream(self, gene_aliases, distance):
         """get the gene sequences as a map from feature id -> sequence for
         the given gene aliases
         """
@@ -211,27 +165,18 @@ class Organism:
             gene_aliases)
         logging.info("Contigs: %s", str(contigs))
         logging.info("# Features read: %d", len(features))
-        return ThesaurusBasedMap(self.__thesaurus(),
-                                 self.__read_sequences(contigs, features,
-                                                       distance))
+        return util.ThesaurusBasedMap(self.__thesaurus(),
+                                      self.__read_sequences_upstream(contigs,
+                                                                     features,
+                                                                     distance))
 
-    def sequences_for_features(self, features):
-        """returns a map from feature id -> sequence for the given
-        features"""
-        feature_ids = []
-        for feature_id in features:
-            if feature_id not in feature_ids:
-                feature_ids.append(feature_id)
-        print "FEATURE_IDS"
-        print feature_ids
-        features, contigs = self.__read_features_and_contigs(feature_ids)
-        print "FEATURES: "
-        print features
-        print "CONTIGS: "
-        print contigs
-        return ThesaurusBasedMap(self.__thesaurus(),
-                                 self.__read_sequences(contigs,
-                                                       features, (0, 0)))
+    def __operon_map(self):
+        """Returns the operon map for this particular organism"""
+        pairs = mo.make_operon_pairs(self.__microbes_online_db, self)
+        result = {}
+        for head, gene in pairs:
+            result[gene] = head
+        return result
 
     def __thesaurus(self):
         """reads the thesaurus from a feature_names file"""
@@ -256,11 +201,11 @@ class Organism:
             if line[6] == 'R':
                 is_reverse = True
 
-            features[feature_id] = Feature(feature_id, line[1],
-                                           line[2],
-                                           contig,
-                                           int(line[4]), int(line[5]),
-                                           is_reverse)
+            features[feature_id] = st.Feature(feature_id, line[1],
+                                              line[2],
+                                              contig,
+                                              int(line[4]), int(line[5]),
+                                              is_reverse)
             if contig not in contigs:
                 contigs.append(contig)
 
@@ -282,7 +227,7 @@ class Organism:
         """internal method to return the RSAT db link"""
         return self.__rsat_info.rsatdb
 
-    def __read_sequences(self, contigs, features, distance):
+    def __read_sequences_upstream(self, contigs, features, distance):
         """for each feature, extract and set its sequence"""
         contig_seqs = {}
         sequences = {}
@@ -292,7 +237,7 @@ class Organism:
 
         for feature_id in features:
             feature = features[feature_id]
-            sequences[feature_id] = seqtools.extract_upstream(
+            sequences[feature_id] = st.extract_upstream(
                 contig_seqs[feature.contig()],
                 feature.start(),
                 feature.end(),
@@ -318,5 +263,5 @@ class Organism:
 
 
 __all__ = ['make_kegg_code_mapper', 'make_go_taxonomy_mapper',
-           'make_rsat_organism_mapper', 'subsequence'
+           'make_rsat_organism_mapper',
            'Organism', 'OrganismFactory']

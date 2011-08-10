@@ -257,6 +257,26 @@ def read_url_cached(url, cache_filename):
         return cached_file.read()
 
 
+class ThesaurusBasedMap:  # pylint: disable-msg=R0903
+    """wrapping a thesaurus and a feature id based map for a flexible
+    lookup container that can use any valid gene alias"""
+
+    def __init__(self, synonyms, wrapped_dict):
+        """create new instance"""
+        self.__thesaurus = synonyms
+        self.__wrapped_dict = wrapped_dict
+
+    def __getitem__(self, key):
+        """override the __getitem__ method for dictionary-like behaviour"""
+        return self.__wrapped_dict[self.__thesaurus[key]]
+
+    def __repr__(self):
+        return repr(self.__wrapped_dict)
+
+    def keys(self):
+        return self.__wrapped_dict.keys()
+
+
 __all__ = ['DelimitedFile', 'best_matching_links', 'quantile', 'make_matrix',
            'DocumentNotFound', 'CMonkeyURLopener', 'read_url',
-           'read_url_cached']
+           'read_url_cached', 'ThesaurusBasedMap']
