@@ -154,8 +154,7 @@ class Organism:
         """returns a map of features for the specified list of genes aliases"""
         return util.ThesaurusBasedMap(
             self.__thesaurus(),
-            self.__read_features_and_contigs(
-                self.__feature_ids_for(gene_aliases))[0])
+            self.__read_features(self.__feature_ids_for(gene_aliases)))
 
     def sequences_for_genes(self, gene_aliases, distance, upstream=True,
                             motif_finding=True):
@@ -191,10 +190,8 @@ class Organism:
                     unique_feature_ids.append(head)
             print "UNIQUE FEATURE IDS"
             print unique_feature_ids
-            features, contigs = self.__read_features_and_contigs(
-                unique_feature_ids)
+            features = self.__read_features(unique_feature_ids)
             print "FEATURES: ", features
-            print "CONTIGS: ", contigs
 
         # TODO: NOW extract the unique sequences for the operons
         get_mapped_locations()
@@ -203,13 +200,11 @@ class Organism:
         """get the gene sequences as a map from feature id -> sequence for
         the given gene aliases
         """
-        features, contigs = self.__read_features_and_contigs(
+        features = self.__read_features(
             self.__feature_ids_for(gene_aliases))
-        logging.info("Contigs: %s", str(contigs))
         logging.info("# Features read: %d", len(features))
         return util.ThesaurusBasedMap(self.__thesaurus(),
-                                      self.__read_sequences_upstream(contigs,
-                                                                     features,
+                                      self.__read_sequences_upstream(features,
                                                                      distance))
 
     def __operon_map(self):
@@ -242,11 +237,11 @@ class Organism:
         synonyms = self.__thesaurus()
         return [synonyms[alias] for alias in gene_aliases if alias in synonyms]
 
-    def __read_features_and_contigs(self, feature_ids):
-        """Returns a (features, contigs) pairs list containing the
-        features and contig information for the specified feature id list"""
+    def __read_features(self, feature_ids):
+        """Returns a list containing the features for the specified feature
+        ids"""
 
-        def add_feature_and_contig(features, contigs, feature_id, line):
+        def read_feature(line):
             """Creates and adds a feature and associated contig from current
             DelimitedFile line"""
             contig = line[3]
@@ -254,41 +249,43 @@ class Organism:
             if line[6] == 'R':
                 is_reverse = True
 
-            features[feature_id] = st.Feature(feature_id, line[1],
-                                              line[2],
-                                              st.Location(contig,
-                                                          int(line[4]),
-                                                          int(line[5]),
-                                                          is_reverse))
-            if contig not in contigs:
-                contigs.append(contig)
+            return st.Feature(line[0], line[1], line[2],
+                              st.Location(contig,
+                                          int(line[4]),
+                                          int(line[5]),
+                                          is_reverse))
 
         features = {}
-        contigs = []
         dfile = util.DelimitedFile.create_from_text(
             self.__rsatdb().get_features(self.species()), comment='--')
         for line in dfile.lines():
             feature_id = line[0]
             if feature_id in feature_ids:
-                add_feature_and_contig(features, contigs, feature_id, line)
-
-        return (features, contigs)
+                features[feature_id] = read_feature(line)
+        return features
 
     def __rsatdb(self):
         """internal method to return the RSAT db link"""
         return self.__rsat_info.rsatdb
 
-    def __read_sequences_upstream(self, contigs, features, distance):
+    def __read_sequences_upstream(self, features, distance):
         """for each feature, extract and set its sequence"""
+        def unique_contigs():
+            result = []
+            for feature in features.values():
+                if feature.location().contig not in result:
+                    result.append(feature.location().contig)
+            return result
+
         contig_seqs = {}
         sequences = {}
-        for contig in contigs:
+        for contig in unique_contigs():
             contig_seqs[contig] = self.__rsatdb().get_contig_sequence(
                 self.species(), contig)
 
-        for feature_id in features:
-            location = features[feature_id].location()
-            sequences[feature_id] = st.extract_upstream(
+        for feature in features.values():
+            location = feature.location()
+            sequences[feature.id()] = st.extract_upstream(
                 contig_seqs[location.contig],
                 location.start,
                 location.end,
