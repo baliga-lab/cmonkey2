@@ -131,28 +131,41 @@ def make_edges_from_predictions(predictions, organism):
     return edges
 
 
+def make_operon_pairs(microbes_online, organism):
+    """returns a list of (head, gene) pairs that were derived from
+    an operon prediction file for an organism from Microbes Online
+    """
+    preds_text = microbes_online.get_operon_predictions_for(
+        organism.taxonomy_id())
+    dfile = util.DelimitedFile.create_from_text(preds_text,
+                                                has_header=True)
+    preds = [(line[2], line[3]) for line in dfile.lines()
+             if line[6] == 'TRUE']
+    return make_edges_from_predictions(preds, organism)
+
+
+def make_operon_map(microbes_online, organism):
+    pairs = make_operon_pairs(microbes_online, organism)
+    result = {}
+    for head, gene in pairs:
+        result[gene] = head
+    return result
+
+
 def get_network_factory(microbes_online):
     """function to create a network factory method"""
     def make_network(organism):
         """factory method to create a network from operon predictions"""
         logging.info("MicrobesOnline - make_network()")
-        preds_text = microbes_online.get_operon_predictions_for(
-            organism.taxonomy_id())
-        dfile = util.DelimitedFile.create_from_text(preds_text,
-                                                    has_header=True)
-        preds = [(line[2], line[3]) for line in dfile.lines()
-                 if line[6] == 'TRUE']
-        # pred_edges is a list of (head, gene) pairs which
+        # operon_map is a list of (head, gene) pairs which
         # represent an operon relationship for each gene
-        # TODO: make the operon relationship reusable, so it can be
-        # used in motifing too
-        pred_edges = make_edges_from_predictions(preds, organism)
+        operon_pairs = make_operon_pairs(microbes_online, organism)
         # this is the part that does not work
         edges = [network.NetworkEdge(edge[0], edge[1], 1000)
-                 for edge in pred_edges]
+                 for edge in operon_pairs]
         return network.Network.create('operons', edges)
 
     return make_network
 
 
-__all__ = ['MicrobesOnline', 'get_network_factory']
+__all__ = ['MicrobesOnline', 'get_network_factory', 'make_operon_pairs']
