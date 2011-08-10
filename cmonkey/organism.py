@@ -168,7 +168,6 @@ class Organism:
     def __operon_sequences_for_genes(self, gene_aliases, distance):
         """returns a map of the gene_aliases to the feature-
         sequence tuple that they are actually mapped to.
-        Currently, there is no synonym translation
         """
         def get_operon_pairs():
             """Extract the (gene, head) pairs that are actually used"""
@@ -183,21 +182,23 @@ class Organism:
                     logging.info("alias '%s' not found in thesaurus", alias)
             return operon_pairs
 
-        def get_mapped_locations():
-            """extract the sequences that were actually used"""
-            operon_pairs = get_operon_pairs()
+        def get_unique_sequences(operon_pairs):
+            """Returns the unique sequences for the specified operon pairs"""
             unique_feature_ids = []
             for _, head in operon_pairs:
                 if head not in unique_feature_ids:
                     unique_feature_ids.append(head)
             features = self.__read_features(unique_feature_ids)
-            seqs = self.__read_sequences(features, distance,
+            return self.__read_sequences(features, distance,
                                          st.extract_upstream)
-            print "FEATURES: ", features
-            print "SEQS: ", seqs
 
-        # TODO: NOW extract the unique sequences for the operons
-        get_mapped_locations()
+        operon_pairs = get_operon_pairs()
+        unique_seqs = get_unique_sequences(operon_pairs)
+        outseqs = {}
+        for gene, head in operon_pairs:
+            outseqs[gene] = unique_seqs[head]
+        return outseqs
+
 
     def sequences_for_genes_upstream(self, gene_aliases, distance):
         """get the gene sequences as a map from feature id -> sequence for

@@ -16,3 +16,4 @@ def compute_scores(organism, membership):
     genes = sorted(membership.rows_for_cluster(1))
     seqs = organism.sequences_for_genes(genes, DISTANCE_UPSTREAM_SEARCH,
                                         upstream=True, motif_finding=True)
+    print seqs
