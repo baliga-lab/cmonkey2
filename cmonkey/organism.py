@@ -150,11 +150,17 @@ class Organism:
             result.append(make_network(self))
         return result
 
+    def feature_ids_for(self, gene_aliases):
+        """Helper method to retrieve a list of feature_ids for the
+        specified alias list"""
+        synonyms = self.__thesaurus()
+        return [synonyms[alias] for alias in gene_aliases if alias in synonyms]
+
     def features_for_genes(self, gene_aliases):
         """returns a map of features for the specified list of genes aliases"""
         return util.ThesaurusBasedMap(
             self.__thesaurus(),
-            self.__read_features(self.__feature_ids_for(gene_aliases)))
+            self.__read_features(self.feature_ids_for(gene_aliases)))
 
     def sequences_for_genes(self, gene_aliases, distance, upstream=True,
                             motif_finding=True):
@@ -199,13 +205,12 @@ class Organism:
             outseqs[gene] = unique_seqs[head]
         return outseqs
 
-
     def sequences_for_genes_upstream(self, gene_aliases, distance):
         """get the gene sequences as a map from feature id -> sequence for
         the given gene aliases
         """
         features = self.__read_features(
-            self.__feature_ids_for(gene_aliases))
+            self.feature_ids_for(gene_aliases))
         logging.info("# Features read: %d", len(features))
         return util.ThesaurusBasedMap(
             self.__thesaurus(),
@@ -234,12 +239,6 @@ class Organism:
             self.__synonyms = thesaurus.create_from_rsat_feature_names(
                 feature_names_dfile, [thesaurus.strip_vng_modification])
         return self.__synonyms
-
-    def __feature_ids_for(self, gene_aliases):
-        """Helper method to retrieve a list of feature_ids for the
-        specified alias list"""
-        synonyms = self.__thesaurus()
-        return [synonyms[alias] for alias in gene_aliases if alias in synonyms]
 
     def __read_features(self, feature_ids):
         """Returns a list containing the features for the specified feature

@@ -7,6 +7,7 @@ import util
 import datamatrix as dm
 import microarray
 import organism as org
+import meme
 import motif
 import microbes_online
 import stringdb
@@ -211,7 +212,8 @@ def run_cmonkey():
     #print cscores
 
     # 2. compute motif scores
-    motif.compute_scores(organism, membership)
+    meme_suite = meme.MemeSuite()
+    motif.compute_scores(meme_suite, organism, membership)
 
     # uncomment me
     #algorithm = CMonkey(organism, dm.DataMatrixCollection([matrix]))
