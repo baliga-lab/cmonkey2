@@ -26,7 +26,8 @@ class MemeSuite:
         def process_with_dust(seqs):
             """data conversion from and to dust tool"""
             dust_tmp_file = None
-            with tempfile.NamedTemporaryFile(delete=False) as dust_input:
+            with tempfile.NamedTemporaryFile(prefix='dust',
+                                             delete=False) as dust_input:
                 for feature_id, seq in seqs.items():
                     dust_input.write(">%s\n" % feature_id)
                     dust_input.write("%s\n" % seq[1])
