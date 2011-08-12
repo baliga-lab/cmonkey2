@@ -7,6 +7,8 @@ import unittest
 import seqtools as st
 import organism as org
 import microbes_online as mo
+import util
+import thesaurus as th
 
 
 class MockMicrobesOnline:
@@ -24,9 +26,10 @@ class MockMicrobesOnline:
 
 class MockOrganism:
     """mock Organism class"""
-    def __init__(self, taxonomy_id, feature_map):
+    def __init__(self, taxonomy_id, feature_map, synonyms=None):
         self.__taxonomy_id = taxonomy_id
         self.__feature_map = feature_map
+        self.__synonyms = synonyms
 
     def taxonomy_id(self):
         return self.__taxonomy_id
@@ -36,6 +39,33 @@ class MockOrganism:
 
     def feature_id_for(self, gene_alias):
         return gene_alias
+
+
+class MockOrganismWithSynonyms:
+    """mock organism class with synonyms"""
+    def __init__(self, taxonomy_id, feature_map, synonyms):
+        self.__taxonomy_id = taxonomy_id
+        self.__feature_map = feature_map
+        self.__synonyms = synonyms
+
+    def taxonomy_id(self):
+        return self.__taxonomy_id
+
+    def features_for_genes(self, gene_names):
+        if self.__synonyms:
+            result = {}
+            for alias in gene_names:
+                feature_id = self.__synonyms[alias]
+                result[feature_id] = self.__feature_map[feature_id]
+            return util.ThesaurusBasedMap(self.__synonyms, result)
+        else:
+            return self.__feature_map
+
+    def feature_id_for(self, gene_alias):
+        if self.__synonyms:
+            return self.__synonyms[gene_alias]
+        else:
+            return gene_alias
 
 
 class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -112,3 +142,43 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
                   }))
         self.assertEquals(5, network.num_edges())
         self.assertEquals(5000, network.total_score())
+
+
+class MakeOperonPairsTest(unittest.TestCase):
+    """integration test for operon pair creation"""
+
+    def __make_organism(self):
+        """makes a mock organism with almost real data"""
+        features = {}
+        dfile = util.DelimitedFile.read('testdata/Halobacterium_sp_features',
+                                        comment='--')
+        for line in dfile.lines():
+            features[line[0]] = st.Feature(line[0], line[1], line[2],
+                                           st.Location(line[3],
+                                                       int(line[4]),
+                                                       int(line[5]),
+                                                       line[6] == 'R'))
+        tfile = util.DelimitedFile.read(
+            'testdata/Halobacterium_sp_feature_names', comment='--')
+        synonyms = th.create_from_rsat_feature_names(tfile)
+        return MockOrganismWithSynonyms('64091', features, synonyms)
+
+    def __make_ref_operon_pairs(self):
+        """returns reference operon pairs for comparison"""
+        reffile = util.DelimitedFile.read(
+            'testdata/operon_reftable.tsv', has_header=True, quote='"')
+        refpairs = []
+        for line in reffile.lines():
+            refpairs.append((line[1], line[2]))
+        return refpairs
+
+    def test_make_operon_pairs(self):
+        """test the make_operon_pairs() function in integration"""
+        mo_db = MockMicrobesOnline('testdata/gnc64091_ref.named')
+        organism = self.__make_organism()
+        pairs = mo.make_operon_pairs(mo_db, organism)
+        refpairs = self.__make_ref_operon_pairs()
+
+        self.assertEquals(len(pairs), len(refpairs))
+        for i in range(len(pairs)):
+            self.assertEquals(refpairs[i], pairs[i])

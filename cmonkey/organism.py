@@ -183,7 +183,14 @@ class Organism:
             for alias in gene_aliases:
                 if alias in synonyms:
                     gene = synonyms[alias]
-                    operon_pairs.append((gene, operon_map[gene]))
+                    if gene in operon_map:
+                        logging.info("gene '%s' [alias '%s'] found in " +
+                                     "operon map -> '%s'",
+                                     gene, alias, operon_map[gene])
+                        operon_pairs.append((gene, operon_map[gene]))
+                    else:
+                        logging.info("gene '%s' [alias '%s'] not found in " +
+                                     "operon map", gene, alias)
                 else:
                     logging.info("alias '%s' not found in thesaurus", alias)
             return operon_pairs

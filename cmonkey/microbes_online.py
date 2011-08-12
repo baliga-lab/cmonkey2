@@ -2,6 +2,8 @@
 For organisms that have operons, cMonkey can read use operon predictions
 to improve its scoring. This module defines access to prediction data through
 various services.
+Note: This module uses VNG names, mostly to be easily comparable
+----- with the reference cMonkey implementation.
 
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.

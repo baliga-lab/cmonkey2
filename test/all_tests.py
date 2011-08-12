@@ -44,6 +44,7 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(tht.DelimitedFileFactoryTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(opnwt.ReadOperonNetworkTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(opnwt.MakeOperonPairsTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(nwt.NetworkEdgeTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(nwt.NetworkTest))

@@ -20,11 +20,12 @@ def compute_scores(meme_suite, organism, membership):
         """filter out redundant and low-complexity sequences"""
         unique_seqs = {}
         for feature_id in sorted_feature_ids:
-            if seqs[feature_id] not in unique_seqs.values():
+            if (feature_id in seqs
+                and seqs[feature_id] not in unique_seqs.values()):
                 unique_seqs[feature_id] = seqs[feature_id]
         return meme_suite.remove_low_complexity(unique_seqs)
 
-    for cluster in [1, 2]:
+    for cluster in [2]:
         genes = sorted(membership.rows_for_cluster(cluster))
         feature_ids = organism.feature_ids_for(genes)
         seqs = organism.sequences_for_genes(genes, DISTANCE_UPSTREAM_SEARCH,
@@ -32,7 +33,8 @@ def compute_scores(meme_suite, organism, membership):
         seqs = filter_sequences(meme_suite, feature_ids, seqs)
         if (len(seqs) >= MIN_CLUSTER_ROWS_ALLOWED
             and len(seqs) <= MIN_CLUSTER_ROWS_ALLOWED):
-            logging.info("# seqs (= %d) within limits, continue processing")
+            logging.info("# seqs (= %d) within limits, continue processing",
+                         len(seqs))
         else:
             logging.info("# seqs (= %d) outside of defined limits, skipping " +
                          "cluster %d", len(seqs), cluster)
