@@ -32,7 +32,7 @@ def compute_scores(meme_suite, organism, membership):
                                             upstream=True, motif_finding=True)
         seqs = filter_sequences(meme_suite, feature_ids, seqs)
         if (len(seqs) >= MIN_CLUSTER_ROWS_ALLOWED
-            and len(seqs) <= MIN_CLUSTER_ROWS_ALLOWED):
+            and len(seqs) <= MAX_CLUSTER_ROWS_ALLOWED):
             logging.info("# seqs (= %d) within limits, continue processing",
                          len(seqs))
         else:

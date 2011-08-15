@@ -167,19 +167,19 @@ class Organism:
         """The default sequence retrieval for microbes is to
         fetch their operon sequences"""
         if upstream and motif_finding:
-            return self.__operon_sequences_for_genes(gene_aliases, distance)
+            return self.__operon_shifted_seqs_for(gene_aliases, distance)
         else:
             raise Error('not supported yet')
 
-    def __operon_sequences_for_genes(self, gene_aliases, distance):
+    def __operon_shifted_seqs_for(self, gene_aliases, distance):
         """returns a map of the gene_aliases to the feature-
         sequence tuple that they are actually mapped to.
         """
-        def get_operon_pairs():
+        def do_operon_shift():
             """Extract the (gene, head) pairs that are actually used"""
             operon_map = self.__operon_map()
             synonyms = self.__thesaurus()
-            operon_pairs = []
+            shifted_pairs = []
             for alias in gene_aliases:
                 if alias in synonyms:
                     gene = synonyms[alias]
@@ -187,15 +187,18 @@ class Organism:
                         logging.info("gene '%s' [alias '%s'] found in " +
                                      "operon map -> '%s'",
                                      gene, alias, operon_map[gene])
-                        operon_pairs.append((gene, operon_map[gene]))
+                        shifted_pairs.append((gene, operon_map[gene]))
                     else:
-                        logging.info("gene '%s' [alias '%s'] not found in " +
-                                     "operon map", gene, alias)
+                        logging.info("no operon found for gene '%s' " + 
+                                     "[alias '%s'] - using gene",
+                                     gene, alias)
+                        shifted_pairs.append((gene, gene))
+
                 else:
                     logging.info("alias '%s' not found in thesaurus", alias)
-            return operon_pairs
+            return shifted_pairs
 
-        def get_unique_sequences(operon_pairs):
+        def unique_sequences(operon_pairs):
             """Returns the unique sequences for the specified operon pairs"""
             unique_feature_ids = []
             for _, head in operon_pairs:
@@ -205,10 +208,10 @@ class Organism:
             return self.__read_sequences(features, distance,
                                          st.extract_upstream)
 
-        operon_pairs = get_operon_pairs()
-        unique_seqs = get_unique_sequences(operon_pairs)
+        shifted_pairs = do_operon_shift()
+        unique_seqs = unique_sequences(shifted_pairs)
         outseqs = {}
-        for gene, head in operon_pairs:
+        for gene, head in shifted_pairs:
             outseqs[gene] = unique_seqs[head]
         return outseqs
 
