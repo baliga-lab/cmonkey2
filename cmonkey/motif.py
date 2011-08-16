@@ -8,13 +8,13 @@ more information and licensing details.
 import logging
 
 
-DISTANCE_UPSTREAM_SEARCH = (-20, 150)
-DISTANCE_UPSTREAM_SCAN = (-30, 150)
+DISTANCE_UPSTREAM_SEARCH = (-20, 150) # used to select sequences
+DISTANCE_UPSTREAM_SCAN = (-30, 150) # used for background distribution
 MIN_CLUSTER_ROWS_ALLOWED = 3
 MAX_CLUSTER_ROWS_ALLOWED = 70
 
 
-def compute_scores(meme_suite, organism, membership):
+def compute_scores(meme_suite, organism, membership, used_sequences):
     """compute motif scores"""
     def filter_sequences(meme_suite, sorted_feature_ids, seqs):
         """filter out redundant and low-complexity sequences"""
@@ -29,12 +29,13 @@ def compute_scores(meme_suite, organism, membership):
         genes = sorted(membership.rows_for_cluster(cluster))
         feature_ids = organism.feature_ids_for(genes)
         seqs = organism.sequences_for_genes(genes, DISTANCE_UPSTREAM_SEARCH,
-                                            upstream=True, motif_finding=True)
+                                            upstream=True)
         seqs = filter_sequences(meme_suite, feature_ids, seqs)
         if (len(seqs) >= MIN_CLUSTER_ROWS_ALLOWED
             and len(seqs) <= MAX_CLUSTER_ROWS_ALLOWED):
             logging.info("# seqs (= %d) within limits, continue processing",
                          len(seqs))
+            meme_suite.run_meme(seqs.values())
         else:
             logging.info("# seqs (= %d) outside of defined limits, skipping " +
                          "cluster %d", len(seqs), cluster)

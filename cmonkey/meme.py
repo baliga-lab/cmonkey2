@@ -47,6 +47,23 @@ class MemeSuite:
                 seqs_for_dust[feature_id] = seq
         return process_with_dust(seqs_for_dust)
 
+    def run_meme(self, seqs):
+        """Runs the meme tool"""
+        def make_seqs():
+            meme_input_seqs = []
+            for seq in seqs:
+                if seq not in meme_input_seqs:
+                    meme_input_seqs.append(seq)
+                rcseq = st.revcomp(seq)
+                if rcseq not in meme_input_seqs:
+                    meme_input_seqs.append(rcseq)
+            return meme_input_seqs
+
+        logging.info("run_meme() - # seqs = %d", len(seqs))
+        bg = st.markov_background(make_seqs(), 3)
+        #for row in bg:
+        #    print row
+
     def dust(self, fasta_file_path):
         """runs the dust command on the specified FASTA file and
         returns a list of sequences"""

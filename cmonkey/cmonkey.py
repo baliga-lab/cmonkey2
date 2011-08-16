@@ -204,6 +204,13 @@ def run_cmonkey():
 
     organism = org_factory.create(sys.argv[2])
 
+    # precompute the sequences for all genes that are referenced in the
+    # input ratios, they are used as a basis to compute the background
+    # distribution for every cluster
+    used_seqs = organism.sequences_for_genes(sorted(matrix.row_names()),
+                                             motif.DISTANCE_UPSTREAM_SCAN,
+                                             upstream=True)
+
     # One iteration
     # 1. compute microarray scores
     #microarray.compute_row_scores(membership, matrix, NUM_CLUSTERS)
@@ -213,7 +220,7 @@ def run_cmonkey():
 
     # 2. compute motif scores
     meme_suite = meme.MemeSuite()
-    motif.compute_scores(meme_suite, organism, membership)
+    motif.compute_scores(meme_suite, organism, membership, used_seqs)
 
     # uncomment me
     #algorithm = CMonkey(organism, dm.DataMatrixCollection([matrix]))

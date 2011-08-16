@@ -154,6 +154,9 @@ class Organism:
         """Helper method to retrieve a list of feature_ids for the
         specified alias list"""
         synonyms = self.__thesaurus()
+        for alias in synonyms:
+            if alias not in synonyms:
+                logging.warn("gene '%s' not contained in feature_names.tab")
         return [synonyms[alias] for alias in gene_aliases if alias in synonyms]
 
     def features_for_genes(self, gene_aliases):
@@ -162,11 +165,10 @@ class Organism:
             self.__thesaurus(),
             self.__read_features(self.feature_ids_for(gene_aliases)))
 
-    def sequences_for_genes(self, gene_aliases, distance, upstream=True,
-                            motif_finding=True):
+    def sequences_for_genes(self, gene_aliases, distance, upstream=True):
         """The default sequence retrieval for microbes is to
         fetch their operon sequences"""
-        if upstream and motif_finding:
+        if upstream:
             return self.__operon_shifted_seqs_for(gene_aliases, distance)
         else:
             raise Error('not supported yet')
