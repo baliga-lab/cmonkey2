@@ -35,7 +35,7 @@ def compute_scores(meme_suite, organism, membership, used_sequences):
             and len(seqs) <= MAX_CLUSTER_ROWS_ALLOWED):
             logging.info("# seqs (= %d) within limits, continue processing",
                          len(seqs))
-            background_sequences = meme_suite.run_meme(seqs, used_sequences)
+            meme_suite.run_meme(seqs, used_sequences)
         else:
             logging.info("# seqs (= %d) outside of defined limits, skipping " +
                          "cluster %d", len(seqs), cluster)

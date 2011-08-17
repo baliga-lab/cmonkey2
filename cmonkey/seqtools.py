@@ -168,12 +168,11 @@ def read_sequences_from_fasta_file(filepath):
     return read_sequences_from_fasta_string(fasta_string)
 
 
-def write_sequences_to_fasta_file(seqs, filepath):
+def write_sequences_to_fasta_file(outputfile, seqs):
     """Write a list of sequence tuples to the specified outputfile"""
-    with open(filepath, 'w') as outputfile:
-        for seq in seqs:
-            outputfile.write('>%s\n' % seq[0])
-            outputfile.write('%s\n' % seq[1])
+    for seq in seqs:
+        outputfile.write('>%s\n' % seq[0])
+        outputfile.write('%s\n' % seq[1])
 
 __all__ = ['subsequence', 'extract_upstream', 'markov_background',
            'read_sequences_from_fasta_string',

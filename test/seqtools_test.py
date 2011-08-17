@@ -128,6 +128,7 @@ class FastaTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_write_sequences_to_fasta_file(self):
         """Tests writing to a FASTA file"""
         seqs = st.read_sequences_from_fasta_file('testdata/fasta_test.fa')
-        st.write_sequences_to_fasta_file(seqs, '/tmp/fasta_tmp.fa')
+        with open('/tmp/fasta_tmp.fa', 'w') as outputfile:
+            st.write_sequences_to_fasta_file(outputfile, seqs)
         seqs2 = st.read_sequences_from_fasta_file('/tmp/fasta_tmp.fa')
         self.assertEquals(seqs, seqs2)
