@@ -152,3 +152,17 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEqual(0.0930750, result[0])
         self.assertAlmostEqual(-0.255575, result[1])
         self.assertAlmostEqual(0.2238883025, result[2])
+
+class Order2StringTest(unittest.TestCase):  # pylint: disable-msg=R0904
+    """Test class for order2string"""
+
+    def test_order2string(self):
+        self.assertEquals("1st", util.order2string(1))
+        self.assertEquals("2nd", util.order2string(2))
+        self.assertEquals("3rd", util.order2string(3))
+        self.assertEquals("4th", util.order2string(4))
+        self.assertEquals("11th", util.order2string(11))
+        self.assertEquals("12th", util.order2string(12))
+        self.assertEquals("21st", util.order2string(21))
+        self.assertEquals("22nd", util.order2string(22))
+        self.assertEquals("23rd", util.order2string(23))

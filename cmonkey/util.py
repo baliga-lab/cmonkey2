@@ -278,6 +278,17 @@ class ThesaurusBasedMap:  # pylint: disable-msg=R0903
         return self.__wrapped_dict.keys()
 
 
+def order2string(order):
+    """returns the string representation for an order, e.g. 1st, 2nd etc."""
+    if order % 10 == 1 and order != 11:
+        return "%dst" % order
+    elif order % 10 == 2 and order != 12:
+        return "%dnd" % order
+    elif order % 10 == 3 and order != 13:
+        return "%drd" % order
+    else:
+        return "%dth" % order
+
 __all__ = ['DelimitedFile', 'best_matching_links', 'quantile', 'make_matrix',
            'DocumentNotFound', 'CMonkeyURLopener', 'read_url',
            'read_url_cached', 'ThesaurusBasedMap']

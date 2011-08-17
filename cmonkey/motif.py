@@ -8,8 +8,8 @@ more information and licensing details.
 import logging
 
 
-DISTANCE_UPSTREAM_SEARCH = (-20, 150) # used to select sequences
-DISTANCE_UPSTREAM_SCAN = (-30, 150) # used for background distribution
+DISTANCE_UPSTREAM_SEARCH = (-20, 150)  # used to select sequences
+DISTANCE_UPSTREAM_SCAN = (-30, 250)    # used for background distribution
 MIN_CLUSTER_ROWS_ALLOWED = 3
 MAX_CLUSTER_ROWS_ALLOWED = 70
 
@@ -35,7 +35,7 @@ def compute_scores(meme_suite, organism, membership, used_sequences):
             and len(seqs) <= MAX_CLUSTER_ROWS_ALLOWED):
             logging.info("# seqs (= %d) within limits, continue processing",
                          len(seqs))
-            meme_suite.run_meme(seqs.values())
+            background_sequences = meme_suite.run_meme(seqs, used_sequences)
         else:
             logging.info("# seqs (= %d) outside of defined limits, skipping " +
                          "cluster %d", len(seqs), cluster)

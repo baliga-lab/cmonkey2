@@ -30,6 +30,7 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ut.UtilsTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ut.LevenshteinDistanceTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ut.BestMatchingLinksTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ut.Order2StringTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ot.KeggOrganismCodeMapperTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ot.RsatOrganismMapperTest))

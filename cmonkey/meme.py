@@ -10,15 +10,17 @@ import tempfile
 import logging
 import seqtools as st
 import os
+import util
 
 
 class MemeSuite:
     """Regard the meme suite as a unit of tools. This helps
     us capturing things like versions, global settings and data
     passing"""
-    def __init__(self, max_width=24):
+    def __init__(self, max_width=24, use_revcomp=True):
         """Create MemeSuite instance"""
         self.__max_width = max_width
+        self.__use_revcomp = use_revcomp
 
     def remove_low_complexity(self, seqs):
         """send sequences through dust filter, send only those
@@ -47,22 +49,52 @@ class MemeSuite:
                 seqs_for_dust[feature_id] = seq
         return process_with_dust(seqs_for_dust)
 
-    def run_meme(self, seqs):
-        """Runs the meme tool"""
-        def make_seqs():
+    def run_meme(self, input_seqs, all_seqs):
+        """Runs the meme tool. input_seqs is a dictionary of
+        (feature_id : (location, sequence)) that are to be provided as meme
+        input, all_seqs is a dictionary that provides all sequences used
+        in the cMonkey run, which will be used to compute background
+        distribution"""
+        def add_if_unique(meme_input_seqs, seq):
+            """add the sequence to the list only if it does not exist"""
+            if seq not in meme_input_seqs:
+                meme_input_seqs.append(seq)
+
+        def make_seqs(seqs):
+            """prepare the input sequences for feeding into meme.
+            This means only taking the unique sequences and rever"""
             meme_input_seqs = []
-            for seq in seqs:
-                if seq not in meme_input_seqs:
-                    meme_input_seqs.append(seq)
-                rcseq = st.revcomp(seq)
-                if rcseq not in meme_input_seqs:
-                    meme_input_seqs.append(rcseq)
+            for locseq in seqs.values():
+                seq = locseq[1]
+                add_if_unique(meme_input_seqs, seq)
+                if self.__use_revcomp:
+                    add_if_unique(meme_input_seqs, st.revcomp(seq))
             return meme_input_seqs
 
-        logging.info("run_meme() - # seqs = %d", len(seqs))
-        bg = st.markov_background(make_seqs(), 3)
-        #for row in bg:
-        #    print row
+        def background_seqs():
+            """return all sequences to be used for background calculation"""
+            return {feature_id: all_seqs[feature_id]
+                    for feature_id in all_seqs if feature_id not in input_seqs}
+
+        def make_background_file():
+            """create a meme background file and returns its name"""
+            bgseqs = background_seqs()
+            bgfilename = None
+            bgmodel = st.markov_background(make_seqs(bgseqs), 3)
+            with tempfile.NamedTemporaryFile(prefix='memebg',
+                                             delete=False) as outfile:
+                bgfilename = outfile.name
+                outfile.write("# %s order Markov background model\n" %
+                              util.order2string(len(bgmodel) - 1))
+                for order_row in bgmodel:
+                    for seq, frequency in order_row.items():
+                        outfile.write('%s %10s\n' %
+                                      (seq, str(round(frequency, 8))))
+            return bgfilename
+
+        logging.info("run_meme() - # seqs = %d", len(input_seqs))
+        bgfilename = make_background_file()
+        logging.info("created background file in %s", bgfilename)
 
     def dust(self, fasta_file_path):
         """runs the dust command on the specified FASTA file and

@@ -171,7 +171,7 @@ class Organism:
         if upstream:
             return self.__operon_shifted_seqs_for(gene_aliases, distance)
         else:
-            raise Error('not supported yet')
+            raise Exception('not supported yet')
 
     def __operon_shifted_seqs_for(self, gene_aliases, distance):
         """returns a map of the gene_aliases to the feature-
@@ -191,7 +191,7 @@ class Organism:
                                      gene, alias, operon_map[gene])
                         shifted_pairs.append((gene, operon_map[gene]))
                     else:
-                        logging.info("no operon found for gene '%s' " + 
+                        logging.info("no operon found for gene '%s' " +
                                      "[alias '%s'] - using gene",
                                      gene, alias)
                         shifted_pairs.append((gene, gene))
