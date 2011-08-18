@@ -147,15 +147,14 @@ class MemeSuite:
 class MemeMotifInfo:
     """Only a motif's info line, the
     probability matrix and the site information is relevant"""
-    def __init__(self, width, num_sites, llr, evalue):
+    def __init__(self, width, num_sites, llr, evalue, sites, pssm):
         """Creates a MemeMotifInfo instance"""
         self.__width = width
         self.__num_sites = num_sites
         self.__llr = llr
         self.__evalue = evalue
-
-        self.__pssm = None
-        self.__site_info = None
+        self.__sites = sites
+        self.__pssm = pssm
 
     def width(self):
         """Returns the width"""
@@ -173,8 +172,12 @@ class MemeMotifInfo:
         """returns the e value"""
         return self.__evalue
 
+    def sites(self):
+        """returns the sites"""
+        return self.__sites
 
-def read_meme_output(output_file):
+
+def read_meme_output(output_file, num_motifs):
     """Reads meme output file into a list of MotifInfo objects"""
     def extract_regex(pattern, infoline):
         """generic info line field extraction based on regex"""
@@ -197,22 +200,84 @@ def read_meme_output(output_file):
         """extract the e-value from the info line"""
         return float(extract_regex('E-value =\s+\S+', infoline))
 
-    def next_info_line(start_index, lines):
-        """finds the index of the next info line"""
-        line_index = start_index
+    def next_info_line(motif_number, lines):
+        """finds the index of the next info line for the specified motif number
+        1-based """
+        line_index = 0
         current_line = lines[line_index]
-        while not current_line.startswith('MOTIF'):
+        pattern = re.compile('MOTIF\s+' + str(motif_number))
+        while not pattern.match(current_line):
             line_index += 1
             current_line = lines[line_index]
         return line_index
 
+    def next_regex_index(pat, start_index, lines):
+        """finds the index of the next motif site"""
+        line_index = start_index
+        pattern = re.compile(pat)
+        current_line = lines[line_index]
+        while not pattern.match(current_line):
+            line_index += 1
+            current_line = lines[line_index]
+        return line_index
+
+    def next_sites_index(start_index, lines):
+        """returns the next sites index"""
+        return next_regex_index('[\t]Motif \d+ sites sorted by position ' +
+                                'p-value',
+                                start_index, lines)
+
+    def read_sites(start_index, lines):
+        """reads the sites"""
+        sites_index = next_sites_index(start_index, lines)
+        pattern = re.compile("(\S+)\s+([+-])\s+(\d+)\s+(\S+)\s+\S+ (\S+) \S+")
+        current_index = sites_index + 4
+        line = lines[current_index]
+        sites = []
+        while not line.startswith('----------------------'):
+            match = pattern.match(line)
+            sites.append((match.group(1), match.group(2), int(match.group(3)),
+                          float(match.group(4)), match.group(5)))
+            current_index += 1
+            line = lines[current_index]
+        return sites
+
+    def read_pssm(start_index, lines):
+        """reads the PSSM, in this case it's what is called the probability
+        matrix in the meme output"""
+        pssm_index = next_pssm_index(start_index, lines)
+        current_index = pssm_index + 3
+        line = lines[current_index]
+        pattern = re.compile("\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)")
+        rows = []
+        while not line.startswith('----------------------'):
+            match = pattern.match(line)
+            rows.append([float(match.group(1)), float(match.group(2)),
+                         float(match.group(3)), float(match.group(4))])
+            current_index += 1
+            line = lines[current_index]
+        return rows
+
+    def next_pssm_index(start_index, lines):
+        """determines the next PSSM start index"""
+        return next_regex_index('[\t]Motif \d+ position-specific ' +
+                                'probability matrix', start_index, lines)
+
+    def read_motif_info(motif_number, lines):
+        """Reads the MemeMotifInfo with the specified number from the input"""
+        info_line_index = next_info_line(motif_number, lines)
+        info_line = lines[info_line_index]
+        return MemeMotifInfo(extract_width(info_line),
+                             extract_num_sites(info_line),
+                             extract_llr(info_line),
+                             extract_evalue(info_line),
+                             read_sites(info_line_index + 1, lines),
+                             read_pssm(info_line_index + 1, lines))
+
     lines = output_file.readlines()
-    info_line_index = next_info_line(0, lines)
-    info_line = lines[info_line_index]
-    info = MemeMotifInfo(extract_width(info_line),
-                         extract_num_sites(info_line),
-                         extract_llr(info_line),
-                         extract_evalue(info_line))
-    return [info]
+    result = []
+    for motif_number in range(1, num_motifs + 1):
+        result.append(read_motif_info(motif_number, lines))
+    return result
 
 __all__ = ['read_meme_output']
