@@ -17,11 +17,23 @@ import re
 class MemeSuite:
     """Regard the meme suite as a unit of tools. This helps
     us capturing things like versions, global settings and data
-    passing"""
+    passing
+    These represent the command line tools and currently are specific
+    for 4.3.0, in 4.6.1 the interface has changed, later the MemeSuite
+    will take a MemeSuiteVersion object to make these changes transparent.
+
+    dust - remove low-complexity regions or sequence repeats
+    meme - discover motifs in a set of sequences
+    mast - search for a group of motifs in a set of sequences
+    """
     def __init__(self, max_width=24, use_revcomp=True):
         """Create MemeSuite instance"""
         self.__max_width = max_width
         self.__use_revcomp = use_revcomp
+
+    def max_width(self):
+        """returns the max_width attribute"""
+        return self.__max_width
 
     def remove_low_complexity(self, seqs):
         """send sequences through dust filter, send only those
@@ -105,43 +117,60 @@ class MemeSuite:
             return filename
 
         logging.info("run_meme() - # seqs = %d", len(input_seqs))
+        logging.info("# all seqs = %d", len(all_seqs))
         bgfile = make_background_file()
         logging.info("created background file in %s", bgfile)
         seqfile = make_sequence_file()
         logging.info("created sequence file in %s", seqfile)
-        meme_command = self.meme(seqfile, bgfile)
-        logging.info("running: %s", meme_command)
+        motif_infos = self.meme(seqfile, bgfile)
+        print motif_infos
 
     def dust(self, fasta_file_path):
         """runs the dust command on the specified FASTA file and
-        returns a list of sequences"""
+        returns a list of sequences. It is assumed that dust has
+        a very simple interface: FASTA in, output on stdout"""
         output = subprocess.check_output(['dust', fasta_file_path])
         return output
 
     def meme(self, infile_path, bgfile_path, num_motifs=2,
              pspfile_path=None):
-        """runs the meme command on the specified input file, background file
-        and positional priors file"""
-        cmd_str = ("meme %s -bfile %s -time 600 -dna -revcomp " +
-                   "-maxsize 9999999 -nmotifs %d -evt 1e9 -minw 6 -maxw %d " +
-                   "-mod zoops -nostatus -text")
-        command = None
-        if pspfile_path:
-            cmd_str += ' -psp %s'
-            command = cmd_str % (infile_path, bgfile_path, num_motifs,
-                                 self.__max_width, pspfile_path)
-        else:
-            command = cmd_str % (infile_path, bgfile_path, num_motifs,
-                                 self.__max_width)
-        return command
+        """Please implement me"""
+        logging.error("MemeSuite.meme() - please implement me")
 
     def mast(self, meme_outfile_path, database_file_path,
-             background_file_path):
+             bgfile_path):
+        """Please implement me"""
+        logging.error("MemeSuite.mast() - please implement me")
+
+
+class MemeSuite430(MemeSuite):
+    """Version 4.3.0 of MEME"""
+
+    def meme(self, infile_path, bgfile_path, num_motifs=2,
+             pspfile_path=None):
+        """runs the meme command on the specified input file, background file
+        and positional priors file. Returns a list of MemeMotifInfo objects
+        """
+        command = ['meme', infile_path, '-bfile', bgfile_path,
+                   '-time', '600', '-dna', '-revcomp',
+                   '-maxsize', '9999999', '-nmotifs', str(num_motifs),
+                   '-evt', '1e9', '-minw', '6', '-maxw', str(self.max_width()),
+                   '-mod',  'zoops', '-nostatus', '-text']
+
+        if pspfile_path:
+            command.append(['-psp', pspfile_path])
+
+        logging.info("running: %s", " ".join(command))
+        output = subprocess.check_output(command)
+        return read_meme_output(output, num_motifs)
+
+    def mast(self, meme_outfile_path, database_file_path,
+             bgfile_path):
         """runs the mast command"""
-        command = ("mast %s -d %s -bfile %s -nostatus -stdout -text -brief " +
-                   "-ev 99999 -mev 99999 -mt 0.99 -seqp " +
-                   "-remcorr") % (meme_outfile_path, database_file_path,
-                                  background_file_path)
+        command = ['mast', meme_outfile_path, '-d', database_file_path,
+                   '-bfile', bgfile_path, '-nostatus', '-stdout', '-text',
+                   '-brief', '-ev', '99999', '-mev', '99999', '-mt', '0.99',
+                   '-seqp', '-remcorr']
 
 
 class MemeMotifInfo:
@@ -176,8 +205,14 @@ class MemeMotifInfo:
         """returns the sites"""
         return self.__sites
 
+    def __repr__(self):
+        """returns the string representation"""
+        return ("Motif width: %d sites: %d llr: %d e-value: %f" %
+         (self.width(), self.num_sites(), self.llr(),
+          self.evalue()))
 
-def read_meme_output(output_file, num_motifs):
+
+def read_meme_output(output_text, num_motifs):
     """Reads meme output file into a list of MotifInfo objects"""
     def extract_regex(pattern, infoline):
         """generic info line field extraction based on regex"""
@@ -274,7 +309,7 @@ def read_meme_output(output_file, num_motifs):
                              read_sites(info_line_index + 1, lines),
                              read_pssm(info_line_index + 1, lines))
 
-    lines = output_file.readlines()
+    lines = output_text.split('\n')
     result = []
     for motif_number in range(1, num_motifs + 1):
         result.append(read_motif_info(motif_number, lines))

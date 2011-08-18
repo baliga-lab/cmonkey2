@@ -219,7 +219,7 @@ def run_cmonkey():
     #print cscores
 
     # 2. compute motif scores
-    meme_suite = meme.MemeSuite()
+    meme_suite = meme.MemeSuite430()
     motif.compute_scores(meme_suite, organism, membership, used_seqs)
 
     # uncomment me

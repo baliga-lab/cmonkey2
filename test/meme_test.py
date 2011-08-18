@@ -13,7 +13,7 @@ class MemeTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_read_meme_output(self):
         """tests the read_meme_output function"""
         with open('testdata/meme.out') as inputfile:
-            motif_infos = meme.read_meme_output(inputfile, 2)
+            motif_infos = meme.read_meme_output(inputfile.read(), 2)
 
         self.assertEquals(2, len(motif_infos))
         self.assertEquals(24, motif_infos[0].width())

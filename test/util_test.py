@@ -153,6 +153,7 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEqual(-0.255575, result[1])
         self.assertAlmostEqual(0.2238883025, result[2])
 
+
 class Order2StringTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for order2string"""
 
