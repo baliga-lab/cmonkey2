@@ -105,25 +105,39 @@ class MemeSuite:
                                       (seq, str(round(frequency, 8))))
             return filename
 
-        def make_sequence_file():
-            """Prepare an input file for meme"""
-            seqs = [(feature_id, input_seqs[feature_id])
-                    for feature_id in input_seqs]
+        def make_sequence_file(seqs):
+            """Creates a FASTA file from a dictionary of (feature_id: sequence)
+            entries"""
+            outseqs = [(feature_id, seqs[feature_id]) for feature_id in seqs]
             filename = None
             with tempfile.NamedTemporaryFile(prefix='memeseqs',
                                              delete=False) as outfile:
                 filename = outfile.name
-                st.write_sequences_to_fasta_file(outfile, seqs)
+                st.write_sequences_to_fasta_file(outfile, outseqs)
             return filename
 
         logging.info("run_meme() - # seqs = %d", len(input_seqs))
         logging.info("# all seqs = %d", len(all_seqs))
         bgfile = make_background_file()
         logging.info("created background file in %s", bgfile)
-        seqfile = make_sequence_file()
+        seqfile = make_sequence_file(input_seqs)
         logging.info("created sequence file in %s", seqfile)
-        motif_infos = self.meme(seqfile, bgfile)
-        print motif_infos
+        motif_infos, output = self.meme(seqfile, bgfile)
+
+        # run mast
+        meme_outfile = None
+        with tempfile.NamedTemporaryFile(prefix='meme.out.',
+                                         delete=False) as outfile:
+            meme_outfile = outfile.name
+            outfile.write(output)
+        logging.info('wrote meme output to %s' % meme_outfile)
+
+        all_seqs_dict = {feature_id: locseq[1]
+                         for feature_id, locseq in all_seqs.items()}
+        dbfile = make_sequence_file(all_seqs_dict)
+        logging.info('created mast database in %s' % dbfile)
+        mast_output = self.mast(meme_outfile, dbfile, bgfile)
+        #print mast_output
 
     def dust(self, fasta_file_path):
         """runs the dust command on the specified FASTA file and
@@ -149,7 +163,8 @@ class MemeSuite430(MemeSuite):
     def meme(self, infile_path, bgfile_path, num_motifs=2,
              pspfile_path=None):
         """runs the meme command on the specified input file, background file
-        and positional priors file. Returns a list of MemeMotifInfo objects
+        and positional priors file. Returns a tuple of
+        (list of MemeMotifInfo objects, meme output)
         """
         command = ['meme', infile_path, '-bfile', bgfile_path,
                    '-time', '600', '-dna', '-revcomp',
@@ -162,7 +177,7 @@ class MemeSuite430(MemeSuite):
 
         logging.info("running: %s", " ".join(command))
         output = subprocess.check_output(command)
-        return read_meme_output(output, num_motifs)
+        return (read_meme_output(output, num_motifs), output)
 
     def mast(self, meme_outfile_path, database_file_path,
              bgfile_path):
@@ -171,6 +186,8 @@ class MemeSuite430(MemeSuite):
                    '-bfile', bgfile_path, '-nostatus', '-stdout', '-text',
                    '-brief', '-ev', '99999', '-mev', '99999', '-mt', '0.99',
                    '-seqp', '-remcorr']
+        output = subprocess.check_output(command)
+        return output
 
 
 class MemeMotifInfo:
