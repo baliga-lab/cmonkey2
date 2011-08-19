@@ -79,6 +79,7 @@ class OrganismFactory:
     For other types of organisms, a different factory should be used
     """
 
+    # pylint: disable-msg=R0913
     def __init__(self, code2kegg_organism,
                  rsat_organism_info,
                  get_go_taxonomy_id,
@@ -113,6 +114,7 @@ class Organism:
     aspects. For now, we assume microbes only, but keep the interface generic
     so the algorithm will work on any type of organism"""
 
+    # pylint: disable-msg=R0913,R0902
     def __init__(self, code, kegg_organism, rsat_info,
                  go_taxonomy_id, microbes_online_db,
                  network_factories):

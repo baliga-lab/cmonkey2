@@ -17,6 +17,8 @@ class DataMatrix:
     The values themselves are implemented as a two-dimensional numpy array
     and returned values are all based on numpy arrays.
     """
+
+    # pylint: disable-msg=R0913
     def __init__(self, nrows, ncols, row_names=None, col_names=None,
                  values=None, init_value=None):
         """create a DataMatrix instance"""

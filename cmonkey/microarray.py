@@ -44,6 +44,7 @@ class ClusterMembership:
         self.__cluster_column_members = create_cluster_to_names_map(
             self.__column_is_member_of)
 
+    # pylint: disable-msg=R0913
     @classmethod
     def create(cls, data_matrix,
                num_clusters,

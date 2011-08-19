@@ -41,7 +41,7 @@ class Feature:  # pylint: disable-msg=R0902
         self.__name = name
         self.__location = location
 
-    def id(self):
+    def id(self):  # pylint: disable-msg=C0103
         """returns the feature id"""
         return self.__feature_id
 

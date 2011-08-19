@@ -130,29 +130,30 @@ class MemeSuite:
                                          delete=False) as outfile:
             meme_outfile = outfile.name
             outfile.write(output)
-        logging.info('wrote meme output to %s' % meme_outfile)
+        logging.info('wrote meme output to %s', meme_outfile)
 
         all_seqs_dict = {feature_id: locseq[1]
                          for feature_id, locseq in all_seqs.items()}
         dbfile = make_sequence_file(all_seqs_dict)
-        logging.info('created mast database in %s' % dbfile)
+        logging.info('created mast database in %s', dbfile)
         mast_output = self.mast(meme_outfile, dbfile, bgfile)
         #print mast_output
 
-    def dust(self, fasta_file_path):
+    def dust(self, fasta_file_path):  # pylint: disable-msg=R0201
         """runs the dust command on the specified FASTA file and
         returns a list of sequences. It is assumed that dust has
         a very simple interface: FASTA in, output on stdout"""
         output = subprocess.check_output(['dust', fasta_file_path])
         return output
 
+    # pylint: disable-msg=W0613,R0201
     def meme(self, infile_path, bgfile_path, num_motifs=2,
              pspfile_path=None):
         """Please implement me"""
         logging.error("MemeSuite.meme() - please implement me")
 
     def mast(self, meme_outfile_path, database_file_path,
-             bgfile_path):
+             bgfile_path):  # pylint: disable-msg=R0201
         """Please implement me"""
         logging.error("MemeSuite.mast() - please implement me")
 
@@ -193,6 +194,7 @@ class MemeSuite430(MemeSuite):
 class MemeMotifInfo:
     """Only a motif's info line, the
     probability matrix and the site information is relevant"""
+    # pylint: disable-msg=R0913
     def __init__(self, width, num_sites, llr, evalue, sites, pssm):
         """Creates a MemeMotifInfo instance"""
         self.__width = width
@@ -231,27 +233,6 @@ class MemeMotifInfo:
 
 def read_meme_output(output_text, num_motifs):
     """Reads meme output file into a list of MotifInfo objects"""
-    def extract_regex(pattern, infoline):
-        """generic info line field extraction based on regex"""
-        match = re.search(pattern, infoline)
-        return infoline[match.start():match.end()].split('=')[1].strip()
-
-    def extract_width(infoline):
-        """extract the width value from the info line"""
-        return int(extract_regex('width =\s+\d+', infoline))
-
-    def extract_num_sites(infoline):
-        """extract the sites value from the info line"""
-        return int(extract_regex('sites =\s+\d+', infoline))
-
-    def extract_llr(infoline):
-        """extract the llr value from the info line"""
-        return int(extract_regex('llr =\s+\d+', infoline))
-
-    def extract_evalue(infoline):
-        """extract the e-value from the info line"""
-        return float(extract_regex('E-value =\s+\S+', infoline))
-
     def next_info_line(motif_number, lines):
         """finds the index of the next info line for the specified motif number
         1-based """
@@ -263,21 +244,10 @@ def read_meme_output(output_text, num_motifs):
             current_line = lines[line_index]
         return line_index
 
-    def next_regex_index(pat, start_index, lines):
-        """finds the index of the next motif site"""
-        line_index = start_index
-        pattern = re.compile(pat)
-        current_line = lines[line_index]
-        while not pattern.match(current_line):
-            line_index += 1
-            current_line = lines[line_index]
-        return line_index
-
     def next_sites_index(start_index, lines):
         """returns the next sites index"""
-        return next_regex_index('[\t]Motif \d+ sites sorted by position ' +
-                                'p-value',
-                                start_index, lines)
+        return __next_regex_index('[\t]Motif \d+ sites sorted by position ' +
+                                  'p-value', start_index, lines)
 
     def read_sites(start_index, lines):
         """reads the sites"""
@@ -312,17 +282,17 @@ def read_meme_output(output_text, num_motifs):
 
     def next_pssm_index(start_index, lines):
         """determines the next PSSM start index"""
-        return next_regex_index('[\t]Motif \d+ position-specific ' +
-                                'probability matrix', start_index, lines)
+        return __next_regex_index('[\t]Motif \d+ position-specific ' +
+                                  'probability matrix', start_index, lines)
 
     def read_motif_info(motif_number, lines):
         """Reads the MemeMotifInfo with the specified number from the input"""
         info_line_index = next_info_line(motif_number, lines)
         info_line = lines[info_line_index]
-        return MemeMotifInfo(extract_width(info_line),
-                             extract_num_sites(info_line),
-                             extract_llr(info_line),
-                             extract_evalue(info_line),
+        return MemeMotifInfo(__extract_width(info_line),
+                             __extract_num_sites(info_line),
+                             __extract_llr(info_line),
+                             __extract_evalue(info_line),
                              read_sites(info_line_index + 1, lines),
                              read_pssm(info_line_index + 1, lines))
 
@@ -331,5 +301,44 @@ def read_meme_output(output_text, num_motifs):
     for motif_number in range(1, num_motifs + 1):
         result.append(read_motif_info(motif_number, lines))
     return result
+
+
+# read_meme_output helpers
+def __extract_regex(pattern, infoline):
+    """generic info line field extraction based on regex"""
+    match = re.search(pattern, infoline)
+    return infoline[match.start():match.end()].split('=')[1].strip()
+
+
+def __extract_width(infoline):
+    """extract the width value from the info line"""
+    return int(__extract_regex('width =\s+\d+', infoline))
+
+
+def __extract_num_sites(infoline):
+    """extract the sites value from the info line"""
+    return int(__extract_regex('sites =\s+\d+', infoline))
+
+
+def __extract_llr(infoline):
+    """extract the llr value from the info line"""
+    return int(__extract_regex('llr =\s+\d+', infoline))
+
+
+def __extract_evalue(infoline):
+    """extract the e-value from the info line"""
+    return float(__extract_regex('E-value =\s+\S+', infoline))
+
+
+def __next_regex_index(pat, start_index, lines):
+    """finds the index of the next motif site"""
+    line_index = start_index
+    pattern = re.compile(pat)
+    current_line = lines[line_index]
+    while not pattern.match(current_line):
+        line_index += 1
+        current_line = lines[line_index]
+    return line_index
+
 
 __all__ = ['read_meme_output']
