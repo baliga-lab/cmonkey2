@@ -233,16 +233,28 @@ class MemeMotifInfo:
 
 def read_meme_output(output_text, num_motifs):
     """Reads meme output file into a list of MotifInfo objects"""
+
+    def extract_width(infoline):
+        """extract the width value from the info line"""
+        return int(__extract_regex('width =\s+\d+', infoline))
+
+    def extract_num_sites(infoline):
+        """extract the sites value from the info line"""
+        return int(__extract_regex('sites =\s+\d+', infoline))
+
+    def extract_llr(infoline):
+        """extract the llr value from the info line"""
+        return int(__extract_regex('llr =\s+\d+', infoline))
+
+    def extract_evalue(infoline):
+        """extract the e-value from the info line"""
+        return float(__extract_regex('E-value =\s+\S+', infoline))
+
     def next_info_line(motif_number, lines):
         """finds the index of the next info line for the specified motif number
         1-based """
-        line_index = 0
-        current_line = lines[line_index]
-        pattern = re.compile('MOTIF\s+' + str(motif_number))
-        while not pattern.match(current_line):
-            line_index += 1
-            current_line = lines[line_index]
-        return line_index
+        return __next_regex_index('MOTIF\s+' + str(motif_number) + '.*',
+                                  0, lines)
 
     def next_sites_index(start_index, lines):
         """returns the next sites index"""
@@ -289,10 +301,10 @@ def read_meme_output(output_text, num_motifs):
         """Reads the MemeMotifInfo with the specified number from the input"""
         info_line_index = next_info_line(motif_number, lines)
         info_line = lines[info_line_index]
-        return MemeMotifInfo(__extract_width(info_line),
-                             __extract_num_sites(info_line),
-                             __extract_llr(info_line),
-                             __extract_evalue(info_line),
+        return MemeMotifInfo(extract_width(info_line),
+                             extract_num_sites(info_line),
+                             extract_llr(info_line),
+                             extract_evalue(info_line),
                              read_sites(info_line_index + 1, lines),
                              read_pssm(info_line_index + 1, lines))
 
@@ -303,40 +315,40 @@ def read_meme_output(output_text, num_motifs):
     return result
 
 
-# read_meme_output helpers
+def read_mast_output(output_text):
+    """Reads out the p-values and e-values from a mast output file"""
+    def next_pe_value_line(start_index, lines):
+        return __next_regex_index('.*COMBINED P-VALUE.*',
+                                  start_index, lines)
+
+    lines = output_text.split('\n')
+    result = []
+    current_index = next_pe_value_line(0, lines)
+    while current_index != -1:
+        gene = lines[current_index - 2].strip()
+        line = lines[current_index]
+        pvalue = float(__extract_regex('P-VALUE\s+=\s+(\S+)', line))
+        evalue = float(__extract_regex('E-VALUE\s+=\s+(\S+)', line))
+        result.append((gene, pvalue, evalue))
+        current_index = next_pe_value_line(current_index + 1, lines)
+    return result
+
+
+# extraction helpers
 def __extract_regex(pattern, infoline):
     """generic info line field extraction based on regex"""
     match = re.search(pattern, infoline)
     return infoline[match.start():match.end()].split('=')[1].strip()
 
-
-def __extract_width(infoline):
-    """extract the width value from the info line"""
-    return int(__extract_regex('width =\s+\d+', infoline))
-
-
-def __extract_num_sites(infoline):
-    """extract the sites value from the info line"""
-    return int(__extract_regex('sites =\s+\d+', infoline))
-
-
-def __extract_llr(infoline):
-    """extract the llr value from the info line"""
-    return int(__extract_regex('llr =\s+\d+', infoline))
-
-
-def __extract_evalue(infoline):
-    """extract the e-value from the info line"""
-    return float(__extract_regex('E-value =\s+\S+', infoline))
-
-
 def __next_regex_index(pat, start_index, lines):
-    """finds the index of the next motif site"""
+    """finds the line index of the first occurrence of the pattern"""
     line_index = start_index
     pattern = re.compile(pat)
     current_line = lines[line_index]
     while not pattern.match(current_line):
         line_index += 1
+        if line_index >= len(lines):
+            return -1
         current_line = lines[line_index]
     return line_index
 
