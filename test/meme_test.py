@@ -55,7 +55,8 @@ class MemeTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_read_mast_output(self):
         """tests the read_mast_output function"""
         with open('testdata/mast.out') as inputfile:
-            pevalues = meme.read_mast_output(inputfile.read())
+            pevalues, annotations = meme.read_mast_output(inputfile.read(),
+                                                          ['VNG6198H'])
         self.assertEquals('VNG6198H', pevalues[0][0])
         self.assertEquals('VNG0117H', pevalues[1][0])
 
@@ -63,3 +64,8 @@ class MemeTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEquals(3.39e-12, pevalues[1][1])
         self.assertAlmostEquals(8.0e-12, pevalues[0][2])
         self.assertAlmostEquals(1.4e-09, pevalues[1][2])
+
+        annot = annotations['VNG6198H']
+        self.assertAlmostEquals(6.6e-01, annot[0][0])
+        self.assertEquals(16, annot[0][1])
+        self.assertEquals(1, annot[0][2])

@@ -315,24 +315,113 @@ def read_meme_output(output_text, num_motifs):
     return result
 
 
-def read_mast_output(output_text):
-    """Reads out the p-values and e-values from a mast output file"""
+def read_mast_output(output_text, genes):
+    """Reads out the p-values and e-values and the gene annotations
+    from a mast output file"""
     def next_pe_value_line(start_index, lines):
         return __next_regex_index('.*COMBINED P-VALUE.*',
                                   start_index, lines)
 
-    lines = output_text.split('\n')
-    result = []
-    current_index = next_pe_value_line(0, lines)
-    while current_index != -1:
-        gene = lines[current_index - 2].strip()
-        line = lines[current_index]
-        pvalue = float(__extract_regex('P-VALUE\s+=\s+(\S+)', line))
-        evalue = float(__extract_regex('E-VALUE\s+=\s+(\S+)', line))
-        result.append((gene, pvalue, evalue))
-        current_index = next_pe_value_line(current_index + 1, lines)
-    return result
+    def read_pe_values(lines):
+        result = []
+        current_index = next_pe_value_line(0, lines)
+        while current_index != -1:
+            gene = lines[current_index - 2].strip()
+            line = lines[current_index]
+            pvalue = float(__extract_regex('P-VALUE\s+=\s+(\S+)', line))
+            evalue = float(__extract_regex('E-VALUE\s+=\s+(\S+)', line))
+            result.append((gene, pvalue, evalue))
+            current_index = next_pe_value_line(current_index + 1, lines)
+        return result
 
+    def read_seqalign_blocks(lines, start_index, seqlen):
+        """Read the sequence alignment blocks starting at start_index
+        a block has the format:
+        1. motif number line (+/- = forward/reverse)
+        2. pvalue line
+        3. motif sequence line
+        4. alignment/match line
+        5. gene sequence line
+        6. blank line (separator)
+        -> Repeat this pattern until the whole database sequence printed
+        
+        While the mast output is easily human-readable, it
+        is hard to parse programmatically.
+        This method does it as follows:
+        - read all motif numbers in sequence
+        - read all p-values in sequencs
+        - the motif number opening brackets are regarded as position markers
+
+        for each block, we only need to keep track in which column the gene
+        sequence starts and at which relative position we are
+        """
+        current_index = start_index
+        is_last = False
+        motif_nums = []
+        pvalues = []
+        positions = []
+        while not is_last:
+            is_last = is_last_block(lines, current_index, seqlen)
+            read_block(lines, current_index, motif_nums,
+                       pvalues, positions)
+            current_index += 6
+        return zip(pvalues, positions, motif_nums)
+
+    def is_last_block(lines, index, seqlen):
+        """determines whether the specified block is the last one for
+        the current gene"""
+        seqline = lines[index + 4]
+        seqstart_index = int(re.match('(\d+).*', seqline).group(1))
+        seq_start = re.match('\d+\s+(\S+)', seqline).start(1)
+        return (len(seqline) - seq_start) + seqstart_index >= seqlen
+
+
+    def read_block(lines, index, motif_nums, pvalues, positions):
+        """Reads the motif numbers, pvalues and positions from the
+        specified block"""
+        motif_nums.extend(read_motif_numbers(lines[index]))
+        pvalues.extend(read_pvalues(lines[index + 1]))
+        positions.extend(read_positions(lines[index], lines[index + 4]))
+
+    def read_motif_numbers(motifnum_line):
+        """reads the motif numbers contained in a motif number line"""
+        return [int(re.sub('\[|\]', '', motifnum))
+                for motifnum in re.split(' +', motifnum_line)
+                if len(motifnum.strip()) > 0]
+
+    def read_pvalues(pvalue_line):
+        """reads the p-values contained in a p-value line"""
+        return [float(pvalue)
+                for pvalue in re.split(' +', pvalue_line)
+                if len(pvalue.strip()) > 0]
+
+    def read_positions(motifnum_line, seqline):
+        """we only need the motif number line and the sequence line
+        to retrieve the position"""
+        start_index = int(re.match('(\d+).*', seqline).group(1))
+        seq_start = re.match('\d+\s+(\S+)', seqline).start(1)
+        # offset +1 for compatibility with cMonkey R, don't really
+        # know why
+        return [(m.start() - seq_start + start_index + 1)
+                for m in re.finditer('\[', motifnum_line)]
+
+    def read_annotations(lines, genes):
+        result = {}
+        current_index = next_pe_value_line(0, lines)
+        while current_index != -1:
+            gene = lines[current_index - 2].strip()
+            if gene in genes:
+                info_line = lines[current_index]
+                length = int(__extract_regex('LENGTH\s+=\s+(\d+)', info_line))
+                result[gene] = read_seqalign_blocks(lines, current_index + 3, length)
+
+            current_index = next_pe_value_line(current_index + 1, lines)
+        return result
+
+    lines = output_text.split('\n')
+    pe_values = read_pe_values(lines)
+    annotations = read_annotations(lines, genes)
+    return (pe_values, annotations)
 
 # extraction helpers
 def __extract_regex(pattern, infoline):
