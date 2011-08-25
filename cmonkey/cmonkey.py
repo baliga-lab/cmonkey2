@@ -9,6 +9,7 @@ import microarray
 import organism as org
 import meme
 import motif
+import network as nw
 import microbes_online
 import stringdb
 import rsat
@@ -219,12 +220,37 @@ def run_cmonkey():
     #print cscores
 
     # 2. compute motif scores
-    meme_suite = meme.MemeSuite430()
-    motif.compute_scores(meme_suite, organism, membership, used_seqs)
+    # TODO: it seems the input sequences to meme are not computed correctly
+    #meme_suite = meme.MemeSuite430()
+    #motif.compute_scores(meme_suite, organism, membership, used_seqs)
 
     # uncomment me
     #algorithm = CMonkey(organism, dm.DataMatrixCollection([matrix]))
     #algorithm.run()
+    # 3. compute network scores
+    #print "# USED SEQS: %d" % len(matrix.row_names())
+    dummy_genes = ['VNG1691G', 'VNG1699C', 'VNG1709G', 'VNG1713G', 'VNG1715G',
+                   'VNG1718G']
+    networks = retrieve_networks(organism)
+    network_scores = nw.compute_network_scores(networks[1], dummy_genes,
+                                               matrix.row_names())
+    for gene, score in network_scores:
+        print "%s\t%f" % (gene, score)
+
+
+def retrieve_networks(organism):
+    """retrieves the networks provided by the organism object and
+    possibly other sources, doing some normalization if necessary"""
+    networks = organism.networks()
+    max_score = 0
+    for network in networks:
+        logging.info("Network with %d edges", network.num_edges())
+        nw_total = network.total_score()
+        if nw_total > max_score:
+            max_score = nw_total
+    for network in networks:
+        network.normalize_scores_to(max_score)
+    return networks
 
 
 def fake_seed_row_memberships(fake_mapper):

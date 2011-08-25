@@ -30,6 +30,14 @@ class NetworkEdge:
         """sets a new score for this edge"""
         self.__score = score
 
+    def source_in(self, nodes):
+        """checks whether this edge's source is in the specified nodes"""
+        return self.__source in nodes
+
+    def target_in(self, nodes):
+        """checks whether this edge's target is in the specified nodes"""
+        return self.__target in nodes
+
     def __str__(self):
         """returns string representation"""
         return "%s -> %s w = %s" % (self.__source, self.__target,
@@ -78,6 +86,10 @@ class Network:
             for edge in self.__edges:
                 edge.set_score(edge.score() * scale)
 
+    def edges_with_source_in(self, nodes):
+        """Returns all edges containing any of the specified nodes"""
+        return [edge for edge in self.__edges if edge.source_in(nodes)]
+
     def __repr__(self):
         return "Network: %s\n# edges: %d\n" % (self.__name,
                                                len(self.__edges))
@@ -103,3 +115,25 @@ class Network:
                 add_edge(NetworkEdge(edge.target(), edge.source(),
                                      edge.score()))
         return Network(name, network_edges)
+
+
+def compute_network_scores(network, genes, all_genes):
+    """Generic method to compute network scores
+    TODO: maybe should be part of Network class"""
+    edges = network.edges_with_source_in(genes)
+    fedges = [edge for edge in edges if edge.target_in(all_genes)]
+
+    gene_scores = {}
+    for edge in fedges:
+        if edge.target() not in gene_scores:
+            gene_scores[edge.target()] = []
+        gene_scores[edge.target()].append(edge.score())
+
+    final_gene_scores = {}
+    for gene, scores in gene_scores.items():
+        final_gene_scores[gene] = sum(scores) / len(genes)
+
+    result = []
+    for gene in sorted(final_gene_scores.keys()):
+        result.append((gene, final_gene_scores[gene]))
+    return result

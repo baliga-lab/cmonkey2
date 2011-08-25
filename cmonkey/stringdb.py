@@ -33,13 +33,16 @@ def read_edges(filename):
             result.append(network.NetworkEdge(protein1, protein2, score))
             if score > max_score:
                 max_score = score
+    return normalize_edge_list(result, max_score)
 
-    # normalize scores to 1000
-    for edge in result:
+
+def normalize_edge_list(edges, max_score):
+    """normalize scores to 1000, for combined scores"""
+    for edge in edges:
         score = edge.score() / max_score * 1000.0
         score = 1000 * math.exp(score / 1000.0) / math.exp(1.0)
         edge.set_score(score)
-    return result
+    return edges
 
 
 def read_edges2(filename):

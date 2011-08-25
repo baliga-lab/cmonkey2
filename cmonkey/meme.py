@@ -319,10 +319,12 @@ def read_mast_output(output_text, genes):
     """Reads out the p-values and e-values and the gene annotations
     from a mast output file"""
     def next_pe_value_line(start_index, lines):
+        """Find the next combined p-value and e-value line"""
         return __next_regex_index('.*COMBINED P-VALUE.*',
                                   start_index, lines)
 
     def read_pe_values(lines):
+        """read all combined p-values and e-values"""
         result = []
         current_index = next_pe_value_line(0, lines)
         while current_index != -1:
@@ -344,7 +346,7 @@ def read_mast_output(output_text, genes):
         5. gene sequence line
         6. blank line (separator)
         -> Repeat this pattern until the whole database sequence printed
-        
+
         While the mast output is easily human-readable, it
         is hard to parse programmatically.
         This method does it as follows:
@@ -374,7 +376,6 @@ def read_mast_output(output_text, genes):
         seqstart_index = int(re.match('(\d+).*', seqline).group(1))
         seq_start = re.match('\d+\s+(\S+)', seqline).start(1)
         return (len(seqline) - seq_start) + seqstart_index >= seqlen
-
 
     def read_block(lines, index, motif_nums, pvalues, positions):
         """Reads the motif numbers, pvalues and positions from the
@@ -406,6 +407,7 @@ def read_mast_output(output_text, genes):
                 for m in re.finditer('\[', motifnum_line)]
 
     def read_annotations(lines, genes):
+        """extract annotations"""
         result = {}
         current_index = next_pe_value_line(0, lines)
         while current_index != -1:
@@ -413,7 +415,8 @@ def read_mast_output(output_text, genes):
             if gene in genes:
                 info_line = lines[current_index]
                 length = int(__extract_regex('LENGTH\s+=\s+(\d+)', info_line))
-                result[gene] = read_seqalign_blocks(lines, current_index + 3, length)
+                result[gene] = read_seqalign_blocks(lines, current_index + 3,
+                                                    length)
 
             current_index = next_pe_value_line(current_index + 1, lines)
         return result
@@ -423,11 +426,13 @@ def read_mast_output(output_text, genes):
     annotations = read_annotations(lines, genes)
     return (pe_values, annotations)
 
+
 # extraction helpers
 def __extract_regex(pattern, infoline):
     """generic info line field extraction based on regex"""
     match = re.search(pattern, infoline)
     return infoline[match.start():match.end()].split('=')[1].strip()
+
 
 def __next_regex_index(pat, start_index, lines):
     """finds the line index of the first occurrence of the pattern"""

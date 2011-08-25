@@ -184,22 +184,29 @@ class Organism:
             operon_map = self.__operon_map()
             synonyms = self.__thesaurus()
             shifted_pairs = []
+            aliases_not_found = []
+            operons_not_found = []
             for alias in gene_aliases:
                 if alias in synonyms:
                     gene = synonyms[alias]
                     if gene in operon_map:
-                        logging.info("gene '%s' [alias '%s'] found in " +
-                                     "operon map -> '%s'",
-                                     gene, alias, operon_map[gene])
+                        #logging.info("gene '%s' [alias '%s'] found in " +
+                        #             "operon map -> '%s'",
+                        #             gene, alias, operon_map[gene])
                         shifted_pairs.append((gene, operon_map[gene]))
                     else:
-                        logging.info("no operon found for gene '%s' " +
-                                     "[alias '%s'] - using gene",
-                                     gene, alias)
+                        #logging.info("no operon found for gene '%s' " +
+                        #             "[alias '%s'] - using gene",
+                        #             gene, alias)
+                        operons_not_found.append(alias)
                         shifted_pairs.append((gene, gene))
 
                 else:
-                    logging.info("alias '%s' not found in thesaurus", alias)
+                    aliases_not_found.append(alias)
+            logging.info("# aliases not found in thesaurus: %d",
+                         len(aliases_not_found))
+            logging.info("# aliases have no operon: %d",
+                         len(operons_not_found))
             return shifted_pairs
 
         def unique_sequences(operon_pairs):
