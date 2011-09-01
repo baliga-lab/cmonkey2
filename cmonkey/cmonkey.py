@@ -222,7 +222,12 @@ def run_cmonkey():
     # 2. compute motif scores
     # TODO: it seems the input sequences to meme are not computed correctly
     meme_suite = meme.MemeSuite430()
-    motif.compute_scores(meme_suite, organism, membership, used_seqs)
+    distance = motif.DISTANCE_UPSTREAM_SEARCH
+    motif.compute_scores(meme_suite, organism, membership, used_seqs,
+                         distance,
+                         [motif.unique_filter,
+                          motif.get_remove_low_complexity_filter(meme_suite),
+                          motif.remove_atgs_filter])
 
     # running the algorithm in the CMonkey object is obsolete
     #algorithm = CMonkey(organism, dm.DataMatrixCollection([matrix]))
