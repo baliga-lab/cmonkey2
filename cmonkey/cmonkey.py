@@ -220,24 +220,23 @@ def run_cmonkey():
     #print cscores
 
     # 2. compute motif scores
-    # TODO: it seems the input sequences to meme are not computed correctly
-    meme_suite = meme.MemeSuite430()
-    distance = motif.DISTANCE_UPSTREAM_SEARCH
-    motif.compute_scores(meme_suite, organism, membership, used_seqs,
-                         distance,
-                         [motif.unique_filter,
-                          motif.get_remove_low_complexity_filter(meme_suite),
-                          motif.remove_atgs_filter])
+    #meme_suite = meme.MemeSuite430()
+    #distance = motif.DISTANCE_UPSTREAM_SEARCH
+    #motif.compute_scores(meme_suite, organism, membership, used_seqs,
+    #                     distance,
+    #                     [motif.unique_filter,
+    #                      motif.get_remove_low_complexity_filter(meme_suite),
+    #                      motif.remove_atgs_filter])
 
     # running the algorithm in the CMonkey object is obsolete
     #algorithm = CMonkey(organism, dm.DataMatrixCollection([matrix]))
     #algorithm.run()
     # 3. compute network scores
     #print "# USED SEQS: %d" % len(matrix.row_names())
-    #dummy_genes = ['VNG1691G', 'VNG1699C', 'VNG1709G', 'VNG1713G', 'VNG1715G',
-    #               'VNG1718G']
-    #networks = retrieve_networks(organism)
-    #network_scores = nw.compute_network_scores(networks[1], dummy_genes,
+    #cluster_genes = ['VNG1691G', 'VNG1699C', 'VNG1709G', 'VNG1713G', 'VNG1715G',
+    #                 'VNG1718G']
+    networks = retrieve_networks(organism)
+    #network_scores = nw.compute_network_scores(networks[1], cluster_genes,
     #                                           matrix.row_names())
     #for gene, score in network_scores:
     #    print "%s\t%f" % (gene, score)

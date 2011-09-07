@@ -90,7 +90,7 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
             'gene3': st.Feature('feature3', 'typ2', 'feature_name3',
                                 st.Location('contig1', 100, 154, False))
             }
-        edges = mo.make_operon_edges(operon, features)
+        edges = mo.make_operon_pairs(operon, features)
         self.assertTrue(('gene2', 'gene1') in edges)
         self.assertTrue(('gene2', 'gene2') in edges)
         self.assertTrue(('gene2', 'gene3') in edges)
@@ -107,7 +107,7 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
             'gene3': st.Feature('feature3', 'typ2', 'feature_name3',
                                 st.Location('contig1', 100, 154, True))
             }
-        edges = mo.make_operon_edges(operon, features)
+        edges = mo.make_operon_pairs(operon, features)
         self.assertTrue(('gene3', 'gene1') in edges)
         self.assertTrue(('gene3', 'gene2') in edges)
         self.assertTrue(('gene3', 'gene3') in edges)
@@ -124,7 +124,7 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
                 'gene3': st.Feature('feature3', 'typ2', 'feature_name3',
                                     st.Location('contig1', 100, 154, False))
                 })
-        edges = mo.make_edges_from_predictions(predictions, organism)
+        edges = mo.make_pairs_from_predictions(predictions, organism)
         self.assertEquals([('gene2', 'gene1'), ('gene2', 'gene2'),
                            ('gene2', 'gene3')], edges)
 
@@ -144,8 +144,8 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals(5000, network.total_score())
 
 
-class MakeOperonPairsTest(unittest.TestCase):
-    """integration test for operon pair creation"""
+class GetOperonPairsTest(unittest.TestCase):
+    """integration test for operon pair retrieval"""
 
     def __make_organism(self):
         """makes a mock organism with almost real data"""
@@ -176,7 +176,7 @@ class MakeOperonPairsTest(unittest.TestCase):
         """test the make_operon_pairs() function in integration"""
         mo_db = MockMicrobesOnline('testdata/gnc64091_ref.named')
         organism = self.__make_organism()
-        pairs = mo.make_operon_pairs(mo_db, organism)
+        pairs = mo.get_operon_pairs(mo_db, organism)
         refpairs = self.__make_ref_operon_pairs()
 
         self.assertEquals(len(pairs), len(refpairs))
