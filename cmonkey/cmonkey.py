@@ -238,10 +238,15 @@ def run_cmonkey():
     #cluster_genes = ['VNG1691G', 'VNG1699C', 'VNG1709G', 'VNG1713G',
     #                 'VNG1715G', 'VNG1718G']
     networks = retrieve_networks(organism)
-    #network_scores = nw.compute_network_scores(networks[1], cluster_genes,
-    #                                           matrix.row_names())
-    #for gene, score in network_scores:
-    #    print "%s\t%f" % (gene, score)
+    for network in networks:
+        logging.info("Compute scores for network '%s'", network.name())
+        for cluster_num in range(1, NUM_CLUSTERS + 1):
+            cluster_genes = sorted(membership.rows_for_cluster(cluster_num))
+            network_scores = nw.compute_network_scores(network,
+                                                       cluster_genes,
+                                                       matrix.row_names())
+            for gene, score in network_scores:
+                print "%s[%d] - %s\t%f" % (network.name(), cluster_num, gene, score)
 
 
 def retrieve_networks(organism):

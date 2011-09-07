@@ -3,6 +3,7 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
+import numpy
 
 
 class NetworkEdge:
@@ -132,6 +133,7 @@ def compute_network_scores(network, genes, all_genes):
     final_gene_scores = {}
     for gene, scores in gene_scores.items():
         final_gene_scores[gene] = sum(scores) / len(genes)
+        final_gene_scores[gene] = -numpy.log(final_gene_scores[gene] + 1)
 
     result = []
     for gene in sorted(final_gene_scores.keys()):
