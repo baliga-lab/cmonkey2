@@ -131,7 +131,7 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_get_network_factory(self):
         """test happy path"""
         microbes_online = MockMicrobesOnline('testdata/gnc64091.named')
-        network = mo.get_network_factory(microbes_online)(MockOrganism(
+        network = mo.get_network_factory(microbes_online, 20)(MockOrganism(
                 '64091',
                  {'gene1': st.Feature('feature1', 'typ1', 'feature_name1',
                                       st.Location('contig1', 24, 89, False)),
@@ -140,8 +140,8 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
                   'gene3': st.Feature('feature3', 'typ2', 'feature_name3',
                                       st.Location('contig1', 100, 154, False))
                   }))
-        self.assertEquals(5, network.num_edges())
-        self.assertEquals(5000, network.total_score())
+        self.assertEquals(6, network.num_edges())
+        self.assertEquals(6000, network.total_score())
 
 
 class GetOperonPairsTest(unittest.TestCase):

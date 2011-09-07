@@ -183,8 +183,10 @@ def run_cmonkey():
     mo_db = microbes_online.MicrobesOnline()
     # note that for the moment, the STRING factory is hardwired to
     # a preprocessed Halobacterium SP file
-    nw_factories = [microbes_online.get_network_factory(mo_db),
-                    stringdb.get_network_factory(stringdb.STRING_FILE2)]
+    nw_factories = [
+        microbes_online.get_network_factory(
+            mo_db, max_operon_size=matrix.num_rows() / 20),
+        stringdb.get_network_factory(stringdb.STRING_FILE2)]
     org_factory = org.OrganismFactory(org.make_kegg_code_mapper(keggfile),
                                       org.make_rsat_organism_mapper(rsatdb),
                                       org.make_go_taxonomy_mapper(gofile),
@@ -233,8 +235,8 @@ def run_cmonkey():
     #algorithm.run()
     # 3. compute network scores
     #print "# USED SEQS: %d" % len(matrix.row_names())
-    #cluster_genes = ['VNG1691G', 'VNG1699C', 'VNG1709G', 'VNG1713G', 'VNG1715G',
-    #                 'VNG1718G']
+    #cluster_genes = ['VNG1691G', 'VNG1699C', 'VNG1709G', 'VNG1713G',
+    #                 'VNG1715G', 'VNG1718G']
     networks = retrieve_networks(organism)
     #network_scores = nw.compute_network_scores(networks[1], cluster_genes,
     #                                           matrix.row_names())
@@ -248,7 +250,8 @@ def retrieve_networks(organism):
     networks = organism.networks()
     max_score = 0
     for network in networks:
-        logging.info("Network with %d edges", network.num_edges())
+        logging.info("Network '%s' with %d edges", network.name(),
+                     network.num_edges())
         nw_total = network.total_score()
         if nw_total > max_score:
             max_score = nw_total

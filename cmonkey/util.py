@@ -289,6 +289,22 @@ def order2string(order):
     else:
         return "%dth" % order
 
+
+def kcombinations(alist, k):
+    """returns all k-combinations of the elements in alist"""
+    if k == 0:
+        return []
+    if k == 1:
+        return [[elem] for elem in alist]
+    if k == len(alist):
+        return [alist]
+
+    ss1 = kcombinations(alist[1:], k - 1)
+    ss1 = [[alist[0]] + s for s in ss1]
+    ss2 = kcombinations(alist[1:], k)
+    return ss1 + ss2
+
+
 __all__ = ['DelimitedFile', 'best_matching_links', 'quantile', 'make_matrix',
            'DocumentNotFound', 'CMonkeyURLopener', 'read_url',
            'read_url_cached', 'ThesaurusBasedMap']

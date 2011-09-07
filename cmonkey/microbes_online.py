@@ -80,7 +80,7 @@ def make_operon_pairs(operon, features):
                 min_gene = gene
         return min_gene
 
-    feature_map = {} # mapping from VNG name to feature
+    feature_map = {}  # mapping from VNG name to feature
     num_reverse = 0
     for gene in operon:
         feature_map[gene] = features[gene]
@@ -145,12 +145,10 @@ def __make_operons_from_predictions(predictions, organism):
 def make_pairs_from_predictions(predictions, organism):
     """return a list of predictions into a list of network edges"""
     operons, features = __make_operons_from_predictions(predictions, organism)
-    #for operon in operons:
-    #    print operon
-    edges = []
+    pairs = []
     for operon in operons:
-        edges.extend(make_operon_pairs(operon, features))
-    return edges
+        pairs.extend(make_operon_pairs(operon, features))
+    return pairs
 
 
 def get_operon_pairs(microbes_online, organism):
@@ -158,6 +156,12 @@ def get_operon_pairs(microbes_online, organism):
     an operon prediction file for an organism from Microbes Online
     Used for retrieving genes that have an operon shift
     """
+    preds = __get_predictions(microbes_online, organism)
+    return make_pairs_from_predictions(preds, organism)
+
+
+def __get_predictions(microbes_online, organism):
+    """reads the operon predictions for a given organism from MicrobesOnline"""
     preds_text = microbes_online.get_operon_predictions_for(
         organism.taxonomy_id())
     dfile = util.DelimitedFile.create_from_text(preds_text,
@@ -165,58 +169,34 @@ def get_operon_pairs(microbes_online, organism):
     preds = [(line[2], line[3]) for line in dfile.lines()
              if line[6] == 'TRUE']
     logging.info("%d prediction pairs read", len(preds))
-    return make_pairs_from_predictions(preds, organism)
+    return preds
 
 
-def get_network_factory(microbes_online):
+def get_network_factory(microbes_online, max_operon_size):
     """function to create a network factory method"""
 
-    def combinations(a, k):
-        """returns all k-combinations of the elements in a"""
-        if k == 0:
-            return []
-        if k == 1:
-            return [[elem] for elem in a]
-        if k == len(a):
-            return [a]
-
-        ss1 = combinations(a[1:], k - 1)
-        ss1 = [ [a[0]] + s for s in ss1]
-        ss2 = combinations(a[1:], k)
-        return ss1 + ss2
-
-    def index_pairs(operon_pairs):
-        """create indexes for every operon_pair"""
-        index_value = 1
-        head_indexes = {}
-        for pair in operon_pairs:
-            if pair[0] not in head_indexes:
-                head_indexes[pair[0]] = index_value
-                index_value += 1
-        indexed_pairs = []
-        for pair in operon_pairs:
-            indexed_pairs.append((pair[0], pair[1], head_indexes[pair[0]]))
-        for pair in indexed_pairs:
-            print pair
-
-
-    def make_edges(operon_pairs):
-        """this part does not work yet"""
-        #for pair in operon_pairs:
-        #    print pair
-        edges = [network.NetworkEdge(edge[0], edge[1], 1000)
-                 for edge in operon_pairs]
+    def get_operon_edges(microbes_online, organism):
+        """gets network edges"""
+        operons, _ = __make_operons_from_predictions(
+            __get_predictions(microbes_online, organism), organism)
+        edges = []
+        for operon in operons:
+            if len(operon) <= max_operon_size:
+                combs = util.kcombinations(operon, 2)
+                edges.extend([network.NetworkEdge(comb[0], comb[1], 1000.0)
+                              for comb in combs if comb[0] != comb[1]])
+            else:
+                logging.warn("dropped operon from network (max_operon_size " +
+                             "exceeded): %s", str(operon))
         return edges
 
     def make_network(organism):
         """factory method to create a network from operon predictions"""
+
         logging.info("MicrobesOnline - make_network()")
-        # operon_map is a list of (head, gene) pairs which
-        # represent an operon relationship for each gene
-        operon_pairs = get_operon_pairs(microbes_online, organism)
-        logging.info("%d edges computed", len(operon_pairs))
-        index_pairs(operon_pairs)
-        return network.Network.create('operons', make_edges(operon_pairs))
+        edges = get_operon_edges(microbes_online, organism)
+        logging.info("%d edges computed", len(edges))
+        return network.Network.create('operons', edges)
 
     return make_network
 

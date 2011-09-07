@@ -242,7 +242,7 @@ class Organism:
         Microbes Online works on VNG names, but RSAT is working on
         feature ids, so this function also maps VNG names to feature ids"""
         if not self.__operon_mappings:
-            pairs = mo.make_operon_pairs(self.__microbes_online_db, self)
+            pairs = mo.get_operon_pairs(self.__microbes_online_db, self)
             synonyms = self.__thesaurus()
             self.__operon_mappings = {}
             for head, gene in pairs:
