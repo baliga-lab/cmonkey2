@@ -234,19 +234,22 @@ def run_cmonkey():
     #algorithm = CMonkey(organism, dm.DataMatrixCollection([matrix]))
     #algorithm.run()
     # 3. compute network scores
-    #print "# USED SEQS: %d" % len(matrix.row_names())
-    #cluster_genes = ['VNG1691G', 'VNG1699C', 'VNG1709G', 'VNG1713G',
-    #                 'VNG1715G', 'VNG1718G']
+    network_scores = compute_network_scores(organism, membership, matrix)
+    print network_scores
+
+def compute_network_scores(organism, membership, matrix):
     networks = retrieve_networks(organism)
+    network_scores = {}
     for network in networks:
         logging.info("Compute scores for network '%s'", network.name())
+        network_cluster_scores = {}
+        network_scores[network.name()] = network_cluster_scores
+
         for cluster_num in range(1, NUM_CLUSTERS + 1):
             cluster_genes = sorted(membership.rows_for_cluster(cluster_num))
-            network_scores = nw.compute_network_scores(network,
-                                                       cluster_genes,
-                                                       matrix.row_names())
-            for gene, score in network_scores:
-                print "%s[%d] - %s\t%f" % (network.name(), cluster_num, gene, score)
+            network_cluster_scores[cluster_num] = nw.compute_network_scores(
+                network, cluster_genes, matrix.row_names())
+    return network_scores
 
 
 def retrieve_networks(organism):
