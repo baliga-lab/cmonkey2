@@ -153,6 +153,14 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEqual(-0.255575, result[1])
         self.assertAlmostEqual(0.2238883025, result[2])
 
+    def test_trim_mean_nonmedian(self):
+        self.assertAlmostEqual(
+            40.625,
+            util.trim_mean([2, 4, 6, 7, 11, 21, 81, 90, 105, 121], 0.1))
+
+    def test_trim_mean_median(self):
+        self.assertAlmostEqual(3.5, util.trim_mean([.1, .2, 3, 4, 5, 6], 0.5))
+
 
 class Order2StringTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for order2string"""

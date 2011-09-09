@@ -305,6 +305,17 @@ def kcombinations(alist, k):
     return ss1 + ss2
 
 
+def trim_mean(values, trim):
+  """returns the trim mean"""
+  values = sorted(values)
+  if trim == 0.5:
+    return numpy.median(values)
+  np = trim * len(values)
+  k = int(round(np))
+  r = len(values) - 2 * k 
+  trimmed_values = values[k:len(values) - k]
+  return sum(trimmed_values) / float(r)
+
 __all__ = ['DelimitedFile', 'best_matching_links', 'quantile', 'make_matrix',
            'DocumentNotFound', 'CMonkeyURLopener', 'read_url',
-           'read_url_cached', 'ThesaurusBasedMap']
+           'read_url_cached', 'ThesaurusBasedMap', 'trim_mean']
