@@ -161,6 +161,13 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_trim_mean_median(self):
         self.assertAlmostEqual(3.5, util.trim_mean([.1, .2, 3, 4, 5, 6], 0.5))
 
+    def test_trim_mean_no_values(self):
+        self.assertEqual(0, util.trim_mean([], 0.05))
+
+    def test_trim_mean_real(self):
+        values = [0.0, 0.0, -8.7520618359684352, -8.7520618359684352, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.assertAlmostEqual(-1.4586770, util.trim_mean(values, 0.05))
 
 class Order2StringTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for order2string"""

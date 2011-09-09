@@ -5,6 +5,7 @@ more information and licensing details.
 """
 import BeautifulSoup as bs
 import operator
+import math
 import numpy
 import scipy.stats
 import urllib
@@ -307,14 +308,20 @@ def kcombinations(alist, k):
 
 def trim_mean(values, trim):
   """returns the trim mean"""
-  values = sorted(values)
+  values = sorted(values, reverse=True)
+  if not values or len(values) == 0:
+      return 0
   if trim == 0.5:
     return numpy.median(values)
+
   np = trim * len(values)
+  remainder = np % 1.0
+
   k = int(round(np))
-  r = len(values) - 2 * k 
+  k_floor = int(math.floor(np))
   trimmed_values = values[k:len(values) - k]
-  return sum(trimmed_values) / float(r)
+  trim_values_floor = values[k_floor:len(values) - k_floor]
+  return sum(trim_values_floor) / float(len(trim_values_floor))
 
 __all__ = ['DelimitedFile', 'best_matching_links', 'quantile', 'make_matrix',
            'DocumentNotFound', 'CMonkeyURLopener', 'read_url',

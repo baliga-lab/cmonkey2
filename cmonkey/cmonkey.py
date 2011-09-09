@@ -234,22 +234,34 @@ def run_cmonkey():
     #algorithm = CMonkey(organism, dm.DataMatrixCollection([matrix]))
     #algorithm.run()
     # 3. compute network scores
-    network_scores = compute_network_scores(organism, membership, matrix)
-    print network_scores
+    compute_network_scores(organism, membership, matrix)
 
 def compute_network_scores(organism, membership, matrix):
     networks = retrieve_networks(organism)
-    network_scores = {}
-    for network in networks:
+
+    # TODO: here add the network scores weighted (0.5 for the two networks for now)
+    network_iteration_scores = {}
+
+    for network in [networks[0]]: # debugging
+    #for network in networks:
         logging.info("Compute scores for network '%s'", network.name())
-        network_cluster_scores = {}
-        network_scores[network.name()] = network_cluster_scores
+        network_score = {}
 
         for cluster_num in range(1, NUM_CLUSTERS + 1):
+            cluster_score_total = 0.0
             cluster_genes = sorted(membership.rows_for_cluster(cluster_num))
-            network_cluster_scores[cluster_num] = nw.compute_network_scores(
+            network_score[cluster_num] = nw.compute_network_scores(
                 network, cluster_genes, matrix.row_names())
-    return network_scores
+            # build network scoring based on cluster membership
+            cluster_scores = []
+            for gene in sorted(membership.rows_for_cluster(cluster_num)):
+                if gene in network_score[cluster_num].keys():
+                    cluster_scores.append(network_score[cluster_num][gene])
+                else:
+                    cluster_scores.append(0.0)
+
+            cluster_score_total = util.trim_mean(cluster_scores, 0.05)
+            print "cluster_score_total[%d] = %f" % (cluster_num, cluster_score_total)
 
 
 def retrieve_networks(organism):
