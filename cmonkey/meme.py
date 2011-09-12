@@ -137,6 +137,9 @@ class MemeSuite:
         dbfile = make_sequence_file(all_seqs_dict)
         logging.info('created mast database in %s', dbfile)
         mast_output = self.mast(meme_outfile, dbfile, bgfile)
+        print "SEQS = ", input_seqs.keys()
+        #pe_values, annotations = read_mast_output(mast_output, input_seqs.keys())
+        #print "PE_VALUES: ", pe_values
         #print mast_output
 
     def dust(self, fasta_file_path):  # pylint: disable-msg=R0201
@@ -359,15 +362,27 @@ def read_mast_output(output_text, genes):
         """
         current_index = start_index
         is_last = False
-        motif_nums = []
-        pvalues = []
-        positions = []
+
+        # global lines
+        motifnum_line = ""
+        pvalue_line = ""
+        seq_line = ""
         while not is_last:
             is_last = is_last_block(lines, current_index, seqlen)
-            read_block(lines, current_index, motif_nums,
-                       pvalues, positions)
+            # append to the motif number line, the p-value line, and seq line
+            motifnum_line += lines[current_index].rstrip().ljust(80)[5:]
+            pvalue_line += lines[current_index + 1].rstrip().ljust(80)[5:]
+            seq_line += lines[current_index + 4].rstrip().ljust(80)[5:]
             current_index += 6
+
+        motif_nums = read_motif_numbers(motifnum_line)
+        pvalues = read_pvalues(pvalue_line)
+        positions = read_positions(motifnum_line, seq_line)
         return zip(pvalues, positions, motif_nums)
+
+    def read_motifnum_line(line):
+        """format and pad a motif number line"""
+        return line.rstrip().ljust(80)[5:]
 
     def is_last_block(lines, index, seqlen):
         """determines whether the specified block is the last one for
@@ -376,13 +391,6 @@ def read_mast_output(output_text, genes):
         seqstart_index = int(re.match('(\d+).*', seqline).group(1))
         seq_start = re.match('\d+\s+(\S+)', seqline).start(1)
         return (len(seqline) - seq_start) + seqstart_index >= seqlen
-
-    def read_block(lines, index, motif_nums, pvalues, positions):
-        """Reads the motif numbers, pvalues and positions from the
-        specified block"""
-        motif_nums.extend(read_motif_numbers(lines[index]))
-        pvalues.extend(read_pvalues(lines[index + 1]))
-        positions.extend(read_positions(lines[index], lines[index + 4]))
 
     def read_motif_numbers(motifnum_line):
         """reads the motif numbers contained in a motif number line"""
@@ -399,15 +407,13 @@ def read_mast_output(output_text, genes):
     def read_positions(motifnum_line, seqline):
         """we only need the motif number line and the sequence line
         to retrieve the position"""
-        start_index = int(re.match('(\d+).*', seqline).group(1))
-        seq_start = re.match('\d+\s+(\S+)', seqline).start(1)
-        # offset +1 for compatibility with cMonkey R, don't really
+        # offset +2 for compatibility with cMonkey R, don't really
         # know why
-        return [(m.start() - seq_start + start_index + 1)
+        return [(m.start() + 2)
                 for m in re.finditer('\[', motifnum_line)]
 
     def read_annotations(lines, genes):
-        """extract annotations"""
+        """extract annotations, genes are given as refseq ids"""
         result = {}
         current_index = next_pe_value_line(0, lines)
         while current_index != -1:
