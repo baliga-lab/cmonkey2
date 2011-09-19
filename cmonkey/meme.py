@@ -388,7 +388,8 @@ def read_mast_output(output_text, genes):
             seqline = lines[index + 4]
             seqstart_index = int(re.match('(\d+).*', seqline).group(1))
             seq_start = re.match('\d+\s+(\S+)', seqline).start(1)
-            return (len(seqline) - seq_start) + seqstart_index >= seqlen
+            return ((len(seqline) - seq_start) + seqstart_index >= seqlen or
+                    not re.match('(\d+).*', lines[index + 10]))
         except:
             print "ERROR IN SEQLINE: [%s]" % seqline
 
@@ -443,6 +444,9 @@ def read_mast_output(output_text, genes):
 
             current_index = next_pe_value_line(current_index + 1, lines)
         return result
+
+    with open("/Users/wwu/MAST_LAST.txt", "w+") as mastout:
+        mastout.write(output_text)
 
     lines = output_text.split('\n')
     pe_values = read_pe_values(lines)

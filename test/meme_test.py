@@ -86,3 +86,13 @@ class MemeTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                                           ['NP_279634.1', 'NP_279286.1'])
         self.assertTrue('NP_279634.1' in annotations)
         self.assertTrue('NP_279286.1' in annotations)
+
+    def test_read_mast_output3(self):
+        """tests the read_mast_output function, this one has an incomplete block"""
+        with open('testdata/mast3.out') as inputfile:
+            pevalues, annotations = meme.read_mast_output(inputfile.read(),
+                                                          ['NP_279608.1'])
+        pev = [pevalue for pevalue in pevalues if pevalue[0] == 'NP_279608.1']
+        self.assertAlmostEquals(3.9e-08, pev[0][1])
+        self.assertAlmostEquals(9.61e-11, pev[0][2])
+        self.assertTrue('NP_279608.1' in annotations)

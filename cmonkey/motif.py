@@ -62,7 +62,7 @@ def compute_scores(meme_suite, organism, membership,
             seqs = sequence_filter(seqs, feature_ids, distance)
         return seqs
 
-    for cluster in [15]:  # range(1, num_clusters + 1):
+    for cluster in range(1, num_clusters + 1):
         logging.info("compute motif scores for cluster %d", cluster)
         genes = sorted(membership.rows_for_cluster(cluster))
         feature_ids = organism.feature_ids_for(genes)
