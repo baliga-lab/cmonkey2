@@ -77,3 +77,12 @@ class MemeTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEquals(4.9e-01, annot2[5][0])
         self.assertAlmostEquals(223, annot2[5][1])
         self.assertAlmostEquals(-2, annot2[5][2])
+
+    def test_read_mast_output2(self):
+        """tests the read_mast_output function, this one has some
+        more silly blank line placements"""
+        with open('testdata/mast2.out') as inputfile:
+            pevalues, annotations = meme.read_mast_output(inputfile.read(),
+                                                          ['NP_279634.1', 'NP_279286.1'])
+        self.assertTrue('NP_279634.1' in annotations)
+        self.assertTrue('NP_279286.1' in annotations)

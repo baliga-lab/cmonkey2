@@ -6,6 +6,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import logging
+import numpy
 
 
 DISTANCE_UPSTREAM_SEARCH = (-20, 150)  # used to select sequences
@@ -44,8 +45,11 @@ def remove_atgs_filter(seqs, feature_ids, distance):
     return seqs
 
 
-def compute_scores(meme_suite, organism, membership, used_sequences,
+def compute_scores(meme_suite, organism, membership,
+                   num_clusters, used_sequences,
                    distance, sequence_filters):
+    MIN_LOG_SCORE = -20.0
+
     """Compute motif scores. In order to influence the sequences
     that go into meme, the user can specify a list of sequence filter
     functions that have the signature
@@ -58,7 +62,8 @@ def compute_scores(meme_suite, organism, membership, used_sequences,
             seqs = sequence_filter(seqs, feature_ids, distance)
         return seqs
 
-    for cluster in [2]:
+    for cluster in [15]:  # range(1, num_clusters + 1):
+        logging.info("compute motif scores for cluster %d", cluster)
         genes = sorted(membership.rows_for_cluster(cluster))
         feature_ids = organism.feature_ids_for(genes)
         seqs = organism.sequences_for_genes(genes, distance, upstream=True)
@@ -69,7 +74,37 @@ def compute_scores(meme_suite, organism, membership, used_sequences,
             logging.info("# seqs (= %d) within limits, continue processing, " +
                          "seqs are: %s",
                          len(seqs), str(seqs))
-            meme_suite.run_meme(seqs, used_sequences)
+            pvalues = {}
+            pe_values, annotations = meme_suite.run_meme(seqs, used_sequences)
+
+            # This is originally done in get.combined.scores
+            min_allowed_pvalue = 1000000
+            for feature_id, pvalue, evalue in pe_values:
+                pvalues[feature_id] = numpy.log(pvalue)
+                if (pvalues[feature_id] < min_allowed_pvalue and
+                    pvalues[feature_id] >= MIN_LOG_SCORE):
+                    min_allowed_pvalue = pvalues[feature_id]
+
+            for feature_id in pvalues:
+                if pvalues[feature_id] < MIN_LOG_SCORE:
+                    pvalues[feature_id] = min_allowed_pvalue
+
+            #for feature_id in pvalues:
+            #    print "%s[%d] => %f" % (feature_id, cluster, pvalues[feature_id])
+            #print "PE-VALUES, CLUSTER: ", cluster
+            #for feature_id, pvalue, evalue in pe_values:
+            #    print "%s\t%f\t%f" % (feature_id, pvalue, evalue)
+
+            #print "COUNT = %d" % len(pe_values)
+            #print "------------------------"
+            #print "ANNOTATIONS, CLUSTER: ", cluster
+            #count = 0
+            #for feature_id, annotation in annotations.items():
+            #    for elem in annotation:
+            #        print "%s\t%s" % (feature_id, str(elem))
+            #        count += 1
+            #print "COUNT = %d" % count 
+
         else:
             logging.info("# seqs (= %d) outside of defined limits, skipping " +
                          "cluster %d", len(seqs), cluster)

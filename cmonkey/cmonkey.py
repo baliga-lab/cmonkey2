@@ -216,26 +216,28 @@ def run_cmonkey():
 
     # One iteration
     # 1. compute microarray scores
-    #microarray.compute_row_scores(membership, matrix, NUM_CLUSTERS)
+    #rscores = microarray.compute_row_scores(membership, matrix, NUM_CLUSTERS)
     #cscores = microarray.compute_column_scores(membership, matrix,
     #                                           NUM_CLUSTERS)
-    #print cscores
+    #print "ROW SCORES: ", rscores
+    #print "COL SCORES: ", cscores
 
     # 2. compute motif scores
-    #meme_suite = meme.MemeSuite430()
-    #distance = motif.DISTANCE_UPSTREAM_SEARCH
-    #motif.compute_scores(meme_suite, organism, membership, used_seqs,
-    #                     distance,
-    #                     [motif.unique_filter,
-    #                      motif.get_remove_low_complexity_filter(meme_suite),
-    #                      motif.remove_atgs_filter])
+    meme_suite = meme.MemeSuite430()
+    distance = motif.DISTANCE_UPSTREAM_SEARCH
+    motif.compute_scores(meme_suite, organism, membership,
+                         NUM_CLUSTERS, used_seqs,
+                         distance,
+                         [motif.unique_filter,
+                          motif.get_remove_low_complexity_filter(meme_suite),
+                          motif.remove_atgs_filter])
 
     # running the algorithm in the CMonkey object is obsolete
     #algorithm = CMonkey(organism, dm.DataMatrixCollection([matrix]))
     #algorithm.run()
     # 3. compute network scores
-    network_scores = compute_network_scores(organism, membership, matrix)
-    print network_scores
+    #network_scores = compute_network_scores(organism, membership, matrix)
+    #print network_scores
 
 
 def compute_network_scores(organism, membership, matrix):

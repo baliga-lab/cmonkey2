@@ -137,10 +137,7 @@ class MemeSuite:
         dbfile = make_sequence_file(all_seqs_dict)
         logging.info('created mast database in %s', dbfile)
         mast_output = self.mast(meme_outfile, dbfile, bgfile)
-        print "SEQS = ", input_seqs.keys()
-        #pe_values, annotations = read_mast_output(mast_output, input_seqs.keys())
-        #print "PE_VALUES: ", pe_values
-        #print mast_output
+        return read_mast_output(mast_output, input_seqs.keys())
 
     def dust(self, fasta_file_path):  # pylint: disable-msg=R0201
         """runs the dust command on the specified FASTA file and
@@ -267,7 +264,7 @@ def read_meme_output(output_text, num_motifs):
     def read_sites(start_index, lines):
         """reads the sites"""
         sites_index = next_sites_index(start_index, lines)
-        pattern = re.compile("(\S+)\s+([+-])\s+(\d+)\s+(\S+)\s+\S+ (\S+) \S+")
+        pattern = re.compile("(\S+)\s+([+-])\s+(\d+)\s+(\S+)\s+\S+ (\S+) (\S+)?")
         current_index = sites_index + 4
         line = lines[current_index]
         sites = []
@@ -376,8 +373,8 @@ def read_mast_output(output_text, genes):
             current_index += 6
 
         motif_nums = read_motif_numbers(motifnum_line)
-        pvalues = read_pvalues(pvalue_line)
         positions = read_positions(motifnum_line, seq_line)
+        pvalues = read_pvalues(pvalue_line, [(pos - 2) for pos in positions])
         return zip(pvalues, positions, motif_nums)
 
     def read_motifnum_line(line):
@@ -387,10 +384,13 @@ def read_mast_output(output_text, genes):
     def is_last_block(lines, index, seqlen):
         """determines whether the specified block is the last one for
         the current gene"""
-        seqline = lines[index + 4]
-        seqstart_index = int(re.match('(\d+).*', seqline).group(1))
-        seq_start = re.match('\d+\s+(\S+)', seqline).start(1)
-        return (len(seqline) - seq_start) + seqstart_index >= seqlen
+        try:
+            seqline = lines[index + 4]
+            seqstart_index = int(re.match('(\d+).*', seqline).group(1))
+            seq_start = re.match('\d+\s+(\S+)', seqline).start(1)
+            return (len(seqline) - seq_start) + seqstart_index >= seqlen
+        except:
+            print "ERROR IN SEQLINE: [%s]" % seqline
 
     def read_motif_numbers(motifnum_line):
         """reads the motif numbers contained in a motif number line"""
@@ -398,11 +398,17 @@ def read_mast_output(output_text, genes):
                 for motifnum in re.split(' +', motifnum_line)
                 if len(motifnum.strip()) > 0]
 
-    def read_pvalues(pvalue_line):
+    def read_pvalues(pvalue_line, indexes):
         """reads the p-values contained in a p-value line"""
-        return [float(pvalue)
-                for pvalue in re.split(' +', pvalue_line)
-                if len(pvalue.strip()) > 0]
+        pvalues = []
+        for index_num in range(len(indexes)):
+            if index_num < len(indexes) - 1:
+               pvalues.append(float(
+                       pvalue_line[indexes[index_num]:indexes[index_num + 1]]))
+            else:
+               pvalues.append(float(
+                       pvalue_line[indexes[index_num]:]))
+        return pvalues
 
     def read_positions(motifnum_line, seqline):
         """we only need the motif number line and the sequence line
@@ -421,7 +427,18 @@ def read_mast_output(output_text, genes):
             if gene in genes:
                 info_line = lines[current_index]
                 length = int(__extract_regex('LENGTH\s+=\s+(\d+)', info_line))
-                result[gene] = read_seqalign_blocks(lines, current_index + 3,
+
+                # the diagram line can span several lines and the blank lines
+                # after those can span several, so search for the first non-blank line
+                # after the block of blank lines
+                blank_index = current_index + 2
+                while len(lines[blank_index].strip()) > 0:
+                    blank_index += 1
+                non_blank_index = blank_index + 1
+                while len(lines[non_blank_index].strip()) == 0:
+                    non_blank_index += 1
+                result[gene] = read_seqalign_blocks(lines,
+                                                    non_blank_index,
                                                     length)
 
             current_index = next_pe_value_line(current_index + 1, lines)
