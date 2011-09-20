@@ -7,6 +7,7 @@ more information and licensing details.
 """
 import logging
 import numpy
+import sys
 
 
 DISTANCE_UPSTREAM_SEARCH = (-20, 150)  # used to select sequences
@@ -47,7 +48,7 @@ def remove_atgs_filter(seqs, feature_ids, distance):
 
 def compute_scores(meme_suite, organism, membership,
                    num_clusters, used_sequences,
-                   distance, sequence_filters):
+                   distance, sequence_filters, pvalue_filter):
     MIN_LOG_SCORE = -20.0
 
     """Compute motif scores. In order to influence the sequences
@@ -74,23 +75,16 @@ def compute_scores(meme_suite, organism, membership,
             logging.info("# seqs (= %d) within limits, continue processing, " +
                          "seqs are: %s",
                          len(seqs), str(seqs))
-            pvalues = {}
             pe_values, annotations = meme_suite.run_meme(seqs, used_sequences)
 
-            # This is originally done in get.combined.scores
-            min_allowed_pvalue = 1000000
+            pvalues = {}
             for feature_id, pvalue, evalue in pe_values:
                 pvalues[feature_id] = numpy.log(pvalue)
-                if (pvalues[feature_id] < min_allowed_pvalue and
-                    pvalues[feature_id] >= MIN_LOG_SCORE):
-                    min_allowed_pvalue = pvalues[feature_id]
-
+            pvalues = pvalue_filter(pvalues)
             for feature_id in pvalues:
-                if pvalues[feature_id] < MIN_LOG_SCORE:
-                    pvalues[feature_id] = min_allowed_pvalue
+                print "%s[%d] => %f" % (feature_id, cluster, pvalues[feature_id])
 
-            #for feature_id in pvalues:
-            #    print "%s[%d] => %f" % (feature_id, cluster, pvalues[feature_id])
+
             #print "PE-VALUES, CLUSTER: ", cluster
             #for feature_id, pvalue, evalue in pe_values:
             #    print "%s\t%f\t%f" % (feature_id, pvalue, evalue)
@@ -108,3 +102,24 @@ def compute_scores(meme_suite, organism, membership,
         else:
             logging.info("# seqs (= %d) outside of defined limits, skipping " +
                          "cluster %d", len(seqs), cluster)
+
+
+def make_min_value_filter(min_value):
+    """A function generator which creates a value filter"""
+
+    def min_value_filter(values):
+        """all values that are below min_value are set to the
+        minimum value above min_value"""
+        allowed_vals = [value for key, value in values.items() if value > min_value]
+        result = {}
+        if len(allowed_vals) == 0:
+            logging.warn("all values are below the threshold -> no result !!")
+        else:
+            min_allowed = min(allowed_vals)
+            for key, value in values.items():
+                if value < min_value:
+                    result[key] = min_allowed
+                else:
+                    result[key] = value
+        return result
+    return min_value_filter

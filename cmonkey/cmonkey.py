@@ -216,21 +216,28 @@ def run_cmonkey():
 
     # One iteration
     # 1. compute microarray scores
-    #rscores = microarray.compute_row_scores(membership, matrix, NUM_CLUSTERS)
+    rscores = microarray.compute_row_scores(membership, matrix, NUM_CLUSTERS)
     #cscores = microarray.compute_column_scores(membership, matrix,
     #                                           NUM_CLUSTERS)
     #print "ROW SCORES: ", rscores
     #print "COL SCORES: ", cscores
+    rscores = rscores.multiply_by(6.0) # TODO: don't hardcode
+    for row in range(rscores.num_rows()):
+        print rscores.row_name(row),
+        for col in range(rscores.num_columns()):
+            print rscores[row][col],
+        print
 
     # 2. compute motif scores
-    meme_suite = meme.MemeSuite430()
-    distance = motif.DISTANCE_UPSTREAM_SEARCH
-    motif.compute_scores(meme_suite, organism, membership,
-                         NUM_CLUSTERS, used_seqs,
-                         distance,
-                         [motif.unique_filter,
-                          motif.get_remove_low_complexity_filter(meme_suite),
-                          motif.remove_atgs_filter])
+    #meme_suite = meme.MemeSuite430()
+    #distance = motif.DISTANCE_UPSTREAM_SEARCH
+    #motif.compute_scores(meme_suite, organism, membership,
+    #                     NUM_CLUSTERS, used_seqs,
+    #                     distance,
+    #                     [motif.unique_filter,
+    #                      motif.get_remove_low_complexity_filter(meme_suite),
+    #                      motif.remove_atgs_filter],
+    #                     motif.make_min_value_filter(-20.0))
 
     # running the algorithm in the CMonkey object is obsolete
     #algorithm = CMonkey(organism, dm.DataMatrixCollection([matrix]))
