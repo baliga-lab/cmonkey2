@@ -39,7 +39,7 @@ class DataMatrix:
             self.__row_names = row_names
 
         if not col_names:
-            self.__column_names = ["Column " + str(i) for i in range(ncols)]
+            self.__column_names = ["Col " + str(i) for i in range(ncols)]
         else:
             if len(col_names) != ncols:
                 raise ValueError("number of column names should be %d" % ncols)
@@ -160,7 +160,7 @@ class DataMatrix:
 
     def __str__(self):
         """returns a string representation of this matrix"""
-        result = "%10s" % 'Gene'
+        result = "%10s" % 'Row'
         result += ' '.join([("%10s" % name)
                             for name in self.__column_names]) + '\n'
         for row_index in range(self.num_rows()):

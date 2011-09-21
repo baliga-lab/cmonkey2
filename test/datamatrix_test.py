@@ -26,8 +26,8 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals(0.0, matrix[0][0])
         self.assertEquals("Row 0", matrix.row_name(0))
         self.assertEquals("Row 1", matrix.row_name(1))
-        self.assertEquals("Column 0", matrix.column_name(0))
-        self.assertEquals("Column 1", matrix.column_name(1))
+        self.assertEquals("Col 0", matrix.column_name(0))
+        self.assertEquals("Col 1", matrix.column_name(1))
 
     def test_create_with_names(self):
         """create DataMatrix with row and column names"""

@@ -216,17 +216,24 @@ def run_cmonkey():
 
     # One iteration
     # 1. compute microarray scores
-    rscores = microarray.compute_row_scores(membership, matrix, NUM_CLUSTERS)
-    #cscores = microarray.compute_column_scores(membership, matrix,
-    #                                           NUM_CLUSTERS)
-    #print "ROW SCORES: ", rscores
-    #print "COL SCORES: ", cscores
-    rscores = rscores.multiply_by(6.0) # TODO: don't hardcode
-    for row in range(rscores.num_rows()):
-        print rscores.row_name(row),
-        for col in range(rscores.num_columns()):
-            print rscores[row][col],
-        print
+    # setup all scoring functions in this array so they are executed
+    # one after another.
+    # each object in this array supports the method
+    # compute(organism, membership, matrix) and returns
+    # a DataMatrix(genes x cluster)
+    scoring_algos = [microarray.RowScoringFunction(NUM_CLUSTERS)]
+
+    #rscores = scoring_algos[0].compute(organism, membership, matrix)
+    #rscores = rscores.multiply_by(6.0) # TODO: don't hardcode
+    #for row in range(rscores.num_rows()):
+    #    print rscores.row_name(row),
+    #    for col in range(rscores.num_columns()):
+    #        print rscores[row][col],
+    #    print
+
+    #cscores = microarray.ColumnScoringFunction(NUM_CLUSTERS).compute(
+    #    organism, membership, matrix)
+    #print cscores
 
     # 2. compute motif scores
     #meme_suite = meme.MemeSuite430()
@@ -243,72 +250,13 @@ def run_cmonkey():
     #algorithm = CMonkey(organism, dm.DataMatrixCollection([matrix]))
     #algorithm.run()
     # 3. compute network scores
-    #network_scores = compute_network_scores(organism, membership, matrix)
-    #print network_scores
+    network_scores = nw.ScoringFunction(NUM_CLUSTERS).compute(
+        organism, membership, matrix)
+    print network_scores
 
-
-def compute_network_scores(organism, membership, matrix):
-    """compute network scores"""
-
-    result = {}  # a dictionary indexed with network names
-    networks = retrieve_networks(organism)
-
-    # TODO: here add the network scores weighted (0.5 for the two networks
-    # for now)
-    weight = 0.5  # for now it's fixed, we need to make them flexible
-    network_iteration_scores = {}
-    for cluster in range(1, NUM_CLUSTERS + 1):
-        network_iteration_scores[cluster] = {}
-
-    for network in networks:
-        logging.info("Compute scores for network '%s'", network.name())
-        network_score = {}
-        cluster_score_means = {}
-
-        for cluster in range(1, NUM_CLUSTERS + 1):
-            cluster_genes = sorted(membership.rows_for_cluster(cluster))
-            network_score[cluster] = nw.compute_network_scores(
-                network, cluster_genes, matrix.row_names())
-            # build network scoring based on cluster membership
-            cluster_scores = []
-            for gene in sorted(membership.rows_for_cluster(cluster)):
-                # init iteration score if non-existent
-                if gene not in network_iteration_scores[cluster].keys():
-                    network_iteration_scores[cluster][gene] = 0.0
-
-                if gene in network_score[cluster].keys():
-                    cluster_scores.append(network_score[cluster][gene])
-                    network_iteration_scores[cluster][gene] += network_score[cluster][gene] * weight
-                else:
-                    cluster_scores.append(0.0)
-
-            cluster_score_means[cluster] = util.trim_mean(cluster_scores, 0.05)
-        result[network.name()] = cluster_score_means
-
-    iteration_scores = {}
-    for cluster in network_iteration_scores:
-        cluster_scores = []
-        for gene, score in network_iteration_scores[cluster].items():
-            cluster_scores.append(score)
-        iteration_scores[cluster] = util.trim_mean(cluster_scores, 0.05)
-    result['all'] = iteration_scores
-    return result
-
-
-def retrieve_networks(organism):
-    """retrieves the networks provided by the organism object and
-    possibly other sources, doing some normalization if necessary"""
-    networks = organism.networks()
-    max_score = 0
-    for network in networks:
-        logging.info("Network '%s' with %d edges", network.name(),
-                     network.num_edges())
-        nw_total = network.total_score()
-        if nw_total > max_score:
-            max_score = nw_total
-    for network in networks:
-        network.normalize_scores_to(max_score)
-    return networks
+    # TODO: Fuzzify scores (can't be reproduced 1:1 to the R version)
+    # TODO: Get density score
+    # TODO: size compensation
 
 
 def fake_seed_row_memberships(fake_mapper):

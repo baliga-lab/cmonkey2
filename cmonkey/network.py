@@ -4,6 +4,8 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import numpy
+import logging
+import util
 
 
 class NetworkEdge:
@@ -135,3 +137,72 @@ def compute_network_scores(network, genes, all_genes):
         final_gene_scores[gene] = sum(scores) / len(genes)
         final_gene_scores[gene] = -numpy.log(final_gene_scores[gene] + 1)
     return final_gene_scores
+
+
+
+class ScoringFunction:
+    def __init__(self, num_clusters):
+        self.num_clusters = num_clusters
+
+    def compute(self, organism, membership, matrix):
+        """compute network scores"""
+
+        result = {}  # a dictionary indexed with network names
+        networks = self.retrieve_networks(organism)
+
+        # TODO: here add the network scores weighted (0.5 for the two networks
+        # for now)
+        weight = 0.5  # for now it's fixed, we need to make them flexible
+        network_iteration_scores = {}
+        for cluster in range(1, self.num_clusters + 1):
+            network_iteration_scores[cluster] = {}
+
+        for network in networks:
+            logging.info("Compute scores for network '%s'", network.name())
+            network_score = {}
+            cluster_score_means = {}
+
+            for cluster in range(1, self.num_clusters + 1):
+                cluster_genes = sorted(membership.rows_for_cluster(cluster))
+                network_score[cluster] = compute_network_scores(
+                    network, cluster_genes, matrix.row_names())
+                # build network scoring based on cluster membership
+                cluster_scores = []
+                for gene in sorted(membership.rows_for_cluster(cluster)):
+                    # init iteration score if non-existent
+                    if gene not in network_iteration_scores[cluster].keys():
+                        network_iteration_scores[cluster][gene] = 0.0
+
+                    if gene in network_score[cluster].keys():
+                        cluster_scores.append(network_score[cluster][gene])
+                        network_iteration_scores[cluster][gene] += network_score[cluster][gene] * weight
+                    else:
+                        cluster_scores.append(0.0)
+
+                cluster_score_means[cluster] = util.trim_mean(cluster_scores, 0.05)
+            result[network.name()] = cluster_score_means
+
+        iteration_scores = {}
+        for cluster in network_iteration_scores:
+            cluster_scores = []
+            for gene, score in network_iteration_scores[cluster].items():
+                cluster_scores.append(score)
+            iteration_scores[cluster] = util.trim_mean(cluster_scores, 0.05)
+        result['all'] = iteration_scores
+        return result
+
+    def retrieve_networks(self, organism):
+        """retrieves the networks provided by the organism object and
+        possibly other sources, doing some normalization if necessary"""
+        networks = organism.networks()
+        max_score = 0
+        for network in networks:
+            logging.info("Network '%s' with %d edges", network.name(),
+                         network.num_edges())
+            nw_total = network.total_score()
+            if nw_total > max_score:
+                max_score = nw_total
+
+        for network in networks:
+            network.normalize_scores_to(max_score)
+        return networks

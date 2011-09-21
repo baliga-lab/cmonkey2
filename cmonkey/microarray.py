@@ -288,5 +288,28 @@ def __quantile_normalize_scores(cluster_row_scores, membership, clusters):
                     values_for_quantile.append(score)
     return util.quantile(values_for_quantile, 0.95)
 
+
+class RowScoringFunction:
+    """Scoring algorithm for microarray data based on genes"""
+
+    def __init__(self, num_clusters):
+        self.num_clusters = num_clusters
+
+    def compute(self, organism, membership, matrix):
+        return compute_row_scores(membership, matrix, self.num_clusters)
+
+
+class ColumnScoringFunction:
+    """Scoring algorithm for microarray data based on conditions.
+    Note that the score does not correspond to the normal scoring
+    function output format and can therefore not be combined in
+    a generic way (the format is |condition x cluster|)"""
+
+    def __init__(self, num_clusters):
+        self.num_clusters = num_clusters
+
+    def compute(self, organism, membership, matrix):
+        return compute_column_scores(membership, matrix, self.num_clusters)
+
 __all__ = ['ClusterMembership', 'compute_row_scores', 'compute_column_scores',
            'seed_column_members']
