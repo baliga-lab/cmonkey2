@@ -96,3 +96,30 @@ class ClusterMembership:
     def is_row_member_of(self, row_name, cluster):
         """determines whether a certain row is member of a cluster"""
         return row_name in self.rows_for_cluster(cluster)
+
+
+class Membership:
+    """Algorithms for cluster membership"""
+    def __init__(self):
+        """this class has only class methods"""
+        pass
+
+    @classmethod
+    def map_to_is_member_matrix(cls, membership_matrix, kcluster):
+        """maps a matrix containing row/column numbers to a true/false
+        matrix by checking all values i in the range [1, kcluster] for
+        containment in each row of the membership matrix.
+        Example: mat =  [1 2] kcluster: 3
+                        [2 3]
+                 result = [t f] => 1 is in     [1 2], but not in [2 3]
+                          [t t] => 2 is in     [1 2], and        [2 3]
+                          [f t] => 3 is not in [1 2], but in     [2 3]
+        """
+        result = []
+        for i in range(1, kcluster + 1):
+            result_row = []
+            result.append(result_row)
+            for matrix_row in membership_matrix:
+                result_row.append(i in matrix_row)
+
+        return result

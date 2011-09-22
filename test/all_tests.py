@@ -6,7 +6,6 @@ more information and licensing details.
 import unittest
 import membership_test as membtest
 import datamatrix_test as dmtest
-import cmonkey_test as cmtest
 import util_test as ut
 import organism_test as ot
 import seqtools_test as stt
@@ -25,9 +24,6 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(dmtest.DataMatrixFactoryTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(dmtest.NoChangeFilterTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(dmtest.CenterScaleFilterTest))
-
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(cmtest.CMonkeyTest))
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(cmtest.MembershipTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ut.DelimitedFileTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ut.UtilsTest))
@@ -54,6 +50,7 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(nwt.NetworkTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(membtest.ClusterMembershipTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(membtest.MembershipTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(mat.ComputeArrayScoresTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(met.MemeTest))

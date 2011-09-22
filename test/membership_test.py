@@ -120,3 +120,12 @@ class ClusterMembershipTest(unittest.TestCase):
                                                 2, 2)
         self.assertEquals([2, 1], column_members[0])
         self.assertEquals([2, 1], column_members[1])
+
+class MembershipTest(unittest.TestCase):  # pylint: disable-msg=R0904
+    """Test class for Membership"""
+
+    def test_map_to_is_member_matrix(self):
+        """tests the map_to_is_member_matrix function"""
+        in_matrix = [[1, 2], [2, 3]]
+        out = memb.Membership.map_to_is_member_matrix(in_matrix, 3)
+        self.assertEquals([[True, False], [True, True], [False, True]], out)

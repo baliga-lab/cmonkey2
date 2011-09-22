@@ -6,6 +6,7 @@ more information and licensing details.
 import util
 import datamatrix as dm
 import microarray
+import membership as memb
 import organism as org
 import meme
 import motif
@@ -27,132 +28,6 @@ RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
 NUM_CLUSTERS = 43
-
-
-class CMonkey:  # pylint: disable-msg=R0902
-    """
-    The cMonkey object controls the overall execution of the cMonkey
-    algorithm.
-    This top-level class takes configuration and inputs to provide
-    them for the actual execution
-    organism: Organism instance to use for computation
-    ratio_matrices: a list of DataMatrix instances containing gene expressions
-    configuration is a dictionary with the following keys:
-    'num_iterations'   - # of iterations
-    'clusters_per_row' - # of clusters/row
-    ...
-    """
-
-    def __init__(self, organism, ratio_matrices, config=None):
-        """create a cMonkey object
-        ratio_matrices: a MatrixCollection object containing gene expression
-                        values
-        configuration: a dictionary of configuration values
-        """
-        self.__finished = False
-        self.__organism = organism
-        self.__ratio_matrices = ratio_matrices
-        self.__configuration = self.__init_configuration(config)
-        self.__networks = None
-
-        # we might move these to a result class
-        self.__row_scores = None
-        self.__col_scores = None
-        self.__gene_weights = None
-
-    def __init_configuration(self, config):
-        """sets meaningful defaults in the configuration"""
-        configuration = config or {}
-        configuration.setdefault('num_iterations',       2)  # 2000 for now
-        configuration.setdefault('biclusters_per_gene',  2)
-        configuration.setdefault('num_biclusters',
-                                 self.__compute_num_biclusters(configuration))
-        configuration.setdefault('row.scaling',          6)
-        configuration.setdefault('seed_method.rows',     'kmeans')
-        configuration.setdefault('seed_method.cols',     'best')
-        return configuration
-
-    def __compute_num_biclusters(self, config):
-        """computes the number of biclusters to optimize"""
-        return int(round(self.__ratio_matrices.num_unique_rows() *
-                         float(config['biclusters_per_gene']) /
-                         AVG_CLUSTER_SIZE))
-
-    def __num_biclusters(self):
-        """returns the number of biclusters"""
-        return self.__configuration['num_biclusters']
-
-    def finished(self):
-        """returns true if the run was finished"""
-        return self.__finished
-
-    def run(self):
-        """start a run"""
-        self.__retrieve_networks()
-        logging.info("# Networks read: %d", len(self.__networks))
-
-        # self.__seed_clusters()
-        current_iteration = 0
-
-        logging.info("# iterations: %d", self.__num_iterations())
-
-        while current_iteration < self.__num_iterations():
-            self.__iterate()
-            current_iteration += 1
-        self.__finished = True
-
-    def __input_gene_names(self):
-        """returns the unique gene names used in the input matrices"""
-        return self.__ratio_matrices[0].row_names()
-
-    def __retrieve_networks(self):
-        """retrieves the networks provided by the organism object and
-        possibly other sources, doing some normalization if necessary"""
-        self.__networks = self.__organism.networks()
-        max_score = 0
-        for network in self.__networks:
-            logging.info("Network with %d edges", network.num_edges())
-            nw_total = network.total_score()
-            if nw_total > max_score:
-                max_score = nw_total
-        for network in self.__networks:
-            network.normalize_scores_to(max_score)
-
-    def __num_iterations(self):
-        """configured number of iterations"""
-        return self.__configuration.get('num_iterations', 2000)
-
-    def __iterate(self):
-        """iteration step in cMonkey
-        This is run over and over until no improvements can be achieved"""
-        pass
-
-
-class Membership:
-    """Algorithms for cluster membership"""
-    def __init__(self):
-        """this class has only class methods"""
-        pass
-
-    @classmethod
-    def map_to_is_member_matrix(cls, membership_matrix, kcluster):
-        """maps a matrix containing row/column numbers to a true/false
-        matrix by checking all values i in the range [1, kcluster] for
-        containment in each row of the membership matrix.
-        Example: mat =  [1 2] kcluster: 3
-                        [2 3]
-                 result = [t f] => 1 is in     [1 2], but not in [2 3]
-                          [t t] => 2 is in     [1 2], and        [2 3]
-                          [f t] => 3 is not in [1 2], but in     [2 3]
-        """
-        result = []
-        for i in range(1, kcluster + 1):
-            result_row = []
-            result.append(result_row)
-            for matrix_row in membership_matrix:
-                result_row.append(i in matrix_row)
-
-        return result
 
 
 def run_cmonkey():
@@ -207,7 +82,7 @@ def run_cmonkey():
     logging.info("# CLUSTERS / ROW = %d", num_clusters_per_row)
     logging.info("# CLUSTERS / COL = %d", num_clusters_per_col)
 
-    membership = microarray.ClusterMembership.create(
+    membership = memb.ClusterMembership.create(
         matrix.sorted_by_row_name(),
         NUM_CLUSTERS,
         num_clusters_per_row,
@@ -259,8 +134,8 @@ def run_cmonkey():
 
     scoring_algos = [row_scoring, motif_scoring, network_scoring]
     result_matrices = []
-    #for score_func in scoring_algos:
-    #    result_matrices.append(score_func.compute(membership, matrix))
+    for score_func in scoring_algos:
+        result_matrices.append(score_func.compute(membership, matrix))
 
     print "Done !!!!"
 
