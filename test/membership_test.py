@@ -83,17 +83,20 @@ class ClusterMembershipTest(unittest.TestCase):
         self.assertTrue(membership.is_row_member_of('R1', 1))
         self.assertTrue(membership.is_row_member_of('R2', 2))
         self.assertFalse(membership.is_row_member_of('R1', 2))
+        self.assertEquals(3, membership.num_clusters())
 
     def test_create_membership(self):
         """test creating a ClusterMembership object"""
         datamatrix = MockDataMatrix(3)
         seed_row_memberships = MockSeedRowMemberships()
         seed_col_memberships = MockSeedColumnMemberships()
-        membership = memb.ClusterMembership.create(datamatrix, 1, 2, 2,
+        membership = memb.ClusterMembership.create(datamatrix, 1,
+                                                   2, 2,
                                                    seed_row_memberships,
                                                    seed_col_memberships)
         self.assertTrue(seed_row_memberships.was_called)
         self.assertTrue(seed_col_memberships.was_called)
+        self.assertEquals(1, membership.num_clusters())
 
     def test_compute_column_scores_submatrix(self):
         """tests compute_column_scores_submatrix"""

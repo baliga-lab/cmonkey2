@@ -46,7 +46,7 @@ def remove_atgs_filter(seqs, feature_ids, distance):
 
 
 def compute_scores(meme_suite, organism, membership,
-                   num_clusters, used_sequences,
+                   used_sequences,
                    distance, sequence_filters, pvalue_filter):
     MIN_LOG_SCORE = -20.0
 
@@ -62,7 +62,7 @@ def compute_scores(meme_suite, organism, membership,
             seqs = sequence_filter(seqs, feature_ids, distance)
         return seqs
 
-    for cluster in range(1, num_clusters + 1):
+    for cluster in range(1, membership.num_clusters() + 1):
         logging.info("compute motif scores for cluster %d", cluster)
         genes = sorted(membership.rows_for_cluster(cluster))
         feature_ids = organism.feature_ids_for(genes)
@@ -126,24 +126,23 @@ def make_min_value_filter(min_value):
 class ScoringFunction:
     """Scoring function for motifs"""
 
-    def __init__(self, organism, meme_suite, distance, num_clusters,
+    def __init__(self, organism, membership, meme_suite, distance,
                  used_seqs, sequence_filters, pvalue_filter):
         """creates a ScoringFunction"""
-        self.organism = organism
-        self.meme_suite = meme_suite
-        self.distance = distance
-        self.num_clusters = num_clusters
-        self.used_seqs = used_seqs  # TODO: make this field computed
-        self.sequence_filters = sequence_filters
-        self.pvalue_filter = pvalue_filter
+        self.__organism = organism
+        self.__membership = membership
+        self.__meme_suite = meme_suite
+        self.__distance = distance
+        self.__used_seqs = used_seqs  # TODO: make this field computed
+        self.__sequence_filters = sequence_filters
+        self.__pvalue_filter = pvalue_filter
 
-    def compute(self, membership, matrix):
+    def compute(self, matrix):
         """compute method"""
-        return compute_scores(self.meme_suite,
-                              self.organism,
-                              membership,
-                              self.num_clusters,
-                              self.used_seqs,
-                              self.distance,
-                              self.sequence_filters,
-                              self.pvalue_filter)
+        return compute_scores(self.__meme_suite,
+                              self.__organism,
+                              self.__membership,
+                              self.__used_seqs,
+                              self.__distance,
+                              self.__sequence_filters,
+                              self.__pvalue_filter)

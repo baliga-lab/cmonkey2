@@ -142,22 +142,30 @@ def compute_network_scores(network, genes, all_genes):
 class ScoringFunction:
     """Network scoring function"""
 
-    def __init__(self, organism, num_clusters):
+    def __init__(self, organism, membership):
         """Create scoring function instance"""
-        self.organism = organism
-        self.num_clusters = num_clusters
+        self.__organism = organism
+        self.__membership = membership
 
-    def compute(self, membership, matrix):
+    def num_clusters(self):
+        """returns the number of clusters"""
+        return self.__membership.num_clusters()
+
+    def rows_for_cluster(self, cluster):
+        """returns the rows for the specified cluster"""
+        return self.__membership.rows_for_cluster(cluster)
+
+    def compute(self, matrix):
         """compute network scores"""
 
         result = {}  # a dictionary indexed with network names
-        networks = self.retrieve_networks(self.organism)
+        networks = self.retrieve_networks(self.__organism)
 
         # TODO: here add the network scores weighted (0.5 for the two networks
         # for now)
         weight = 0.5  # for now it's fixed, we need to make them flexible
         network_iteration_scores = {}
-        for cluster in range(1, self.num_clusters + 1):
+        for cluster in range(1, self.num_clusters() + 1):
             network_iteration_scores[cluster] = {}
 
         for network in networks:
@@ -165,13 +173,13 @@ class ScoringFunction:
             network_score = {}
             cluster_score_means = {}
 
-            for cluster in range(1, self.num_clusters + 1):
-                cluster_genes = sorted(membership.rows_for_cluster(cluster))
+            for cluster in range(1, self.num_clusters() + 1):
+                cluster_genes = sorted(self.rows_for_cluster(cluster))
                 network_score[cluster] = compute_network_scores(
                     network, cluster_genes, matrix.row_names())
                 # build network scoring based on cluster membership
                 cluster_scores = []
-                for gene in sorted(membership.rows_for_cluster(cluster)):
+                for gene in sorted(self.rows_for_cluster(cluster)):
                     # init iteration score if non-existent
                     if gene not in network_iteration_scores[cluster].keys():
                         network_iteration_scores[cluster][gene] = 0.0

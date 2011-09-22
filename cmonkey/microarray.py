@@ -202,13 +202,18 @@ def __quantile_normalize_scores(cluster_row_scores, membership, clusters):
 class RowScoringFunction:
     """Scoring algorithm for microarray data based on genes"""
 
-    def __init__(self, num_clusters):
+    def __init__(self, membership):
         """Create scoring function instance"""
-        self.num_clusters = num_clusters
+        self.__membership = membership
 
-    def compute(self, membership, matrix):
+    def num_clusters(self):
+        """returns the number of clusters"""
+        return self.__membership.num_clusters()
+
+    def compute(self, matrix):
         """compute method"""
-        return compute_row_scores(membership, matrix, self.num_clusters)
+        return compute_row_scores(self.__membership, matrix,
+                                  self.num_clusters())
 
 
 class ColumnScoringFunction:
@@ -217,13 +222,18 @@ class ColumnScoringFunction:
     function output format and can therefore not be combined in
     a generic way (the format is |condition x cluster|)"""
 
-    def __init__(self, num_clusters):
+    def __init__(self, membership):
         """create scoring function instance"""
-        self.num_clusters = num_clusters
+        self.__membership = membership
 
-    def compute(self, membership, matrix):
+    def num_clusters(self):
+        """returns the number of clusters"""
+        return self.__membership.num_clusters()
+
+    def compute(self, matrix):
         """compute method"""
-        return compute_column_scores(membership, matrix, self.num_clusters)
+        return compute_column_scores(self.__membership, matrix,
+                                     self.num_clusters())
 
 __all__ = ['ClusterMembership', 'compute_row_scores', 'compute_column_scores',
            'seed_column_members']

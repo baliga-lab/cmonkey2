@@ -34,6 +34,7 @@ class ClusterMembership:
                     result[cluster].append(name)
             return result
 
+        self.__num_clusters = num_clusters
         self.__row_is_member_of = row_is_member_of
         self.__column_is_member_of = column_is_member_of
         self.__cluster_row_members = create_cluster_to_names_map(
@@ -76,6 +77,10 @@ class ClusterMembership:
                                            data_matrix.column_names())
         return ClusterMembership(num_clusters, row_is_member_of,
                                  col_is_member_of)
+
+    def num_clusters(self):
+        """returns the number of clusters"""
+        return self.__num_clusters
 
     def clusters_for_row(self, row_name):
         """determine the clusters for the specified row"""

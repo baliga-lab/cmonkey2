@@ -106,13 +106,13 @@ def run_cmonkey():
     # each object in this array supports the method
     # compute(organism, membership, matrix) and returns
     # a DataMatrix(genes x cluster)
-    row_scoring = microarray.RowScoringFunction(NUM_CLUSTERS)
+    row_scoring = microarray.RowScoringFunction(membership)
 
-    #rscores = scoring_algos[0].compute(organism, membership, matrix)
+    #rscores = scoring_algos[0].compute(matrix)
     #rscores = rscores.multiply_by(6.0) # TODO: don't hardcode
 
-    #cscores = microarray.ColumnScoringFunction(NUM_CLUSTERS).compute(
-    #    organism, membership, matrix)
+    #cscores = microarray.ColumnScoringFunction(membership).compute(
+    #    matrix)
     #print cscores
 
     # 2. compute motif scores
@@ -122,30 +122,25 @@ def run_cmonkey():
                         motif.remove_atgs_filter]
 
     motif_scoring = motif.ScoringFunction(organism,
+                                          membership,
                                           meme_suite,
                                           motif.DISTANCE_UPSTREAM_SEARCH,
-                                          NUM_CLUSTERS,
                                           used_seqs,
                                           sequence_filters,
                                           motif.make_min_value_filter(-20.0))
 
     # 3. compute network scores
-    network_scoring = nw.ScoringFunction(organism, NUM_CLUSTERS)
+    network_scoring = nw.ScoringFunction(organism, membership)
 
     scoring_algos = [row_scoring, motif_scoring, network_scoring]
     result_matrices = []
     for score_func in scoring_algos:
-        result_matrices.append(score_func.compute(membership, matrix))
-
-    print "Done !!!!"
-
-    # running the algorithm in the CMonkey object is obsolete
-    #algorithm = CMonkey(organism, dm.DataMatrixCollection([matrix]))
-    #algorithm.run()
+        result_matrices.append(score_func.compute(matrix))
 
     # TODO: Fuzzify scores (can't be reproduced 1:1 to the R version)
     # TODO: Get density score
     # TODO: size compensation
+    print "Done !!!!"
 
 
 def fake_seed_row_memberships(fake_mapper):
