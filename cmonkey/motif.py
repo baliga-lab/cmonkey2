@@ -123,3 +123,27 @@ def make_min_value_filter(min_value):
                     result[key] = value
         return result
     return min_value_filter
+
+
+class ScoringFunction:
+
+    def __init__(self, organism, meme_suite, distance, num_clusters,
+                 used_seqs, sequence_filters, pvalue_filter):
+        """creates a ScoringFunction"""
+        self.organism = organism
+        self.meme_suite = meme_suite
+        self.distance = distance
+        self.num_clusters = num_clusters
+        self.used_seqs = used_seqs  # TODO: make this field computed
+        self.sequence_filters = sequence_filters
+        self.pvalue_filter = pvalue_filter
+
+    def compute(self, membership, matrix):
+        return compute_scores(self.meme_suite,
+                              self.organism,
+                              membership,
+                              self.num_clusters,
+                              self.used_seqs,
+                              self.distance,
+                              self.sequence_filters,
+                              self.pvalue_filter)

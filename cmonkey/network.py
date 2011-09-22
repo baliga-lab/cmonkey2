@@ -141,14 +141,15 @@ def compute_network_scores(network, genes, all_genes):
 
 
 class ScoringFunction:
-    def __init__(self, num_clusters):
+    def __init__(self, organism, num_clusters):
+        self.organism = organism
         self.num_clusters = num_clusters
 
-    def compute(self, organism, membership, matrix):
+    def compute(self, membership, matrix):
         """compute network scores"""
 
         result = {}  # a dictionary indexed with network names
-        networks = self.retrieve_networks(organism)
+        networks = self.retrieve_networks(self.organism)
 
         # TODO: here add the network scores weighted (0.5 for the two networks
         # for now)

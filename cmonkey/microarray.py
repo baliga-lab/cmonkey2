@@ -295,7 +295,7 @@ class RowScoringFunction:
     def __init__(self, num_clusters):
         self.num_clusters = num_clusters
 
-    def compute(self, organism, membership, matrix):
+    def compute(self, membership, matrix):
         return compute_row_scores(membership, matrix, self.num_clusters)
 
 
@@ -308,7 +308,7 @@ class ColumnScoringFunction:
     def __init__(self, num_clusters):
         self.num_clusters = num_clusters
 
-    def compute(self, organism, membership, matrix):
+    def compute(self, membership, matrix):
         return compute_column_scores(membership, matrix, self.num_clusters)
 
 __all__ = ['ClusterMembership', 'compute_row_scores', 'compute_column_scores',

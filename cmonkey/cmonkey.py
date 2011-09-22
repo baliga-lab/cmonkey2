@@ -221,38 +221,42 @@ def run_cmonkey():
     # each object in this array supports the method
     # compute(organism, membership, matrix) and returns
     # a DataMatrix(genes x cluster)
-    scoring_algos = [microarray.RowScoringFunction(NUM_CLUSTERS)]
+    row_scoring = microarray.RowScoringFunction(NUM_CLUSTERS)
 
     #rscores = scoring_algos[0].compute(organism, membership, matrix)
     #rscores = rscores.multiply_by(6.0) # TODO: don't hardcode
-    #for row in range(rscores.num_rows()):
-    #    print rscores.row_name(row),
-    #    for col in range(rscores.num_columns()):
-    #        print rscores[row][col],
-    #    print
 
     #cscores = microarray.ColumnScoringFunction(NUM_CLUSTERS).compute(
     #    organism, membership, matrix)
     #print cscores
 
     # 2. compute motif scores
-    #meme_suite = meme.MemeSuite430()
-    #distance = motif.DISTANCE_UPSTREAM_SEARCH
-    #motif.compute_scores(meme_suite, organism, membership,
-    #                     NUM_CLUSTERS, used_seqs,
-    #                     distance,
-    #                     [motif.unique_filter,
-    #                      motif.get_remove_low_complexity_filter(meme_suite),
-    #                      motif.remove_atgs_filter],
-    #                     motif.make_min_value_filter(-20.0))
+    meme_suite = meme.MemeSuite430()
+    sequence_filters = [motif.unique_filter,
+                        motif.get_remove_low_complexity_filter(meme_suite),
+                        motif.remove_atgs_filter]
+
+    motif_scoring = motif.ScoringFunction(organism,
+                                          meme_suite,
+                                          motif.DISTANCE_UPSTREAM_SEARCH,
+                                          NUM_CLUSTERS,
+                                          used_seqs,
+                                          sequence_filters,
+                                          motif.make_min_value_filter(-20.0))
+
+    # 3. compute network scores
+    network_scoring = nw.ScoringFunction(organism, NUM_CLUSTERS)
+
+    scoring_algos = [row_scoring, motif_scoring, network_scoring]
+    result_matrices = []
+    for score_func in scoring_algos:
+        result_matrices.append(score_func.compute(membership, matrix))
+
+    print "Done !!!!"
 
     # running the algorithm in the CMonkey object is obsolete
     #algorithm = CMonkey(organism, dm.DataMatrixCollection([matrix]))
     #algorithm.run()
-    # 3. compute network scores
-    network_scores = nw.ScoringFunction(NUM_CLUSTERS).compute(
-        organism, membership, matrix)
-    print network_scores
 
     # TODO: Fuzzify scores (can't be reproduced 1:1 to the R version)
     # TODO: Get density score
