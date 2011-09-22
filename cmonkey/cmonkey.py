@@ -38,6 +38,46 @@ def run_cmonkey():
     if not os.path.exists(CACHE_DIR):
         os.mkdir(CACHE_DIR)
 
+    matrix = read_matrix(sys.argv[1])
+    logging.info("Normalized input matrix has %d rows and %d columns:",
+                 matrix.num_rows(), matrix.num_columns())
+
+    organism = make_organism(sys.argv[2], matrix)
+    membership = make_membership(matrix, NUM_CLUSTERS)
+
+    # microarray scoring
+    row_scoring = microarray.RowScoringFunction(membership, matrix)
+    # TODO: Incorporate the scaling/weight
+    #rscores = rscores.multiply_by(6.0) # TODO: don't hardcode
+
+
+    meme_suite = meme.MemeSuite430()
+    sequence_filters = [motif.unique_filter,
+                        motif.get_remove_low_complexity_filter(meme_suite),
+                        motif.remove_atgs_filter]
+
+    motif_scoring = motif.ScoringFunction(organism,
+                                          membership,
+                                          matrix,
+                                          meme_suite,
+                                          sequence_filters,
+                                          motif.make_min_value_filter(-20.0))
+
+    network_scoring = nw.ScoringFunction(organism, membership, matrix)
+
+    # setup all scoring functions in this array so they are executed
+    # one after another.
+    # each object in this array supports the method
+    # compute(organism, membership, matrix) and returns
+    # a DataMatrix(genes x cluster)
+    scoring_funcs = [row_scoring, motif_scoring, network_scoring]
+    cscoring = microarray.ColumnScoringFunction(membership, matrix)
+    iterate(scoring_funcs, cscoring)
+    print "Done !!!!"
+
+
+def read_matrix(filename):
+    """reads the data matrix from a file"""
     matrix_factory = dm.DataMatrixFactory(
         [dm.nochange_filter, dm.center_scale_filter])
     infile = util.DelimitedFile.read(sys.argv[1], has_header=True)
@@ -45,13 +85,11 @@ def run_cmonkey():
     # that matches halo_ratios5.tsv
     # This is to take out the random component out of the seeding
     # and make it easier to compare results with R-cMonkey
-    fake_row_membership_seed = util.DelimitedFileMapper(
-        util.DelimitedFile.read('clusters.tsv', has_header=False), 0, 1)
-    matrix = matrix_factory.create_from(infile)
-    logging.info("Normalized input matrix has %d rows and %d columns:",
-                 matrix.num_rows(), matrix.num_columns())
-    #print(matrix.sorted_by_row_name())
+    return matrix_factory.create_from(infile)
 
+
+def make_organism(organism_code, matrix):
+    """create the organism based on the organism code"""
     keggfile = util.DelimitedFile.read(KEGG_FILE_PATH, comment='#')
     gofile = util.DelimitedFile.read(GO_FILE_PATH)
     rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
@@ -67,78 +105,42 @@ def run_cmonkey():
                                       org.make_go_taxonomy_mapper(gofile),
                                       mo_db,
                                       nw_factories)
+    return org_factory.create(organism_code)
+
+
+def make_membership(matrix, num_clusters):
+    """returns a seeded membership"""
     # We are using a fake row seed here in order to have reproducible,
     # deterministic results for development. Since the column seed is
     # deterministic and dependent on the row seed, we can use the real
     # column seed implementation here.
     # We currently assume the halo_ratios5.tsv file as input, and
-    # NUM_CLUSTERS clusters, so it follows:
-    # n.clust.per.row = 2
-    # n.clust.per.col = k.clust * 2/3 => 43 * 2/3 => 29
+    # num_clusters clusters, so it follows for num_clusters = 43:
+    # num_clusters_per_row = 2
+    # num_clusters_per_col = num_clusters * 2/3 => 43 * 2/3 => 29
     num_clusters_per_row = 2
-    num_clusters_per_col = int(round(NUM_CLUSTERS * 2.0 / 3.0))
+    num_clusters_per_col = int(round(num_clusters * 2.0 / 3.0))
 
-    logging.info("# CLUSTERS = %d", NUM_CLUSTERS)
+    logging.info("# CLUSTERS = %d", num_clusters)
     logging.info("# CLUSTERS / ROW = %d", num_clusters_per_row)
     logging.info("# CLUSTERS / COL = %d", num_clusters_per_col)
 
-    membership = memb.ClusterMembership.create(
+    fake_row_membership_seed = util.DelimitedFileMapper(
+        util.DelimitedFile.read('clusters.tsv', has_header=False), 0, 1)
+    return memb.ClusterMembership.create(
         matrix.sorted_by_row_name(),
-        NUM_CLUSTERS,
+        num_clusters,
         num_clusters_per_row,
         num_clusters_per_col,
         fake_seed_row_memberships(fake_row_membership_seed),
         microarray.seed_column_members)
 
-    organism = org_factory.create(sys.argv[2])
 
-    # precompute the sequences for all genes that are referenced in the
-    # input ratios, they are used as a basis to compute the background
-    # distribution for every cluster
-    used_seqs = organism.sequences_for_genes(sorted(matrix.row_names()),
-                                             motif.DISTANCE_UPSTREAM_SCAN,
-                                             upstream=True)
-
-    # One iteration
-    # microarray scoring
-    # setup all scoring functions in this array so they are executed
-    # one after another.
-    # each object in this array supports the method
-    # compute(organism, membership, matrix) and returns
-    # a DataMatrix(genes x cluster)
-    row_scoring = microarray.RowScoringFunction(membership, matrix)
-
-    #rscores = scoring_algos[0].compute(matrix)
-    #rscores = rscores.multiply_by(6.0) # TODO: don't hardcode
-
-    #cscores = microarray.ColumnScoringFunction(membership, matrix).compute(
-    #    matrix)
-    #print cscores
-
-    # motif scoring
-    meme_suite = meme.MemeSuite430()
-    sequence_filters = [motif.unique_filter,
-                        motif.get_remove_low_complexity_filter(meme_suite),
-                        motif.remove_atgs_filter]
-
-    motif_scoring = motif.ScoringFunction(organism,
-                                          membership,
-                                          meme_suite,
-                                          motif.DISTANCE_UPSTREAM_SEARCH,
-                                          used_seqs,
-                                          sequence_filters,
-                                          motif.make_min_value_filter(-20.0))
-
-    # network scoring
-    network_scoring = nw.ScoringFunction(organism, membership, matrix)
-    scoring_funcs = [row_scoring, motif_scoring, network_scoring]
-    iterate(scoring_funcs)
-    print "Done !!!!"
-
-def iterate(scoring_funcs):
+def iterate(scoring_funcs, column_scoring_func):
     result_matrices = []
     for score_func in scoring_funcs:
         result_matrices.append(score_func.compute())
+    cscores = column_scoring_func.compute()
     # TODO: Fuzzify scores (can't be reproduced 1:1 to the R version)
     # TODO: Get density score
     # TODO: size compensation

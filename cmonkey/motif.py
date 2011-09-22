@@ -126,16 +126,21 @@ def make_min_value_filter(min_value):
 class ScoringFunction:
     """Scoring function for motifs"""
 
-    def __init__(self, organism, membership, meme_suite, distance,
-                 used_seqs, sequence_filters, pvalue_filter):
+    def __init__(self, organism, membership, matrix,
+                 meme_suite, sequence_filters, pvalue_filter):
         """creates a ScoringFunction"""
         self.__organism = organism
         self.__membership = membership
         self.__meme_suite = meme_suite
-        self.__distance = distance
-        self.__used_seqs = used_seqs  # TODO: make this field computed
         self.__sequence_filters = sequence_filters
         self.__pvalue_filter = pvalue_filter
+
+        # precompute the sequences for all genes that are referenced in the
+        # input ratios, they are used as a basis to compute the background
+        # distribution for every cluster
+        self.__used_seqs = organism.sequences_for_genes(sorted(matrix.row_names()),
+                                                        DISTANCE_UPSTREAM_SCAN,
+                                                        upstream=True)
 
     def compute(self):
         """compute method"""
@@ -143,6 +148,6 @@ class ScoringFunction:
                               self.__organism,
                               self.__membership,
                               self.__used_seqs,
-                              self.__distance,
+                              DISTANCE_UPSTREAM_SEARCH,
                               self.__sequence_filters,
                               self.__pvalue_filter)
