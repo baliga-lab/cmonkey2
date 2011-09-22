@@ -264,7 +264,8 @@ def read_meme_output(output_text, num_motifs):
     def read_sites(start_index, lines):
         """reads the sites"""
         sites_index = next_sites_index(start_index, lines)
-        pattern = re.compile("(\S+)\s+([+-])\s+(\d+)\s+(\S+)\s+\S+ (\S+) (\S+)?")
+        pattern = re.compile(
+            "(\S+)\s+([+-])\s+(\d+)\s+(\S+)\s+\S+ (\S+) (\S+)?")
         current_index = sites_index + 4
         line = lines[current_index]
         sites = []
@@ -404,11 +405,12 @@ def read_mast_output(output_text, genes):
         pvalues = []
         for index_num in range(len(indexes)):
             if index_num < len(indexes) - 1:
-               pvalues.append(float(
-                       pvalue_line[indexes[index_num]:indexes[index_num + 1]]))
+                pvalues.append(
+                    float(pvalue_line[indexes[index_num]:
+                                          indexes[index_num + 1]]))
             else:
-               pvalues.append(float(
-                       pvalue_line[indexes[index_num]:]))
+                pvalues.append(float(
+                        pvalue_line[indexes[index_num]:]))
         return pvalues
 
     def read_positions(motifnum_line, seqline):
@@ -430,8 +432,8 @@ def read_mast_output(output_text, genes):
                 length = int(__extract_regex('LENGTH\s+=\s+(\d+)', info_line))
 
                 # the diagram line can span several lines and the blank lines
-                # after those can span several, so search for the first non-blank line
-                # after the block of blank lines
+                # after those can span several, so search for the first
+                # non-blank line after the block of blank lines
                 blank_index = current_index + 2
                 while len(lines[blank_index].strip()) > 0:
                     blank_index += 1

@@ -197,12 +197,22 @@ def run_cmonkey():
     # deterministic and dependent on the row seed, we can use the real
     # column seed implementation here.
     # We currently assume the halo_ratios5.tsv file as input, and
-    # 43 clusters, so it follows:
+    # NUM_CLUSTERS clusters, so it follows:
     # n.clust.per.row = 2
     # n.clust.per.col = k.clust * 2/3 => 43 * 2/3 => 29
+    num_clusters_per_row = 2
+    num_clusters_per_col = int(round(NUM_CLUSTERS * 2.0 / 3.0))
+
+    logging.info("# CLUSTERS = %d", NUM_CLUSTERS)
+    logging.info("# CLUSTERS / ROW = %d", num_clusters_per_row)
+    logging.info("# CLUSTERS / COL = %d", num_clusters_per_col)
+
     membership = microarray.ClusterMembership.create(
-        matrix.sorted_by_row_name(), 43, 2,
-        29, fake_seed_row_memberships(fake_row_membership_seed),
+        matrix.sorted_by_row_name(),
+        NUM_CLUSTERS,
+        num_clusters_per_row,
+        num_clusters_per_col,
+        fake_seed_row_memberships(fake_row_membership_seed),
         microarray.seed_column_members)
 
     organism = org_factory.create(sys.argv[2])
@@ -249,8 +259,8 @@ def run_cmonkey():
 
     scoring_algos = [row_scoring, motif_scoring, network_scoring]
     result_matrices = []
-    for score_func in scoring_algos:
-        result_matrices.append(score_func.compute(membership, matrix))
+    #for score_func in scoring_algos:
+    #    result_matrices.append(score_func.compute(membership, matrix))
 
     print "Done !!!!"
 

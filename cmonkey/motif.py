@@ -7,7 +7,6 @@ more information and licensing details.
 """
 import logging
 import numpy
-import sys
 
 
 DISTANCE_UPSTREAM_SEARCH = (-20, 150)  # used to select sequences
@@ -82,9 +81,8 @@ def compute_scores(meme_suite, organism, membership,
                 pvalues[feature_id] = numpy.log(pvalue)
             pvalues = pvalue_filter(pvalues)
             for feature_id in pvalues:
-                print "%s[%d] => %f" % (feature_id, cluster, pvalues[feature_id])
-
-
+                print "%s[%d] => %f" % (feature_id, cluster,
+                                        pvalues[feature_id])
             #print "PE-VALUES, CLUSTER: ", cluster
             #for feature_id, pvalue, evalue in pe_values:
             #    print "%s\t%f\t%f" % (feature_id, pvalue, evalue)
@@ -97,8 +95,7 @@ def compute_scores(meme_suite, organism, membership,
             #    for elem in annotation:
             #        print "%s\t%s" % (feature_id, str(elem))
             #        count += 1
-            #print "COUNT = %d" % count 
-
+            #print "COUNT = %d" % count
         else:
             logging.info("# seqs (= %d) outside of defined limits, skipping " +
                          "cluster %d", len(seqs), cluster)
@@ -110,7 +107,8 @@ def make_min_value_filter(min_value):
     def min_value_filter(values):
         """all values that are below min_value are set to the
         minimum value above min_value"""
-        allowed_vals = [value for key, value in values.items() if value > min_value]
+        allowed_vals = [value for key, value in values.items()
+                        if value > min_value]
         result = {}
         if len(allowed_vals) == 0:
             logging.warn("all values are below the threshold -> no result !!")
@@ -126,6 +124,7 @@ def make_min_value_filter(min_value):
 
 
 class ScoringFunction:
+    """Scoring function for motifs"""
 
     def __init__(self, organism, meme_suite, distance, num_clusters,
                  used_seqs, sequence_filters, pvalue_filter):
@@ -139,6 +138,7 @@ class ScoringFunction:
         self.pvalue_filter = pvalue_filter
 
     def compute(self, membership, matrix):
+        """compute method"""
         return compute_scores(self.meme_suite,
                               self.organism,
                               membership,

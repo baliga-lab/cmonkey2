@@ -139,9 +139,11 @@ def compute_network_scores(network, genes, all_genes):
     return final_gene_scores
 
 
-
 class ScoringFunction:
+    """Network scoring function"""
+
     def __init__(self, organism, num_clusters):
+        """Create scoring function instance"""
         self.organism = organism
         self.num_clusters = num_clusters
 
@@ -180,7 +182,8 @@ class ScoringFunction:
                     else:
                         cluster_scores.append(0.0)
 
-                cluster_score_means[cluster] = util.trim_mean(cluster_scores, 0.05)
+                cluster_score_means[cluster] = util.trim_mean(cluster_scores,
+                                                              0.05)
             result[network.name()] = cluster_score_means
 
         iteration_scores = {}

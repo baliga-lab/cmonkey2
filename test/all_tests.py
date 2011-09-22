@@ -4,6 +4,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
+import membership_test as membtest
 import datamatrix_test as dmtest
 import cmonkey_test as cmtest
 import util_test as ut
@@ -52,7 +53,7 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(nwt.NetworkEdgeTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(nwt.NetworkTest))
 
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(mat.ClusterMembershipTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(membtest.ClusterMembershipTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(mat.ComputeArrayScoresTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(met.MemeTest))
