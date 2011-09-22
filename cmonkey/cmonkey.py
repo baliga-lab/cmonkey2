@@ -100,22 +100,22 @@ def run_cmonkey():
                                              upstream=True)
 
     # One iteration
-    # 1. compute microarray scores
+    # microarray scoring
     # setup all scoring functions in this array so they are executed
     # one after another.
     # each object in this array supports the method
     # compute(organism, membership, matrix) and returns
     # a DataMatrix(genes x cluster)
-    row_scoring = microarray.RowScoringFunction(membership)
+    row_scoring = microarray.RowScoringFunction(membership, matrix)
 
     #rscores = scoring_algos[0].compute(matrix)
     #rscores = rscores.multiply_by(6.0) # TODO: don't hardcode
 
-    #cscores = microarray.ColumnScoringFunction(membership).compute(
+    #cscores = microarray.ColumnScoringFunction(membership, matrix).compute(
     #    matrix)
     #print cscores
 
-    # 2. compute motif scores
+    # motif scoring
     meme_suite = meme.MemeSuite430()
     sequence_filters = [motif.unique_filter,
                         motif.get_remove_low_complexity_filter(meme_suite),
@@ -129,19 +129,24 @@ def run_cmonkey():
                                           sequence_filters,
                                           motif.make_min_value_filter(-20.0))
 
-    # 3. compute network scores
-    network_scoring = nw.ScoringFunction(organism, membership)
+    # network scoring
+    network_scoring = nw.ScoringFunction(organism, membership, matrix)
+    scoring_funcs = [row_scoring, motif_scoring, network_scoring]
+    iterate(scoring_funcs)
+    print "Done !!!!"
 
-    scoring_algos = [row_scoring, motif_scoring, network_scoring]
+def iterate(scoring_funcs):
     result_matrices = []
-    for score_func in scoring_algos:
-        result_matrices.append(score_func.compute(matrix))
-
+    for score_func in scoring_funcs:
+        result_matrices.append(score_func.compute())
     # TODO: Fuzzify scores (can't be reproduced 1:1 to the R version)
     # TODO: Get density score
     # TODO: size compensation
-    print "Done !!!!"
 
+
+############################################################
+#### Replace with real seeding when everything works
+############################################################
 
 def fake_seed_row_memberships(fake_mapper):
     """This method sets the memberships according to a seed that was

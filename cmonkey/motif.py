@@ -137,7 +137,7 @@ class ScoringFunction:
         self.__sequence_filters = sequence_filters
         self.__pvalue_filter = pvalue_filter
 
-    def compute(self, matrix):
+    def compute(self):
         """compute method"""
         return compute_scores(self.__meme_suite,
                               self.__organism,

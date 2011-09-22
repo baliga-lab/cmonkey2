@@ -142,20 +142,25 @@ def compute_network_scores(network, genes, all_genes):
 class ScoringFunction:
     """Network scoring function"""
 
-    def __init__(self, organism, membership):
+    def __init__(self, organism, membership, matrix):
         """Create scoring function instance"""
         self.__organism = organism
         self.__membership = membership
+        self.__matrix = matrix
 
     def num_clusters(self):
         """returns the number of clusters"""
         return self.__membership.num_clusters()
 
+    def gene_names(self):
+        """returns the gene names"""
+        return self.__matrix.row_names()
+
     def rows_for_cluster(self, cluster):
         """returns the rows for the specified cluster"""
         return self.__membership.rows_for_cluster(cluster)
 
-    def compute(self, matrix):
+    def compute(self):
         """compute network scores"""
 
         result = {}  # a dictionary indexed with network names
@@ -176,7 +181,7 @@ class ScoringFunction:
             for cluster in range(1, self.num_clusters() + 1):
                 cluster_genes = sorted(self.rows_for_cluster(cluster))
                 network_score[cluster] = compute_network_scores(
-                    network, cluster_genes, matrix.row_names())
+                    network, cluster_genes, self.gene_names())
                 # build network scoring based on cluster membership
                 cluster_scores = []
                 for gene in sorted(self.rows_for_cluster(cluster)):
