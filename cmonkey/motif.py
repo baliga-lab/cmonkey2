@@ -7,6 +7,7 @@ more information and licensing details.
 """
 import logging
 import numpy
+import membership as memb
 
 
 DISTANCE_UPSTREAM_SEARCH = (-20, 150)  # used to select sequences
@@ -123,14 +124,16 @@ def make_min_value_filter(min_value):
     return min_value_filter
 
 
-class ScoringFunction:
+class ScoringFunction(memb.ScoringFunctionBase):
     """Scoring function for motifs"""
 
     def __init__(self, organism, membership, matrix,
-                 meme_suite, sequence_filters, pvalue_filter):
+                 meme_suite, sequence_filters, pvalue_filter,
+                 weight_func=None):
         """creates a ScoringFunction"""
+        memb.ScoringFunctionBase.__init__(self, membership,
+                                          matrix, weight_func)
         self.__organism = organism
-        self.__membership = membership
         self.__meme_suite = meme_suite
         self.__sequence_filters = sequence_filters
         self.__pvalue_filter = pvalue_filter
@@ -138,15 +141,16 @@ class ScoringFunction:
         # precompute the sequences for all genes that are referenced in the
         # input ratios, they are used as a basis to compute the background
         # distribution for every cluster
-        self.__used_seqs = organism.sequences_for_genes(sorted(matrix.row_names()),
-                                                        DISTANCE_UPSTREAM_SCAN,
-                                                        upstream=True)
+        self.__used_seqs = organism.sequences_for_genes(
+            sorted(matrix.row_names()),
+            DISTANCE_UPSTREAM_SCAN,
+            upstream=True)
 
-    def compute(self):
-        """compute method"""
+    def compute(self, iteration):
+        """compute method, iteration is the 0-based iteration number"""
         return compute_scores(self.__meme_suite,
                               self.__organism,
-                              self.__membership,
+                              self.membership(),
                               self.__used_seqs,
                               DISTANCE_UPSTREAM_SEARCH,
                               self.__sequence_filters,

@@ -8,6 +8,7 @@ more information and licensing details.
 import numpy
 import datamatrix as dm
 import util
+import membership as memb
 
 
 def seed_column_members(data_matrix, row_membership, num_clusters,
@@ -199,26 +200,22 @@ def __quantile_normalize_scores(cluster_row_scores, membership, clusters):
     return util.quantile(values_for_quantile, 0.95)
 
 
-class RowScoringFunction:
+class RowScoringFunction(memb.ScoringFunctionBase):
     """Scoring algorithm for microarray data based on genes"""
 
-    def __init__(self, membership, matrix):
+    def __init__(self, membership, matrix, weight_func=None):
         """Create scoring function instance"""
-        self.__membership = membership
-        self.__matrix = matrix
+        memb.ScoringFunctionBase.__init__(self, membership,
+                                          matrix, weight_func)
 
-    def num_clusters(self):
-        """returns the number of clusters"""
-        return self.__membership.num_clusters()
-
-    def compute(self):
-        """compute method"""
-        return compute_row_scores(self.__membership,
-                                  self.__matrix,
+    def compute(self, iteration):
+        """compute method, iteration is the 0-based iteration number"""
+        return compute_row_scores(self.membership(),
+                                  self.matrix(),
                                   self.num_clusters())
 
 
-class ColumnScoringFunction:
+class ColumnScoringFunction(memb.ScoringFunctionBase):
     """Scoring algorithm for microarray data based on conditions.
     Note that the score does not correspond to the normal scoring
     function output format and can therefore not be combined in
@@ -226,18 +223,18 @@ class ColumnScoringFunction:
 
     def __init__(self, membership, matrix):
         """create scoring function instance"""
-        self.__membership = membership
-        self.__matrix = matrix
+        memb.ScoringFunctionBase.__init__(self, membership,
+                                          matrix, None)
 
-    def num_clusters(self):
-        """returns the number of clusters"""
-        return self.__membership.num_clusters()
-
-    def compute(self):
-        """compute method"""
-        return compute_column_scores(self.__membership,
-                                     self.__matrix,
+    def compute(self, iteration):
+        """compute method, iteration is the 0-based iteration number"""
+        return compute_column_scores(self.membership(),
+                                     self.matrix(),
                                      self.num_clusters())
+
+    def apply_weight(self, result, iteration):
+        """applies the stored weight"""
+        return result
 
 __all__ = ['ClusterMembership', 'compute_row_scores', 'compute_column_scores',
            'seed_column_members']

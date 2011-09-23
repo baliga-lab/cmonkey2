@@ -6,6 +6,7 @@ more information and licensing details.
 import numpy
 import logging
 import util
+import membership as memb
 
 
 class NetworkEdge:
@@ -139,29 +140,17 @@ def compute_network_scores(network, genes, all_genes):
     return final_gene_scores
 
 
-class ScoringFunction:
+class ScoringFunction(memb.ScoringFunctionBase):
     """Network scoring function"""
 
-    def __init__(self, organism, membership, matrix):
+    def __init__(self, organism, membership, matrix, weight_func=None):
         """Create scoring function instance"""
+        memb.ScoringFunctionBase.__init__(self, membership,
+                                          matrix, weight_func)
         self.__organism = organism
-        self.__membership = membership
-        self.__matrix = matrix
 
-    def num_clusters(self):
-        """returns the number of clusters"""
-        return self.__membership.num_clusters()
-
-    def gene_names(self):
-        """returns the gene names"""
-        return self.__matrix.row_names()
-
-    def rows_for_cluster(self, cluster):
-        """returns the rows for the specified cluster"""
-        return self.__membership.rows_for_cluster(cluster)
-
-    def compute(self):
-        """compute network scores"""
+    def compute(self, iteration):
+        """compute method, iteration is the 0-based iteration number"""
 
         result = {}  # a dictionary indexed with network names
         networks = self.retrieve_networks(self.__organism)

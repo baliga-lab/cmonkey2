@@ -128,3 +128,43 @@ class Membership:
                 result_row.append(i in matrix_row)
 
         return result
+
+
+class ScoringFunctionBase:
+    """Base class for scoring functions"""
+
+    def __init__(self, membership, matrix, weight_func):
+        """creates a function instance"""
+        self.__membership = membership
+        self.__matrix = matrix
+        self.__weight_func = weight_func
+
+    def membership(self):
+        """returns this function's membership object"""
+        return self.__membership
+
+    def matrix(self):
+        """returns this function's matrix object"""
+        return self.__matrix
+
+    def compute(self, iteration):
+        """general compute method, iteration is the 0-based iteration number"""
+        raise Exception("please implement me")
+
+    def num_clusters(self):
+        """returns the number of clusters"""
+        return self.__membership.num_clusters()
+
+    def gene_names(self):
+        """returns the gene names"""
+        return self.__matrix.row_names()
+
+    def rows_for_cluster(self, cluster):
+        """returns the rows for the specified cluster"""
+        return self.__membership.rows_for_cluster(cluster)
+
+    def apply_weight(self, result, iteration):
+        """applies the stored weight function to the result
+        Note: we might be able to incorporate this into the result object"""
+        if (self.__weight_func != None):
+            return result.multiply_by(self.__weight_func(iteration))

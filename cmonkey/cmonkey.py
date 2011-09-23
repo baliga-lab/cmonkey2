@@ -18,7 +18,6 @@ import sys
 import os
 import logging
 
-
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 CMONKEY_VERSION = '4.0'
 AVG_CLUSTER_SIZE = 20
@@ -28,6 +27,8 @@ RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
 NUM_CLUSTERS = 43
+ROW_WEIGHT = 6.0
+NUM_ITERATIONS = 1
 
 
 def run_cmonkey():
@@ -46,10 +47,8 @@ def run_cmonkey():
     membership = make_membership(matrix, NUM_CLUSTERS)
 
     # microarray scoring
-    row_scoring = microarray.RowScoringFunction(membership, matrix)
-    # TODO: Incorporate the scaling/weight
-    #rscores = rscores.multiply_by(6.0) # TODO: don't hardcode
-
+    row_scoring = microarray.RowScoringFunction(membership, matrix,
+                                                lambda iteration: ROW_WEIGHT)
 
     meme_suite = meme.MemeSuite430()
     sequence_filters = [motif.unique_filter,
@@ -70,9 +69,11 @@ def run_cmonkey():
     # each object in this array supports the method
     # compute(organism, membership, matrix) and returns
     # a DataMatrix(genes x cluster)
-    scoring_funcs = [row_scoring, motif_scoring, network_scoring]
+    #scoring_funcs = [row_scoring, motif_scoring, network_scoring]
+    scoring_funcs = [row_scoring]
     cscoring = microarray.ColumnScoringFunction(membership, matrix)
-    iterate(scoring_funcs, cscoring)
+    for iteration in range(NUM_ITERATIONS):
+        iterate(scoring_funcs, cscoring, iteration)
     print "Done !!!!"
 
 
@@ -136,19 +137,28 @@ def make_membership(matrix, num_clusters):
         microarray.seed_column_members)
 
 
-def iterate(scoring_funcs, column_scoring_func):
+def iterate(scoring_funcs, column_scoring_func, iteration):
+    """one iteration of the algorithm"""
+    logging.info("Iteration # %d", iteration)
     result_matrices = []
     for score_func in scoring_funcs:
-        result_matrices.append(score_func.compute())
-    cscores = column_scoring_func.compute()
+        result_matrices.append(score_func.compute(iteration))
+    cscores = column_scoring_func.compute(iteration)
     # TODO: Fuzzify scores (can't be reproduced 1:1 to the R version)
     # TODO: Get density score
-    # TODO: size compensation
 
+    # size compensation
+    for index in range(len(scoring_funcs)):
+        result_matrices[index] = scoring_funcs[index].apply_weight(
+            result_matrices[index], iteration)
+
+    #for matrix in result_matrices:
+    #    print matrix
 
 ############################################################
 #### Replace with real seeding when everything works
 ############################################################
+
 
 def fake_seed_row_memberships(fake_mapper):
     """This method sets the memberships according to a seed that was
