@@ -92,11 +92,11 @@ class ClusterMembership:
 
     def rows_for_cluster(self, cluster):
         """determine the rows that belong to a cluster"""
-        return self.__cluster_row_members[cluster]
+        return sorted(self.__cluster_row_members[cluster])
 
     def columns_for_cluster(self, cluster):
         """determine the rows that belong to a cluster"""
-        return self.__cluster_column_members[cluster]
+        return sorted(self.__cluster_column_members[cluster])
 
     def is_row_member_of(self, row_name, cluster):
         """determines whether a certain row is member of a cluster"""

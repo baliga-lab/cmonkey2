@@ -76,6 +76,13 @@ class DataMatrix:
         """returns this matrix's values"""
         return self.__values
 
+    def column_values(self, column):
+        """returns the values in the specified column"""
+        result = []
+        for row in range(self.num_rows()):
+            result.append(self.__values[row][column])
+        return result
+
     def __getitem__(self, row_index):
         """return the row at the specified position"""
         return self.__values[row_index]
@@ -147,6 +154,12 @@ class DataMatrix:
         return DataMatrix(self.num_rows(), self.num_columns(),
                           self.row_names(), self.column_names(),
                           self.values() * factor)
+
+    def max(self):
+        return numpy.amax(self.values())
+
+    def min(self):
+        return numpy.amin(self.values())
 
     def __neg__(self):
         """returns a new DataMatrix with the values in the matrix negated"""
