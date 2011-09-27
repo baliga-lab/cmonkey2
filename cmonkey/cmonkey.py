@@ -153,75 +153,17 @@ def iterate(membership, scoring_funcs, column_scoring_func, iteration):
 
     # TODO: Fuzzify scores (can't be reproduced 1:1 to the R version)
     # Get density score
-    rd_scores, cd_scores = get_density_scores(membership, result_matrices[0],
-                                              cscores)
+    rd_scores, cd_scores = memb.get_density_scores(membership,
+                                                   result_matrices[0],
+                                                   cscores,
+                                                   NUM_CLUSTERS)
 
+    print cd_scores
     # TODO: size compensation
 
     #for matrix in result_matrices:
     #    print matrix
 
-
-def get_density_scores(membership, row_scores, col_scores):
-    """We can't really implement density scores at the moment,
-    there seems to be no equivalent to R's density() and approx()
-    in scipy"""
-    rscore_range = abs(row_scores.max() - row_scores.min())
-    rowscore_bandwidth = max(rscore_range / 100.0, 0.001)
-    rd_scores = dm.DataMatrix(row_scores.num_rows(),
-                              row_scores.num_columns(),
-                              row_scores.row_names(),
-                              row_scores.column_names())
-    for cluster in range(1, NUM_CLUSTERS + 1):
-        rr_scores = get_rr_scores(membership, row_scores, rowscore_bandwidth,
-                                  cluster)
-        for row in range(row_scores.num_rows()):
-            rd_scores[row][cluster - 1] = rr_scores[row]
-
-    cscore_range = abs(col_scores.max() - col_scores.min())
-    colscore_bandwidth = max(cscore_range / 100.0, 0.001)
-    cd_scores = dm.DataMatrix(col_scores.num_rows(),
-                              col_scores.num_columns(),
-                              col_scores.row_names(),
-                              col_scores.column_names())
-    for cluster in range(1, NUM_CLUSTERS + 1):
-        cc_scores = get_cc_scores(membership, col_scores, colscore_bandwidth,
-                                  cluster)
-        for row in range(col_scores.num_rows()):
-            cd_scores[row][cluster - 1] = cc_scores[row]
-    return (rd_scores, cd_scores)
-
-
-def get_rr_scores(membership, rowscores, bandwidth, cluster):
-    """calculate the density scores for the given row score values in the
-    specified cluster"""
-    def bwscale(value):
-        """standard bandwidth scaling function for row scores"""
-        return math.exp(-value / 10.0) * 10.0
-
-    cluster_rows = membership.rows_for_cluster(cluster)
-
-    row_names = rowscores.row_names()
-    score_indexes = [row_names.index(name) for name in cluster_rows]
-    kscores = rowscores.column_values(cluster - 1)
-    cluster_scores = [kscores[index] for index in score_indexes]
-    cluster_bandwidth = bandwidth * bwscale(len(cluster_rows))
-
-    return util.density(kscores, cluster_scores, cluster_bandwidth,
-                        min(kscores) - 1, max(kscores) + 1)
-
-
-def get_cc_scores(membership, scores, bandwidth, cluster):
-    """calculate the density scores for the given column score values in the
-    specified cluster"""
-    cluster_columns = membership.columns_for_cluster(cluster)
-
-    row_names = scores.row_names()
-    score_indexes = [row_names.index(name) for name in cluster_columns]
-    kscores = scores.column_values(cluster - 1)
-    cluster_scores = [kscores[index] for index in score_indexes]
-    return util.density(kscores, cluster_scores, bandwidth,
-                        min(kscores) - 1, max(kscores) + 1)
 
 ############################################################
 #### Replace with real seeding when everything works
