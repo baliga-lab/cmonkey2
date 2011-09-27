@@ -22,7 +22,9 @@ class ClusterMembership:
     A column seed function is called after this, which generates the
     entire column membership matrix.
     """
-    def __init__(self, num_clusters, row_is_member_of, column_is_member_of):
+    def __init__(self, num_clusters, num_clusters_per_row,
+                 num_clusters_per_col,
+                 row_is_member_of, column_is_member_of):
         """creates an instance of ClusterMembership"""
 
         def create_cluster_to_names_map(name_to_cluster_map):
@@ -37,6 +39,8 @@ class ClusterMembership:
             return result
 
         self.__num_clusters = num_clusters
+        self.__num_clusters_per_row = num_clusters_per_row
+        self.__num_clusters_per_col = num_clusters_per_col
         self.__row_is_member_of = row_is_member_of
         self.__column_is_member_of = column_is_member_of
         self.__cluster_row_members = create_cluster_to_names_map(
@@ -77,12 +81,23 @@ class ClusterMembership:
                                            data_matrix.row_names())
         col_is_member_of = make_member_map(column_membership,
                                            data_matrix.column_names())
-        return ClusterMembership(num_clusters, row_is_member_of,
+        return ClusterMembership(num_clusters,
+                                 num_clusters_per_row,
+                                 num_clusters_per_column,
+                                 row_is_member_of,
                                  col_is_member_of)
 
     def num_clusters(self):
         """returns the number of clusters"""
         return self.__num_clusters
+
+    def num_clusters_per_row(self):
+        """returns the number of clusters per row"""
+        return self.__num_clusters_per_row
+
+    def num_clusters_per_column(self):
+        """returns the number of clusters per row"""
+        return self.__num_clusters_per_col
 
     def clusters_for_row(self, row_name):
         """determine the clusters for the specified row"""
@@ -103,6 +118,20 @@ class ClusterMembership:
     def is_row_member_of(self, row_name, cluster):
         """determines whether a certain row is member of a cluster"""
         return row_name in self.rows_for_cluster(cluster)
+
+    def num_row_members(self, cluster):
+        """returns the number of row members in the specified cluster"""
+        if cluster in self.__cluster_row_members:
+            return len(self.__cluster_row_members[cluster])
+        else:
+            return 0
+
+    def num_column_members(self, cluster):
+        """returns the number of row members in the specified cluster"""
+        if cluster in self.__cluster_column_members:
+            return len(self.__cluster_column_members[cluster])
+        else:
+            return 0
 
 
 class Membership:
@@ -172,10 +201,11 @@ class ScoringFunctionBase:
             return result.multiply_by(self.__weight_func(iteration))
 
 
-def get_density_scores(membership, row_scores, col_scores, num_clusters):
+def get_density_scores(membership, row_scores, col_scores):
     """We can't really implement density scores at the moment,
     there seems to be no equivalent to R's density() and approx()
     in scipy"""
+    num_clusters = membership.num_clusters()
     rscore_range = abs(row_scores.max() - row_scores.min())
     rowscore_bandwidth = max(rscore_range / 100.0, 0.001)
     rd_scores = dm.DataMatrix(row_scores.num_rows(),

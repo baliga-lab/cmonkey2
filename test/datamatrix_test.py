@@ -168,6 +168,33 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                                  [4, 5, 6]]),
                                     sorted_matrix.values()).all())
 
+    def test_multiply_by(self):
+        """tests the multiply_by method"""
+        matrix = dm.DataMatrix(2, 2,
+                               row_names=['R0', 'R1'],
+                               col_names=['C0', 'C1'],
+                               values=[[1, 2],
+                                       [3, 4]])
+        multiplied = matrix.multiply_by(2)
+        self.assertEquals(['R0', 'R1'], multiplied.row_names())
+        self.assertEquals(['C0', 'C1'], multiplied.column_names())
+        self.assertNotEquals(matrix, multiplied)
+        self.assertTrue(numpy.equal(numpy.array([[2, 4], [6, 8]]),
+                                    multiplied.values()).all())
+
+    def test_multiply_column_by(self):
+        """tests the multiply_column_by method"""
+        matrix = dm.DataMatrix(2, 2,
+                               row_names=['R0', 'R1'],
+                               col_names=['C0', 'C1'],
+                               values=[[1, 2],
+                                       [3, 4]])
+        multiplied = matrix.multiply_column_by(1, 2)
+        self.assertEquals(['R0', 'R1'], multiplied.row_names())
+        self.assertEquals(['C0', 'C1'], multiplied.column_names())
+        self.assertEquals(matrix, multiplied)
+        self.assertTrue(numpy.equal(numpy.array([[1, 4], [3, 8]]),
+                                    multiplied.values()).all())
 
 class DataMatrixCollectionTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for MatrixCollection"""

@@ -31,6 +31,14 @@ NUM_CLUSTERS = 43
 ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 1
 
+# num_clusters clusters, so it follows for num_clusters = 43:
+# num_clusters_per_row = 2
+# num_clusters_per_col = num_clusters * 2/3 => 43 * 2/3 => 29
+NUM_CLUSTERS_PER_ROW = 2
+NUM_CLUSTERS_PER_COL = int(round(NUM_CLUSTERS * 2.0 / 3.0))
+MIN_CLUSTER_ROWS_ALLOWED = 3
+MAX_CLUSTER_ROWS_ALLOWED = 70
+
 
 def run_cmonkey():
     """init of the cMonkey system"""
@@ -45,7 +53,9 @@ def run_cmonkey():
                  matrix.num_rows(), matrix.num_columns())
 
     organism = make_organism(sys.argv[2], matrix)
-    membership = make_membership(matrix, NUM_CLUSTERS)
+    membership = make_membership(matrix, NUM_CLUSTERS,
+                                 NUM_CLUSTERS_PER_ROW,
+                                 NUM_CLUSTERS_PER_COL)
 
     # microarray scoring
     row_scoring = microarray.RowScoringFunction(membership, matrix,
@@ -74,7 +84,7 @@ def run_cmonkey():
     scoring_funcs = [row_scoring]
     cscoring = microarray.ColumnScoringFunction(membership, matrix)
     for iteration in range(NUM_ITERATIONS):
-        iterate(membership, scoring_funcs, cscoring, iteration)
+        iterate(membership, matrix, scoring_funcs, cscoring, iteration)
     print "Done !!!!"
 
 
@@ -110,23 +120,18 @@ def make_organism(organism_code, matrix):
     return org_factory.create(organism_code)
 
 
-def make_membership(matrix, num_clusters):
+def make_membership(matrix, num_clusters, num_clusters_per_row,
+                    num_clusters_per_col):
     """returns a seeded membership"""
-    # We are using a fake row seed here in order to have reproducible,
-    # deterministic results for development. Since the column seed is
-    # deterministic and dependent on the row seed, we can use the real
-    # column seed implementation here.
-    # We currently assume the halo_ratios5.tsv file as input, and
-    # num_clusters clusters, so it follows for num_clusters = 43:
-    # num_clusters_per_row = 2
-    # num_clusters_per_col = num_clusters * 2/3 => 43 * 2/3 => 29
-    num_clusters_per_row = 2
-    num_clusters_per_col = int(round(num_clusters * 2.0 / 3.0))
-
     logging.info("# CLUSTERS = %d", num_clusters)
     logging.info("# CLUSTERS / ROW = %d", num_clusters_per_row)
     logging.info("# CLUSTERS / COL = %d", num_clusters_per_col)
 
+    # We are using a fake row seed here in order to have reproducible,
+    # deterministic results for development. Since the column seed is
+    # deterministic and dependent on the row seed, we can use the real
+    # column seed implementation here.
+    # We currently assume the halo_ratios5.tsv file as input
     fake_row_membership_seed = util.DelimitedFileMapper(
         util.DelimitedFile.read('clusters.tsv', has_header=False), 0, 1)
     return memb.ClusterMembership.create(
@@ -138,7 +143,7 @@ def make_membership(matrix, num_clusters):
         microarray.seed_column_members)
 
 
-def iterate(membership, scoring_funcs, column_scoring_func, iteration):
+def iterate(membership, matrix, scoring_funcs, column_scoring_func, iteration):
     """one iteration of the algorithm"""
     logging.info("Iteration # %d", iteration)
     result_matrices = []
@@ -155,14 +160,54 @@ def iterate(membership, scoring_funcs, column_scoring_func, iteration):
     # Get density score
     rd_scores, cd_scores = memb.get_density_scores(membership,
                                                    result_matrices[0],
-                                                   cscores,
-                                                   NUM_CLUSTERS)
+                                                   cscores)
+    compensate_size(membership, matrix, rd_scores, cd_scores)
 
-    print cd_scores
-    # TODO: size compensation
 
-    #for matrix in result_matrices:
-    #    print matrix
+def compensate_size(membership, matrix, rd_scores, cd_scores):
+    """size compensation function"""
+    def compensate_dim_size(size, dimsize, clusters_per_dim, num_clusters):
+        """compensate size for a dimension"""
+        return math.exp(-size / (dimsize * clusters_per_dim) / num_clusters)
+
+    def compensate_row_size(size):
+        """compensation function for row dimension"""
+        return compensate_dim_size(size,
+                                   matrix.num_rows(),
+                                   membership.num_clusters_per_row(),
+                                   membership.num_clusters())
+
+    def compensate_column_size(size):
+        """compensation function for column dimension"""
+        return compensate_dim_size(size,
+                                   matrix.num_columns(),
+                                   membership.num_clusters_per_column(),
+                                   membership.num_clusters())
+
+    def compensate_rows(cluster):
+        """compensate density scores for row dimension"""
+        num_rowmembers = membership.num_row_members(cluster)
+        if num_rowmembers > 0:
+            rd_scores.multiply_column_by(
+                cluster - 1, compensate_row_size(num_rowmembers))
+        else:
+            rd_scores.multiply_column_by(
+                cluster - 1, compensate_row_size(MIN_CLUSTER_ROWS_ALLOWED))
+
+    def compensate_columns(cluster):
+        """compensate density scores for column dimension"""
+        num_colmembers = membership.num_column_members(cluster)
+        if num_colmembers > 0:
+            cd_scores.multiply_column_by(
+                cluster - 1, compensate_column_size(num_colmembers))
+        else:
+            cd_scores.multiply_column_by(
+                cluster - 1, compensate_column_size(matrix.num_columns() / 10.0))
+
+    num_clusters = membership.num_clusters()
+    for cluster in range(1, num_clusters + 1):
+        compensate_rows(cluster)
+        compensate_columns(cluster)
 
 
 ############################################################

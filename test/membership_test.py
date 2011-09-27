@@ -1,4 +1,4 @@
-"""microarray_test.py - unit test module for microarray module
+"""membership_test.py - unit test module for membership module
 
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
@@ -69,7 +69,7 @@ class ClusterMembershipTest(unittest.TestCase):
 
     def test_constructor(self):
         """tests the constructor"""
-        membership = memb.ClusterMembership(3,
+        membership = memb.ClusterMembership(3, 2, 5,
                                             {'R1': [1, 3], 'R2': [2, 3]},
                                             {'C1': [1, 2], 'C2': [2]})
         self.assertEquals([1, 3], membership.clusters_for_row('R1'))
@@ -84,6 +84,13 @@ class ClusterMembershipTest(unittest.TestCase):
         self.assertTrue(membership.is_row_member_of('R2', 2))
         self.assertFalse(membership.is_row_member_of('R1', 2))
         self.assertEquals(3, membership.num_clusters())
+        self.assertEquals(2, membership.num_clusters_per_row())
+        self.assertEquals(1, membership.num_row_members(1))
+        self.assertEquals(2, membership.num_row_members(3))
+        self.assertEquals(0, membership.num_row_members(4))
+        self.assertEquals(1, membership.num_column_members(1))
+        self.assertEquals(2, membership.num_column_members(2))
+        self.assertEquals(0, membership.num_column_members(3))
 
     def test_create_membership(self):
         """test creating a ClusterMembership object"""

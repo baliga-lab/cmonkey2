@@ -149,16 +149,27 @@ class DataMatrix:
                           col_names=self.column_names(),
                           values=[util.column_means(self.values())])
 
+    ######################################################################
+    #### Operations on the matrix values
+    ######################################################################
     def multiply_by(self, factor):
         """returns a new DataMatrix with the values in the matrix negated"""
         return DataMatrix(self.num_rows(), self.num_columns(),
                           self.row_names(), self.column_names(),
                           self.values() * factor)
 
+    def multiply_column_by(self, column, factor):
+        """Mulitplies the specified column by a certain factor"""
+        for row in range(self.num_rows()):
+            self.__values[row][column] *= factor
+        return self
+
     def max(self):
+        """return the maximum value in this matrix"""
         return numpy.amax(self.values())
 
     def min(self):
+        """return the minimum value in this matrix"""
         return numpy.amin(self.values())
 
     def __neg__(self):

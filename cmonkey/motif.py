@@ -49,14 +49,14 @@ def remove_atgs_filter(seqs, feature_ids, distance):
 def compute_scores(meme_suite, organism, membership,
                    used_sequences,
                    distance, sequence_filters, pvalue_filter):
-    MIN_LOG_SCORE = -20.0
-
     """Compute motif scores. In order to influence the sequences
     that go into meme, the user can specify a list of sequence filter
     functions that have the signature
     (seqs, feature_ids, distance) -> seqs
     These filters are applied in the order they appear in the list
     """
+    MIN_LOG_SCORE = -20.0
+
     def apply_sequence_filters(filters, seqs, feature_ids, distance):
         """apply all filters in the filters list in order"""
         for sequence_filter in filters:
