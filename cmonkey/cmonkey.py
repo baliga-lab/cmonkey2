@@ -161,53 +161,7 @@ def iterate(membership, matrix, scoring_funcs, column_scoring_func, iteration):
     rd_scores, cd_scores = memb.get_density_scores(membership,
                                                    result_matrices[0],
                                                    cscores)
-    compensate_size(membership, matrix, rd_scores, cd_scores)
-
-
-def compensate_size(membership, matrix, rd_scores, cd_scores):
-    """size compensation function"""
-    def compensate_dim_size(size, dimsize, clusters_per_dim, num_clusters):
-        """compensate size for a dimension"""
-        return math.exp(-size / (dimsize * clusters_per_dim) / num_clusters)
-
-    def compensate_row_size(size):
-        """compensation function for row dimension"""
-        return compensate_dim_size(size,
-                                   matrix.num_rows(),
-                                   membership.num_clusters_per_row(),
-                                   membership.num_clusters())
-
-    def compensate_column_size(size):
-        """compensation function for column dimension"""
-        return compensate_dim_size(size,
-                                   matrix.num_columns(),
-                                   membership.num_clusters_per_column(),
-                                   membership.num_clusters())
-
-    def compensate_rows(cluster):
-        """compensate density scores for row dimension"""
-        num_rowmembers = membership.num_row_members(cluster)
-        if num_rowmembers > 0:
-            rd_scores.multiply_column_by(
-                cluster - 1, compensate_row_size(num_rowmembers))
-        else:
-            rd_scores.multiply_column_by(
-                cluster - 1, compensate_row_size(MIN_CLUSTER_ROWS_ALLOWED))
-
-    def compensate_columns(cluster):
-        """compensate density scores for column dimension"""
-        num_colmembers = membership.num_column_members(cluster)
-        if num_colmembers > 0:
-            cd_scores.multiply_column_by(
-                cluster - 1, compensate_column_size(num_colmembers))
-        else:
-            cd_scores.multiply_column_by(
-                cluster - 1, compensate_column_size(matrix.num_columns() / 10.0))
-
-    num_clusters = membership.num_clusters()
-    for cluster in range(1, num_clusters + 1):
-        compensate_rows(cluster)
-        compensate_columns(cluster)
+    memb.compensate_size(membership, matrix, rd_scores, cd_scores)
 
 
 ############################################################
