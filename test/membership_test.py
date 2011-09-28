@@ -69,7 +69,7 @@ class ClusterMembershipTest(unittest.TestCase):
 
     def test_constructor(self):
         """tests the constructor"""
-        membership = memb.ClusterMembership(3, 2, 5,
+        membership = memb.ClusterMembership(3, 2, 5, 0, 0, 0, 0,
                                             {'R1': [1, 3], 'R2': [2, 3]},
                                             {'C1': [1, 2], 'C2': [2]})
         self.assertEquals([1, 3], membership.clusters_for_row('R1'))
@@ -98,7 +98,7 @@ class ClusterMembershipTest(unittest.TestCase):
         seed_row_memberships = MockSeedRowMemberships()
         seed_col_memberships = MockSeedColumnMemberships()
         membership = memb.ClusterMembership.create(datamatrix, 1,
-                                                   2, 2,
+                                                   2, 2, 0, 0, 0, 0,
                                                    seed_row_memberships,
                                                    seed_col_memberships)
         self.assertTrue(seed_row_memberships.was_called)

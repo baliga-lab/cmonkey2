@@ -39,6 +39,11 @@ NUM_CLUSTERS_PER_COL = int(round(NUM_CLUSTERS * 2.0 / 3.0))
 MIN_CLUSTER_ROWS_ALLOWED = 3
 MAX_CLUSTER_ROWS_ALLOWED = 70
 
+PROBABILITY_SEEING_ROW_CHANGE = 0.5
+PROBABILITY_SEEING_COLUMN_CHANGE = 1.0
+MAX_CHANGES_PER_ROW = 0.5
+MAX_CHANGES_PER_COLUMN = 5
+
 
 def run_cmonkey():
     """init of the cMonkey system"""
@@ -53,11 +58,22 @@ def run_cmonkey():
                  matrix.num_rows(), matrix.num_columns())
 
     organism = make_organism(sys.argv[2], matrix)
-    membership = make_membership(matrix, NUM_CLUSTERS,
-                                 NUM_CLUSTERS_PER_ROW,
-                                 NUM_CLUSTERS_PER_COL)
+    membership = make_membership(matrix)
+    gene_scoring_funcs = make_gene_scoring_funcs(organism, membership, matrix)
+    cond_scoring = microarray.ColumnScoringFunction(membership, matrix)
 
-    # microarray scoring
+    for iteration in range(NUM_ITERATIONS):
+        iterate(membership, matrix, gene_scoring_funcs, cond_scoring,
+                iteration)
+    print "Done !!!!"
+
+
+def make_gene_scoring_funcs(organism, membership, matrix):
+    """setup the gene-related scoring functions here
+    each object in this array supports the method
+    compute(organism, membership, matrix) and returns
+    a DataMatrix(genes x cluster)
+    """
     row_scoring = microarray.RowScoringFunction(membership, matrix,
                                                 lambda iteration: ROW_WEIGHT)
 
@@ -75,17 +91,8 @@ def run_cmonkey():
 
     network_scoring = nw.ScoringFunction(organism, membership, matrix)
 
-    # setup all scoring functions in this array so they are executed
-    # one after another.
-    # each object in this array supports the method
-    # compute(organism, membership, matrix) and returns
-    # a DataMatrix(genes x cluster)
-    #scoring_funcs = [row_scoring, motif_scoring, network_scoring]
-    scoring_funcs = [row_scoring]
-    cscoring = microarray.ColumnScoringFunction(membership, matrix)
-    for iteration in range(NUM_ITERATIONS):
-        iterate(membership, matrix, scoring_funcs, cscoring, iteration)
-    print "Done !!!!"
+    #return [row_scoring, motif_scoring, network_scoring]
+    return [row_scoring]
 
 
 def read_matrix(filename):
@@ -120,13 +127,8 @@ def make_organism(organism_code, matrix):
     return org_factory.create(organism_code)
 
 
-def make_membership(matrix, num_clusters, num_clusters_per_row,
-                    num_clusters_per_col):
+def make_membership(matrix):
     """returns a seeded membership"""
-    logging.info("# CLUSTERS = %d", num_clusters)
-    logging.info("# CLUSTERS / ROW = %d", num_clusters_per_row)
-    logging.info("# CLUSTERS / COL = %d", num_clusters_per_col)
-
     # We are using a fake row seed here in order to have reproducible,
     # deterministic results for development. Since the column seed is
     # deterministic and dependent on the row seed, we can use the real
@@ -136,33 +138,32 @@ def make_membership(matrix, num_clusters, num_clusters_per_row,
         util.DelimitedFile.read('clusters.tsv', has_header=False), 0, 1)
     return memb.ClusterMembership.create(
         matrix.sorted_by_row_name(),
-        num_clusters,
-        num_clusters_per_row,
-        num_clusters_per_col,
+        NUM_CLUSTERS,
+        NUM_CLUSTERS_PER_ROW,
+        NUM_CLUSTERS_PER_COL,
+        PROBABILITY_SEEING_ROW_CHANGE,
+        PROBABILITY_SEEING_COLUMN_CHANGE,
+        MAX_CHANGES_PER_ROW,
+        MAX_CHANGES_PER_COLUMN,
         fake_seed_row_memberships(fake_row_membership_seed),
         microarray.seed_column_members)
 
 
-def iterate(membership, matrix, scoring_funcs, column_scoring_func, iteration):
+def iterate(membership, matrix, gene_scoring_funcs, cond_scoring_func,
+            iteration):
     """one iteration of the algorithm"""
     logging.info("Iteration # %d", iteration)
     result_matrices = []
-    for score_func in scoring_funcs:
+    for score_func in gene_scoring_funcs:
         result_matrices.append(score_func.compute(iteration))
-    cscores = column_scoring_func.compute(iteration)
+    cscores = cond_scoring_func.compute(iteration)
 
     # TODO: combine (log filter + weight)
-    for index in range(len(scoring_funcs)):
-        result_matrices[index] = scoring_funcs[index].apply_weight(
+    for index in range(len(gene_scoring_funcs)):
+        result_matrices[index] = gene_scoring_funcs[index].apply_weight(
             result_matrices[index], iteration)
 
-    # TODO: Fuzzify scores (can't be reproduced 1:1 to the R version)
-    # Get density score
-    rd_scores, cd_scores = memb.get_density_scores(membership,
-                                                   result_matrices[0],
-                                                   cscores)
-    memb.compensate_size(membership, matrix, rd_scores, cd_scores)
-
+    membership.update(matrix, result_matrices[0], cscores)
 
 ############################################################
 #### Replace with real seeding when everything works

@@ -76,6 +76,13 @@ class DataMatrix:
         """returns this matrix's values"""
         return self.__values
 
+    def row_values(self, row):
+        """returns the values in the specified row"""
+        result = []
+        for column in range(self.num_columns()):
+            result.append(self.__values[row][column])
+        return result
+
     def column_values(self, column):
         """returns the values in the specified column"""
         result = []

@@ -8,6 +8,8 @@ more information and licensing details.
 import datamatrix as dm
 import math
 import util
+import random
+
 
 class ClusterMembership:
     """A class to store row and column memberships of an input matrix
@@ -22,9 +24,15 @@ class ClusterMembership:
     A column seed function is called after this, which generates the
     entire column membership matrix.
     """
-    def __init__(self, num_clusters, num_clusters_per_row,
+    def __init__(self, num_clusters,
+                 num_clusters_per_row,
                  num_clusters_per_col,
-                 row_is_member_of, column_is_member_of):
+                 probability_seeing_row_change,
+                 probability_seeing_col_change,
+                 max_changes_per_row,
+                 max_changes_per_column,
+                 row_is_member_of,
+                 column_is_member_of):
         """creates an instance of ClusterMembership"""
 
         def create_cluster_to_names_map(name_to_cluster_map):
@@ -41,6 +49,11 @@ class ClusterMembership:
         self.__num_clusters = num_clusters
         self.__num_clusters_per_row = num_clusters_per_row
         self.__num_clusters_per_col = num_clusters_per_col
+        self.__probability_seeing_row_change = probability_seeing_row_change
+        self.__probability_seeing_column_change = probability_seeing_col_change
+        self.__max_changes_per_row = max_changes_per_row
+        self.__max_changes_per_column = max_changes_per_column
+
         self.__row_is_member_of = row_is_member_of
         self.__column_is_member_of = column_is_member_of
         self.__cluster_row_members = create_cluster_to_names_map(
@@ -54,6 +67,10 @@ class ClusterMembership:
                num_clusters,
                num_clusters_per_row,
                num_clusters_per_column,
+               probability_seeing_row_change,
+               probability_seeing_col_change,
+               max_changes_per_row,
+               max_changes_per_col,
                seed_row_memberships,
                seed_column_memberships):
         """create instance of ClusterMembership using
@@ -84,6 +101,10 @@ class ClusterMembership:
         return ClusterMembership(num_clusters,
                                  num_clusters_per_row,
                                  num_clusters_per_column,
+                                 probability_seeing_row_change,
+                                 probability_seeing_col_change,
+                                 max_changes_per_row,
+                                 max_changes_per_col,
                                  row_is_member_of,
                                  col_is_member_of)
 
@@ -132,6 +153,25 @@ class ClusterMembership:
             return len(self.__cluster_column_members[cluster])
         else:
             return 0
+
+    def __repr__(self):
+        """returns the string representation of memberships"""
+        result = "ROW MEMBERS:\n"
+        result += repr(self.__cluster_row_members)
+        result += "\n\nCOLUMN MEMBERS:\n"
+        result += repr(self.__cluster_column_members)
+        return result
+
+    def update(self, matrix, row_scores, column_scores):
+        # TODO: Fuzzify scores (can't be reproduced 1:1 to the R version)
+        rd_scores, cd_scores = get_density_scores(self, row_scores,
+                                                  column_scores)
+        compensate_size(self, matrix, rd_scores, cd_scores)
+        update_memberships(self, rd_scores, cd_scores,
+                           self.__probability_seeing_row_change,
+                           self.__probability_seeing_column_change,
+                           self.__max_changes_per_row,
+                           self.__max_changes_per_column)
 
 
 class Membership:
@@ -302,9 +342,34 @@ def compensate_size(membership, matrix, rd_scores, cd_scores):
                 cluster - 1, compensate_column_size(num_colmembers))
         else:
             cd_scores.multiply_column_by(
-                cluster - 1, compensate_column_size(matrix.num_columns() / 10.0))
+                cluster - 1,
+                compensate_column_size(matrix.num_columns() / 10.0))
 
     num_clusters = membership.num_clusters()
     for cluster in range(1, num_clusters + 1):
         compensate_rows(cluster)
         compensate_columns(cluster)
+
+
+def update_memberships(membership, rd_scores, cd_scores,
+                       probability_seeing_row_change,
+                       probability_seeing_column_change,
+                       max_row_changes,
+                       max_col_changes):
+    """update memberships according to rd_scores and cd_scores"""
+    best_gene_clusters = {}
+    for row in range(rd_scores.num_rows()):
+        row_values = rd_scores.row_values(row)
+        ranked_scores = sorted(row_values, reverse=True)
+        gene = rd_scores.row_names()[row]
+        best_gene_clusters[gene] = []
+        for index in range(membership.num_clusters_per_row()):
+            best_gene_clusters[gene].append(row_values.index(
+                    ranked_scores[index]) + 1)
+
+    print membership
+
+    #for row in range(len(rm)):
+    #    randval = random.uniform(0.0, 1.0)
+    #    if (max_row_changes > 0.0 and max_row_changes and
+    #        randval <= max_row_changes):
