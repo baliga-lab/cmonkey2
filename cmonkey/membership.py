@@ -215,6 +215,14 @@ class ClusterMembership:
         if row not in rows:
             rows.append(row)
 
+    def remove_row_from_cluster(self, row, cluster):
+        """removes the specified row as a member to the cluster"""
+        if row in self.__row_is_member_of:
+            clusters = self.__row_is_member_of[row]
+            rows = self.__cluster_row_members[cluster]
+            clusters.remove(cluster)
+            rows.remove(row)
+
     def add_column_to_cluster(self, column, cluster):
         """checked adding of a column to a cluster"""
         if self.num_clusters_for_column(column) >= self.__num_clusters_per_col:
@@ -240,6 +248,14 @@ class ClusterMembership:
                          str(cluster), str(column))
         if columns not in columns:
             columns.append(column)
+
+    def remove_column_from_cluster(self, column, cluster):
+        """removes the specified column as a member to the cluster"""
+        if column in self.__column_is_member_of:
+            clusters = self.__column_is_member_of[column]
+            columns = self.__cluster_column_members[cluster]
+            clusters.remove(cluster)
+            columns.remove(column)
 
     def __repr__(self):
         """returns the string representation of memberships"""

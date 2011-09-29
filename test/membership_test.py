@@ -207,3 +207,35 @@ class ClusterMembershipTest(unittest.TestCase):
             max_changes_per_column=1)
         self.assertRaises(Exception,
                           membership.add_column_to_cluster, 'C1', 2)
+
+    def test_remove_row_from_cluster(self):
+        """tests removing a row from a cluster"""
+        membership = memb.ClusterMembership(
+            row_is_member_of={'R1': [1, 3], 'R2': [2, 3]},
+            column_is_member_of={},
+            num_clusters=3,
+            num_clusters_per_row=2,
+            num_clusters_per_col=5,
+            probability_seeing_row_change=1.0,
+            probability_seeing_col_change=1.0,
+            max_changes_per_row=1,
+            max_changes_per_column=1)
+        membership.remove_row_from_cluster('R1', 3)
+        self.assertEquals([1], membership.clusters_for_row('R1'))
+        self.assertEquals(['R2'], membership.rows_for_cluster(3))
+
+    def test_remove_column_from_cluster(self):
+        """tests removing a column from a cluster"""
+        membership = memb.ClusterMembership(
+            row_is_member_of={},
+            column_is_member_of={'C1': [1, 3], 'C2': [2, 3]},
+            num_clusters=3,
+            num_clusters_per_row=2,
+            num_clusters_per_col=2,
+            probability_seeing_row_change=1.0,
+            probability_seeing_col_change=1.0,
+            max_changes_per_row=1,
+            max_changes_per_column=1)
+        membership.remove_column_from_cluster('C1', 3)
+        self.assertEquals([1], membership.clusters_for_column('C1'))
+        self.assertEquals(['C2'], membership.columns_for_cluster(3))
