@@ -20,7 +20,7 @@ MAX_CLUSTER_ROWS_ALLOWED = 70
 
 PROBABILITY_SEEING_ROW_CHANGE = 0.5
 PROBABILITY_SEEING_COLUMN_CHANGE = 1.0
-MAX_CHANGES_PER_ROW = 0.5
+MAX_CHANGES_PER_ROW = 1
 MAX_CHANGES_PER_COLUMN = 5
 
 
@@ -138,9 +138,17 @@ class ClusterMembership:
         """determine the clusters for the specified row"""
         return self.__row_is_member_of[row_name]
 
+    def num_clusters_for_row(self, row_name):
+        """returns the number of clusters for the row"""
+        return len(self.clusters_for_row(row_name))
+
     def clusters_for_column(self, column_name):
         """determine the clusters for the specified column"""
         return self.__column_is_member_of[column_name]
+
+    def num_clusters_for_column(self, column_name):
+        """returns the number of clusters for the column"""
+        return len(self.clusters_for_column(column_name))
 
     def rows_for_cluster(self, cluster):
         """determine the rows that belong to a cluster"""
@@ -153,6 +161,9 @@ class ClusterMembership:
     def is_row_member_of(self, row_name, cluster):
         """determines whether a certain row is member of a cluster"""
         return row_name in self.rows_for_cluster(cluster)
+
+    def is_gene_member_of(self, gene, cluster):
+        return self.is_row_member_of(gene, cluster)
 
     def num_row_members(self, cluster):
         """returns the number of row members in the specified cluster"""
@@ -168,6 +179,13 @@ class ClusterMembership:
         else:
             return 0
 
+    def is_gene_in_all_clusters(self, gene, clusters):
+        """returns true if the specified gene is in all spefied clusters"""
+        for cluster in clusters:
+            if not self.is_gene_member_of(gene, cluster):
+                return False
+        return True
+
     def __repr__(self):
         """returns the string representation of memberships"""
         result = "ROW MEMBERS:\n"
@@ -178,41 +196,52 @@ class ClusterMembership:
 
     def update(self, matrix, row_scores, column_scores):
         # TODO: Fuzzify scores (can't be reproduced 1:1 to the R version)
-        rd_scores, cd_scores = get_density_scores(self, row_scores,
-                                                  column_scores)
-        compensate_size(self, matrix, rd_scores, cd_scores)
-        update_memberships(self, rd_scores, cd_scores,
-                           self.__probability_seeing_row_change,
-                           self.__probability_seeing_column_change,
-                           self.__max_changes_per_row,
-                           self.__max_changes_per_column)
+        rd_scores, cd_scores = _get_density_scores(self, row_scores,
+                                                   column_scores)
+        _compensate_size(self, matrix, rd_scores, cd_scores)
+        self.update_memberships(rd_scores, cd_scores)
 
+    def update_memberships(self, rd_scores, cd_scores):
+        """update memberships according to rd_scores and cd_scores"""
 
-class Membership:
-    """Algorithms for cluster membership"""
-    def __init__(self):
-        """this class has only class methods"""
-        pass
+        def get_best_gene_clusters():
+            """retrieve the best scored gene clusters from rd_scores"""
+            result = {}
+            for row in range(rd_scores.num_rows()):
+                row_values = rd_scores.row_values(row)
+                ranked_scores = sorted(row_values, reverse=True)
+                gene = rd_scores.row_names()[row]
+                result[gene] = []
+                for index in range(self.num_clusters_per_row()):
+                    result[gene].append(row_values.index(
+                            ranked_scores[index]) + 1)
+            return result
 
-    @classmethod
-    def map_to_is_member_matrix(cls, membership_matrix, kcluster):
-        """maps a matrix containing row/column numbers to a true/false
-        matrix by checking all values i in the range [1, kcluster] for
-        containment in each row of the membership matrix.
-        Example: mat =  [1 2] kcluster: 3
-                        [2 3]
-                 result = [t f] => 1 is in     [1 2], but not in [2 3]
-                          [t t] => 2 is in     [1 2], and        [2 3]
-                          [f t] => 3 is not in [1 2], but in     [2 3]
-        """
-        result = []
-        for i in range(1, kcluster + 1):
-            result_row = []
-            result.append(result_row)
-            for matrix_row in membership_matrix:
-                result_row.append(i in matrix_row)
+        def seeing_change(prob):            
+            """returns true if the update is seeing the change"""
+            return prob < 1.0 and random.uniform(0.0, 1.0) > prob
 
-        return result
+        def add_gene_to_cluster(gene, cluster, index):
+            """ Ways to add a member to a cluster:
+            1. if the number of members is less than the allowed, simply add
+            2. if there is a conflict, replace a gene with a lower score in the
+               scores matrix
+            """
+            #print "APPLY CHANGE %s -> %d" % (gene, cluster)
+            if self.num_clusters_for_row(gene) < self.__num_clusters_per_row:
+                print "SLOTS FREE IN ROW MEMBERS, UPDATING HERE"
+            else:
+                print "TODO: REPLACE MEMBER WITH LOWER SCORE"
+
+        best_gene_clusters = get_best_gene_clusters()
+
+        for row in range(rd_scores.num_rows()):
+            gene = rd_scores.row_names()[row]
+            best_for_gene = best_gene_clusters[gene]
+            if (not self.is_gene_in_all_clusters(gene, best_for_gene) and
+                seeing_change(self.__probability_seeing_row_change)):
+                for change in range(self.__max_changes_per_row):
+                    add_gene_to_cluster(gene, best_for_gene[change], row) 
 
 
 class ScoringFunctionBase:
@@ -255,7 +284,7 @@ class ScoringFunctionBase:
             return result.multiply_by(self.__weight_func(iteration))
 
 
-def get_density_scores(membership, row_scores, col_scores):
+def _get_density_scores(membership, row_scores, col_scores):
     """We can't really implement density scores at the moment,
     there seems to be no equivalent to R's density() and approx()
     in scipy"""
@@ -267,8 +296,8 @@ def get_density_scores(membership, row_scores, col_scores):
                               row_scores.row_names(),
                               row_scores.column_names())
     for cluster in range(1, num_clusters + 1):
-        rr_scores = get_rr_scores(membership, row_scores, rowscore_bandwidth,
-                                  cluster)
+        rr_scores = _get_rr_scores(membership, row_scores, rowscore_bandwidth,
+                                   cluster)
         for row in range(row_scores.num_rows()):
             rd_scores[row][cluster - 1] = rr_scores[row]
 
@@ -279,14 +308,14 @@ def get_density_scores(membership, row_scores, col_scores):
                               col_scores.row_names(),
                               col_scores.column_names())
     for cluster in range(1, num_clusters + 1):
-        cc_scores = get_cc_scores(membership, col_scores, colscore_bandwidth,
-                                  cluster)
+        cc_scores = _get_cc_scores(membership, col_scores, colscore_bandwidth,
+                                   cluster)
         for row in range(col_scores.num_rows()):
             cd_scores[row][cluster - 1] = cc_scores[row]
     return (rd_scores, cd_scores)
 
 
-def get_rr_scores(membership, rowscores, bandwidth, cluster):
+def _get_rr_scores(membership, rowscores, bandwidth, cluster):
     """calculate the density scores for the given row score values in the
     specified cluster"""
     def bwscale(value):
@@ -305,7 +334,7 @@ def get_rr_scores(membership, rowscores, bandwidth, cluster):
                         min(kscores) - 1, max(kscores) + 1)
 
 
-def get_cc_scores(membership, scores, bandwidth, cluster):
+def _get_cc_scores(membership, scores, bandwidth, cluster):
     """calculate the density scores for the given column score values in the
     specified cluster"""
     cluster_columns = membership.columns_for_cluster(cluster)
@@ -318,7 +347,7 @@ def get_cc_scores(membership, scores, bandwidth, cluster):
                         min(kscores) - 1, max(kscores) + 1)
 
 
-def compensate_size(membership, matrix, rd_scores, cd_scores):
+def _compensate_size(membership, matrix, rd_scores, cd_scores):
     """size compensation function"""
     def compensate_dim_size(size, dimsize, clusters_per_dim, num_clusters):
         """compensate size for a dimension"""
@@ -365,25 +394,3 @@ def compensate_size(membership, matrix, rd_scores, cd_scores):
         compensate_columns(cluster)
 
 
-def update_memberships(membership, rd_scores, cd_scores,
-                       probability_seeing_row_change,
-                       probability_seeing_column_change,
-                       max_row_changes,
-                       max_col_changes):
-    """update memberships according to rd_scores and cd_scores"""
-    best_gene_clusters = {}
-    for row in range(rd_scores.num_rows()):
-        row_values = rd_scores.row_values(row)
-        ranked_scores = sorted(row_values, reverse=True)
-        gene = rd_scores.row_names()[row]
-        best_gene_clusters[gene] = []
-        for index in range(membership.num_clusters_per_row()):
-            best_gene_clusters[gene].append(row_values.index(
-                    ranked_scores[index]) + 1)
-
-    print membership
-
-    #for row in range(len(rm)):
-    #    randval = random.uniform(0.0, 1.0)
-    #    if (max_row_changes > 0.0 and max_row_changes and
-    #        randval <= max_row_changes):
