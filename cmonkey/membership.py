@@ -136,7 +136,10 @@ class ClusterMembership:
 
     def clusters_for_row(self, row_name):
         """determine the clusters for the specified row"""
-        return self.__row_is_member_of[row_name]
+        if row_name in self.__row_is_member_of:
+            return self.__row_is_member_of[row_name]
+        else:
+            return []
 
     def num_clusters_for_row(self, row_name):
         """returns the number of clusters for the row"""
@@ -144,7 +147,10 @@ class ClusterMembership:
 
     def clusters_for_column(self, column_name):
         """determine the clusters for the specified column"""
-        return self.__column_is_member_of[column_name]
+        if column_name in self.__column_is_member_of:
+            return self.__column_is_member_of[column_name]
+        else:
+            return []
 
     def num_clusters_for_column(self, column_name):
         """returns the number of clusters for the column"""
@@ -162,9 +168,6 @@ class ClusterMembership:
         """determines whether a certain row is member of a cluster"""
         return row_name in self.rows_for_cluster(cluster)
 
-    def is_gene_member_of(self, gene, cluster):
-        return self.is_row_member_of(gene, cluster)
-
     def num_row_members(self, cluster):
         """returns the number of row members in the specified cluster"""
         if cluster in self.__cluster_row_members:
@@ -179,12 +182,64 @@ class ClusterMembership:
         else:
             return 0
 
-    def is_gene_in_all_clusters(self, gene, clusters):
-        """returns true if the specified gene is in all spefied clusters"""
+    def is_row_in_all_clusters(self, row, clusters):
+        """returns true if the specified row is in all spefied clusters"""
         for cluster in clusters:
-            if not self.is_gene_member_of(gene, cluster):
+            if not self.is_row_member_of(row, cluster):
                 return False
         return True
+
+    def add_row_to_cluster(self, row, cluster):
+        """checked adding of a row to a cluster"""
+        if self.num_clusters_for_row(row) >= self.__num_clusters_per_row:
+            raise Exception(("add_row_to_cluster() - exceeded clusters/row " +
+                            "limit for row: '%s'" % str(row)))
+        self.__add_row_to_cluster(row, cluster)
+
+    def __add_row_to_cluster(self, row, cluster):
+        """adds the specified row as a member to the cluster. Unchecked
+        version, without checking limits"""
+        if not row in self.__row_is_member_of:
+            self.__row_is_member_of[row] = []
+        if not cluster in self.__cluster_row_members:
+            self.__cluster_row_members[cluster] = []
+
+        clusters = self.__row_is_member_of[row]
+        rows = self.__cluster_row_members[cluster]
+
+        if cluster not in clusters:
+            clusters.append(cluster)
+        else:
+            logging.warn("cluster %s already associated with %s",
+                         str(cluster), str(row))
+        if row not in rows:
+            rows.append(row)
+
+    def add_column_to_cluster(self, column, cluster):
+        """checked adding of a column to a cluster"""
+        if self.num_clusters_for_column(column) >= self.__num_clusters_per_col:
+            raise Exception(("add_col_to_cluster() - exceeded clusters/col " +
+                            "limit for col: '%s'" % str(column)))
+        self.__add_column_to_cluster(column, cluster)
+
+    def __add_column_to_cluster(self, column, cluster):
+        """adds the specified column as a member to the cluster. Unchecked
+        version, without checking limits"""
+        if not column in self.__column_is_member_of:
+            self.__column_is_member_of[column] = []
+        if not cluster in self.__cluster_column_members:
+            self.__cluster_column_members[cluster] = []
+
+        clusters = self.__column_is_member_of[column]
+        columns = self.__cluster_column_members[cluster]
+
+        if cluster not in clusters:
+            clusters.append(cluster)
+        else:
+            logging.warn("cluster %s already associated with %s",
+                         str(cluster), str(column))
+        if columns not in columns:
+            columns.append(column)
 
     def __repr__(self):
         """returns the string representation of memberships"""
@@ -217,7 +272,7 @@ class ClusterMembership:
                             ranked_scores[index]) + 1)
             return result
 
-        def seeing_change(prob):            
+        def seeing_change(prob):
             """returns true if the update is seeing the change"""
             return prob < 1.0 and random.uniform(0.0, 1.0) > prob
 
@@ -238,10 +293,10 @@ class ClusterMembership:
         for row in range(rd_scores.num_rows()):
             gene = rd_scores.row_names()[row]
             best_for_gene = best_gene_clusters[gene]
-            if (not self.is_gene_in_all_clusters(gene, best_for_gene) and
+            if (not self.is_row_in_all_clusters(gene, best_for_gene) and
                 seeing_change(self.__probability_seeing_row_change)):
                 for change in range(self.__max_changes_per_row):
-                    add_gene_to_cluster(gene, best_for_gene[change], row) 
+                    add_gene_to_cluster(gene, best_for_gene[change], row)
 
 
 class ScoringFunctionBase:
@@ -392,5 +447,3 @@ def _compensate_size(membership, matrix, rd_scores, cd_scores):
     for cluster in range(1, num_clusters + 1):
         compensate_rows(cluster)
         compensate_columns(cluster)
-
-

@@ -50,7 +50,6 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(nwt.NetworkTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(membtest.ClusterMembershipTest))
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(membtest.MembershipTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(mat.ComputeArrayScoresTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(met.MemeTest))
