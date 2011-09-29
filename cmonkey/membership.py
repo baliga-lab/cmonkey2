@@ -11,6 +11,19 @@ import util
 import random
 
 
+# Default values for membership creation
+NUM_CLUSTERS = 43
+NUM_CLUSTERS_PER_ROW = 2
+NUM_CLUSTERS_PER_COL = int(round(NUM_CLUSTERS * 2.0 / 3.0))
+MIN_CLUSTER_ROWS_ALLOWED = 3
+MAX_CLUSTER_ROWS_ALLOWED = 70
+
+PROBABILITY_SEEING_ROW_CHANGE = 0.5
+PROBABILITY_SEEING_COLUMN_CHANGE = 1.0
+MAX_CHANGES_PER_ROW = 0.5
+MAX_CHANGES_PER_COLUMN = 5
+
+
 class ClusterMembership:
     """A class to store row and column memberships of an input matrix
     1. Row memberships are stored as a matrix where each row represents a gene
@@ -24,15 +37,16 @@ class ClusterMembership:
     A column seed function is called after this, which generates the
     entire column membership matrix.
     """
-    def __init__(self, num_clusters,
+    def __init__(self,
+                 row_is_member_of,
+                 column_is_member_of,
+                 num_clusters,
                  num_clusters_per_row,
                  num_clusters_per_col,
                  probability_seeing_row_change,
                  probability_seeing_col_change,
                  max_changes_per_row,
-                 max_changes_per_column,
-                 row_is_member_of,
-                 column_is_member_of):
+                 max_changes_per_column):
         """creates an instance of ClusterMembership"""
 
         def create_cluster_to_names_map(name_to_cluster_map):
@@ -64,15 +78,15 @@ class ClusterMembership:
     # pylint: disable-msg=R0913
     @classmethod
     def create(cls, data_matrix,
-               num_clusters,
-               num_clusters_per_row,
-               num_clusters_per_column,
-               probability_seeing_row_change,
-               probability_seeing_col_change,
-               max_changes_per_row,
-               max_changes_per_col,
                seed_row_memberships,
-               seed_column_memberships):
+               seed_column_memberships,
+               num_clusters=NUM_CLUSTERS,
+               num_clusters_per_row=NUM_CLUSTERS_PER_ROW,
+               num_clusters_per_column=NUM_CLUSTERS_PER_COL,
+               probability_seeing_row_change=PROBABILITY_SEEING_ROW_CHANGE,
+               probability_seeing_col_change=PROBABILITY_SEEING_COLUMN_CHANGE,
+               max_changes_per_row=MAX_CHANGES_PER_ROW,
+               max_changes_per_col=MAX_CHANGES_PER_COLUMN):
         """create instance of ClusterMembership using
         the provided seeding algorithms"""
         def make_member_map(membership, names):
@@ -98,15 +112,15 @@ class ClusterMembership:
                                            data_matrix.row_names())
         col_is_member_of = make_member_map(column_membership,
                                            data_matrix.column_names())
-        return ClusterMembership(num_clusters,
+        return ClusterMembership(row_is_member_of,
+                                 col_is_member_of,
+                                 num_clusters,
                                  num_clusters_per_row,
                                  num_clusters_per_column,
                                  probability_seeing_row_change,
                                  probability_seeing_col_change,
                                  max_changes_per_row,
-                                 max_changes_per_col,
-                                 row_is_member_of,
-                                 col_is_member_of)
+                                 max_changes_per_col)
 
     def num_clusters(self):
         """returns the number of clusters"""

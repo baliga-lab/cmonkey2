@@ -17,32 +17,16 @@ import rsat
 import sys
 import os
 import logging
-import math
 
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 CMONKEY_VERSION = '4.0'
-AVG_CLUSTER_SIZE = 20
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
 GO_FILE_PATH = 'testdata/proteome2taxid'
 RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
-NUM_CLUSTERS = 43
 ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 1
-
-# num_clusters clusters, so it follows for num_clusters = 43:
-# num_clusters_per_row = 2
-# num_clusters_per_col = num_clusters * 2/3 => 43 * 2/3 => 29
-NUM_CLUSTERS_PER_ROW = 2
-NUM_CLUSTERS_PER_COL = int(round(NUM_CLUSTERS * 2.0 / 3.0))
-MIN_CLUSTER_ROWS_ALLOWED = 3
-MAX_CLUSTER_ROWS_ALLOWED = 70
-
-PROBABILITY_SEEING_ROW_CHANGE = 0.5
-PROBABILITY_SEEING_COLUMN_CHANGE = 1.0
-MAX_CHANGES_PER_ROW = 0.5
-MAX_CHANGES_PER_COLUMN = 5
 
 
 def run_cmonkey():
@@ -138,13 +122,6 @@ def make_membership(matrix):
         util.DelimitedFile.read('clusters.tsv', has_header=False), 0, 1)
     return memb.ClusterMembership.create(
         matrix.sorted_by_row_name(),
-        NUM_CLUSTERS,
-        NUM_CLUSTERS_PER_ROW,
-        NUM_CLUSTERS_PER_COL,
-        PROBABILITY_SEEING_ROW_CHANGE,
-        PROBABILITY_SEEING_COLUMN_CHANGE,
-        MAX_CHANGES_PER_ROW,
-        MAX_CHANGES_PER_COLUMN,
         fake_seed_row_memberships(fake_row_membership_seed),
         microarray.seed_column_members)
 

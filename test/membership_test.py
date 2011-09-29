@@ -69,9 +69,10 @@ class ClusterMembershipTest(unittest.TestCase):
 
     def test_constructor(self):
         """tests the constructor"""
-        membership = memb.ClusterMembership(3, 2, 5, 0, 0, 0, 0,
-                                            {'R1': [1, 3], 'R2': [2, 3]},
-                                            {'C1': [1, 2], 'C2': [2]})
+        membership = memb.ClusterMembership(
+            {'R1': [1, 3], 'R2': [2, 3]},
+            {'C1': [1, 2], 'C2': [2]},
+            3, 2, 5, 0, 0, 0, 0)
         self.assertEquals([1, 3], membership.clusters_for_row('R1'))
         self.assertEquals([2, 3], membership.clusters_for_row('R2'))
         self.assertEquals([1, 2], membership.clusters_for_column('C1'))
@@ -97,13 +98,25 @@ class ClusterMembershipTest(unittest.TestCase):
         datamatrix = MockDataMatrix(3)
         seed_row_memberships = MockSeedRowMemberships()
         seed_col_memberships = MockSeedColumnMemberships()
-        membership = memb.ClusterMembership.create(datamatrix, 1,
-                                                   2, 2, 0, 0, 0, 0,
+        membership = memb.ClusterMembership.create(datamatrix,
+                                                   seed_row_memberships,
+                                                   seed_col_memberships,
+                                                   1, 2, 2, 0, 0, 0, 0)
+        self.assertTrue(seed_row_memberships.was_called)
+        self.assertTrue(seed_col_memberships.was_called)
+        self.assertEquals(1, membership.num_clusters())
+
+    def test_create_membership_use_defaults(self):
+        """test creating a ClusterMembership object using default parameters"""
+        datamatrix = MockDataMatrix(3)
+        seed_row_memberships = MockSeedRowMemberships()
+        seed_col_memberships = MockSeedColumnMemberships()
+        membership = memb.ClusterMembership.create(datamatrix,
                                                    seed_row_memberships,
                                                    seed_col_memberships)
         self.assertTrue(seed_row_memberships.was_called)
         self.assertTrue(seed_col_memberships.was_called)
-        self.assertEquals(1, membership.num_clusters())
+        self.assertEquals(memb.NUM_CLUSTERS, membership.num_clusters())
 
     def test_compute_column_scores_submatrix(self):
         """tests compute_column_scores_submatrix"""
