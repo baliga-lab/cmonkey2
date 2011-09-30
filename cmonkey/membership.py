@@ -9,6 +9,7 @@ import datamatrix as dm
 import math
 import util
 import random
+import logging
 
 
 # Default values for membership creation
@@ -168,6 +169,10 @@ class ClusterMembership:
         """determines whether a certain row is member of a cluster"""
         return row_name in self.rows_for_cluster(cluster)
 
+    def is_column_member_of(self, column_name, cluster):
+        """determines whether a certain column is member of a cluster"""
+        return column_name in self.columns_for_cluster(cluster)
+
     def num_row_members(self, cluster):
         """returns the number of row members in the specified cluster"""
         if cluster in self.__cluster_row_members:
@@ -182,10 +187,17 @@ class ClusterMembership:
         else:
             return 0
 
-    def is_row_in_all_clusters(self, row, clusters):
+    def is_row_in_clusters(self, row, clusters):
         """returns true if the specified row is in all spefied clusters"""
         for cluster in clusters:
             if not self.is_row_member_of(row, cluster):
+                return False
+        return True
+
+    def is_column_in_clusters(self, col, clusters):
+        """returns true if the specified row is in all spefied clusters"""
+        for cluster in clusters:
+            if not self.is_column_member_of(col, cluster):
                 return False
         return True
 
@@ -208,10 +220,12 @@ class ClusterMembership:
         rows = self.__cluster_row_members[cluster]
 
         if cluster not in clusters:
+            logging.info("ROW %s -> CLUSTER %d", row, cluster)
             clusters.append(cluster)
         else:
-            logging.warn("cluster %s already associated with %s",
-                         str(cluster), str(row))
+            pass
+            #logging.warn("cluster %s already associated with %s",
+            #             str(cluster), str(row))
         if row not in rows:
             rows.append(row)
 
@@ -242,6 +256,7 @@ class ClusterMembership:
         columns = self.__cluster_column_members[cluster]
 
         if cluster not in clusters:
+            logging.info("COL %s -> CLUSTER %d", column, cluster)
             clusters.append(cluster)
         else:
             logging.warn("cluster %s already associated with %s",
@@ -266,53 +281,79 @@ class ClusterMembership:
         return result
 
     def update(self, matrix, row_scores, column_scores):
+        """top-level update method"""
         # TODO: Fuzzify scores (can't be reproduced 1:1 to the R version)
         rd_scores, cd_scores = _get_density_scores(self, row_scores,
                                                    column_scores)
         _compensate_size(self, matrix, rd_scores, cd_scores)
-        self.update_memberships(rd_scores, cd_scores)
+        self._update_memberships(rd_scores, cd_scores)
 
-    def update_memberships(self, rd_scores, cd_scores):
+    def _update_memberships(self, rd_scores, cd_scores):
         """update memberships according to rd_scores and cd_scores"""
 
-        def get_best_gene_clusters():
-            """retrieve the best scored gene clusters from rd_scores"""
+        def get_best_clusters(scores, num_per_cluster):
+            """retrieve the best scored gene clusters from the given
+            row/column score matrix"""
             result = {}
-            for row in range(rd_scores.num_rows()):
-                row_values = rd_scores.row_values(row)
+            for row in range(scores.num_rows()):
+                row_values = scores.row_values(row)
                 ranked_scores = sorted(row_values, reverse=True)
-                gene = rd_scores.row_names()[row]
-                result[gene] = []
-                for index in range(self.num_clusters_per_row()):
-                    result[gene].append(row_values.index(
+                rowname = scores.row_names()[row]
+                result[rowname] = []
+                for index in range(num_per_cluster):
+                    result[rowname].append(row_values.index(
                             ranked_scores[index]) + 1)
             return result
 
         def seeing_change(prob):
             """returns true if the update is seeing the change"""
-            return prob < 1.0 and random.uniform(0.0, 1.0) > prob
+            return prob >= 1.0 or random.uniform(0.0, 1.0) > prob
 
-        def add_gene_to_cluster(gene, cluster, index):
+        def add_row_to_cluster(row, cluster, index):
             """ Ways to add a member to a cluster:
             1. if the number of members is less than the allowed, simply add
             2. if there is a conflict, replace a gene with a lower score in the
                scores matrix
             """
-            #print "APPLY CHANGE %s -> %d" % (gene, cluster)
-            if self.num_clusters_for_row(gene) < self.__num_clusters_per_row:
-                print "SLOTS FREE IN ROW MEMBERS, UPDATING HERE"
+            if self.num_clusters_for_row(row) < self.__num_clusters_per_row:
+                self.add_row_to_cluster(row, cluster)
             else:
                 print "TODO: REPLACE MEMBER WITH LOWER SCORE"
 
-        best_gene_clusters = get_best_gene_clusters()
+        def add_col_to_cluster(col, cluster, index):
+            """adds a column to a cluster"""
+            if self.num_clusters_for_column(col) < self.__num_clusters_per_col:
+                self.add_column_to_cluster(col, cluster)
+            else:
+                print "TODO: REPLACE MEMBER WITH LOWER SCORE"
 
-        for row in range(rd_scores.num_rows()):
-            gene = rd_scores.row_names()[row]
-            best_for_gene = best_gene_clusters[gene]
-            if (not self.is_row_in_all_clusters(gene, best_for_gene) and
-                seeing_change(self.__probability_seeing_row_change)):
-                for change in range(self.__max_changes_per_row):
-                    add_gene_to_cluster(gene, best_for_gene[change], row)
+        def update_for(scores,
+                       num_per_cluster,
+                       probability_seeing_change,
+                       is_in_all_clusters, max_changes,
+                       add_member_to_cluster):
+            """generically updating row/column memberships according to
+            rd_scores/cd_scores"""
+            best_clusters = get_best_clusters(scores, num_per_cluster)
+            for row in range(scores.num_rows()):
+                rowname = scores.row_names()[row]
+                best_members = best_clusters[rowname]
+                if (not is_in_all_clusters(rowname, best_members) and
+                    seeing_change(probability_seeing_change)):
+                    for change in range(max_changes):
+                        add_member_to_cluster(rowname, best_members[change],
+                                              row)
+
+        update_for(rd_scores,
+                   self.__num_clusters_per_row,
+                   self.__probability_seeing_row_change,
+                   self.is_row_in_clusters, self.__max_changes_per_row,
+                   add_row_to_cluster)
+        update_for(cd_scores,
+                   self.__num_clusters_per_col,
+                   self.__probability_seeing_column_change,
+                   self.is_column_in_clusters, self.__max_changes_per_column,
+                   add_col_to_cluster)
 
 
 class ScoringFunctionBase:
