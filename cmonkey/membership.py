@@ -201,14 +201,14 @@ class ClusterMembership:
                 return False
         return True
 
-    def add_row_to_cluster(self, row, cluster):
+    def add_cluster_to_row(self, row, cluster):
         """checked adding of a row to a cluster"""
         if self.num_clusters_for_row(row) >= self.__num_clusters_per_row:
             raise Exception(("add_row_to_cluster() - exceeded clusters/row " +
                             "limit for row: '%s'" % str(row)))
-        self.__add_row_to_cluster(row, cluster)
+        self.__add_cluster_to_row(row, cluster)
 
-    def __add_row_to_cluster(self, row, cluster):
+    def __add_cluster_to_row(self, row, cluster):
         """adds the specified row as a member to the cluster. Unchecked
         version, without checking limits"""
         if not row in self.__row_is_member_of:
@@ -229,22 +229,29 @@ class ClusterMembership:
         if row not in rows:
             rows.append(row)
 
-    def remove_row_from_cluster(self, row, cluster):
-        """removes the specified row as a member to the cluster"""
+    def remove_cluster_from_row(self, row, cluster):
+        """removes a cluster from the list of associated clusters for a row"""
         if row in self.__row_is_member_of:
             clusters = self.__row_is_member_of[row]
-            rows = self.__cluster_row_members[cluster]
             clusters.remove(cluster)
+
+        if cluster in self.__cluster_row_members:
+            rows = self.__cluster_row_members[cluster]
             rows.remove(row)
 
-    def add_column_to_cluster(self, column, cluster):
+    def replace_row_cluster(self, row, cluster, replacement):
+        """replaces a cluster in the list of clusters for a row"""
+        self.remove_cluster_from_row(row, cluster)
+        self.add_cluster_to_row(row, replacement)
+
+    def add_cluster_to_column(self, column, cluster):
         """checked adding of a column to a cluster"""
         if self.num_clusters_for_column(column) >= self.__num_clusters_per_col:
             raise Exception(("add_col_to_cluster() - exceeded clusters/col " +
                             "limit for col: '%s'" % str(column)))
-        self.__add_column_to_cluster(column, cluster)
+        self.__add_cluster_to_column(column, cluster)
 
-    def __add_column_to_cluster(self, column, cluster):
+    def __add_cluster_to_column(self, column, cluster):
         """adds the specified column as a member to the cluster. Unchecked
         version, without checking limits"""
         if not column in self.__column_is_member_of:
@@ -264,13 +271,20 @@ class ClusterMembership:
         if columns not in columns:
             columns.append(column)
 
-    def remove_column_from_cluster(self, column, cluster):
-        """removes the specified column as a member to the cluster"""
+    def remove_cluster_from_column(self, column, cluster):
+        """removes a cluster from the list of associated clusters for a column"""
+        if cluster in self.__cluster_column_members:
+            columns = self.__cluster_column_members[cluster]
+            columns.remove(column)
+
         if column in self.__column_is_member_of:
             clusters = self.__column_is_member_of[column]
-            columns = self.__cluster_column_members[cluster]
             clusters.remove(cluster)
-            columns.remove(column)
+ 
+    def replace_column_cluster(self, column, cluster, replacement):
+        """replaces a cluster in the list of clusters for a column"""
+        self.remove_cluster_from_column(column, cluster)
+        self.add_cluster_to_column(column, replacement)
 
     def __repr__(self):
         """returns the string representation of memberships"""
@@ -316,16 +330,18 @@ class ClusterMembership:
                scores matrix
             """
             if self.num_clusters_for_row(row) < self.__num_clusters_per_row:
-                self.add_row_to_cluster(row, cluster)
+                self.add_cluster_to_row(row, cluster)
             else:
-                print "TODO: REPLACE MEMBER WITH LOWER SCORE"
+                #replace_lowest_scoring_row_member(cluster, row)
+                pass
 
         def add_col_to_cluster(col, cluster, index):
             """adds a column to a cluster"""
             if self.num_clusters_for_column(col) < self.__num_clusters_per_col:
-                self.add_column_to_cluster(col, cluster)
+                self.add_cluster_to_column(col, cluster)
             else:
-                print "TODO: REPLACE MEMBER WITH LOWER SCORE"
+                #replace_lowest_scoring_col_member(cluster, col)
+                pass
 
         def update_for(scores,
                        num_per_cluster,
