@@ -506,7 +506,9 @@ def _compensate_size(membership, matrix, rd_scores, cd_scores):
     """size compensation function"""
     def compensate_dim_size(size, dimsize, clusters_per_dim, num_clusters):
         """compensate size for a dimension"""
-        return math.exp(-size / (dimsize * clusters_per_dim) / num_clusters)
+        return math.exp(-float(size) / (float(dimsize) *
+                                        float(clusters_per_dim) /
+                                        float(num_clusters)))
 
     def compensate_row_size(size):
         """compensation function for row dimension"""
@@ -528,6 +530,7 @@ def _compensate_size(membership, matrix, rd_scores, cd_scores):
         if num_rowmembers > 0:
             rd_scores.multiply_column_by(
                 cluster - 1, compensate_row_size(num_rowmembers))
+            #print "# members in cluster", cluster, ": ", num_rowmembers, " compfactor: ", compensate_row_size(num_rowmembers)
         else:
             rd_scores.multiply_column_by(
                 cluster - 1, compensate_row_size(MIN_CLUSTER_ROWS_ALLOWED))

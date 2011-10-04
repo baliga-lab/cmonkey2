@@ -26,7 +26,7 @@ RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
 ROW_WEIGHT = 6.0
-NUM_ITERATIONS = 100
+NUM_ITERATIONS = 1
 
 
 def run_cmonkey():
