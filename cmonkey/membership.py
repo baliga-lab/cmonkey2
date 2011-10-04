@@ -10,6 +10,7 @@ import math
 import util
 import random
 import logging
+import sys
 
 
 # Default values for membership creation
@@ -266,8 +267,9 @@ class ClusterMembership:
             logging.info("COL %s -> CLUSTER %d", column, cluster)
             clusters.append(cluster)
         else:
-            logging.warn("cluster %s already associated with %s",
-                         str(cluster), str(column))
+            #logging.warn("cluster %s already associated with %s",
+            #             str(cluster), str(column))
+            pass
         if columns not in columns:
             columns.append(column)
 
@@ -323,7 +325,7 @@ class ClusterMembership:
             """returns true if the update is seeing the change"""
             return prob >= 1.0 or random.uniform(0.0, 1.0) > prob
 
-        def add_row_to_cluster(row, cluster, index):
+        def add_cluster_to_row(row, cluster):
             """ Ways to add a member to a cluster:
             1. if the number of members is less than the allowed, simply add
             2. if there is a conflict, replace a gene with a lower score in the
@@ -332,16 +334,42 @@ class ClusterMembership:
             if self.num_clusters_for_row(row) < self.__num_clusters_per_row:
                 self.add_cluster_to_row(row, cluster)
             else:
-                #replace_lowest_scoring_row_member(cluster, row)
-                pass
+                replace_lowest_scoring_row_member(row, cluster)
 
-        def add_col_to_cluster(col, cluster, index):
+        def replace_lowest_scoring_row_member(row, cluster):
+            current_clusters = self.__row_is_member_of[row]
+            min_score = sys.maxint
+            min_cluster = None
+            member_names = rd_scores.row_names()
+            member_index = member_names.index(row)
+
+            for current_cluster in current_clusters:
+                if rd_scores[member_index][current_cluster - 1] < min_score:
+                    min_score = rd_scores[member_index][current_cluster - 1]
+                    min_cluster = current_cluster
+            self.remove_cluster_from_row(row, min_cluster)
+            self.add_cluster_to_row(row, cluster)
+
+        def add_cluster_to_col(col, cluster):
             """adds a column to a cluster"""
             if self.num_clusters_for_column(col) < self.__num_clusters_per_col:
                 self.add_cluster_to_column(col, cluster)
             else:
-                #replace_lowest_scoring_col_member(cluster, col)
-                pass
+                replace_lowest_scoring_col_member(col, cluster)
+
+        def replace_lowest_scoring_col_member(column, cluster):
+            current_clusters = self.__column_is_member_of[column]
+            min_score = sys.maxint
+            min_cluster = None
+            member_names = cd_scores.row_names()
+            member_index = member_names.index(column)
+
+            for current_cluster in current_clusters:
+                if cd_scores[member_index][current_cluster - 1] < min_score:
+                    min_score = cd_scores[member_index][current_cluster - 1]
+                    min_cluster = current_cluster
+            self.remove_cluster_from_column(column, min_cluster)
+            self.add_cluster_to_column(column, cluster)
 
         def update_for(scores,
                        num_per_cluster,
@@ -357,19 +385,18 @@ class ClusterMembership:
                 if (not is_in_all_clusters(rowname, best_members) and
                     seeing_change(probability_seeing_change)):
                     for change in range(max_changes):
-                        add_member_to_cluster(rowname, best_members[change],
-                                              row)
+                        add_member_to_cluster(rowname, best_members[change])
 
         update_for(rd_scores,
                    self.__num_clusters_per_row,
                    self.__probability_seeing_row_change,
                    self.is_row_in_clusters, self.__max_changes_per_row,
-                   add_row_to_cluster)
+                   add_cluster_to_row)
         update_for(cd_scores,
                    self.__num_clusters_per_col,
                    self.__probability_seeing_column_change,
                    self.is_column_in_clusters, self.__max_changes_per_column,
-                   add_col_to_cluster)
+                   add_cluster_to_col)
 
 
 class ScoringFunctionBase:
