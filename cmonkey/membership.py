@@ -221,7 +221,7 @@ class ClusterMembership:
         rows = self.__cluster_row_members[cluster]
 
         if cluster not in clusters:
-            logging.info("ROW %s -> CLUSTER %d", row, cluster)
+            #logging.info("ROW %s -> CLUSTER %d", row, cluster)
             clusters.append(cluster)
         else:
             pass
@@ -323,7 +323,8 @@ class ClusterMembership:
 
         def seeing_change(prob):
             """returns true if the update is seeing the change"""
-            return prob >= 1.0 or random.uniform(0.0, 1.0) > prob
+            #return prob >= 1.0 or random.uniform(0.0, 1.0) <= prob
+            return True
 
         def add_cluster_to_row(row, cluster):
             """ Ways to add a member to a cluster:
@@ -347,8 +348,7 @@ class ClusterMembership:
                 if rd_scores[member_index][current_cluster - 1] < min_score:
                     min_score = rd_scores[member_index][current_cluster - 1]
                     min_cluster = current_cluster
-            self.remove_cluster_from_row(row, min_cluster)
-            self.add_cluster_to_row(row, cluster)
+            self.replace_row_cluster(row, min_cluster, cluster)
 
         def add_cluster_to_col(col, cluster):
             """adds a column to a cluster"""
@@ -368,34 +368,55 @@ class ClusterMembership:
                 if cd_scores[member_index][current_cluster - 1] < min_score:
                     min_score = cd_scores[member_index][current_cluster - 1]
                     min_cluster = current_cluster
-            self.remove_cluster_from_column(column, min_cluster)
-            self.add_cluster_to_column(column, cluster)
+            self.replace_column_cluster(column, min_cluster, cluster)
 
         def update_for(scores,
-                       num_per_cluster,
+                       num_clusters,
                        probability_seeing_change,
-                       is_in_all_clusters, max_changes,
+                       is_in_all_clusters,
+                       max_changes,
+                       get_change_clusters,
                        add_member_to_cluster):
             """generically updating row/column memberships according to
             rd_scores/cd_scores"""
-            best_clusters = get_best_clusters(scores, num_per_cluster)
+            best_clusters = get_best_clusters(scores, num_clusters)
             for row in range(scores.num_rows()):
                 rowname = scores.row_names()[row]
                 best_members = best_clusters[rowname]
                 if (not is_in_all_clusters(rowname, best_members) and
                     seeing_change(probability_seeing_change)):
-                    for change in range(max_changes):
-                        add_member_to_cluster(rowname, best_members[change])
+                    change_clusters = get_change_clusters(rowname, best_members)
+                    if len(change_clusters) < max_changes:
+                        print "# CHANGES = ", len(change_clusters), ": ", change_clusters, " FROM: ", best_members
+                    for change in range(min(max_changes, len(change_clusters))):
+                        add_member_to_cluster(rowname, change_clusters[change])
+                else:
+                    print "NO CHANGES FROM: ", best_members
+
+        def clusters_not_in_column(row_name, clusters):
+            """returns the clusters in clusters that are not associated with the
+            specified row"""
+            return [cluster for cluster in clusters
+                    if cluster not in self.clusters_for_column(row_name)]
 
         update_for(rd_scores,
                    self.__num_clusters_per_row,
                    self.__probability_seeing_row_change,
-                   self.is_row_in_clusters, self.__max_changes_per_row,
+                   self.is_row_in_clusters,
+                   self.__max_changes_per_row,
+                   lambda row, clusters: [cluster for cluster in clusters
+                                         if cluster not in
+                                         self.clusters_for_row(row)],
                    add_cluster_to_row)
+        print cd_scores
         update_for(cd_scores,
                    self.__num_clusters_per_col,
                    self.__probability_seeing_column_change,
-                   self.is_column_in_clusters, self.__max_changes_per_column,
+                   self.is_column_in_clusters,
+                   self.__max_changes_per_column,
+                   lambda col, clusters: [cluster for cluster in clusters
+                                          if cluster not in
+                                          self.clusters_for_column(col)],
                    add_cluster_to_col)
 
 
