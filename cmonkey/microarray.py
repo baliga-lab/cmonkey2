@@ -47,6 +47,20 @@ def order(alist):
 
 def compute_column_scores(membership, matrix, num_clusters):
     """Computes the column scores for the specified number of clusters"""
+
+    def compute_substitution(cluster_column_scores):
+        """calculate substitution value for missing column scores"""
+        membership_values = []
+        for cluster in range(1, num_clusters + 1):
+            columns = membership.columns_for_cluster(cluster)
+            column_scores = cluster_column_scores[cluster - 1]
+            if column_scores != None:
+                for row in range(column_scores.num_rows()):
+                    for col in range(column_scores.num_columns()):
+                        if column_scores.column_name(col) in columns:
+                            membership_values.append(column_scores[row][col])
+        return util.quantile(membership_values, 0.95)
+
     cluster_column_scores = []
     null_scores_found = False
     for cluster in range(1, num_clusters + 1):
@@ -59,19 +73,8 @@ def compute_column_scores(membership, matrix, num_clusters):
             cluster_column_scores.append(None)
             null_scores_found = True
 
-    # There were some non-measurements - compute a substitution
-    # value from the scores based on the existing column members
     if null_scores_found:
-        membership_values = []
-        for cluster in range(1, num_clusters + 1):
-            columns = membership.columns_for_cluster(cluster)
-            column_scores = cluster_column_scores[cluster - 1]
-            if column_scores:
-                for row in range(column_scores.num_rows()):
-                    for col in range(column_scores.num_columns()):
-                        if column_scores.column_name(col) in columns:
-                            membership_values.append(column_scores[row][col])
-        substitution = util.quantile(membership_values, 0.95)
+        substitution = compute_substitution(cluster_column_scores)
 
     # Convert scores into a matrix that have the clusters as columns
     # and conditions in the rows
