@@ -48,16 +48,31 @@ def order(alist):
 def compute_column_scores(membership, matrix, num_clusters):
     """Computes the column scores for the specified number of clusters"""
     cluster_column_scores = []
+    null_scores_found = False
     for cluster in range(1, num_clusters + 1):
         submatrix = matrix.submatrix_by_name(
             row_names=membership.rows_for_cluster(cluster))
-        if submatrix.num_rows > 1:
+        if submatrix.num_rows() > 1:
             cluster_column_scores.append(compute_column_scores_submatrix(
                     submatrix))
         else:
             cluster_column_scores.append(None)
+            null_scores_found = True
 
-    # TODO: add normalization for NA results
+    # There were some non-measurements - compute a substitution
+    # value from the scores based on the existing column members
+    if null_scores_found:
+        membership_values = []
+        for cluster in range(1, num_clusters + 1):
+            columns = membership.columns_for_cluster(cluster)
+            column_scores = cluster_column_scores[cluster - 1]
+            if column_scores:
+                for row in range(column_scores.num_rows()):
+                    for col in range(column_scores.num_columns()):
+                        if column_scores.column_name(col) in columns:
+                            membership_values.append(column_scores[row][col])
+        substitution = util.quantile(membership_values, 0.95)
+
     # Convert scores into a matrix that have the clusters as columns
     # and conditions in the rows
     result = dm.DataMatrix(matrix.num_columns(), num_clusters,
@@ -65,7 +80,10 @@ def compute_column_scores(membership, matrix, num_clusters):
     for cluster in range(num_clusters):
         column_scores = cluster_column_scores[cluster]
         for row_index in range(matrix.num_columns()):
-            result[row_index][cluster] = column_scores[0][row_index]
+            if column_scores == None:
+                result[row_index][cluster] = substitution
+            else:
+                result[row_index][cluster] = column_scores[0][row_index]
     return result
 
 

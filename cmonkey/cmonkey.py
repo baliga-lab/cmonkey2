@@ -26,7 +26,7 @@ RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
 ROW_WEIGHT = 6.0
-NUM_ITERATIONS = 1
+NUM_ITERATIONS = 2000
 
 
 def run_cmonkey():
@@ -50,6 +50,7 @@ def run_cmonkey():
         iterate(membership, matrix, gene_scoring_funcs, cond_scoring,
                 iteration)
     print "Done !!!!"
+    print membership
 
 
 def make_gene_scoring_funcs(organism, membership, matrix):

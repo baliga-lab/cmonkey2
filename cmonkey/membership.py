@@ -221,7 +221,7 @@ class ClusterMembership:
         rows = self.__cluster_row_members[cluster]
 
         if cluster not in clusters:
-            #logging.info("ROW %s -> CLUSTER %d", row, cluster)
+            logging.info("ROW %s -> CLUSTER %d", row, cluster)
             clusters.append(cluster)
         else:
             pass
@@ -274,7 +274,8 @@ class ClusterMembership:
             columns.append(column)
 
     def remove_cluster_from_column(self, column, cluster):
-        """removes a cluster from the list of associated clusters for a column"""
+        """removes a cluster from the list of associated clusters
+        for a column"""
         if cluster in self.__cluster_column_members:
             columns = self.__cluster_column_members[cluster]
             columns.remove(column)
@@ -282,7 +283,7 @@ class ClusterMembership:
         if column in self.__column_is_member_of:
             clusters = self.__column_is_member_of[column]
             clusters.remove(cluster)
- 
+
     def replace_column_cluster(self, column, cluster, replacement):
         """replaces a cluster in the list of clusters for a column"""
         self.remove_cluster_from_column(column, cluster)
@@ -323,8 +324,7 @@ class ClusterMembership:
 
         def seeing_change(prob):
             """returns true if the update is seeing the change"""
-            #return prob >= 1.0 or random.uniform(0.0, 1.0) <= prob
-            return True
+            return prob >= 1.0 or random.uniform(0.0, 1.0) <= prob
 
         def add_cluster_to_row(row, cluster):
             """ Ways to add a member to a cluster:
@@ -338,6 +338,7 @@ class ClusterMembership:
                 replace_lowest_scoring_row_member(row, cluster)
 
         def replace_lowest_scoring_row_member(row, cluster):
+            """replaces the lowest scoring cluster in row with cluster"""
             current_clusters = self.__row_is_member_of[row]
             min_score = sys.maxint
             min_cluster = None
@@ -358,6 +359,8 @@ class ClusterMembership:
                 replace_lowest_scoring_col_member(col, cluster)
 
         def replace_lowest_scoring_col_member(column, cluster):
+            """replaces the lowest scoring cluster for a column with
+            another cluster"""
             current_clusters = self.__column_is_member_of[column]
             min_score = sys.maxint
             min_cluster = None
@@ -385,13 +388,12 @@ class ClusterMembership:
                 best_members = best_clusters[rowname]
                 if (not is_in_all_clusters(rowname, best_members) and
                     seeing_change(probability_seeing_change)):
-                    change_clusters = get_change_clusters(rowname, best_members)
-                    if len(change_clusters) < max_changes:
-                        print "# CHANGES = ", len(change_clusters), ": ", change_clusters, " FROM: ", best_members
+                    change_clusters = get_change_clusters(rowname,
+                                                          best_members)
+                    #if len(change_clusters) < max_changes:
+                    #    print "# CHANGES = ", len(change_clusters), ": ", change_clusters, " FROM: ", best_members
                     for change in range(min(max_changes, len(change_clusters))):
                         add_member_to_cluster(rowname, change_clusters[change])
-                else:
-                    print "NO CHANGES FROM: ", best_members
 
         def clusters_not_in_column(row_name, clusters):
             """returns the clusters in clusters that are not associated with the
@@ -408,7 +410,7 @@ class ClusterMembership:
                                          if cluster not in
                                          self.clusters_for_row(row)],
                    add_cluster_to_row)
-        print cd_scores
+        #print cd_scores
         update_for(cd_scores,
                    self.__num_clusters_per_col,
                    self.__probability_seeing_column_change,
@@ -499,28 +501,37 @@ def _get_rr_scores(membership, rowscores, bandwidth, cluster):
         return math.exp(-value / 10.0) * 10.0
 
     cluster_rows = membership.rows_for_cluster(cluster)
-
-    row_names = rowscores.row_names()
-    score_indexes = [row_names.index(name) for name in cluster_rows]
-    kscores = rowscores.column_values(cluster - 1)
-    cluster_scores = [kscores[index] for index in score_indexes]
-    cluster_bandwidth = bandwidth * bwscale(len(cluster_rows))
-
-    return util.density(kscores, cluster_scores, cluster_bandwidth,
-                        min(kscores) - 1, max(kscores) + 1)
+    cluster_columns = membership.columns_for_cluster(cluster)
+    if len(cluster_rows) == 0 or len(cluster_columns) == 0:
+        num_rows = rowscores.num_rows()
+        return [(1.0 / num_rows) for _ in range(num_rows)]
+    else:
+        row_names = rowscores.row_names()
+        score_indexes = [row_names.index(name) for name in cluster_rows]
+        kscores = rowscores.column_values(cluster - 1)
+        cluster_scores = [kscores[index] for index in score_indexes]
+        cluster_bandwidth = bandwidth * bwscale(len(cluster_rows))
+        return util.density(kscores, cluster_scores, cluster_bandwidth,
+                            min(kscores) - 1, max(kscores) + 1)
 
 
 def _get_cc_scores(membership, scores, bandwidth, cluster):
     """calculate the density scores for the given column score values in the
     specified cluster"""
+    cluster_rows = membership.columns_for_cluster(cluster)
     cluster_columns = membership.columns_for_cluster(cluster)
-
-    row_names = scores.row_names()
-    score_indexes = [row_names.index(name) for name in cluster_columns]
-    kscores = scores.column_values(cluster - 1)
-    cluster_scores = [kscores[index] for index in score_indexes]
-    return util.density(kscores, cluster_scores, bandwidth,
-                        min(kscores) - 1, max(kscores) + 1)
+    if len(cluster_rows) == 0 or len(cluster_columns) <= 1:
+        # This is a little weird, but is here to at least attempt to simulate
+        # what the original cMonkey is doing
+        num_rows = scores.num_rows()
+        return [(1.0 / num_rows) for _ in range(num_rows)]
+    else:
+        row_names = scores.row_names()
+        score_indexes = [row_names.index(name) for name in cluster_columns]
+        kscores = scores.column_values(cluster - 1)
+        cluster_scores = [kscores[index] for index in score_indexes]
+        return util.density(kscores, cluster_scores, bandwidth,
+                            min(kscores) - 1, max(kscores) + 1)
 
 
 def _compensate_size(membership, matrix, rd_scores, cd_scores):
@@ -551,7 +562,6 @@ def _compensate_size(membership, matrix, rd_scores, cd_scores):
         if num_rowmembers > 0:
             rd_scores.multiply_column_by(
                 cluster - 1, compensate_row_size(num_rowmembers))
-            #print "# members in cluster", cluster, ": ", num_rowmembers, " compfactor: ", compensate_row_size(num_rowmembers)
         else:
             rd_scores.multiply_column_by(
                 cluster - 1, compensate_row_size(MIN_CLUSTER_ROWS_ALLOWED))
