@@ -221,7 +221,7 @@ class ClusterMembership:
         rows = self.__cluster_row_members[cluster]
 
         if cluster not in clusters:
-            logging.info("ROW %s -> CLUSTER %d", row, cluster)
+            #logging.info("ROW %s -> CLUSTER %d", row, cluster)
             clusters.append(cluster)
         else:
             pass
@@ -264,7 +264,7 @@ class ClusterMembership:
         columns = self.__cluster_column_members[cluster]
 
         if cluster not in clusters:
-            logging.info("COL %s -> CLUSTER %d", column, cluster)
+            #logging.info("COL %s -> CLUSTER %d", column, cluster)
             clusters.append(cluster)
         else:
             #logging.warn("cluster %s already associated with %s",
@@ -391,13 +391,15 @@ class ClusterMembership:
                     change_clusters = get_change_clusters(rowname,
                                                           best_members)
                     #if len(change_clusters) < max_changes:
-                    #    print "# CHANGES = ", len(change_clusters), ": ", change_clusters, " FROM: ", best_members
-                    for change in range(min(max_changes, len(change_clusters))):
+                    #    print "# CHANGES = ", len(change_clusters), ": ",
+                    #          change_clusters, " FROM: ", best_members
+                    for change in range(min(max_changes,
+                                            len(change_clusters))):
                         add_member_to_cluster(rowname, change_clusters[change])
 
         def clusters_not_in_column(row_name, clusters):
-            """returns the clusters in clusters that are not associated with the
-            specified row"""
+            """returns the clusters in clusters that are not associated with
+            the specified row"""
             return [cluster for cluster in clusters
                     if cluster not in self.clusters_for_column(row_name)]
 

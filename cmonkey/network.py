@@ -7,6 +7,7 @@ import numpy
 import logging
 import util
 import membership as memb
+import datamatrix as dm
 
 
 class NetworkEdge:
@@ -143,59 +144,99 @@ def compute_network_scores(network, genes, all_genes):
 class ScoringFunction(memb.ScoringFunctionBase):
     """Network scoring function"""
 
-    def __init__(self, organism, membership, matrix, weight_func=None):
+    def __init__(self, organism, membership, matrix, weight_func=None,
+                 interval=0):
         """Create scoring function instance"""
         memb.ScoringFunctionBase.__init__(self, membership,
                                           matrix, weight_func)
         self.__organism = organism
+        self.__interval = interval
 
     def compute(self, iteration):
+        if (self.__interval == 0 or
+            (iteration > 0 and (iteration % self.__interval == 0))):
+            print "RUN NETWORK SCORING IN ITERATION ", iteration
+            return self.__compute()
+        else:
+            return None
+
+    def __compute(self):
         """compute method, iteration is the 0-based iteration number"""
+        def compute_network_cluster_scores(network):
+            """computes the cluster scores for the given network"""
+            result = {}
+            for cluster in range(1, self.num_clusters() + 1):
+                result[cluster] = compute_network_scores(
+                    network, sorted(self.rows_for_cluster(cluster)),
+                    self.gene_names())
+            return result
 
-        result = {}  # a dictionary indexed with network names
+        def update_score_matrix(matrix, network_score, weight):
+            """add values into the result score matrix"""
+            for cluster in range(1, self.num_clusters() + 1):
+                for gene in self.gene_names():
+                    if gene in network_score[cluster].keys():
+                        row_index = self.gene_names().index(gene)
+                        matrix[row_index][cluster - 1] += network_score[cluster][gene] * weight
+
+        # The functions below are computed by cMonkey for stats, we don't
+        # use them right now, but keep them around for debugging and
+        # integration of stats functionality
+        def create_network_iteration_scores():
+            """creates initialized network iteration scores"""
+            result = {}
+            for cluster in range(1, self.num_clusters() + 1):
+                result[cluster] = {}
+            return result
+
+        def compute_iteration_scores(network_iteration_scores):
+            """called 'cluster.ns' in the original cMonkey"""
+            result = {}
+            for cluster in network_iteration_scores:
+                cluster_scores = []
+                for _, score in network_iteration_scores[cluster].items():
+                    cluster_scores.append(score)
+                result[cluster] = util.trim_mean(cluster_scores, 0.05)
+            return result
+
+        def update_network_iteration_scores(result, network_score, weight):
+            """compute network iteration scores"""
+            for cluster in range(1, self.num_clusters() + 1):
+                for gene in sorted(self.rows_for_cluster(cluster)):
+                    if gene not in result[cluster].keys():
+                        result[cluster][gene] = 0.0
+                    if gene in network_score[cluster].keys():
+                        result[cluster][gene] += network_score[cluster][gene] * weight
+            return result
+
+        def compute_cluster_score_means(network_score):
+            """compute the score means on the given network score"""
+            result = {}
+            for cluster in range(1, self.num_clusters() + 1):
+                cluster_scores = []
+                for gene in sorted(self.rows_for_cluster(cluster)):
+                    if gene in network_score[cluster].keys():
+                        cluster_scores.append(network_score[cluster][gene])
+                    else:
+                        cluster_scores.append(0.0)
+                result[cluster] = util.trim_mean(cluster_scores, 0.05)
+            return result
+
         networks = self.retrieve_networks(self.__organism)
-
-        # TODO: here add the network scores weighted (0.5 for the two networks
-        # for now)
         weight = 0.5  # for now it's fixed, we need to make them flexible
-        network_iteration_scores = {}
-        for cluster in range(1, self.num_clusters() + 1):
-            network_iteration_scores[cluster] = {}
+        matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
+                               self.gene_names())
+        #network_iteration_scores = create_network_iteration_scores()
+        #score_means = {}  # a dictionary indexed with network names
 
         for network in networks:
             logging.info("Compute scores for network '%s'", network.name())
-            network_score = {}
-            cluster_score_means = {}
-
-            for cluster in range(1, self.num_clusters() + 1):
-                cluster_genes = sorted(self.rows_for_cluster(cluster))
-                network_score[cluster] = compute_network_scores(
-                    network, cluster_genes, self.gene_names())
-                # build network scoring based on cluster membership
-                cluster_scores = []
-                for gene in sorted(self.rows_for_cluster(cluster)):
-                    # init iteration score if non-existent
-                    if gene not in network_iteration_scores[cluster].keys():
-                        network_iteration_scores[cluster][gene] = 0.0
-
-                    if gene in network_score[cluster].keys():
-                        cluster_scores.append(network_score[cluster][gene])
-                        network_iteration_scores[cluster][gene] += network_score[cluster][gene] * weight
-                    else:
-                        cluster_scores.append(0.0)
-
-                cluster_score_means[cluster] = util.trim_mean(cluster_scores,
-                                                              0.05)
-            result[network.name()] = cluster_score_means
-
-        iteration_scores = {}
-        for cluster in network_iteration_scores:
-            cluster_scores = []
-            for gene, score in network_iteration_scores[cluster].items():
-                cluster_scores.append(score)
-            iteration_scores[cluster] = util.trim_mean(cluster_scores, 0.05)
-        result['all'] = iteration_scores
-        return result
+            network_score = compute_network_cluster_scores(network)
+            update_score_matrix(matrix, network_score, weight)
+            #score_means[network.name()] = compute_cluster_score_means(network_score)
+            #update_network_iteration_scores(network_iteration_scores, network_score, weight)
+            #iteration_scores = compute_iteration_scores(network_iteration_scores)
+        return matrix
 
     def retrieve_networks(self, organism):
         """retrieves the networks provided by the organism object and

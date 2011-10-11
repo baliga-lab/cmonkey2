@@ -26,7 +26,7 @@ RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
 ROW_WEIGHT = 6.0
-NUM_ITERATIONS = 2000
+NUM_ITERATIONS = 1
 
 
 def run_cmonkey():
@@ -37,7 +37,7 @@ def run_cmonkey():
     if not os.path.exists(CACHE_DIR):
         os.mkdir(CACHE_DIR)
 
-    matrix = read_matrix(sys.argv[1])
+    matrix = read_matrix(sys.argv[1]).sorted_by_row_name()
     logging.info("Normalized input matrix has %d rows and %d columns:",
                  matrix.num_rows(), matrix.num_columns())
 
@@ -50,7 +50,7 @@ def run_cmonkey():
         iterate(membership, matrix, gene_scoring_funcs, cond_scoring,
                 iteration)
     print "Done !!!!"
-    print membership
+    #print membership
 
 
 def make_gene_scoring_funcs(organism, membership, matrix):
@@ -74,10 +74,12 @@ def make_gene_scoring_funcs(organism, membership, matrix):
                                           sequence_filters,
                                           motif.make_min_value_filter(-20.0))
 
-    network_scoring = nw.ScoringFunction(organism, membership, matrix)
+    network_scoring = nw.ScoringFunction(organism, membership, matrix,
+                                         None, 0)
 
     #return [row_scoring, motif_scoring, network_scoring]
-    return [row_scoring]
+    #return [row_scoring]
+    return [row_scoring, network_scoring]
 
 
 def read_matrix(filename):
@@ -101,9 +103,9 @@ def make_organism(organism_code, matrix):
     # note that for the moment, the STRING factory is hardwired to
     # a preprocessed Halobacterium SP file
     nw_factories = [
+        stringdb.get_network_factory(stringdb.STRING_FILE2),
         microbes_online.get_network_factory(
-            mo_db, max_operon_size=matrix.num_rows() / 20),
-        stringdb.get_network_factory(stringdb.STRING_FILE2)]
+            mo_db, max_operon_size=matrix.num_rows() / 20)]
     org_factory = org.OrganismFactory(org.make_kegg_code_mapper(keggfile),
                                       org.make_rsat_organism_mapper(rsatdb),
                                       org.make_go_taxonomy_mapper(gofile),
@@ -133,14 +135,18 @@ def iterate(membership, matrix, gene_scoring_funcs, cond_scoring_func,
     logging.info("Iteration # %d", iteration)
     result_matrices = []
     for score_func in gene_scoring_funcs:
-        result_matrices.append(score_func.compute(iteration))
+        row_scores = score_func.compute(iteration)
+        if row_scores != None:
+            result_matrices.append(row_scores)
     cscores = cond_scoring_func.compute(iteration)
 
     # TODO: combine (log filter + weight)
-    for index in range(len(gene_scoring_funcs)):
+    for index in range(len(result_matrices)):
         result_matrices[index] = gene_scoring_funcs[index].apply_weight(
             result_matrices[index], iteration)
 
+    # TODO: instead of result_matrices, we just add everything weighted to
+    # a single result matrix
     membership.update(matrix, result_matrices[0], cscores)
 
 ############################################################
