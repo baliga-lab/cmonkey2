@@ -76,6 +76,10 @@ class DataMatrix:
         """returns this matrix's values"""
         return self.__values
 
+    def flat_values(self):
+        """returns all values as a single sequence"""
+        return self.__values.flatten()
+
     def row_values(self, row):
         """returns the values in the specified row"""
         result = []
@@ -175,6 +179,11 @@ class DataMatrix:
         """return the maximum value in this matrix"""
         return numpy.amax(self.values())
 
+    def quantile(self, probability):
+        """returns the result of the quantile function over all contained
+        values"""
+        return util.quantile(self.__values.ravel(), probability)
+
     def min(self):
         """return the minimum value in this matrix"""
         return numpy.amin(self.values())
@@ -184,6 +193,15 @@ class DataMatrix:
         return DataMatrix(self.num_rows(), self.num_columns(),
                           self.row_names(), self.column_names(),
                           -self.values())
+
+    def __sub__(self, value):
+        """subtract a value from the matrix"""
+        if value != 0.0:
+            return DataMatrix(self.num_rows(), self.num_columns(),
+                              self.row_names(), self.column_names(),
+                              self.__values - value)
+        else:
+            return self
 
     def __repr__(self):
         """returns a string representation of this matrix"""
@@ -362,6 +380,69 @@ def center_scale_filter(matrix):
         return [((value - center) / scale) for value in row]
 
     return row_filter(matrix, center_scale)
+
+
+def quantile_normalize_scores(matrices, weights=None):
+    """quantile normalize scores against each other"""
+    def extract_flat_values():
+        """optimization: flat_values are only retrieved once"""
+        result = []
+        for index in range(len(matrices)):
+            result.append(matrices[index].flat_values())
+        return result
+
+    def compute_tmp_mean_weighted(flat_values):
+        """compute weighted row means"""
+        in_values = []
+        for index in range(len(matrices)):
+            values = flat_values[index] * weights[index]
+            values.sort()
+            in_values.append(values)
+        result = []
+        num_values = len(in_values[0])
+        scale = sum(weights)
+        for row in range(len(in_values[0])):
+            result.append(numpy.mean([inarray[row]
+                                      for inarray in in_values]) / scale)
+        return result
+
+    def compute_tmp_mean_unweighted(flat_values):
+        """compute unweighted row means"""
+        in_values = []
+        for index in range(len(matrices)):
+            values = sorted(flat_values)
+            in_values.append(values)
+        result = []
+        for row in range(len(in_values[0])):
+            result.append(numpy.mean([inarray[row] for inarray in in_values]))
+        return result
+
+    def build_result_matrices(tmp_mean):
+        """builds the resulting matrices by looking at the rank of their
+        original values and retrieving the means at the specified position"""
+        result = []
+        for index in range(len(matrices)):
+            sorted_values = sorted(flat_values[index])
+            ranks = [sorted_values.index(value)
+                     for value in flat_values[index]]
+            outmatrix = DataMatrix(matrices[index].num_rows(),
+                                   matrices[index].num_columns(),
+                                   matrices[index].row_names(),
+                                   matrices[index].column_names())
+            for row in range(outmatrix.num_rows()):
+                for col in range(outmatrix.num_columns()):
+                    seqindex = row * outmatrix.num_columns() + col
+                    outmatrix[row][col] = tmp_mean[ranks[seqindex]]
+            result.append(outmatrix)
+        return result
+
+    flat_values = extract_flat_values()
+    if weights != None:
+        tmp_mean = compute_tmp_mean_weighted(flat_values)
+    else:
+        tmp_mean = compute_tmp_mean_unweighted(flat_values)
+    return build_result_matrices(tmp_mean)
+
 
 __all__ = ['DataMatrix', 'DataMatrixCollection', 'DataMatrixFactory',
            'nochange_filter', 'center_scale_filter']

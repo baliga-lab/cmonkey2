@@ -236,7 +236,7 @@ class ScoringFunction(memb.ScoringFunctionBase):
             #score_means[network.name()] = compute_cluster_score_means(network_score)
             #update_network_iteration_scores(network_iteration_scores, network_score, weight)
             #iteration_scores = compute_iteration_scores(network_iteration_scores)
-        return matrix
+        return matrix - matrix.quantile(0.99)
 
     def retrieve_networks(self, organism):
         """retrieves the networks provided by the organism object and

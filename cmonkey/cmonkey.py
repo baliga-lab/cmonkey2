@@ -140,6 +140,9 @@ def iterate(membership, matrix, gene_scoring_funcs, cond_scoring_func,
             result_matrices.append(row_scores)
     cscores = cond_scoring_func.compute(iteration)
 
+    score_weights = [6.0, 0.0]
+    dm.quantile_normalize_scores(result_matrices, score_weights)
+
     # TODO: combine (log filter + weight)
     for index in range(len(result_matrices)):
         result_matrices[index] = gene_scoring_funcs[index].apply_weight(
