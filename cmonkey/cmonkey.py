@@ -26,7 +26,7 @@ RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
 ROW_WEIGHT = 6.0
-NUM_ITERATIONS = 1
+NUM_ITERATIONS = 2000
 
 
 def run_cmonkey():
@@ -75,7 +75,7 @@ def make_gene_scoring_funcs(organism, membership, matrix):
                                           motif.make_min_value_filter(-20.0))
 
     network_scoring = nw.ScoringFunction(organism, membership, matrix,
-                                         None, 0)
+                                         lambda iteration: 0.0, 7)
 
     #return [row_scoring, motif_scoring, network_scoring]
     #return [row_scoring]
@@ -140,17 +140,16 @@ def iterate(membership, matrix, gene_scoring_funcs, cond_scoring_func,
             result_matrices.append(row_scores)
     cscores = cond_scoring_func.compute(iteration)
 
-    score_weights = [6.0, 0.0]
+    score_weights = [score_func.weight(iteration)
+                     for score_func in gene_scoring_funcs]
+    # TODO: log filter
     dm.quantile_normalize_scores(result_matrices, score_weights)
+    rscores = result_matrices[0] * gene_scoring_funcs[0].weight(iteration)
+    for index in range(1, len(result_matrices)):
+        rscores = rscores + (result_matrices[index] *
+                             gene_scoring_funcs[0].weight(iteration))
 
-    # TODO: combine (log filter + weight)
-    for index in range(len(result_matrices)):
-        result_matrices[index] = gene_scoring_funcs[index].apply_weight(
-            result_matrices[index], iteration)
-
-    # TODO: instead of result_matrices, we just add everything weighted to
-    # a single result matrix
-    membership.update(matrix, result_matrices[0], cscores)
+    membership.update(matrix, rscores, cscores)
 
 ############################################################
 #### Replace with real seeding when everything works

@@ -175,7 +175,7 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                col_names=['C0', 'C1'],
                                values=[[1, 2],
                                        [3, 4]])
-        multiplied = matrix.multiply_by(2)
+        multiplied = matrix * 2
         self.assertEquals(['R0', 'R1'], multiplied.row_names())
         self.assertEquals(['C0', 'C1'], multiplied.column_names())
         self.assertNotEquals(matrix, multiplied)
@@ -195,6 +195,40 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals(matrix, multiplied)
         self.assertTrue(numpy.equal(numpy.array([[1, 4], [3, 8]]),
                                     multiplied.values()).all())
+
+    def test_add_matrix(self):
+        """tests the + operator"""
+        matrix1 = dm.DataMatrix(2, 2,
+                                row_names=['R0', 'R1'],
+                                col_names=['C0', 'C1'],
+                                values=[[1, 2],
+                                        [3, 4]])
+        matrix2 = dm.DataMatrix(2, 2,
+                                row_names=['R0', 'R1'],
+                                col_names=['C0', 'C1'],
+                                values=[[2, 3],
+                                        [4, 5]])
+        matrix3 = matrix1 + matrix2
+        self.assertEquals(['R0', 'R1'], matrix3.row_names())
+        self.assertEquals(['C0', 'C1'], matrix3.column_names())
+        self.assertNotEquals(matrix3, matrix1)
+        self.assertNotEquals(matrix3, matrix2)
+        self.assertTrue(numpy.equal(numpy.array([[3, 5], [7, 9]]),
+                                    matrix3.values()).all())
+
+    def test_add_scalar(self):
+        """tests the + operator"""
+        matrix1 = dm.DataMatrix(2, 2,
+                                row_names=['R0', 'R1'],
+                                col_names=['C0', 'C1'],
+                                values=[[1, 2],
+                                        [3, 4]])
+        matrix2 = matrix1 + 3
+        self.assertEquals(['R0', 'R1'], matrix2.row_names())
+        self.assertEquals(['C0', 'C1'], matrix2.column_names())
+        self.assertNotEquals(matrix2, matrix1)
+        self.assertTrue(numpy.equal(numpy.array([[4, 5], [6, 7]]),
+                                    matrix2.values()).all())
 
 class DataMatrixCollectionTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for MatrixCollection"""

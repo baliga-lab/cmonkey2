@@ -163,11 +163,6 @@ class DataMatrix:
     ######################################################################
     #### Operations on the matrix values
     ######################################################################
-    def multiply_by(self, factor):
-        """returns a new DataMatrix with the values in the matrix negated"""
-        return DataMatrix(self.num_rows(), self.num_columns(),
-                          self.row_names(), self.column_names(),
-                          self.values() * factor)
 
     def multiply_column_by(self, column, factor):
         """Mulitplies the specified column by a certain factor"""
@@ -194,6 +189,17 @@ class DataMatrix:
                           self.row_names(), self.column_names(),
                           -self.values())
 
+    def __add__(self, value):
+        """adding a value to this matrix can be either a scalar or a matrix"""
+        if isinstance(value, DataMatrix):
+            return DataMatrix(self.num_rows(), self.num_columns(),
+                              self.row_names(), self.column_names(),
+                              self.__values + value.values())
+        else:
+            return DataMatrix(self.num_rows(), self.num_columns(),
+                              self.row_names(), self.column_names(),
+                              self.__values + value)
+
     def __sub__(self, value):
         """subtract a value from the matrix"""
         if value != 0.0:
@@ -202,6 +208,12 @@ class DataMatrix:
                               self.__values - value)
         else:
             return self
+
+    def __mul__(self, factor):
+        """returns a new DataMatrix with the values in the matrix negated"""
+        return DataMatrix(self.num_rows(), self.num_columns(),
+                          self.row_names(), self.column_names(),
+                          self.values() * factor)
 
     def __repr__(self):
         """returns a string representation of this matrix"""

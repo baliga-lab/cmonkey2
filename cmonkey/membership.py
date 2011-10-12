@@ -221,7 +221,7 @@ class ClusterMembership:
         rows = self.__cluster_row_members[cluster]
 
         if cluster not in clusters:
-            #logging.info("ROW %s -> CLUSTER %d", row, cluster)
+            logging.info("ROW %s -> CLUSTER %d", row, cluster)
             clusters.append(cluster)
         else:
             pass
@@ -264,7 +264,7 @@ class ClusterMembership:
         columns = self.__cluster_column_members[cluster]
 
         if cluster not in clusters:
-            #logging.info("COL %s -> CLUSTER %d", column, cluster)
+            logging.info("COL %s -> CLUSTER %d", column, cluster)
             clusters.append(cluster)
         else:
             #logging.warn("cluster %s already associated with %s",
@@ -457,11 +457,9 @@ class ScoringFunctionBase:
         """returns the rows for the specified cluster"""
         return self.__membership.rows_for_cluster(cluster)
 
-    def apply_weight(self, result, iteration):
-        """applies the stored weight function to the result
-        Note: we might be able to incorporate this into the result object"""
-        if (self.__weight_func != None):
-            return result.multiply_by(self.__weight_func(iteration))
+    def weight(self, iteration):
+        """returns the weight for the specified iteration"""
+        return self.__weight_func(iteration)
 
 
 def _get_density_scores(membership, row_scores, col_scores):
