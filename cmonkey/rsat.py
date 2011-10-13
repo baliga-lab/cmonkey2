@@ -58,7 +58,7 @@ class RsatDatabase:
         while the original cMonkey will fall back to cds.tab
         if that fails
         """
-        logging.info('RSAT - get_features(%s)', organism)
+        #logging.info('RSAT - get_features(%s)', organism)
         cache_file = "/".join([self.cache_dir, organism + '_features'])
         return util.read_url_cached("/".join([self.base_url,
                                               RsatDatabase.DIR_PATH,
@@ -68,7 +68,7 @@ class RsatDatabase:
 
     def get_feature_names(self, organism):
         """returns the specified organism's feature name file contents"""
-        logging.info('RSAT - get_feature_names(%s)', organism)
+        #logging.info('RSAT - get_feature_names(%s)', organism)
         cache_file = "/".join([self.cache_dir, organism + '_feature_names'])
         return util.read_url_cached(
             "/".join([self.base_url,
@@ -79,8 +79,8 @@ class RsatDatabase:
 
     def get_contig_sequence(self, organism, contig):
         """returns the specified contig sequence"""
-        logging.info('RSAT - get_contig_sequence(%s, %s)',
-                     organism, contig)
+        #logging.info('RSAT - get_contig_sequence(%s, %s)',
+        #             organism, contig)
         cache_file = "/".join([self.cache_dir, organism + '_' + contig])
         url = "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
                         'genome', contig + '.raw'])

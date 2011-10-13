@@ -8,6 +8,7 @@ more information and licensing details.
 import logging
 import numpy
 import membership as memb
+import datamatrix as dm
 
 
 DISTANCE_UPSTREAM_SEARCH = (-20, 150)  # used to select sequences
@@ -62,6 +63,7 @@ def compute_scores(meme_suite, organism, membership,
         for sequence_filter in filters:
             seqs = sequence_filter(seqs, feature_ids, distance)
         return seqs
+    cluster_pvalues = {}
 
     for cluster in range(1, membership.num_clusters() + 1):
         logging.info("compute motif scores for cluster %d", cluster)
@@ -72,18 +74,19 @@ def compute_scores(meme_suite, organism, membership,
                                       distance)
         if (len(seqs) >= MIN_CLUSTER_ROWS_ALLOWED
             and len(seqs) <= MAX_CLUSTER_ROWS_ALLOWED):
-            logging.info("# seqs (= %d) within limits, continue processing, " +
-                         "seqs are: %s",
-                         len(seqs), str(seqs))
+            #logging.info("# seqs (= %d) within limits, continue processing, " +
+            #             "seqs are: %s",
+            #             len(seqs), str(seqs))
             pe_values, annotations = meme_suite.run_meme(seqs, used_sequences)
 
             pvalues = {}
             for feature_id, pvalue, evalue in pe_values:
                 pvalues[feature_id] = numpy.log(pvalue)
             pvalues = pvalue_filter(pvalues)
-            for feature_id in pvalues:
-                print "%s[%d] => %f" % (feature_id, cluster,
-                                        pvalues[feature_id])
+            cluster_pvalues[cluster] = pvalues
+            #for feature_id in pvalues:
+            #    print "%s[%d] => %f" % (feature_id, cluster,
+            #                            pvalues[feature_id])
             #print "PE-VALUES, CLUSTER: ", cluster
             #for feature_id, pvalue, evalue in pe_values:
             #    print "%s\t%f\t%f" % (feature_id, pvalue, evalue)
@@ -100,6 +103,9 @@ def compute_scores(meme_suite, organism, membership,
         else:
             logging.info("# seqs (= %d) outside of defined limits, skipping " +
                          "cluster %d", len(seqs), cluster)
+        #print "CLUSTER PVALUES:"
+        #print cluster_pvalues
+    return cluster_pvalues
 
 
 def make_min_value_filter(min_value):
@@ -129,7 +135,7 @@ class ScoringFunction(memb.ScoringFunctionBase):
 
     def __init__(self, organism, membership, matrix,
                  meme_suite, sequence_filters, pvalue_filter,
-                 weight_func=None):
+                 weight_func=None, interval=0):
         """creates a ScoringFunction"""
         memb.ScoringFunctionBase.__init__(self, membership,
                                           matrix, weight_func)
@@ -145,13 +151,56 @@ class ScoringFunction(memb.ScoringFunctionBase):
             sorted(matrix.row_names()),
             DISTANCE_UPSTREAM_SCAN,
             upstream=True)
+        self.__interval = interval
+        self.__reverse_map = self.__build_reverse_map(matrix)
+
+    def __build_reverse_map(self, matrix):
+        """build a map that reconstructs the original row name from
+        a feature id"""
+        def feature_id_for(gene):
+            """convenience method to return the feature id for a gene"""
+            feature_ids = self.__organism.feature_ids_for([gene])
+            if len(feature_ids) > 0:
+                return feature_ids[0]
+            else:
+                return None
+
+        result = {}
+        for row_name in matrix.row_names():
+            feature_id = feature_id_for(row_name)
+            if feature_id != None:
+                result[feature_id] = row_name
+        return result
 
     def compute(self, iteration):
         """compute method, iteration is the 0-based iteration number"""
-        return compute_scores(self.__meme_suite,
-                              self.__organism,
-                              self.membership(),
-                              self.__used_seqs,
-                              DISTANCE_UPSTREAM_SEARCH,
-                              self.__sequence_filters,
-                              self.__pvalue_filter)
+        if (self.__interval == 0 or
+            (iteration > 0 and (iteration % self.__interval == 0))):
+            print "RUN MOTIF SCORING IN ITERATION ", iteration
+            pvalues = compute_scores(self.__meme_suite,
+                                     self.__organism,
+                                     self.membership(),
+                                     self.__used_seqs,
+                                     DISTANCE_UPSTREAM_SEARCH,
+                                     self.__sequence_filters,
+                                     self.__pvalue_filter)
+            remapped = {}
+            for cluster in pvalues:
+                pvalues_k = pvalues[cluster]
+                pvalues_genes = {}
+                for feature_id, pvalue in pvalues_k.items():
+                    pvalues_genes[self.__reverse_map[feature_id]] = pvalue
+                remapped[cluster] = pvalues_genes
+            #print remapped
+            # convert remapped to an actual scoring matrix
+            matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
+                                   self.gene_names())
+            for row in matrix.row_names():
+                row_index = matrix.row_names().index(row)
+                for cluster in range(1, self.num_clusters() + 1):
+                    if (cluster in remapped.keys() and
+                        row in remapped[cluster].keys()):
+                        matrix[row_index][cluster - 1] = remapped[cluster][row]                        
+            return matrix
+        else:
+            return None

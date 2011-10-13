@@ -72,14 +72,13 @@ def make_gene_scoring_funcs(organism, membership, matrix):
                                           matrix,
                                           meme_suite,
                                           sequence_filters,
-                                          motif.make_min_value_filter(-20.0))
+                                          motif.make_min_value_filter(-20.0),
+                                          lambda iteration: 0.0, 100)
 
     network_scoring = nw.ScoringFunction(organism, membership, matrix,
                                          lambda iteration: 0.0, 7)
 
-    #return [row_scoring, motif_scoring, network_scoring]
-    #return [row_scoring]
-    return [row_scoring, network_scoring]
+    return [row_scoring, motif_scoring, network_scoring]
 
 
 def read_matrix(filename):
@@ -134,20 +133,22 @@ def iterate(membership, matrix, gene_scoring_funcs, cond_scoring_func,
     """one iteration of the algorithm"""
     logging.info("Iteration # %d", iteration)
     result_matrices = []
+    score_weights = []
     for score_func in gene_scoring_funcs:
         row_scores = score_func.compute(iteration)
         if row_scores != None:
             result_matrices.append(row_scores)
+            score_weights.append(score_func.weight(iteration))
     cscores = cond_scoring_func.compute(iteration)
 
-    score_weights = [score_func.weight(iteration)
-                     for score_func in gene_scoring_funcs]
     # TODO: log filter
-    dm.quantile_normalize_scores(result_matrices, score_weights)
+    if len(result_matrices) > 0:
+        result_matrices = dm.quantile_normalize_scores(result_matrices,
+                                                       score_weights)
     rscores = result_matrices[0] * gene_scoring_funcs[0].weight(iteration)
     for index in range(1, len(result_matrices)):
         rscores = rscores + (result_matrices[index] *
-                             gene_scoring_funcs[0].weight(iteration))
+                             gene_scoring_funcs[index].weight(iteration))
 
     membership.update(matrix, rscores, cscores)
 

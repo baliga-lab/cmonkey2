@@ -47,7 +47,7 @@ class MemeSuite:
                     dust_input.write(">%s\n" % feature_id)
                     dust_input.write("%s\n" % seq[1])
                 dust_tmp_file = dust_input.name
-                logging.info("DUST input written to: %s", dust_input.name)
+                #logging.info("DUST input written to: %s", dust_input.name)
             seqpairs = st.read_sequences_from_fasta_string(
                 self.dust(dust_tmp_file))
             os.remove(dust_tmp_file)
@@ -116,12 +116,11 @@ class MemeSuite:
                 st.write_sequences_to_fasta_file(outfile, outseqs)
             return filename
 
-        logging.info("run_meme() - # seqs = %d", len(input_seqs))
-        logging.info("# all seqs = %d", len(all_seqs))
+        #logging.info("run_meme() - # seqs = %d", len(input_seqs))
         bgfile = make_background_file()
-        logging.info("created background file in %s", bgfile)
+        #logging.info("created background file in %s", bgfile)
         seqfile = make_sequence_file(input_seqs)
-        logging.info("created sequence file in %s", seqfile)
+        #logging.info("created sequence file in %s", seqfile)
         motif_infos, output = self.meme(seqfile, bgfile)
 
         # run mast
@@ -130,12 +129,12 @@ class MemeSuite:
                                          delete=False) as outfile:
             meme_outfile = outfile.name
             outfile.write(output)
-        logging.info('wrote meme output to %s', meme_outfile)
+        #logging.info('wrote meme output to %s', meme_outfile)
 
         all_seqs_dict = {feature_id: locseq[1]
                          for feature_id, locseq in all_seqs.items()}
         dbfile = make_sequence_file(all_seqs_dict)
-        logging.info('created mast database in %s', dbfile)
+        #logging.info('created mast database in %s', dbfile)
         mast_output = self.mast(meme_outfile, dbfile, bgfile)
         return read_mast_output(mast_output, input_seqs.keys())
 
@@ -176,7 +175,7 @@ class MemeSuite430(MemeSuite):
         if pspfile_path:
             command.append(['-psp', pspfile_path])
 
-        logging.info("running: %s", " ".join(command))
+        #logging.info("running: %s", " ".join(command))
         output = subprocess.check_output(command)
         return (read_meme_output(output, num_motifs), output)
 
