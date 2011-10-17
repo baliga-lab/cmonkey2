@@ -384,6 +384,7 @@ def read_mast_output(output_text, genes):
     def is_last_block(lines, index, seqlen):
         """determines whether the specified block is the last one for
         the current gene"""
+        seqline = None
         try:
             seqline = lines[index + 4]
             seqstart_index = int(re.match('(\d+).*', seqline).group(1))
@@ -391,7 +392,14 @@ def read_mast_output(output_text, genes):
             return ((len(seqline) - seq_start) + seqstart_index >= seqlen or
                     not re.match('(\d+).*', lines[index + 10]))
         except:
-            print "ERROR IN SEQLINE: [%s]" % seqline
+            if seqline != None:
+                print "ERROR IN SEQLINE: [%s]" % seqline
+            else:
+                print "ERROR in is_last_block() # LINES: %d, INDEX: %d SEQLEN = %d" % (len(lines), index, seqlen)                
+                with open("MOTIFERROR.txt", "w") as outfile:
+                    for line in lines:
+                        outfile.write(line)
+                        outfile.write('\n')
 
     def read_motif_numbers(motifnum_line):
         """reads the motif numbers contained in a motif number line"""
@@ -429,19 +437,27 @@ def read_mast_output(output_text, genes):
             if gene in genes:
                 info_line = lines[current_index]
                 length = int(__extract_regex('LENGTH\s+=\s+(\d+)', info_line))
+                has_seqalign_block = True
+                diagram_match = re.match('^\s+DIAGRAM:\s+(\d+)$',
+                                         lines[current_index + 1])
+                if diagram_match != None:
+                    diagram = int(diagram_match.group(1))
+                    if diagram == length:
+                        has_seqalign_block = False
 
-                # the diagram line can span several lines and the blank lines
-                # after those can span several, so search for the first
-                # non-blank line after the block of blank lines
-                blank_index = current_index + 2
-                while len(lines[blank_index].strip()) > 0:
-                    blank_index += 1
-                non_blank_index = blank_index + 1
-                while len(lines[non_blank_index].strip()) == 0:
-                    non_blank_index += 1
-                result[gene] = read_seqalign_blocks(lines,
-                                                    non_blank_index,
-                                                    length)
+                if has_seqalign_block:
+                    # the diagram line can span several lines and the blank lines
+                    # after those can span several, so search for the first
+                    # non-blank line after the block of blank lines
+                    blank_index = current_index + 2
+                    while len(lines[blank_index].strip()) > 0:
+                        blank_index += 1
+                    non_blank_index = blank_index + 1
+                    while len(lines[non_blank_index].strip()) == 0:
+                        non_blank_index += 1
+                    result[gene] = read_seqalign_blocks(lines,
+                                                        non_blank_index,
+                                                        length)
 
             current_index = next_pe_value_line(current_index + 1, lines)
         return result
