@@ -424,7 +424,7 @@ def read_mast_output(output_text, genes):
         """we only need the motif number line and the sequence line
         to retrieve the position"""
         # offset +2 for compatibility with cMonkey R, don't really
-        # know why
+        # know why we need this
         return [(m.start() + 2)
                 for m in re.finditer('\[', motifnum_line)]
 
@@ -461,9 +461,6 @@ def read_mast_output(output_text, genes):
 
             current_index = next_pe_value_line(current_index + 1, lines)
         return result
-
-    with open("/Users/wwu/MAST_LAST.txt", "w+") as mastout:
-        mastout.write(output_text)
 
     lines = output_text.split('\n')
     pe_values = read_pe_values(lines)
