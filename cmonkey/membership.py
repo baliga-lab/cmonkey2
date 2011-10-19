@@ -297,13 +297,57 @@ class ClusterMembership:
         result += repr(self.__cluster_column_members)
         return result
 
-    def update(self, matrix, row_scores, column_scores):
+    def update(self, matrix, row_scores, column_scores, iteration,
+               num_iterations):
         """top-level update method"""
-        # TODO: Fuzzify scores (can't be reproduced 1:1 to the R version)
+        row_scores, column_scores = self.__fuzzify(row_scores,
+                                                   column_scores,
+                                                   iteration, num_iterations)
         rd_scores, cd_scores = _get_density_scores(self, row_scores,
                                                    column_scores)
         _compensate_size(self, matrix, rd_scores, cd_scores)
         self._update_memberships(rd_scores, cd_scores)
+
+    def __fuzzify(self, row_scores, column_scores, iteration,
+                  num_iterations):
+        """Provide an iteration-specific fuzzification"""
+        fuzzy_coeff = std_fuzzy_coefficient(iteration + 1, num_iterations)
+        num_row_fuzzy_values = row_scores.num_rows() * row_scores.num_columns()
+        num_col_fuzzy_values = (column_scores.num_rows() *
+                                column_scores.num_columns())
+        row_sd_values = []
+        for col in range(row_scores.num_columns()):
+            for row in range(row_scores.num_rows()):
+                row_name = row_scores.row_name(row)
+                if self.is_row_member_of(row_name, col + 1):
+                    row_sd_values.append(row_scores[row][col])
+        row_sd = util.r_stddev(row_sd_values) * fuzzy_coeff
+        row_rnorm = util.rnorm(num_row_fuzzy_values, row_sd)
+
+        col_sd_values = []
+        for col in range(column_scores.num_columns()):
+            for row in range(column_scores.num_rows()):
+                row_name = column_scores.row_name(row)
+                if self.is_column_member_of(row_name, col + 1):
+                    col_sd_values.append(column_scores[row][col])
+        col_sd = util.r_stddev(col_sd_values) * fuzzy_coeff
+        col_rnorm = util.rnorm(num_col_fuzzy_values, col_sd)
+
+        logging.info("fuzzifying scores, coeff = %f, row sd = %f, col sd = %f",
+                     fuzzy_coeff, row_sd, col_sd)
+
+        # add fuzzy values to the row/column scores
+        for col in range(row_scores.num_columns()):
+            for row in range(row_scores.num_rows()):
+                row_scores[row][col] += row_rnorm[
+                    row * row_scores.num_columns() + col]
+
+        for col in range(column_scores.num_columns()):
+            for row in range(column_scores.num_rows()):
+                column_scores[row][col] += col_rnorm[
+                    row * row_scores.num_columns() + col]
+
+        return row_scores, column_scores
 
     def _update_memberships(self, rd_scores, cd_scores):
         """update memberships according to rd_scores and cd_scores"""
@@ -581,3 +625,9 @@ def _compensate_size(membership, matrix, rd_scores, cd_scores):
     for cluster in range(1, num_clusters + 1):
         compensate_rows(cluster)
         compensate_columns(cluster)
+
+
+def std_fuzzy_coefficient(iteration, num_iterations):
+    """standard fuzzy coefficient as defined in cMonkey"""
+    return 0.7 * math.exp(-(float(iteration) /
+                            (float(num_iterations) / 3.0))) + 0.05

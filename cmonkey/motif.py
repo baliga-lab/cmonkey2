@@ -74,8 +74,8 @@ def compute_scores(meme_suite, organism, membership,
                                       distance)
         if (len(seqs) >= MIN_CLUSTER_ROWS_ALLOWED
             and len(seqs) <= MAX_CLUSTER_ROWS_ALLOWED):
-            #logging.info("# seqs (= %d) within limits, continue processing, " +
-            #             "seqs are: %s",
+            #logging.info("# seqs (= %d) within limits, continue " +
+            #             "processing, seqs are: %s",
             #             len(seqs), str(seqs))
             pe_values, annotations = meme_suite.run_meme(seqs, used_sequences)
 
@@ -200,7 +200,7 @@ class ScoringFunction(memb.ScoringFunctionBase):
                 for cluster in range(1, self.num_clusters() + 1):
                     if (cluster in remapped.keys() and
                         row in remapped[cluster].keys()):
-                        matrix[row_index][cluster - 1] = remapped[cluster][row]                        
+                        matrix[row_index][cluster - 1] = remapped[cluster][row]
             return matrix
         else:
             return None

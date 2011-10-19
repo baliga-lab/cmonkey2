@@ -48,7 +48,7 @@ def run_cmonkey():
 
     for iteration in range(NUM_ITERATIONS):
         iterate(membership, matrix, gene_scoring_funcs, cond_scoring,
-                iteration)
+                iteration, NUM_ITERATIONS)
     print "Done !!!!"
     #print membership
 
@@ -78,7 +78,8 @@ def make_gene_scoring_funcs(organism, membership, matrix):
     network_scoring = nw.ScoringFunction(organism, membership, matrix,
                                          lambda iteration: 0.0, 7)
 
-    return [row_scoring, motif_scoring, network_scoring]
+    #return [row_scoring, motif_scoring, network_scoring]
+    return [row_scoring, network_scoring]
 
 
 def read_matrix(filename):
@@ -129,7 +130,7 @@ def make_membership(matrix):
 
 
 def iterate(membership, matrix, gene_scoring_funcs, cond_scoring_func,
-            iteration):
+            iteration, num_iterations):
     """one iteration of the algorithm"""
     logging.info("Iteration # %d", iteration)
     result_matrices = []
@@ -150,7 +151,7 @@ def iterate(membership, matrix, gene_scoring_funcs, cond_scoring_func,
         rscores = rscores + (result_matrices[index] *
                              gene_scoring_funcs[index].weight(iteration))
 
-    membership.update(matrix, rscores, cscores)
+    membership.update(matrix, rscores, cscores, iteration, num_iterations)
 
 ############################################################
 #### Replace with real seeding when everything works

@@ -269,3 +269,11 @@ class ClusterMembershipTest(unittest.TestCase):
         membership.replace_row_cluster('R1', 1, 2)
         self.assertEquals([3, 2], membership.clusters_for_row('R1'))
         self.assertEquals(['R1', 'R2'], membership.rows_for_cluster(2))
+
+    def test_std_fuzzy_coefficient(self):
+        result = [memb.std_fuzzy_coefficient(value, 10) for value in range(1, 11)]
+        self.assertEquals([0.5685727544772026, 0.43416814526581843,
+                           0.3345987618184194, 0.2608359483385415,
+                           0.20619111210390084, 0.1657092217551106,
+                           0.13571949977708733, 0.11350256730258876,
+                           0.09704385891782485, 0.08485094785750477], result)

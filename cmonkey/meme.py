@@ -394,12 +394,6 @@ def read_mast_output(output_text, genes):
         except:
             if seqline != None:
                 print "ERROR IN SEQLINE: [%s]" % seqline
-            else:
-                print "ERROR in is_last_block() # LINES: %d, INDEX: %d SEQLEN = %d" % (len(lines), index, seqlen)                
-                with open("MOTIFERROR.txt", "w") as outfile:
-                    for line in lines:
-                        outfile.write(line)
-                        outfile.write('\n')
 
     def read_motif_numbers(motifnum_line):
         """reads the motif numbers contained in a motif number line"""
@@ -446,9 +440,9 @@ def read_mast_output(output_text, genes):
                         has_seqalign_block = False
 
                 if has_seqalign_block:
-                    # the diagram line can span several lines and the blank lines
-                    # after those can span several, so search for the first
-                    # non-blank line after the block of blank lines
+                    # the diagram line can span several lines and the blank
+                    # line after those can span several, so search for the
+                    # first non-blank line after the block of blank lines
                     blank_index = current_index + 2
                     while len(lines[blank_index].strip()) > 0:
                         blank_index += 1
