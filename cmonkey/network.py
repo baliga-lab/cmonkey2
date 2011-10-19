@@ -123,8 +123,7 @@ class Network:
 
 
 def compute_network_scores(network, genes, all_genes):
-    """Generic method to compute network scores
-    TODO: maybe should be part of Network class"""
+    """Generic method to compute network scores"""
     edges = network.edges_with_source_in(genes)
     fedges = [edge for edge in edges if edge.target_in(all_genes)]
 

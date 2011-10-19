@@ -298,11 +298,12 @@ class ClusterMembership:
         return result
 
     def update(self, matrix, row_scores, column_scores, iteration,
-               num_iterations):
+               num_iterations, add_fuzz=True):
         """top-level update method"""
-        row_scores, column_scores = self.__fuzzify(row_scores,
-                                                   column_scores,
-                                                   iteration, num_iterations)
+        if add_fuzz:
+            row_scores, column_scores = self.__fuzzify(row_scores,
+                                                       column_scores,
+                                                       iteration, num_iterations)
         rd_scores, cd_scores = _get_density_scores(self, row_scores,
                                                    column_scores)
         _compensate_size(self, matrix, rd_scores, cd_scores)

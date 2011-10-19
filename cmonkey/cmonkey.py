@@ -142,7 +142,6 @@ def iterate(membership, matrix, gene_scoring_funcs, cond_scoring_func,
             score_weights.append(score_func.weight(iteration))
     cscores = cond_scoring_func.compute(iteration)
 
-    # TODO: log filter
     if len(result_matrices) > 0:
         result_matrices = dm.quantile_normalize_scores(result_matrices,
                                                        score_weights)
