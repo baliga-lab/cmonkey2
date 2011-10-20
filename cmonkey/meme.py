@@ -223,6 +223,23 @@ class MemeMotifInfo:
         """returns the sites"""
         return self.__sites
 
+    def consensus_string(self, cutoff1=0.7, cutoff2=0.4):
+        """returns the consensus string from the pssm table
+        remember: letter order is ACGT"""
+        alphabet = 'ACGT'
+        result = ""
+        for row in range(len(self.__pssm)):
+            rowvals = self.__pssm[row]
+            max_index = rowvals.index(max(rowvals))
+            score = rowvals[max_index]
+            if score < cutoff2:
+                result += 'n'
+            elif score < cutoff1:
+                result += alphabet[max_index].lower()
+            else:
+                result += alphabet[max_index]
+        return result
+
     def __repr__(self):
         """returns the string representation"""
         return ("Motif width: %d sites: %d llr: %d e-value: %f" %
