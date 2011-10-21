@@ -3,3 +3,6 @@ lintlog
 *.log
 .coverage
 cache
+0
+FreqFiles
+weeder

@@ -1,4 +1,4 @@
-"""pssm.py - cMonkey top-level module
+"""pssm.py - cMonkey pssm module
 
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.

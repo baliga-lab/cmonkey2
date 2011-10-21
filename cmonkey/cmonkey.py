@@ -17,6 +17,7 @@ import rsat
 import sys
 import os
 import logging
+import weeder
 
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 CMONKEY_VERSION = '4.0'
@@ -183,7 +184,12 @@ if __name__ == '__main__':
     if len(sys.argv) <= 2:
         print('Usage: ./run_cmonkey.sh <ratio-file> <organism-code>')
     else:
-        run_cmonkey()
+        #run_cmonkey()
+        logging.basicConfig(format=LOG_FORMAT,
+                            datefmt='%Y-%m-%d %H:%M:%S',
+                            level=logging.DEBUG)
+        weeder_obj = weeder.Weeder()
+        weeder_obj.run('0/perm_miR1_0_0.fasta')
 
 
 __all__ = ['CMonkey', 'Membership']
