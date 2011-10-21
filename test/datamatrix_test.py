@@ -1,4 +1,4 @@
-"""datatypes_test.py - test classes for datatypes module
+"""datamatrix_test.py - test classes for datamatrix module
 
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.

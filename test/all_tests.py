@@ -14,6 +14,7 @@ import operon_nw_test as opnwt
 import network_test as nwt
 import microarray_test as mat
 import meme_test as met
+import pssm_test as pt
 
 
 # pylint: disable-msg=C0301
@@ -53,5 +54,7 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(mat.ComputeArrayScoresTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(met.MemeTest))
+
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(pt.PssmTest))
 
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))

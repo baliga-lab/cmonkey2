@@ -14,6 +14,15 @@ import util
 import re
 
 
+class MemeRunResult:
+    """Result data for a single MEME run"""
+    def __init__(self, pe_values, annotations, motif_infos):
+        """constructor"""
+        self.pe_values = pe_values
+        self.annotations = annotations
+        self.motif_infos =  motif_infos
+
+
 class MemeSuite:
     """Regard the meme suite as a unit of tools. This helps
     us capturing things like versions, global settings and data
@@ -136,7 +145,8 @@ class MemeSuite:
         dbfile = make_sequence_file(all_seqs_dict)
         #logging.info('created mast database in %s', dbfile)
         mast_output = self.mast(meme_outfile, dbfile, bgfile)
-        return read_mast_output(mast_output, input_seqs.keys())
+        pe_values, annotations = read_mast_output(mast_output, input_seqs.keys())
+        return MemeRunResult(pe_values, annotations, motif_infos)
 
     def dust(self, fasta_file_path):  # pylint: disable-msg=R0201
         """runs the dust command on the specified FASTA file and

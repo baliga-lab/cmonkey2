@@ -46,68 +46,6 @@ def remove_atgs_filter(seqs, feature_ids, distance):
         seqs[feature_id] = "".join(chars)
     return seqs
 
-
-def compute_scores(meme_suite, organism, membership,
-                   used_sequences,
-                   distance, sequence_filters, pvalue_filter):
-    """Compute motif scores. In order to influence the sequences
-    that go into meme, the user can specify a list of sequence filter
-    functions that have the signature
-    (seqs, feature_ids, distance) -> seqs
-    These filters are applied in the order they appear in the list
-    """
-    MIN_LOG_SCORE = -20.0
-
-    def apply_sequence_filters(filters, seqs, feature_ids, distance):
-        """apply all filters in the filters list in order"""
-        for sequence_filter in filters:
-            seqs = sequence_filter(seqs, feature_ids, distance)
-        return seqs
-    cluster_pvalues = {}
-
-    for cluster in range(1, membership.num_clusters() + 1):
-        logging.info("compute motif scores for cluster %d", cluster)
-        genes = sorted(membership.rows_for_cluster(cluster))
-        feature_ids = organism.feature_ids_for(genes)
-        seqs = organism.sequences_for_genes(genes, distance, upstream=True)
-        seqs = apply_sequence_filters(sequence_filters, seqs, feature_ids,
-                                      distance)
-        if (len(seqs) >= MIN_CLUSTER_ROWS_ALLOWED
-            and len(seqs) <= MAX_CLUSTER_ROWS_ALLOWED):
-            #logging.info("# seqs (= %d) within limits, continue " +
-            #             "processing, seqs are: %s",
-            #             len(seqs), str(seqs))
-            pe_values, annotations = meme_suite.run_meme(seqs, used_sequences)
-
-            pvalues = {}
-            for feature_id, pvalue, evalue in pe_values:
-                pvalues[feature_id] = numpy.log(pvalue)
-            pvalues = pvalue_filter(pvalues)
-            cluster_pvalues[cluster] = pvalues
-            #for feature_id in pvalues:
-            #    print "%s[%d] => %f" % (feature_id, cluster,
-            #                            pvalues[feature_id])
-            #print "PE-VALUES, CLUSTER: ", cluster
-            #for feature_id, pvalue, evalue in pe_values:
-            #    print "%s\t%f\t%f" % (feature_id, pvalue, evalue)
-
-            #print "COUNT = %d" % len(pe_values)
-            #print "------------------------"
-            #print "ANNOTATIONS, CLUSTER: ", cluster
-            #count = 0
-            #for feature_id, annotation in annotations.items():
-            #    for elem in annotation:
-            #        print "%s\t%s" % (feature_id, str(elem))
-            #        count += 1
-            #print "COUNT = %d" % count
-        else:
-            logging.info("# seqs (= %d) outside of defined limits, skipping " +
-                         "cluster %d", len(seqs), cluster)
-        #print "CLUSTER PVALUES:"
-        #print cluster_pvalues
-    return cluster_pvalues
-
-
 def make_min_value_filter(min_value):
     """A function generator which creates a value filter"""
 
@@ -177,13 +115,8 @@ class ScoringFunction(memb.ScoringFunctionBase):
         if (self.__interval == 0 or
             (iteration > 0 and (iteration % self.__interval == 0))):
             print "RUN MOTIF SCORING IN ITERATION ", iteration
-            pvalues = compute_scores(self.__meme_suite,
-                                     self.__organism,
-                                     self.membership(),
-                                     self.__used_seqs,
-                                     DISTANCE_UPSTREAM_SEARCH,
-                                     self.__sequence_filters,
-                                     self.__pvalue_filter)
+            pvalues = self.compute_scores(DISTANCE_UPSTREAM_SEARCH,
+                                          iteration)
             remapped = {}
             for cluster in pvalues:
                 pvalues_k = pvalues[cluster]
@@ -204,3 +137,48 @@ class ScoringFunction(memb.ScoringFunctionBase):
             return matrix
         else:
             return None
+
+    def compute_scores(self, distance, iteration):
+        """Compute motif scores. In order to influence the sequences
+        that go into meme, the user can specify a list of sequence filter
+        functions that have the signature
+        (seqs, feature_ids, distance) -> seqs
+        These filters are applied in the order they appear in the list
+        """
+        MIN_LOG_SCORE = -20.0
+
+        def apply_sequence_filters(seqs, feature_ids):
+            """apply all filters in the filters list in order"""
+            for sequence_filter in self.__sequence_filters:
+                seqs = sequence_filter(seqs, feature_ids, distance)
+            return seqs
+
+        cluster_pvalues = {}
+        meme_run_results = {}
+
+        for cluster in range(1, self.num_clusters() + 1):
+            logging.info("compute motif scores for cluster %d", cluster)
+            genes = sorted(self.rows_for_cluster(cluster))
+            feature_ids = self.__organism.feature_ids_for(genes)
+            seqs = self.__organism.sequences_for_genes(genes, distance,
+                                                       upstream=True)
+            seqs = apply_sequence_filters(seqs, feature_ids)
+            if (len(seqs) >= MIN_CLUSTER_ROWS_ALLOWED
+                and len(seqs) <= MAX_CLUSTER_ROWS_ALLOWED):
+                meme_run_results[cluster] = self.__meme_suite.run_meme(
+                    seqs, self.__used_seqs)
+
+                pvalues = {}
+                pe_values = meme_run_results[cluster].pe_values
+                for feature_id, pvalue, evalue in pe_values:
+                    pvalues[feature_id] = numpy.log(pvalue)
+                pvalues = self.__pvalue_filter(pvalues)
+                cluster_pvalues[cluster] = pvalues
+                
+                for motif_info in meme_run_results[cluster].motif_infos:
+                    print "consensus: ", motif_info.consensus_string(), " evalue: ", motif_info.evalue()
+            else:
+                logging.info("# seqs (= %d) outside of defined limits, skipping " +
+                             "cluster %d", len(seqs), cluster)
+
+        return cluster_pvalues

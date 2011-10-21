@@ -26,7 +26,7 @@ RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
 ROW_WEIGHT = 6.0
-NUM_ITERATIONS = 2000
+NUM_ITERATIONS = 1 # 2000
 
 
 def run_cmonkey():
@@ -50,6 +50,9 @@ def run_cmonkey():
         iterate(membership, matrix, gene_scoring_funcs, cond_scoring,
                 iteration, NUM_ITERATIONS)
     print "Done !!!!"
+    print "cluster\t# rows"
+    for cluster in range(1, membership.num_clusters() + 1):
+        print "%d\t%d" % (cluster, membership.num_row_members(cluster))
     #print membership
 
 
@@ -73,13 +76,13 @@ def make_gene_scoring_funcs(organism, membership, matrix):
                                           meme_suite,
                                           sequence_filters,
                                           motif.make_min_value_filter(-20.0),
-                                          lambda iteration: 0.0, 100)
+                                          lambda iteration: 0.0, 0) # 100
 
     network_scoring = nw.ScoringFunction(organism, membership, matrix,
-                                         lambda iteration: 0.0, 7)
+                                         lambda iteration: 0.0, 0) # 7
 
-    #return [row_scoring, motif_scoring, network_scoring]
-    return [row_scoring, network_scoring]
+    #return [row_scoring, network_scoring]
+    return [row_scoring, motif_scoring, network_scoring]
 
 
 def read_matrix(filename):
