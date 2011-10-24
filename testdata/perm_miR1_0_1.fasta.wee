@@ -1,0 +1,4928 @@
+
+
+NEW: Starting a small job
+
+Organism code: SC
+./weederlauncher.out 0/perm_miR1_0_1.fasta SC small 50 
+
+
+Searching for motifs of length 6 with 1 mutations.....
+(Actual commandline is : 
+./weederTFBS.out -f 0/perm_miR1_0_1.fasta -R 50 -O SC -W 6 -e 1 -N -N -T 50 )
+1) GGGGGC 1.70 
+2) CCCTGG 1.67 
+3) CCTGGG 1.67 
+4) GCCCCC 1.65 
+5) GGGGGG 1.61 
+6) CCCCTG 1.57 
+7) CCCAGG 1.54 
+8) CCTGCC 1.53 
+9) CTGGGA 1.52 
+10) CCAGGG 1.51 
+11) GGGGCC 1.50 
+12) GGACTG 1.49 
+13) GCCAGG 1.45 
+14) CAGGGG 1.44 
+15) GCTGGG 1.44 
+16) CCTCCC 1.43 
+17) GGGGCT 1.42 
+18) CCGGGG 1.42 
+19) GGGCTG 1.41 
+20) CGGGGG 1.41 
+21) CCCGGG 1.40 
+22) CCACCC 1.40 
+23) GCCTGG 1.39 
+24) GGCCTG 1.36 
+25) GGCCCC 1.34 
+26) GGGCCC 1.34 
+27) CCCCCC 1.34 
+28) GTGGGC 1.33 
+29) CTGGGG 1.33 
+30) GGCCCT 1.31 
+31) GCCCTC 1.31 
+32) CCCACC 1.31 
+33) AGACCC 1.30 
+34) GGGGAG 1.30 
+35) GCCCTG 1.29 
+36) GGGTGG 1.28 
+37) GGGGTG 1.28 
+38) TGGGCC 1.28 
+39) GGCCAG 1.28 
+40) GGGGGA 1.26 
+41) CCTGGC 1.25 
+42) CCCCCT 1.24 
+43) TGGGGG 1.24 
+44) GGTGGG 1.24 
+45) AGGGGG 1.23 
+46) GGGCAG 1.23 
+47) CACCCC 1.23 
+48) GCCCAC 1.22 
+49) AGGCCC 1.21 
+50) CTCCCC 1.21 
+
+Elapsed time : 0 min. 2 sec.
+
+
+Searching for motifs of length 8 with 2 mutations.....
+(Actual commandline is : 
+./weederTFBS.out -f 0/perm_miR1_0_1.fasta -R 50 -O SC -W 8 -e 2 -N -N -T 50 )
+1) CTGGGGGG 1.89 
+2) GGGGGGGC 1.86 
+3) GCCCCCCC 1.83 
+4) GGGGGGCT 1.83 
+5) GCCCCCTG 1.80 
+6) GCCCGGGG 1.80 
+7) CCCCTGGC 1.77 
+8) CCCCCTGG 1.77 
+9) GCCCACCC 1.76 
+10) CCCAGGGC 1.72 
+11) GGGCAGGC 1.67 
+12) CGGGGGGG 1.67 
+13) GGCCCTCC 1.66 
+14) CCCACCCC 1.66 
+15) CCCGGGGA 1.65 
+16) GGGGGGCC 1.65 
+17) CCGGGGGG 1.65 
+18) CCCCACCC 1.65 
+19) CCCGGGGC 1.64 
+20) GCCCCTGG 1.63 
+21) CCCTGGCT 1.62 
+22) TCCGGGGG 1.61 
+23) GGGGGGAG 1.61 
+24) GCCAGGGC 1.61 
+25) GGCCTGGG 1.60 
+26) GCCCTCCC 1.60 
+27) GCCTGGGC 1.59 
+28) CCCCCCCT 1.59 
+29) CCCAGGGG 1.58 
+30) TGGGGGGC 1.57 
+31) TCAGGGGG 1.57 
+32) CCAGGGCT 1.57 
+33) CTGGCCCC 1.56 
+34) CAGGCCCC 1.56 
+35) GGCCAGGG 1.55 
+36) CCCACCCT 1.55 
+37) GCCCTGGG 1.55 
+38) TGCCTGGG 1.54 
+39) TCGGGGGG 1.53 
+40) CCTGGGGC 1.53 
+41) CAGGGGGC 1.52 
+42) CCTGCCAG 1.52 
+43) GCCTGGGA 1.52 
+44) CCCCTGCC 1.52 
+45) CCAGCCCC 1.52 
+46) CCGGGGGC 1.51 
+47) CTGGGCCC 1.51 
+48) CTGAGGGG 1.51 
+49) TGCCCAGG 1.50 
+50) AGCCCCCC 1.50 
+
+Elapsed time : 0 min. 21 sec.
+
+
+Your sequences:
+
+Sequence 1 : >perm0
+Sequence 2 : >perm1
+Sequence 3 : >perm2
+Sequence 4 : >perm3
+Sequence 5 : >perm4
+Sequence 6 : >perm5
+Sequence 7 : >perm6
+Sequence 8 : >perm7
+Sequence 9 : >perm8
+Sequence 10 : >perm9
+Sequence 11 : >perm10
+Sequence 12 : >perm11
+Sequence 13 : >perm12
+Sequence 14 : >perm13
+Sequence 15 : >perm14
+Sequence 16 : >perm15
+Sequence 17 : >perm16
+Sequence 18 : >perm17
+Sequence 19 : >perm18
+Sequence 20 : >perm19
+Sequence 21 : >perm20
+Sequence 22 : >perm21
+Sequence 23 : >perm22
+Sequence 24 : >perm23
+Sequence 25 : >perm24
+Sequence 26 : >perm25
+Sequence 27 : >perm26
+Sequence 28 : >perm27
+Sequence 29 : >perm28
+Sequence 30 : >perm29
+
+
+**** MY ADVICE ****
+
+
+ *** Interesting motifs (highest-ranking) seem to be : 
+
+
+GGGGGC
+
+19 redundant motifs found:
+CCGGGGGC - CAGGGGGC - TGGGGGGC - GGGGGGCC - GGGGGGCT - GGGGGGGC - AGGGGG - GGGCAG - TGGGGG - GGGGGA - GTGGGC - GGGCCC - GGGCTG - CGGGGG - GGGGCT - GGGGCC - GGGGCC - GGGGGG - GGGGGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [GGTGGC]  122  (89.33) 
+  1 + [GGGGGT]  256  (88.13) 
+  1 +  GTGGGC   320  (91.48) 
+  1 +  GGGGGG   451  (92.55) 
+  1 +  GGGGGG   452  (92.55) 
+  1 +  GGGGGC   453  (100.00) 
+  1 +  GTGGGC   780  (91.48) 
+  3 +  GGGGGC   276  (100.00) 
+  3 +  GTGGGC   531  (91.48) 
+  3 + [AGGGGC]  783  (89.78) 
+  4 + [AGGGGC]   89  (89.78) 
+  4 + [TGGGGC]  459  (88.89) 
+  4 +  GGGGCC   460  (90.17) 
+  4 +  GTGGGC   814  (91.48) 
+  5 + [GGGAGC]  756  (89.66) 
+  6 +  GGGGGC   152  (100.00) 
+  6 + [GGGAGC]  194  (89.66) 
+  6 + [GAGGGC]  501  (88.95) 
+  6 + [GGGTGC]  527  (86.87) 
+  6 + [GAGGGC]  607  (88.95) 
+  7 +  GTGGGC    10  (91.48) 
+  7 + [GGGGGT]  171  (88.13) 
+  7 + [AGGGGC]  353  (89.78) 
+  7 +  GGGGCC   354  (90.17) 
+  7 +  GGGGGC   481  (100.00) 
+  7 + [GGGTGC]  782  (86.87) 
+  7 + [TGGGGC]  832  (88.89) 
+  7 +  GGGGCC   833  (90.17) 
+  8 + [TGGGGC]  325  (88.89) 
+  8 + [GGGAGC]  341  (89.66) 
+  8 +  GGGGGG   532  (92.55) 
+  8 +  GGGGGG   533  (92.55) 
+  8 +  GGGGGG   534  (92.55) 
+  8 +  GGGGGG   535  (92.55) 
+  8 +  GGGGGG   536  (92.55) 
+  8 + [GGGGGT]  537  (88.13) 
+  8 + [GGGTGC]  539  (86.87) 
+  8 + [GGGGAC]  660  (88.35) 
+  8 + [GAGGGC]  809  (88.95) 
+  9 + [GGAGGC]  305  (88.86) 
+  9 +  GGGGGG   660  (92.55) 
+  9 +  GGGGGG   661  (92.55) 
+  9 +  GGGGGG   662  (92.55) 
+  9 +  GGGGGC   663  (100.00) 
+  9 +  GGGGCC   664  (90.17) 
+ 10 + [GGGAGC]  634  (89.66) 
+ 11 + [AGGGGC]  248  (89.78) 
+ 11 +  GGGGCC   249  (90.17) 
+ 11 +  GTGGGC   709  (91.48) 
+ 12 + [GGAGGC]  296  (88.86) 
+ 12 + [GGGGGA]  354  (89.76) 
+ 12 + [GGGAGC]  356  (89.66) 
+ 13 + [TGGGGC]  230  (88.89) 
+ 13 +  GGGGCC   231  (90.17) 
+ 14 +  GGGGGC    20  (100.00) 
+ 14 +  GGGGCC    21  (90.17) 
+ 14 +  GTGGGC   331  (91.48) 
+ 14 +  GGGGGG   555  (92.55) 
+ 14 + [GGGGGA]  556  (89.76) 
+ 14 + [GGAGGC]  559  (88.86) 
+ 14 + [GGAGGC]  608  (88.86) 
+ 14 + [GGGAGC]  779  (89.66) 
+ 15 + [GGTGGC]   90  (89.33) 
+ 16 + [GGGAGC]  193  (89.66) 
+ 16 +  GTGGGC   214  (91.48) 
+ 16 +  GGGGGC   226  (100.00) 
+ 16 +  GTGGGC   357  (91.48) 
+ 17 + [GGGGGT]  323  (88.13) 
+ 17 +  GTGGGC   661  (91.48) 
+ 17 +  GGGGGG   723  (92.55) 
+ 17 + [GGGGGT]  724  (88.13) 
+ 17 + [GGGGGA]  847  (89.76) 
+ 18 + [AGGGGC]  360  (89.78) 
+ 18 + [GAGGGC]  393  (88.95) 
+ 18 + [GGGGGA]  608  (89.76) 
+ 18 + [GGGGAC]  609  (88.35) 
+ 18 + [GGGAGC]  731  (89.66) 
+ 19 + [GGGTGC]   93  (86.87) 
+ 19 + [GGTGGC]  677  (89.33) 
+ 19 + [GGGGGA]  774  (89.76) 
+ 19 + [GGGAGC]  776  (89.66) 
+ 20 + [GAGGGC]   26  (88.95) 
+ 20 + [AGGGGC]  120  (89.78) 
+ 20 + [TGGGGC]  167  (88.89) 
+ 20 +  GGGGGG   184  (92.55) 
+ 20 +  GGGGGC   185  (100.00) 
+ 20 + [GGGGAC]  260  (88.35) 
+ 20 +  GTGGGC   516  (91.48) 
+ 21 + [AGGGGC]  267  (89.78) 
+ 21 + [GGTGGC]  450  (89.33) 
+ 22 + [GGTGGC]  289  (89.33) 
+ 22 + [AGGGGC]  353  (89.78) 
+ 22 + [GGGGGA]  527  (89.76) 
+ 22 + [GGAGGC]  666  (88.86) 
+ 22 + [GGAGGC]  805  (88.86) 
+ 22 + [TGGGGC]  819  (88.89) 
+ 22 + [GGTGGC]  825  (89.33) 
+ 23 + [AGGGGC]  124  (89.78) 
+ 23 +  GGGGCC   125  (90.17) 
+ 23 +  GGGGGC   150  (100.00) 
+ 23 + [TGGGGC]  164  (88.89) 
+ 23 +  GGGGGG   477  (92.55) 
+ 23 +  GGGGGG   478  (92.55) 
+ 23 +  GGGGGG   479  (92.55) 
+ 23 + [GGGGGA]  480  (89.76) 
+ 23 + [GAGGGC]  484  (88.95) 
+ 23 + [GGGGAC]  707  (88.35) 
+ 24 + [GGGGGA]  161  (89.76) 
+ 24 +  GGGGGC   220  (100.00) 
+ 24 +  GGGGCC   221  (90.17) 
+ 24 +  GTGGGC   370  (91.48) 
+ 24 + [GGTGGC]  549  (89.33) 
+ 25 + [GGAGGC]   63  (88.86) 
+ 25 +  GGGGCC   335  (90.17) 
+ 25 + [GGTGGC]  421  (89.33) 
+ 25 +  GTGGGC   451  (91.48) 
+ 25 +  GGGGGC   543  (100.00) 
+ 25 +  GTGGGC   737  (91.48) 
+ 25 + [GAGGGC]  827  (88.95) 
+ 26 +  GTGGGC   243  (91.48) 
+ 26 + [GGTGGC]  328  (89.33) 
+ 27 +  GGGGGG   179  (92.55) 
+ 27 + [GGGGGA]  180  (89.76) 
+ 27 + [AGGGGC]  282  (89.78) 
+ 27 + [GGGGAC]  306  (88.35) 
+ 27 + [GGGGAC]  585  (88.35) 
+ 27 +  GGGGCC   761  (90.17) 
+ 28 + [GAGGGC]  225  (88.95) 
+ 28 + [GGGTGC]  517  (86.87) 
+ 28 +  GGGGGG   543  (92.55) 
+ 28 +  GGGGGC   544  (100.00) 
+ 28 + [GGGGAC]  616  (88.35) 
+ 28 + [GGGGGT]  756  (88.13) 
+ 28 + [GGGAGC]  769  (89.66) 
+ 29 +  GGGGGC   300  (100.00) 
+ 29 + [GGAGGC]  443  (88.86) 
+ 29 + [TGGGGC]  523  (88.89) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   10     3   127     8		    0     0    57     0
+2 	    8     0   125    15		    0     0    42    15
+3 	    8     3   128     9		    0     0    57     0
+4 	   10     2   131     5		    0     0    57     0
+5 	    7    11   127     3		    0    11    46     0
+6 	    9   115    18     6		    0    39    18     0
+
+==========================================
+
+
+CTGGGGGG
+
+14 redundant motifs found:
+CCGGGGGC - CTGAGGGG - CAGGGGGC - TCGGGGGG - TGGGGGGC - GGGGGGAG - GGGGGGCC - CCGGGGGG - CGGGGGGG - GGGGGGCT - GGGGGGGC - TGGGGG - CTGGGG - GGGGGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 +  ATGGGGGG   449  (91.48) 
+  4 +  CTGGGGTG   391  (90.83) 
+  5 +  CTGGTGGG   159  (92.40) 
+  6 +  CTGGAGGG   604  (91.40) 
+  7 +  CTGGTGGG   823  (92.40) 
+  8 +  CTGGGGGG   530  (100.00) 
+  8 +  CTGGAGGG   806  (91.40) 
+  9 +  TTGGGGGG   658  (90.54) 
+ 10 +  CTGAGGGG   629  (91.68) 
+ 14 +  CTGAGGGG   680  (91.68) 
+ 15 +  CTGGTGGG   469  (92.40) 
+ 17 +  GTGGGGGG   721  (90.88) 
+ 19 + [CTCGGGGG]  771  (87.64) 
+ 20 +  CTGGTGGG   163  (92.40) 
+ 20 + [CCGGGGGG]  182  (89.44) 
+ 20 +  CTGGGAGG   307  (91.39) 
+ 20 +  CTGAGGGG   609  (91.68) 
+ 21 +  CTGGGTGG   447  (90.52) 
+ 22 + [CTGTGGGG]  523  (89.69) 
+ 22 + [CTGGGGCG]  818  (86.49) 
+ 23 + [CTCGGGGG]  474  (87.64) 
+ 23 +  CGGGGGGG   476  (91.59) 
+ 25 +  CTGGGGTG   417  (90.83) 
+ 28 +  CTGGGGGG   541  (100.00) 
+ 28 +  CTGGGGGT   754  (90.46) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   15   113    13    12		    1    17     1     1
+2 	   19     9    15   110		    0     0     1    19
+3 	    6     7   131     9		    0     0    20     0
+4 	   16    12   115    10		    3     0    17     0
+5 	   15     4   115    19		    2     0    14     4
+6 	   16     1   123    13		    1     0    18     1
+7 	   11     5   123    14		    0     0    18     2
+8 	   11    15   115    12		    0     0    19     1
+
+==========================================
+
+ *** Interesting motifs (not highest-ranking) can also be : 
+
+
+CCTGGG
+
+17 redundant motifs found:
+CCCTGG - GCCTGGGA - CCTGGGGC - TGCCTGGG - GCCCTGGG - GCCTGGGC - GGCCTGGG - TGGGGG - CCTGGC - TGGGCC - CTGGGG - GCCTGG - CCCGGG - CCGGGG - GCTGGG - CCAGGG - CTGGGA - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [CATGGG]  253  (86.15) 
+  1 + [CCTGTG]  353  (88.12) 
+  1 + [CCTGAG]  365  (87.26) 
+  1 + [CATGGG]  448  (86.15) 
+  1 + [CCTGAG]  541  (87.26) 
+  1 + [ACTGGG]  605  (88.92) 
+  1 +  CCTGGG   829  (100.00) 
+  2 +  CCTGGG    27  (100.00) 
+  2 + [GCTGGG]  157  (88.92) 
+  2 + [CTTGGG]  269  (86.71) 
+  2 + [CTTGGG]  286  (86.71) 
+  2 + [CATGGG]  394  (86.15) 
+  2 + [GCTGGG]  602  (88.92) 
+  2 + [CCTTGG]  771  (88.00) 
+  3 + [TCTGGG]   29  (87.69) 
+  3 + [CCAGGG]   40  (89.91) 
+  3 + [CCAGGG]  269  (89.91) 
+  3 +  CCTGGG   468  (100.00) 
+  3 + [CCTGTG]  528  (88.12) 
+  3 + [CCTGTG]  642  (88.12) 
+  3 + [CCTGGA]  667  (87.84) 
+  3 +  CCTGGG   840  (100.00) 
+  4 + [ACTGGG]   23  (88.92) 
+  4 + [GCTGGG]  390  (88.92) 
+  4 +  CCTGGG   457  (100.00) 
+  4 +  CCTGGG   501  (100.00) 
+  4 + [CCAGGG]  543  (89.91) 
+  4 + [CCTGAG]  572  (87.26) 
+  4 + [TCTGGG]  579  (87.69) 
+  5 +  CCTGGG    14  (100.00) 
+  5 + [CCTGGT]  317  (85.72) 
+  5 + [CCGGGG]  658  (85.02) 
+  5 + [CCTGTG]  833  (88.12) 
+  6 + [CCTGTG]    9  (88.12) 
+  6 + [ACTGGG]  402  (88.92) 
+  6 + [CCTTGG]  452  (88.00) 
+  6 + [CCTGTG]  522  (88.12) 
+  6 + [CCTTGG]  564  (88.00) 
+  6 + [CTTGGG]  565  (86.71) 
+  6 + [CCTGGT]  681  (85.72) 
+  6 +  CCTGGG   708  (100.00) 
+  6 + [CCTGTG]  777  (88.12) 
+  7 + [ACTGGG]  130  (88.92) 
+  7 + [CCGGGG]  479  (85.02) 
+  7 + [ACTGGG]  691  (88.92) 
+  8 + [CCTTGG]  135  (88.00) 
+  8 + [GCTGGG]  323  (88.92) 
+  8 + [TCTGGG]  529  (87.69) 
+  8 +  CCTGGG   714  (100.00) 
+  9 + [CCTGGA]  196  (87.84) 
+  9 + [CCTGGC]  292  (86.90) 
+  9 + [CCAGGG]  301  (89.91) 
+  9 + [CCTGAG]  614  (87.26) 
+  9 + [CATGGG]  795  (86.15) 
+ 10 + [TCTGGG]  170  (87.69) 
+ 10 + [CCGGGG]  427  (85.02) 
+ 10 + [CCTTGG]  530  (88.00) 
+ 10 + [ACTGGG]  679  (88.92) 
+ 11 + [CCAGGG]  246  (89.91) 
+ 11 + [CATGGG]  524  (86.15) 
+ 11 + [CCAGGG]  578  (89.91) 
+ 11 + [CCTGGC]  665  (86.90) 
+ 12 + [CCTGGA]  177  (87.84) 
+ 12 + [TCTGGG]  322  (87.69) 
+ 12 + [CCTGGA]  344  (87.84) 
+ 12 + [GCTGGG]  394  (88.92) 
+ 12 + [CCTGAG]  618  (87.26) 
+ 13 + [CATGGG]  147  (86.15) 
+ 13 + [TCTGGG]  305  (87.69) 
+ 14 + [CCTGGA]  467  (87.84) 
+ 14 + [CCTGGT]  500  (85.72) 
+ 14 + [ACTGGG]  747  (88.92) 
+ 15 + [CCTGGT]  514  (85.72) 
+ 15 + [CCTTGG]  771  (88.00) 
+ 16 + [ACTGGG]   11  (88.92) 
+ 16 + [CCTGGC]  135  (86.90) 
+ 16 +  CCTGGG   434  (100.00) 
+ 16 + [CCTGGC]  499  (86.90) 
+ 16 + [GCTGGG]  627  (88.92) 
+ 16 + [CCAGGG]  833  (89.91) 
+ 17 + [GCTGGG]   35  (88.92) 
+ 17 + [CCAGGG]  114  (89.91) 
+ 17 + [CCAGGG]  164  (89.91) 
+ 17 +  CCTGGG   444  (100.00) 
+ 17 + [CATGGG]  844  (86.15) 
+ 18 + [CCTTGG]  193  (88.00) 
+ 18 + [CTTGGG]  194  (86.71) 
+ 18 + [TCTGGG]  671  (87.69) 
+ 18 + [CCTGGA]  697  (87.84) 
+ 18 + [TCTGGG]  728  (87.69) 
+ 19 + [GCTGGG]   90  (88.92) 
+ 19 + [CCTTGG]  249  (88.00) 
+ 19 + [CTTGGG]  250  (86.71) 
+ 19 +  CCTGGG   347  (100.00) 
+ 19 + [CCTGGC]  444  (86.90) 
+ 19 + [CCAGGG]  579  (89.91) 
+ 20 + [ACTGGG]   46  (88.92) 
+ 20 + [CCTGTG]   57  (88.12) 
+ 20 + [CCTGGT]  162  (85.72) 
+ 20 + [CCGGGG]  182  (85.02) 
+ 20 + [CCAGGG]  226  (89.91) 
+ 20 + [GCTGGG]  306  (88.92) 
+ 20 + [CCTGAG]  331  (87.26) 
+ 20 + [CCTGAG]  371  (87.26) 
+ 20 + [CCTGGA]  580  (87.84) 
+ 20 + [CCTTGG]  638  (88.00) 
+ 20 + [CCTGGC]  709  (86.90) 
+ 20 + [CCTGTG]  729  (88.12) 
+ 21 + [ACTGGG]  446  (88.92) 
+ 21 + [CCTGGT]  458  (85.72) 
+ 21 + [CTTGGG]  630  (86.71) 
+ 22 +  CCTGGG    48  (100.00) 
+ 22 + [CCTGTG]  264  (88.12) 
+ 22 + [CCTGAG]  394  (87.26) 
+ 22 + [CCTGGA]  500  (87.84) 
+ 22 +  CCTGGG   625  (100.00) 
+ 22 +  CCTGGG   817  (100.00) 
+ 23 + [CTTGGG]  162  (86.71) 
+ 23 + [CCGGGG]  705  (85.02) 
+ 23 + [CATGGG]  752  (86.15) 
+ 23 + [CCTGTG]  846  (88.12) 
+ 24 + [CCTTGG]  299  (88.00) 
+ 25 + [CCTGGC]  302  (86.90) 
+ 25 + [GCTGGG]  416  (88.92) 
+ 26 +  CCTGGG   117  (100.00) 
+ 26 + [CCTGTG]  212  (88.12) 
+ 26 + [CCAGGG]  286  (89.91) 
+ 26 + [CTTGGG]  547  (86.71) 
+ 26 +  CCTGGG   694  (100.00) 
+ 26 + [CCAGGG]  827  (89.91) 
+ 27 + [CCTGAG]   19  (87.26) 
+ 27 + [CCAGGG]  105  (89.91) 
+ 27 + [CCAGGG]  194  (89.91) 
+ 27 + [CCTGGA]  327  (87.84) 
+ 27 +  CCTGGG   458  (100.00) 
+ 27 + [CCTGGA]  516  (87.84) 
+ 27 + [CCTGGC]  609  (86.90) 
+ 27 + [CCGGGG]  759  (85.02) 
+ 28 + [CCTGGT]   17  (85.72) 
+ 28 + [GCTGGG]   99  (88.92) 
+ 28 +  CCTGGG   158  (100.00) 
+ 28 + [CCTGGA]  188  (87.84) 
+ 28 + [CCTGAG]  222  (87.26) 
+ 28 + [CCAGGG]  514  (89.91) 
+ 28 + [TCTGGG]  540  (87.69) 
+ 28 + [ACTGGG]  613  (88.92) 
+ 28 + [ACTGGG]  620  (88.92) 
+ 28 + [CCTTGG]  648  (88.00) 
+ 28 + [CTTGGG]  649  (86.71) 
+ 28 + [GCTGGG]  753  (88.92) 
+ 28 + [ACTGGG]  804  (88.92) 
+ 29 + [GCTGGG]   82  (88.92) 
+ 29 + [CCTTGG]  738  (88.00) 
+ 30 + [TCTGGG]  114  (87.69) 
+ 30 + [CCAGGG]  406  (89.91) 
+ 30 +  CCTGGG   481  (100.00) 
+ 30 + [CCTGGC]  498  (86.90) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   13   138    13    10		    0    20     0     0
+2 	    8   153     4     9		    0    20     0     0
+3 	   17     5     6   146		    0     0     0    20
+4 	    4     3   155    12		    0     0    20     0
+5 	   10     1   151    12		    0     0    20     0
+6 	   11     9   147     7		    0     0    20     0
+
+==========================================
+
+
+GGGGGGGC
+
+14 redundant motifs found:
+CCGGGGGC - CAGGGGGC - TGGGGGGC - GGGGGGAG - GGGGGGCC - GGGGGGCC - GGGCAGGC - CGGGGGGG - CGGGGGGG - GGGGGGCT - GGGGGGCT - CTGGGGGG - GGGGGG - GGGGGC - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 +  GGGGGGGC   451  (100.00) 
+  1 +  GGGTGGGC   778  (91.13) 
+  3 +  GTGGGGGC   274  (90.06) 
+  8 +  GGGGGGGG   532  (93.69) 
+  8 +  GGGGGGGG   533  (93.69) 
+  8 +  GGGGGGGG   534  (93.69) 
+  8 +  GGGGGGGT   535  (91.05) 
+  8 + [GGGGGTGC]  537  (89.35) 
+  9 +  GGGGGGGG   660  (93.69) 
+  9 +  GGGGGGGC   661  (100.00) 
+  9 +  GGGGGGCC   662  (91.98) 
+ 12 +  GGGGGAGC   354  (90.79) 
+ 14 + [GAGGGGGC]   18  (88.82) 
+ 14 +  GGGGAGGC   557  (91.51) 
+ 19 +  GGGGGAGC   774  (90.79) 
+ 20 +  GGTGGGGC   165  (90.23) 
+ 20 + [CGGGGGGC]  183  (89.08) 
+ 22 + [GGAGGGGC]  351  (89.10) 
+ 23 +  GGGGGGGG   477  (93.69) 
+ 23 + [GGGGGGGA]  478  (89.93) 
+ 23 + [GGGGAGGG]  481  (85.21) 
+ 23 +  GGGAGGGC   482  (90.83) 
+ 24 + [GCGGGGGC]  218  (88.82) 
+ 25 +  GGGGAGGC    61  (91.51) 
+ 25 +  GGGGTGGC   419  (90.94) 
+ 28 +  TGGGGGGC   542  (91.27) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   13     9   114    15		    0     0    18     1
+2 	    9     9   121    12		    0     0    18     1
+3 	   10     2   126    13		    0     0    18     1
+4 	   14     4   118    15		    1     0    17     1
+5 	   16     6   115    14		    2     0    16     1
+6 	   14     8   119    10		    2     0    17     0
+7 	   10    18   116     7		    0     1    18     0
+8 	   10   104    24    13		    0    13     5     1
+
+==========================================
+
+
+CCCTGG
+
+14 redundant motifs found:
+GCCCTGGG - CCCTGGCT - GCCCCTGG - CCCCTGGC - CCCCCTGG - CCTGGC - GCCCTG - CTGGGG - GCCTGG - CCCGGG - CTGGGA - CCCAGG - CCCCTG - CCTGGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [CCCTGT]  141  (88.49) 
+  1 + [CCATGG]  252  (86.30) 
+  1 + [CTCTGG]  271  (88.76) 
+  1 + [CCATGG]  447  (86.30) 
+  1 + [GCCTGG]  828  (87.36) 
+  2 + [ACCTGG]   26  (85.18) 
+  2 + [CCATGG]  393  (86.30) 
+  2 + [CCCTGT]  593  (88.49) 
+  2 + [CCCTTG]  770  (89.04) 
+  2 + [CCTTGG]  771  (87.68) 
+  3 + [CCCAGG]   39  (88.24) 
+  3 + [CCGTGG]  394  (85.08) 
+  3 +  CCCTGG   467  (100.00) 
+  3 + [TCCTGG]  666  (88.17) 
+  3 + [TCCTGG]  839  (88.17) 
+  4 + [TCCTGG]  456  (88.17) 
+  4 + [ACCTGG]  500  (85.18) 
+  4 + [CTCTGG]  578  (88.76) 
+  5 + [TCCTGG]   13  (88.17) 
+  5 + [CCGTGG]   75  (85.08) 
+  5 + [CCATGG]  113  (86.30) 
+  5 + [CACTGG]  157  (86.30) 
+  5 +  CCCTGG   316  (100.00) 
+  5 + [CTCTGG]  641  (88.76) 
+  6 + [CCCAGG]   57  (88.24) 
+  6 + [CCTTGG]  452  (87.68) 
+  6 + [CCTTGG]  564  (87.68) 
+  6 + [CTCTGG]  624  (88.76) 
+  6 + [CCCTGT]  675  (88.49) 
+  6 + [TCCTGG]  680  (88.17) 
+  6 + [GCCTGG]  707  (87.36) 
+  6 + [CCCTGC]  731  (86.87) 
+  6 + [CCCTTG]  821  (89.04) 
+  7 + [CCCTGT]  303  (88.49) 
+  7 + [CACTGG]  359  (86.30) 
+  7 + [CCCTGC]  657  (86.87) 
+  8 + [CCCTTG]  134  (89.04) 
+  8 + [CCTTGG]  135  (87.68) 
+  8 + [CCCTGC]  145  (86.87) 
+  8 + [CCCTAG]  629  (85.70) 
+  8 + [CCCAGG]  665  (88.24) 
+  8 + [TCCTGG]  713  (88.17) 
+  9 + [GCCTGG]  195  (87.36) 
+  9 + [CCCAGG]  235  (88.24) 
+  9 +  CCCTGG   291  (100.00) 
+  9 + [CCCAGG]  515  (88.24) 
+  9 + [CCCTTG]  597  (89.04) 
+ 10 + [CTCTGG]  169  (88.76) 
+ 10 + [CCTTGG]  530  (87.68) 
+ 10 + [CCCTGT]  553  (88.49) 
+ 10 + [CCCTTG]  559  (89.04) 
+ 11 + [CCCTGC]    2  (86.87) 
+ 11 + [CCCTGT]  182  (88.49) 
+ 11 + [CCCAGG]  282  (88.24) 
+ 11 + [CCCTGC]  430  (86.87) 
+ 11 + [GCCTGG]  664  (87.36) 
+ 12 + [CCATGG]   22  (86.30) 
+ 12 + [CTCTGG]  116  (88.76) 
+ 12 + [TCCTGG]  176  (88.17) 
+ 12 +  CCCTGG   343  (100.00) 
+ 13 + [CCCTGT]  569  (88.49) 
+ 13 + [CCCTGT]  710  (88.49) 
+ 13 + [CCCTAG]  839  (85.70) 
+ 14 + [CACTGG]  157  (86.30) 
+ 14 + [CCCTAG]  309  (85.70) 
+ 14 + [CCCAGG]  399  (88.24) 
+ 14 + [CCGTGG]  427  (85.08) 
+ 14 +  CCCTGG   466  (100.00) 
+ 14 +  CCCTGG   499  (100.00) 
+ 14 + [CTCTGG]  652  (88.76) 
+ 15 + [CCCTGC]  144  (86.87) 
+ 15 + [CCATGG]  176  (86.30) 
+ 15 + [CACTGG]  260  (86.30) 
+ 15 +  CCCTGG   513  (100.00) 
+ 15 + [CCTTGG]  771  (87.68) 
+ 16 + [TCCTGG]  134  (88.17) 
+ 16 + [TCCTGG]  433  (88.17) 
+ 16 + [ACCTGG]  498  (85.18) 
+ 16 + [CCCTGC]  637  (86.87) 
+ 17 + [CCCTAG]  101  (85.70) 
+ 17 + [CCCAGG]  113  (88.24) 
+ 17 +  CCCTGG   443  (100.00) 
+ 17 + [CTCTGG]  531  (88.76) 
+ 17 + [CACTGG]  822  (86.30) 
+ 18 + [CTCTGG]  127  (88.76) 
+ 18 + [CCCTTG]  153  (89.04) 
+ 18 + [CCTTGG]  193  (87.68) 
+ 18 + [CCCTAG]  258  (85.70) 
+ 18 + [CCCTGT]  552  (88.49) 
+ 18 + [CTCTGG]  670  (88.76) 
+ 18 +  CCCTGG   696  (100.00) 
+ 18 + [CCCTGC]  769  (86.87) 
+ 18 + [CCCTAG]  799  (85.70) 
+ 19 + [CCGTGG]   74  (85.08) 
+ 19 + [CCATGG]   98  (86.30) 
+ 19 + [CCCTTG]  248  (89.04) 
+ 19 + [CCTTGG]  249  (87.68) 
+ 19 + [GCCTGG]  346  (87.36) 
+ 19 + [TCCTGG]  443  (88.17) 
+ 20 + [GCCTGG]  161  (87.36) 
+ 20 + [CCCTTG]  403  (89.04) 
+ 20 + [CCGTGG]  514  (85.08) 
+ 20 + [TCCTGG]  579  (88.17) 
+ 20 + [CCCTTG]  637  (89.04) 
+ 20 + [CCTTGG]  638  (87.68) 
+ 20 + [ACCTGG]  708  (85.18) 
+ 20 + [CCCTTG]  716  (89.04) 
+ 20 + [CCCTGT]  764  (88.49) 
+ 21 + [CCCTGT]   63  (88.49) 
+ 21 + [CCGTGG]  113  (85.08) 
+ 21 + [CCCAGG]  234  (88.24) 
+ 21 + [CTCTGG]  308  (88.76) 
+ 21 + [CACTGG]  353  (86.30) 
+ 21 + [CACTGG]  445  (86.30) 
+ 21 +  CCCTGG   457  (100.00) 
+ 21 + [CCCTAG]  502  (85.70) 
+ 22 + [TCCTGG]   47  (88.17) 
+ 22 + [CCATGG]  347  (86.30) 
+ 22 + [CCCTGT]  371  (88.49) 
+ 22 + [CCCTTG]  463  (89.04) 
+ 22 + [GCCTGG]  499  (87.36) 
+ 22 + [GCCTGG]  624  (87.36) 
+ 22 + [TCCTGG]  816  (88.17) 
+ 23 + [CCCTGT]  845  (88.49) 
+ 24 + [CCCTTG]  298  (89.04) 
+ 24 + [CCTTGG]  299  (87.68) 
+ 24 + [CCCTTG]  308  (89.04) 
+ 24 + [CCCAGG]  658  (88.24) 
+ 24 + [CCCTGT]  827  (88.49) 
+ 25 +  CCCTGG   301  (100.00) 
+ 25 + [CACTGG]  368  (86.30) 
+ 25 + [CCCTGC]  620  (86.87) 
+ 26 + [CTCTGG]   60  (88.76) 
+ 26 +  CCCTGG   116  (100.00) 
+ 26 + [CCATGG]  568  (86.30) 
+ 26 + [CTCTGG]  593  (88.76) 
+ 26 +  CCCTGG   693  (100.00) 
+ 26 + [CCCAGG]  826  (88.24) 
+ 27 + [CCCAGG]  193  (88.24) 
+ 27 + [CCCTGC]  316  (86.87) 
+ 27 +  CCCTGG   326  (100.00) 
+ 27 + [GCCTGG]  457  (87.36) 
+ 27 + [CACTGG]  476  (86.30) 
+ 27 +  CCCTGG   515  (100.00) 
+ 27 + [ACCTGG]  608  (85.18) 
+ 27 + [CCCTTG]  830  (89.04) 
+ 28 + [GCCTGG]   16  (87.36) 
+ 28 + [GCCTGG]  157  (87.36) 
+ 28 + [ACCTGG]  187  (85.18) 
+ 28 + [CTCTGG]  215  (88.76) 
+ 28 + [CCCAGG]  513  (88.24) 
+ 28 + [CCCTTG]  647  (89.04) 
+ 28 + [CCTTGG]  648  (87.68) 
+ 28 + [CTCTGG]  715  (88.76) 
+ 29 + [CCCTTG]   77  (89.04) 
+ 29 + [CCTTGG]  738  (87.68) 
+ 30 + [CCCTAG]  166  (85.70) 
+ 30 + [CCGTGG]  393  (85.08) 
+ 30 + [CCCAGG]  405  (88.24) 
+ 30 + [ACCTGG]  480  (85.18) 
+ 30 +  CCCTGG   497  (100.00) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    7   151    11    13		    0    16     0     0
+2 	    9   154     4    15		    0    16     0     0
+3 	    9   154     7    12		    0    16     0     0
+4 	   14     3     5   160		    0     0     0    16
+5 	    8     3   155    16		    0     0    16     0
+6 	    6    10   152    14		    0     0    16     0
+
+==========================================
+
+
+GGGGGGCT
+
+9 redundant motifs found:
+TGGGGGGC - GGGGGGAG - GGGGGGCC - GGGGGGGC - GGGGGGGC - CTGGGGGG - GGGGCT - GGGGGG - GGGGGC - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 +  GGGGGGCT   452  (100.00) 
+  8 +  GGGGAGCT   340  (91.34) 
+  8 +  GGGGGGGT   535  (92.27) 
+  8 + [GGGGTGCA]  538  (85.26) 
+  9 +  GGGGGGCC   662  (92.44) 
+ 13 + [GGGCGGCT]   50  (86.51) 
+ 14 +  GGTGGGCT   330  (90.65) 
+ 20 +  GGGGGGCT   184  (100.00) 
+ 22 + [GAGGGGCT]  352  (89.71) 
+ 23 +  AGGGGGCT   149  (90.34) 
+ 23 + [GGGGGGGA]  478  (85.41) 
+ 23 +  GGAGGGCT   483  (91.80) 
+ 26 +  GGGTGGCT   327  (90.93) 
+ 28 +  GGGGGGCT   543  (100.00) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   12     8   114    14		    1     0     9     0
+2 	   11     6   121    10		    0     0    10     0
+3 	   17     3   115    13		    1     0     8     1
+4 	   13     5   116    14		    0     0     9     1
+5 	   15     2   113    18		    1     0     9     0
+6 	   10    13   116     9		    0     0    10     0
+7 	   10   109    18    11		    0     9     1     0
+8 	   20    17    12    99		    0     1     0     9
+
+==========================================
+
+
+GCCCCC
+
+11 redundant motifs found:
+AGCCCCCC - GCCCCCTG - GCCCCCCC - GCCCAC - CCCCCT - GCCCTC - GGCCCC - GGCCCC - CCCCCC - CCCCCC - CCCCTG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 +  GCCCCC   138  (100.00) 
+  1 + [GCCTCC]  473  (87.86) 
+  1 + [TCCCCC]  476  (86.14) 
+  2 +  GCCCTC    76  (90.26) 
+  2 +  GCCCCC   588  (100.00) 
+  2 + [CCCCCC]  589  (86.14) 
+  2 + [CCCCCC]  590  (86.14) 
+  2 + [TCCCCC]  685  (86.14) 
+  2 + [CCCCCC]  686  (86.14) 
+  2 + [CCCCCC]  687  (86.14) 
+  2 + [GCTCCC]  711  (87.57) 
+  2 +  GCCCTC   760  (90.26) 
+  3 +  GCCCTC    34  (90.26) 
+  3 + [GCCCCG]  178  (85.17) 
+  4 +  GCCCTC   843  (90.26) 
+  5 + [ACCCCC]  204  (87.38) 
+  5 +  GCCCCC   313  (100.00) 
+  5 + [GCTCCC]  551  (87.57) 
+  5 + [TCCCCC]  553  (86.14) 
+  5 + [GCTCCC]  723  (87.57) 
+  5 + [GCCCAC]  731  (89.16) 
+  5 + [GCTCCC]  803  (87.57) 
+  6 + [GGCCCC]   18  (86.59) 
+  6 + [GCCCCG]   19  (85.17) 
+  6 + [GCCCAC]   96  (89.16) 
+  6 +  GCCCTC   172  (90.26) 
+  6 + [GCCTCC]  338  (87.86) 
+  6 +  GCCCCC   513  (100.00) 
+  6 +  GCCCTC   698  (90.26) 
+  7 + [ACCCCC]  115  (87.38) 
+  7 + [GCCTCC]  376  (87.86) 
+  7 + [GCTCCC]  634  (87.57) 
+  7 +  GCCCTC   790  (90.26) 
+  8 + [GCCCAC]  845  (89.16) 
+  9 + [GCCACC]  610  (86.76) 
+ 11 + [GGCCCC]  251  (86.59) 
+ 11 +  GCCCCC   252  (100.00) 
+ 11 + [GCCCCG]  330  (85.17) 
+ 11 + [GCCCCT]  428  (87.18) 
+ 11 + [GGCCCC]  620  (86.59) 
+ 11 +  GCCCCC   621  (100.00) 
+ 12 + [GCCACC]  148  (86.76) 
+ 12 + [GCCACC]  338  (86.76) 
+ 12 +  GCCCCC   482  (100.00) 
+ 13 + [GCCCAC]   30  (89.16) 
+ 13 + [GCCTCC]  184  (87.86) 
+ 13 + [ACCCCC]  566  (87.38) 
+ 13 + [GCCTCC]  704  (87.86) 
+ 13 + [TCCCCC]  707  (86.14) 
+ 14 + [GCCCCT]  497  (87.18) 
+ 14 + [GCCCAC]  563  (89.16) 
+ 15 +  GCCCCC   131  (100.00) 
+ 16 + [GGCCCC]   65  (86.59) 
+ 16 + [GCCCAC]  600  (89.16) 
+ 16 + [GCCCAC]  728  (89.16) 
+ 16 + [GCCCAC]  793  (89.16) 
+ 17 + [GCCTCC]   40  (87.86) 
+ 17 + [ACCCCC]   84  (87.38) 
+ 17 + [GGCCCC]   98  (86.59) 
+ 17 + [GCCCCT]   99  (87.18) 
+ 17 + [GCTCCC]  440  (87.57) 
+ 18 + [GCCTCC]  161  (87.86) 
+ 18 +  GCCCTC   656  (90.26) 
+ 18 +  GCCCTC   773  (90.26) 
+ 19 + [GCCCAC]  464  (89.16) 
+ 19 +  GCCCCC   629  (100.00) 
+ 20 +  GCCCCC   174  (100.00) 
+ 20 + [GCTCCC]  713  (87.57) 
+ 21 +  GCCCTC    58  (90.26) 
+ 21 + [GGCCCC]  453  (86.59) 
+ 21 +  GCCCCC   454  (100.00) 
+ 21 + [GCCCCG]  529  (85.17) 
+ 21 + [TCCCCC]  642  (86.14) 
+ 21 + [GCCCCT]  788  (87.18) 
+ 22 + [GCCCCT]  300  (87.18) 
+ 22 + [GCCCCT]  369  (87.18) 
+ 22 + [ACCCCC]  455  (87.38) 
+ 22 + [CCCCCC]  456  (86.14) 
+ 22 +  GCCCTC   515  (90.26) 
+ 22 + [GCCCAC]  575  (89.16) 
+ 22 + [GCTCCC]  670  (87.57) 
+ 22 + [ACCCCC]  834  (87.38) 
+ 22 + [CCCCCC]  835  (86.14) 
+ 23 + [GCCCAC]   39  (89.16) 
+ 23 + [GGCCCC]  234  (86.59) 
+ 23 + [GCCCCG]  235  (85.17) 
+ 23 + [GCCACC]  265  (86.76) 
+ 23 +  GCCCCC   449  (100.00) 
+ 24 + [TCCCCC]  354  (86.14) 
+ 24 + [CCCCCC]  355  (86.14) 
+ 24 +  GCCCTC   393  (90.26) 
+ 24 + [ACCCCC]  401  (87.38) 
+ 24 + [GCCACC]  663  (86.76) 
+ 24 + [GCCCCG]  676  (85.17) 
+ 24 + [GCTCCC]  847  (87.57) 
+ 25 + [GCCCAC]  282  (89.16) 
+ 25 + [GCCACC]  313  (86.76) 
+ 25 + [GCCACC]  425  (86.76) 
+ 25 + [GGCCCC]  490  (86.59) 
+ 25 +  GCCCTC   501  (90.26) 
+ 25 + [GCCTCC]  521  (87.86) 
+ 25 + [ACCCCC]  600  (87.38) 
+ 25 + [GCCCCT]  618  (87.18) 
+ 25 + [TCCCCC]  851  (86.14) 
+ 26 + [ACCCCC]   19  (87.38) 
+ 26 + [GCTCCC]  302  (87.57) 
+ 26 + [GCCTCC]  416  (87.86) 
+ 27 + [GCCACC]  189  (86.76) 
+ 28 +  GCCCTC   439  (90.26) 
+ 28 + [GCCCCT]  552  (87.18) 
+ 28 +  GCCCTC   712  (90.26) 
+ 29 + [GCCCCT]  360  (87.18) 
+ 29 + [GCCTCC]  608  (87.86) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    9     7   116     7		    0     0    27     0
+2 	    5   121     8     5		    0    27     0     0
+3 	    3   124     2    10		    0    27     0     0
+4 	    8   117     4    10		    0    27     0     0
+5 	   12   108     4    15		    0    12     0    15
+6 	    3   121     6     9		    0    27     0     0
+
+==========================================
+
+
+GCCCCCCC
+
+12 redundant motifs found:
+AGCCCCCC - AGCCCCCC - CCCCCCCT - CCCCCCCT - GCCCTCCC - CCCCACCC - GGCCCTCC - CCCACCCC - GCCCACCC - GCCCCCTG - CCCCCC - GCCCCC - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [GCGCCCCC]  136  (86.52) 
+  1 +  GCCTCCCC   473  (91.46) 
+  2 +  GCCCCCCC   588  (100.00) 
+  2 +  TCCCCCCC   685  (90.81) 
+  3 +  GCCCTCCC    34  (91.54) 
+  5 + [GCTCCCCC]  551  (87.58) 
+  6 + [GCCGCCCC]  510  (89.42) 
+  6 + [GCCCCCAC]  513  (88.86) 
+ 11 + [GCCCCCAC]  252  (88.86) 
+ 11 + [GCCCCCAC]  621  (88.86) 
+ 12 + [GCCACCCC]  338  (89.42) 
+ 13 +  GCCTCCCC   704  (91.46) 
+ 15 + [GCCCCCGC]  131  (87.12) 
+ 16 + [GCCCCACC]   66  (88.62) 
+ 16 +  GCCCACCC   728  (91.77) 
+ 19 +  GCCCACCC   464  (91.77) 
+ 19 + [GCCCCCTC]  629  (87.12) 
+ 21 +  GCCCTCCC    58  (91.54) 
+ 22 + [GCACCCCC]  832  (88.45) 
+ 24 + [GCCACCCC]  663  (89.42) 
+ 29 + [GCCCCTCC]  360  (89.36) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   15    25   111    16		    0     0     7     1
+2 	   10   135    14     8		    0     8     0     0
+3 	   12   137     8    10		    0     8     0     0
+4 	   13   121    13    20		    0     6     0     2
+5 	   21   119     7    20		    2     4     0     2
+6 	   12   132     9    14		    0     8     0     0
+7 	   13   136     9     9		    0     8     0     0
+8 	   17   133     6    11		    0     8     0     0
+
+==========================================
+
+
+GGGGGG
+
+27 redundant motifs found:
+TCGGGGGG - TGGGGGGC - GGGGGGAG - GGGGGGCC - CCGGGGGG - CGGGGGGG - GGGGGGCT - GGGGGGGC - CTGGGGGG - AGGGGG - AGGGGG - TGGGGG - TGGGGG - GGTGGG - GGGGGA - GGGGGA - GGGTGG - GGGGTG - GGGGTG - GGGGAG - GGGGAG - CGGGGG - CGGGGG - GGGGCT - GGGGCC - GGGGGC - GGGGGC - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [GGGTGG]  121  (89.34) 
+  1 + [TGGGGG]  255  (89.00) 
+  1 + [GGGGGT]  256  (85.49) 
+  1 + [TGGGGG]  450  (89.00) 
+  1 +  GGGGGG   451  (100.00) 
+  1 +  GGGGGG   452  (100.00) 
+  1 + [GGGGGC]  453  (89.00) 
+  1 + [GGGTGG]  597  (89.34) 
+  1 + [GGGTGG]  778  (89.34) 
+  1 + [GGTGGG]  779  (89.24) 
+  2 + [GGGTGG]  848  (89.34) 
+  3 + [GGGTGG]  272  (89.34) 
+  3 + [GGTGGG]  273  (89.24) 
+  3 + [GTGGGG]  274  (85.98) 
+  3 + [TGGGGG]  275  (89.00) 
+  3 + [GGGGGC]  276  (89.00) 
+  4 + [GGGGTG]  393  (88.21) 
+  5 + [GGGGTG]  124  (88.21) 
+  5 + [GGTGGG]  161  (89.24) 
+  5 + [GTGGGG]  162  (85.98) 
+  5 + [GGGTGG]  532  (89.34) 
+  5 + [GGTGGG]  533  (89.24) 
+  6 + [AGGGGG]  151  (86.80) 
+  6 + [GGGGGC]  152  (89.00) 
+  6 + [GGGGAG]  193  (88.61) 
+  6 + [GGAGGG]  606  (87.72) 
+  7 + [GGTGGG]    9  (89.24) 
+  7 + [GGGAGG]  153  (88.24) 
+  7 + [TGGGGG]  170  (89.00) 
+  7 + [GGGGGT]  171  (85.49) 
+  7 + [GGGGTG]  172  (88.21) 
+  7 + [CGGGGG]  480  (86.19) 
+  7 + [GGGGGC]  481  (89.00) 
+  7 + [GGTGGG]  643  (89.24) 
+  7 + [GGTGGG]  779  (89.24) 
+  7 + [GGTGGG]  825  (89.24) 
+  8 + [GAGGGG]   41  (87.60) 
+  8 + [GGGGTG]  230  (88.21) 
+  8 + [GGGGAG]  340  (88.61) 
+  8 + [GGGTGG]  481  (89.34) 
+  8 + [TGGGGG]  531  (89.00) 
+  8 +  GGGGGG   532  (100.00) 
+  8 +  GGGGGG   533  (100.00) 
+  8 +  GGGGGG   534  (100.00) 
+  8 +  GGGGGG   535  (100.00) 
+  8 +  GGGGGG   536  (100.00) 
+  8 + [GGGGGT]  537  (85.49) 
+  8 + [GGGGTG]  538  (88.21) 
+  8 + [GGAGGG]  808  (87.72) 
+  9 + [GAGGGG]   67  (87.60) 
+  9 + [GGGGAG]   69  (88.61) 
+  9 + [GGGAGG]  304  (88.24) 
+  9 + [TGGGGG]  659  (89.00) 
+  9 +  GGGGGG   660  (100.00) 
+  9 +  GGGGGG   661  (100.00) 
+  9 +  GGGGGG   662  (100.00) 
+  9 + [GGGGGC]  663  (89.00) 
+ 10 + [GAGGGG]  631  (87.60) 
+ 10 + [GGGGAG]  633  (88.61) 
+ 11 + [GGGAGG]    9  (88.24) 
+ 11 + [GGGAGG]  581  (88.24) 
+ 11 + [GGAGGG]  737  (87.72) 
+ 11 + [GAGGGG]  738  (87.60) 
+ 12 + [GGGGTG]  235  (88.21) 
+ 12 + [AGGGGG]  353  (86.80) 
+ 12 + [GGGGGA]  354  (87.33) 
+ 12 + [GGGGAG]  355  (88.61) 
+ 12 + [GGGAGG]  643  (88.24) 
+ 13 + [GTGGGG]  229  (85.98) 
+ 14 + [GGAGGG]   17  (87.72) 
+ 14 + [GAGGGG]   18  (87.60) 
+ 14 + [AGGGGG]   19  (86.80) 
+ 14 + [GGGGGC]   20  (89.00) 
+ 14 + [GGTGGG]  330  (89.24) 
+ 14 + [CGGGGG]  554  (86.19) 
+ 14 +  GGGGGG   555  (100.00) 
+ 14 + [GGGGGA]  556  (87.33) 
+ 14 + [GGGGAG]  557  (88.61) 
+ 14 + [GGGAGG]  558  (88.24) 
+ 14 + [GAGGGG]  682  (87.60) 
+ 15 + [GGTGGG]  471  (89.24) 
+ 16 + [CGGGGG]  225  (86.19) 
+ 16 + [GGGGGC]  226  (89.00) 
+ 17 + [AGGGGG]  322  (86.80) 
+ 17 + [GGGGGT]  323  (85.49) 
+ 17 + [GGGGTG]  324  (88.21) 
+ 17 + [GTGGGG]  721  (85.98) 
+ 17 + [TGGGGG]  722  (89.00) 
+ 17 +  GGGGGG   723  (100.00) 
+ 17 + [GGGGGT]  724  (85.49) 
+ 17 + [TGGGGG]  846  (89.00) 
+ 17 + [GGGGGA]  847  (87.33) 
+ 18 + [GGGTGG]   25  (89.34) 
+ 18 + [TGGGGG]  607  (89.00) 
+ 18 + [GGGGGA]  608  (87.33) 
+ 19 + [CGGGGG]  773  (86.19) 
+ 19 + [GGGGGA]  774  (87.33) 
+ 19 + [GGGGAG]  775  (88.61) 
+ 20 + [GGAGGG]   25  (87.72) 
+ 20 + [GGTGGG]  165  (89.24) 
+ 20 + [GTGGGG]  166  (85.98) 
+ 20 + [CGGGGG]  183  (86.19) 
+ 20 +  GGGGGG   184  (100.00) 
+ 20 + [GGGGGC]  185  (89.00) 
+ 20 + [GGGAGG]  309  (88.24) 
+ 20 + [GAGGGG]  611  (87.60) 
+ 20 + [GGGGTG]  613  (88.21) 
+ 20 + [GGGTGG]  614  (89.34) 
+ 21 + [GGGTGG]  449  (89.34) 
+ 22 + [GGAGGG]  351  (87.72) 
+ 22 + [GAGGGG]  352  (87.60) 
+ 22 + [GTGGGG]  525  (85.98) 
+ 22 + [TGGGGG]  526  (89.00) 
+ 22 + [GGGGGA]  527  (87.33) 
+ 23 + [GAGGGG]  123  (87.60) 
+ 23 + [AGGGGG]  149  (86.80) 
+ 23 + [GGGGGC]  150  (89.00) 
+ 23 + [CGGGGG]  476  (86.19) 
+ 23 +  GGGGGG   477  (100.00) 
+ 23 +  GGGGGG   478  (100.00) 
+ 23 +  GGGGGG   479  (100.00) 
+ 23 + [GGGGGA]  480  (87.33) 
+ 23 + [GGGGAG]  481  (88.61) 
+ 23 + [GGGAGG]  482  (88.24) 
+ 23 + [GGAGGG]  483  (87.72) 
+ 23 + [GGGGTG]  755  (88.21) 
+ 23 + [GGGTGG]  756  (89.34) 
+ 24 + [GAGGGG]   39  (87.60) 
+ 24 + [TGGGGG]  160  (89.00) 
+ 24 + [GGGGGA]  161  (87.33) 
+ 24 + [CGGGGG]  219  (86.19) 
+ 24 + [GGGGGC]  220  (89.00) 
+ 24 + [GGTGGG]  369  (89.24) 
+ 25 + [GGGGAG]   61  (88.61) 
+ 25 + [GGGAGG]   62  (88.24) 
+ 25 + [GGGGTG]  419  (88.21) 
+ 25 + [GGGTGG]  420  (89.34) 
+ 25 + [GGTGGG]  450  (89.24) 
+ 25 + [AGGGGG]  542  (86.80) 
+ 25 + [GGGGGC]  543  (89.00) 
+ 26 + [GGAGGG]  320  (87.72) 
+ 26 + [GGGAGG]  323  (88.24) 
+ 26 + [GGAGGG]  324  (87.72) 
+ 26 + [GGGTGG]  327  (89.34) 
+ 27 + [AGGGGG]  178  (86.80) 
+ 27 +  GGGGGG   179  (100.00) 
+ 27 + [GGGGGA]  180  (87.33) 
+ 27 + [GGGGAG]  181  (88.61) 
+ 27 + [GGGAGG]  182  (88.24) 
+ 27 + [GGTGGG]  550  (89.24) 
+ 28 + [TGGGGG]  542  (89.00) 
+ 28 +  GGGGGG   543  (100.00) 
+ 28 + [GGGGGC]  544  (89.00) 
+ 28 + [TGGGGG]  755  (89.00) 
+ 28 + [GGGGGT]  756  (85.49) 
+ 28 + [GGGGTG]  757  (88.21) 
+ 28 + [GGGTGG]  758  (89.34) 
+ 28 + [GGGGAG]  768  (88.61) 
+ 29 + [AGGGGG]  299  (86.80) 
+ 29 + [GGGGGC]  300  (89.00) 
+ 30 + [GGAGGG]   12  (87.72) 
+ 30 + [GTGGGG]  395  (85.98) 
+ 30 + [GGGGAG]  458  (88.61) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    8     7   147    13		    0     0    18     0
+2 	   10     4   154     7		    0     0    18     0
+3 	   10     1   150    14		    0     0    18     0
+4 	   11     3   147    14		    0     0    18     0
+5 	   12     4   148    11		    0     0    18     0
+6 	    9    13   147     6		    0     0    18     0
+
+==========================================
+
+
+GCCCGGGG
+
+15 redundant motifs found:
+CCGGGGGC - GCCTGGGA - GGCCAGGG - GCCCTGGG - CCCAGGGG - GCCTGGGC - GGCCTGGG - TCCGGGGG - GCCAGGGC - GCCCCTGG - CCCGGGGC - CCCGGGGA - CCGGGGGG - CCCGGG - CCGGGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [GCCATGGG]  446  (86.51) 
+  1 + [GCCTGGGA]  828  (85.93) 
+  2 + [ACCTGGGG]   26  (86.64) 
+  2 + [GCCTCGGG]  490  (85.92) 
+  3 + [ACCCTGGG]  466  (85.85) 
+  4 + [TCCTGGGG]  456  (86.23) 
+  4 + [ACCTGGGG]  500  (86.64) 
+  5 +  GCCCGGGG   656  (100.00) 
+  6 + [GCCTGGGC]  707  (85.48) 
+  9 + [GCCCGAGG]  667  (87.03) 
+ 10 +  TCCCGGGG   425  (91.51) 
+ 14 + [GCCCTGGA]  465  (85.15) 
+ 16 + [GCACGGGG]  403  (89.40) 
+ 17 +  GCCCAGGG   112  (93.31) 
+ 17 + [TCCCTGGG]  442  (85.44) 
+ 19 + [GCCCGCGG]  263  (88.00) 
+ 19 + [GCCTGGGA]  346  (85.93) 
+ 20 + [GTCCGGGG]  180  (88.05) 
+ 21 +  GCCCGTGG   111  (90.03) 
+ 22 + [TCCTGGGG]  816  (86.23) 
+ 23 +  GGCCGGGG   703  (90.09) 
+ 24 + [GCGCGGGG]  216  (85.73) 
+ 26 + [TCCCTGGG]  115  (85.44) 
+ 26 +  GCCCTGGG   692  (93.93) 
+ 26 + [ACCCAGGG]  825  (85.23) 
+ 27 + [ACCCAGGG]  192  (85.23) 
+ 27 + [GCCAAGGG]  278  (85.89) 
+ 27 + [GCCCTGGA]  325  (85.15) 
+ 27 +  ACCCGGGG   757  (91.93) 
+ 28 + [GCCTGGGC]  157  (85.48) 
+ 28 +  GCCCAGGG   512  (93.31) 
+ 30 + [ACCCAGGG]  404  (85.23) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   11     5    71    10		    1     0     6     1
+2 	    5    79     8     5		    0     7     1     0
+3 	    7    81     3     6		    0     8     0     0
+4 	   11    61     7    18		    0     8     0     0
+5 	   13     8    61    15		    2     0     5     1
+6 	    4     5    80     8		    0     0     7     1
+7 	    3     2    87     5		    0     0     8     0
+8 	   10     9    76     2		    0     0     8     0
+
+==========================================
+
+
+CCCCTG
+
+11 redundant motifs found:
+CCCCTGCC - GCCCCTGG - CCCCTGGC - CCCCCTGG - GCCCCCTG - CCCCCT - CCTGGC - GCCCTG - CCTGCC - GCCCCC - CCCTGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [CCTCTG]   54  (87.81) 
+  1 +  CCCCTG   140  (100.00) 
+  1 + [CACCTG]  277  (88.33) 
+  1 + [CCCCTA]  478  (86.93) 
+  1 + [CTCCTG]  558  (89.39) 
+  1 + [GCCCTG]  758  (87.13) 
+  2 + [CCCCTA]   97  (86.93) 
+  2 + [CACCTG]  193  (88.33) 
+  2 +  CCCCTG   592  (100.00) 
+  2 + [CCCCAG]  658  (87.13) 
+  2 + [CCCCAG]  689  (87.13) 
+  2 + [CCCCTA]  714  (86.93) 
+  2 + [CCCTTG]  770  (89.56) 
+  3 + [CCCCTC]  163  (87.43) 
+  3 + [CCTCTG]  165  (87.81) 
+  3 + [ACCCTG]  466  (88.88) 
+  3 + [CTCCTG]  665  (89.39) 
+  3 + [CTCCTG]  838  (89.39) 
+  4 + [CTCCTG]  455  (89.39) 
+  4 + [CCCCTT]  475  (86.37) 
+  4 + [CTCCTG]  619  (89.39) 
+  5 + [CTCCTG]   12  (89.39) 
+  5 + [CCCCTT]  206  (86.37) 
+  5 +  CCCCTG   315  (100.00) 
+  5 + [CCACTG]  557  (86.86) 
+  5 + [CCTCTG]  640  (87.81) 
+  6 + [CTCCTG]    7  (89.39) 
+  6 + [CCCCAG]   56  (87.13) 
+  6 + [CCCCTT]  225  (86.37) 
+  6 + [CCTCTG]  342  (87.81) 
+  6 + [CTCCTG]  520  (89.39) 
+  6 + [CCTCTG]  623  (87.81) 
+  6 + [TCCCTG]  674  (88.09) 
+  6 + [CCTCTG]  700  (87.81) 
+  6 + [GCCCTG]  730  (87.13) 
+  6 + [CCCTTG]  821  (89.56) 
+  6 + [CCCCAG]  832  (87.13) 
+  7 + [CCCCTC]  284  (87.43) 
+  7 + [TCCCTG]  302  (88.09) 
+  7 + [CCACTG]  358  (86.86) 
+  7 + [CTCCTG]  378  (89.39) 
+  7 + [CACCTG]  506  (88.33) 
+  7 + [ACCCTG]  656  (88.88) 
+  8 + [CCCTTG]  134  (89.56) 
+  8 + [TCCCTG]  144  (88.09) 
+  8 + [CACCTG]  391  (88.33) 
+  8 + [CCCCTA]  628  (86.93) 
+  9 +  CCCCTG   290  (100.00) 
+  9 + [CCCCTC]  396  (87.43) 
+  9 + [CCCTTG]  597  (89.56) 
+  9 + [CACCTG]  612  (88.33) 
+ 10 + [CCCCAG]  494  (87.13) 
+ 10 + [CTCCTG]  543  (89.39) 
+ 10 + [ACCCTG]  552  (88.88) 
+ 10 + [CCCTTG]  559  (89.56) 
+ 10 + [CCACTG]  704  (86.86) 
+ 11 +  CCCCTG     1  (100.00) 
+ 11 + [ACCCTG]  181  (88.88) 
+ 11 +  CCCCTG   429  (100.00) 
+ 12 + [CACCTG]  150  (88.33) 
+ 12 +  CCCCTG   342  (100.00) 
+ 12 + [CCCCAG]  484  (87.13) 
+ 13 + [CCTCTG]  131  (87.81) 
+ 13 +  CCCCTG   568  (100.00) 
+ 13 + [CCTCTG]  595  (87.81) 
+ 13 + [ACCCTG]  632  (88.88) 
+ 13 +  CCCCTG   709  (100.00) 
+ 13 + [CCCCTA]  838  (86.93) 
+ 14 + [CCACTG]  156  (86.86) 
+ 14 + [GCCCTG]  465  (87.13) 
+ 14 +  CCCCTG   498  (100.00) 
+ 15 + [GCCCTG]  143  (87.13) 
+ 15 + [ACCCTG]  512  (88.88) 
+ 16 + [CCCCTC]  466  (87.43) 
+ 16 + [CACCTG]  497  (88.33) 
+ 16 + [TCCCTG]  636  (88.09) 
+ 17 + [CCCCTT]   86  (86.37) 
+ 17 + [CCCCTA]  100  (86.93) 
+ 17 + [CCACTG]  133  (86.86) 
+ 17 + [CTCCTG]  145  (89.39) 
+ 17 + [TCCCTG]  208  (88.09) 
+ 17 + [TCCCTG]  442  (88.09) 
+ 18 + [CCCCTT]  152  (86.37) 
+ 18 + [CCCTTG]  153  (89.56) 
+ 18 + [CCTCTG]  226  (87.81) 
+ 18 + [ACCCTG]  551  (88.88) 
+ 18 + [ACCCTG]  633  (88.88) 
+ 18 + [TCCCTG]  695  (88.09) 
+ 18 + [ACCCTG]  768  (88.88) 
+ 18 + [CCCCTA]  798  (86.93) 
+ 19 + [CCCTTG]  248  (89.56) 
+ 19 + [CTCCTG]  442  (89.39) 
+ 19 + [CACCTG]  496  (88.33) 
+ 19 + [CCCCTC]  631  (87.43) 
+ 20 + [CTCCTG]   55  (89.39) 
+ 20 + [CACCTG]  369  (88.33) 
+ 20 + [CCCTTG]  403  (89.56) 
+ 20 + [CCCTTG]  637  (89.56) 
+ 20 + [CACCTG]  707  (88.33) 
+ 20 + [CCCTTG]  716  (89.56) 
+ 20 + [GCCCTG]  763  (87.13) 
+ 21 + [TCCCTG]   62  (88.09) 
+ 21 + [CCACTG]  106  (86.86) 
+ 21 +  CCCCTG   456  (100.00) 
+ 21 + [CCCCTA]  644  (86.93) 
+ 21 + [CCCCTC]  789  (87.43) 
+ 22 + [CCCCTT]  301  (86.37) 
+ 22 +  CCCCTG   370  (100.00) 
+ 22 + [CCCTTG]  463  (89.56) 
+ 22 + [CTCCTG]  601  (89.39) 
+ 22 + [CTCCTG]  815  (89.39) 
+ 22 + [CCCCAG]  837  (87.13) 
+ 23 + [CACCTG]  217  (88.33) 
+ 23 + [CACCTG]  267  (88.33) 
+ 23 + [ACCCTG]  321  (88.88) 
+ 23 + [GCCCTG]  844  (87.13) 
+ 24 + [CCTCTG]  211  (87.81) 
+ 24 + [CCCCAG]  249  (87.13) 
+ 24 + [CCCCTT]  297  (86.37) 
+ 24 + [CCCTTG]  298  (89.56) 
+ 24 + [CCCTTG]  308  (89.56) 
+ 24 + [ACCCTG]  826  (88.88) 
+ 25 + [CCCCAG]  176  (87.13) 
+ 25 + [TCCCTG]  300  (88.09) 
+ 25 + [CCCCAG]  492  (87.13) 
+ 25 +  CCCCTG   619  (100.00) 
+ 25 + [GCCCTG]  747  (87.13) 
+ 26 + [TCCCTG]  115  (88.09) 
+ 26 + [GCCCTG]  692  (87.13) 
+ 27 + [TCCCTG]  315  (88.09) 
+ 27 + [GCCCTG]  325  (87.13) 
+ 27 + [CCACTG]  475  (86.86) 
+ 27 + [ACCCTG]  514  (88.88) 
+ 27 + [CCCTTG]  830  (89.56) 
+ 28 + [CCCCTC]  457  (87.43) 
+ 28 + [CCACTG]  463  (86.86) 
+ 28 + [CCCCTC]  553  (87.43) 
+ 28 + [CCCTTG]  647  (89.56) 
+ 28 + [CCTCTG]  714  (87.81) 
+ 29 + [CCCCTT]   76  (86.37) 
+ 29 + [CCCTTG]   77  (89.56) 
+ 29 + [CCCCTC]  361  (87.43) 
+ 29 + [CCCCTC]  465  (87.43) 
+ 30 + [CCCCTA]  165  (86.93) 
+ 30 + [CCACTG]  414  (86.86) 
+ 30 + [ACCCTG]  496  (88.88) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   13   135     9    11		    0    13     0     0
+2 	   12   140     1    15		    0    13     0     0
+3 	    9   143     5    11		    0    13     0     0
+4 	    4   144     4    16		    0    13     0     0
+5 	   10     5     3   150		    0     0     0    13
+6 	    9    10   141     8		    0     0    13     0
+
+==========================================
+
+
+GCCCCCTG
+
+8 redundant motifs found:
+CCCCTGCC - GCCCCTGG - CCCCTGGC - CCCCCTGG - GCCCCCCC - CCCCCT - CCCCTG - GCCCCC - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 +  GCCCCCTG   138  (100.00) 
+  2 +  CCCCCCTG   590  (91.07) 
+  4 + [GCCCGCTG]  386  (88.29) 
+  5 +  GCCCCCTG   313  (100.00) 
+  6 +  GCCCTCTG   698  (92.48) 
+  7 +  GCCTCCTG   376  (90.57) 
+  9 +  GACCCCTG   288  (91.69) 
+  9 +  GCCACCTG   610  (90.17) 
+ 10 + [GCCCGCTG]  232  (88.29) 
+ 12 +  GCCACCTG   148  (90.17) 
+ 12 +  GCCCCCAG   482  (91.65) 
+ 13 +  ACCCCCTG   566  (91.07) 
+ 13 +  TCCCCCTG   707  (92.10) 
+ 17 +  GCTCCCTG   440  (90.30) 
+ 19 +  GCCCCCTC   629  (90.84) 
+ 21 +  GCCCCCTG   454  (100.00) 
+ 23 +  GCCACCTG   265  (90.17) 
+ 28 +  GCCCTCTG   712  (92.48) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   11    11    89    14		    1     1    13     1
+2 	   13    91    14     7		    1    15     0     0
+3 	   12    97     6    10		    0    15     0     1
+4 	   10   100     4    11		    3    12     0     1
+5 	   10    93     6    16		    0    14     0     2
+6 	    2   108     7     8		    0    16     0     0
+7 	   14     3     9    99		    1     0     0    15
+8 	    6    11    94    14		    0     1    15     0
+
+==========================================
+
+
+CCCAGG
+
+8 redundant motifs found:
+TGCCCAGG - CCCAGGGG - CCCAGGGC - CCCGGG - CAGGGG - GCCAGG - CCAGGG - CCCTGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [CTCAGG]  413  (88.33) 
+  2 +  CCCAGA    89  (90.72) 
+  2 + [CCCAGC]  242  (85.54) 
+  2 + [CCCAAG]  551  (88.75) 
+  2 + [CCCAGC]  659  (85.54) 
+  2 +  CCCAGA   690  (90.72) 
+  3 +  CCCAGG    39  (100.00) 
+  3 + [CCAAGG]  117  (89.53) 
+  3 + [ACCAGG]  268  (87.36) 
+  3 +  GCCAGG   422  (91.31) 
+  3 +  CCCTGG   467  (90.61) 
+  3 + [CTCAGG]  690  (88.33) 
+  4 + [TCCAGG]  542  (89.76) 
+  5 +  CCCTGG   316  (90.61) 
+  5 +  CCCAGA   580  (90.72) 
+  5 + [CCCGGG]  657  (85.44) 
+  5 +  GCCAGG   781  (91.31) 
+  6 +  CCCAGG    57  (100.00) 
+  6 +  GCCAGG   466  (91.31) 
+  6 + [CCCAAG]  720  (88.75) 
+  6 +  CCCAGA   833  (90.72) 
+  7 + [CACAGG]   50  (86.74) 
+  7 + [CACAGG]  323  (86.74) 
+  7 + [CCAAGG]  426  (89.53) 
+  7 + [CTCAGG]  605  (88.33) 
+  8 + [TCCAGG]  563  (89.76) 
+  8 +  CCCAGG   665  (100.00) 
+  9 +  CCCAGA   146  (90.72) 
+  9 +  CCCAGG   235  (100.00) 
+  9 +  CCCTGG   291  (90.61) 
+  9 +  GCCAGG   300  (91.31) 
+  9 + [TCCAGG]  500  (89.76) 
+  9 +  CCCAGG   515  (100.00) 
+ 10 + [CCCAAG]   15  (88.75) 
+ 10 + [CCAAGG]   16  (89.53) 
+ 10 +  GCCAGG   147  (91.31) 
+ 10 + [ACCAGG]  197  (87.36) 
+ 10 + [CCCGGG]  426  (85.44) 
+ 10 + [CCCAGC]  495  (85.54) 
+ 10 +  GCCAGG   776  (91.31) 
+ 11 +  GCCAGG   212  (91.31) 
+ 11 + [TCCAGG]  245  (89.76) 
+ 11 +  CCCAGG   282  (100.00) 
+ 11 + [TCCAGG]  577  (89.76) 
+ 12 + [ACCAGG]   73  (87.36) 
+ 12 +  CCCTGG   343  (90.61) 
+ 12 + [CTCAGG]  350  (88.33) 
+ 12 + [CCCAGT]  485  (86.35) 
+ 12 +  CCCAGA   538  (90.72) 
+ 13 + [CTCAGG]  138  (88.33) 
+ 13 + [ACCAGG]  512  (87.36) 
+ 13 +  GCCAGG   521  (91.31) 
+ 13 +  CCCAGA   531  (90.72) 
+ 13 + [CCCAGT]  769  (86.35) 
+ 13 + [ACCAGG]  811  (87.36) 
+ 13 + [CCCAAG]  818  (88.75) 
+ 13 + [CCAAGG]  819  (89.53) 
+ 14 + [CACAGG]   13  (86.74) 
+ 14 + [CACAGG]  102  (86.74) 
+ 14 +  CCCAGG   399  (100.00) 
+ 14 +  GCCAGG   450  (91.31) 
+ 14 +  CCCTGG   466  (90.61) 
+ 14 +  CCCTGG   499  (90.61) 
+ 15 + [TCCAGG]    3  (89.76) 
+ 15 + [CCCAAG]  170  (88.75) 
+ 15 +  CCCTGG   513  (90.61) 
+ 15 +  CCCAGA   785  (90.72) 
+ 16 + [CTCAGG]  350  (88.33) 
+ 16 + [TCCAGG]  823  (89.76) 
+ 16 +  GCCAGG   832  (91.31) 
+ 17 + [CCCGGG]   62  (85.44) 
+ 17 +  CCCAGG   113  (100.00) 
+ 17 + [ACCAGG]  163  (87.36) 
+ 17 + [CCCAGT]  412  (86.35) 
+ 17 +  CCCTGG   443  (90.61) 
+ 18 + [CCCGGG]  569  (85.44) 
+ 18 + [CTCAGG]  594  (88.33) 
+ 18 +  CCCTGG   696  (90.61) 
+ 19 + [TCCAGG]  578  (89.76) 
+ 19 + [CCCAGC]  622  (85.54) 
+ 19 +  GCCAGG   651  (91.31) 
+ 19 + [CTCAGG]  796  (88.33) 
+ 20 +  GCCAGG   225  (91.31) 
+ 20 +  GCCAGG   237  (91.31) 
+ 21 + [TCCAGG]   68  (89.76) 
+ 21 +  CCCAGG   234  (100.00) 
+ 21 +  CCCTGG   457  (90.61) 
+ 22 + [CCCAAG]  113  (88.75) 
+ 22 + [TCCAGG]  163  (89.76) 
+ 22 +  CCCAGA   618  (90.72) 
+ 22 + [CCCAGT]  708  (86.35) 
+ 22 +  CCCAGA   838  (90.72) 
+ 23 + [CTCAGG]  146  (88.33) 
+ 23 +  CCCAGA   402  (90.72) 
+ 23 + [CCAAGG]  622  (89.53) 
+ 24 +  CCCAGA   250  (90.72) 
+ 24 + [CCAAGG]  277  (89.53) 
+ 24 +  GCCAGG   335  (91.31) 
+ 24 + [CCCAAG]  404  (88.75) 
+ 24 +  CCCAGG   658  (100.00) 
+ 25 +  CCCAGA    13  (90.72) 
+ 25 +  CCCAGA   177  (90.72) 
+ 25 + [CCCAAG]  192  (88.75) 
+ 25 + [CCAAGG]  193  (89.53) 
+ 25 +  CCCTGG   301  (90.61) 
+ 25 + [CTCAGG]  486  (88.33) 
+ 25 + [CCCAGC]  493  (85.54) 
+ 25 + [ACCAGG]  580  (87.36) 
+ 26 +  CCCTGG   116  (90.61) 
+ 26 + [TCCAGG]  277  (89.76) 
+ 26 + [TCCAGG]  285  (89.76) 
+ 26 + [CCCAAG]  310  (88.75) 
+ 26 + [CCCAAG]  636  (88.75) 
+ 26 +  CCCTGG   693  (90.61) 
+ 26 +  CCCAGG   826  (100.00) 
+ 27 +  GCCAGG   104  (91.31) 
+ 27 +  CCCAGG   193  (100.00) 
+ 27 +  CCCAGA   238  (90.72) 
+ 27 + [CCAAGG]  279  (89.53) 
+ 27 +  GCCAGG   320  (91.31) 
+ 27 +  CCCTGG   326  (90.61) 
+ 27 +  CCCTGG   515  (90.61) 
+ 27 +  GCCAGG   538  (91.31) 
+ 27 + [CCAAGG]  730  (89.53) 
+ 27 + [CCCGGG]  758  (85.44) 
+ 28 + [CACAGG]  476  (86.74) 
+ 28 +  CCCAGG   513  (100.00) 
+ 29 + [CCAAGG]  439  (89.53) 
+ 29 + [CCAAGG]  826  (89.53) 
+ 30 + [CCCAAG]    7  (88.75) 
+ 30 + [CCAAGG]    8  (89.53) 
+ 30 + [CACAGG]   39  (86.74) 
+ 30 + [CCCAGT]  132  (86.35) 
+ 30 +  CCCAGG   405  (100.00) 
+ 30 + [CCAAGG]  454  (89.53) 
+ 30 +  CCCTGG   497  (90.61) 
+ 30 +  CCCAGA   555  (90.72) 
+ 30 + [CCCAGT]  722  (86.35) 
+ 30 + [CACAGG]  747  (86.74) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    7   120    17    12		    0    46    17     0
+2 	    7   138     1    10		    0    63     0     0
+3 	   13   137     2     4		    0    63     0     0
+4 	  132     3     5    16		   47     0     0    16
+5 	   11     3   138     4		    0     0    63     0
+6 	   16     5   129     6		   16     0    47     0
+
+==========================================
+
+
+CCCCCTGG
+
+7 redundant motifs found:
+CCCCTGGC - CCCTGGCT - GCCCCTGG - GCCCCCTG - CCCCCT - CCCCTG - CCCTGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 +  CCCCCTGT   139  (91.09) 
+  2 +  CCCCCTGT   591  (91.09) 
+  3 + [TCTCCTGG]  664  (85.34) 
+  3 + [TCTCCTGG]  837  (85.34) 
+  4 + [CCCGCTGG]  387  (88.03) 
+  4 + [GCTCCTGG]  454  (85.08) 
+  5 + [GCTCCTGG]   11  (85.08) 
+  5 +  CCCCCTGG   314  (100.00) 
+  6 + [CCCTCTGG]  622  (89.95) 
+  9 +  ACCCCTGG   289  (91.04) 
+ 10 + [CCCGCTGG]  233  (88.03) 
+ 12 +  ACCCCTGG   341  (91.04) 
+ 13 +  CCCCCTGT   567  (91.09) 
+ 13 +  CCCCCTGT   708  (91.09) 
+ 14 +  GCCCCTGG   497  (92.27) 
+ 15 +  CACCCTGG   511  (91.90) 
+ 17 +  CTCCCTGG   441  (91.90) 
+ 18 +  CTCCCTGG   694  (91.90) 
+ 19 + [TCTCCTGG]  441  (85.34) 
+ 21 +  CCCCCTGG   455  (100.00) 
+ 24 +  CCCCTTGG   297  (91.35) 
+ 28 + [CCCTCTGG]  713  (89.95) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   12    98    16    17		    2    10     1     0
+2 	   16   107     4    16		    1    10     0     2
+3 	    9   108     6    20		    0    13     0     0
+4 	    9   116     7    11		    0    13     0     0
+5 	    9   114     5    15		    0    12     0     1
+6 	   14     8     4   117		    0     0     0    13
+7 	   12     3   112    16		    0     0    13     0
+8 	    9    16   105    13		    0     0     9     4
+
+==========================================
+
+
+CCTGCC
+
+5 redundant motifs found:
+CCTGCCAG - CCCCTGCC - CCTGGC - CCTCCC - CCCCTG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [CCTGAC]  279  (85.17) 
+  1 + [TCTGCC]  430  (87.39) 
+  1 + [CCTCCC]  474  (89.90) 
+  1 +  CCTGCC   560  (100.00) 
+  1 +  CCTGCC   755  (100.00) 
+  2 + [CCTACC]   99  (85.59) 
+  2 +  CCTGCC   195  (100.00) 
+  2 + [CCTGCT]  521  (87.08) 
+  3 + [CCTCCC]   36  (89.90) 
+  3 + [CCTACC]  638  (85.59) 
+  3 + [CATGCC]  721  (86.95) 
+  3 + [GCTGCC]  787  (88.33) 
+  4 +  CCTGCC   118  (100.00) 
+  4 + [CCTTCC]  151  (89.22) 
+  4 + [GCTGCC]  253  (88.33) 
+  4 + [CTTGCC]  258  (85.04) 
+  4 + [CCAGCC]  293  (86.91) 
+  4 + [CCTACC]  307  (85.59) 
+  4 + [CCTGCA]  327  (88.43) 
+  4 + [CCTCCC]  345  (89.90) 
+  4 + [CATGCC]  383  (86.95) 
+  4 + [CTTGCC]  403  (85.04) 
+  4 + [GCTGCC]  800  (88.33) 
+  5 + [TCTGCC]  185  (87.39) 
+  5 + [CCTTCC]  208  (89.22) 
+  5 + [CATGCC]  610  (86.95) 
+  5 + [CCTCCC]  705  (89.90) 
+  5 + [CATGCC]  728  (86.95) 
+  6 +  CCTGCC    93  (100.00) 
+  6 + [CCTTCC]  227  (89.22) 
+  6 + [CTTGCC]  448  (85.04) 
+  6 + [GCTGCC]  629  (88.33) 
+  6 + [CCTGTC]  676  (85.90) 
+  6 + [CCTGCT]  732  (87.08) 
+  7 + [CCTTCC]  299  (89.22) 
+  7 + [CCTGCT]  380  (87.08) 
+  7 + [CCTACC]  422  (85.59) 
+  7 + [CCTGCT]  658  (87.08) 
+  7 + [TCTGCC]  811  (87.39) 
+  8 +  CCTGCC   146  (100.00) 
+  8 + [CCTTCC]  151  (89.22) 
+  8 + [CCTGCA]  393  (88.43) 
+  8 + [CCTTCC]  426  (89.22) 
+  8 + [TCTGCC]  760  (87.39) 
+  9 + [CCTGGC]  292  (87.08) 
+  9 + [CCTTCC]  310  (89.22) 
+  9 + [CCTACC]  677  (85.59) 
+  9 + [GCTGCC]  684  (88.33) 
+  9 + [GCTGCC]  771  (88.33) 
+ 10 +  CCTGCC    85  (100.00) 
+ 10 +  CCTGCC   315  (100.00) 
+ 10 + [CCTTCC]  391  (89.22) 
+ 10 + [CCTCCC]  423  (89.90) 
+ 10 + [CCAGCC]  496  (86.91) 
+ 10 + [CCTGTC]  554  (85.90) 
+ 10 + [CCTCCC]  700  (89.90) 
+ 10 + [ACTGCC]  706  (88.33) 
+ 11 +  CCTGCC     3  (100.00) 
+ 11 + [CCTTCC]  198  (89.22) 
+ 11 +  CCTGCC   431  (100.00) 
+ 11 + [CCTGGC]  665  (87.08) 
+ 11 + [CTTGCC]  671  (85.04) 
+ 11 + [CTTGCC]  833  (85.04) 
+ 12 +  CCTGCC   145  (100.00) 
+ 12 + [CCTGAC]  152  (85.17) 
+ 12 + [ACTGCC]  365  (88.33) 
+ 12 + [CCTGAC]  679  (85.17) 
+ 13 + [CCTGTC]   83  (85.90) 
+ 13 + [CCTCCC]  705  (89.90) 
+ 14 + [CCAGCC]  462  (86.91) 
+ 14 + [CCTGTC]  524  (85.90) 
+ 15 + [CCTGCA]   70  (88.43) 
+ 15 + [CCTGCT]  145  (87.08) 
+ 15 + [CCTGCA]  288  (88.43) 
+ 15 + [CCTGCA]  610  (88.43) 
+ 15 + [ACTGCC]  847  (88.33) 
+ 16 + [CCTGGC]  135  (87.08) 
+ 16 + [CCAGCC]  250  (86.91) 
+ 16 + [CCTGGC]  499  (87.08) 
+ 16 +  CCTGCC   638  (100.00) 
+ 16 + [CCAGCC]  757  (86.91) 
+ 17 +  CCTGCC   129  (100.00) 
+ 17 + [CCTGCA]  762  (88.43) 
+ 18 + [CCTGCT]  332  (87.08) 
+ 18 + [CCTACC]  585  (85.59) 
+ 18 + [CCTCCC]  693  (89.90) 
+ 18 +  CCTGCC   770  (100.00) 
+ 19 + [CATGCC]  343  (86.95) 
+ 19 + [CCTGGC]  444  (87.08) 
+ 19 + [GCTGCC]  626  (88.33) 
+ 19 + [ACTGCC]  648  (88.33) 
+ 20 + [GCTGCC]  158  (88.33) 
+ 20 + [CCTGGC]  709  (87.08) 
+ 21 + [CCTCCC]   60  (89.90) 
+ 21 + [CCTGTC]   64  (85.90) 
+ 21 + [ACTGCC]  108  (88.33) 
+ 21 + [GCTGCC]  230  (88.33) 
+ 21 + [CCTTCC]  281  (89.22) 
+ 21 + [CCTCCC]  499  (89.90) 
+ 21 + [CCTGCT]  739  (87.08) 
+ 21 +  CCTGCC   785  (100.00) 
+ 22 + [CCTTCC]   44  (89.22) 
+ 22 + [CCTGCA]  480  (88.43) 
+ 22 + [ACTGCC]  496  (88.33) 
+ 22 + [CCTGTC]  603  (85.90) 
+ 23 + [TCTGCC]   21  (87.39) 
+ 23 + [CTTGCC]   36  (85.04) 
+ 23 + [CCTCCC]   89  (89.90) 
+ 23 +  CCTGCC   219  (100.00) 
+ 23 + [CCTCCC]  249  (89.90) 
+ 23 + [CCTGCT]  269  (87.08) 
+ 23 + [CCTGAC]  305  (85.17) 
+ 23 + [CCTGAC]  323  (85.17) 
+ 23 + [ACTGCC]  422  (88.33) 
+ 23 + [TCTGCC]  618  (87.39) 
+ 24 +  CCTGCC   332  (100.00) 
+ 24 + [ACTGCC]  710  (88.33) 
+ 25 +  CCTGCC   101  (100.00) 
+ 25 + [CCTTCC]  184  (89.22) 
+ 25 + [CCTCCC]  188  (89.90) 
+ 25 + [CCTGGC]  302  (87.08) 
+ 25 + [CCTGCA]  322  (88.43) 
+ 25 + [CCAGCC]  494  (86.91) 
+ 25 + [CCAGCC]  498  (86.91) 
+ 25 + [CATGCC]  615  (86.95) 
+ 25 + [CCTGCA]  621  (88.43) 
+ 25 + [CCTGAC]  749  (85.17) 
+ 26 + [TCTGCC]  190  (87.39) 
+ 26 + [GCTGCC]  425  (88.33) 
+ 26 + [ACTGCC]  713  (88.33) 
+ 27 + [CCTGCA]   10  (88.43) 
+ 27 + [CATGCC]  101  (86.95) 
+ 27 + [CCTGCT]  156  (87.08) 
+ 27 +  CCTGCC   317  (100.00) 
+ 27 + [CATGCC]  535  (86.95) 
+ 27 + [ACTGCC]  574  (88.33) 
+ 27 + [CCTGGC]  609  (87.08) 
+ 28 + [CATGCC]   13  (86.95) 
+ 28 + [CCTGCA]  370  (88.43) 
+ 28 + [TCTGCC]  436  (87.39) 
+ 28 + [CCTCCC]  459  (89.90) 
+ 28 + [ACTGCC]  465  (88.33) 
+ 28 + [GCTGCC]  491  (88.33) 
+ 28 + [TCTGCC]  509  (87.39) 
+ 28 + [CCTGTC]  849  (85.90) 
+ 29 + [CCTTCC]  235  (89.22) 
+ 29 + [CCTGCA]  322  (88.43) 
+ 29 + [CCAGCC]  357  (86.91) 
+ 29 + [CCTCCC]  363  (89.90) 
+ 30 + [CCTGGC]  498  (87.08) 
+ 30 + [CCAGCC]  649  (86.91) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   11   132    11     9		    0    19     0     0
+2 	    9   145     3     6		    0    19     0     0
+3 	    9     5     3   146		    0     0     0    19
+4 	    6    15   129    13		    0     0    19     0
+5 	    6   141     9     7		    0    19     0     0
+6 	   12   141     1     9		    0    19     0     0
+
+==========================================
+
+
+CCCCTGGC
+
+11 redundant motifs found:
+CCCCTGCC - GCCCTGGG - CCCTGGCT - GCCCCTGG - CCCGGGGC - CCCAGGGC - CCCCCTGG - GCCCCCTG - CCTGGC - CCCCTG - CCCTGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  2 +  CCCTTGGC   770  (90.45) 
+  5 + [CCCCTGGT]  315  (89.83) 
+  5 + [CCTCTGGC]  640  (89.94) 
+  6 + [CCTCTGGC]  623  (89.94) 
+  9 +  CCCCTGGC   290  (100.00) 
+ 11 +  CCCCTGCC     1  (93.06) 
+ 11 +  CCCCTGCC   429  (93.06) 
+ 12 +  CCCATGGC    21  (90.10) 
+ 12 +  CCCCTGGA   342  (92.67) 
+ 14 + [CCCCTGGT]  498  (89.83) 
+ 16 + [CACCTGGC]  497  (89.14) 
+ 19 +  CTCCTGGC   442  (90.30) 
+ 20 + [CACCTGGC]  707  (89.14) 
+ 21 + [CCCCTGGT]  456  (89.83) 
+ 24 +  CCCTTGGC   298  (90.45) 
+ 25 +  TCCCTGGC   300  (91.67) 
+ 25 + [CCCCTGCA]  619  (85.73) 
+ 27 + [CCACTGGC]  475  (88.67) 
+ 28 + [CCTCTGGC]  714  (89.94) 
+ 29 +  CCCCTTGC    76  (90.18) 
+ 30 +  CCCCTAGC   165  (90.18) 
+ 30 +  ACCCTGGC   496  (91.36) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   14    99    15    15		    1    10     0     1
+2 	   10   117     3    13		    0    11     0     1
+3 	    9   117     5    12		    0    12     0     0
+4 	   12   113     5    13		    1     9     0     2
+5 	   10     6     5   122		    0     0     0    12
+6 	   12     8   111    12		    1     0    10     1
+7 	    6    21   101    15		    0     2    10     0
+8 	   19   100    14    10		    1    11     0     0
+
+==========================================
+
+
+CTGGGA
+
+5 redundant motifs found:
+GCCTGGGA - CTGGGG - GCTGGG - CCCTGG - CCTGGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 +  CTGTGA   185  (91.07) 
+  1 + [CTGGCA]  273  (88.32) 
+  1 +  CTGGAA   325  (90.96) 
+  1 +  CTGTGA   354  (91.07) 
+  1 + [CTGAGA]  366  (87.72) 
+  1 +  CTGGGA   606  (100.00) 
+  1 +  CTGGGA   830  (100.00) 
+  2 + [CTGGGG]   28  (89.14) 
+  2 +  CTGGGA   158  (100.00) 
+  2 +  CTGGGA   603  (100.00) 
+  2 +  CTGTGA   664  (91.07) 
+  3 + [CTGGGC]   30  (87.85) 
+  3 + [CAGGGA]   41  (86.13) 
+  3 +  CTGTGA   168  (91.07) 
+  3 + [CTGGGT]  469  (89.50) 
+  3 + [GTGGGA]  673  (86.76) 
+  3 + [CTGGTA]  824  (86.03) 
+  3 +  CTGGGA   841  (100.00) 
+  4 + [CTGGGC]   24  (87.85) 
+  4 +  CTGGAA    36  (90.96) 
+  4 + [CTGGGG]  391  (89.14) 
+  4 + [CTGGGG]  458  (89.14) 
+  4 + [CTGGGG]  502  (89.14) 
+  4 +  CTGGGA   580  (100.00) 
+  5 + [CTGGGC]   15  (87.85) 
+  5 + [CTGGTA]   49  (86.03) 
+  5 +  CTGTGA    65  (91.07) 
+  5 + [CTAGGA]  213  (86.82) 
+  5 +  CTGTGA   306  (91.07) 
+  5 + [CTTGGA]  712  (87.34) 
+  5 +  CTGTGA   834  (91.07) 
+  6 +  CTGGAA   267  (90.96) 
+  6 + [CTGGGT]  403  (89.50) 
+  6 + [CTGGGC]  709  (87.85) 
+  7 +  CTGGGA   131  (100.00) 
+  7 + [CAGGGA]  607  (86.13) 
+  7 + [GTGGGA]  644  (86.76) 
+  7 + [CTGGGC]  692  (87.85) 
+  7 +  CTGTGA   704  (91.07) 
+  7 + [CTTGGA]  795  (87.34) 
+  7 + [CTGAGA]  849  (87.72) 
+  8 + [CTGGGG]  324  (89.14) 
+  8 +  CTGGAA   365  (90.96) 
+  8 + [CTGGGG]  530  (89.14) 
+  8 +  CTGTGA   676  (91.07) 
+  8 +  CTGGGA   715  (100.00) 
+  9 +  CTGGAA   155  (90.96) 
+  9 +  CTGTGA   169  (91.07) 
+  9 + [CTGGCA]  293  (88.32) 
+  9 + [CAGGGA]  302  (86.13) 
+  9 + [CTAGGA]  482  (86.82) 
+  9 + [CTGAGA]  615  (87.72) 
+ 10 + [GTGGGA]   49  (86.76) 
+ 10 +  CTGGAA   131  (90.96) 
+ 10 + [CTGGGC]  171  (87.85) 
+ 10 +  CTGGAA   237  (90.96) 
+ 10 +  CTGGAA   593  (90.96) 
+ 10 + [CTGGTA]  616  (86.03) 
+ 10 + [CTGGGT]  680  (89.50) 
+ 11 + [CTTGGA]   98  (87.34) 
+ 11 +  CTGGAA   233  (90.96) 
+ 11 + [CTGAGA]  273  (87.72) 
+ 11 + [CAGGGA]  579  (86.13) 
+ 11 + [CTAGGA]  823  (86.82) 
+ 12 +  CTGGAA   118  (90.96) 
+ 12 +  CTGGAA   178  (90.96) 
+ 12 +  CTGGGA   323  (100.00) 
+ 12 +  CTGGGA   395  (100.00) 
+ 13 +  CTGGAA   204  (90.96) 
+ 13 + [CTGGGC]  306  (87.85) 
+ 13 +  CTGTGA   393  (91.07) 
+ 13 + [CTTGGA]  417  (87.34) 
+ 13 + [CTGAGA]  642  (87.72) 
+ 14 + [CTGGTA]  159  (86.03) 
+ 14 + [CTGGTA]  654  (86.03) 
+ 14 +  CTGGGA   748  (100.00) 
+ 14 +  CTGTGA   827  (91.07) 
+ 15 + [GTGGGA]  472  (86.76) 
+ 15 +  CTGGAA   532  (90.96) 
+ 15 + [CTTGGA]  647  (87.34) 
+ 16 + [CTGGGT]   12  (89.50) 
+ 16 + [CTGGCA]  136  (88.32) 
+ 16 +  CTGGGA   435  (100.00) 
+ 16 + [CTGGGT]  628  (89.50) 
+ 17 + [CTGGGC]   36  (87.85) 
+ 17 + [CAGGGA]  115  (86.13) 
+ 17 + [GTGGGA]  385  (86.76) 
+ 17 +  CTGGGA   445  (100.00) 
+ 17 + [CTAGGA]  669  (86.82) 
+ 17 + [CTAGGA]  711  (86.82) 
+ 17 + [CTTGGA]  794  (87.34) 
+ 18 +  CTGGAA     5  (90.96) 
+ 18 + [CTGGGT]  672  (89.50) 
+ 18 +  CTGGGA   729  (100.00) 
+ 19 + [CTGGGT]   91  (89.50) 
+ 19 +  CTGGGA   348  (100.00) 
+ 20 + [CTGGGT]   47  (89.50) 
+ 20 +  CTGGGA   307  (100.00) 
+ 20 +  CTGTGA   393  (91.07) 
+ 20 + [CTGAGA]  503  (87.72) 
+ 20 + [CTTGGA]  639  (87.34) 
+ 20 +  CTGTGA   730  (91.07) 
+ 21 + [CTGGGT]  447  (89.50) 
+ 21 +  CTGGAA   829  (90.96) 
+ 22 +  CTGGGA    49  (100.00) 
+ 22 + [CTGGGT]  626  (89.50) 
+ 22 + [CTGGGG]  818  (89.14) 
+ 23 + [CTGAGA]   70  (87.72) 
+ 23 +  CTGGAA   523  (90.96) 
+ 23 +  CTGTGA   847  (91.07) 
+ 24 +  CTGGAA    93  (90.96) 
+ 24 +  CTGTGA   516  (91.07) 
+ 24 +  CTGTGA   705  (91.07) 
+ 25 + [CTGGCA]  303  (88.32) 
+ 25 +  CTGGAA   410  (90.96) 
+ 25 + [CTGGGG]  417  (89.14) 
+ 25 + [CTAGGA]  711  (86.82) 
+ 26 +  CTGGGA   118  (100.00) 
+ 26 + [CTAGGA]  181  (86.82) 
+ 26 +  CTGTGA   213  (91.07) 
+ 26 + [CAGGGA]  370  (86.13) 
+ 26 + [CTGGCA]  595  (88.32) 
+ 26 + [CTGGGT]  695  (89.50) 
+ 26 + [GTGGGA]  801  (86.76) 
+ 27 + [CTGAGA]  336  (87.72) 
+ 27 + [CTGGGT]  459  (89.50) 
+ 27 + [CTGGCA]  478  (88.32) 
+ 27 + [CTGGTA]  509  (86.03) 
+ 27 + [GTGGGA]  551  (86.76) 
+ 27 + [CTGGCA]  610  (88.32) 
+ 27 + [CTGGCA]  705  (88.32) 
+ 27 + [GTGGGA]  711  (86.76) 
+ 28 + [CTGGGG]  100  (89.14) 
+ 28 + [CTGGGC]  159  (87.85) 
+ 28 + [CTAGGA]  394  (86.82) 
+ 28 + [CTGGGG]  541  (89.14) 
+ 28 + [CTGGGG]  614  (89.14) 
+ 28 +  CTGGGA   621  (100.00) 
+ 28 + [CTGGCA]  717  (88.32) 
+ 28 + [CTGGGG]  754  (89.14) 
+ 28 + [CTGGGT]  805  (89.50) 
+ 29 +  CTGGGA    83  (100.00) 
+ 29 + [CTTGGA]  739  (87.34) 
+ 30 + [CTGGCA]   88  (88.32) 
+ 30 +  CTGGGA   115  (100.00) 
+ 30 + [CTGAGA]  226  (87.72) 
+ 30 +  CTGTGA   442  (91.07) 
+ 30 +  CTGGGA   482  (100.00) 
+ 30 + [CTTGGA]  503  (87.34) 
+ 30 + [CAGGGA]  827  (86.13) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    3   153     8     5		    0    59     0     0
+2 	    7     4     4   154		    0     0     0    59
+3 	    8     1   151     9		    0     0    59     0
+4 	    9     2   139    19		    0     0    40    19
+5 	   18    10   135     6		   18     0    41     0
+6 	  135     9    12    13		   59     0     0     0
+
+==========================================
+
+
+GCCCACCC
+
+8 redundant motifs found:
+CCCACCCT - GCCCTCCC - CCCCACCC - CCCACCCC - GCCCCCCC - GCCCAC - CCCACC - CCACCC - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  2 +  CCCCACCC   546  (93.11) 
+  2 +  GCCCCCCC   588  (92.92) 
+  2 + [TCCCCCCC]  685  (85.25) 
+  3 +  GCCCTCCC    34  (93.61) 
+  6 +  GCCCACCA    96  (90.68) 
+  6 + [GCCAACCC]  471  (89.70) 
+  7 +  ACCCACCC   279  (90.60) 
+  8 + [GCCCACCT]  845  (89.90) 
+ 13 +  GCCCACCA    30  (90.68) 
+ 13 + [GCCGACCC]  526  (85.78) 
+ 13 +  CCCCACCC   562  (93.11) 
+ 13 + [GACCACCC]  589  (88.74) 
+ 14 + [GCCCACGC]  563  (88.53) 
+ 16 +  GCCCACAC   600  (91.18) 
+ 16 +  GCCCACCC   728  (100.00) 
+ 17 +  ACCCACCC    80  (90.60) 
+ 18 + [GCCTACCC]  584  (88.74) 
+ 18 + [TCCCTCCC]  691  (85.94) 
+ 19 +  GCCCACCC   464  (100.00) 
+ 21 +  GCCCTCCC    58  (93.61) 
+ 21 + [TCCCTCCC]  497  (85.94) 
+ 22 +  ACCCACCC    56  (90.60) 
+ 22 +  CCCCACCC   458  (93.11) 
+ 24 + [GGCCACCC]  662  (88.74) 
+ 25 +  GCCCACCA   282  (90.68) 
+ 25 + [GGCCACCC]  424  (88.74) 
+ 26 +  CCCCACCC   305  (93.11) 
+ 28 + [CCCCTCCC]  457  (86.72) 
+ 29 + [CCCCTCCC]  361  (86.72) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   10    18    90    15		    3     4     9     0
+2 	    8   111     8     6		    0    16     0     0
+3 	   13   110     2     8		    0    16     0     0
+4 	   10   111     4     8		    0    16     0     0
+5 	   89    17     7    20		   13     1     0     2
+6 	   11   105     6    11		    0    16     0     0
+7 	   13   102     7    11		    1    15     0     0
+8 	   12   106     5    10		    3    13     0     0
+
+==========================================
+
+
+CCAGGG
+
+12 redundant motifs found:
+GGCCAGGG - CCAGGGCT - CCCAGGGG - GCCAGGGC - CCCAGGGC - AGGGGG - CCCGGG - CCGGGG - CAGGGG - GCCAGG - CCCAGG - CCTGGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [CCATGG]  252  (88.37) 
+  1 + [CCATGG]  447  (88.37) 
+  1 + [TCAGGG]  820  (88.07) 
+  1 +  CCTGGG   829  (92.11) 
+  2 +  CCTGGG    27  (92.11) 
+  2 + [TCAGGG]   71  (88.07) 
+  2 + [CCATGG]  393  (88.37) 
+  3 +  CCAGGG    40  (100.00) 
+  3 + [CCAAGG]  117  (89.99) 
+  3 + [CAAGGG]  135  (86.06) 
+  3 +  CCAGGG   269  (100.00) 
+  3 + [CCAGGC]  423  (88.66) 
+  3 +  CCTGGG   468  (92.11) 
+  3 +  CCTGGG   840  (92.11) 
+  4 + [CCAGAG]  122  (87.10) 
+  4 + [CCAGTG]  262  (89.47) 
+  4 +  CCTGGG   457  (92.11) 
+  4 +  CCTGGG   501  (92.11) 
+  4 +  CCAGGG   543  (100.00) 
+  5 +  CCTGGG    14  (92.11) 
+  5 + [CCATGG]  113  (88.37) 
+  5 + [CCAGTG]  587  (89.47) 
+  5 + [CCCGGG]  657  (86.00) 
+  5 + [CCGGGG]  658  (86.80) 
+  5 +  CCAGGA   782  (90.91) 
+  6 + [CCAGGT]   58  (88.66) 
+  6 + [CAAGGG]  149  (86.06) 
+  6 + [CCAGGC]  467  (88.66) 
+  6 +  CCTGGG   708  (92.11) 
+  7 + [TCAGGG]  351  (88.07) 
+  7 + [CCAAGG]  426  (89.99) 
+  7 + [CCGGGG]  479  (86.80) 
+  7 + [TCAGGG]  606  (88.07) 
+  8 +  CCAGGA   564  (90.91) 
+  8 +  CCAGGA   666  (90.91) 
+  8 +  CCTGGG   714  (92.11) 
+  9 +  CCAGGA   236  (90.91) 
+  9 +  CCAGGG   301  (100.00) 
+  9 +  CCAGGA   501  (90.91) 
+  9 + [CCAGGT]  516  (88.66) 
+ 10 + [CCAAGG]   16  (89.99) 
+ 10 +  CCAGGA   148  (90.91) 
+ 10 + [CCAGGT]  198  (88.66) 
+ 10 + [CCCGGG]  426  (86.00) 
+ 10 + [CCGGGG]  427  (86.80) 
+ 10 +  CCAGGA   777  (90.91) 
+ 10 + [CCAGAG]  840  (87.10) 
+ 11 + [CCAGGC]  213  (88.66) 
+ 11 +  CCAGGG   246  (100.00) 
+ 11 +  CCAGGA   283  (90.91) 
+ 11 + [CCAGTG]  409  (89.47) 
+ 11 +  CCAGGG   578  (100.00) 
+ 12 + [CCATGG]   22  (88.37) 
+ 12 + [CCAGGC]   74  (88.66) 
+ 12 + [TCAGGG]  351  (88.07) 
+ 12 + [CCAGTG]  486  (89.47) 
+ 13 + [CCAGGT]  513  (88.66) 
+ 13 + [CCAGGC]  522  (88.66) 
+ 13 + [CCAGTG]  770  (89.47) 
+ 13 + [CCAGGT]  812  (88.66) 
+ 13 + [CCAAGG]  819  (89.99) 
+ 14 + [CCAGGT]  400  (88.66) 
+ 14 + [CCAGGT]  451  (88.66) 
+ 15 +  CCAGGA     4  (90.91) 
+ 15 + [CCATGG]  176  (88.37) 
+ 15 + [CCAGTG]  235  (89.47) 
+ 16 +  CCTGGG   434  (92.11) 
+ 16 +  CCAGGA   824  (90.91) 
+ 16 +  CCAGGG   833  (100.00) 
+ 17 + [CAAGGG]   25  (86.06) 
+ 17 + [CCCGGG]   62  (86.00) 
+ 17 +  CCAGGG   114  (100.00) 
+ 17 +  CCAGGG   164  (100.00) 
+ 17 +  CCTGGG   444  (92.11) 
+ 17 + [CCAGTG]  776  (89.47) 
+ 18 + [CCCGGG]  569  (86.00) 
+ 19 + [CCATGG]   98  (88.37) 
+ 19 +  CCTGGG   347  (92.11) 
+ 19 +  CCAGGG   579  (100.00) 
+ 19 +  CCAGGA   652  (90.91) 
+ 20 + [CCGGGG]  182  (86.80) 
+ 20 +  CCAGGG   226  (100.00) 
+ 20 + [CCAGGT]  238  (88.66) 
+ 21 + [CCAGGT]   69  (88.66) 
+ 21 + [CCAGAG]  153  (87.10) 
+ 21 + [CCAGGC]  235  (88.66) 
+ 21 + [TCAGGG]  265  (88.07) 
+ 22 +  CCTGGG    48  (92.11) 
+ 22 +  CCAGGA   164  (90.91) 
+ 22 + [CCATGG]  347  (88.37) 
+ 22 + [CCAGAG]  619  (87.10) 
+ 22 +  CCTGGG   625  (92.11) 
+ 22 + [CCAGTG]  741  (89.47) 
+ 22 +  CCTGGG   817  (92.11) 
+ 23 + [TCAGGG]  147  (88.07) 
+ 23 + [CCAGTG]  299  (89.47) 
+ 23 + [CCAAGG]  622  (89.99) 
+ 23 + [CCGGGG]  705  (86.80) 
+ 24 + [CCAGAG]  251  (87.10) 
+ 24 + [CCAAGG]  277  (89.99) 
+ 24 + [CCAGGC]  336  (88.66) 
+ 24 + [CCAGGC]  659  (88.66) 
+ 24 + [CCAGAG]  748  (87.10) 
+ 25 + [CCAGAG]  178  (87.10) 
+ 25 + [CCAAGG]  193  (89.99) 
+ 25 +  CCAGGA   581  (90.91) 
+ 26 +  CCTGGG   117  (92.11) 
+ 26 +  CCAGGA   278  (90.91) 
+ 26 +  CCAGGG   286  (100.00) 
+ 26 + [TCAGGG]  369  (88.07) 
+ 26 + [CCAGTG]  429  (89.47) 
+ 26 + [CCATGG]  568  (88.37) 
+ 26 +  CCTGGG   694  (92.11) 
+ 26 +  CCAGGG   827  (100.00) 
+ 27 +  CCAGGG   105  (100.00) 
+ 27 +  CCAGGG   194  (100.00) 
+ 27 + [CCAAGG]  279  (89.99) 
+ 27 + [CAAGGG]  280  (86.06) 
+ 27 + [CCAGGC]  321  (88.66) 
+ 27 +  CCTGGG   458  (92.11) 
+ 27 +  CCAGGA   539  (90.91) 
+ 27 + [TCAGGG]  582  (88.07) 
+ 27 + [CCAAGG]  730  (89.99) 
+ 27 + [CCCGGG]  758  (86.00) 
+ 27 + [CCGGGG]  759  (86.80) 
+ 28 +  CCTGGG   158  (92.11) 
+ 28 +  CCAGGG   514  (100.00) 
+ 28 + [CAAGGG]  765  (86.06) 
+ 29 + [CCAAGG]  439  (89.99) 
+ 29 + [CCAGTG]  809  (89.47) 
+ 29 + [CCAAGG]  826  (89.99) 
+ 30 + [CCAAGG]    8  (89.99) 
+ 30 +  CCAGGG   406  (100.00) 
+ 30 + [CCAAGG]  454  (89.99) 
+ 30 + [CAAGGG]  455  (86.06) 
+ 30 +  CCTGGG   481  (92.11) 
+ 30 + [CCAGTG]  723  (89.47) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    3   135     4     9		    0    52     0     0
+2 	    6   142     2     1		    0    52     0     0
+3 	  120     5     6    20		   32     0     0    20
+4 	   13     3   126     9		    0     0    52     0
+5 	    7     1   131    12		    0     0    52     0
+6 	   15     9   118     9		   15     0    37     0
+
+==========================================
+
+
+CCCAGGGC
+
+11 redundant motifs found:
+CCGGGGGC - CCTGGGGC - CCAGGGCT - CCCAGGGG - GCCTGGGC - GCCAGGGC - CCCGGGGC - CCCGGGGA - CCCCTGGC - CCAGGG - CCCAGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  3 +  CCCAGGGA    39  (91.87) 
+  8 + [CCCAGGAC]  665  (89.42) 
+ 11 + [CCCAGGAC]  282  (89.42) 
+ 12 +  CCCATGGC    21  (91.48) 
+ 13 +  CCCAGTGC   769  (91.43) 
+ 16 +  GCCAGGGC   832  (92.82) 
+ 17 +  CCCAGGGA   113  (91.87) 
+ 19 +  TCCAGGGC   578  (91.57) 
+ 20 +  GCCAGGGC   225  (92.82) 
+ 22 +  CCCAGAGC   618  (91.08) 
+ 24 +  CCCAGAGC   250  (91.08) 
+ 24 +  CCCAGGCC   658  (90.80) 
+ 25 +  CCCAGAGC   177  (91.08) 
+ 26 +  CCCAGGGC   826  (100.00) 
+ 27 +  GCCAGGGC   104  (92.82) 
+ 27 +  CCCAGGGG   193  (91.52) 
+ 27 + [CCCGGGGC]  758  (89.28) 
+ 28 +  CCCAGGGT   513  (91.14) 
+ 30 +  CCCAGGGC   405  (100.00) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    9    84    16    12		    0    12     3     1
+2 	    4   105     3     9		    0    16     0     0
+3 	   10    99     7     5		    0    16     0     0
+4 	   95     3     8    15		   16     0     0     0
+5 	    9     6    93    13		    0     0    15     1
+6 	   12     2    94    13		    3     0    12     1
+7 	    8    11    92    10		    0     1    15     0
+8 	   13    85    12    11		    2    12     1     1
+
+==========================================
+
+
+GGGGCC
+
+12 redundant motifs found:
+GGGGGGCC - TGGGCC - GGCCAG - GGCCCT - GGCCCC - GGGCCC - GGGCCC - GGCCTG - GGGGCT - GGGGGG - GGGGGC - GGGGGC - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [GTGGCC]  240  (88.44) 
+  1 +  TGGGCC   408  (91.34) 
+  1 +  GGGGGC   453  (90.71) 
+  1 + [GGGGCT]  454  (89.55) 
+  2 + [AGGGCC]   73  (87.97) 
+  2 + [GGGCCC]   74  (88.35) 
+  2 + [GGGTCC]   85  (86.27) 
+  2 + [GGGTCC]  785  (86.27) 
+  3 +  TGGGCC    31  (91.34) 
+  3 + [GGGCCC]   32  (88.35) 
+  3 +  GGGGGC   276  (90.71) 
+  3 + [GGGGCA]  277  (89.08) 
+  3 + [GGTGCC]  657  (86.00) 
+  3 + [GGGGCT]  784  (89.55) 
+  4 + [GGGGCG]   90  (85.49) 
+  4 + [AGGGCC]  147  (87.97) 
+  4 +  GGGGCC   460  (100.00) 
+  6 +  GGGGGC   152  (90.71) 
+  6 + [GGGGCA]  153  (89.08) 
+  6 + [AGGGCC]  502  (87.97) 
+  6 + [GGTGCC]  528  (86.00) 
+  7 +  TGGGCC    11  (91.34) 
+  7 + [GGGCCC]   12  (88.35) 
+  7 +  GGGGCC   354  (100.00) 
+  7 +  GGGGGC   481  (90.71) 
+  7 + [GGGGCA]  482  (89.08) 
+  7 +  GGGGCC   833  (100.00) 
+  8 + [GGGGCT]  326  (89.55) 
+  8 + [GGGGAC]  660  (87.97) 
+  8 + [GGGACC]  661  (86.27) 
+  9 + [GAGGCC]  306  (88.96) 
+  9 +  GGGGGC   663  (90.71) 
+  9 +  GGGGCC   664  (100.00) 
+  9 + [GGGCCC]  665  (88.35) 
+ 10 +  TGGGCC   172  (91.34) 
+ 10 + [GAGGCC]  229  (88.96) 
+ 10 +  TGGGCC   413  (91.34) 
+ 11 +  GGGGCC   249  (100.00) 
+ 11 + [GGGCCC]  250  (88.35) 
+ 11 + [GGGTCC]  527  (86.27) 
+ 12 + [GGAGCC]  141  (86.00) 
+ 12 + [GAGGCC]  297  (88.96) 
+ 12 + [GGAGCC]  357  (86.00) 
+ 12 +  TGGGCC   514  (91.34) 
+ 12 +  TGGGCC   583  (91.34) 
+ 13 + [GAGGCC]   27  (88.96) 
+ 13 + [GTGGCC]  181  (88.44) 
+ 13 +  GGGGCC   231  (100.00) 
+ 13 +  TGGGCC   307  (91.34) 
+ 14 +  GGGGGC    20  (90.71) 
+ 14 +  GGGGCC    21  (100.00) 
+ 14 + [GGGACC]  266  (86.27) 
+ 14 + [GAGGCC]  560  (88.96) 
+ 14 + [GGAGCC]  780  (86.00) 
+ 14 + [GAGGCC]  798  (88.96) 
+ 15 + [AGGGCC]  721  (87.97) 
+ 15 + [GGGCCC]  722  (88.35) 
+ 16 +  GGGGGC   226  (90.71) 
+ 16 + [GGGGCA]  227  (89.08) 
+ 16 + [GTGGCC]  597  (88.44) 
+ 17 +  TGGGCC    37  (91.34) 
+ 17 + [GGGACC]  387  (86.27) 
+ 17 +  TGGGCC   584  (91.34) 
+ 17 +  TGGGCC   662  (91.34) 
+ 17 + [GGGGCA]  697  (89.08) 
+ 17 + [AGGGCC]  734  (87.97) 
+ 18 + [GGGGCT]  361  (89.55) 
+ 18 + [GGGGAC]  609  (87.97) 
+ 18 + [GGGACC]  610  (86.27) 
+ 18 + [GGAGCC]  700  (86.00) 
+ 19 + [GGTGCC]   94  (86.00) 
+ 19 + [GGAGCC]  777  (86.00) 
+ 20 + [GGGGCA]  121  (89.08) 
+ 20 + [GGGGCA]  168  (89.08) 
+ 20 +  GGGGGC   185  (90.71) 
+ 20 + [GGGGCT]  186  (89.55) 
+ 20 + [GGGGAC]  260  (87.97) 
+ 21 + [GGGGCT]  268  (89.55) 
+ 21 + [GTGGCC]  363  (88.44) 
+ 21 + [GTGGCC]  451  (88.44) 
+ 22 + [GTGGCC]  290  (88.44) 
+ 22 + [GGGGCT]  354  (89.55) 
+ 22 + [GGGGCG]  820  (85.49) 
+ 23 +  GGGGCC   125  (100.00) 
+ 23 +  GGGGGC   150  (90.71) 
+ 23 + [GGGGCT]  151  (89.55) 
+ 23 + [GGGGCA]  165  (89.08) 
+ 23 + [GGGGAC]  707  (87.97) 
+ 23 + [GAGGCC]  841  (88.96) 
+ 24 +  GGGGGC   220  (90.71) 
+ 24 +  GGGGCC   221  (100.00) 
+ 24 + [GAGGCC]  641  (88.96) 
+ 25 +  GGGGCC   335  (100.00) 
+ 25 + [GTGGCC]  422  (88.44) 
+ 25 +  TGGGCC   452  (91.34) 
+ 25 +  GGGGGC   543  (90.71) 
+ 25 + [GGGGCG]  544  (85.49) 
+ 25 +  TGGGCC   738  (91.34) 
+ 26 + [GGGACC]  120  (86.27) 
+ 26 + [GGTGCC]  413  (86.00) 
+ 26 + [AGGGCC]  616  (87.97) 
+ 26 + [AGGGCC]  689  (87.97) 
+ 26 + [GGGCCC]  690  (88.35) 
+ 27 + [GGTGCC]  186  (86.00) 
+ 27 + [GGGGCA]  283  (89.08) 
+ 27 + [GGGGAC]  306  (87.97) 
+ 27 + [GGGTCC]  461  (86.27) 
+ 27 + [GGGGAC]  585  (87.97) 
+ 27 +  GGGGCC   761  (100.00) 
+ 28 + [GAGGCC]  154  (88.96) 
+ 28 +  TGGGCC   160  (91.34) 
+ 28 + [GGGCCC]  161  (88.35) 
+ 28 +  GGGGGC   544  (90.71) 
+ 28 + [GGGGCT]  545  (89.55) 
+ 28 + [GGGGAC]  616  (87.97) 
+ 29 + [GTGGCC]   32  (88.44) 
+ 29 +  GGGGGC   300  (90.71) 
+ 29 + [GGGGCG]  301  (85.49) 
+ 29 + [GGGGCT]  524  (89.55) 
+ 29 +  TGGGCC   689  (91.34) 
+ 30 + [GGGTCC]  349  (86.27) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    7     1   106    15		    0     0    24    15
+2 	    9     3   109     8		    0     0    39     0
+3 	    5     1   118     5		    0     0    39     0
+4 	    5     8   111     5		    0     0    39     0
+5 	    7   106    13     3		    0    26    13     0
+6 	    9   106     4    10		    0    39     0     0
+
+==========================================
+
+
+CGGGGGGG
+
+16 redundant motifs found:
+CCGGGGGC - CTGAGGGG - CAGGGGGC - TCGGGGGG - TCGGGGGG - TGGGGGGC - GGGGGGAG - GGGGGGAG - GGGGGGCC - CCGGGGGG - CCGGGGGG - GGGGGGGC - GGGGGGGC - CTGGGGGG - CGGGGG - GGGGGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [ATGGGGGG]  449  (87.44) 
+  1 +  TGGGGGGG   450  (93.18) 
+  5 + [CGGGTGGG]  531  (89.96) 
+  8 +  CTGGGGGG   530  (94.54) 
+  8 +  TGGGGGGG   531  (93.18) 
+  8 +  GGGGGGGG   532  (94.95) 
+  8 +  GGGGGGGG   533  (94.95) 
+  8 +  GGGGGGGG   534  (94.95) 
+  9 + [TTGGGGGG]  658  (87.72) 
+  9 +  TGGGGGGG   659  (93.18) 
+  9 +  GGGGGGGG   660  (94.95) 
+ 11 +  CGGAGGGG   736  (90.04) 
+ 14 + [GCGGGGGG]  553  (85.39) 
+ 14 + [CGGGGGGA]  554  (88.68) 
+ 14 + [GGGGGAGG]  556  (85.37) 
+ 17 + [GTGGGGGG]  721  (89.49) 
+ 19 + [CGGGGGAG]  773  (89.16) 
+ 20 +  CCGGGGGG   182  (90.43) 
+ 20 + [CGGGGGGC]  183  (89.66) 
+ 23 +  CGGGGGGG   476  (100.00) 
+ 23 +  GGGGGGGG   477  (94.95) 
+ 23 + [GGGGGAGG]  480  (85.37) 
+ 24 + [CGCGGGGG]  217  (87.82) 
+ 27 + [AAGGGGGG]  177  (86.60) 
+ 27 + [GGGGGAGG]  180  (85.37) 
+ 28 +  CTGGGGGG   541  (94.54) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   15    76    24    16		    0     5     5     3
+2 	   19     9    80    23		    0     1    10     2
+3 	    3     7   113     8		    0     0    13     0
+4 	   11     4   107     9		    1     0    12     0
+5 	    8     3   109    11		    0     0    13     0
+6 	   12     4   107     8		    0     0    13     0
+7 	    9     8   107     7		    0     0    13     0
+8 	    8    10   106     7		    0     0    13     0
+
+==========================================
+
+
+GGGCAGGC
+
+3 redundant motifs found:
+GGCCAGGG - GGGGGGGC - GGGCAG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 +  GGGCAGCC   823  (90.70) 
+  3 +  GGGCAGAC    20  (90.70) 
+  3 +  GGCCAGGC   421  (93.60) 
+  6 +  TGGCAGGC    13  (92.34) 
+  7 +  GGGCAGGA   483  (90.51) 
+  8 + [TGACAGGC]  358  (85.40) 
+  9 +  TGGCAGGC   294  (92.34) 
+ 11 + [TGCCAGGC]  211  (85.93) 
+ 11 +  GGGCAGGC   658  (100.00) 
+ 11 + [GGCCTGGC]  663  (85.09) 
+ 14 +  GGGGAGGC   557  (92.09) 
+ 14 +  GGTCAGGC   619  (90.37) 
+ 16 +  GTGCAGGC   200  (90.37) 
+ 17 +  GGTCAGGC    29  (90.37) 
+ 17 +  GGGCAGAC   698  (90.70) 
+ 18 +  GGGCAGCC   572  (90.70) 
+ 20 +  GGGCAGGC   122  (100.00) 
+ 20 +  GGGCAGCC   169  (90.70) 
+ 21 + [GGGCAGGT]  633  (88.98) 
+ 22 +  GGGAAGGC   529  (90.65) 
+ 23 +  GGGCAGGC   735  (100.00) 
+ 24 + [TGCCAGGC]  334  (85.93) 
+ 25 +  GGGGAGGC    61  (92.09) 
+ 26 +  GGTCAGGC   296  (90.37) 
+ 27 +  GGGCAGGC    33  (100.00) 
+ 27 + [TGCCAGGC]  319  (85.93) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    8     3    90    15		    0     0    18     2
+2 	    6     5    95    10		    0     0    19     1
+3 	   15    17    76     8		    0     1    16     3
+4 	   10    89    14     3		    1    17     2     0
+5 	   95     4     4    13		   20     0     0     0
+6 	   10     3    96     7		    0     0    20     0
+7 	   10    10    88     8		    2     3    15     0
+8 	   10    92     7     7		    1    19     0     0
+
+==========================================
+
+
+GCCAGG
+
+7 redundant motifs found:
+GGCCAGGG - GCCAGGGC - GGCCAG - GCCTGG - CAGGGG - CCAGGG - CCCAGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [GCCATG]  446  (86.51) 
+  1 + [GCCTGG]  828  (88.00) 
+  2 + [GCCAGA]   11  (88.28) 
+  2 + [GCCAGC]  431  (86.06) 
+  3 + [CCCAGG]   39  (89.84) 
+  3 + [GCCAAG]  116  (86.51) 
+  3 + [ACCAGG]  268  (86.44) 
+  3 +  GCCAGG   422  (100.00) 
+  3 + [GCCAGA]  572  (88.28) 
+  3 + [GCCAGC]  724  (86.06) 
+  4 + [GTCAGG]   57  (86.63) 
+  4 + [GCCAGA]  121  (88.28) 
+  4 + [GCCAGT]  261  (85.30) 
+  4 + [GCCAGA]  406  (88.28) 
+  4 + [TCCAGG]  542  (89.09) 
+  5 + [GCCAGA]  239  (88.28) 
+  5 +  GCCAGG   781  (100.00) 
+  6 + [GGCAGG]   14  (87.21) 
+  6 + [CCCAGG]   57  (89.84) 
+  6 +  GCCAGG   466  (100.00) 
+  6 + [GCCAAG]  531  (86.51) 
+  6 + [GCCTGG]  707  (88.00) 
+  7 + [GGCAGG]  484  (87.21) 
+  8 + [TCCAGG]  563  (89.09) 
+  8 + [CCCAGG]  665  (89.84) 
+  9 + [GCCTGG]  195  (88.00) 
+  9 + [CCCAGG]  235  (89.84) 
+  9 + [GGCAGG]  295  (87.21) 
+  9 +  GCCAGG   300  (100.00) 
+  9 + [GCCATG]  344  (86.51) 
+  9 + [GTCAGG]  409  (86.63) 
+  9 + [TCCAGG]  500  (89.09) 
+  9 + [CCCAGG]  515  (89.84) 
+ 10 + [GCCAAG]   88  (86.51) 
+ 10 +  GCCAGG   147  (100.00) 
+ 10 + [ACCAGG]  197  (86.44) 
+ 10 +  GCCAGG   776  (100.00) 
+ 11 +  GCCAGG   212  (100.00) 
+ 11 + [TCCAGG]  245  (89.09) 
+ 11 + [CCCAGG]  282  (89.84) 
+ 11 + [TCCAGG]  577  (89.09) 
+ 11 + [GGCAGG]  659  (87.21) 
+ 11 + [GCCTGG]  664  (88.00) 
+ 12 + [ACCAGG]   73  (86.44) 
+ 12 + [GCCAGT]  586  (85.30) 
+ 13 + [GCCATG]  224  (86.51) 
+ 13 + [GCCAAG]  290  (86.51) 
+ 13 + [GCCATG]  310  (86.51) 
+ 13 + [ACCAGG]  512  (86.44) 
+ 13 +  GCCAGG   521  (100.00) 
+ 13 + [GCCAGT]  746  (85.30) 
+ 13 + [ACCAGG]  811  (86.44) 
+ 14 + [CCCAGG]  399  (89.84) 
+ 14 +  GCCAGG   450  (100.00) 
+ 14 + [GTCAGG]  620  (86.63) 
+ 14 + [GCCAGA]  783  (88.28) 
+ 15 + [TCCAGG]    3  (89.09) 
+ 15 + [GCCAGC]   98  (86.06) 
+ 15 + [GCCATG]  175  (86.51) 
+ 15 + [GCCAGA]  850  (88.28) 
+ 16 + [TCCAGG]  823  (89.09) 
+ 16 +  GCCAGG   832  (100.00) 
+ 17 + [GTCAGG]   30  (86.63) 
+ 17 + [CCCAGG]  113  (89.84) 
+ 17 + [ACCAGG]  163  (86.44) 
+ 19 + [GCCATG]   97  (86.51) 
+ 19 + [GCCTGG]  346  (88.00) 
+ 19 + [TCCAGG]  578  (89.09) 
+ 19 +  GCCAGG   651  (100.00) 
+ 20 + [GGCAGG]  123  (87.21) 
+ 20 + [GCCTGG]  161  (88.00) 
+ 20 +  GCCAGG   225  (100.00) 
+ 20 +  GCCAGG   237  (100.00) 
+ 21 + [TCCAGG]   68  (89.09) 
+ 21 + [CCCAGG]  234  (89.84) 
+ 21 + [GGCAGG]  634  (87.21) 
+ 22 + [TCCAGG]  163  (89.09) 
+ 22 + [GCCAGC]  293  (86.06) 
+ 22 + [GCCTGG]  499  (88.00) 
+ 22 + [GCCTGG]  624  (88.00) 
+ 23 + [GCCATG]   59  (86.51) 
+ 23 + [GCCAGT]  613  (85.30) 
+ 23 + [GCCAAG]  621  (86.51) 
+ 23 + [GGCAGG]  736  (87.21) 
+ 24 +  GCCAGG   335  (100.00) 
+ 24 + [GTCAGG]  576  (86.63) 
+ 24 + [CCCAGG]  658  (89.84) 
+ 24 + [GCCAGA]  747  (88.28) 
+ 25 + [GGCAGG]   66  (87.21) 
+ 25 + [GCCAAG]  338  (86.51) 
+ 25 + [GCCAGC]  497  (86.06) 
+ 25 + [ACCAGG]  580  (86.44) 
+ 26 + [TCCAGG]  277  (89.09) 
+ 26 + [TCCAGG]  285  (89.09) 
+ 26 + [GTCAGG]  297  (86.63) 
+ 26 + [GCCAGT]  428  (85.30) 
+ 26 + [GCCAGC]  666  (86.06) 
+ 26 + [CCCAGG]  826  (89.84) 
+ 27 + [GGCAGG]   34  (87.21) 
+ 27 +  GCCAGG   104  (100.00) 
+ 27 + [CCCAGG]  193  (89.84) 
+ 27 + [GCCAAG]  278  (86.51) 
+ 27 +  GCCAGG   320  (100.00) 
+ 27 + [GCCTGG]  457  (88.00) 
+ 27 +  GCCAGG   538  (100.00) 
+ 27 + [GCCAGT]  577  (85.30) 
+ 27 + [GTCAGG]  581  (86.63) 
+ 28 + [GCCTGG]   16  (88.00) 
+ 28 + [GCCAGC]   27  (86.06) 
+ 28 + [GCCTGG]  157  (88.00) 
+ 28 + [CCCAGG]  513  (89.84) 
+ 28 + [GCCATG]  606  (86.51) 
+ 29 + [GTCAGG]  218  (86.63) 
+ 29 + [GCCAGA]  369  (88.28) 
+ 29 + [GCCAAG]  825  (86.51) 
+ 30 + [GCCAGA]  316  (88.28) 
+ 30 + [CCCAGG]  405  (89.84) 
+ 30 + [GCCAGA]  652  (88.28) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    7    14   111    12		    0     0    17     0
+2 	    5   122     9     8		    0    17     0     0
+3 	    5   132     3     4		    0    17     0     0
+4 	  127     2     4    11		   17     0     0     0
+5 	    8     3   125     8		    0     0    17     0
+6 	   11     7   120     6		    0     0    17     0
+
+==========================================
+
+
+CCCACCCC
+
+10 redundant motifs found:
+CCAGCCCC - CCCACCCT - CCCCCCCT - CCCCACCC - CCCCACCC - GCCCACCC - GCCCCCCC - CACCCC - CCCACC - CCACCC - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  2 + [TCCACCCC]  542  (88.33) 
+  2 +  CCCACCCA   547  (93.03) 
+  2 + [CCCCCCCT]  589  (86.57) 
+  2 + [CCCCCCCA]  686  (87.04) 
+  3 + [CCCTCCCA]   35  (86.64) 
+  5 + [TCCACCCC]  201  (88.33) 
+  5 + [CCCTCCCT]  704  (86.17) 
+  6 +  CCCACCAC    97  (90.17) 
+  6 +  CCCACTCC   516  (90.28) 
+  7 +  ACCACCCC   112  (90.24) 
+  7 +  CCCACCCC   280  (100.00) 
+ 11 +  CCCACACC   624  (90.28) 
+ 12 +  GCCACCCC   338  (90.24) 
+ 13 +  CCCACCCC   563  (100.00) 
+ 15 +  CCCAACCC   780  (90.72) 
+ 16 +  CCCACCCT   729  (92.56) 
+ 17 +  CCCACCCC    81  (100.00) 
+ 18 + [CCTACCCC]  585  (88.08) 
+ 18 + [CCCTCCCT]  692  (86.17) 
+ 19 + [CCCACCCG]  465  (87.40) 
+ 21 + [CCCTCCCT]   59  (86.17) 
+ 21 + [CCCTCCCT]  498  (86.17) 
+ 21 + [CCCGCCCC]  526  (89.17) 
+ 22 +  CCCACCCT    57  (92.56) 
+ 22 +  CCCACCCT   459  (92.56) 
+ 24 + [CCAACCCC]  398  (89.98) 
+ 24 +  GCCACCCC   663  (90.24) 
+ 24 + [CCCATCCC]  668  (88.45) 
+ 24 + [CCCGCCCC]  673  (89.17) 
+ 25 + [CCAACCCC]  172  (89.98) 
+ 26 +  CCCACCCA   306  (93.03) 
+ 28 + [CCCTCCCA]  458  (86.64) 
+ 29 + [CACACCCC]  461  (89.58) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   11   111    11     7		    1    12     2     0
+2 	   10   118     2    10		    0    15     0     0
+3 	   11   118     4     7		    0    15     0     0
+4 	   91    22     7    20		   15     0     0     0
+5 	   12   108    13     7		    1    14     0     0
+6 	   11   110     8    11		    1    13     0     1
+7 	   11   113     7     9		    1    14     0     0
+8 	   19    99     5    17		    2    10     0     3
+
+==========================================
+
+
+GGCCCTCC
+
+5 redundant motifs found:
+AGCCCCCC - GCCCTCCC - GCCCCCCC - GGCCCT - GCCCTC - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  2 +  GGCCCTCC    75  (100.00) 
+  2 + [AGCCCTCA]  759  (85.43) 
+  3 +  GGCCCTCC    33  (100.00) 
+  4 +  GGCCTTCC   149  (91.52) 
+  5 + [GGCACTCC]  196  (89.60) 
+  6 +  GGCCCTCA   171  (92.98) 
+  6 + [GTCCCTCT]  620  (85.43) 
+  6 +  GGCCCTCT   697  (92.98) 
+  7 +  GGCCCTCT   789  (92.98) 
+  9 +  GGCCTTCC   308  (91.52) 
+ 10 + [GGCCCTTC]  374  (89.26) 
+ 11 + [GTCCCTCT]  291  (85.43) 
+ 13 +  GGCCCACC    29  (92.14) 
+ 16 + [GGCCCACA]  599  (85.12) 
+ 17 +  GGGCCTCC    38  (91.25) 
+ 18 +  TGCCCTCC   655  (91.90) 
+ 18 +  GTCCCTCC   690  (92.45) 
+ 21 + [CGCCCTCC]   57  (85.45) 
+ 22 + [AGCCCTCT]  514  (85.43) 
+ 24 +  AGCCCTCC   392  (92.45) 
+ 25 +  GGCCCACC   281  (92.14) 
+ 25 + [AGCCCTCA]  500  (85.43) 
+ 28 +  TGCCCTCC   438  (91.90) 
+ 28 + [AGCCCTCT]  711  (85.43) 
+ 29 +  GCCCCTCC   360  (91.85) 
+ 30 + [GTCCCTCA]  351  (85.43) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   16     3    97    14		    1     0    12     2
+2 	   11    13    91    15		    0     1    13     1
+3 	    8   105    13     4		    0    14     1     0
+4 	    9   108     3    10		    0    15     0     0
+5 	    6   106     4    14		    0    13     0     2
+6 	   15    11     6    98		    2     0     0    13
+7 	    7   104    11     8		    0    15     0     0
+8 	   17    91     5    17		    1    12     0     2
+
+==========================================
+
+
+CAGGGG
+
+14 redundant motifs found:
+CAGGGGGC - TCAGGGGG - CCCAGGGG - AGGGGG - GGGGGA - GGGGTG - GGGGAG - CTGGGG - CGGGGG - GGGGCT - CCGGGG - GCCAGG - CCAGGG - CCCAGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [CATGGG]  253  (85.70) 
+  1 + [CAGGAG]  304  (87.69) 
+  1 + [CATGGG]  448  (85.70) 
+  1 + [AAGGGG]  612  (87.21) 
+  1 + [CAGGGC]  821  (86.42) 
+  2 + [CTGGGG]   28  (88.10) 
+  2 + [CAGGGC]   72  (86.42) 
+  2 + [CATGGG]  394  (85.70) 
+  3 + [CAGGGA]   41  (85.14) 
+  3 +  CAGGGG   782  (100.00) 
+  4 + [AAGGGG]   88  (87.21) 
+  4 + [CAGAGG]  123  (87.49) 
+  4 + [CAGGGC]  146  (86.42) 
+  4 + [CTGGGG]  391  (88.10) 
+  4 + [CTGGGG]  458  (88.10) 
+  4 + [CTGGGG]  502  (88.10) 
+  4 + [CAGAGG]  687  (87.49) 
+  6 +  CAGGGG    35  (100.00) 
+  6 + [CAGGTG]   59  (86.67) 
+  6 + [AAGGGG]  150  (87.21) 
+  6 + [AAGGGG]  191  (87.21) 
+  7 +  CAGGGG   352  (100.00) 
+  7 + [CGGGGG]  480  (85.34) 
+  7 + [CAGGAG]  486  (87.69) 
+  7 + [CAGGGA]  607  (85.14) 
+  7 + [CAGGTG]  777  (86.67) 
+  8 + [GAGGGG]   41  (87.21) 
+  8 + [CAGGAG]  318  (87.69) 
+  8 + [CTGGGG]  324  (88.10) 
+  8 + [CTGGGG]  530  (88.10) 
+  9 + [CAGAGG]   65  (87.49) 
+  9 + [GAGGGG]   67  (87.21) 
+  9 + [CAGGAG]  237  (87.69) 
+  9 + [CAGGGA]  302  (85.14) 
+  9 + [CAGGAG]  502  (87.69) 
+  9 + [CATGGG]  795  (85.70) 
+ 10 + [CAGGTG]  199  (86.67) 
+ 10 + [GAGGGG]  631  (87.21) 
+ 10 + [CAGGTG]  827  (86.67) 
+ 11 +  CAGGGG   247  (100.00) 
+ 11 + [CATGGG]  524  (85.70) 
+ 11 + [CAGGGA]  579  (85.14) 
+ 11 + [GAGGGG]  738  (87.21) 
+ 12 + [AAGGGG]  233  (87.21) 
+ 12 +  CAGGGG   352  (100.00) 
+ 13 + [CAGAGG]   25  (87.49) 
+ 13 + [CATGGG]  147  (85.70) 
+ 13 + [CAGGTG]  514  (86.67) 
+ 14 + [CAGGAG]   15  (87.69) 
+ 14 + [GAGGGG]   18  (87.21) 
+ 14 + [CGGGGG]  554  (85.34) 
+ 14 + [GAGGGG]  682  (87.21) 
+ 16 + [CGGGGG]  225  (85.34) 
+ 16 + [CAGAGG]  518  (87.49) 
+ 16 + [CAGGGC]  834  (86.42) 
+ 17 + [CAGGGA]  115  (85.14) 
+ 17 +  CAGGGG   165  (100.00) 
+ 17 +  CAGGGG   321  (100.00) 
+ 17 + [CATGGG]  844  (85.70) 
+ 18 + [CAGAGG]  145  (87.49) 
+ 19 + [CAGAGG]  110  (87.49) 
+ 19 + [CAGGTG]  531  (86.67) 
+ 19 + [CAGGGC]  580  (86.42) 
+ 19 + [CGGGGG]  773  (85.34) 
+ 20 + [CAGGAG]   23  (87.69) 
+ 20 + [CGGGGG]  183  (85.34) 
+ 20 + [CAGGGC]  227  (86.42) 
+ 20 +  CAGGGG   258  (100.00) 
+ 20 + [GAGGGG]  611  (87.21) 
+ 21 + [CAGGAG]   38  (87.69) 
+ 21 + [CAGGTG]   70  (86.67) 
+ 21 + [CAGAGG]  154  (87.49) 
+ 21 +  CAGGGG   266  (100.00) 
+ 22 + [CAGGAG]  165  (87.69) 
+ 22 + [GAGGGG]  352  (87.21) 
+ 22 + [CTGGGG]  818  (88.10) 
+ 23 + [GAGGGG]  123  (87.21) 
+ 23 +  CAGGGG   148  (100.00) 
+ 23 + [CAGGTG]  461  (86.67) 
+ 23 + [CGGGGG]  476  (85.34) 
+ 23 + [CATGGG]  752  (85.70) 
+ 23 + [CAGAGG]  839  (87.49) 
+ 24 + [CAGAGG]   37  (87.49) 
+ 24 + [GAGGGG]   39  (87.21) 
+ 24 + [CGGGGG]  219  (85.34) 
+ 24 + [CAGGAG]  804  (87.69) 
+ 25 + [CAGGAG]   68  (87.69) 
+ 25 + [CTGGGG]  417  (88.10) 
+ 25 + [CAGAGG]  506  (87.49) 
+ 25 +  CAGGGG   541  (100.00) 
+ 26 + [CAGGGA]  370  (85.14) 
+ 26 + [AAGGGG]  769  (87.21) 
+ 26 + [CAGGGC]  828  (86.42) 
+ 27 + [CAGGGC]  106  (86.42) 
+ 27 + [AAGGGG]  177  (87.21) 
+ 27 +  CAGGGG   195  (100.00) 
+ 27 + [AAGGGG]  281  (87.21) 
+ 27 +  CAGGGG   583  (100.00) 
+ 28 + [CTGGGG]  100  (88.10) 
+ 28 + [CAGGTG]  478  (86.67) 
+ 28 + [CTGGGG]  541  (88.10) 
+ 28 + [CTGGGG]  614  (88.10) 
+ 28 + [CTGGGG]  754  (88.10) 
+ 28 + [AAGGGG]  766  (87.21) 
+ 30 + [CAGGGC]  407  (86.42) 
+ 30 + [AAGGGG]  456  (87.21) 
+ 30 + [CAGGGA]  827  (85.14) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   10   122    10     6		    0    13     0     0
+2 	  123     6     7    12		   13     0     0     0
+3 	    6     3   131     8		    0     0    13     0
+4 	   11     4   127     6		    0     0    13     0
+5 	   11     6   122     9		    0     0    13     0
+6 	    7     9   128     4		    0     0    13     0
+
+==========================================
+
+
+CCCCACCC
+
+10 redundant motifs found:
+CCCCTGCC - CCCACCCT - CCCCCCCT - GCCCTCCC - CCCACCCC - CCCACCCC - GCCCACCC - GCCCCCCC - CCCACC - CCACCC - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  2 + [CTCCACCC]  541  (89.83) 
+  2 +  CCCCACCC   546  (100.00) 
+  2 + [GCCCCCCC]  588  (85.41) 
+  3 + [GCCCTCCC]   34  (85.41) 
+  5 + [CTCCACCC]  200  (89.83) 
+  6 + [CCCCACTC]  515  (88.73) 
+  7 + [CCCCATCC]  190  (88.33) 
+  7 + [ACCCACCC]  279  (89.57) 
+ 10 + [CCCCAGCC]  494  (87.18) 
+ 11 +  CCCCACCT   254  (90.93) 
+ 11 + [CCCCACAC]  623  (87.11) 
+ 13 +  CCCCACCC   562  (100.00) 
+ 15 + [CCCAACCC]  780  (89.83) 
+ 16 +  CCCCACCT    67  (90.93) 
+ 16 +  GCCCACCC   728  (91.98) 
+ 17 + [ACCCACCC]   80  (89.57) 
+ 18 + [CCCCACTC]  589  (88.73) 
+ 19 +  GCCCACCC   464  (91.98) 
+ 21 + [GCCCTCCC]   58  (85.41) 
+ 22 + [ACCCACCC]   56  (89.57) 
+ 22 +  CCCCACCC   458  (100.00) 
+ 24 + [CCCCATCC]  667  (88.33) 
+ 25 + [CCCCAGCC]  492  (87.18) 
+ 26 +  CCCCACCC   305  (100.00) 
+ 28 +  CCCCTCCC   457  (93.43) 
+ 29 +  CCCCTCCC   361  (93.43) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   10    99    17    15		    0     8     2     0
+2 	    8   112     9    12		    0    10     0     0
+3 	   10   115     6    10		    0    10     0     0
+4 	   12   112     7    10		    0    10     0     0
+5 	   89    21    10    21		    8     0     0     2
+6 	    8   117     7     9		    0    10     0     0
+7 	    7   119     5    10		    0    10     0     0
+8 	   12   110     4    15		    0     8     0     2
+
+==========================================
+
+
+CCTCCC
+
+5 redundant motifs found:
+GCCCTCCC - CTCCCC - CCCCCC - CCACCC - CCTGCC - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 +  CCTCCC   474  (100.00) 
+  1 + [CCTCTC]  519  (88.00) 
+  1 + [CCTCCT]  557  (87.52) 
+  1 +  CCTGCC   560  (90.23) 
+  1 +  CCTGCC   755  (90.23) 
+  2 + [CCTCTC]  123  (88.00) 
+  2 +  CCTGCC   195  (90.23) 
+  2 + [CCACCC]  543  (89.41) 
+  2 + [CCACCC]  548  (89.41) 
+  2 + [CCCCCC]  589  (85.07) 
+  2 + [CCCCCC]  590  (85.07) 
+  2 + [CCCCCC]  686  (85.07) 
+  2 + [CCCCCC]  687  (85.07) 
+  2 + [GCTCCC]  711  (86.72) 
+  3 +  CCTCCC    36  (100.00) 
+  3 + [CCTCTC]  835  (88.00) 
+  4 + [CCTCTC]   99  (88.00) 
+  4 +  CCTGCC   118  (90.23) 
+  4 + [CCTTCC]  151  (88.37) 
+  4 +  CCTCCC   345  (100.00) 
+  4 + [CCTCTC]  845  (88.00) 
+  5 + [CCACCC]  202  (89.41) 
+  5 + [CCTTCC]  208  (88.37) 
+  5 + [GCTCCC]  551  (86.72) 
+  5 +  CCTCCC   705  (100.00) 
+  5 + [GCTCCC]  723  (86.72) 
+  5 + [GCTCCC]  803  (86.72) 
+  6 + [ACTCCC]   53  (85.63) 
+  6 +  CCTGCC    93  (90.23) 
+  6 + [CCTCCT]  179  (87.52) 
+  6 + [CCTTCC]  227  (88.37) 
+  6 + [CCTCCT]  339  (87.52) 
+  7 + [CTTCCC]   38  (86.87) 
+  7 + [CCACCC]  113  (89.41) 
+  7 + [CCACCC]  281  (89.41) 
+  7 + [CCTTCC]  299  (88.37) 
+  7 + [CTTCCC]  300  (86.87) 
+  7 + [CCTCCT]  377  (87.52) 
+  7 + [CCTCCT]  419  (87.52) 
+  7 + [GCTCCC]  634  (86.72) 
+  8 +  CCTGCC   146  (90.23) 
+  8 + [CCTTCC]  151  (88.37) 
+  8 + [CCTTCC]  426  (88.37) 
+  9 + [CTTCCC]  143  (86.87) 
+  9 + [CCTTCC]  310  (88.37) 
+  9 + [CTTCCC]  311  (86.87) 
+  9 + [ACTCCC]  393  (85.63) 
+  9 + [CCTCTC]  465  (88.00) 
+  9 + [TCTCCC]  594  (86.21) 
+ 10 +  CCTGCC    85  (90.23) 
+ 10 +  CCTGCC   315  (90.23) 
+ 10 + [CCTTCC]  391  (88.37) 
+ 10 +  CCTCCC   423  (100.00) 
+ 10 + [CCTCTC]  540  (88.00) 
+ 10 +  CCTCCC   700  (100.00) 
+ 11 +  CCTGCC     3  (90.23) 
+ 11 + [CCTTCC]  198  (88.37) 
+ 11 + [CCTCTC]  294  (88.00) 
+ 11 +  CCTGCC   431  (90.23) 
+ 12 +  CCTGCC   145  (90.23) 
+ 12 + [CCACCC]  339  (89.41) 
+ 12 + [TCTCCC]  459  (86.21) 
+ 12 + [ACTCCC]  535  (85.63) 
+ 13 + [CCTCCA]  185  (86.11) 
+ 13 + [CCACCC]  564  (89.41) 
+ 13 + [CCACCC]  591  (89.41) 
+ 13 +  CCTCCC   705  (100.00) 
+ 13 + [ACTCCC]  835  (85.63) 
+ 14 + [CTTCCC]  306  (86.87) 
+ 14 + [CCTCCA]  459  (86.11) 
+ 14 + [CCTCTC]  585  (88.00) 
+ 14 + [TCTCCC]  717  (86.21) 
+ 15 + [TCTCCC]  436  (86.21) 
+ 15 + [CTTCCC]  777  (86.87) 
+ 16 +  CCTGCC   638  (90.23) 
+ 16 + [CCACCC]  730  (89.41) 
+ 17 + [CCTCCT]   41  (87.52) 
+ 17 + [CCACCC]   82  (89.41) 
+ 17 +  CCTGCC   129  (90.23) 
+ 17 + [GCTCCC]  440  (86.72) 
+ 18 + [CCTCCT]   92  (87.52) 
+ 18 + [CCTCCT]  162  (87.52) 
+ 18 + [CCTCCA]  658  (86.11) 
+ 18 +  CCTCCC   693  (100.00) 
+ 18 +  CCTGCC   770  (90.23) 
+ 19 + [CCACCC]  466  (89.41) 
+ 19 + [CCTCCA]  633  (86.11) 
+ 20 + [CTTCCC]  634  (86.87) 
+ 20 + [GCTCCC]  713  (86.72) 
+ 20 + [CCTCCT]  771  (87.52) 
+ 21 +  CCTCCC    60  (100.00) 
+ 21 + [CCTCCT]  219  (87.52) 
+ 21 + [CCTTCC]  281  (88.37) 
+ 21 + [CTTCCC]  282  (86.87) 
+ 21 + [CTTCCC]  495  (86.87) 
+ 21 +  CCTCCC   499  (100.00) 
+ 21 + [CCTCTC]  521  (88.00) 
+ 21 + [TCTCCC]  523  (86.21) 
+ 21 + [TCTCCC]  640  (86.21) 
+ 21 +  CCTGCC   785  (90.23) 
+ 22 + [CCTTCC]   44  (88.37) 
+ 22 + [CCACCC]   58  (89.41) 
+ 22 + [CCTCCA]  161  (86.11) 
+ 22 + [CCCCCC]  456  (85.07) 
+ 22 + [CCACCC]  460  (89.41) 
+ 22 + [CCTCCT]  600  (87.52) 
+ 22 + [GCTCCC]  670  (86.72) 
+ 22 + [CCCCCC]  835  (85.07) 
+ 23 +  CCTCCC    89  (100.00) 
+ 23 +  CCTGCC   219  (90.23) 
+ 23 +  CCTCCC   249  (100.00) 
+ 24 + [TCTCCC]  172  (86.21) 
+ 24 + [CTTCCC]  305  (86.87) 
+ 24 +  CCTGCC   332  (90.23) 
+ 24 + [CCCCCC]  355  (85.07) 
+ 24 + [CCTCCA]  395  (86.11) 
+ 24 + [CCACCC]  664  (89.41) 
+ 24 + [GCTCCC]  847  (86.72) 
+ 25 +  CCTGCC   101  (90.23) 
+ 25 + [CCTTCC]  184  (88.37) 
+ 25 +  CCTCCC   188  (100.00) 
+ 25 + [CCACCC]  426  (89.41) 
+ 25 + [CCTCCA]  522  (86.11) 
+ 25 + [ACTCCC]  699  (85.63) 
+ 25 + [ACTCCC]  849  (85.63) 
+ 26 + [GCTCCC]  302  (86.72) 
+ 26 + [CCACCC]  307  (89.41) 
+ 26 + [CCTCCA]  417  (86.11) 
+ 27 + [CCACCC]  190  (89.41) 
+ 27 + [ACTCCC]  313  (85.63) 
+ 27 +  CCTGCC   317  (90.23) 
+ 27 + [ACTCCC]  851  (85.63) 
+ 28 + [CCTCCA]  441  (86.11) 
+ 28 +  CCTCCC   459  (100.00) 
+ 28 + [CCTCTC]  555  (88.00) 
+ 28 + [CCTCTC]  642  (88.00) 
+ 28 + [TCTCCC]  644  (86.21) 
+ 29 + [CCTTCC]  235  (88.37) 
+ 29 +  CCTCCC   363  (100.00) 
+ 29 + [CCTCCT]  609  (87.52) 
+ 30 + [TCTCCC]    4  (86.21) 
+ 30 + [CCTCTC]  207  (88.00) 
+ 30 + [CTTCCC]  754  (86.87) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    8   151    10     9		    0    34     0     0
+2 	    4   161     2    11		    0    34     0     0
+3 	   17     7     6   148		    0     0     0    34
+4 	    6   140    19    13		    0    15    19     0
+5 	    7   151     7    13		    0    34     0     0
+6 	    9   154     3    12		    0    34     0     0
+
+==========================================
+
+
+CCGGGGGG
+
+19 redundant motifs found:
+CCCGGGGA - CCGGGGGC - CTGAGGGG - CAGGGGGC - TCGGGGGG - CCTGGGGC - TCAGGGGG - CCCAGGGG - TCCGGGGG - TCCGGGGG - GGGGGGAG - CCCGGGGC - CGGGGGGG - CGGGGGGG - GCCCGGGG - CTGGGGGG - CGGGGG - CCGGGG - GGGGGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [CATGGGGG]  253  (87.91) 
+  1 + [CATGGGGG]  448  (87.91) 
+  6 + [CAAGGGGG]  149  (88.12) 
+  7 +  CCGGGGGC   479  (90.93) 
+  7 + [CCGGTGGG]  641  (89.99) 
+  8 + [TCTGGGGG]  529  (85.86) 
+  8 +  CTGGGGGG   530  (94.84) 
+  9 + [TTGGGGGG]  658  (86.80) 
+ 11 + [CCGGGAGG]    7  (87.15) 
+ 11 + [CCAGGGGC]  246  (85.04) 
+ 12 + [TCAGGGGG]  351  (86.07) 
+ 14 + [GCGGGGGG]  553  (89.91) 
+ 17 + [CATGGGGG]  844  (87.91) 
+ 19 + [CCGCGGGG]  265  (89.24) 
+ 19 + [CTCGGGGG]  771  (85.71) 
+ 20 +  CCGGGGGG   182  (100.00) 
+ 23 +  CCGAGGGG   121  (90.11) 
+ 23 + [TCAGGGGG]  147  (86.07) 
+ 23 + [CTCGGGGG]  474  (85.71) 
+ 23 +  TCGGGGGG   475  (91.96) 
+ 23 +  CGGGGGGG   476  (92.98) 
+ 28 + [TCTGGGGG]  540  (85.86) 
+ 28 +  CTGGGGGG   541  (94.84) 
+ 30 + [CCGTGGGG]  393  (87.47) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    5   101    10    16		    0     6     0     1
+2 	   19    75    15    23		    0     4     1     2
+3 	   21    10    81    20		    0     0     7     0
+4 	   11     9   106     6		    1     0     6     0
+5 	    8     4   109    11		    0     0     7     0
+6 	    6     4   114     8		    0     0     7     0
+7 	   10     2   115     5		    0     0     7     0
+8 	    9    13   104     6		    0     1     6     0
+
+==========================================
+
+
+CCGGGG
+
+17 redundant motifs found:
+CCGGGGGC - TCCGGGGG - CCCGGGGC - CCCGGGGA - CCGGGGGG - GCCCGGGG - GGGGGA - GGGGTG - GGGGAG - CTGGGG - CCCGGG - CCCGGG - CGGGGG - CGGGGG - CAGGGG - CCAGGG - CCTGGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [CATGGG]  253  (86.16) 
+  1 + [CATGGG]  448  (86.16) 
+  1 +  CCTGGG   829  (94.28) 
+  2 +  CCTGGG    27  (94.28) 
+  2 +  CTGGGG    28  (91.53) 
+  2 + [CTTGGG]  269  (85.81) 
+  2 + [CTTGGG]  286  (85.81) 
+  2 + [CATGGG]  394  (86.16) 
+  3 +  CCAGGG    40  (93.58) 
+  3 + [CAAGGG]  135  (85.45) 
+  3 +  CCAGGG   269  (93.58) 
+  3 + [CCGTGG]  394  (88.28) 
+  3 +  CCTGGG   468  (94.28) 
+  3 +  CAGGGG   782  (91.88) 
+  3 +  CCTGGG   840  (94.28) 
+  4 +  CTGGGG   391  (91.53) 
+  4 +  CCTGGG   457  (94.28) 
+  4 +  CTGGGG   458  (91.53) 
+  4 +  CCTGGG   501  (94.28) 
+  4 +  CTGGGG   502  (91.53) 
+  4 +  CCAGGG   543  (93.58) 
+  5 +  CCTGGG    14  (94.28) 
+  5 + [CCGTGG]   75  (88.28) 
+  5 + [CCGGGA]  416  (85.66) 
+  5 + [CCCGGG]  657  (88.28) 
+  5 +  CCGGGG   658  (100.00) 
+  6 +  CAGGGG    35  (91.88) 
+  6 + [CAAGGG]  149  (85.45) 
+  6 + [GCGGGG]  426  (85.86) 
+  6 + [CTTGGG]  565  (85.81) 
+  6 +  CCTGGG   708  (94.28) 
+  7 +  CAGGGG   352  (91.88) 
+  7 +  CCGGGG   479  (100.00) 
+  7 + [CGGGGG]  480  (89.20) 
+  8 +  CTGGGG   324  (91.53) 
+  8 +  CTGGGG   530  (91.53) 
+  8 + [ACGGGG]  658  (85.86) 
+  8 +  CCTGGG   714  (94.28) 
+  9 +  CCAGGG   301  (93.58) 
+  9 + [CATGGG]  795  (86.16) 
+ 10 + [CCCGGG]  426  (88.28) 
+ 10 +  CCGGGG   427  (100.00) 
+ 11 + [CCGGGA]    7  (85.66) 
+ 11 +  CCAGGG   246  (93.58) 
+ 11 +  CAGGGG   247  (91.88) 
+ 11 + [CATGGG]  524  (86.16) 
+ 11 +  CCAGGG   578  (93.58) 
+ 12 +  CAGGGG   352  (91.88) 
+ 13 + [CATGGG]  147  (86.16) 
+ 14 + [CCGTGG]  427  (88.28) 
+ 14 + [GCGGGG]  553  (85.86) 
+ 14 + [CGGGGG]  554  (89.20) 
+ 16 + [TCGGGG]  224  (85.86) 
+ 16 + [CGGGGG]  225  (89.20) 
+ 16 + [ACGGGG]  405  (85.86) 
+ 16 +  CCTGGG   434  (94.28) 
+ 16 +  CCAGGG   833  (93.58) 
+ 17 + [CAAGGG]   25  (85.45) 
+ 17 + [CCCGGG]   62  (88.28) 
+ 17 + [CCGGGA]   63  (85.66) 
+ 17 +  CCAGGG   114  (93.58) 
+ 17 +  CCAGGG   164  (93.58) 
+ 17 +  CAGGGG   165  (91.88) 
+ 17 +  CAGGGG   321  (91.88) 
+ 17 +  CCTGGG   444  (94.28) 
+ 17 + [TCGGGG]  695  (85.86) 
+ 17 + [CATGGG]  844  (86.16) 
+ 18 + [CTTGGG]  194  (85.81) 
+ 18 + [CCCGGG]  569  (88.28) 
+ 19 + [CCGTGG]   74  (88.28) 
+ 19 + [CTTGGG]  250  (85.81) 
+ 19 + [GCGGGG]  267  (85.86) 
+ 19 +  CCTGGG   347  (94.28) 
+ 19 +  CCAGGG   579  (93.58) 
+ 19 + [TCGGGG]  772  (85.86) 
+ 19 + [CGGGGG]  773  (89.20) 
+ 20 + [CTAGGG]  118  (85.11) 
+ 20 +  CCGGGG   182  (100.00) 
+ 20 + [CGGGGG]  183  (89.20) 
+ 20 +  CCAGGG   226  (93.58) 
+ 20 +  CAGGGG   258  (91.88) 
+ 20 + [CCGTGG]  514  (88.28) 
+ 21 + [CCGTGG]  113  (88.28) 
+ 21 +  CAGGGG   266  (91.88) 
+ 21 + [CTTGGG]  630  (85.81) 
+ 22 +  CCTGGG    48  (94.28) 
+ 22 +  CCTGGG   625  (94.28) 
+ 22 +  CCTGGG   817  (94.28) 
+ 22 +  CTGGGG   818  (91.53) 
+ 23 +  CAGGGG   148  (91.88) 
+ 23 + [CTTGGG]  162  (85.81) 
+ 23 + [TCGGGG]  475  (85.86) 
+ 23 + [CGGGGG]  476  (89.20) 
+ 23 +  CCGGGG   705  (100.00) 
+ 23 + [ACGGGG]  711  (85.86) 
+ 23 + [CATGGG]  752  (86.16) 
+ 24 + [GCGGGG]  218  (85.86) 
+ 24 + [CGGGGG]  219  (89.20) 
+ 25 + [ACGGGG]  333  (85.86) 
+ 25 +  CTGGGG   417  (91.53) 
+ 25 +  CAGGGG   541  (91.88) 
+ 26 +  CCTGGG   117  (94.28) 
+ 26 +  CCAGGG   286  (93.58) 
+ 26 + [CTTGGG]  547  (85.81) 
+ 26 + [CCGGGA]  620  (85.66) 
+ 26 +  CCTGGG   694  (94.28) 
+ 26 +  CCAGGG   827  (93.58) 
+ 27 +  CCAGGG   105  (93.58) 
+ 27 +  CCAGGG   194  (93.58) 
+ 27 +  CAGGGG   195  (91.88) 
+ 27 + [CAAGGG]  280  (85.45) 
+ 27 +  CCTGGG   458  (94.28) 
+ 27 +  CAGGGG   583  (91.88) 
+ 27 + [CCCGGG]  758  (88.28) 
+ 27 +  CCGGGG   759  (100.00) 
+ 28 +  CTGGGG   100  (91.53) 
+ 28 +  CCTGGG   158  (94.28) 
+ 28 +  CCAGGG   514  (93.58) 
+ 28 +  CTGGGG   541  (91.53) 
+ 28 +  CTGGGG   614  (91.53) 
+ 28 + [CTTGGG]  649  (85.81) 
+ 28 +  CTGGGG   754  (91.53) 
+ 28 + [CAAGGG]  765  (85.45) 
+ 30 + [CCGTGG]  393  (88.28) 
+ 30 +  CCAGGG   406  (93.58) 
+ 30 + [CAAGGG]  455  (85.45) 
+ 30 +  CCTGGG   481  (94.28) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    4   105     4     4		    0    68     0     0
+2 	   13    85     7    12		   13    43     0    12
+3 	   17     5    75    20		   17     0    31    20
+4 	    2     3   105     7		    0     0    68     0
+5 	    2     2   111     2		    0     0    68     0
+6 	    4     3   110     0		    0     0    68     0
+
+==========================================
+
+
+GGGGGGCC
+
+11 redundant motifs found:
+TGGGGGGC - TGGGGGGC - GGGGGGAG - CGGGGGGG - GGGGGGCT - GGGGGGGC - GGGGGGGC - CTGGGGGG - GGGGCC - GGGGGG - GGGGGC - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 +  GGGGGGGC   451  (93.62) 
+  1 +  GGGGGGCT   452  (90.12) 
+  7 +  GGTGGGCC     9  (91.47) 
+  9 +  GGGAGGCC   304  (90.38) 
+  9 +  GGGGGGGC   661  (93.62) 
+  9 +  GGGGGGCC   662  (100.00) 
+  9 +  GGGGGCCC   663  (90.00) 
+ 12 +  GGGGAGCC   355  (90.55) 
+ 13 + [GTGGGGCC]  229  (88.76) 
+ 14 + [AGGGGGCC]   19  (89.04) 
+ 14 +  GGGAGGCC   558  (90.38) 
+ 18 + [GGGGGACC]  608  (86.44) 
+ 19 +  GGGGAGCC   775  (90.55) 
+ 20 + [GGTGGGGC]  165  (85.09) 
+ 20 +  GGGGGGCT   184  (90.12) 
+ 21 +  GGGTGGCC   449  (90.01) 
+ 23 + [GAGGGGCC]  123  (86.40) 
+ 23 + [GGGGGGGA]  478  (86.49) 
+ 24 + [CGGGGGCC]  219  (88.56) 
+ 25 +  GGGTGGCC   420  (90.01) 
+ 25 +  GGTGGGCC   450  (91.47) 
+ 28 +  GGGGGGCT   543  (90.12) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   10     9   108    10		    0     0    15     0
+2 	    6     6   115    10		    0     0    15     0
+3 	   11     8   102    16		    0     0    13     2
+4 	   13     7   105    12		    2     0    11     2
+5 	   14     5   109     9		    2     0    13     0
+6 	    6    13   114     4		    0     1    14     0
+7 	   10    96    24     7		    0    13     2     0
+8 	   20    94    12    11		    0    12     0     3
+
+==========================================
+
+
+GGGGCT
+
+6 redundant motifs found:
+GGGGGGCT - GGGCTG - CAGGGG - GGGGCC - GGGGGG - GGGGGC - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [GGGGGT]  256  (86.36) 
+  1 + [GGGGTT]  257  (85.54) 
+  1 +  TGGGCT   321  (90.55) 
+  1 + [GGGCCT]  409  (89.01) 
+  1 +  GGGGCT   454  (100.00) 
+  1 + [GGGGTT]  614  (85.54) 
+  3 + [GAGGCT]   64  (87.41) 
+  3 + [GGGTCT]  138  (88.54) 
+  3 + [GGGGCA]  277  (88.50) 
+  3 +  TGGGCT   532  (90.55) 
+  3 + [GGGACT]  772  (86.73) 
+  3 +  GGGGCT   784  (100.00) 
+  4 + [GGGCCT]  148  (89.01) 
+  4 + [GAGGCT]  168  (87.41) 
+  4 + [GGGGCC]  460  (89.40) 
+  4 +  GTGGCT   489  (90.51) 
+  4 + [GGGTCT]  546  (88.54) 
+  4 +  GTGGCT   747  (90.51) 
+  4 +  TGGGCT   815  (90.55) 
+  5 +  TGGGCT   485  (90.55) 
+  5 + [GGGTCT]  536  (88.54) 
+  5 + [GGAGCT]  757  (88.24) 
+  6 + [GGGGCA]  153  (88.50) 
+  6 +  TGGGCT   567  (90.55) 
+  6 +  TGGGCT   710  (90.55) 
+  6 +  GTGGCT   780  (90.51) 
+  7 + [GGGACT]   57  (86.73) 
+  7 + [GGGGGT]  171  (86.36) 
+  7 + [GGGTCT]  201  (88.54) 
+  7 + [GGGGCC]  354  (89.40) 
+  7 + [GGGTCT]  449  (88.54) 
+  7 + [GGGGCA]  482  (88.50) 
+  7 +  TGGGCT   693  (90.55) 
+  7 + [GGTGCT]  783  (87.12) 
+  7 + [GGGGCC]  833  (89.40) 
+  7 + [GGGCCT]  834  (89.01) 
+  8 + [GGAGCT]  320  (88.24) 
+  8 +  GGGGCT   326  (100.00) 
+  8 + [GGAGCT]  342  (88.24) 
+  8 + [AGGGCT]  384  (89.47) 
+  8 + [GGGGGT]  537  (86.36) 
+  9 + [GGGGCC]  664  (89.40) 
+ 10 +  GTGGCT   122  (90.51) 
+ 10 + [GGGCCT]  173  (89.01) 
+ 10 + [GGGCCT]  414  (89.01) 
+ 11 + [GGTGCT]  111  (87.12) 
+ 11 + [GGAGCT]  170  (88.24) 
+ 11 + [GGGGCC]  249  (89.40) 
+ 12 + [GGGTCT]  201  (88.54) 
+ 13 + [GGGGCC]  231  (89.40) 
+ 13 + [GGGCCT]  232  (89.01) 
+ 13 + [GGAGCT]  420  (88.24) 
+ 14 + [GGGGCC]   21  (89.40) 
+ 14 + [GGTGCT]  175  (87.12) 
+ 14 +  TGGGCT   332  (90.55) 
+ 14 +  GTGGCT   648  (90.51) 
+ 14 + [AGGGCT]  659  (89.47) 
+ 15 +  GTGGCT    91  (90.51) 
+ 15 + [AGGGCT]  452  (89.47) 
+ 16 +  TGGGCT   215  (90.55) 
+ 16 + [GGGGCA]  227  (88.50) 
+ 16 + [GGTGCT]  312  (87.12) 
+ 16 +  TGGGCT   358  (90.55) 
+ 16 + [GGGTCT]  422  (88.54) 
+ 16 + [GGGTCT]  483  (88.54) 
+ 16 + [AGGGCT]  835  (89.47) 
+ 17 + [GGGCCT]   38  (89.01) 
+ 17 + [GGGGTT]  173  (85.54) 
+ 17 +  TGGGCT   280  (90.55) 
+ 17 + [GGGGGT]  323  (86.36) 
+ 17 + [GGGCCT]  585  (89.01) 
+ 17 + [GGGCCT]  663  (89.01) 
+ 17 + [GGGGCA]  697  (88.50) 
+ 17 + [GGGGGT]  724  (86.36) 
+ 17 + [GGGCCT]  735  (89.01) 
+ 17 + [GGTGCT]  769  (87.12) 
+ 18 + [GAGGCT]  218  (87.41) 
+ 18 +  GGGGCT   361  (100.00) 
+ 18 + [AGGGCT]  394  (89.47) 
+ 18 + [GGAGCT]  732  (88.24) 
+ 19 + [GGAGCT]  114  (88.24) 
+ 19 +  TGGGCT   252  (90.55) 
+ 19 + [GGGGTT]  269  (85.54) 
+ 19 + [AGGGCT]  581  (89.47) 
+ 19 +  GTGGCT   678  (90.51) 
+ 19 + [GGGACT]  701  (86.73) 
+ 19 + [AGGGCT]  848  (89.47) 
+ 20 + [GGGTCT]   49  (88.54) 
+ 20 + [GGGGCA]  121  (88.50) 
+ 20 + [GGGGCA]  168  (88.50) 
+ 20 +  GGGGCT   186  (100.00) 
+ 20 +  GTGGCT   205  (90.51) 
+ 20 +  TGGGCT   517  (90.55) 
+ 21 + [GAGGCT]  156  (87.41) 
+ 21 +  GGGGCT   268  (100.00) 
+ 21 +  GTGGCT   337  (90.51) 
+ 21 + [GGAGCT]  357  (88.24) 
+ 22 + [GGGACT]  321  (86.73) 
+ 22 +  GGGGCT   354  (100.00) 
+ 22 + [GAGGCT]  667  (87.41) 
+ 23 + [GGGGCC]  125  (89.40) 
+ 23 +  GGGGCT   151  (100.00) 
+ 23 + [GGGGCA]  165  (88.50) 
+ 23 + [GGAGCT]  394  (88.24) 
+ 23 + [AGGGCT]  485  (89.47) 
+ 24 + [GAGGCT]  129  (87.41) 
+ 24 + [GGGGCC]  221  (89.40) 
+ 25 +  GTGGCT    90  (90.51) 
+ 25 + [GGGGCC]  335  (89.40) 
+ 25 +  TGGGCT   819  (90.55) 
+ 26 +  GTGGCT   329  (90.51) 
+ 26 +  GTGGCT   346  (90.51) 
+ 26 + [GGGACT]  748  (86.73) 
+ 26 + [AGGGCT]  829  (89.47) 
+ 27 +  GTGGCT    52  (90.51) 
+ 27 + [AGGGCT]  107  (89.47) 
+ 27 + [GGGGCA]  283  (88.50) 
+ 27 + [GGGGCC]  761  (89.40) 
+ 28 +  GTGGCT    83  (90.51) 
+ 28 + [GGTGCT]  518  (87.12) 
+ 28 +  GGGGCT   545  (100.00) 
+ 28 + [GGGACT]  617  (86.73) 
+ 28 + [GGGGGT]  756  (86.36) 
+ 29 + [GAGGCT]  335  (87.41) 
+ 29 +  GGGGCT   524  (100.00) 
+ 30 + [GGTGCT]  325  (87.12) 
+ 30 + [AGGGCT]  408  (89.47) 
+ 30 + [GGGGTT]  575  (85.54) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   11     1   116    14		    0     0    24    14
+2 	    7     4   117    14		    0     0    24    14
+3 	    9     1   125     7		    0     0    38     0
+4 	    6    10   117     9		    0     0    38     0
+5 	    4   127     6     5		    0    38     0     0
+6 	    9    11     4   118		    0     0     0    38
+
+==========================================
+
+
+CCCGGGGA
+
+11 redundant motifs found:
+CCGGGGGC - GCCTGGGA - CCTGGGGC - CCCAGGGG - TCCGGGGG - CCCGGGGC - CCGGGGGG - CCCAGGGC - GCCCGGGG - CCCGGG - CCGGGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [GCCTGGGA]  828  (86.67) 
+  3 +  CCCAGGGA    39  (93.68) 
+  3 + [TCCTGGGA]  839  (87.03) 
+  3 + [CCTGGGAA]  840  (87.56) 
+  4 + [CCTGGGGC]  457  (85.61) 
+  4 +  CCTGGGGA   501  (94.41) 
+  5 + [CCTGGGCA]   14  (85.71) 
+  5 + [TCCGGGAA]  415  (85.71) 
+  5 +  CCCGGGGA   657  (100.00) 
+  8 +  CACGGGGA   657  (91.96) 
+  8 + [TCCTGGGA]  713  (87.03) 
+  8 + [CCTGGGAA]  714  (87.56) 
+  9 + [CCCTGGCA]  291  (85.76) 
+  9 + [GCCAGGGA]  300  (85.87) 
+  9 +  CCCGAGGA   668  (91.25) 
+  9 + [CATGGGGA]  795  (86.37) 
+ 10 +  CCCGGGGA   426  (100.00) 
+ 11 + [TCCAGGGA]  577  (86.24) 
+ 16 + [TCCTGGGA]  433  (87.03) 
+ 16 + [CCTGGGAA]  434  (87.56) 
+ 17 +  CCCGGGAA    62  (93.15) 
+ 17 +  CCCAGGGA   113  (93.68) 
+ 17 + [CCAGGGAA]  114  (86.13) 
+ 17 +  CCAGGGGA   164  (92.98) 
+ 17 +  CCCTGGGA   443  (94.47) 
+ 17 + [CCTGGGAA]  444  (87.56) 
+ 18 +  CCCGGGCA   569  (91.29) 
+ 19 + [GCCTGGGA]  346  (86.67) 
+ 19 + [CCTGGGAA]  347  (87.56) 
+ 20 + [GCAGGGGA]  257  (85.18) 
+ 20 + [CCCTTGGA]  637  (86.17) 
+ 21 +  CCCGTGGA   112  (91.70) 
+ 22 + [TCCTGGGA]   47  (87.03) 
+ 22 + [CCTGGGGC]  817  (85.61) 
+ 23 +  GCCGGGGA   704  (92.20) 
+ 25 + [CCCTGGCA]  301  (85.76) 
+ 26 +  CCCTGGGA   116  (94.47) 
+ 26 + [GCCGGGAA]  619  (85.35) 
+ 27 +  CCAGGGGA   194  (92.98) 
+ 27 + [TCAGGGGA]  582  (85.54) 
+ 27 +  CCCGGGGC   758  (91.20) 
+ 28 + [GCTGGGGA]   99  (86.61) 
+ 30 + [CCTGGGAA]  481  (87.56) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    4    77    10    11		    0    15     1     0
+2 	   10    82     4     6		    1    15     0     0
+3 	   11    69     6    16		    2    13     0     1
+4 	   13     5    68    16		    2     0    12     2
+5 	    8     6    79     9		    1     0    14     1
+6 	    3     0    97     2		    0     0    16     0
+7 	   13     8    78     3		    1     1    14     0
+8 	   80     8     8     6		   15     1     0     0
+
+==========================================
+
+
+CGGGGG
+
+17 redundant motifs found:
+CCGGGGGC - TCGGGGGG - TCCGGGGG - CCGGGGGG - CGGGGGGG - AGGGGG - TGGGGG - GGGGGA - GGGGTG - GGGGAG - CTGGGG - CCGGGG - CCGGGG - CAGGGG - GGGGGG - GGGGGG - GGGGGC - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 +  TGGGGG   255  (93.45) 
+  1 +  TGGGGG   450  (93.45) 
+  1 +  GGGGGG   451  (94.72) 
+  1 +  GGGGGG   452  (94.72) 
+  2 +  CTGGGG    28  (92.72) 
+  2 + [CGCGGG]   82  (86.36) 
+  3 + [GTGGGG]  274  (87.44) 
+  3 +  TGGGGG   275  (93.45) 
+  3 +  CAGGGG   782  (93.03) 
+  4 +  CTGGGG   391  (92.72) 
+  4 +  CTGGGG   458  (92.72) 
+  4 +  CTGGGG   502  (92.72) 
+  5 + [GTGGGG]  162  (87.44) 
+  5 +  CCGGGG   658  (90.03) 
+  5 + [CGGGGA]  659  (87.56) 
+  6 +  CAGGGG    35  (93.03) 
+  6 +  AGGGGG   151  (91.56) 
+  6 + [CGGGGT]  427  (87.56) 
+  7 + [CGGTGG]    8  (86.32) 
+  7 + [CGGGAG]  152  (86.17) 
+  7 + [TTGGGG]  169  (86.17) 
+  7 +  TGGGGG   170  (93.45) 
+  7 +  CAGGGG   352  (93.03) 
+  7 +  CCGGGG   479  (90.03) 
+  7 +  CGGGGG   480  (100.00) 
+  7 + [CGGTGG]  642  (86.32) 
+  7 + [TTGGGG]  831  (86.17) 
+  8 + [GAGGGG]   41  (87.75) 
+  8 +  CTGGGG   324  (92.72) 
+  8 + [CGGAGG]  504  (88.31) 
+  8 +  CTGGGG   530  (92.72) 
+  8 +  TGGGGG   531  (93.45) 
+  8 +  GGGGGG   532  (94.72) 
+  8 +  GGGGGG   533  (94.72) 
+  8 +  GGGGGG   534  (94.72) 
+  8 +  GGGGGG   535  (94.72) 
+  8 +  GGGGGG   536  (94.72) 
+  8 + [CGGGGA]  659  (87.56) 
+  9 + [GAGGGG]   67  (87.75) 
+  9 + [CGGAGG]  365  (88.31) 
+  9 + [TTGGGG]  658  (86.17) 
+  9 +  TGGGGG   659  (93.45) 
+  9 +  GGGGGG   660  (94.72) 
+  9 +  GGGGGG   661  (94.72) 
+  9 +  GGGGGG   662  (94.72) 
+ 10 +  CCGGGG   427  (90.03) 
+ 10 + [CGGGGA]  428  (87.56) 
+ 10 + [GAGGGG]  631  (87.75) 
+ 11 + [CGGGAG]    8  (86.17) 
+ 11 + [CGGAGG]   40  (88.31) 
+ 11 +  CAGGGG   247  (93.03) 
+ 11 + [CGGAGG]  736  (88.31) 
+ 11 + [GAGGGG]  738  (87.75) 
+ 12 +  CAGGGG   352  (93.03) 
+ 12 +  AGGGGG   353  (91.56) 
+ 13 + [GTGGGG]  229  (87.44) 
+ 14 + [GAGGGG]   18  (87.75) 
+ 14 +  AGGGGG    19  (91.56) 
+ 14 +  CGGGGG   554  (100.00) 
+ 14 +  GGGGGG   555  (94.72) 
+ 14 + [GAGGGG]  682  (87.75) 
+ 16 + [CGGGAG]  192  (86.17) 
+ 16 +  CGGGGG   225  (100.00) 
+ 16 + [CGTGGG]  356  (87.48) 
+ 16 + [CGGGGT]  406  (87.56) 
+ 16 + [TAGGGG]  480  (86.48) 
+ 17 +  CAGGGG   165  (93.03) 
+ 17 +  CAGGGG   321  (93.03) 
+ 17 +  AGGGGG   322  (91.56) 
+ 17 + [CGGGGC]  696  (86.44) 
+ 17 + [GTGGGG]  721  (87.44) 
+ 17 +  TGGGGG   722  (93.45) 
+ 17 +  GGGGGG   723  (94.72) 
+ 17 +  TGGGGG   846  (93.45) 
+ 18 + [TAGGGG]  359  (86.48) 
+ 18 +  TGGGGG   607  (93.45) 
+ 19 + [CGCGGG]  266  (86.36) 
+ 19 + [CGGGGT]  268  (87.56) 
+ 19 +  CGGGGG   773  (100.00) 
+ 20 + [TAGGGG]  119  (86.48) 
+ 20 + [GTGGGG]  166  (87.44) 
+ 20 +  CCGGGG   182  (90.03) 
+ 20 +  CGGGGG   183  (100.00) 
+ 20 +  GGGGGG   184  (94.72) 
+ 20 +  CAGGGG   258  (93.03) 
+ 20 + [CGTGGG]  515  (87.48) 
+ 20 + [GAGGGG]  611  (87.75) 
+ 21 +  CAGGGG   266  (93.03) 
+ 22 + [GAGGGG]  352  (87.75) 
+ 22 + [GTGGGG]  525  (87.44) 
+ 22 +  TGGGGG   526  (93.45) 
+ 22 +  CTGGGG   818  (92.72) 
+ 22 + [CGGTGG]  824  (86.32) 
+ 23 + [GAGGGG]  123  (87.75) 
+ 23 +  CAGGGG   148  (93.03) 
+ 23 +  AGGGGG   149  (91.56) 
+ 23 + [TTGGGG]  163  (86.17) 
+ 23 +  CGGGGG   476  (100.00) 
+ 23 +  GGGGGG   477  (94.72) 
+ 23 +  GGGGGG   478  (94.72) 
+ 23 +  GGGGGG   479  (94.72) 
+ 23 +  CCGGGG   705  (90.03) 
+ 23 + [CGGGGA]  706  (87.56) 
+ 23 + [CGGGGT]  712  (87.56) 
+ 24 + [GAGGGG]   39  (87.75) 
+ 24 + [TTGGGG]  159  (86.17) 
+ 24 +  TGGGGG   160  (93.45) 
+ 24 + [CGCGGG]  217  (86.36) 
+ 24 +  CGGGGG   219  (100.00) 
+ 25 + [TAGGGG]   59  (86.48) 
+ 25 + [CGGGGC]  334  (86.44) 
+ 25 +  CTGGGG   417  (92.72) 
+ 25 +  CAGGGG   541  (93.03) 
+ 25 +  AGGGGG   542  (91.56) 
+ 26 + [TTGGGG]  292  (86.17) 
+ 26 + [CGTGGG]  800  (87.48) 
+ 27 +  AGGGGG   178  (91.56) 
+ 27 +  GGGGGG   179  (94.72) 
+ 27 +  CAGGGG   195  (93.03) 
+ 27 + [TAGGGG]  304  (86.48) 
+ 27 +  CAGGGG   583  (93.03) 
+ 27 +  CCGGGG   759  (90.03) 
+ 27 + [CGGGGC]  760  (86.44) 
+ 28 +  CTGGGG   100  (92.72) 
+ 28 +  CTGGGG   541  (92.72) 
+ 28 +  TGGGGG   542  (93.45) 
+ 28 +  GGGGGG   543  (94.72) 
+ 28 +  CTGGGG   614  (92.72) 
+ 28 +  CTGGGG   754  (92.72) 
+ 28 +  TGGGGG   755  (93.45) 
+ 29 + [TAGGGG]  298  (86.48) 
+ 29 +  AGGGGG   299  (91.56) 
+ 29 + [CGGAGG]  392  (88.31) 
+ 30 + [CGTGGG]  394  (87.48) 
+ 30 + [GTGGGG]  395  (87.44) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    8    70    18    13		    8    38    18    13
+2 	   13     6    78    12		   13     6    46    12
+3 	    2     3   100     4		    0     0    77     0
+4 	    5     0   101     3		    0     0    77     0
+5 	    3     0   105     1		    0     0    77     0
+6 	    4     3    98     4		    0     0    77     0
+
+==========================================
+
+
+CCCGGGGC
+
+14 redundant motifs found:
+CCGGGGGC - CAGGGGGC - CCTGGGGC - CCCAGGGG - GCCTGGGC - TCCGGGGG - GCCAGGGC - CCCGGGGA - CCGGGGGG - CCCAGGGC - CCCCTGGC - GCCCGGGG - CCCGGG - CCGGGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  2 + [CCTGGGGT]   27  (85.20) 
+  3 + [CCCAGGGA]   39  (88.51) 
+  3 + [GCAGGGGC]  781  (85.78) 
+  4 +  CCTGGGGC   457  (95.22) 
+  4 + [CCTGGGGA]  501  (88.90) 
+  5 + [TCCTGGGC]   13  (85.24) 
+  5 +  CCCGGGGA   657  (93.68) 
+  6 + [CCTGTGGC]    9  (85.65) 
+  6 + [CCTTGGGC]  564  (89.31) 
+  6 + [GCCTGGGC]  707  (85.66) 
+  6 + [CCTGTGGC]  777  (85.65) 
+  7 + [TCAGGGGC]  351  (85.35) 
+  7 +  CCGGGGGC   479  (92.85) 
+  8 + [GCTGGGGC]  323  (86.79) 
+  8 + [CCCAGGAC]  665  (85.35) 
+ 10 +  CCCGGGGA   426  (93.68) 
+ 11 +  CCAGGGGC   246  (94.20) 
+ 11 + [CCCAGGAC]  282  (85.35) 
+ 12 + [CCCATGGC]   21  (85.26) 
+ 16 + [GCCAGGGC]  832  (86.40) 
+ 17 + [CCCAGGGA]  113  (88.51) 
+ 17 + [CCAGGGGA]  164  (87.88) 
+ 17 + [CCCTGGGA]  443  (87.77) 
+ 18 + [CCTGGAGC]  697  (85.11) 
+ 19 + [CCTTGGGC]  249  (89.31) 
+ 19 + [TCCAGGGC]  578  (85.97) 
+ 20 + [GCCAGGGC]  225  (86.40) 
+ 20 + [CCGTGGGC]  514  (86.94) 
+ 21 + [TCAGGGGC]  265  (85.35) 
+ 22 + [CCTGGGAC]   48  (85.74) 
+ 22 + [CCTGGAGC]  500  (85.11) 
+ 22 +  CCTGGGGC   817  (95.22) 
+ 23 + [GCCGGGGA]  704  (85.25) 
+ 25 + [CACGGGGC]  332  (89.37) 
+ 26 + [CCCTGGGA]  116  (87.77) 
+ 26 + [CCTGGGAC]  117  (85.74) 
+ 26 +  CCCAGGGC   826  (94.83) 
+ 27 + [GCCAGGGC]  104  (86.40) 
+ 27 + [CCCAGGGG]  193  (85.97) 
+ 27 + [CCAGGGGA]  194  (87.88) 
+ 27 +  CCCGGGGC   758  (100.00) 
+ 28 + [GCCTGGGC]  157  (85.66) 
+ 30 +  CCCAGGGC   405  (94.83) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    1    81    10     9		    0     9     0     0
+2 	    6    84     5     6		    0     9     0     0
+3 	   14    59    10    18		    1     5     1     2
+4 	   18     3    65    15		    2     0     7     0
+5 	    5     2    86     8		    0     0     9     0
+6 	    7     2    86     6		    0     0     9     0
+7 	    8     5    84     4		    0     0     9     0
+8 	   15    72     8     6		    2     7     0     0
+
+==========================================
+
+
+GCCCCTGG
+
+8 redundant motifs found:
+GCCCTGGG - CCCTGGCT - CCCCTGGC - CCCCCTGG - GCCCCCTG - GCCCGGGG - CCCCTG - CCCTGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  2 + [GCCCTTGG]  769  (88.21) 
+  4 + [GCTCCTGG]  454  (88.04) 
+  5 + [GCTCCTGG]   11  (88.04) 
+  5 +  CCCCCTGG   314  (91.31) 
+  7 + [GCCACTGG]  357  (89.17) 
+  8 + [GCCCTTGG]  133  (88.21) 
+  9 +  ACCCCTGG   289  (90.58) 
+ 11 + [GCCCCTGC]  428  (88.62) 
+ 12 +  ACCCCTGG   341  (90.58) 
+ 14 +  GCCCCTGG   497  (100.00) 
+ 16 + [GCACCTGG]  496  (85.26) 
+ 17 + [GCCCCTAG]   99  (89.38) 
+ 19 + [GCCCTTGG]  247  (88.21) 
+ 20 + [GCACCTGG]  706  (85.26) 
+ 21 + [GCCCGTGG]  111  (87.02) 
+ 21 +  CCCCCTGG   455  (91.31) 
+ 22 +  GCCCCTGT   369  (91.34) 
+ 25 + [GCCCCTGC]  618  (88.62) 
+ 26 + [GGCCCTGG]  691  (89.41) 
+ 27 + [GGCCCTGG]  324  (89.41) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   12    14    88    17		    2     2     2     0
+2 	   16    94    10    11		    0     6     0     0
+3 	    5   113     4     9		    0     6     0     0
+4 	   10    99     6    16		    0     6     0     0
+5 	    6   109     7     9		    0     6     0     0
+6 	    8    12    11   100		    0     0     0     6
+7 	   11     7   104     9		    0     0     6     0
+8 	    6     9   100    16		    0     0     5     1
+
+==========================================
+
+
+CCACCC
+
+8 redundant motifs found:
+CCCACCCT - CCCCACCC - CCCACCCC - GCCCACCC - CACCCC - CCCACC - CCCCCC - CCTCCC - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [CCACCT]  200  (88.63) 
+  1 + [CCTCCC]  474  (89.92) 
+  2 + [CCGCCC]  185  (85.35) 
+  2 + [CCACCA]  390  (87.20) 
+  2 +  CCACCC   543  (100.00) 
+  2 +  CCACCC   548  (100.00) 
+  2 + [CCCCCC]  589  (86.12) 
+  2 + [CCCCCC]  590  (86.12) 
+  2 + [CCCCCC]  686  (86.12) 
+  2 + [CCCCCC]  687  (86.12) 
+  3 + [CCTCCC]   36  (89.92) 
+  3 + [CAACCC]  160  (86.28) 
+  3 + [CCACCT]  743  (88.63) 
+  4 + [TCACCC]   79  (86.28) 
+  4 + [CCAGCC]  293  (87.11) 
+  4 + [CCATCC]  297  (85.09) 
+  4 + [CCTCCC]  345  (89.92) 
+  5 +  CCACCC   202  (100.00) 
+  5 + [CCTCCC]  705  (89.92) 
+  6 + [CCACCA]   98  (87.20) 
+  6 + [CCACGC]  101  (85.69) 
+  6 + [CCAACC]  472  (85.86) 
+  6 + [CAACCC]  473  (86.28) 
+  6 + [CCGCCC]  511  (85.35) 
+  6 + [CCAACC]  560  (85.86) 
+  7 +  CCACCC   113  (100.00) 
+  7 + [CCATCC]  192  (85.09) 
+  7 + [CAACCC]  277  (86.28) 
+  7 +  CCACCC   281  (100.00) 
+  8 + [CCACCT]  847  (88.63) 
+  9 + [TCACCC]  232  (86.28) 
+  9 + [CCACCT]  611  (88.63) 
+ 10 + [CCATCC]   81  (85.09) 
+ 10 + [CCTCCC]  423  (89.92) 
+ 10 + [CCAGCC]  496  (87.11) 
+ 10 + [CCATCC]  696  (85.09) 
+ 10 + [CCTCCC]  700  (89.92) 
+ 10 + [CCACGC]  739  (85.69) 
+ 11 + [CCACCT]  256  (88.63) 
+ 11 + [CCAACC]  596  (85.86) 
+ 12 + [CCACCT]  149  (88.63) 
+ 12 + [CCACCT]  307  (88.63) 
+ 12 +  CCACCC   339  (100.00) 
+ 13 + [CCACCA]   32  (87.20) 
+ 13 +  CCACCC   564  (100.00) 
+ 13 +  CCACCC   591  (100.00) 
+ 13 + [CCTCCC]  705  (89.92) 
+ 14 + [CCACGC]   25  (85.69) 
+ 14 + [CCGCCC]  187  (85.35) 
+ 14 + [CCAGCC]  462  (87.11) 
+ 14 + [TCACCC]  528  (86.28) 
+ 14 + [CCACGC]  565  (85.69) 
+ 15 + [CCATCC]  347  (85.09) 
+ 15 + [TCACCC]  510  (86.28) 
+ 15 + [CCAACC]  781  (85.86) 
+ 15 + [CAACCC]  782  (86.28) 
+ 16 + [CCACCT]   69  (88.63) 
+ 16 + [CCAGCC]  250  (87.11) 
+ 16 +  CCACCC   730  (100.00) 
+ 16 + [CCAGCC]  757  (87.11) 
+ 17 +  CCACCC    82  (100.00) 
+ 17 + [CCACCA]  161  (87.20) 
+ 18 + [CCACGC]  295  (85.69) 
+ 18 + [TCACCC]  631  (86.28) 
+ 18 + [CCTCCC]  693  (89.92) 
+ 19 +  CCACCC   466  (100.00) 
+ 19 + [CCACCT]  495  (88.63) 
+ 19 + [CAACCC]  619  (86.28) 
+ 20 + [CCGCCC]  525  (85.35) 
+ 21 + [CCTCCC]   60  (89.92) 
+ 21 + [CCACCT]  428  (88.63) 
+ 21 + [CCTCCC]  499  (89.92) 
+ 21 + [CCGCCC]  527  (85.35) 
+ 22 +  CCACCC    58  (100.00) 
+ 22 + [TCACCC]  251  (86.28) 
+ 22 + [CCCCCC]  456  (86.12) 
+ 22 +  CCACCC   460  (100.00) 
+ 22 + [CCCCCC]  835  (86.12) 
+ 23 + [CCTCCC]   89  (89.92) 
+ 23 + [CCACCT]  216  (88.63) 
+ 23 + [CCTCCC]  249  (89.92) 
+ 23 + [CCACCT]  266  (88.63) 
+ 24 + [CCCCCC]  355  (86.12) 
+ 24 + [CCAACC]  398  (85.86) 
+ 24 + [CAACCC]  399  (86.28) 
+ 24 +  CCACCC   664  (100.00) 
+ 24 + [CCATCC]  669  (85.09) 
+ 24 + [CCGCCC]  674  (85.35) 
+ 25 + [CCAACC]  172  (85.86) 
+ 25 + [CAACCC]  173  (86.28) 
+ 25 + [CCTCCC]  188  (89.92) 
+ 25 + [CCACCA]  284  (87.20) 
+ 25 + [CCACCA]  314  (87.20) 
+ 25 +  CCACCC   426  (100.00) 
+ 25 + [CCAGCC]  494  (87.11) 
+ 25 + [CCAGCC]  498  (87.11) 
+ 25 + [CCACGC]  773  (85.69) 
+ 26 + [TCACCC]   17  (86.28) 
+ 26 +  CCACCC   307  (100.00) 
+ 27 + [CCACCA]   90  (87.20) 
+ 27 +  CCACCC   190  (100.00) 
+ 27 + [CCACCA]  643  (87.20) 
+ 28 + [CCTCCC]  459  (89.92) 
+ 29 + [TCACCC]  184  (86.28) 
+ 29 + [CAACCC]  193  (86.28) 
+ 29 + [CCAACC]  197  (85.86) 
+ 29 + [CCAGCC]  357  (87.11) 
+ 29 + [CCTCCC]  363  (89.92) 
+ 29 + [CCACCA]  436  (87.20) 
+ 30 + [CCACGC]  386  (85.69) 
+ 30 + [CCAGCC]  649  (87.11) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    5   125     3     8		    0    17     0     0
+2 	    8   125     3     5		    0    17     0     0
+3 	  113     7     6    15		   17     0     0     0
+4 	    7   119     9     6		    0    17     0     0
+5 	    5   123     7     6		    0    17     0     0
+6 	    9   117     3    12		    0    17     0     0
+
+==========================================
+
+
+CCCTGGCT
+
+6 redundant motifs found:
+CCAGGGCT - GCCCCTGG - CCCCTGGC - CCCCCTGG - CCTGGC - CCCTGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  3 + [CCCTGGGT]  467  (89.94) 
+  5 + [CCCTCGCT]    6  (89.51) 
+  5 +  CCATGGCT   113  (90.93) 
+  5 +  CTCTGGCT   641  (90.29) 
+  6 +  CCTTGGCT   452  (90.37) 
+  6 +  CTCTGGCT   624  (90.29) 
+  9 +  CCCTGGCA   291  (91.92) 
+  9 +  CCCTTGCT   597  (91.57) 
+ 11 +  CCCTGCCT   430  (92.62) 
+ 14 +  CCCTGGAT   466  (92.10) 
+ 14 + [CCCTGGTT]  499  (88.76) 
+ 15 +  CCATGGCT   176  (90.93) 
+ 15 +  CCTTGGCT   771  (90.37) 
+ 16 + [ACCTGGCT]  498  (88.91) 
+ 16 +  CCCTGCCT   637  (92.62) 
+ 17 +  CTCTGGCT   531  (90.29) 
+ 19 + [TCCTGGCT]  443  (88.48) 
+ 20 + [ACCTGGCT]  708  (88.91) 
+ 21 + [CCCTGGTT]  457  (88.76) 
+ 24 +  CCTTGGCT   299  (90.37) 
+ 25 +  CCCTGGCA   301  (91.92) 
+ 26 + [CCCTGGGT]  693  (89.94) 
+ 27 +  CCCTGGAT   515  (92.10) 
+ 29 +  CCCTTGCT    77  (91.57) 
+ 30 + [CCCTAGCT]  166  (89.12) 
+ 30 +  CCCTGGCT   497  (100.00) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   11   130    15    10		    0    17     0     0
+2 	    7   139     4    16		    0    14     0     3
+3 	   17   128     6    15		    2    12     0     3
+4 	   16     8     8   134		    0     0     0    17
+5 	   11    12   124    19		    0     0    15     2
+6 	   10    23   119    14		    0     2    15     0
+7 	   21   122    13    10		    2    15     0     0
+8 	   21    12     6   127		    2     0     0    15
+
+==========================================
+
+
+CCCGGG
+
+9 redundant motifs found:
+CCCGGGGC - CCCGGGGA - GCCCGGGG - CCGGGG - CCGGGG - CCAGGG - CCCAGG - CCCTGG - CCTGGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [CCATGG]  252  (88.80) 
+  1 + [CCATGG]  447  (88.80) 
+  1 + [CCCGTG]  686  (88.01) 
+  1 +  CCTGGG   829  (95.34) 
+  2 +  CCTGGG    27  (95.34) 
+  2 + [CGCGGG]   82  (87.17) 
+  2 + [CTTGGG]  269  (85.59) 
+  2 + [CTTGGG]  286  (85.59) 
+  2 + [CCATGG]  393  (88.80) 
+  2 +  CTCGGG   492  (90.25) 
+  2 + [CCTTGG]  771  (89.40) 
+  3 + [GCCGGG]   17  (88.04) 
+  3 +  CCCAGG    39  (93.57) 
+  3 +  CCAGGG    40  (94.75) 
+  3 + [CCAAGG]  117  (88.32) 
+  3 +  CCAGGG   269  (94.75) 
+  3 + [CCGTGG]  394  (85.02) 
+  3 +  CCCTGG   467  (94.06) 
+  3 +  CCTGGG   468  (95.34) 
+  3 +  CCTGGG   840  (95.34) 
+  4 + [CCCGAG]   82  (85.49) 
+  4 + [CCCGGC]  348  (86.93) 
+  4 +  CCTGGG   457  (95.34) 
+  4 +  CCTGGG   501  (95.34) 
+  4 +  CCAGGG   543  (94.75) 
+  5 +  CCTGGG    14  (95.34) 
+  5 + [CCGTGG]   75  (85.02) 
+  5 + [CCATGG]  113  (88.80) 
+  5 + [CCTAGG]  212  (88.91) 
+  5 +  CCCTGG   316  (94.06) 
+  5 + [TCCGGG]  415  (88.04) 
+  5 +  CTCGGG   529  (90.25) 
+  5 +  CCCGGG   657  (100.00) 
+  5 +  CCGGGG   658  (90.96) 
+  6 + [CCCCGG]   20  (87.97) 
+  6 + [CCCGGC]   21  (86.93) 
+  6 +  CCCAGG    57  (93.57) 
+  6 + [CCTTGG]  452  (89.40) 
+  6 + [CCTTGG]  564  (89.40) 
+  6 + [CTTGGG]  565  (85.59) 
+  6 +  CCTGGG   708  (95.34) 
+  7 + [CCCCGG]  117  (87.97) 
+  7 + [CCCGGA]  118  (86.93) 
+  7 + [CCAAGG]  426  (88.32) 
+  7 + [TCCGGG]  478  (88.04) 
+  7 +  CCGGGG   479  (90.96) 
+  7 + [CCCGTG]  580  (88.01) 
+  8 + [CCTTGG]  135  (89.40) 
+  8 + [CACGGG]  657  (87.17) 
+  8 +  CCCAGG   665  (93.57) 
+  8 +  CCTGGG   714  (95.34) 
+  9 +  CTCGGG    95  (90.25) 
+  9 +  CCCAGG   235  (93.57) 
+  9 +  CCCTGG   291  (94.06) 
+  9 +  CCAGGG   301  (94.75) 
+  9 + [TCCGGG]  323  (88.04) 
+  9 +  CCCAGG   515  (93.57) 
+  9 + [CCCGAG]  668  (85.49) 
+ 10 + [CCAAGG]   16  (88.32) 
+ 10 +  CCCGGG   426  (100.00) 
+ 10 +  CCGGGG   427  (90.96) 
+ 10 + [CCTTGG]  530  (89.40) 
+ 11 + [GCCGGG]    6  (88.04) 
+ 11 +  CCAGGG   246  (94.75) 
+ 11 +  CCCAGG   282  (93.57) 
+ 11 +  CCAGGG   578  (94.75) 
+ 12 + [CCATGG]   22  (88.80) 
+ 12 +  CCCTGG   343  (94.06) 
+ 13 + [CCCGGC]  756  (86.93) 
+ 13 + [CCAAGG]  819  (88.32) 
+ 14 + [CCTAGG]  310  (88.91) 
+ 14 +  CCCAGG   399  (93.57) 
+ 14 + [CCGTGG]  427  (85.02) 
+ 14 +  CCCTGG   466  (94.06) 
+ 14 +  CCCTGG   499  (94.06) 
+ 15 + [CCATGG]  176  (88.80) 
+ 15 +  CCCTGG   513  (94.06) 
+ 15 + [CCTTGG]  771  (89.40) 
+ 16 + [CACGGG]  404  (87.17) 
+ 16 +  CCTGGG   434  (95.34) 
+ 16 +  CCAGGG   833  (94.75) 
+ 17 +  CCCGGG    62  (100.00) 
+ 17 +  CCCAGG   113  (93.57) 
+ 17 +  CCAGGG   114  (94.75) 
+ 17 +  CCAGGG   164  (94.75) 
+ 17 +  CCCTGG   443  (94.06) 
+ 17 +  CCTGGG   444  (95.34) 
+ 18 + [CCTTGG]  193  (89.40) 
+ 18 + [CTTGGG]  194  (85.59) 
+ 18 +  CCCGGG   569  (100.00) 
+ 18 +  CCCTGG   696  (94.06) 
+ 18 + [CCTAGG]  800  (88.91) 
+ 19 + [CCGTGG]   74  (85.02) 
+ 19 + [CCATGG]   98  (88.80) 
+ 19 + [CCTTGG]  249  (89.40) 
+ 19 + [CTTGGG]  250  (85.59) 
+ 19 + [CGCGGG]  266  (87.17) 
+ 19 +  CCTGGG   347  (95.34) 
+ 19 +  CCAGGG   579  (94.75) 
+ 19 +  CTCGGG   771  (90.25) 
+ 20 + [CTAGGG]  118  (85.00) 
+ 20 + [TCCGGG]  181  (88.04) 
+ 20 +  CCGGGG   182  (90.96) 
+ 20 +  CCAGGG   226  (94.75) 
+ 20 + [CCGTGG]  514  (85.02) 
+ 20 + [CCTTGG]  638  (89.40) 
+ 21 + [CCCGTG]  112  (88.01) 
+ 21 + [CCGTGG]  113  (85.02) 
+ 21 +  CCCAGG   234  (93.57) 
+ 21 +  CCCTGG   457  (94.06) 
+ 21 + [CTTGGG]  630  (85.59) 
+ 22 +  CCTGGG    48  (95.34) 
+ 22 + [CCATGG]  347  (88.80) 
+ 22 +  CCTGGG   625  (95.34) 
+ 22 + [CCCGGA]  673  (86.93) 
+ 22 +  CCTGGG   817  (95.34) 
+ 23 + [CTTGGG]  162  (85.59) 
+ 23 + [CCCGTG]  452  (88.01) 
+ 23 +  CTCGGG   474  (90.25) 
+ 23 + [CCAAGG]  622  (88.32) 
+ 23 + [GCCGGG]  704  (88.04) 
+ 23 +  CCGGGG   705  (90.96) 
+ 24 + [CGCGGG]  217  (87.17) 
+ 24 + [CCAAGG]  277  (88.32) 
+ 24 + [CCTTGG]  299  (89.40) 
+ 24 +  CCCAGG   658  (93.57) 
+ 24 + [CCCCGG]  677  (87.97) 
+ 24 + [CCCGGA]  678  (86.93) 
+ 25 + [CCAAGG]  193  (88.32) 
+ 25 +  CCCTGG   301  (94.06) 
+ 25 + [CACGGG]  332  (87.17) 
+ 25 + [CCTAGG]  710  (88.91) 
+ 26 +  CCCTGG   116  (94.06) 
+ 26 +  CCTGGG   117  (95.34) 
+ 26 +  CCAGGG   286  (94.75) 
+ 26 + [CTTGGG]  547  (85.59) 
+ 26 + [CCATGG]  568  (88.80) 
+ 26 + [GCCGGG]  619  (88.04) 
+ 26 +  CCCTGG   693  (94.06) 
+ 26 +  CCTGGG   694  (95.34) 
+ 26 +  CTCGGG   739  (90.25) 
+ 26 +  CCCAGG   826  (93.57) 
+ 26 +  CCAGGG   827  (94.75) 
+ 27 +  CCAGGG   105  (94.75) 
+ 27 +  CCCAGG   193  (93.57) 
+ 27 +  CCAGGG   194  (94.75) 
+ 27 + [CCAAGG]  279  (88.32) 
+ 27 +  CCCTGG   326  (94.06) 
+ 27 +  CCTGGG   458  (95.34) 
+ 27 +  CCCTGG   515  (94.06) 
+ 27 + [CCAAGG]  730  (88.32) 
+ 27 +  CCCGGG   758  (100.00) 
+ 27 +  CCGGGG   759  (90.96) 
+ 28 +  CCTGGG   158  (95.34) 
+ 28 +  CCCAGG   513  (93.57) 
+ 28 +  CCAGGG   514  (94.75) 
+ 28 +  CTCGGG   558  (90.25) 
+ 28 + [CCTTGG]  648  (89.40) 
+ 28 + [CTTGGG]  649  (85.59) 
+ 29 + [CCAAGG]  439  (88.32) 
+ 29 + [CCTTGG]  738  (89.40) 
+ 29 + [CCAAGG]  826  (88.32) 
+ 30 + [CCAAGG]    8  (88.32) 
+ 30 + [CCGTGG]  393  (85.02) 
+ 30 +  CCCAGG   405  (93.57) 
+ 30 +  CCAGGG   406  (94.75) 
+ 30 + [CCAAGG]  454  (88.32) 
+ 30 +  CCTGGG   481  (95.34) 
+ 30 +  CCCTGG   497  (94.06) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    0   107     4     4		    0    85     0     0
+2 	    3   102     3     7		    0    78     0     7
+3 	   17    72     6    20		   17    42     6    20
+4 	   14     3    82    16		   14     0    55    16
+5 	    2     1   108     4		    0     0    85     0
+6 	    3     3   109     0		    0     0    85     0
+
+==========================================
+
+
+GCCAGGGC
+
+10 redundant motifs found:
+GCCTGGGA - GGCCAGGG - CCAGGGCT - CCCAGGGG - GCCTGGGC - CCCGGGGC - CCCAGGGC - GCCCGGGG - GCCAGG - CCAGGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  3 + [CCCAGGGA]   39  (85.08) 
+  4 +  GCCAGTGC   261  (91.17) 
+  6 +  GCCAGGCC   466  (92.20) 
+  6 +  GCCTGGGC   707  (91.92) 
+  9 +  GCCAGGGA   300  (92.34) 
+ 10 +  GCCAGGAC   776  (91.17) 
+ 13 +  GCCAGGCC   521  (92.20) 
+ 14 + [GCCAGGTC]  450  (88.60) 
+ 15 +  GCCATGGC   175  (91.40) 
+ 16 +  GCCAGGGC   832  (100.00) 
+ 17 + [CCCAGGGA]  113  (85.08) 
+ 19 +  GCCATGGC    97  (91.40) 
+ 19 +  TCCAGGGC   578  (91.79) 
+ 20 +  GCCAGGGC   225  (100.00) 
+ 25 + [GCGAGGGC]  825  (87.08) 
+ 26 +  CCCAGGGC   826  (92.74) 
+ 27 +  GCCAGGGC   104  (100.00) 
+ 27 +  GCCAGGCC   320  (92.20) 
+ 28 +  GCCTGGGC   157  (91.92) 
+ 29 +  GCCAAGGC   825  (91.03) 
+ 30 +  CCCAGGGC   405  (92.74) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    9    15    83    12		    0     2    14     1
+2 	    7    94    11     7		    0    17     0     0
+3 	    6   105     5     3		    0    17     0     0
+4 	   94     5     6    14		   15     0     0     2
+5 	   11     5    91    12		    1     0    14     2
+6 	   10     1    96    12		    0     0    16     1
+7 	   11    14    88     6		    1     3    13     0
+8 	   14    85     8    12		    1    16     0     0
+
+==========================================
+
+
+GCCTGG
+
+10 redundant motifs found:
+GCCTGGGA - TGCCTGGG - GCCTGGGC - GGCCTGGG - CCTGGC - CTGGGG - GGCCTG - GCCAGG - CCCTGG - CCTGGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [GGCTGG]  323  (88.93) 
+  1 +  GACTGG   335  (90.96) 
+  1 + [GCCTGT]  352  (87.58) 
+  1 + [GCATGG]  441  (87.94) 
+  1 +  GACTGG   604  (90.96) 
+  1 + [GCATGG]  691  (87.94) 
+  1 + [GCCTGC]  754  (88.96) 
+  1 +  GCCTGG   828  (100.00) 
+  2 + [ACCTGG]   26  (87.35) 
+  2 + [GTCTGG]  330  (89.34) 
+  2 + [GCCTCG]  490  (85.26) 
+  2 + [GCCTGC]  520  (88.96) 
+  3 + [GTCTGG]   99  (89.34) 
+  3 + [GCCTGA]  411  (86.34) 
+  3 +  GCCAGG   422  (90.78) 
+  3 +  CCCTGG   467  (90.92) 
+  3 + [GCCTGT]  527  (87.58) 
+  3 +  TCCTGG   666  (90.03) 
+  3 +  TCCTGG   839  (90.03) 
+  4 + [GCCTGC]  117  (88.96) 
+  4 + [GCCTTG]  256  (88.25) 
+  4 +  TCCTGG   456  (90.03) 
+  4 + [ACCTGG]  500  (87.35) 
+  4 + [GCCTGA]  571  (86.34) 
+  5 +  TCCTGG    13  (90.03) 
+  5 + [GTCTGG]   47  (89.34) 
+  5 +  CCCTGG   316  (90.92) 
+  5 + [GCTTGG]  760  (86.86) 
+  5 + [GTCTGG]  776  (89.34) 
+  5 +  GCCAGG   781  (90.78) 
+  6 + [GCATGG]  156  (87.94) 
+  6 + [GCCTTG]  379  (88.25) 
+  6 + [GCCTTG]  451  (88.25) 
+  6 +  GCCAGG   466  (90.78) 
+  6 +  TCCTGG   680  (90.03) 
+  6 +  GCCTGG   707  (100.00) 
+  6 + [GCCTGT]  776  (87.58) 
+  7 +  GACTGG   129  (90.96) 
+  7 + [GCCTGT]  472  (87.58) 
+  7 +  GACTGG   492  (90.96) 
+  7 +  GACTGG   690  (90.96) 
+  7 + [GCATGG]  715  (87.94) 
+  8 + [GGCTGG]  363  (88.93) 
+  8 +  TCCTGG   713  (90.03) 
+  8 +  GACTGG   804  (90.96) 
+  9 +  GCCTGG   195  (100.00) 
+  9 +  CCCTGG   291  (90.92) 
+  9 +  GCCAGG   300  (90.78) 
+  9 +  GACTGG   707  (90.96) 
+ 10 +  GCCAGG   147  (90.78) 
+ 10 + [GCCTGC]  314  (88.96) 
+ 10 + [GCCTTG]  499  (88.25) 
+ 10 + [GCCTTG]  709  (88.25) 
+ 10 +  GCCAGG   776  (90.78) 
+ 11 + [GCTTGG]   97  (86.86) 
+ 11 +  GCCAGG   212  (90.78) 
+ 11 + [GCCTTG]  434  (88.25) 
+ 11 + [GCATGG]  523  (87.94) 
+ 11 +  GCCTGG   664  (100.00) 
+ 11 + [GCCTTG]  669  (88.25) 
+ 12 + [GCCTGC]  144  (88.96) 
+ 12 +  TCCTGG   176  (90.03) 
+ 12 + [GCCTCG]  300  (85.26) 
+ 12 +  CCCTGG   343  (90.92) 
+ 12 + [GCCTTG]  386  (88.25) 
+ 12 + [GGCTGG]  393  (88.93) 
+ 12 + [GCCTGA]  678  (86.34) 
+ 13 + [GCCTGT]   82  (87.58) 
+ 13 + [GCATGG]  146  (87.94) 
+ 13 +  GCCAGG   521  (90.78) 
+ 13 +  GACTGG   661  (90.96) 
+ 14 +  GCCAGG   450  (90.78) 
+ 14 +  CCCTGG   466  (90.92) 
+ 14 +  CCCTGG   499  (90.92) 
+ 14 + [GCCTGT]  523  (87.58) 
+ 14 + [GCCTCG]  579  (85.26) 
+ 14 + [GCATGG]  625  (87.94) 
+ 14 +  GACTGG   746  (90.96) 
+ 15 + [GGCTGG]   93  (88.93) 
+ 15 + [GCTTGG]  296  (86.86) 
+ 15 + [GGCTGG]  467  (88.93) 
+ 15 +  CCCTGG   513  (90.92) 
+ 15 + [GGCTGG]  530  (88.93) 
+ 15 + [GCCTGC]  609  (88.96) 
+ 15 + [GCCTTG]  770  (88.25) 
+ 16 +  GACTGG    10  (90.96) 
+ 16 + [GTCTGG]  114  (89.34) 
+ 16 +  TCCTGG   134  (90.03) 
+ 16 +  TCCTGG   433  (90.03) 
+ 16 + [ACCTGG]  498  (87.35) 
+ 16 + [GCCTCG]  641  (85.26) 
+ 16 +  GCCAGG   832  (90.78) 
+ 17 + [GGCTGG]   34  (88.93) 
+ 17 +  CCCTGG   443  (90.92) 
+ 17 + [GCCTGA]  587  (86.34) 
+ 17 + [GCATGG]  765  (87.94) 
+ 18 + [GCCTGC]  331  (88.96) 
+ 18 + [GGCTGG]  562  (88.93) 
+ 18 +  CCCTGG   696  (90.92) 
+ 19 + [GGCTGG]   89  (88.93) 
+ 19 +  GCCTGG   346  (100.00) 
+ 19 +  TCCTGG   443  (90.03) 
+ 19 +  GCCAGG   651  (90.78) 
+ 20 +  GACTGG    45  (90.96) 
+ 20 +  GCCTGG   161  (100.00) 
+ 20 +  GCCAGG   225  (90.78) 
+ 20 +  GCCAGG   237  (90.78) 
+ 20 +  TCCTGG   579  (90.03) 
+ 20 + [ACCTGG]  708  (87.35) 
+ 21 +  CCCTGG   457  (90.92) 
+ 21 + [GCTTGG]  707  (86.86) 
+ 21 + [GCCTGC]  738  (88.96) 
+ 21 + [GCCTGC]  784  (88.96) 
+ 22 +  TCCTGG    47  (90.03) 
+ 22 + [GCCTGA]  393  (86.34) 
+ 22 +  GCCTGG   499  (100.00) 
+ 22 +  GCCTGG   624  (100.00) 
+ 22 +  GACTGG   677  (90.96) 
+ 22 +  TCCTGG   816  (90.03) 
+ 23 + [GCCTCG]   24  (85.26) 
+ 23 + [GCTTGG]  161  (86.86) 
+ 23 + [GCCTGA]  304  (86.34) 
+ 23 + [GCATGG]  751  (87.94) 
+ 24 + [GTCTGG]   91  (89.34) 
+ 24 +  GCCAGG   335  (90.78) 
+ 24 + [GTCTGG]  629  (89.34) 
+ 24 + [GCCTGT]  644  (87.58) 
+ 25 + [GCCTGC]  100  (88.96) 
+ 25 +  CCCTGG   301  (90.92) 
+ 25 +  GACTGG   408  (90.96) 
+ 25 + [GCCTTG]  777  (88.25) 
+ 26 + [GTCTGG]   30  (89.34) 
+ 26 +  CCCTGG   116  (90.92) 
+ 26 +  CCCTGG   693  (90.92) 
+ 26 + [GTCTGG]  732  (89.34) 
+ 27 +  GCCAGG   104  (90.78) 
+ 27 +  GCCAGG   320  (90.78) 
+ 27 +  CCCTGG   326  (90.92) 
+ 27 +  GCCTGG   457  (100.00) 
+ 27 +  CCCTGG   515  (90.92) 
+ 27 +  GCCAGG   538  (90.78) 
+ 27 + [ACCTGG]  608  (87.35) 
+ 27 + [GTCTGG]  703  (89.34) 
+ 28 +  GCCTGG    16  (100.00) 
+ 28 +  GCCTGG   157  (100.00) 
+ 28 + [ACCTGG]  187  (87.35) 
+ 28 +  GACTGG   619  (90.96) 
+ 28 + [GGCTGG]  796  (88.93) 
+ 28 +  GACTGG   803  (90.96) 
+ 29 + [GCCTGC]  321  (88.96) 
+ 29 + [GCTTGG]  532  (86.86) 
+ 30 +  GACTGG    86  (90.96) 
+ 30 + [GTCTGG]  113  (89.34) 
+ 30 + [GCCTGT]  360  (87.58) 
+ 30 + [ACCTGG]  480  (87.35) 
+ 30 +  CCCTGG   497  (90.92) 
+ 30 + [GCTTGG]  502  (86.86) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    7    16   131    13		    0    16    44    13
+2 	   16   130    10    11		   16    57     0     0
+3 	    9   147     4     7		    0    73     0     0
+4 	   17     2     4   144		   17     0     0    56
+5 	    0     5   152    10		    0     0    73     0
+6 	    6    11   142     8		    0     0    73     0
+
+==========================================
+
+
+GGGGGGAG
+
+10 redundant motifs found:
+GGGGGGCC - CCGGGGGG - CGGGGGGG - CGGGGGGG - GGGGGGCT - GGGGGGGC - CTGGGGGG - GGGGGA - GGGGAG - GGGGGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [TGGGGGGG]  450  (87.03) 
+  1 +  GGGTGGAG   597  (92.18) 
+  3 + [GGGTGGGG]  272  (86.50) 
+  4 + [GGGGTGAG]  393  (88.91) 
+  7 +  GGGGGCAG   481  (92.87) 
+  8 + [TGGGGGGG]  531  (87.03) 
+  8 +  GGGGGGGG   532  (94.31) 
+  8 +  GGGGGGGG   533  (94.31) 
+  8 +  GGGGGGGG   534  (94.31) 
+  8 + [GGGGGGGT]  535  (85.11) 
+  8 +  GGGGGGTG   536  (91.09) 
+  8 + [GGGTGCAG]  539  (85.05) 
+  9 +  GAGGGGAG    67  (91.37) 
+  9 + [TGGGGGGG]  659  (87.03) 
+  9 +  GGGGGGGG   660  (94.31) 
+ 10 +  GAGGGGAG   631  (91.37) 
+ 12 +  AGGGGGAG   353  (92.20) 
+ 14 +  GGGGGGAG   555  (100.00) 
+ 14 + [GGGGGAGG]  556  (85.51) 
+ 15 + [GGTGGGAG]  471  (89.51) 
+ 19 + [CGGGGGAG]  773  (88.41) 
+ 20 + [AGGGGCAG]  120  (85.07) 
+ 20 + [TGGGGCAG]  167  (85.59) 
+ 20 +  GGGAGGAG   309  (91.00) 
+ 22 +  GGGGGAAG   527  (91.19) 
+ 23 + [TGGGGCAG]  164  (85.59) 
+ 23 +  GGGGGGGG   477  (94.31) 
+ 23 + [GGGGGGGA]  478  (86.10) 
+ 23 +  GGGGGGAG   479  (100.00) 
+ 23 + [GGGGGAGG]  480  (85.51) 
+ 26 + [GGAGGGAG]  320  (89.51) 
+ 27 +  GGGGGGAG   179  (100.00) 
+ 27 + [GGGGGAGG]  180  (85.51) 
+ 27 + [GGTGGGAG]  550  (89.51) 
+ 29 + [GGGGGCGG]  300  (87.18) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   15     6    99    17		    1     0    15     0
+2 	   14     5   113     5		    2     0    14     0
+3 	    9     5   114     9		    0     0    16     0
+4 	   12     3   106    16		    1     0    14     1
+5 	   10     2   117     8		    0     0    16     0
+6 	   12    18   101     6		    1     1    14     0
+7 	   95     7    24    11		   10     0     5     1
+8 	   14    10   102    11		    0     0    16     0
+
+==========================================
+
+
+GGCCTG
+
+8 redundant motifs found:
+GGCCTGGG - CCTGGC - GGCCAG - GCCCTG - GCCTGG - GGGCTG - GGACTG - GGGGCC - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 +  GGACTG   182  (92.16) 
+  1 + [GGGCTG]  322  (89.76) 
+  1 +  GGACTG   334  (92.16) 
+  1 + [AGCCTG]  351  (89.71) 
+  1 + [GGCCTC]  410  (88.38) 
+  1 + [TGCCTG]  753  (89.71) 
+  1 + [GCCCTG]  758  (88.31) 
+  1 + [AGCCTG]  827  (89.71) 
+  2 + [AGCCTG]  519  (89.71) 
+  3 + [GGTCTG]  139  (87.79) 
+  3 + [GGTCTG]  340  (87.79) 
+  3 +  GGCCTG   410  (100.00) 
+  3 + [GGCCAG]  421  (89.57) 
+  3 + [AGCCTG]  526  (89.71) 
+  3 + [GGGCTG]  785  (89.76) 
+  4 + [TGCCTG]  116  (89.71) 
+  4 + [GGCCTT]  149  (89.26) 
+  4 + [GGCCTT]  240  (89.26) 
+  4 + [GACCTG]  325  (87.80) 
+  4 + [GGTCTG]  547  (87.79) 
+  4 +  GGCCTG   570  (100.00) 
+  4 + [GGGCTG]  816  (89.76) 
+  5 + [GGCCAG]  238  (89.57) 
+  5 + [GGTCTG]  537  (87.79) 
+  5 +  GGACTG   603  (92.16) 
+  5 + [GGCCCG]  655  (85.74) 
+  5 + [GGCCAG]  780  (89.57) 
+  6 + [GACCTG]   91  (87.80) 
+  6 + [GGCATG]  155  (86.95) 
+  6 + [GGGCTG]  568  (89.76) 
+  6 + [TGCCTG]  706  (89.71) 
+  6 + [GCCCTG]  730  (88.31) 
+  6 +  GGCCTG   775  (100.00) 
+  7 +  GGACTG   128  (92.16) 
+  7 + [GGTCTG]  202  (87.79) 
+  7 + [TGCCTG]  471  (89.71) 
+  7 +  GGACTG   491  (92.16) 
+  7 +  GGACTG   689  (92.16) 
+  7 + [GGCCTT]  835  (89.26) 
+  8 + [GGGCTG]  385  (89.76) 
+  9 +  GGCCTG   194  (100.00) 
+  9 + [GGCCAG]  299  (89.57) 
+  9 + [GGCCTT]  308  (89.26) 
+  9 + [GGCCCG]  666  (85.74) 
+  9 +  GGACTG   706  (92.16) 
+ 10 + [GGCCTT]  174  (89.26) 
+ 10 + [GGCCCG]  231  (85.74) 
+ 10 + [AGCCTG]  313  (89.71) 
+ 10 + [GGCCTC]  415  (88.38) 
+ 10 + [GGCTTG]  485  (85.48) 
+ 10 + [GGCCTC]  538  (88.38) 
+ 11 + [GGCATG]  522  (86.95) 
+ 11 +  GGACTG   585  (92.16) 
+ 11 +  GGCCTG   663  (100.00) 
+ 11 + [GGCCTT]  668  (89.26) 
+ 11 + [GGCATG]  712  (86.95) 
+ 12 + [AGCCTG]  143  (89.71) 
+ 12 + [GGCCTC]  299  (88.38) 
+ 12 + [GGCCTT]  385  (89.26) 
+ 12 + [GGCCAG]  585  (89.57) 
+ 12 + [AGCCTG]  677  (89.71) 
+ 13 + [TGCCTG]   81  (89.71) 
+ 13 + [GGCATG]  145  (86.95) 
+ 13 + [GGCCTC]  183  (88.38) 
+ 13 + [GGCCTC]  233  (88.38) 
+ 13 + [GACCTG]  826  (87.80) 
+ 14 +  GGACTG   436  (92.16) 
+ 14 + [GCCCTG]  465  (88.31) 
+ 14 + [TGCCTG]  522  (89.71) 
+ 14 + [GGCATG]  624  (86.95) 
+ 14 + [GGCCCG]  800  (85.74) 
+ 15 + [GGCCAG]   97  (89.57) 
+ 15 + [GCCCTG]  143  (88.31) 
+ 15 + [GGGCTG]  466  (89.76) 
+ 16 + [GGGCTG]  836  (89.76) 
+ 17 + [GGCCTC]   39  (88.38) 
+ 17 +  GGCCTG   586  (100.00) 
+ 17 + [GGCCTC]  664  (88.38) 
+ 17 +  GGACTG   797  (92.16) 
+ 18 +  GGCCTG   330  (100.00) 
+ 18 + [GGGCTG]  362  (89.76) 
+ 19 + [GGCCTT]  217  (89.26) 
+ 19 + [GGCCCG]  262  (85.74) 
+ 19 + [TGCCTG]  345  (89.71) 
+ 20 +  GGACTG    44  (92.16) 
+ 20 + [TGCCTG]  160  (89.71) 
+ 20 + [GGCCAG]  224  (89.57) 
+ 20 + [GGCCAG]  236  (89.57) 
+ 20 + [GGCATG]  301  (86.95) 
+ 20 +  GGACTG   606  (92.16) 
+ 20 + [GCCCTG]  763  (88.31) 
+ 21 + [GGCTTG]  158  (85.48) 
+ 21 + [GGCCTC]  519  (88.38) 
+ 21 +  GGCCTG   737  (100.00) 
+ 21 + [AGCCTG]  783  (89.71) 
+ 22 + [GGCCAG]  292  (89.57) 
+ 22 + [GGCTTG]  356  (85.48) 
+ 22 + [AGCCTG]  392  (89.71) 
+ 22 + [TGCCTG]  498  (89.71) 
+ 22 + [AGCCTG]  623  (89.71) 
+ 22 +  GGACTG   676  (92.16) 
+ 23 + [GGTCTG]   67  (87.79) 
+ 23 + [GGGCTG]  152  (89.76) 
+ 23 + [TGCCTG]  303  (89.71) 
+ 23 + [GGCCAG]  612  (89.57) 
+ 23 + [GACCTG]  683  (87.80) 
+ 23 + [GCCCTG]  844  (88.31) 
+ 24 + [GGCTTG]  131  (85.48) 
+ 24 + [GGCCTT]  154  (89.26) 
+ 24 +  GGACTG   633  (92.16) 
+ 24 +  GGCCTG   643  (100.00) 
+ 25 + [AGCCTG]   99  (89.71) 
+ 25 + [GACCTG]  320  (87.80) 
+ 25 + [GCCCTG]  747  (88.31) 
+ 25 + [GGGCTG]  820  (89.76) 
+ 26 + [GACCTG]  210  (87.80) 
+ 26 + [GGCCAG]  665  (89.57) 
+ 26 + [GCCCTG]  692  (88.31) 
+ 26 +  GGACTG   749  (92.16) 
+ 26 + [GGGCTG]  830  (89.76) 
+ 27 + [GGCCTT]  257  (89.26) 
+ 27 + [GCCCTG]  325  (88.31) 
+ 27 + [TGCCTG]  456  (89.71) 
+ 27 +  GGACTG   572  (92.16) 
+ 27 + [GGCATG]  612  (86.95) 
+ 27 + [GGCCTT]  840  (89.26) 
+ 28 + [TGCCTG]   15  (89.71) 
+ 28 + [GGCCAG]   26  (89.57) 
+ 28 +  GGCCTG   156  (100.00) 
+ 28 + [GACCTG]  220  (87.80) 
+ 28 +  GGACTG   283  (92.16) 
+ 28 +  GGACTG   618  (92.16) 
+ 29 +  GGCCTG   320  (100.00) 
+ 30 +  GGACTG    85  (92.16) 
+ 30 + [GGTCTG]  233  (87.79) 
+ 30 + [AGCCTG]  359  (89.71) 
+ 30 + [GACCTG]  479  (87.80) 
+ 30 + [GGCTTG]  501  (85.48) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   12     1   126    12		    0     0    30     0
+2 	    8     9   130     4		    0     0    30     0
+3 	   19   114    11     7		   19    11     0     0
+4 	    7   138     1     5		    0    30     0     0
+5 	   12     5     4   130		    0     0     0    30
+6 	    3     9   128    11		    0     0    30     0
+
+==========================================
+
+
+TCCGGGGG
+
+11 redundant motifs found:
+CCGGGGGC - TCGGGGGG - TCAGGGGG - CCCAGGGG - CCCGGGGC - CCCGGGGA - CCGGGGGG - CCGGGGGG - GCCCGGGG - CGGGGG - CCGGGG - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  2 + [ACCTGGGG]   26  (85.73) 
+  2 + [TCCGCGGG]   80  (88.53) 
+  3 + [TGCAGGGG]  780  (85.93) 
+  3 + [TCCTGGGA]  839  (86.41) 
+  4 +  TCCTGGGG   456  (95.05) 
+  4 + [ACCTGGGG]  500  (85.73) 
+  7 + [TTCAGGGG]  350  (86.30) 
+  7 +  TCCGGGGG   478  (100.00) 
+  8 + [TCCGGAGG]  502  (86.39) 
+  8 +  TCTGGGGG   529  (92.55) 
+  8 + [TCCTGGGA]  713  (86.41) 
+ 10 +  TCCCGGGG   425  (90.41) 
+ 11 +  TCCAGGGG   245  (94.84) 
+ 11 + [TCCAGGGA]  577  (86.21) 
+ 12 +  TCAGGGGG   351  (93.16) 
+ 16 + [TCCTGGGA]  433  (86.41) 
+ 17 + [ACCAGGGG]  163  (85.53) 
+ 17 + [TCATGGGG]  843  (88.20) 
+ 18 + [TCCTTGGG]  192  (85.29) 
+ 20 + [TCTAGGGG]  117  (87.39) 
+ 20 +  TCCGGGGG   181  (100.00) 
+ 20 + [TGCAGGGG]  256  (85.93) 
+ 21 + [TTCAGGGG]  264  (86.30) 
+ 22 + [TCCTGGGA]   47  (86.41) 
+ 22 +  TCCTGGGG   816  (95.05) 
+ 23 +  TCCGAGGG   120  (90.69) 
+ 23 +  TCAGGGGG   147  (93.16) 
+ 23 +  TCGGGGGG   475  (92.22) 
+ 27 + [CCCAGGGG]  193  (85.08) 
+ 28 + [TGCTGGGG]   98  (86.14) 
+ 28 + [TTCTGGGG]  539  (86.50) 
+ 28 +  TCTGGGGG   540  (92.55) 
+ 28 + [TCAAGGGG]  764  (88.00) 
+ 30 + [TCCAAGGG]  453  (85.53) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   10     9     6    91		    0     0     0    12
+2 	    2    91    11    12		    0    12     0     0
+3 	   15    76    12    13		    2     7     1     2
+4 	   20     7    68    21		    1     1     8     2
+5 	   10     6    91     9		    1     0    11     0
+6 	    4     4   101     7		    0     0    12     0
+7 	    8     2   101     5		    0     0    12     0
+8 	   12     8    93     3		    0     0    12     0
+
+==========================================
+
+
+CCCCCC
+
+13 redundant motifs found:
+GGCCCC - AGCCCCCC - CCCCCCCT - GCCCCCCC - CTCCCC - CACCCC - CCCCCT - CCCCCT - CCCACC - CCACCC - CCTCCC - GCCCCC - GCCCCC - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  1 + [GCCCCC]  138  (86.65) 
+  1 + [CCCCCT]  139  (86.18) 
+  1 + [CCTCCC]  474  (88.09) 
+  1 + [CTCCCC]  475  (86.80) 
+  1 + [CCCCCT]  477  (86.18) 
+  2 + [CCCTCC]   77  (87.30) 
+  2 + [CCACCC]  543  (88.72) 
+  2 + [CACCCC]  544  (87.21) 
+  2 + [CCCCAC]  546  (86.62) 
+  2 + [CCCACC]  547  (88.95) 
+  2 + [CCACCC]  548  (88.72) 
+  2 + [GCCCCC]  588  (86.65) 
+  2 +  CCCCCC   589  (100.00) 
+  2 +  CCCCCC   590  (100.00) 
+  2 + [CCCCCT]  591  (86.18) 
+  2 +  CCCCCC   686  (100.00) 
+  2 +  CCCCCC   687  (100.00) 
+  2 + [CCCCCA]  688  (86.18) 
+  2 + [CTCCCC]  712  (86.80) 
+  3 + [CCCTCC]   35  (87.30) 
+  3 + [CCTCCC]   36  (88.09) 
+  3 + [CCCCTC]  163  (85.70) 
+  4 + [CCTCCC]  345  (88.09) 
+  4 + [CACCCC]  473  (87.21) 
+  5 + [CCACCC]  202  (88.72) 
+  5 + [CACCCC]  203  (87.21) 
+  5 + [ACCCCC]  204  (85.20) 
+  5 + [CCCCCT]  205  (86.18) 
+  5 + [GCCCCC]  313  (86.65) 
+  5 + [CCCCCT]  314  (86.18) 
+  5 + [CTCCCC]  552  (86.80) 
+  5 + [CCCCCA]  554  (86.18) 
+  5 + [CCCCAC]  555  (86.62) 
+  5 + [CCCTCC]  704  (87.30) 
+  5 + [CCTCCC]  705  (88.09) 
+  6 + [CTCCCC]   54  (86.80) 
+  6 + [CCCACC]   97  (88.95) 
+  6 + [GCCCCC]  513  (86.65) 
+  6 + [CCCCCA]  514  (86.18) 
+  6 + [CCCCAC]  515  (86.62) 
+  7 + [CCACCC]  113  (88.72) 
+  7 + [CACCCC]  114  (87.21) 
+  7 + [ACCCCC]  115  (85.20) 
+  7 + [CCCACC]  280  (88.95) 
+  7 + [CCACCC]  281  (88.72) 
+  7 + [CACCCC]  282  (87.21) 
+  7 + [CCCCTC]  284  (85.70) 
+  7 + [CCCTCC]  418  (87.30) 
+  7 + [CCCACC]  637  (88.95) 
+  8 + [CCCACC]  846  (88.95) 
+  9 + [CTCCCC]  394  (86.80) 
+  9 + [CCCCTC]  396  (85.70) 
+ 10 + [CCTCCC]  423  (88.09) 
+ 10 + [CCTCCC]  700  (88.09) 
+ 11 + [GCCCCC]  252  (86.65) 
+ 11 + [CCCCCA]  253  (86.18) 
+ 11 + [CCCCAC]  254  (86.62) 
+ 11 + [CCCACC]  255  (88.95) 
+ 11 + [CCCCAC]  553  (86.62) 
+ 11 + [GCCCCC]  621  (86.65) 
+ 11 + [CCCCCA]  622  (86.18) 
+ 11 + [CCCCAC]  623  (86.62) 
+ 12 + [CCACCC]  339  (88.72) 
+ 12 + [CACCCC]  340  (87.21) 
+ 12 + [GCCCCC]  482  (86.65) 
+ 12 + [CCCCCA]  483  (86.18) 
+ 13 + [CCCACC]   31  (88.95) 
+ 13 + [CCCCAC]  562  (86.62) 
+ 13 + [CCCACC]  563  (88.95) 
+ 13 + [CCACCC]  564  (88.72) 
+ 13 + [CACCCC]  565  (87.21) 
+ 13 + [ACCCCC]  566  (85.20) 
+ 13 + [CCCCCT]  567  (86.18) 
+ 13 + [CCACCC]  591  (88.72) 
+ 13 + [CCTCCC]  705  (88.09) 
+ 13 + [CTCCCC]  706  (86.80) 
+ 13 + [CCCCCT]  708  (86.18) 
+ 13 + [CTCCCC]  836  (86.80) 
+ 14 + [CACCCC]  529  (87.21) 
+ 15 + [GCCCCC]  131  (86.65) 
+ 16 + [CCCCAC]   67  (86.62) 
+ 16 + [CCCACC]   68  (88.95) 
+ 16 + [CCCCTC]  466  (85.70) 
+ 16 + [CCCACC]  729  (88.95) 
+ 16 + [CCACCC]  730  (88.72) 
+ 17 + [CCCACC]   81  (88.95) 
+ 17 + [CCACCC]   82  (88.72) 
+ 17 + [CACCCC]   83  (87.21) 
+ 17 + [ACCCCC]   84  (85.20) 
+ 17 + [CCCCCT]   85  (86.18) 
+ 18 + [CCCCAC]  589  (86.62) 
+ 18 + [CCCTCC]  657  (87.30) 
+ 18 + [CCCTCC]  692  (87.30) 
+ 18 + [CCTCCC]  693  (88.09) 
+ 19 + [CCCACC]  465  (88.95) 
+ 19 + [CCACCC]  466  (88.72) 
+ 19 + [GCCCCC]  629  (86.65) 
+ 19 + [CCCCCT]  630  (86.18) 
+ 19 + [CCCCTC]  631  (85.70) 
+ 19 + [CCCTCC]  632  (87.30) 
+ 20 + [GCCCCC]  174  (86.65) 
+ 21 + [CCCTCC]   59  (87.30) 
+ 21 + [CCTCCC]   60  (88.09) 
+ 21 + [GCCCCC]  454  (86.65) 
+ 21 + [CCCCCT]  455  (86.18) 
+ 21 + [CCCTCC]  498  (87.30) 
+ 21 + [CCTCCC]  499  (88.09) 
+ 21 + [CTCCCC]  641  (86.80) 
+ 21 + [CCCCCT]  643  (86.18) 
+ 21 + [CCCCTC]  789  (85.70) 
+ 22 + [CCCACC]   57  (88.95) 
+ 22 + [CCACCC]   58  (88.72) 
+ 22 + [ACCCCC]  455  (85.20) 
+ 22 +  CCCCCC   456  (100.00) 
+ 22 + [CCCCCA]  457  (86.18) 
+ 22 + [CCCCAC]  458  (86.62) 
+ 22 + [CCCACC]  459  (88.95) 
+ 22 + [CCACCC]  460  (88.72) 
+ 22 + [CACCCC]  833  (87.21) 
+ 22 + [ACCCCC]  834  (85.20) 
+ 22 +  CCCCCC   835  (100.00) 
+ 22 + [CCCCCA]  836  (86.18) 
+ 23 + [CCTCCC]   89  (88.09) 
+ 23 + [CCCACC]  215  (88.95) 
+ 23 + [CCTCCC]  249  (88.09) 
+ 23 + [CTCCCC]  250  (86.80) 
+ 23 + [GCCCCC]  449  (86.65) 
+ 24 +  CCCCCC   355  (100.00) 
+ 24 + [CCCCCA]  356  (86.18) 
+ 24 + [CCCTCC]  394  (87.30) 
+ 24 + [ACCCCC]  401  (85.20) 
+ 24 + [CCCCCA]  402  (86.18) 
+ 24 + [CCACCC]  664  (88.72) 
+ 24 + [CACCCC]  665  (87.21) 
+ 25 + [CCTCCC]  188  (88.09) 
+ 25 + [CTCCCC]  189  (86.80) 
+ 25 + [CCCACC]  283  (88.95) 
+ 25 + [CCACCC]  426  (88.72) 
+ 25 + [ACCCCC]  600  (85.20) 
+ 25 + [CTCCCC]  850  (86.80) 
+ 26 + [CACCCC]   18  (87.21) 
+ 26 + [ACCCCC]   19  (85.20) 
+ 26 + [CCCCCA]   20  (86.18) 
+ 26 + [CCCCAC]   21  (86.62) 
+ 26 + [CTCCCC]  303  (86.80) 
+ 26 + [CCCCAC]  305  (86.62) 
+ 26 + [CCCACC]  306  (88.95) 
+ 26 + [CCACCC]  307  (88.72) 
+ 27 + [CCCACC]   89  (88.95) 
+ 27 + [CCACCC]  190  (88.72) 
+ 28 + [CCCTCC]  440  (87.30) 
+ 28 + [CCCCTC]  457  (85.70) 
+ 28 + [CCCTCC]  458  (87.30) 
+ 28 + [CCTCCC]  459  (88.09) 
+ 28 + [CCCCTC]  553  (85.70) 
+ 29 + [CCCCTC]  361  (85.70) 
+ 29 + [CCCTCC]  362  (87.30) 
+ 29 + [CCTCCC]  363  (88.09) 
+ 29 + [CACCCC]  463  (87.21) 
+ 29 + [CCCCTC]  465  (85.70) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	    9   168    12     7		    0     7     0     0
+2 	   13   163     8    12		    0     7     0     0
+3 	   17   158     6    15		    0     7     0     0
+4 	   18   160     5    13		    0     7     0     0
+5 	   12   169     5    10		    0     7     0     0
+6 	   11   169     5    11		    0     7     0     0
+
+==========================================
+
+
+GCCCTCCC
+
+7 redundant motifs found:
+CCCCTGCC - CCCCACCC - GGCCCTCC - GCCCACCC - GCCCCCCC - GCCCTC - CCTCCC - 
+
+Best occurrences: 
+Seq  St  oligo  pos  match
+  2 + [GCCCTCCG]   76  (86.21) 
+  2 + [CCCCACCC]  546  (85.84) 
+  2 +  GCCCCCCC   588  (92.10) 
+  3 +  GCCCTCCC    34  (100.00) 
+  4 + [GCCCTACC]  305  (88.91) 
+  4 + [GTCCTCCC]  343  (88.80) 
+  4 +  GCCCTCTC   843  (91.72) 
+  5 +  ACCCTCCC   703  (90.27) 
+  6 +  GCCCTCAC   172  (90.56) 
+  7 +  GCCTTCCC   298  (92.56) 
+  8 +  GCCCTTCC   149  (90.15) 
+  9 +  GCCTTCCC   309  (92.56) 
+  9 + [GCACTCCC]  391  (89.02) 
+ 13 + [CCCCACCC]  562  (85.84) 
+ 16 +  GCCCACCC   728  (93.01) 
+ 18 + [GCCTACCC]  584  (85.57) 
+ 18 +  GCCCTCCA   656  (90.63) 
+ 18 +  TCCCTCCC   691  (91.60) 
+ 19 +  GCCCACCC   464  (93.01) 
+ 21 +  GCCCTCCC    58  (100.00) 
+ 21 +  TCCCTCCC   497  (91.60) 
+ 22 + [CCCCACCC]  458  (85.84) 
+ 23 + [GACCTCCC]  247  (87.06) 
+ 24 +  GCCCTCCA   393  (90.63) 
+ 26 + [CCCCACCC]  305  (85.84) 
+ 28 +  GCCCTCCA   439  (90.63) 
+ 28 +  CCCCTCCC   457  (92.84) 
+ 29 +  CCCCTCCC   361  (92.84) 
+
+	                   Frequency Matrix               
+	      All Occurrences  		      Best Occurrences  
+	    A     C     G     T		    A     C     G     T
+1 	   11    20   106    15		    1     2    13     2
+2 	    6   122    15     9		    0    18     0     0
+3 	   10   129     3    10		    0    18     0     0
+4 	   12   113     7    20		    0    16     0     2
+5 	   21    17     7   107		    2     1     0    15
+6 	    9   119    12    12		    0    17     0     1
+7 	   13   117     5    17		    1    16     0     1
+8 	   14   124     5     9		    3    15     0     0
+
+==========================================

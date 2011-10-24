@@ -5,7 +5,7 @@ more information and licensing details.
 """
 
 
-TWO_BASE_LETTERS   = ['Y', 'R', 'W', 'S', 'K', 'M']
+TWO_BASE_LETTERS = ['Y', 'R', 'W', 'S', 'K', 'M']
 THREE_BASE_LETTERS = ['V', 'H', 'D', 'B']
 
 
@@ -48,7 +48,7 @@ class Pssm:
             elif self.__values[row][3] >= limit1:
                 return 'T'
             else:
-                return compute_column_consensus(col)
+                return compute_column_consensus(row)
 
         def compute_column_consensus(row):
             """computes column consensus"""
@@ -82,13 +82,14 @@ class Pssm:
                         pmax = three_base[row]
                         max_letter = THREE_BASE_LETTERS[row]
             if pmax <= limit2:
-                maxletter = 'N'
-            return maxletter
+                max_letter = 'N'
+            return max_letter
 
         result = ""
         for col in range(len(self.__values)):
             result += column_consensus(col)
         return result
+
 
 def read_fasta(infile):
     """creates a list of Pssm objects from a FASTA file"""

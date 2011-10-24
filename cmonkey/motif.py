@@ -46,6 +46,7 @@ def remove_atgs_filter(seqs, feature_ids, distance):
         seqs[feature_id] = "".join(chars)
     return seqs
 
+
 def make_min_value_filter(min_value):
     """A function generator which creates a value filter"""
 
@@ -174,7 +175,7 @@ class ScoringFunction(memb.ScoringFunctionBase):
                     pvalues[feature_id] = numpy.log(pvalue)
                 pvalues = self.__pvalue_filter(pvalues)
                 cluster_pvalues[cluster] = pvalues
-                
+
                 for motif_info in meme_run_results[cluster].motif_infos:
                     print "consensus: ", motif_info.consensus_string(), " evalue: ", motif_info.evalue()
             else:

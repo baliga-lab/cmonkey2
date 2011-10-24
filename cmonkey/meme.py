@@ -20,7 +20,7 @@ class MemeRunResult:
         """constructor"""
         self.pe_values = pe_values
         self.annotations = annotations
-        self.motif_infos =  motif_infos
+        self.motif_infos = motif_infos
 
 
 class MemeSuite:
