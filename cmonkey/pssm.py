@@ -3,6 +3,7 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
+import math
 
 
 TWO_BASE_LETTERS = ['Y', 'R', 'W', 'S', 'K', 'M']
@@ -12,28 +13,54 @@ THREE_BASE_LETTERS = ['V', 'H', 'D', 'B']
 class Pssm:
     """A PSSM class to interface with Weeder"""
 
-    def __init__(self, name, values=[], num_sites=0, e_value=None):
+    def __init__(self, name, values=None, e_value=None, sites=None):
         """Create a PSSM object"""
         self.__name = name
-        self.__values = values
-        self.__num_sites = num_sites
+        if values:
+            self.__values = values
+        else:
+            self.__values = []
+        self.__sites = sites
         self.__e_value = e_value
 
     def __getitem__(self, row):
         """accesses the row at the specified index"""
         return self.__values[row]
 
+    def sequence_length(self):
+        """returns the sequence length this PSSM is based on"""
+        return len(self.__values)
+
     def name(self):
         """returns the name"""
         return self.__name
 
-    def num_sites(self):
+    def sites(self):
         """returns the number of sites"""
-        return self.__num_sites
+        return self.__sites
 
     def e_value(self):
         """returns the e-value"""
         return self.__e_value
+
+    def to_mast_string(self, at_freq=0.25, cg_freq=0.25):
+        """returns a string representation in MAST format"""
+        def log_odds(pvalue, freq):
+            """returns the log-odds value"""
+            if pvalue == 0.0:
+                return int(round(math.log(float(1e-300) / freq, 2), 0))
+            else:
+                return int(round(math.log(pvalue / freq, 2), 0))
+
+        result = ('log-odds matrix: alength= 4 w= %d\n' %
+                  self.sequence_length())
+        for row in self.__values:
+            result += ('%7d %7d %7d %7d\n' %
+                       (log_odds(row[0], at_freq),
+                        log_odds(row[1], cg_freq),
+                        log_odds(row[2], cg_freq),
+                        log_odds(row[3], at_freq)))
+        return result
 
     def consensus_motif(self, limit1=0.6, limit2=0.8, three=True):
         """returns the consensus motif"""

@@ -17,7 +17,7 @@ class PssmTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """Test creation with no data"""
         pssm = p.Pssm('pssm')
         self.assertEquals('pssm', pssm.name())
-        self.assertEquals(0, pssm.num_sites())
+        self.assertIsNone(pssm.sites())
         self.assertIsNone(pssm.e_value())
 
     def test_read_fasta(self):

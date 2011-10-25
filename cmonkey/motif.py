@@ -177,9 +177,10 @@ class ScoringFunction(memb.ScoringFunctionBase):
                 cluster_pvalues[cluster] = pvalues
 
                 for motif_info in meme_run_results[cluster].motif_infos:
-                    print "consensus: ", motif_info.consensus_string(), " evalue: ", motif_info.evalue()
+                    print ("consensus: ", motif_info.consensus_string(),
+                           " evalue: ", motif_info.evalue())
             else:
-                logging.info("# seqs (= %d) outside of defined limits, skipping " +
-                             "cluster %d", len(seqs), cluster)
+                logging.info("# seqs (= %d) outside of defined limits, "
+                             "skipping cluster %d", len(seqs), cluster)
 
         return cluster_pvalues

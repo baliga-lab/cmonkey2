@@ -9,12 +9,78 @@ import re
 import pssm
 
 LAUNCHER = 'weederlauncher'
+LLR_VALUE = 'NA'
+
+
+class Site:
+    """A site value object holding entries from the wee file"""
+    def __init__(self, gene, reverse, site, start, match):
+        """create Site object"""
+        self.gene = gene
+        self.is_reverse = reverse
+        self.site = site
+        self.start = start
+        self.match = match
+
+    def __str__(self):
+        return ("gene = %s, rev = %d, site = %s, start = %d, match = %s" %
+                (self.gene, self.is_reverse, self.site, self.start,
+                 self.match))
+
+    def __repr__(self):
+        return self.__str__()
 
 
 def run_weeder(fasta_file):
     """run the weeder command and interpret its result"""
-    __launch_weeder(fasta_file)
-    return __read_pssms_for(fasta_file)
+    def write_f1_file(pssm_num, apssm, num_sites):
+        """writes the pssm to the .f1 file"""
+        with open('%s.%d.f1' % (fasta_file, pssm_num), 'w') as outfile:
+            outfile.write('%d,%s,%f,%d\n' % (apssm.sequence_length(),
+                                             LLR_VALUE,
+                                             apssm.e_value(),
+                                             num_sites))
+            for row in range(apssm.sequence_length()):
+                outfile.write('%f,%f,%f,%f\n' % (apssm[row][0],
+                                                 apssm[row][1],
+                                                 apssm[row][2],
+                                                 apssm[row][3]))
+
+    def write_f2_file(pssm_num, apssm):
+        """writes the pssm to the .f2 file"""
+        with open('%s.%d.f2' % (fasta_file, pssm_num), 'w') as outfile:
+            outfile.write(',gene,strand,start,p.value,site\n')
+            for index in range(len(apssm.sites())):
+                site = apssm.sites()[index]
+                strand = '+'
+                if site.is_reverse:
+                    strand = '-'
+
+                outfile.write('%d,%s,%s,%d,%f,%s\n' %
+                              (index + 1, site.gene, strand, site.start,
+                               site.match, site.site))
+
+    def write_meme_file(pssms):
+        """writes a PSSM file to be read by meme"""
+        with open('%s.meme' % fasta_file, 'w') as outfile:
+            outfile.write('ALPHABET= ACGT\n')
+            for apssm in pssms:
+                outfile.write(apssm.to_mast_string())
+                outfile.write('\n')
+
+    #__launch_weeder(fasta_file)
+    pssms = [pssm8 for pssm8 in __read_pssms_for(fasta_file)
+             if pssm8.sequence_length() == 8]
+    for index in range(len(pssms)):
+        unique_target_sites = []
+        for site in pssms[index].sites():
+            if site.gene not in unique_target_sites:
+                unique_target_sites.append(site.gene)
+        num_sites = len(unique_target_sites)
+        write_f1_file(index + 1, pssms[index], num_sites)
+        write_f2_file(index + 1, pssms[index])
+    write_meme_file(pssms)
+    return pssms
 
 
 def __launch_weeder(fasta_file):
@@ -69,7 +135,6 @@ class WeederReader:
         """takes a wee file name and parses the contents into a list"""
         with open(self.__wee_file) as infile:
             self.__lines = infile.readlines()
-        print "lines read: ", len(self.__lines)
         self.__top_hit6 = self.__locate_top_entry_for_length(6)
         self.__top_hit8 = self.__locate_top_entry_for_length(8)
         self.__sequence_names = self.__read_sequence_names()
@@ -136,14 +201,36 @@ class WeederReader:
     def __read_pssms(self):
         """reads and returns the PSSM's"""
         result = []
-        self.__find_line_starting_with(' *** Interesting motifs (highest-ranking)')
+        self.__find_line_starting_with(
+            ' *** Interesting motifs (highest-ranking)')
         self.__next_nonempty_line()
         while (not self.__input_end_reached() and
-               not re.match('.*not highest-ranking.*$', self.__current_line())):
+               not re.match('.*not highest-ranking.*$',
+                            self.__current_line())):
             pssm_name = self.__base_name + '_' + self.__current_line().strip()
-            result.append(pssm.Pssm(pssm_name, self.__read_frequency_matrix()))
+            sites = self.__read_sites()
+            matrix = self.__read_frequency_matrix()
+            if len(matrix) == 6:
+                top_hit = self.__top_hit6
+            else:
+                top_hit = self.__top_hit8
+            result.append(pssm.Pssm(pssm_name, matrix, e_value=top_hit[1],
+                                    sites=sites))
             self.__current_index += 2  # skip over the empty line and the ====
             self.__next_nonempty_line()  # and position to the next PSSM
+        return result
+
+    def __read_sites(self):
+        """reads the sites from the best occurrences section"""
+        result = []
+        self.__find_line_starting_with('Best occurrences:')
+        self.__current_index += 2
+        while len(self.__current_line().strip()) > 0:
+            comps = re.split('[ \t]+', self.__current_line().strip())
+            result.append(Site(self.__sequence_names[int(comps[0]) - 1],
+                               comps[1] != '+', comps[2], int(comps[3]),
+                               float(comps[4].lstrip('(').rstrip(')'))))
+            self.__current_index += 1
         return result
 
     def __read_frequency_matrix(self):

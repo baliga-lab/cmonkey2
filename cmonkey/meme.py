@@ -145,7 +145,8 @@ class MemeSuite:
         dbfile = make_sequence_file(all_seqs_dict)
         #logging.info('created mast database in %s', dbfile)
         mast_output = self.mast(meme_outfile, dbfile, bgfile)
-        pe_values, annotations = read_mast_output(mast_output, input_seqs.keys())
+        pe_values, annotations = read_mast_output(mast_output,
+                                                  input_seqs.keys())
         return MemeRunResult(pe_values, annotations, motif_infos)
 
     def dust(self, fasta_file_path):  # pylint: disable-msg=R0201

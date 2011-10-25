@@ -303,7 +303,8 @@ class ClusterMembership:
         if add_fuzz:
             row_scores, column_scores = self.__fuzzify(row_scores,
                                                        column_scores,
-                                                       iteration, num_iterations)
+                                                       iteration,
+                                                       num_iterations)
         rd_scores, cd_scores = _get_density_scores(self, row_scores,
                                                    column_scores)
         _compensate_size(self, matrix, rd_scores, cd_scores)

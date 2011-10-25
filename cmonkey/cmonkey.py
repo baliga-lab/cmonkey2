@@ -17,7 +17,7 @@ import rsat
 import sys
 import os
 import logging
-import weeder
+
 
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 CMONKEY_VERSION = '4.0'
@@ -90,7 +90,7 @@ def read_matrix(filename):
     """reads the data matrix from a file"""
     matrix_factory = dm.DataMatrixFactory(
         [dm.nochange_filter, dm.center_scale_filter])
-    infile = util.DelimitedFile.read(sys.argv[1], has_header=True)
+    infile = util.DelimitedFile.read(filename, has_header=True)
     # for now, we set a fixed set of clusters assignments
     # that matches halo_ratios5.tsv
     # This is to take out the random component out of the seeding
@@ -185,5 +185,6 @@ if __name__ == '__main__':
         print('Usage: ./run_cmonkey.sh <ratio-file> <organism-code>')
     else:
         run_cmonkey()
+
 
 __all__ = ['CMonkey', 'Membership']
