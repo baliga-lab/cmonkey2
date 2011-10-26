@@ -11,6 +11,7 @@ import scipy.stats
 import urllib
 import os
 import rpy2.robjects as robjects
+import gzip
 
 
 def make_delimited_file_from_lines(lines, sep, has_header, comment, quote):
@@ -81,8 +82,12 @@ class DelimitedFile:  # pylint: disable-msg=R0913
              quote=None):
         """Creates the reader object"""
         lines = None
-        with open(filepath) as inputfile:
-            lines = inputfile.readlines()
+        if filepath.endswith('.gz'):
+            with gzip.open(filepath) as inputfile:
+                lines = inputfile.readlines()
+        else:
+            with open(filepath) as inputfile:
+                lines = inputfile.readlines()
         return make_delimited_file_from_lines(lines, sep, has_header,
                                               comment, quote)
 

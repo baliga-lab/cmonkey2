@@ -68,7 +68,7 @@ def run_weeder(fasta_file):
                 outfile.write(apssm.to_mast_string())
                 outfile.write('\n')
 
-    #__launch_weeder(fasta_file)
+    __launch_weeder(fasta_file)
     pssms = [pssm8 for pssm8 in __read_pssms_for(fasta_file)
              if pssm8.sequence_length() == 8]
     for index in range(len(pssms)):

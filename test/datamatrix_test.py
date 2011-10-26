@@ -138,6 +138,24 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                                  [9, 11]]),
                                     submatrix.values()).all())
 
+    def test_submatrix_by_name_rows_and_cols_with_nonexisting(self):
+        """test creating sub matrices by row/column name selection
+        using non-existing names"""
+        matrix = dm.DataMatrix(4, 4,
+                               row_names=['R0', 'R1', 'R2', 'R3'],
+                               col_names=['C0', 'C1', 'C2', 'C3'],
+                               values=[[1, 2, 3, 4],
+                                       [4, 5, 6, 7],
+                                       [8, 9, 10, 11],
+                                       [12, 13, 14, 15]])
+        submatrix = matrix.submatrix_by_name(row_names=['R0', 'R2', 'R5'],
+                                             column_names=['C1', 'C3', 'C5'])
+        self.assertEquals(['R0', 'R2'], submatrix.row_names())
+        self.assertEquals(['C1', 'C3'], submatrix.column_names())
+        self.assertTrue(numpy.equal(numpy.array([[2, 4],
+                                                 [9, 11]]),
+                                    submatrix.values()).all())
+
     def test_sorted_by_rowname(self):
         matrix = dm.DataMatrix(3, 3,
                                row_names=['R0', 'R2', 'R1'],

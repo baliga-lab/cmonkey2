@@ -185,6 +185,3 @@ if __name__ == '__main__':
         print('Usage: ./run_cmonkey.sh <ratio-file> <organism-code>')
     else:
         run_cmonkey()
-
-
-__all__ = ['CMonkey', 'Membership']

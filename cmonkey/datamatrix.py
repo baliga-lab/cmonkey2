@@ -115,7 +115,8 @@ class DataMatrix:
         supported"""
         def find_indexes(search_names, my_names):
             """returns the indexes for the specified search names"""
-            return [my_names.index(name) for name in search_names]
+            return [my_names.index(name) for name in search_names
+                    if name in my_names]
 
         def make_values(row_indexes, column_indexes):
             """creates an array from the selected rows and columns"""
@@ -135,8 +136,10 @@ class DataMatrix:
         col_indexes = find_indexes(column_names, self.column_names())
         new_values = make_values(row_indexes, col_indexes)
         return DataMatrix(len(row_indexes), len(col_indexes),
-                          row_names=row_names,
-                          col_names=column_names,
+                          row_names=[name for name in row_names
+                                     if name in self.__row_names],
+                          col_names=[name for name in column_names
+                                     if name in self.__column_names],
                           values=new_values)
 
     def sorted_by_row_name(self):
