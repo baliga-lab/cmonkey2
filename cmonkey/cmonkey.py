@@ -27,7 +27,7 @@ RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
 ROW_WEIGHT = 6.0
-NUM_ITERATIONS = 1  # 2000
+NUM_ITERATIONS = 2000
 
 
 def run_cmonkey():
@@ -77,10 +77,10 @@ def make_gene_scoring_funcs(organism, membership, matrix):
                                           meme_suite,
                                           sequence_filters,
                                           motif.make_min_value_filter(-20.0),
-                                          lambda iteration: 0.0, 0)  # 100
+                                          lambda iteration: 0.0, 100)
 
     network_scoring = nw.ScoringFunction(organism, membership, matrix,
-                                         lambda iteration: 0.0, 0)  # 7
+                                         lambda iteration: 0.0, 7)
 
     #return [row_scoring, network_scoring]
     return [row_scoring, motif_scoring, network_scoring]
