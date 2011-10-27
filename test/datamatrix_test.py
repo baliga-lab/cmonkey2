@@ -156,6 +156,21 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                                  [9, 11]]),
                                     submatrix.values()).all())
 
+    def test_submatrix_by_rows(self):
+        """test creating sub matrices by providing row indexes"""
+        matrix = dm.DataMatrix(4, 2,
+                               row_names=['R0', 'R1', 'R2', 'R3'],
+                               col_names=['C0', 'C1'],
+                               values=[[1, 2],
+                                       [3, 4],
+                                       [5, 6],
+                                       [7, 8]])
+        submatrix = matrix.submatrix_by_rows([1, 3])
+        self.assertEquals(['R1', 'R3'], submatrix.row_names())
+        self.assertEquals(['C0', 'C1'], submatrix.column_names())
+        self.assertTrue(numpy.equal(numpy.array([[3, 4], [7, 8]]),
+                                    submatrix.values()).all())
+
     def test_sorted_by_rowname(self):
         matrix = dm.DataMatrix(3, 3,
                                row_names=['R0', 'R2', 'R1'],

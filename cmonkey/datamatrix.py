@@ -47,7 +47,7 @@ class DataMatrix:
 
         if values != None:
             check_values()
-            self.__values = numpy.array(values)
+            self.__values = numpy.array(values, dtype=numpy.float64)
         else:
             self.__values = numpy.zeros((nrows, ncols))
             if init_value != None:
@@ -105,6 +105,18 @@ class DataMatrix:
     def column_name(self, row):
         """retrieve the name for the specified column"""
         return self.__column_names[row]
+
+    def submatrix_by_rows(self, row_indexes):
+        """extract a submatrix with the specified rows.
+        row_indexes needs to be sorted"""
+        new_values = []
+        for row_index in row_indexes:
+            new_values.append([value for value in self.__values[row_index]])
+        return DataMatrix(len(row_indexes), self.num_columns(),
+                          row_names=[self.__row_names[index]
+                                     for index in row_indexes],
+                          col_names=self.__column_names,
+                          values=new_values)
 
     def submatrix_by_name(self, row_names=None, column_names=None):
         """extract a submatrix with the specified rows and columns

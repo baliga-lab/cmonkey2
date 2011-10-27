@@ -351,6 +351,7 @@ def rnorm(num_values, std_deviation):
     kwargs = {'sd': std_deviation}
     return r_rnorm(num_values, **kwargs)
 
+
 __all__ = ['DelimitedFile', 'best_matching_links', 'quantile', 'make_matrix',
            'DocumentNotFound', 'CMonkeyURLopener', 'read_url',
            'read_url_cached', 'ThesaurusBasedMap', 'trim_mean']

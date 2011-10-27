@@ -17,6 +17,7 @@ CONTROLS_FILE = 'human_data/controls.csv'
 RUG_FILE = 'human_data/rug.csv'
 RUG_PROPS = ['MIXED', 'ASTROCYTOMA', 'GBM', 'OLIGODENDROGLIOMA']
 
+
 def run_cmonkey():
     """init of the cMonkey system"""
     logging.basicConfig(format=LOG_FORMAT,
@@ -27,6 +28,7 @@ def run_cmonkey():
     matrix = read_matrix(sys.argv[1])
     logging.info("Filtered input matrix has %d rows and %d columns:",
                  matrix.num_rows(), matrix.num_columns())
+
 
 def read_controls():
     """reads the controls file"""
@@ -48,13 +50,15 @@ def read_matrix(filename):
     # pass the column filter as the first filter to the DataMatrixFactory,
     # so normalization will be applied to the submatrix
     matrix_factory = dm.DataMatrixFactory([
-            lambda matrix: matrix.submatrix_by_name(column_names=columns_to_use)])
+            lambda matrix: matrix.submatrix_by_name(
+                column_names=columns_to_use)])
     infile = util.DelimitedFile.read(filename, sep=',', has_header=True,
                                      quote="\"")
     matrix = matrix_factory.create_from(infile)
-    return human.select_probes(2000,
-                               [1 for _ in range(matrix.num_columns())],
-                               matrix)
+    select_rows = human.select_probes(matrix, 2000,
+                                      {1: range(matrix.num_columns())})
+    matrix = matrix.submatrix_by_rows(select_rows)
+    return matrix
 
 if __name__ == '__main__':
     print('cMonkey (Python port) (c) 2011, Institute for Systems Biology')

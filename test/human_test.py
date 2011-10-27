@@ -72,4 +72,26 @@ class HumanTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                 [9, 19, 29, 39],
                                 [10, 20, 30, 40]])
         selgenes = human.select_probes(matrix, 10, {1:[0, 1], 2: [2, 3]})
-        self.assertEquals([0, 1, 2, 3, 4, 0, 1, 2, 3, 4], selgenes)
+        self.assertEquals([0, 1, 2, 3, 4], selgenes)
+
+    def test_intensities_to_ratios(self):
+        """tests the intensities_to_ratios() function"""
+        matrix = dm.DataMatrix(10, 4,
+                               [('R%d' % row) for row in range(1, 11)],
+                               [('C%d' % col) for col in range(1, 5)],
+                               [[1, 11, 21, 31],
+                                [2, 12, 22, 32],
+                                [3, 13, 23, 33],
+                                [4, 14, 24, 34],
+                                [5, 15, 25, 35],
+                                [6, 16, 26, 36],
+                                [7, 17, 27, 37],
+                                [8, 18, 28, 38],
+                                [9, 19, 29, 39],
+                                [10, 20, 30, 40]])
+        ratios = human.intensities_to_ratios(matrix, ['C2', 'C4'], {1:range(4)})
+        for row in range(ratios.num_rows()):
+            self.assertAlmostEquals(-1.549193, ratios[row][0], places=5)
+            self.assertAlmostEquals(-0.774597, ratios[row][1], places=5)
+            self.assertAlmostEquals(0.0, ratios[row][2], places=5)
+            self.assertAlmostEquals(0.774597, ratios[row][3], places=5)
