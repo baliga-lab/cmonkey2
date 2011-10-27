@@ -11,6 +11,7 @@ import util
 import random
 import logging
 import sys
+import scipy.cluster.vq as clvq
 
 
 # Default values for membership creation
@@ -24,6 +25,7 @@ PROBABILITY_SEEING_ROW_CHANGE = 0.5
 PROBABILITY_SEEING_COLUMN_CHANGE = 1.0
 MAX_CHANGES_PER_ROW = 1
 MAX_CHANGES_PER_COLUMN = 5
+KMEANS_ITERATIONS = 10
 
 
 class ClusterMembership:
@@ -633,3 +635,27 @@ def std_fuzzy_coefficient(iteration, num_iterations):
     """standard fuzzy coefficient as defined in cMonkey"""
     return 0.7 * math.exp(-(float(iteration) /
                             (float(num_iterations) / 3.0))) + 0.05
+
+
+def make_kmeans_row_seeder(num_clusters):
+    """creates a row seeding function based on k-means"""
+
+    def contains_all_clusters(seeding):
+        """check whether the seeding contains all clusters"""
+        seed_values = set(seeding)
+        for cluster in range(num_clusters):
+            if cluster not in seed_values:
+                return False
+        return True
+
+    def seed(row_membership, matrix):
+        """uses k-means seeding to seed row membership"""
+        seeding = []
+        while not contains_all_clusters(seeding):
+            if len(seeding) > 0:
+                logging.info("not all clusters where assigned, retry seeding")
+            seeding = clvq.kmeans2(matrix.values(), num_clusters,
+                                   KMEANS_ITERATIONS, minit='points')[1]
+        for row in range(len(seeding)):
+            row_membership[row][0] = seeding[row] + 1
+    return seed

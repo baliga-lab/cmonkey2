@@ -9,6 +9,9 @@ import logging
 import datamatrix as dm
 import util
 import human
+import scipy.cluster.vq as clvq
+import membership as memb
+import microarray
 
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 CMONKEY_VERSION = '4.0'
@@ -16,6 +19,7 @@ CACHE_DIR = 'humancache'
 CONTROLS_FILE = 'human_data/controls.csv'
 RUG_FILE = 'human_data/rug.csv'
 RUG_PROPS = ['MIXED', 'ASTROCYTOMA', 'GBM', 'OLIGODENDROGLIOMA']
+NUM_CLUSTERS = 133
 
 
 def run_cmonkey():
@@ -28,6 +32,8 @@ def run_cmonkey():
     matrix = read_matrix(sys.argv[1])
     logging.info("Filtered input matrix has %d rows and %d columns:",
                  matrix.num_rows(), matrix.num_columns())
+    membership = make_membership(matrix)
+    logging.info("Memberships seeded")
 
 
 def read_controls():
@@ -44,8 +50,9 @@ def read_rug(pred):
 
 def read_matrix(filename):
     """reads the data matrix from a file"""
+    controls = read_controls()
     rug = read_rug(lambda row: row[1] in RUG_PROPS)
-    columns_to_use = list(set(rug + read_controls()))
+    columns_to_use = list(set(rug + controls))
 
     # pass the column filter as the first filter to the DataMatrixFactory,
     # so normalization will be applied to the submatrix
@@ -55,10 +62,20 @@ def read_matrix(filename):
     infile = util.DelimitedFile.read(filename, sep=',', has_header=True,
                                      quote="\"")
     matrix = matrix_factory.create_from(infile)
-    select_rows = human.select_probes(matrix, 2000,
-                                      {1: range(matrix.num_columns())})
+
+    column_groups = {1: range(matrix.num_columns())}
+    select_rows = human.select_probes(matrix, 2000, column_groups)
     matrix = matrix.submatrix_by_rows(select_rows)
-    return matrix
+    return human.intensities_to_ratios(matrix, controls, column_groups)
+
+
+def make_membership(matrix):
+    """returns a seeded membership"""
+    return memb.ClusterMembership.create(
+        matrix.sorted_by_row_name(),
+        memb.make_kmeans_row_seeder(NUM_CLUSTERS),
+        microarray.seed_column_members,
+        num_clusters=NUM_CLUSTERS)
 
 if __name__ == '__main__':
     print('cMonkey (Python port) (c) 2011, Institute for Systems Biology')

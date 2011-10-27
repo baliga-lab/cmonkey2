@@ -13,7 +13,7 @@ import membership as memb
 
 def seed_column_members(data_matrix, row_membership, num_clusters,
                         num_clusters_per_column):
-    """Default column membership seeder
+    """Default column membership seeder ('best')
     In case of multiple input ratio matrices, we assume that these
     matrices have been combined into data_matrix"""
     num_rows = data_matrix.num_rows()
