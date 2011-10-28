@@ -166,7 +166,10 @@ class ClusterMembership:
 
     def columns_for_cluster(self, cluster):
         """determine the rows that belong to a cluster"""
-        return sorted(self.__cluster_column_members[cluster])
+        if cluster in self.__cluster_column_members:
+            return sorted(self.__cluster_column_members[cluster])
+        else:
+            return []
 
     def is_row_member_of(self, row_name, cluster):
         """determines whether a certain row is member of a cluster"""

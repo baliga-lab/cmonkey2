@@ -12,15 +12,21 @@ import human
 import scipy.cluster.vq as clvq
 import membership as memb
 import microarray
+import stringdb
+import network as nw
 
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 CMONKEY_VERSION = '4.0'
 CACHE_DIR = 'humancache'
 CONTROLS_FILE = 'human_data/controls.csv'
 RUG_FILE = 'human_data/rug.csv'
+PROM_SEQFILE = ''
+P3UTR_SEQFILE = ''
+
 RUG_PROPS = ['MIXED', 'ASTROCYTOMA', 'GBM', 'OLIGODENDROGLIOMA']
 NUM_CLUSTERS = 133
-
+ROW_WEIGHT = 6.0
+NUM_ITERATIONS = 2
 
 def run_cmonkey():
     """init of the cMonkey system"""
@@ -34,6 +40,47 @@ def run_cmonkey():
                  matrix.num_rows(), matrix.num_columns())
     membership = make_membership(matrix)
     logging.info("Memberships seeded")
+    organism = make_organism()
+    logging.info("Organism object created")
+    gene_scoring_funcs = make_gene_scoring_funcs(organism, membership, matrix)
+    cond_scoring = microarray.ColumnScoringFunction(membership, matrix)
+    logging.info("Scoring functions created")
+
+    for iteration in range(NUM_ITERATIONS):
+        iterate(membership, matrix, gene_scoring_funcs, cond_scoring,
+                iteration, NUM_ITERATIONS)
+    print "Done !!!!"
+
+
+def iterate(membership, matrix, gene_scoring_funcs, cond_scoring_func,
+            iteration, num_iterations):
+    """one iteration of the algorithm"""
+    logging.info("Iteration # %d", iteration)
+    result_matrices = []
+    score_weights = []
+    logging.info("calculating row scores...")
+    for score_func in gene_scoring_funcs:
+        row_scores = score_func.compute(iteration)
+        if row_scores != None:
+            result_matrices.append(row_scores)
+            score_weights.append(score_func.weight(iteration))
+    logging.info("row scores done.")
+    logging.info("calculating column scores...")
+    cscores = cond_scoring_func.compute(iteration)
+    logging.info("column scores done.")
+
+    if len(result_matrices) > 0:  # should be 0
+        logging.info("quantile normalize...")
+        result_matrices = dm.quantile_normalize_scores(result_matrices,
+                                                       score_weights)
+        logging.info("quantile normalize done.")
+
+    rscores = result_matrices[0] * gene_scoring_funcs[0].weight(iteration)
+    for index in range(1, len(result_matrices)):
+        rscores = rscores + (result_matrices[index] *
+                             gene_scoring_funcs[index].weight(iteration))
+
+    membership.update(matrix, rscores, cscores, iteration, num_iterations)
 
 
 def read_controls():
@@ -76,6 +123,27 @@ def make_membership(matrix):
         memb.make_kmeans_row_seeder(NUM_CLUSTERS),
         microarray.seed_column_members,
         num_clusters=NUM_CLUSTERS)
+
+def make_organism():
+    """returns a human organism object"""
+    nw_factories = [stringdb.get_network_factory3('human_data/string.csv')]
+    organism = human.Human(PROM_SEQFILE, P3UTR_SEQFILE,
+                           nw_factories)
+    return organism
+
+
+def make_gene_scoring_funcs(organism, membership, matrix):
+    """setup the gene-related scoring functions here
+    each object in this array supports the method
+    compute(organism, membership, matrix) and returns
+    a DataMatrix(genes x cluster)
+    """
+    row_scoring = microarray.RowScoringFunction(membership, matrix,
+                                                lambda iteration: ROW_WEIGHT)
+
+    network_scoring = nw.ScoringFunction(organism, membership, matrix,
+                                         lambda iteration: 0.0, 0)
+    return [row_scoring, network_scoring]
 
 if __name__ == '__main__':
     print('cMonkey (Python port) (c) 2011, Institute for Systems Biology')

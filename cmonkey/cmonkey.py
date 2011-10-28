@@ -107,7 +107,7 @@ def make_organism(organism_code, matrix):
     # note that for the moment, the STRING factory is hardwired to
     # a preprocessed Halobacterium SP file
     nw_factories = [
-        stringdb.get_network_factory(stringdb.STRING_FILE2),
+        stringdb.get_network_factory2(stringdb.STRING_FILE2),
         microbes_online.get_network_factory(
             mo_db, max_operon_size=matrix.num_rows() / 20)]
     org_factory = org.OrganismFactory(org.make_kegg_code_mapper(keggfile),

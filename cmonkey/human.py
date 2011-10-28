@@ -104,3 +104,24 @@ def center_scale_filter(matrix, group_columns, group_controls):
             matrix[row][col] -= centers[row]
             matrix[row][col] /= scale_factors[row]
     return matrix
+
+
+##################
+# Organism interface
+
+class Human:
+
+    def __init__(self, prom_seq_filename, p3utr_seq_filename,
+                 nw_factories):
+        self.__prom_seq_filename = prom_seq_filename
+        self.__p3utr_seq_filename = p3utr_seq_filename
+        self.__nw_factories = nw_factories
+        self.__networks = None
+
+    def networks(self):
+        """returns this organism's networks"""
+        if self.__networks == None:
+            self.__networks = []
+            for make_network in self.__nw_factories:
+                self.__networks.append(make_network(self))
+        return self.__networks

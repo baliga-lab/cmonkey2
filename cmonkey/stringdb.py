@@ -44,23 +44,53 @@ def normalize_edge_list(edges, max_score):
         edge.set_score(score)
     return edges
 
-
-def read_edges2(filename):
-    """just read a preprocessed file, much faster to debug"""
-    logging.info("stringdb.read_edges2()")
-    dfile = util.DelimitedFile.read(filename)
-    result = []
-    for line in dfile.lines():
-        result.append(network.NetworkEdge(line[0], line[1], float(line[2])))
-    return result
-
-
 def get_network_factory(filename):
-    """temporary STRING network factory"""
+    """temporary STRING network factory using the default STRING format"""
+    def make_network(_):
+        """make network"""
+        return network.Network.create("STRING",
+                                      read_edges(filename))
+
+    return make_network
+
+def get_network_factory2(filename):
+    """STRING network factory from preprocessed edge file
+    (protein1, protein2, combined_score), scores are already
+    normalized to 1000"""
+    def read_edges2(filename):
+        """just read a preprocessed file, much faster to debug"""
+        logging.info("stringdb.read_edges2()")
+        dfile = util.DelimitedFile.read(filename)
+        result = []
+        for line in dfile.lines():
+            result.append(network.NetworkEdge(line[0], line[1], float(line[2])))
+        return result
+
     def make_network(_):
         """make network"""
         return network.Network.create("STRING", read_edges2(filename))
 
     return make_network
 
-__all__ = ['get_network_factory']
+def get_network_factory3(filename):
+    """STRING network factory from preprocessed edge file
+    (row, protein1, protein2, combined_score), scores are not yet
+    normalized to 1000"""
+    def read_edges3(filename):
+        """just read a preprocessed file, much faster to debug"""
+        logging.info("stringdb.read_edges3()")
+        dfile = util.DelimitedFile.read(filename, sep=",",
+                                        has_header=True, quote='"')
+        result = []
+        for line in dfile.lines():
+            result.append(network.NetworkEdge(line[1], line[2], float(line[3])))
+        return result
+
+    def make_network(_):
+        """make network"""
+        return network.Network.create("STRING", read_edges3(filename))
+
+    return make_network
+
+
+__all__ = ['get_network_factory', 'get_network_factory2', 'get_network_factory3']
