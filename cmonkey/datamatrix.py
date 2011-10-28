@@ -6,6 +6,7 @@ more information and licensing details.
 import scipy
 import numpy
 import util
+import logging
 
 
 class DataMatrix:
@@ -444,14 +445,21 @@ def quantile_normalize_scores(matrices, weights=None):
             result.append(numpy.mean([inarray[row] for inarray in in_values]))
         return result
 
+    def compute_ranks(flat_values):
+        """optimization: write a map from value to first index in sorted_values"""
+        sorted_values = sorted(flat_values)
+        first_index = {}
+        for index in range(len(sorted_values)):
+            if sorted_values[index] not in first_index:
+                first_index[sorted_values[index]] = index
+        return [first_index[value] for value in flat_values]
+
     def build_result_matrices(tmp_mean):
         """builds the resulting matrices by looking at the rank of their
         original values and retrieving the means at the specified position"""
         result = []
         for index in range(len(matrices)):
-            sorted_values = sorted(flat_values[index])
-            ranks = [sorted_values.index(value)
-                     for value in flat_values[index]]
+            ranks = compute_ranks(flat_values[index])
             outmatrix = DataMatrix(matrices[index].num_rows(),
                                    matrices[index].num_columns(),
                                    matrices[index].row_names(),
