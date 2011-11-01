@@ -92,6 +92,7 @@ def revcomp(sequence):
 
 def revchar(nucleotide):
     """for a nucleotide character, return its complement"""
+    nucleotide = nucleotide.upper()
     if nucleotide == 'A':
         return 'T'
     elif nucleotide == 'G':
@@ -101,7 +102,7 @@ def revchar(nucleotide):
     elif nucleotide == 'T':
         return 'A'
     else:
-        raise ValueError('unknown param: %s' % str(nucleotide))
+        return nucleotide
 
 
 def subseq_counts(seqs, subseq_len):

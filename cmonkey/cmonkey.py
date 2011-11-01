@@ -75,9 +75,10 @@ def make_gene_scoring_funcs(organism, membership, matrix):
                                           membership,
                                           matrix,
                                           meme_suite,
-                                          sequence_filters,
-                                          motif.make_min_value_filter(-20.0),
-                                          lambda iteration: 0.0, 100)
+                                          sequence_filters=sequence_filters,
+                                          pvalue_filter=motif.make_min_value_filter(-20.0),
+                                          weight_func=lambda iteration: 0.0,
+                                          interval=100)
 
     network_scoring = nw.ScoringFunction(organism, membership, matrix,
                                          lambda iteration: 0.0, 7)

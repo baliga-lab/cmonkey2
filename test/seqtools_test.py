@@ -90,6 +90,11 @@ class SeqtoolsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals(4, len(background[0]))
         self.assertEquals(7, len(background[1]))
 
+    def test_revcomp(self):
+        """test revcomp function"""
+        self.assertEquals("GNCAT", st.revcomp('ATGNC'))
+        self.assertEquals("GNCAT", st.revcomp('atgnc'))
+
 
 class FastaTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for FASTA related functions"""
