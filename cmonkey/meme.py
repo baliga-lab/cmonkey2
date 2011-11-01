@@ -117,7 +117,7 @@ class MemeSuite:
         def make_sequence_file(seqs):
             """Creates a FASTA file from a dictionary of (feature_id: sequence)
             entries"""
-            outseqs = [(feature_id, seqs[feature_id]) for feature_id in seqs]
+            outseqs = seqs.items()
             filename = None
             with tempfile.NamedTemporaryFile(prefix='memeseqs',
                                              delete=False) as outfile:
