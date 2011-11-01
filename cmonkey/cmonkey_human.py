@@ -14,19 +14,23 @@ import membership as memb
 import microarray
 import stringdb
 import network as nw
+import motif
+import meme
 
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 CMONKEY_VERSION = '4.0'
 CACHE_DIR = 'humancache'
 CONTROLS_FILE = 'human_data/controls.csv'
 RUG_FILE = 'human_data/rug.csv'
-PROM_SEQFILE = ''
-P3UTR_SEQFILE = ''
+
+PROM_SEQFILE = 'human_data/promoterSeqs_set3pUTR_Final.csv.gz'
+P3UTR_SEQFILE = 'human_data/p3utrSeqs_set3pUTR_Final.csv.gz'
+THESAURUS_FILE = 'human_data/synonymThesaurus.csv.gz'
 
 RUG_PROPS = ['MIXED', 'ASTROCYTOMA', 'GBM', 'OLIGODENDROGLIOMA']
 NUM_CLUSTERS = 133
 ROW_WEIGHT = 6.0
-NUM_ITERATIONS = 2
+NUM_ITERATIONS = 2000
 
 def run_cmonkey():
     """init of the cMonkey system"""
@@ -49,7 +53,7 @@ def run_cmonkey():
     for iteration in range(NUM_ITERATIONS):
         iterate(membership, matrix, gene_scoring_funcs, cond_scoring,
                 iteration, NUM_ITERATIONS)
-    print "Done !!!!"
+    logging.info("Done !!!!")
 
 
 def iterate(membership, matrix, gene_scoring_funcs, cond_scoring_func,
@@ -127,7 +131,7 @@ def make_membership(matrix):
 def make_organism():
     """returns a human organism object"""
     nw_factories = [stringdb.get_network_factory3('human_data/string.csv')]
-    organism = human.Human(PROM_SEQFILE, P3UTR_SEQFILE,
+    organism = human.Human(PROM_SEQFILE, P3UTR_SEQFILE, THESAURUS_FILE,
                            nw_factories)
     return organism
 
@@ -141,9 +145,20 @@ def make_gene_scoring_funcs(organism, membership, matrix):
     row_scoring = microarray.RowScoringFunction(membership, matrix,
                                                 lambda iteration: ROW_WEIGHT)
 
+    sequence_filters = []
+    meme_suite = meme.MemeSuite430()
+    motif_scoring = motif.ScoringFunction(organism,
+                                          membership,
+                                          matrix,
+                                          meme_suite,
+                                          sequence_filters=sequence_filters,
+                                          pvalue_filter=motif.make_min_value_filter(-20.0),
+                                          weight_func=lambda iteration: 0.0,
+                                          interval=1)
+
     network_scoring = nw.ScoringFunction(organism, membership, matrix,
-                                         lambda iteration: 0.0, 0)
-    return [row_scoring, network_scoring]
+                                         lambda iteration: 0.0, 7)
+    return [row_scoring, motif_scoring, network_scoring]
 
 if __name__ == '__main__':
     print('cMonkey (Python port) (c) 2011, Institute for Systems Biology')
