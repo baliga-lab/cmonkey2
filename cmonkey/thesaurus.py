@@ -4,6 +4,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import re
+import util
 
 
 def create_from_delimited_file1(dfile):
@@ -20,10 +21,12 @@ def create_from_delimited_file2(dfile):
     """creates a thesaurus from a delimited file where the format is
     <original>SEPARATOR<alt1>;<alt2>;...
     ..."""
+    if isinstance(dfile, str):
+        dfile = util.DelimitedFile.read(dfile, sep=',', has_header=False)
     result = {}
     for line in dfile.lines():
         for alternative in line[1].split(';'):
-            result[alternative] = line[0]
+            result[alternative.upper()] = line[0].upper()
     return result
 
 
