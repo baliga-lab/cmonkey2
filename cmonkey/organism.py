@@ -164,18 +164,17 @@ class Organism:
         return [synonyms[alias] for alias in gene_aliases if alias in synonyms]
 
     def features_for_genes(self, gene_aliases):
-        """returns a map of features for the specified list of genes aliases"""
+        """returns a map of features for the specified list of genes aliases
+        used for operon information"""
         return util.ThesaurusBasedMap(
             self.__thesaurus(),
             self.__read_features(self.feature_ids_for(gene_aliases)))
 
-    def sequences_for_genes(self, gene_aliases, distance, upstream=True):
+    def sequences_for_genes(self, gene_aliases, **kwargs):
         """The default sequence retrieval for microbes is to
         fetch their operon sequences"""
-        if upstream:
-            return self.__operon_shifted_seqs_for(gene_aliases, distance)
-        else:
-            raise Exception('not supported yet')
+        distance = kwargs['distance']
+        return self.__operon_shifted_seqs_for(gene_aliases, distance)
 
     def __operon_shifted_seqs_for(self, gene_aliases, distance):
         """returns a map of the gene_aliases to the feature-
@@ -192,23 +191,13 @@ class Organism:
                 if alias in synonyms:
                     gene = synonyms[alias]
                     if gene in operon_map:
-                        #logging.info("gene '%s' [alias '%s'] found in " +
-                        #             "operon map -> '%s'",
-                        #             gene, alias, operon_map[gene])
                         shifted_pairs.append((gene, operon_map[gene]))
                     else:
-                        #logging.info("no operon found for gene '%s' " +
-                        #             "[alias '%s'] - using gene",
-                        #             gene, alias)
                         operons_not_found.append(alias)
                         shifted_pairs.append((gene, gene))
 
                 else:
                     aliases_not_found.append(alias)
-            #logging.info("# aliases not found in thesaurus: %d",
-            #             len(aliases_not_found))
-            #logging.info("# aliases have no operon: %d",
-            #             len(operons_not_found))
             return shifted_pairs
 
         def unique_sequences(operon_pairs):
