@@ -74,6 +74,9 @@ class ScoringFunction(memb.ScoringFunctionBase):
 
     def __init__(self, organism, membership, matrix,
                  meme_suite, sequence_filters, pvalue_filter,
+                 scan_distance=DISTANCE_UPSTREAM_SCAN,
+                 search_distance=DISTANCE_UPSTREAM_SEARCH,
+                 seqtype='upstream',
                  weight_func=None, interval=0):
         """creates a ScoringFunction"""
         memb.ScoringFunctionBase.__init__(self, membership,
@@ -82,16 +85,21 @@ class ScoringFunction(memb.ScoringFunctionBase):
         self.__meme_suite = meme_suite
         self.__sequence_filters = sequence_filters
         self.__pvalue_filter = pvalue_filter
+        self.__search_distance = search_distance
+        self.__seqtype = seqtype
 
         # precompute the sequences for all genes that are referenced in the
         # input ratios, they are used as a basis to compute the background
         # distribution for every cluster
         self.__used_seqs = organism.sequences_for_genes(
             sorted(matrix.row_names()),
-            DISTANCE_UPSTREAM_SCAN,
-            upstream=True)
+            distance=scan_distance,
+            seqtype=self.__seqtype)
+        logging.info("used sequences for motifing retrieved")
         self.__interval = interval
+        logging.info("building reverse map...")
         self.__reverse_map = self.__build_reverse_map(matrix)
+        logging.info("reverse map built.")
 
     def __build_reverse_map(self, matrix):
         """build a map that reconstructs the original row name from
@@ -116,8 +124,7 @@ class ScoringFunction(memb.ScoringFunctionBase):
         if (self.__interval == 0 or
             (iteration > 0 and (iteration % self.__interval == 0))):
             print "RUN MOTIF SCORING IN ITERATION ", iteration
-            pvalues = self.compute_scores(DISTANCE_UPSTREAM_SEARCH,
-                                          iteration)
+            pvalues = self.compute_scores(self.__search_distance, iteration)
             remapped = {}
             for cluster in pvalues:
                 pvalues_k = pvalues[cluster]
@@ -125,7 +132,7 @@ class ScoringFunction(memb.ScoringFunctionBase):
                 for feature_id, pvalue in pvalues_k.items():
                     pvalues_genes[self.__reverse_map[feature_id]] = pvalue
                 remapped[cluster] = pvalues_genes
-            #print remapped
+
             # convert remapped to an actual scoring matrix
             matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
                                    self.gene_names())
@@ -161,8 +168,9 @@ class ScoringFunction(memb.ScoringFunctionBase):
             logging.info("compute motif scores for cluster %d", cluster)
             genes = sorted(self.rows_for_cluster(cluster))
             feature_ids = self.__organism.feature_ids_for(genes)
-            seqs = self.__organism.sequences_for_genes(genes, distance,
-                                                       upstream=True)
+            seqs = self.__organism.sequences_for_genes(genes,
+                                                       distance=distance,
+                                                       seqtype=self.__seqtype)
             seqs = apply_sequence_filters(seqs, feature_ids)
             if (len(seqs) >= MIN_CLUSTER_ROWS_ALLOWED
                 and len(seqs) <= MAX_CLUSTER_ROWS_ALLOWED):
