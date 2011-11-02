@@ -8,6 +8,7 @@ import numpy
 import scipy
 import util
 import thesaurus
+import organism
 import seqtools as st
 
 DISTANCE_PROM = (0, 700)
@@ -115,14 +116,13 @@ def center_scale_filter(matrix, group_columns, group_controls):
 ##################
 # Organism interface
 
-class Human:
+class Human(organism.OrganismBase):
 
     def __init__(self, prom_seq_filename, p3utr_seq_filename,
                  thesaurus_filename, nw_factories):
+        organism.OrganismBase.__init__(self, 'hsa', nw_factories)
         self.__prom_seq_filename = prom_seq_filename
         self.__p3utr_seq_filename = p3utr_seq_filename
-        self.__nw_factories = nw_factories
-        self.__networks = None
         self.__thesaurus_filename = thesaurus_filename
         self.__synonyms = None
 
@@ -194,28 +194,9 @@ class Human:
         logging.info("sequences all retrieved")
         return result
 
-    #####################
-    #### These could be part of a super class
-    def networks(self):
-        """returns this organism's networks"""
-        if self.__networks == None:
-            self.__networks = []
-            for make_network in self.__nw_factories:
-                self.__networks.append(make_network(self))
-        return self.__networks
-
     def thesaurus(self):
         """Reads the synonyms from the provided CSV file"""
         if not self.__synonyms:
             self.__synonyms = thesaurus.create_from_delimited_file2(
                 self.__thesaurus_filename)
         return self.__synonyms
-
-    def feature_ids_for(self, gene_aliases):
-        """Helper method to retrieve a list of feature_ids for the
-        specified alias list"""
-        synonyms = self.thesaurus()
-        for alias in synonyms:
-            if alias not in synonyms:
-                logging.warn("gene '%s' not contained in feature_names.tab")
-        return [synonyms[alias] for alias in gene_aliases if alias in synonyms]
