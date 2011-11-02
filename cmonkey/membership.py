@@ -226,7 +226,7 @@ class ClusterMembership:
         rows = self.__cluster_row_members[cluster]
 
         if cluster not in clusters:
-            logging.info("ROW %s -> CLUSTER %d", row, cluster)
+            #logging.info("ROW %s -> CLUSTER %d", row, cluster)
             clusters.append(cluster)
         else:
             pass
@@ -269,7 +269,7 @@ class ClusterMembership:
         columns = self.__cluster_column_members[cluster]
 
         if cluster not in clusters:
-            logging.info("COL %s -> CLUSTER %d", column, cluster)
+            #logging.info("COL %s -> CLUSTER %d", column, cluster)
             clusters.append(cluster)
         else:
             #logging.warn("cluster %s already associated with %s",

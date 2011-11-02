@@ -160,7 +160,8 @@ class Human:
                 if gene in self.__p3utr_seqs:
                     result[gene] = self.__p3utr_seqs[gene]
                 else:
-                    logging.warn("Gene '%s' not found in 3' UTRs", gene)
+                    #logging.warn("Gene '%s' not found in 3' UTRs", gene)
+                    pass
             else:
                 #logging.warn("Alias '%s' not in thesaurus !", alias)
                 pass
@@ -185,7 +186,8 @@ class Human:
                     seq = self.__prom_seqs[gene]
                     result[gene] =  seq # st.subsequence(seq, distance[0], distance[1])
                 else:
-                    logging.warn("Gene '%s' not found in promoter seqs", gene)
+                    #logging.warn("Gene '%s' not found in promoter seqs", gene)
+                    pass
             else:
                 #logging.warn("Alias '%s' not in thesaurus !", alias)
                 pass
