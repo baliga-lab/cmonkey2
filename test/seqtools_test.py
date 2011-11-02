@@ -5,6 +5,7 @@ more information and licensing details.
 """
 import unittest
 import os
+import re
 import seqtools as st
 
 
@@ -95,6 +96,10 @@ class SeqtoolsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals("GNCAT", st.revcomp('ATGNC'))
         self.assertEquals("GNCAT", st.revcomp('atgnc'))
 
+    def test_replace_degenerate_residues(self):
+        seqs = ['ACGTRYKMSWN']
+        newseq = st.replace_degenerate_residues(seqs)[0]
+        self.assertTrue(re.match('ACGT[GA][TC][GT][AC][GC][AT][GATC]', newseq) != None)
 
 class FastaTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for FASTA related functions"""

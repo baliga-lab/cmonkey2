@@ -3,7 +3,8 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-
+import re
+import random
 
 class Location:  # pylint: disable-msg=R0903
     """representation of a genomic position, a simple value object"""
@@ -136,10 +137,28 @@ def markov_background(seqs, order):
     by gathering the frequencies of subsequences of length
     1,..,(order + 1)"""
     result = []
+    seqs = replace_degenerate_residues(seqs)
     for subseq_len in range(1, (order + 2)):
         result.append(subseq_frequencies(seqs, subseq_len))
     return result
 
+def replace_degenerate_residues(seqs):
+    """gets rid of funny characters in gene sequences by employing a
+    replacement strategy"""
+    replacements = {'R':['G', 'A'], 'Y':['T', 'C'], 'K':['G', 'T'], 'M':['A', 'C'],
+                    'S':['G', 'C'], 'W':['A', 'T'], 'N':['G', 'A', 'T', 'C']}
+
+    pat = re.compile('[ACGTX]*([^ACGTX])[ACGTX]*')
+    result = []
+    for seq in seqs:
+        for match in pat.finditer(seq):
+            replace_chars = replacements[seq[match.start(1)]]
+            replace_char = replace_chars[random.randint(0,
+                                                        len(replace_chars) - 1)]
+            seq = seq[:match.start(1)] + replace_char + seq[match.end(1):]
+        result.append(seq)
+    return result
+            
 
 def read_sequences_from_fasta_string(fasta_string):
     """reads the sequences contained in a FASTA string"""
