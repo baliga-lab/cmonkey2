@@ -11,8 +11,8 @@ import membership as memb
 import datamatrix as dm
 
 
-DISTANCE_UPSTREAM_SEARCH = (-20, 150)  # used to select sequences
-DISTANCE_UPSTREAM_SCAN = (-30, 250)    # used for background distribution
+DISTANCE_UPSTREAM_SEARCH = (-20, 150)  # used to select sequences and MEME
+DISTANCE_UPSTREAM_SCAN = (-30, 250)    # used for background distribution and MAST
 MIN_CLUSTER_ROWS_ALLOWED = 3
 MAX_CLUSTER_ROWS_ALLOWED = 70
 
