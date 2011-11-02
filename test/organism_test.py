@@ -15,6 +15,9 @@ TAXONOMY_FILE_PATH = "testdata/KEGG_taxonomy"
 PROT2TAXID_FILE_PATH = "testdata/proteome2taxid"
 RSAT_LIST_FILE_PATH = "testdata/RSAT_genomes_listing.txt"
 
+SEARCH_DISTANCES = {'upstream':(-20, 150)}
+SCAN_DISTANCES = {'upstream':(-30, 250)}
+
 
 # pylint: disable-msg=R0904
 class KeggOrganismCodeMapperTest(unittest.TestCase):
@@ -134,12 +137,12 @@ class MockMicrobesOnline:
     pass
 
 
-class OrganismFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
+class MicrobeFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for OrganismFactory"""
 
     def test_create_prokaryote(self):
         """tests creating a Prokaryote"""
-        factory = org.OrganismFactory(
+        factory = org.MicrobeFactory(
             lambda _: 'KEGG organism',
             lambda _: org.RsatSpeciesInfo(MockRsatDatabase(''),
                                           'RSAT_organism',
@@ -147,7 +150,7 @@ class OrganismFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
             mock_go_mapper,
             MockMicrobesOnline(),
             [])
-        organism = factory.create('hpy')
+        organism = factory.create('hpy', SEARCH_DISTANCES, SCAN_DISTANCES)
         self.assertEquals('hpy', organism.code)
         self.assertEquals('Hpy', organism.cog_organism())
         self.assertEquals('KEGG organism', organism.kegg_organism)
@@ -158,7 +161,7 @@ class OrganismFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_create_eukaryote(self):
         """tests creating an eukaryote"""
-        factory = org.OrganismFactory(
+        factory = org.MicrobeFactory(
             lambda _: 'KEGG organism',
             lambda _: org.RsatSpeciesInfo(MockRsatDatabase(''),
                                           'RSAT_organism',
@@ -166,24 +169,26 @@ class OrganismFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
             lambda _: 'GO taxonomy id',
             MockMicrobesOnline(),
             [])
-        organism = factory.create('hpy')
+        organism = factory.create('hpy', SEARCH_DISTANCES, SCAN_DISTANCES)
         self.assertEquals('hpy', organism.code)
         self.assertTrue(organism.is_eukaryote())
 
 
-class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
+class MicrobeTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for Organism"""
 
     def test_init_genome(self):
         """Tests the init_genome() method"""
-        organism = org.Organism('hal', 'Halobacterium SP',
-                                org.RsatSpeciesInfo(MockRsatDatabase(''),
-                                                    'Halobacterium_SP',
-                                                    False,
-                                                    12345),
-                                12345,
-                                MockMicrobesOnline(),
-                                [])
+        organism = org.Microbe('hal', 'Halobacterium SP',
+                               org.RsatSpeciesInfo(MockRsatDatabase(''),
+                                                   'Halobacterium_SP',
+                                                   False,
+                                                   12345),
+                               12345,
+                               MockMicrobesOnline(),
+                               [],
+                               SEARCH_DISTANCES,
+                               SCAN_DISTANCES)
         seqs = organism.sequences_for_genes_upstream(['VNG12345G'], (-30, 250))
         self.assertEquals((st.Location('NC_000915.1', -128, 152, False),
                            'ACGTTTAAAAGAGAGAGAGACACAGTATATATTTTTTTAAAA'),
@@ -192,13 +197,15 @@ class OrganismTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_get_networks(self):
         """tests the networks() method"""
         mockFactory = MockNetworkFactory()
-        organism = org.Organism('hal', 'Halobacterium SP',
-                                org.RsatSpeciesInfo(MockRsatDatabase(''),
-                                                    'Halobacterium_SP',
-                                                    False,
-                                                    12345), 12345,
-                                MockMicrobesOnline(),
-                                [mockFactory])
+        organism = org.Microbe('hal', 'Halobacterium SP',
+                               org.RsatSpeciesInfo(MockRsatDatabase(''),
+                                                   'Halobacterium_SP',
+                                                   False,
+                                                   12345), 12345,
+                               MockMicrobesOnline(),
+                               [mockFactory],
+                               SEARCH_DISTANCES,
+                               SCAN_DISTANCES)
         networks = organism.networks()
         self.assertEquals(1, len(networks))
         self.assertEquals(organism, mockFactory.create_called_with)

@@ -65,7 +65,7 @@ def make_rsat_organism_mapper(rsatdb):
     return mapper_fun
 
 
-class OrganismFactory:
+class MicrobeFactory:
     """Factory to create an organism. Construction of an organism
     instance is relatively complex and costly, so it is coordinated
     here. Information has to be pulled together from various databases
@@ -92,7 +92,8 @@ class OrganismFactory:
         self.__microbes_online_db = microbes_online_db
         self.__network_factories = network_factories
 
-    def create(self, organism_code):
+    def create(self, organism_code, search_distances,
+               scan_distances):
         """factory method to create an organism from a code"""
         logging.info("Creating organism object for code '%s'...",
                      organism_code)
@@ -103,10 +104,11 @@ class OrganismFactory:
         go_taxonomy_id = self.__get_taxonomy_id(
             rsat_info.species.replace('_', ' '))
         logging.info('GO taxonomy id: %s', str(go_taxonomy_id))
-        return Organism(organism_code, kegg_organism, rsat_info,
-                        go_taxonomy_id,
-                        self.__microbes_online_db,
-                        self.__network_factories)
+        return Microbe(organism_code, kegg_organism, rsat_info,
+                       go_taxonomy_id,
+                       self.__microbes_online_db,
+                       self.__network_factories,
+                       search_distances, scan_distances)
 
 
 class OrganismBase:
@@ -141,21 +143,25 @@ class OrganismBase:
         return [synonyms[alias] for alias in gene_aliases if alias in synonyms]
 
 
-class Organism(OrganismBase):
-    """Abstraction of an organism in cMonkey. It captures all organism-specific
+class Microbe(OrganismBase):
+    """Abstraction of a microbial organism in cMonkey. It captures all organism-specific
     aspects. For now, we assume microbes only, but keep the interface generic
     so the algorithm will work on any type of organism"""
 
     # pylint: disable-msg=R0913,R0902
     def __init__(self, code, kegg_organism, rsat_info,
                  go_taxonomy_id, microbes_online_db,
-                 network_factories):
+                 network_factories,
+                 search_distances, scan_distances):
         """create an Organism instance"""
         OrganismBase.__init__(self, code, network_factories)
         self.kegg_organism = kegg_organism
         self.__rsat_info = rsat_info
         self.__microbes_online_db = microbes_online_db
         self.go_taxonomy_id = go_taxonomy_id
+        self.__search_distances = search_distances
+        self.__scan_distances = scan_distances
+
         self.__synonyms = None  # lazy loaded
         self.__operon_mappings = None  # lazy loaded
 
@@ -182,11 +188,17 @@ class Organism(OrganismBase):
             self.thesaurus(),
             self.__read_features(self.feature_ids_for(gene_aliases)))
 
-    def sequences_for_genes(self, gene_aliases, **kwargs):
+    def sequences_for_genes_search(self, gene_aliases, seqtype='upstream'):
         """The default sequence retrieval for microbes is to
         fetch their operon sequences"""
-        distance = kwargs['distance']
-        return self.__operon_shifted_seqs_for(gene_aliases, distance)
+        return self.__operon_shifted_seqs_for(gene_aliases,
+                                              self.__search_distances[seqtype])
+
+    def sequences_for_genes_scan(self, gene_aliases, seqtype='upstream'):
+        """The default sequence retrieval for microbes is to
+        fetch their operon sequences"""
+        return self.__operon_shifted_seqs_for(gene_aliases,
+                                              self.__scan_distances[seqtype])
 
     def __operon_shifted_seqs_for(self, gene_aliases, distance):
         """returns a map of the gene_aliases to the feature-

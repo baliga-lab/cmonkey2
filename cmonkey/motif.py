@@ -11,14 +11,12 @@ import membership as memb
 import datamatrix as dm
 
 
-DISTANCE_UPSTREAM_SEARCH = (-20, 150)  # used to select sequences and MEME
-DISTANCE_UPSTREAM_SCAN = (-30, 250)    # used for background distribution and MAST
 MIN_CLUSTER_ROWS_ALLOWED = 3
 MAX_CLUSTER_ROWS_ALLOWED = 70
 
 
 # Applicable sequence filters
-def unique_filter(seqs, feature_ids, distance):
+def unique_filter(seqs, feature_ids):
     """returns a map that contains only the keys that are in
     feature_ids and only contains unique sequences"""
     unique_seqs = {}
@@ -31,20 +29,22 @@ def unique_filter(seqs, feature_ids, distance):
 
 def get_remove_low_complexity_filter(meme_suite):
     """Factory method that returns a low complexity filter"""
-    def remove_low_complexity(seqs, feature_ids, distance):
+    def remove_low_complexity(seqs, feature_ids):
         """low-complexity filter that depends on meme"""
         return meme_suite.remove_low_complexity(seqs)
     return remove_low_complexity
 
-
-def remove_atgs_filter(seqs, feature_ids, distance):
-    """a filter removes the ATG's from the sequence, this
-    just masks a window of 4 letters with N's"""
-    for feature_id in seqs:
-        chars = [c for c in seqs[feature_id]]
-        chars[distance[1]:distance[1] + 4] = "NNNN"
-        seqs[feature_id] = "".join(chars)
-    return seqs
+def get_remove_atgs_filter(distance):
+    """returns a remove ATG filter"""
+    def remove_atgs_filter(seqs, feature_ids):
+        """a filter removes the ATG's from the sequence, this
+        just masks a window of 4 letters with N's"""
+        for feature_id in seqs:
+            chars = [c for c in seqs[feature_id]]
+            chars[distance[1]:distance[1] + 4] = "NNNN"
+            seqs[feature_id] = "".join(chars)
+        return seqs
+    return remove_atgs_filter
 
 
 def make_min_value_filter(min_value):
@@ -74,8 +74,6 @@ class ScoringFunction(memb.ScoringFunctionBase):
 
     def __init__(self, organism, membership, matrix,
                  meme_suite, sequence_filters, pvalue_filter,
-                 scan_distance=DISTANCE_UPSTREAM_SCAN,
-                 search_distance=DISTANCE_UPSTREAM_SEARCH,
                  seqtype='upstream',
                  weight_func=None, interval=0):
         """creates a ScoringFunction"""
@@ -85,16 +83,13 @@ class ScoringFunction(memb.ScoringFunctionBase):
         self.__meme_suite = meme_suite
         self.__sequence_filters = sequence_filters
         self.__pvalue_filter = pvalue_filter
-        self.__search_distance = search_distance
         self.__seqtype = seqtype
 
         # precompute the sequences for all genes that are referenced in the
         # input ratios, they are used as a basis to compute the background
         # distribution for every cluster
-        self.__used_seqs = organism.sequences_for_genes(
-            sorted(matrix.row_names()),
-            distance=scan_distance,
-            seqtype=self.__seqtype)
+        self.__used_seqs = organism.sequences_for_genes_scan(
+            sorted(matrix.row_names()), seqtype=self.__seqtype)
         logging.info("used sequences for motifing retrieved")
         self.__interval = interval
         logging.info("building reverse map...")
@@ -124,7 +119,7 @@ class ScoringFunction(memb.ScoringFunctionBase):
         if (self.__interval == 0 or
             (iteration > 0 and (iteration % self.__interval == 0))):
             print "RUN MOTIF SCORING IN ITERATION ", iteration
-            pvalues = self.compute_scores(self.__search_distance, iteration)
+            pvalues = self.compute_pvalues(iteration)
             remapped = {}
             for cluster in pvalues:
                 pvalues_k = pvalues[cluster]
@@ -146,7 +141,7 @@ class ScoringFunction(memb.ScoringFunctionBase):
         else:
             return None
 
-    def compute_scores(self, distance, iteration):
+    def compute_pvalues(self, iteration):
         """Compute motif scores. In order to influence the sequences
         that go into meme, the user can specify a list of sequence filter
         functions that have the signature
@@ -158,7 +153,7 @@ class ScoringFunction(memb.ScoringFunctionBase):
         def apply_sequence_filters(seqs, feature_ids):
             """apply all filters in the filters list in order"""
             for sequence_filter in self.__sequence_filters:
-                seqs = sequence_filter(seqs, feature_ids, distance)
+                seqs = sequence_filter(seqs, feature_ids)
             return seqs
 
         cluster_pvalues = {}
@@ -168,9 +163,8 @@ class ScoringFunction(memb.ScoringFunctionBase):
             logging.info("compute motif scores for cluster %d", cluster)
             genes = sorted(self.rows_for_cluster(cluster))
             feature_ids = self.__organism.feature_ids_for(genes)
-            seqs = self.__organism.sequences_for_genes(genes,
-                                                       distance=distance,
-                                                       seqtype=self.__seqtype)
+            seqs = self.__organism.sequences_for_genes_search(genes,
+                                                              seqtype=self.__seqtype)
             seqs = apply_sequence_filters(seqs, feature_ids)
             if (len(seqs) >= MIN_CLUSTER_ROWS_ALLOWED
                 and len(seqs) <= MAX_CLUSTER_ROWS_ALLOWED):

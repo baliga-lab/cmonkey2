@@ -11,8 +11,8 @@ import thesaurus
 import organism
 import seqtools as st
 
-DISTANCE_PROM = (0, 700)
-DISTANCE_P3UTR = (0, 831)
+SEARCH_DISTANCES = {'promoter':(0, 700), 'p3utr':(0, 831)}
+SCAN_DISTANCES = {'promoter':(0, 700), 'p3utr':(0, 831)}
 
 
 def genes_per_group_proportional(num_genes_total, num_per_group):
@@ -119,13 +119,18 @@ def center_scale_filter(matrix, group_columns, group_controls):
 class Human(organism.OrganismBase):
 
     def __init__(self, prom_seq_filename, p3utr_seq_filename,
-                 thesaurus_filename, nw_factories):
+                 thesaurus_filename, nw_factories,
+                 search_distances=SEARCH_DISTANCES,
+                 scan_distances=SCAN_DISTANCES):
         organism.OrganismBase.__init__(self, 'hsa', nw_factories)
         self.__prom_seq_filename = prom_seq_filename
         self.__p3utr_seq_filename = p3utr_seq_filename
         self.__thesaurus_filename = thesaurus_filename
-        self.__synonyms = None
+        self.__search_distances = search_distances
+        self.__scan_distances = scan_distances
 
+        # lazy-loaded values
+        self.__synonyms = None
         self.__p3utr_seqs = None
         self.__prom_seqs = None
 
@@ -137,17 +142,24 @@ class Human(organism.OrganismBase):
         """Determines whether this object is an eukaryote"""
         return False
 
-    def sequences_for_genes(self, gene_aliases, **kwargs):
+    def sequences_for_genes_search(self, gene_aliases, seqtype):
         """retrieve the sequences for the specified"""
-        if 'seqtype' in kwargs:
-            seqtype = kwargs['seqtype']
+        distance = self.__search_distances[seqtype]
         if seqtype == 'p3utr':
-            return self.__get_p3utr_seqs(gene_aliases, **kwargs)
+            return self.__get_p3utr_seqs(gene_aliases, distance)
         else:
-            return self.__get_promoter_seqs(gene_aliases, **kwargs)
+            return self.__get_promoter_seqs(gene_aliases, distance)
 
-    def __get_p3utr_seqs(self, gene_aliases, **kwargs):
-        print "GET_P3UTR SEQS, distance: ", kwargs['distance']
+    def sequences_for_genes_scan(self, gene_aliases, seqtype):
+        """retrieve the sequences for the specified"""
+        distance = self.__scan_distances[seqtype]
+        if seqtype == 'p3utr':
+            return self.__get_p3utr_seqs(gene_aliases, distance)
+        else:
+            return self.__get_promoter_seqs(gene_aliases, distance)
+
+    def __get_p3utr_seqs(self, gene_aliases, distance):
+        print "GET_P3UTR SEQS, distance: ", distance
         if self.__p3utr_seqs == None:
             dfile = util.DelimitedFile.read(self.__p3utr_seq_filename, sep=',')
             self.__p3utr_seqs = {}
@@ -167,18 +179,14 @@ class Human(organism.OrganismBase):
                 pass
         return result
 
-    def __get_promoter_seqs(self, gene_aliases, **kwargs):
+    def __get_promoter_seqs(self, gene_aliases, distance):
         logging.info("GET PROMOTER SEQS, # GENES: %d", len(gene_aliases))
-        #distance = kwargs['distance']
-        distance = DISTANCE_PROM  # hardcoded for now
         if self.__prom_seqs == None:
             dfile = util.DelimitedFile.read(self.__prom_seq_filename, sep=',')
             self.__prom_seqs = {}
             for line in dfile.lines():
                 self.__prom_seqs[line[0].upper()] = line[1]
-        logging.info("promoter sequences read")
         result = {}
-        logging.info("cutting out sequences")
         for alias in gene_aliases:
             if alias in self.thesaurus():
                 gene = self.thesaurus()[alias]

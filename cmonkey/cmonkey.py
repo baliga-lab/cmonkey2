@@ -28,7 +28,11 @@ COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
 ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 2000
+NETWORK_SCORE_INTERVAL = 7
+MOTIF_SCORE_INTERVAL = 10
 
+SEARCH_DISTANCES = {'upstream':(-20, 150)}  # used to select sequences and MEME
+SCAN_DISTANCES = {'upstream':(-30, 250)}    # used for background distribution and MAST
 
 def run_cmonkey():
     """init of the cMonkey system"""
@@ -69,7 +73,7 @@ def make_gene_scoring_funcs(organism, membership, matrix):
     meme_suite = meme.MemeSuite430()
     sequence_filters = [motif.unique_filter,
                         motif.get_remove_low_complexity_filter(meme_suite),
-                        motif.remove_atgs_filter]
+                        motif.get_remove_atgs_filter(SEARCH_DISTANCES['upstream'])]
 
     motif_scoring = motif.ScoringFunction(organism,
                                           membership,
@@ -78,10 +82,10 @@ def make_gene_scoring_funcs(organism, membership, matrix):
                                           sequence_filters=sequence_filters,
                                           pvalue_filter=motif.make_min_value_filter(-20.0),
                                           weight_func=lambda iteration: 0.0,
-                                          interval=100)
+                                          interval=MOTIF_SCORE_INTERVAL)
 
     network_scoring = nw.ScoringFunction(organism, membership, matrix,
-                                         lambda iteration: 0.0, 7)
+                                         lambda iteration: 0.0, NETWORK_SCORE_INTERVAL)
 
     #return [row_scoring, network_scoring]
     return [row_scoring, motif_scoring, network_scoring]
@@ -111,12 +115,12 @@ def make_organism(organism_code, matrix):
         stringdb.get_network_factory2(stringdb.STRING_FILE2),
         microbes_online.get_network_factory(
             mo_db, max_operon_size=matrix.num_rows() / 20)]
-    org_factory = org.OrganismFactory(org.make_kegg_code_mapper(keggfile),
-                                      org.make_rsat_organism_mapper(rsatdb),
-                                      org.make_go_taxonomy_mapper(gofile),
-                                      mo_db,
-                                      nw_factories)
-    return org_factory.create(organism_code)
+    org_factory = org.MicrobeFactory(org.make_kegg_code_mapper(keggfile),
+                                     org.make_rsat_organism_mapper(rsatdb),
+                                     org.make_go_taxonomy_mapper(gofile),
+                                     mo_db,
+                                     nw_factories)
+    return org_factory.create(organism_code, SEARCH_DISTANCES, SCAN_DISTANCES)
 
 
 def make_membership(matrix):

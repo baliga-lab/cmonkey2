@@ -153,6 +153,7 @@ def make_gene_scoring_funcs(organism, membership, matrix):
                                           meme_suite,
                                           sequence_filters=sequence_filters,
                                           pvalue_filter=motif.make_min_value_filter(-20.0),
+                                          seqtype='promoter',
                                           weight_func=lambda iteration: 0.0,
                                           interval=0)
 
