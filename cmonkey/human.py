@@ -3,12 +3,34 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
+import os
 import logging
 import numpy
 import scipy
 import util
 import thesaurus
 import organism
+import datamatrix as dm
+import membership as memb
+import microarray
+import stringdb
+import network as nw
+import motif
+import meme
+
+LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
+CACHE_DIR = 'humancache'
+CONTROLS_FILE = 'human_data/controls.csv'
+RUG_FILE = 'human_data/rug.csv'
+
+PROM_SEQFILE = 'human_data/promoterSeqs_set3pUTR_Final.csv.gz'
+P3UTR_SEQFILE = 'human_data/p3utrSeqs_set3pUTR_Final.csv.gz'
+THESAURUS_FILE = 'human_data/synonymThesaurus.csv.gz'
+
+RUG_PROPS = ['MIXED', 'ASTROCYTOMA', 'GBM', 'OLIGODENDROGLIOMA']
+NUM_CLUSTERS = 133
+ROW_WEIGHT = 6.0
+NUM_ITERATIONS = 2000
 
 SEARCH_DISTANCES = {'promoter': (0, 700), 'p3utr': (0, 831)}
 SCAN_DISTANCES = {'promoter': (0, 700), 'p3utr': (0, 831)}
@@ -213,3 +235,145 @@ class Human(organism.OrganismBase):
             self.__synonyms = thesaurus.create_from_delimited_file2(
                 self.__thesaurus_filename)
         return self.__synonyms
+
+
+######################################################################
+##### Configuration
+######################################################################
+
+class CMonkeyConfiguration:
+    def __init__(self, matrix_filename, num_iterations=NUM_ITERATIONS,
+                 cache_dir=CACHE_DIR):
+        """create instance"""
+        logging.basicConfig(format=LOG_FORMAT,
+                            datefmt='%Y-%m-%d %H:%M:%S',
+                            level=logging.DEBUG)
+        if not os.path.exists(cache_dir):
+            os.mkdir(cache_dir)
+        self.__cache_dir = cache_dir
+        self.__matrix_filename = matrix_filename
+        self.__num_iterations = num_iterations
+
+        self.__matrix = None
+        self.__membership = None
+        self.__organism = None
+        self.__row_scoring = None
+        self.__column_scoring = None
+
+    def num_iterations(self):
+        """returns the number of iterations"""
+        return self.__num_iterations
+
+    def cache_dir(self):
+        """returns the cache directory"""
+        return self.__cache_dir
+
+    def matrix(self):
+        """returns the input matrix"""
+        if self.__matrix == None:
+            self.__matrix = read_matrix(self.__matrix_filename)
+        return self.__matrix
+
+    def membership(self):
+        """returns the seeded membership"""
+        if self.__membership == None:
+            self.__membership = make_membership(self.matrix())
+        return self.__membership
+
+    def organism(self):
+        """returns the organism object to work on"""
+        if self.__organism == None:
+            self.__organism = make_organism()
+        return self.__organism
+
+    def row_scoring(self):
+        if self.__row_scoring == None:
+            self.__row_scoring = make_gene_scoring_func(self.organism(),
+                                                         self.membership(),
+                                                         self.matrix())
+        return self.__row_scoring
+
+    def column_scoring(self):
+        if self.__column_scoring == None:
+            self.__column_scoring = microarray.ColumnScoringFunction(
+                self.membership(), self.matrix())
+        return self.__column_scoring
+
+
+def read_controls():
+    """reads the controls file"""
+    with open(CONTROLS_FILE) as infile:
+        return [line.strip() for line in infile.readlines()]
+
+
+def read_rug(pred):
+    """reads the rug file"""
+    infile = util.DelimitedFile.read(RUG_FILE, sep=',', has_header=False)
+    return list(set([row[0] for row in infile.lines() if pred(row)]))
+
+
+def read_matrix(filename):
+    """reads the data matrix from a file"""
+    controls = read_controls()
+    rug = read_rug(lambda row: row[1] in RUG_PROPS)
+    columns_to_use = list(set(rug + controls))
+
+    # pass the column filter as the first filter to the DataMatrixFactory,
+    # so normalization will be applied to the submatrix
+    matrix_factory = dm.DataMatrixFactory([
+            lambda matrix: matrix.submatrix_by_name(
+                column_names=columns_to_use)])
+    infile = util.DelimitedFile.read(filename, sep=',', has_header=True,
+                                     quote="\"")
+    matrix = matrix_factory.create_from(infile)
+
+    column_groups = {1: range(matrix.num_columns())}
+    select_rows = select_probes(matrix, 2000, column_groups)
+    matrix = matrix.submatrix_by_rows(select_rows)
+    return intensities_to_ratios(matrix, controls, column_groups)
+
+
+def make_membership(matrix):
+    """returns a seeded membership"""
+    return memb.ClusterMembership.create(
+        matrix.sorted_by_row_name(),
+        memb.make_kmeans_row_seeder(NUM_CLUSTERS),
+        microarray.seed_column_members,
+        num_clusters=NUM_CLUSTERS)
+
+
+def make_organism():
+    """returns a human organism object"""
+    nw_factories = [stringdb.get_network_factory3('human_data/string.csv')]
+    organism = Human(PROM_SEQFILE, P3UTR_SEQFILE, THESAURUS_FILE,
+                     nw_factories)
+    return organism
+
+
+def make_gene_scoring_func(organism, membership, matrix):
+    """setup the gene-related scoring functions here
+    each object in this array supports the method
+    compute(organism, membership, matrix) and returns
+    a DataMatrix(genes x cluster)
+    """
+    row_scoring = microarray.RowScoringFunction(membership, matrix,
+                                                lambda iteration: ROW_WEIGHT)
+
+    sequence_filters = []
+    meme_suite = meme.MemeSuite430()
+    motif_scoring = motif.ScoringFunction(
+        organism,
+        membership,
+        matrix,
+        meme_suite,
+        sequence_filters=sequence_filters,
+        pvalue_filter=motif.make_min_value_filter(-20.0),
+        seqtype='promoter',
+        weight_func=lambda iteration: 0.0,
+        interval=0)
+
+    network_scoring = nw.ScoringFunction(organism, membership, matrix,
+                                         lambda iteration: 0.0, 7)
+
+    return memb.ScoringFunctionCombiner([row_scoring, motif_scoring,
+                                         network_scoring])
