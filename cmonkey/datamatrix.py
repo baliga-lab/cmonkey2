@@ -6,7 +6,6 @@ more information and licensing details.
 import scipy
 import numpy
 import util
-import logging
 
 
 class DataMatrix:
@@ -446,7 +445,8 @@ def quantile_normalize_scores(matrices, weights=None):
         return result
 
     def compute_ranks(flat_values):
-        """optimization: write a map from value to first index in sorted_values"""
+        """optimization: write a map from value to first index in
+        sorted_values"""
         sorted_values = sorted(flat_values)
         first_index = {}
         for index in range(len(sorted_values)):

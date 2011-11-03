@@ -6,6 +6,7 @@ more information and licensing details.
 import re
 import random
 
+
 class Location:  # pylint: disable-msg=R0903
     """representation of a genomic position, a simple value object"""
     def __init__(self, contig, start, end, reverse):
@@ -142,23 +143,25 @@ def markov_background(seqs, order):
         result.append(subseq_frequencies(seqs, subseq_len))
     return result
 
+
 def replace_degenerate_residues(seqs):
     """gets rid of funny characters in gene sequences by employing a
     replacement strategy"""
-    replacements = {'R':['G', 'A'], 'Y':['T', 'C'], 'K':['G', 'T'], 'M':['A', 'C'],
-                    'S':['G', 'C'], 'W':['A', 'T'], 'N':['G', 'A', 'T', 'C']}
+    replacements = {'R': ['G', 'A'], 'Y': ['T', 'C'], 'K': ['G', 'T'],
+                    'M': ['A', 'C'], 'S': ['G', 'C'], 'W': ['A', 'T'],
+                    'N': ['G', 'A', 'T', 'C']}
 
     pat = re.compile('[ACGTX]*([^ACGTX])[ACGTX]*')
     result = []
     for seq in seqs:
         for match in pat.finditer(seq):
             replace_chars = replacements[seq[match.start(1)]]
-            replace_char = replace_chars[random.randint(0,
-                                                        len(replace_chars) - 1)]
+            replace_char = replace_chars[random.randint(
+                    0, len(replace_chars) - 1)]
             seq = seq[:match.start(1)] + replace_char + seq[match.end(1):]
         result.append(seq)
     return result
-            
+
 
 def read_sequences_from_fasta_string(fasta_string):
     """reads the sequences contained in a FASTA string"""

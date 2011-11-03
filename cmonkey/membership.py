@@ -662,3 +662,39 @@ def make_kmeans_row_seeder(num_clusters):
         for row in range(len(seeding)):
             row_membership[row][0] = seeding[row] + 1
     return seed
+
+
+class ScoringFunctionCombiner:
+    """Taking advantage of the composite pattern, this combiner function
+    exposes the basic interface of a scoring function in order to
+    allow for nested scoring functions as they are used in the motif
+    scoring
+    """
+    def __init__(self, scoring_functions, weight_func=None):
+        """creates a combiner instance"""
+        self.__scoring_functions = scoring_functions
+
+    def compute(self, iteration):
+        """compute scores for one iteration"""
+        result_matrices = []
+        score_weights = []
+        for scoring_function in self.__scoring_functions:
+            matrix = scoring_function.compute(iteration)
+            if matrix != None:
+                result_matrices.append(matrix)
+                score_weights.append(scoring_function.weight(iteration))
+
+        if len(result_matrices) > 0:
+            result_matrices = dm.quantile_normalize_scores(result_matrices,
+                                                           score_weights)
+        combined_score = (result_matrices[0] *
+                          self.__scoring_functions[0].weight(iteration))
+        for index in range(1, len(result_matrices)):
+            combined_score += (
+                result_matrices[index] *
+                self.__scoring_functions[index].weight(iteration))
+        return combined_score
+
+    def weight(self, iteration):
+        """returns the weight for the specified iteration"""
+        return self.__weight_func(iteration)

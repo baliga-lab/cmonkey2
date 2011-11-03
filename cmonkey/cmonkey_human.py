@@ -9,7 +9,6 @@ import logging
 import datamatrix as dm
 import util
 import human
-import scipy.cluster.vq as clvq
 import membership as memb
 import microarray
 import stringdb
@@ -31,6 +30,7 @@ RUG_PROPS = ['MIXED', 'ASTROCYTOMA', 'GBM', 'OLIGODENDROGLIOMA']
 NUM_CLUSTERS = 133
 ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 2000
+
 
 def run_cmonkey():
     """init of the cMonkey system"""
@@ -128,6 +128,7 @@ def make_membership(matrix):
         microarray.seed_column_members,
         num_clusters=NUM_CLUSTERS)
 
+
 def make_organism():
     """returns a human organism object"""
     nw_factories = [stringdb.get_network_factory3('human_data/string.csv')]
@@ -147,15 +148,16 @@ def make_gene_scoring_funcs(organism, membership, matrix):
 
     sequence_filters = []
     meme_suite = meme.MemeSuite430()
-    motif_scoring = motif.ScoringFunction(organism,
-                                          membership,
-                                          matrix,
-                                          meme_suite,
-                                          sequence_filters=sequence_filters,
-                                          pvalue_filter=motif.make_min_value_filter(-20.0),
-                                          seqtype='promoter',
-                                          weight_func=lambda iteration: 0.0,
-                                          interval=0)
+    motif_scoring = motif.ScoringFunction(
+        organism,
+        membership,
+        matrix,
+        meme_suite,
+        sequence_filters=sequence_filters,
+        pvalue_filter=motif.make_min_value_filter(-20.0),
+        seqtype='promoter',
+        weight_func=lambda iteration: 0.0,
+        interval=0)
 
     network_scoring = nw.ScoringFunction(organism, membership, matrix,
                                          lambda iteration: 0.0, 7)

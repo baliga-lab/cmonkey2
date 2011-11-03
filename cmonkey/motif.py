@@ -34,6 +34,7 @@ def get_remove_low_complexity_filter(meme_suite):
         return meme_suite.remove_low_complexity(seqs)
     return remove_low_complexity
 
+
 def get_remove_atgs_filter(distance):
     """returns a remove ATG filter"""
     def remove_atgs_filter(seqs, feature_ids):
@@ -163,8 +164,8 @@ class ScoringFunction(memb.ScoringFunctionBase):
             logging.info("compute motif scores for cluster %d", cluster)
             genes = sorted(self.rows_for_cluster(cluster))
             feature_ids = self.__organism.feature_ids_for(genes)
-            seqs = self.__organism.sequences_for_genes_search(genes,
-                                                              seqtype=self.__seqtype)
+            seqs = self.__organism.sequences_for_genes_search(
+                genes, seqtype=self.__seqtype)
             seqs = apply_sequence_filters(seqs, feature_ids)
             if (len(seqs) >= MIN_CLUSTER_ROWS_ALLOWED
                 and len(seqs) <= MAX_CLUSTER_ROWS_ALLOWED):

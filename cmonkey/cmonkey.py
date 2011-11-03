@@ -31,8 +31,11 @@ NUM_ITERATIONS = 2000
 NETWORK_SCORE_INTERVAL = 7
 MOTIF_SCORE_INTERVAL = 10
 
-SEARCH_DISTANCES = {'upstream':(-20, 150)}  # used to select sequences and MEME
-SCAN_DISTANCES = {'upstream':(-30, 250)}    # used for background distribution and MAST
+# used to select sequences and MEME
+SEARCH_DISTANCES = {'upstream': (-20, 150)}
+# used for background distribution and MAST
+SCAN_DISTANCES = {'upstream': (-30, 250)}
+
 
 def run_cmonkey():
     """init of the cMonkey system"""
@@ -48,11 +51,11 @@ def run_cmonkey():
 
     organism = make_organism(sys.argv[2], matrix)
     membership = make_membership(matrix)
-    gene_scoring_funcs = make_gene_scoring_funcs(organism, membership, matrix)
+    gene_scoring = make_gene_scoring_func(organism, membership, matrix)
     cond_scoring = microarray.ColumnScoringFunction(membership, matrix)
 
     for iteration in range(NUM_ITERATIONS):
-        iterate(membership, matrix, gene_scoring_funcs, cond_scoring,
+        iterate(membership, matrix, gene_scoring, cond_scoring,
                 iteration, NUM_ITERATIONS)
     print "Done !!!!"
     print "cluster\t# rows"
@@ -61,7 +64,7 @@ def run_cmonkey():
     #print membership
 
 
-def make_gene_scoring_funcs(organism, membership, matrix):
+def make_gene_scoring_func(organism, membership, matrix):
     """setup the gene-related scoring functions here
     each object in this array supports the method
     compute(organism, membership, matrix) and returns
@@ -71,24 +74,27 @@ def make_gene_scoring_funcs(organism, membership, matrix):
                                                 lambda iteration: ROW_WEIGHT)
 
     meme_suite = meme.MemeSuite430()
-    sequence_filters = [motif.unique_filter,
-                        motif.get_remove_low_complexity_filter(meme_suite),
-                        motif.get_remove_atgs_filter(SEARCH_DISTANCES['upstream'])]
+    sequence_filters = [
+        motif.unique_filter,
+        motif.get_remove_low_complexity_filter(meme_suite),
+        motif.get_remove_atgs_filter(SEARCH_DISTANCES['upstream'])]
 
-    motif_scoring = motif.ScoringFunction(organism,
-                                          membership,
-                                          matrix,
-                                          meme_suite,
-                                          sequence_filters=sequence_filters,
-                                          pvalue_filter=motif.make_min_value_filter(-20.0),
-                                          weight_func=lambda iteration: 0.0,
-                                          interval=MOTIF_SCORE_INTERVAL)
+    motif_scoring = motif.ScoringFunction(
+        organism,
+        membership,
+        matrix,
+        meme_suite,
+        sequence_filters=sequence_filters,
+        pvalue_filter=motif.make_min_value_filter(-20.0),
+        weight_func=lambda iteration: 0.0,
+        interval=MOTIF_SCORE_INTERVAL)
 
     network_scoring = nw.ScoringFunction(organism, membership, matrix,
-                                         lambda iteration: 0.0, NETWORK_SCORE_INTERVAL)
+                                         lambda iteration: 0.0,
+                                         NETWORK_SCORE_INTERVAL)
 
-    #return [row_scoring, network_scoring]
-    return [row_scoring, motif_scoring, network_scoring]
+    return memb.ScoringFunctionCombiner([row_scoring, motif_scoring,
+                                         network_scoring])
 
 
 def read_matrix(filename):
@@ -138,28 +144,14 @@ def make_membership(matrix):
         microarray.seed_column_members)
 
 
-def iterate(membership, matrix, gene_scoring_funcs, cond_scoring_func,
+def iterate(membership, matrix, gene_scoring_func, cond_scoring_func,
             iteration, num_iterations):
     """one iteration of the algorithm"""
     logging.info("Iteration # %d", iteration)
-    result_matrices = []
-    score_weights = []
-    for score_func in gene_scoring_funcs:
-        row_scores = score_func.compute(iteration)
-        if row_scores != None:
-            result_matrices.append(row_scores)
-            score_weights.append(score_func.weight(iteration))
-    cscores = cond_scoring_func.compute(iteration)
-
-    if len(result_matrices) > 0:
-        result_matrices = dm.quantile_normalize_scores(result_matrices,
-                                                       score_weights)
-    rscores = result_matrices[0] * gene_scoring_funcs[0].weight(iteration)
-    for index in range(1, len(result_matrices)):
-        rscores = rscores + (result_matrices[index] *
-                             gene_scoring_funcs[index].weight(iteration))
-
-    membership.update(matrix, rscores, cscores, iteration, num_iterations)
+    membership.update(matrix,
+                      gene_scoring_func.compute(iteration),
+                      cond_scoring_func.compute(iteration),
+                      iteration, num_iterations)
 
 ############################################################
 #### Replace with real seeding when everything works

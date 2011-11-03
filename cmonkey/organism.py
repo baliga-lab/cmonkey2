@@ -144,9 +144,10 @@ class OrganismBase:
 
 
 class Microbe(OrganismBase):
-    """Abstraction of a microbial organism in cMonkey. It captures all organism-specific
-    aspects. For now, we assume microbes only, but keep the interface generic
-    so the algorithm will work on any type of organism"""
+    """Abstraction of a microbial organism in cMonkey. It captures all
+    organism-specific aspects. For now, we assume microbes only, but
+    keep the interface generic so the algorithm will work on any type
+    of organism"""
 
     # pylint: disable-msg=R0913,R0902
     def __init__(self, code, kegg_organism, rsat_info,

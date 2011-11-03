@@ -9,10 +9,9 @@ import scipy
 import util
 import thesaurus
 import organism
-import seqtools as st
 
-SEARCH_DISTANCES = {'promoter':(0, 700), 'p3utr':(0, 831)}
-SCAN_DISTANCES = {'promoter':(0, 700), 'p3utr':(0, 831)}
+SEARCH_DISTANCES = {'promoter': (0, 700), 'p3utr': (0, 831)}
+SCAN_DISTANCES = {'promoter': (0, 700), 'p3utr': (0, 831)}
 
 
 def genes_per_group_proportional(num_genes_total, num_per_group):
@@ -117,11 +116,13 @@ def center_scale_filter(matrix, group_columns, group_controls):
 # Organism interface
 
 class Human(organism.OrganismBase):
+    """Implementation of a human organism"""
 
     def __init__(self, prom_seq_filename, p3utr_seq_filename,
                  thesaurus_filename, nw_factories,
                  search_distances=SEARCH_DISTANCES,
                  scan_distances=SCAN_DISTANCES):
+        """Creates the organism"""
         organism.OrganismBase.__init__(self, 'hsa', nw_factories)
         self.__prom_seq_filename = prom_seq_filename
         self.__p3utr_seq_filename = p3utr_seq_filename
@@ -159,6 +160,7 @@ class Human(organism.OrganismBase):
             return self.__get_promoter_seqs(gene_aliases, distance)
 
     def __get_p3utr_seqs(self, gene_aliases, distance):
+        """Retrieves genomic sequences from the 3" UTR set"""
         print "GET_P3UTR SEQS, distance: ", distance
         if self.__p3utr_seqs == None:
             dfile = util.DelimitedFile.read(self.__p3utr_seq_filename, sep=',')
@@ -180,6 +182,7 @@ class Human(organism.OrganismBase):
         return result
 
     def __get_promoter_seqs(self, gene_aliases, distance):
+        """Retrieves genomic sequences from the promoter set"""
         logging.info("GET PROMOTER SEQS, # GENES: %d", len(gene_aliases))
         if self.__prom_seqs == None:
             dfile = util.DelimitedFile.read(self.__prom_seq_filename, sep=',')
@@ -192,7 +195,9 @@ class Human(organism.OrganismBase):
                 gene = self.thesaurus()[alias]
                 if gene in self.__prom_seqs:
                     seq = self.__prom_seqs[gene]
-                    result[gene] =  seq # st.subsequence(seq, distance[0], distance[1])
+                    # result[gene] = st.subsequence(seq, distance[0],
+                    #                               distance[1])
+                    result[gene] = seq
                 else:
                     #logging.warn("Gene '%s' not found in promoter seqs", gene)
                     pass
