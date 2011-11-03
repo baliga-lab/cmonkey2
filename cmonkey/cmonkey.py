@@ -24,8 +24,9 @@ def run_cmonkey(config):
                                    iteration, config.num_iterations())
     print "Done !!!!"
     print "cluster\t# rows"
-    for cluster in range(1, membership.num_clusters() + 1):
-        print "%d\t%d" % (cluster, membership.num_row_members(cluster))
+    for cluster in range(1, config.membership().num_clusters() + 1):
+        print "%d\t%d" % (cluster,
+                          config.membership().num_row_members(cluster))
     #print membership
 
 
@@ -37,7 +38,6 @@ if __name__ == '__main__':
         print('Usage: ./run_cmonkey.sh <organism-code> <ratio-file>')
     else:
         if sys.argv[1] == 'hsa':
-            config = human.CMonkeyConfiguration(sys.argv[2])
+            run_cmonkey(human.CMonkeyConfiguration(sys.argv[2]))
         else:
-            config = microbe.CMonkeyConfiguration(sys.argv[1], sys.argv[2])
-        run_cmonkey(config)
+            run_cmonkey(microbe.CMonkeyConfiguration(sys.argv[1], sys.argv[2]))

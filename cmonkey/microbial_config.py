@@ -3,7 +3,6 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import os
 import util
 import logging
 import datamatrix as dm
@@ -17,7 +16,6 @@ import microbes_online
 import stringdb
 import rsat
 
-LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
 GO_FILE_PATH = 'testdata/proteome2taxid'
 RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
@@ -34,69 +32,35 @@ SEARCH_DISTANCES = {'upstream': (-20, 150)}
 SCAN_DISTANCES = {'upstream': (-30, 250)}
 
 
-class CMonkeyConfiguration:
+class CMonkeyConfiguration(memb.ConfigurationBase):
+    """Microbe-specific configuration class"""
+
     def __init__(self,
                  organism_code,
                  matrix_filename,
                  num_iterations=NUM_ITERATIONS,
                  cache_dir=CACHE_DIR):
         """create instance"""
-        logging.basicConfig(format=LOG_FORMAT,
-                            datefmt='%Y-%m-%d %H:%M:%S',
-                            level=logging.DEBUG)
-        if not os.path.exists(cache_dir):
-            os.mkdir(cache_dir)
-        self.__cache_dir = cache_dir
-        self.__matrix_filename = matrix_filename
-        self.__organism_code = organism_code
-        self.__num_iterations = num_iterations
+        memb.ConfigurationBase.__init__(self, organism_code, matrix_filename,
+                                        num_iterations, cache_dir)
 
-        self.__matrix = None
-        self.__membership = None
-        self.__organism = None
-        self.__row_scoring = None
-        self.__column_scoring = None
+    def read_matrix(self, filename):
+        """returns the matrix"""
+        return read_matrix(filename)
 
-    def num_iterations(self):
-        """returns the number of iterations"""
-        return self.__num_iterations
-
-    def cache_dir(self):
-        """returns the cache directory"""
-        return self.__cache_dir
-
-    def matrix(self):
-        """returns the input matrix"""
-        if self.__matrix == None:
-            self.__matrix = read_matrix(
-                self.__matrix_filename).sorted_by_row_name()
-        return self.__matrix
-
-    def membership(self):
+    def make_membership(self):
         """returns the seeded membership"""
-        if self.__membership == None:
-            self.__membership = make_membership(self.matrix())
-        return self.__membership
+        return make_membership(self.matrix())
 
-    def organism(self):
+    def make_organism(self):
         """returns the organism object to work on"""
-        if self.__organism == None:
-            self.__organism = make_organism(self.__organism_code,
-                                            self.matrix())
-        return self.__organism
+        return make_organism(self.organism_code(), self.matrix())
 
     def row_scoring(self):
-        if self.__row_scoring == None:
-            self.__row_scoring = make_gene_scoring_func(self.organism(),
-                                                         self.membership(),
-                                                         self.matrix())
-        return self.__row_scoring
-
-    def column_scoring(self):
-        if self.__column_scoring == None:
-            self.__column_scoring = microarray.ColumnScoringFunction(
-                self.membership(), self.matrix())
-        return self.__column_scoring
+        """returns the row scoring function"""
+        return make_gene_scoring_func(self.organism(),
+                                      self.membership(),
+                                      self.matrix())
 
 
 def make_gene_scoring_func(organism, membership, matrix):

@@ -3,7 +3,6 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import os
 import logging
 import numpy
 import scipy
@@ -18,7 +17,6 @@ import network as nw
 import motif
 import meme
 
-LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 CACHE_DIR = 'humancache'
 CONTROLS_FILE = 'human_data/controls.csv'
 RUG_FILE = 'human_data/rug.csv'
@@ -241,63 +239,31 @@ class Human(organism.OrganismBase):
 ##### Configuration
 ######################################################################
 
-class CMonkeyConfiguration:
+class CMonkeyConfiguration(memb.ConfigurationBase):
+    """Human-specific configuration class"""
     def __init__(self, matrix_filename, num_iterations=NUM_ITERATIONS,
                  cache_dir=CACHE_DIR):
         """create instance"""
-        logging.basicConfig(format=LOG_FORMAT,
-                            datefmt='%Y-%m-%d %H:%M:%S',
-                            level=logging.DEBUG)
-        if not os.path.exists(cache_dir):
-            os.mkdir(cache_dir)
-        self.__cache_dir = cache_dir
-        self.__matrix_filename = matrix_filename
-        self.__num_iterations = num_iterations
+        memb.ConfigurationBase.__init__(self, 'hsa', matrix_filename,
+                                        num_iterations, cache_dir)
 
-        self.__matrix = None
-        self.__membership = None
-        self.__organism = None
-        self.__row_scoring = None
-        self.__column_scoring = None
+    def read_matrix(self, filename):
+        """returns the matrix"""
+        return read_matrix(filename)
 
-    def num_iterations(self):
-        """returns the number of iterations"""
-        return self.__num_iterations
-
-    def cache_dir(self):
-        """returns the cache directory"""
-        return self.__cache_dir
-
-    def matrix(self):
-        """returns the input matrix"""
-        if self.__matrix == None:
-            self.__matrix = read_matrix(self.__matrix_filename)
-        return self.__matrix
-
-    def membership(self):
+    def make_membership(self):
         """returns the seeded membership"""
-        if self.__membership == None:
-            self.__membership = make_membership(self.matrix())
-        return self.__membership
+        return make_membership(self.matrix())
 
-    def organism(self):
+    def make_organism(self):
         """returns the organism object to work on"""
-        if self.__organism == None:
-            self.__organism = make_organism()
-        return self.__organism
+        return make_organism()
 
-    def row_scoring(self):
-        if self.__row_scoring == None:
-            self.__row_scoring = make_gene_scoring_func(self.organism(),
-                                                         self.membership(),
-                                                         self.matrix())
-        return self.__row_scoring
-
-    def column_scoring(self):
-        if self.__column_scoring == None:
-            self.__column_scoring = microarray.ColumnScoringFunction(
-                self.membership(), self.matrix())
-        return self.__column_scoring
+    def make_row_scoring(self):
+        """returns the row scoring function"""
+        return make_gene_scoring_func(self.organism(),
+                                      self.membership(),
+                                      self.matrix())
 
 
 def read_controls():

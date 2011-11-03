@@ -5,6 +5,7 @@ of cMonkey.
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
+import os
 import datamatrix as dm
 import math
 import util
@@ -12,7 +13,9 @@ import random
 import logging
 import sys
 import scipy.cluster.vq as clvq
+import microarray
 
+LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 
 # Default values for membership creation
 NUM_CLUSTERS = 43
@@ -698,3 +701,86 @@ class ScoringFunctionCombiner:
     def weight(self, iteration):
         """returns the weight for the specified iteration"""
         return self.__weight_func(iteration)
+
+
+class ConfigurationBase:
+    """configuration base class"""
+
+    def __init__(self, organism_code, matrix_filename,
+                 num_iterations, cache_dir):
+        """create instance"""
+        logging.basicConfig(format=LOG_FORMAT,
+                            datefmt='%Y-%m-%d %H:%M:%S',
+                            level=logging.DEBUG)
+        if not os.path.exists(cache_dir):
+            os.mkdir(cache_dir)
+        self.__cache_dir = cache_dir
+        self.__matrix_filename = matrix_filename
+        self.__organism_code = organism_code
+        self.__num_iterations = num_iterations
+
+        self.__matrix = None
+        self.__membership = None
+        self.__organism = None
+        self.__row_scoring = None
+        self.__column_scoring = None
+
+    def organism_code(self):
+        """returns the organism code"""
+        return self.__organism_code
+
+    def num_iterations(self):
+        """returns the number of iterations"""
+        return self.__num_iterations
+
+    def cache_dir(self):
+        """returns the cache directory"""
+        return self.__cache_dir
+
+    def matrix(self):
+        """returns the input matrix"""
+        if self.__matrix == None:
+            self.__matrix = self.read_matrix(
+                self.__matrix_filename).sorted_by_row_name()
+        return self.__matrix
+
+    def membership(self):
+        """returns the seeded membership"""
+        if self.__membership == None:
+            self.__membership = self.make_membership()
+        return self.__membership
+
+    def organism(self):
+        """returns the organism object to work on"""
+        if self.__organism == None:
+            self.__organism = self.make_organism()
+        return self.__organism
+
+    def row_scoring(self):
+        """returns the row scoring function"""
+        if self.__row_scoring == None:
+            self.__row_scoring = self.make_row_scoring()
+        return self.__row_scoring
+
+    def column_scoring(self):
+        """returns the column scoring function"""
+        if self.__column_scoring == None:
+            self.__column_scoring = microarray.ColumnScoringFunction(
+                self.membership(), self.matrix())
+        return self.__column_scoring
+
+    def make_membership(self):
+        """implement in derived class"""
+        pass
+
+    def read_matrix(self, filename):
+        """implement in derived class"""
+        pass
+
+    def make_organism(self):
+        """implement in derived class"""
+        pass
+
+    def make_row_scoring(self):
+        """implement in derived class"""
+        pass
