@@ -6,8 +6,8 @@ more information and licensing details.
 import numpy
 import logging
 import util
-import membership as memb
 import datamatrix as dm
+import scoring
 
 
 class NetworkEdge:
@@ -140,14 +140,14 @@ def compute_network_scores(network, genes, all_genes):
     return final_gene_scores
 
 
-class ScoringFunction(memb.ScoringFunctionBase):
+class ScoringFunction(scoring.ScoringFunctionBase):
     """Network scoring function"""
 
     def __init__(self, organism, membership, matrix, weight_func=None,
                  interval=0):
         """Create scoring function instance"""
-        memb.ScoringFunctionBase.__init__(self, membership,
-                                          matrix, weight_func)
+        scoring.ScoringFunctionBase.__init__(self, membership,
+                                             matrix, weight_func)
         self.__organism = organism
         self.__interval = interval
 

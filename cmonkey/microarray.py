@@ -8,7 +8,7 @@ more information and licensing details.
 import numpy
 import datamatrix as dm
 import util
-import membership as memb
+import scoring
 
 
 def seed_column_members(data_matrix, row_membership, num_clusters,
@@ -221,13 +221,13 @@ def __quantile_normalize_scores(cluster_row_scores, membership, clusters):
     return util.quantile(values_for_quantile, 0.95)
 
 
-class RowScoringFunction(memb.ScoringFunctionBase):
+class RowScoringFunction(scoring.ScoringFunctionBase):
     """Scoring algorithm for microarray data based on genes"""
 
     def __init__(self, membership, matrix, weight_func=None):
         """Create scoring function instance"""
-        memb.ScoringFunctionBase.__init__(self, membership,
-                                          matrix, weight_func)
+        scoring.ScoringFunctionBase.__init__(self, membership,
+                                             matrix, weight_func)
 
     def compute(self, iteration):
         """compute method, iteration is the 0-based iteration number"""
@@ -236,7 +236,7 @@ class RowScoringFunction(memb.ScoringFunctionBase):
                                   self.num_clusters())
 
 
-class ColumnScoringFunction(memb.ScoringFunctionBase):
+class ColumnScoringFunction(scoring.ScoringFunctionBase):
     """Scoring algorithm for microarray data based on conditions.
     Note that the score does not correspond to the normal scoring
     function output format and can therefore not be combined in
@@ -244,8 +244,8 @@ class ColumnScoringFunction(memb.ScoringFunctionBase):
 
     def __init__(self, membership, matrix):
         """create scoring function instance"""
-        memb.ScoringFunctionBase.__init__(self, membership,
-                                          matrix, None)
+        scoring.ScoringFunctionBase.__init__(self, membership,
+                                             matrix, None)
 
     def compute(self, iteration):
         """compute method, iteration is the 0-based iteration number"""

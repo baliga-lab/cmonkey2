@@ -7,7 +7,7 @@ more information and licensing details.
 """
 import logging
 import numpy
-import membership as memb
+import scoring
 import datamatrix as dm
 
 
@@ -70,7 +70,7 @@ def make_min_value_filter(min_value):
     return min_value_filter
 
 
-class ScoringFunction(memb.ScoringFunctionBase):
+class ScoringFunction(scoring.ScoringFunctionBase):
     """Scoring function for motifs"""
 
     def __init__(self, organism, membership, matrix,
@@ -78,8 +78,8 @@ class ScoringFunction(memb.ScoringFunctionBase):
                  seqtype='upstream',
                  weight_func=None, interval=0):
         """creates a ScoringFunction"""
-        memb.ScoringFunctionBase.__init__(self, membership,
-                                          matrix, weight_func)
+        scoring.ScoringFunctionBase.__init__(self, membership,
+                                             matrix, weight_func)
         self.__organism = organism
         self.__meme_suite = meme_suite
         self.__sequence_filters = sequence_filters

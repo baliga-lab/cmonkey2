@@ -7,7 +7,7 @@ import util
 import logging
 import datamatrix as dm
 import microarray
-import membership as memb
+import scoring
 import organism as org
 import meme
 import motif
@@ -15,6 +15,7 @@ import network as nw
 import microbes_online
 import stringdb
 import rsat
+import membership as memb
 
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
 GO_FILE_PATH = 'testdata/proteome2taxid'
@@ -24,7 +25,7 @@ CACHE_DIR = 'cache'
 ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 2000
 NETWORK_SCORE_INTERVAL = 7
-MOTIF_SCORE_INTERVAL = 10
+MOTIF_SCORE_INTERVAL = 100
 
 # used to select sequences and MEME
 SEARCH_DISTANCES = {'upstream': (-20, 150)}
@@ -32,7 +33,7 @@ SEARCH_DISTANCES = {'upstream': (-20, 150)}
 SCAN_DISTANCES = {'upstream': (-30, 250)}
 
 
-class CMonkeyConfiguration(memb.ConfigurationBase):
+class CMonkeyConfiguration(scoring.ConfigurationBase):
     """Microbe-specific configuration class"""
 
     def __init__(self,
@@ -41,8 +42,8 @@ class CMonkeyConfiguration(memb.ConfigurationBase):
                  num_iterations=NUM_ITERATIONS,
                  cache_dir=CACHE_DIR):
         """create instance"""
-        memb.ConfigurationBase.__init__(self, organism_code, matrix_filename,
-                                        num_iterations, cache_dir)
+        scoring.ConfigurationBase.__init__(self, organism_code, matrix_filename,
+                                           num_iterations, cache_dir)
 
     def read_matrix(self, filename):
         """returns the matrix"""
@@ -92,8 +93,8 @@ def make_gene_scoring_func(organism, membership, matrix):
                                          lambda iteration: 0.0,
                                          NETWORK_SCORE_INTERVAL)
 
-    return memb.ScoringFunctionCombiner([row_scoring, motif_scoring,
-                                         network_scoring])
+    return scoring.ScoringFunctionCombiner([row_scoring, motif_scoring,
+                                            network_scoring])
 
 
 def read_matrix(filename):

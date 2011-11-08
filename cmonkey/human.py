@@ -10,12 +10,13 @@ import util
 import thesaurus
 import organism
 import datamatrix as dm
-import membership as memb
+import scoring
 import microarray
 import stringdb
 import network as nw
 import motif
 import meme
+import membership as memb
 
 CACHE_DIR = 'humancache'
 CONTROLS_FILE = 'human_data/controls.csv'
@@ -239,13 +240,13 @@ class Human(organism.OrganismBase):
 ##### Configuration
 ######################################################################
 
-class CMonkeyConfiguration(memb.ConfigurationBase):
+class CMonkeyConfiguration(scoring.ConfigurationBase):
     """Human-specific configuration class"""
     def __init__(self, matrix_filename, num_iterations=NUM_ITERATIONS,
                  cache_dir=CACHE_DIR):
         """create instance"""
-        memb.ConfigurationBase.__init__(self, 'hsa', matrix_filename,
-                                        num_iterations, cache_dir)
+        scoring.ConfigurationBase.__init__(self, 'hsa', matrix_filename,
+                                           num_iterations, cache_dir)
 
     def read_matrix(self, filename):
         """returns the matrix"""
@@ -341,5 +342,5 @@ def make_gene_scoring_func(organism, membership, matrix):
     network_scoring = nw.ScoringFunction(organism, membership, matrix,
                                          lambda iteration: 0.0, 7)
 
-    return memb.ScoringFunctionCombiner([row_scoring, motif_scoring,
-                                         network_scoring])
+    return scoring.ScoringFunctionCombiner([row_scoring, motif_scoring,
+                                            network_scoring])
