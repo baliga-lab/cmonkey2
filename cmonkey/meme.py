@@ -78,13 +78,17 @@ class MemeSuite:
         input, all_seqs is a dictionary that provides all sequences used
         in the cMonkey run, which will be used to compute background
         distribution"""
-        def background_seqs():
-            """return all sequences to be used for background calculation"""
-            return {feature_id: all_seqs[feature_id]
-                    for feature_id in all_seqs if feature_id not in input_seqs}
+        def background_file():
+            if self.__background_file != None:
+                return self.__background_file
+            else:
+                bgseqs = {feature_id: all_seqs[feature_id]
+                          for feature_id in all_seqs
+                          if feature_id not in input_seqs}
+                return make_background_file(bgseqs, self.__use_revcomp)
 
         #logging.info("run_meme() - # seqs = %d", len(input_seqs))
-        bgfile = self.__make_background_file(background_seqs())
+        bgfile = background_file()
         #logging.info("created background file in %s", bgfile)
         seqfile = self.__make_sequence_file(input_seqs)
         #logging.info("created sequence file in %s", seqfile)
@@ -106,34 +110,6 @@ class MemeSuite:
         pe_values, annotations = read_mast_output(mast_output,
                                                   input_seqs.keys())
         return MemeRunResult(pe_values, annotations, motif_infos)
-
-    def __make_background_file(self, bgseqs):
-        """create a meme background file and returns its name"""
-        def make_seqs(seqs):
-            """prepare the input sequences for feeding into meme.
-            This means only taking the unique sequences and their reverse
-            complement if desired"""
-            meme_input_seqs = []
-            for locseq in seqs.values():
-                seq = locseq[1]
-                util.add_if_unique(meme_input_seqs, seq)
-                if self.__use_revcomp:
-                    util.add_if_unique(meme_input_seqs, st.revcomp(seq))
-            return meme_input_seqs
-
-        filename = None
-        bgmodel = st.markov_background(make_seqs(bgseqs), 3)
-        with tempfile.NamedTemporaryFile(prefix='memebg',
-                                         delete=False) as outfile:
-            filename = outfile.name
-            logging.info("make background file '%s'", filename)
-            outfile.write("# %s order Markov background model\n" %
-                          util.order2string(len(bgmodel) - 1))
-            for order_row in bgmodel:
-                for seq, frequency in order_row.items():
-                    outfile.write('%s %10s\n' %
-                                  (seq, str(round(frequency, 8))))
-        return filename
 
     def __make_sequence_file(self, seqs):
         """Creates a FASTA file from a dictionary of (feature_id: sequence)
@@ -505,6 +481,35 @@ def __next_regex_index(pat, start_index, lines):
             return -1
         current_line = lines[line_index]
     return line_index
+
+
+def make_background_file(bgseqs, use_revcomp):
+    """create a meme background file and returns its name"""
+    def make_seqs(seqs):
+        """prepare the input sequences for feeding into meme.
+        This means only taking the unique sequences and their reverse
+        complement if desired"""
+        meme_input_seqs = []
+        for locseq in seqs.values():
+            seq = locseq[1]
+            util.add_if_unique(meme_input_seqs, seq)
+            if use_revcomp:
+                util.add_if_unique(meme_input_seqs, st.revcomp(seq))
+        return meme_input_seqs
+
+    filename = None
+    bgmodel = st.markov_background(make_seqs(bgseqs), 3)
+    with tempfile.NamedTemporaryFile(prefix='memebg',
+                                     delete=False) as outfile:
+        filename = outfile.name
+        logging.info("make background file '%s'", filename)
+        outfile.write("# %s order Markov background model\n" %
+                      util.order2string(len(bgmodel) - 1))
+        for order_row in bgmodel:
+            for seq, frequency in order_row.items():
+                outfile.write('%s %10s\n' %
+                              (seq, str(round(frequency, 8))))
+    return filename
 
 
 __all__ = ['read_meme_output']
