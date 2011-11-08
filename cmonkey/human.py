@@ -327,7 +327,9 @@ def make_gene_scoring_func(organism, membership, matrix):
                                                 lambda iteration: ROW_WEIGHT)
 
     sequence_filters = []
-    meme_suite = meme.MemeSuite430()
+    background_file = meme.global_background_file(organism, matrix.row_names(),
+                                                  'promoter', use_revcomp=True)
+    meme_suite = meme.MemeSuite430(background_file=background_file)
     motif_scoring = motif.ScoringFunction(
         organism,
         membership,

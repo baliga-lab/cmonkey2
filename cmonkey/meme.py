@@ -79,7 +79,9 @@ class MemeSuite:
         in the cMonkey run, which will be used to compute background
         distribution"""
         def background_file():
+            """decide whether to use global or specific background file"""
             if self.__background_file != None:
+                logging.info("using global background")
                 return self.__background_file
             else:
                 bgseqs = {feature_id: all_seqs[feature_id]
@@ -511,5 +513,14 @@ def make_background_file(bgseqs, use_revcomp):
                               (seq, str(round(frequency, 8))))
     return filename
 
+
+def global_background_file(organism, gene_aliases, seqtype, use_revcomp=True):
+    """returns a background file that was computed on the set of all
+    used sequences"""
+    global_seqs = organism.sequences_for_genes_scan(gene_aliases,
+                                                    seqtype=seqtype)
+    logging.info("Computing global background file on seqtype '%s' " +
+                 "(%d sequences)", seqtype, len(global_seqs))
+    return make_background_file(global_seqs, use_revcomp)
 
 __all__ = ['read_meme_output']
