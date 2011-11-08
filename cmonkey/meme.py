@@ -35,10 +35,11 @@ class MemeSuite:
     meme - discover motifs in a set of sequences
     mast - search for a group of motifs in a set of sequences
     """
-    def __init__(self, max_width=24, use_revcomp=True):
+    def __init__(self, max_width=24, use_revcomp=True, background_file=None):
         """Create MemeSuite instance"""
         self.__max_width = max_width
         self.__use_revcomp = use_revcomp
+        self.__background_file = background_file
 
     def max_width(self):
         """returns the max_width attribute"""
@@ -77,59 +78,15 @@ class MemeSuite:
         input, all_seqs is a dictionary that provides all sequences used
         in the cMonkey run, which will be used to compute background
         distribution"""
-        def add_if_unique(meme_input_seqs, seq):
-            """add the sequence to the list only if it does not exist"""
-            if seq not in meme_input_seqs:
-                meme_input_seqs.append(seq)
-
-        def make_seqs(seqs):
-            """prepare the input sequences for feeding into meme.
-            This means only taking the unique sequences and rever"""
-            meme_input_seqs = []
-            for locseq in seqs.values():
-                seq = locseq[1]
-                add_if_unique(meme_input_seqs, seq)
-                if self.__use_revcomp:
-                    add_if_unique(meme_input_seqs, st.revcomp(seq))
-            return meme_input_seqs
-
         def background_seqs():
             """return all sequences to be used for background calculation"""
             return {feature_id: all_seqs[feature_id]
                     for feature_id in all_seqs if feature_id not in input_seqs}
 
-        def make_background_file():
-            """create a meme background file and returns its name"""
-            bgseqs = background_seqs()
-            filename = None
-            bgmodel = st.markov_background(make_seqs(bgseqs), 3)
-            with tempfile.NamedTemporaryFile(prefix='memebg',
-                                             delete=False) as outfile:
-                filename = outfile.name
-                logging.info("make background file '%s'", filename)
-                outfile.write("# %s order Markov background model\n" %
-                              util.order2string(len(bgmodel) - 1))
-                for order_row in bgmodel:
-                    for seq, frequency in order_row.items():
-                        outfile.write('%s %10s\n' %
-                                      (seq, str(round(frequency, 8))))
-            return filename
-
-        def make_sequence_file(seqs):
-            """Creates a FASTA file from a dictionary of (feature_id: sequence)
-            entries"""
-            outseqs = seqs.items()
-            filename = None
-            with tempfile.NamedTemporaryFile(prefix='memeseqs',
-                                             delete=False) as outfile:
-                filename = outfile.name
-                st.write_sequences_to_fasta_file(outfile, outseqs)
-            return filename
-
         #logging.info("run_meme() - # seqs = %d", len(input_seqs))
-        bgfile = make_background_file()
+        bgfile = self.__make_background_file(background_seqs())
         #logging.info("created background file in %s", bgfile)
-        seqfile = make_sequence_file(input_seqs)
+        seqfile = self.__make_sequence_file(input_seqs)
         #logging.info("created sequence file in %s", seqfile)
         motif_infos, output = self.meme(seqfile, bgfile)
 
@@ -143,12 +100,51 @@ class MemeSuite:
 
         all_seqs_dict = {feature_id: locseq[1]
                          for feature_id, locseq in all_seqs.items()}
-        dbfile = make_sequence_file(all_seqs_dict)
+        dbfile = self.__make_sequence_file(all_seqs_dict)
         #logging.info('created mast database in %s', dbfile)
         mast_output = self.mast(meme_outfile, dbfile, bgfile)
         pe_values, annotations = read_mast_output(mast_output,
                                                   input_seqs.keys())
         return MemeRunResult(pe_values, annotations, motif_infos)
+
+    def __make_background_file(self, bgseqs):
+        """create a meme background file and returns its name"""
+        def make_seqs(seqs):
+            """prepare the input sequences for feeding into meme.
+            This means only taking the unique sequences and their reverse
+            complement if desired"""
+            meme_input_seqs = []
+            for locseq in seqs.values():
+                seq = locseq[1]
+                util.add_if_unique(meme_input_seqs, seq)
+                if self.__use_revcomp:
+                    util.add_if_unique(meme_input_seqs, st.revcomp(seq))
+            return meme_input_seqs
+
+        filename = None
+        bgmodel = st.markov_background(make_seqs(bgseqs), 3)
+        with tempfile.NamedTemporaryFile(prefix='memebg',
+                                         delete=False) as outfile:
+            filename = outfile.name
+            logging.info("make background file '%s'", filename)
+            outfile.write("# %s order Markov background model\n" %
+                          util.order2string(len(bgmodel) - 1))
+            for order_row in bgmodel:
+                for seq, frequency in order_row.items():
+                    outfile.write('%s %10s\n' %
+                                  (seq, str(round(frequency, 8))))
+        return filename
+
+    def __make_sequence_file(self, seqs):
+        """Creates a FASTA file from a dictionary of (feature_id: sequence)
+        entries"""
+        outseqs = seqs.items()
+        filename = None
+        with tempfile.NamedTemporaryFile(prefix='memeseqs',
+                                         delete=False) as outfile:
+            filename = outfile.name
+            st.write_sequences_to_fasta_file(outfile, outseqs)
+        return filename
 
     def dust(self, fasta_file_path):  # pylint: disable-msg=R0201
         """runs the dust command on the specified FASTA file and

@@ -10,6 +10,7 @@ import logging
 import os
 import datamatrix as dm
 
+
 class ScoringFunctionBase:
     """Base class for scoring functions"""
 

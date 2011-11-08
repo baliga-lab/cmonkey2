@@ -25,7 +25,7 @@ CACHE_DIR = 'cache'
 ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 2000
 NETWORK_SCORE_INTERVAL = 7
-MOTIF_SCORE_INTERVAL = 100
+MOTIF_SCORE_INTERVAL = 10
 
 # used to select sequences and MEME
 SEARCH_DISTANCES = {'upstream': (-20, 150)}
@@ -42,7 +42,8 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
                  num_iterations=NUM_ITERATIONS,
                  cache_dir=CACHE_DIR):
         """create instance"""
-        scoring.ConfigurationBase.__init__(self, organism_code, matrix_filename,
+        scoring.ConfigurationBase.__init__(self, organism_code,
+                                           matrix_filename,
                                            num_iterations, cache_dir)
 
     def read_matrix(self, filename):

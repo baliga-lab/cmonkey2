@@ -352,6 +352,17 @@ def rnorm(num_values, std_deviation):
     return r_rnorm(num_values, **kwargs)
 
 
+######################################################################
+### Misc functionality
+######################################################################
+
+
+def add_if_unique(sequence, item):
+    """add the item to the Python sequence only if it does not exist"""
+    if item not in sequence:
+        sequence.append(item)
+
+
 __all__ = ['DelimitedFile', 'best_matching_links', 'quantile', 'make_matrix',
            'DocumentNotFound', 'CMonkeyURLopener', 'read_url',
            'read_url_cached', 'ThesaurusBasedMap', 'trim_mean']
