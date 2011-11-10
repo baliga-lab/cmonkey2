@@ -5,7 +5,6 @@ of cMonkey.
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import os
 import datamatrix as dm
 import math
 import util

@@ -41,6 +41,11 @@ class MemeSuite:
         self.__use_revcomp = use_revcomp
         self.__background_file = background_file
 
+    def global_background_file(self):
+        """returns the global background file used with this meme suite
+        instance"""
+        return self.__background_file
+
     def max_width(self):
         """returns the max_width attribute"""
         return self.__max_width
@@ -92,7 +97,7 @@ class MemeSuite:
         #logging.info("run_meme() - # seqs = %d", len(input_seqs))
         bgfile = background_file()
         #logging.info("created background file in %s", bgfile)
-        seqfile = self.__make_sequence_file(input_seqs)
+        seqfile = self.make_sequence_file(input_seqs.items())
         #logging.info("created sequence file in %s", seqfile)
         motif_infos, output = self.meme(seqfile, bgfile)
 
@@ -103,25 +108,23 @@ class MemeSuite:
             meme_outfile = outfile.name
             outfile.write(output)
         #logging.info('wrote meme output to %s', meme_outfile)
-
-        all_seqs_dict = {feature_id: locseq[1]
-                         for feature_id, locseq in all_seqs.items()}
-        dbfile = self.__make_sequence_file(all_seqs_dict)
+        dbfile = self.make_sequence_file(
+            [(feature_id, locseq[1])
+             for feature_id, locseq in all_seqs.items()])
         #logging.info('created mast database in %s', dbfile)
         mast_output = self.mast(meme_outfile, dbfile, bgfile)
         pe_values, annotations = read_mast_output(mast_output,
                                                   input_seqs.keys())
         return MemeRunResult(pe_values, annotations, motif_infos)
 
-    def __make_sequence_file(self, seqs):
-        """Creates a FASTA file from a dictionary of (feature_id: sequence)
-        entries"""
-        outseqs = seqs.items()
+    def make_sequence_file(self, seqs):
+        """Creates a FASTA file from a list of(feature_id, sequence)
+        pairs"""
         filename = None
         with tempfile.NamedTemporaryFile(prefix='memeseqs',
                                          delete=False) as outfile:
             filename = outfile.name
-            st.write_sequences_to_fasta_file(outfile, outseqs)
+            st.write_sequences_to_fasta_file(outfile, seqs)
         return filename
 
     def dust(self, fasta_file_path):  # pylint: disable-msg=R0201
@@ -459,10 +462,16 @@ def read_mast_output(output_text, genes):
             current_index = next_pe_value_line(current_index + 1, lines)
         return result
 
-    lines = output_text.split('\n')
-    pe_values = read_pe_values(lines)
-    annotations = read_annotations(lines, genes)
-    return (pe_values, annotations)
+    # Make sure MAST returns a meaningful result
+    if output_text.startswith("Error reading log-odds matrix file"):
+        logging.warn("MAST returned the famous 'Error reading log-odds " +
+                     "matrix file, provide empty result...'")
+        return ([], {})
+    else:
+        lines = output_text.split('\n')
+        pe_values = read_pe_values(lines)
+        annotations = read_annotations(lines, genes)
+        return (pe_values, annotations)
 
 
 # extraction helpers

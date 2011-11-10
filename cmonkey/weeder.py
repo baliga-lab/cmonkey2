@@ -89,7 +89,8 @@ def __launch_weeder(fasta_file):
     retcode = 1
     with open('weeder.log', 'w') as logfile:
         logging.info("running weeder on '%s'", fasta_file)
-        weederproc = sp.Popen(command, stdout=logfile, stderr=sp.STDOUT)
+        #weederproc = sp.Popen(command, stdout=logfile, stderr=sp.STDOUT)
+        weederproc = sp.Popen(command, stdout=logfile, stderr=logfile)
         retcode = weederproc.wait()
         logging.info("Weeder finished, return code: %d", retcode)
     return retcode

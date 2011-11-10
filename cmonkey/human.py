@@ -18,6 +18,7 @@ import motif
 import meme
 import membership as memb
 
+
 CACHE_DIR = 'humancache'
 CONTROLS_FILE = 'human_data/controls.csv'
 RUG_FILE = 'human_data/rug.csv'
@@ -182,7 +183,7 @@ class Human(organism.OrganismBase):
 
     def __get_p3utr_seqs(self, gene_aliases, distance):
         """Retrieves genomic sequences from the 3" UTR set"""
-        print "GET_P3UTR SEQS, distance: ", distance
+        #print "GET_P3UTR SEQS, distance: ", distance
         if self.__p3utr_seqs == None:
             dfile = util.DelimitedFile.read(self.__p3utr_seq_filename, sep=',')
             self.__p3utr_seqs = {}
@@ -204,7 +205,7 @@ class Human(organism.OrganismBase):
 
     def __get_promoter_seqs(self, gene_aliases, distance):
         """Retrieves genomic sequences from the promoter set"""
-        logging.info("GET PROMOTER SEQS, # GENES: %d", len(gene_aliases))
+        #logging.info("GET PROMOTER SEQS, # GENES: %d", len(gene_aliases))
         if self.__prom_seqs == None:
             dfile = util.DelimitedFile.read(self.__prom_seq_filename, sep=',')
             self.__prom_seqs = {}
@@ -327,22 +328,35 @@ def make_gene_scoring_func(organism, membership, matrix):
                                                 lambda iteration: ROW_WEIGHT)
 
     sequence_filters = []
-    background_file = meme.global_background_file(organism, matrix.row_names(),
-                                                  'promoter', use_revcomp=True)
-    meme_suite = meme.MemeSuite430(background_file=background_file)
-    motif_scoring = motif.ScoringFunction(
+    background_file_prom = meme.global_background_file(organism,
+                                                       matrix.row_names(),
+                                                       'promoter',
+                                                       use_revcomp=True)
+    background_file_p3utr = meme.global_background_file(organism,
+                                                        matrix.row_names(),
+                                                        'p3utr',
+                                                        use_revcomp=True)
+    meme_suite_prom = meme.MemeSuite430(background_file=background_file_prom)
+    meme_suite_p3utr = meme.MemeSuite430(background_file=background_file_p3utr)
+
+    motif_scoring = motif.MemeScoringFunction(
         organism,
         membership,
         matrix,
-        meme_suite,
+        meme_suite_prom,
+        seqtype='promoter',
         sequence_filters=sequence_filters,
         pvalue_filter=motif.make_min_value_filter(-20.0),
-        seqtype='promoter',
         weight_func=lambda iteration: 0.0,
         interval=0)
 
     network_scoring = nw.ScoringFunction(organism, membership, matrix,
                                          lambda iteration: 0.0, 7)
 
-    return scoring.ScoringFunctionCombiner([row_scoring, motif_scoring,
-                                            network_scoring])
+    weeder_scoring = motif.WeederScoringFunction(organism, membership, matrix,
+                                                 meme_suite_p3utr, 'p3utr',
+                                                 lambda iteration: 0.0, 0)
+
+    #return scoring.ScoringFunctionCombiner([row_scoring, motif_scoring,
+    #                                        network_scoring, weeder_scoring])
+    return scoring.ScoringFunctionCombiner([row_scoring, weeder_scoring])

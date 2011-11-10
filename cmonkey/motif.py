@@ -9,6 +9,10 @@ import logging
 import numpy
 import scoring
 import datamatrix as dm
+import weeder
+import meme
+import tempfile
+import seqtools as st
 
 
 MIN_CLUSTER_ROWS_ALLOWED = 3
@@ -70,7 +74,7 @@ def make_min_value_filter(min_value):
     return min_value_filter
 
 
-class ScoringFunction(scoring.ScoringFunctionBase):
+class MemeScoringFunction(scoring.ScoringFunctionBase):
     """Scoring function for motifs"""
 
     def __init__(self, organism, membership, matrix,
@@ -187,3 +191,56 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                              "skipping cluster %d", len(seqs), cluster)
 
         return cluster_pvalues
+
+
+class WeederScoringFunction(scoring.ScoringFunctionBase):
+    """Motif scoring function that runs Weeder instead of MEME"""
+
+    def __init__(self, organism, membership, matrix,
+                 meme_suite, seqtype,
+                 weight_func=None, interval=0):
+        """creates a scoring function"""
+        scoring.ScoringFunctionBase.__init__(self, membership, matrix,
+                                             weight_func)
+        self.__organism = organism
+        self.__membership = membership
+        self.__seqtype = seqtype
+        self.__interval = interval
+        self.__meme_suite = meme_suite
+        self.__used_seqs = organism.sequences_for_genes_scan(
+            sorted(matrix.row_names()), seqtype=self.__seqtype)
+
+    def compute(self, iteration):
+        """compute function"""
+        if (self.__interval == 0 or
+            (iteration > 0 and (iteration % self.__interval == 0))):
+            for cluster in range(1, self.num_clusters() + 1):
+                genes = sorted(self.rows_for_cluster(cluster))
+                feature_ids = self.__organism.feature_ids_for(genes)
+                seqs = self.__organism.sequences_for_genes_search(
+                    genes, seqtype=self.__seqtype)
+                if len(seqs) > 0:
+                    with tempfile.NamedTemporaryFile(prefix='weeder.fasta',
+                                                     delete=False) as outfile:
+                        filename = outfile.name
+                        logging.info("Run Weeder on cluster %d, FASTA file: " +
+                                     "'%s'", cluster, filename)
+                        st.write_sequences_to_fasta_file(outfile, seqs.items())
+                    pssms = weeder.run_weeder(filename)
+                    meme_outfile = '%s.meme' % filename
+                    dbfile = self.__meme_suite.make_sequence_file(
+                        [(feature_id, locseq[1])
+                         for feature_id, locseq in self.__used_seqs.items()])
+                    logging.info("# PSSMS created: %d", len(pssms))
+                    logging.info("run MAST on '%s'", meme_outfile)
+                    mast_out = self.__meme_suite.mast(
+                        meme_outfile, dbfile,
+                        self.__meme_suite.global_background_file())
+                    pe_values, annotations = meme.read_mast_output(mast_out,
+                                                                   seqs.keys())
+                    #print "PEVALS: ", pe_values, " ANNOTS: ", annotations
+                    # TODO:
+                    # 2. (optional) store f1 and f2 results
+                    # 3. return the PV-EV results
+                else:
+                    logging.info("Cluster %d has no sequences", cluster)

@@ -80,7 +80,7 @@ def make_gene_scoring_func(organism, membership, matrix):
         motif.get_remove_low_complexity_filter(meme_suite),
         motif.get_remove_atgs_filter(SEARCH_DISTANCES['upstream'])]
 
-    motif_scoring = motif.ScoringFunction(
+    motif_scoring = motif.MemeScoringFunction(
         organism,
         membership,
         matrix,
