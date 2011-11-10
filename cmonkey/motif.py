@@ -74,31 +74,28 @@ def make_min_value_filter(min_value):
     return min_value_filter
 
 
-class MemeScoringFunction(scoring.ScoringFunctionBase):
-    """Scoring function for motifs"""
+class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
+    """Base class for motif scoring functions that use MEME"""
 
     def __init__(self, organism, membership, matrix,
-                 meme_suite, sequence_filters, pvalue_filter,
-                 seqtype='upstream',
-                 weight_func=None, interval=0):
+                 meme_suite, seqtype, weight_func=None, interval=0):
         """creates a ScoringFunction"""
         scoring.ScoringFunctionBase.__init__(self, membership,
                                              matrix, weight_func)
-        self.__organism = organism
-        self.__meme_suite = meme_suite
-        self.__sequence_filters = sequence_filters
-        self.__pvalue_filter = pvalue_filter
-        self.__seqtype = seqtype
+        # attributes accessible by subclasses
+        self.organism = organism
+        self.meme_suite = meme_suite
+        self.seqtype = seqtype
+        self.interval = interval
 
         # precompute the sequences for all genes that are referenced in the
         # input ratios, they are used as a basis to compute the background
         # distribution for every cluster
-        self.__used_seqs = organism.sequences_for_genes_scan(
-            sorted(matrix.row_names()), seqtype=self.__seqtype)
+        self.used_seqs = organism.sequences_for_genes_scan(
+            sorted(matrix.row_names()), seqtype=self.seqtype)
         logging.info("used sequences for motifing retrieved")
-        self.__interval = interval
         logging.info("building reverse map...")
-        self.__reverse_map = self.__build_reverse_map(matrix)
+        self.reverse_map = self.__build_reverse_map(matrix)
         logging.info("reverse map built.")
 
     def __build_reverse_map(self, matrix):
@@ -106,7 +103,7 @@ class MemeScoringFunction(scoring.ScoringFunctionBase):
         a feature id"""
         def feature_id_for(gene):
             """convenience method to return the feature id for a gene"""
-            feature_ids = self.__organism.feature_ids_for([gene])
+            feature_ids = self.organism.feature_ids_for([gene])
             if len(feature_ids) > 0:
                 return feature_ids[0]
             else:
@@ -119,10 +116,24 @@ class MemeScoringFunction(scoring.ScoringFunctionBase):
                 result[feature_id] = row_name
         return result
 
+class MemeScoringFunction(MotifScoringFunctionBase):
+    """Scoring function for motifs"""
+
+    def __init__(self, organism, membership, matrix,
+                 meme_suite, sequence_filters, pvalue_filter,
+                 seqtype='upstream',
+                 weight_func=None, interval=0):
+        """creates a ScoringFunction"""
+        MotifScoringFunctionBase.__init__(self, organism, membership,
+                                          matrix, meme_suite, seqtype,
+                                          weight_func, interval)
+        self.__sequence_filters = sequence_filters
+        self.__pvalue_filter = pvalue_filter
+
     def compute(self, iteration):
         """compute method, iteration is the 0-based iteration number"""
-        if (self.__interval == 0 or
-            (iteration > 0 and (iteration % self.__interval == 0))):
+        if (self.interval == 0 or
+            (iteration > 0 and (iteration % self.interval == 0))):
             print "RUN MOTIF SCORING IN ITERATION ", iteration
             pvalues = self.compute_pvalues(iteration)
             remapped = {}
@@ -130,7 +141,7 @@ class MemeScoringFunction(scoring.ScoringFunctionBase):
                 pvalues_k = pvalues[cluster]
                 pvalues_genes = {}
                 for feature_id, pvalue in pvalues_k.items():
-                    pvalues_genes[self.__reverse_map[feature_id]] = pvalue
+                    pvalues_genes[self.reverse_map[feature_id]] = pvalue
                 remapped[cluster] = pvalues_genes
 
             # convert remapped to an actual scoring matrix
@@ -167,14 +178,14 @@ class MemeScoringFunction(scoring.ScoringFunctionBase):
         for cluster in range(1, self.num_clusters() + 1):
             logging.info("compute motif scores for cluster %d", cluster)
             genes = sorted(self.rows_for_cluster(cluster))
-            feature_ids = self.__organism.feature_ids_for(genes)
-            seqs = self.__organism.sequences_for_genes_search(
-                genes, seqtype=self.__seqtype)
+            feature_ids = self.organism.feature_ids_for(genes)
+            seqs = self.organism.sequences_for_genes_search(
+                genes, seqtype=self.seqtype)
             seqs = apply_sequence_filters(seqs, feature_ids)
             if (len(seqs) >= MIN_CLUSTER_ROWS_ALLOWED
                 and len(seqs) <= MAX_CLUSTER_ROWS_ALLOWED):
-                meme_run_results[cluster] = self.__meme_suite.run_meme(
-                    seqs, self.__used_seqs)
+                meme_run_results[cluster] = self.meme_suite.run_meme(
+                    seqs, self.used_seqs)
 
                 pvalues = {}
                 pe_values = meme_run_results[cluster].pe_values
@@ -193,32 +204,26 @@ class MemeScoringFunction(scoring.ScoringFunctionBase):
         return cluster_pvalues
 
 
-class WeederScoringFunction(scoring.ScoringFunctionBase):
+class WeederScoringFunction(MotifScoringFunctionBase):
     """Motif scoring function that runs Weeder instead of MEME"""
 
     def __init__(self, organism, membership, matrix,
                  meme_suite, seqtype,
                  weight_func=None, interval=0):
         """creates a scoring function"""
-        scoring.ScoringFunctionBase.__init__(self, membership, matrix,
-                                             weight_func)
-        self.__organism = organism
-        self.__membership = membership
-        self.__seqtype = seqtype
-        self.__interval = interval
-        self.__meme_suite = meme_suite
-        self.__used_seqs = organism.sequences_for_genes_scan(
-            sorted(matrix.row_names()), seqtype=self.__seqtype)
+        MotifScoringFunctionBase.__init__(self, organism, membership, matrix,
+                                          meme_suite, seqtype, weight_func,
+                                          interval)
 
     def compute(self, iteration):
         """compute function"""
-        if (self.__interval == 0 or
-            (iteration > 0 and (iteration % self.__interval == 0))):
+        if (self.interval == 0 or
+            (iteration > 0 and (iteration % self.interval == 0))):
             for cluster in range(1, self.num_clusters() + 1):
                 genes = sorted(self.rows_for_cluster(cluster))
-                feature_ids = self.__organism.feature_ids_for(genes)
-                seqs = self.__organism.sequences_for_genes_search(
-                    genes, seqtype=self.__seqtype)
+                feature_ids = self.organism.feature_ids_for(genes)
+                seqs = self.organism.sequences_for_genes_search(
+                    genes, seqtype=self.seqtype)
                 if len(seqs) > 0:
                     with tempfile.NamedTemporaryFile(prefix='weeder.fasta',
                                                      delete=False) as outfile:
@@ -228,14 +233,14 @@ class WeederScoringFunction(scoring.ScoringFunctionBase):
                         st.write_sequences_to_fasta_file(outfile, seqs.items())
                     pssms = weeder.run_weeder(filename)
                     meme_outfile = '%s.meme' % filename
-                    dbfile = self.__meme_suite.make_sequence_file(
+                    dbfile = self.meme_suite.make_sequence_file(
                         [(feature_id, locseq[1])
-                         for feature_id, locseq in self.__used_seqs.items()])
+                         for feature_id, locseq in self.used_seqs.items()])
                     logging.info("# PSSMS created: %d", len(pssms))
                     logging.info("run MAST on '%s'", meme_outfile)
-                    mast_out = self.__meme_suite.mast(
+                    mast_out = self.meme_suite.mast(
                         meme_outfile, dbfile,
-                        self.__meme_suite.global_background_file())
+                        self.meme_suite.global_background_file())
                     pe_values, annotations = meme.read_mast_output(mast_out,
                                                                    seqs.keys())
                     #print "PEVALS: ", pe_values, " ANNOTS: ", annotations
