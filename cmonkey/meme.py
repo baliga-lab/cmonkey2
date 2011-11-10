@@ -112,10 +112,13 @@ class MemeSuite:
             [(feature_id, locseq[1])
              for feature_id, locseq in all_seqs.items()])
         #logging.info('created mast database in %s', dbfile)
-        mast_output = self.mast(meme_outfile, dbfile, bgfile)
-        pe_values, annotations = read_mast_output(mast_output,
-                                                  input_seqs.keys())
-        return MemeRunResult(pe_values, annotations, motif_infos)
+        try:
+            mast_output = self.mast(meme_outfile, dbfile, bgfile)
+            pe_values, annotations = read_mast_output(mast_output,
+                                                      input_seqs.keys())
+            return MemeRunResult(pe_values, annotations, motif_infos)
+        except:
+            return MemeRunResult([], {}, [])
 
     def make_sequence_file(self, seqs):
         """Creates a FASTA file from a list of(feature_id, sequence)

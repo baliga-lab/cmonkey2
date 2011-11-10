@@ -78,7 +78,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
     """Base class for motif scoring functions that use MEME"""
 
     def __init__(self, organism, membership, matrix,
-                 meme_suite, seqtype, weight_func=None, interval=0):
+                 meme_suite, seqtype,
+                 sequence_filters=[], pvalue_filter=None,
+                 weight_func=None, interval=0):
         """creates a ScoringFunction"""
         scoring.ScoringFunctionBase.__init__(self, membership,
                                              matrix, weight_func)
@@ -87,6 +89,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.meme_suite = meme_suite
         self.seqtype = seqtype
         self.interval = interval
+        self.__sequence_filters = sequence_filters
+        self.__pvalue_filter = pvalue_filter
 
         # precompute the sequences for all genes that are referenced in the
         # input ratios, they are used as a basis to compute the background
@@ -115,20 +119,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             if feature_id != None:
                 result[feature_id] = row_name
         return result
-
-class MemeScoringFunction(MotifScoringFunctionBase):
-    """Scoring function for motifs"""
-
-    def __init__(self, organism, membership, matrix,
-                 meme_suite, sequence_filters, pvalue_filter,
-                 seqtype='upstream',
-                 weight_func=None, interval=0):
-        """creates a ScoringFunction"""
-        MotifScoringFunctionBase.__init__(self, organism, membership,
-                                          matrix, meme_suite, seqtype,
-                                          weight_func, interval)
-        self.__sequence_filters = sequence_filters
-        self.__pvalue_filter = pvalue_filter
 
     def compute(self, iteration):
         """compute method, iteration is the 0-based iteration number"""
@@ -184,14 +174,14 @@ class MemeScoringFunction(MotifScoringFunctionBase):
             seqs = apply_sequence_filters(seqs, feature_ids)
             if (len(seqs) >= MIN_CLUSTER_ROWS_ALLOWED
                 and len(seqs) <= MAX_CLUSTER_ROWS_ALLOWED):
-                meme_run_results[cluster] = self.meme_suite.run_meme(
-                    seqs, self.used_seqs)
+                meme_run_results[cluster] = self.compute_meme_run(seqs)
 
                 pvalues = {}
                 pe_values = meme_run_results[cluster].pe_values
                 for feature_id, pvalue, evalue in pe_values:
                     pvalues[feature_id] = numpy.log(pvalue)
-                pvalues = self.__pvalue_filter(pvalues)
+                if self.__pvalue_filter != None:
+                    pvalues = self.__pvalue_filter(pvalues)
                 cluster_pvalues[cluster] = pvalues
 
                 for motif_info in meme_run_results[cluster].motif_infos:
@@ -204,48 +194,58 @@ class MemeScoringFunction(MotifScoringFunctionBase):
         return cluster_pvalues
 
 
+class MemeScoringFunction(MotifScoringFunctionBase):
+    """Scoring function for motifs"""
+
+    def __init__(self, organism, membership, matrix,
+                 meme_suite,
+                 seqtype='upstream',
+                 sequence_filters=[], pvalue_filter=None,
+                 weight_func=None, interval=0):
+        """creates a ScoringFunction"""
+        MotifScoringFunctionBase.__init__(self, organism, membership,
+                                          matrix, meme_suite, seqtype,
+                                          sequence_filters, pvalue_filter,
+                                          weight_func, interval)
+
+    def compute_meme_run(self, seqs):
+        return self.meme_suite.run_meme(seqs, self.used_seqs)
+
+
 class WeederScoringFunction(MotifScoringFunctionBase):
     """Motif scoring function that runs Weeder instead of MEME"""
 
     def __init__(self, organism, membership, matrix,
                  meme_suite, seqtype,
+                 sequence_filters=[], pvalue_filter=None,
                  weight_func=None, interval=0):
         """creates a scoring function"""
         MotifScoringFunctionBase.__init__(self, organism, membership, matrix,
-                                          meme_suite, seqtype, weight_func,
-                                          interval)
+                                          meme_suite, seqtype,
+                                          sequence_filters, pvalue_filter,
+                                          weight_func, interval)
 
-    def compute(self, iteration):
-        """compute function"""
-        if (self.interval == 0 or
-            (iteration > 0 and (iteration % self.interval == 0))):
-            for cluster in range(1, self.num_clusters() + 1):
-                genes = sorted(self.rows_for_cluster(cluster))
-                feature_ids = self.organism.feature_ids_for(genes)
-                seqs = self.organism.sequences_for_genes_search(
-                    genes, seqtype=self.seqtype)
-                if len(seqs) > 0:
-                    with tempfile.NamedTemporaryFile(prefix='weeder.fasta',
-                                                     delete=False) as outfile:
-                        filename = outfile.name
-                        logging.info("Run Weeder on cluster %d, FASTA file: " +
-                                     "'%s'", cluster, filename)
-                        st.write_sequences_to_fasta_file(outfile, seqs.items())
-                    pssms = weeder.run_weeder(filename)
-                    meme_outfile = '%s.meme' % filename
-                    dbfile = self.meme_suite.make_sequence_file(
-                        [(feature_id, locseq[1])
-                         for feature_id, locseq in self.used_seqs.items()])
-                    logging.info("# PSSMS created: %d", len(pssms))
-                    logging.info("run MAST on '%s'", meme_outfile)
-                    mast_out = self.meme_suite.mast(
-                        meme_outfile, dbfile,
-                        self.meme_suite.global_background_file())
-                    pe_values, annotations = meme.read_mast_output(mast_out,
-                                                                   seqs.keys())
-                    #print "PEVALS: ", pe_values, " ANNOTS: ", annotations
-                    # TODO:
-                    # 2. (optional) store f1 and f2 results
-                    # 3. return the PV-EV results
-                else:
-                    logging.info("Cluster %d has no sequences", cluster)
+    def compute_meme_run(self, seqs):
+        """computes the values of a meme run"""
+        with tempfile.NamedTemporaryFile(prefix='weeder.fasta',
+                                         delete=False) as outfile:
+            filename = outfile.name
+            logging.info("Run Weeder on FASTA file: '%s'", filename)
+            st.write_sequences_to_fasta_file(outfile, seqs.items())
+
+        pssms = weeder.run_weeder(filename)
+        meme_outfile = '%s.meme' % filename
+        dbfile = self.meme_suite.make_sequence_file(
+            [(feature_id, locseq[1])
+             for feature_id, locseq in self.used_seqs.items()])
+        logging.info("# PSSMS created: %d", len(pssms))
+        logging.info("run MAST on '%s'", meme_outfile)
+        try:
+            mast_out = self.meme_suite.mast(
+                meme_outfile, dbfile,
+                self.meme_suite.global_background_file())
+            pe_values, annotations = meme.read_mast_output(mast_out,
+                                                           seqs.keys())
+            return meme.MemeRunResult(pe_values, annotations, [])
+        except:
+            return meme.MemeRunResult([], {}, [])

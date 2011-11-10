@@ -353,9 +353,12 @@ def make_gene_scoring_func(organism, membership, matrix):
     network_scoring = nw.ScoringFunction(organism, membership, matrix,
                                          lambda iteration: 0.0, 7)
 
-    weeder_scoring = motif.WeederScoringFunction(organism, membership, matrix,
-                                                 meme_suite_p3utr, 'p3utr',
-                                                 lambda iteration: 0.0, 0)
+    weeder_scoring = motif.WeederScoringFunction(
+        organism, membership, matrix,
+        meme_suite_p3utr, 'p3utr',
+        pvalue_filter=motif.make_min_value_filter(-20.0),
+        weight_func=lambda iteration: 0.0,
+        interval=0)
 
     #return scoring.ScoringFunctionCombiner([row_scoring, motif_scoring,
     #                                        network_scoring, weeder_scoring])
