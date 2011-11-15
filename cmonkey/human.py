@@ -17,6 +17,7 @@ import network as nw
 import motif
 import meme
 import membership as memb
+import set_enrichment as se
 
 
 CACHE_DIR = 'humancache'
@@ -362,4 +363,10 @@ def make_gene_scoring_func(organism, membership, matrix):
 
     #return scoring.ScoringFunctionCombiner([row_scoring, motif_scoring,
     #                                        network_scoring, weeder_scoring])
-    return scoring.ScoringFunctionCombiner([row_scoring, weeder_scoring])
+    pita = se.SetType.read_csv('pita', 'human_data/pita_miRNA_sets.csv')
+    target_scan = se.SetType.read_csv('target_scan', 'human_data/targetScan_miRNA_sets.csv')
+    set_types = [pita, target_scan]
+    set_enrichment_scoring = se.ScoringFunction(membership, matrix, set_types,
+                                                lambda iteration: 0.0, 0)
+
+    return scoring.ScoringFunctionCombiner([row_scoring, set_enrichment_scoring])
