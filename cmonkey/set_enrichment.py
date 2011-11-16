@@ -89,12 +89,17 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                                              matrix, weight_func)
         self.__interval = interval
         self.__set_types = set_types
+        # stores (min_set, pvalue) pairs for each cluster and set type
+        # for the last run of the function
+        self.__last_min_enriched_set = {}
+        for set_type in set_types:
+            self.__last_min_enriched_set[set_type] = {}
 
     def bonferroni_cutoff(self):
         """Bonferroni cutoff value"""
         return float(self.num_clusters()) / 0.05
 
-    def compute(self, iteration):
+    def compute(self, iteration, ref_matrix):
         """compute method"""
         if (self.__interval == 0 or
             (iteration > 0 and (iteration % self.__interval == 0))):
@@ -103,14 +108,15 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             for set_type in self.__set_types:
                 for cluster in range(1, self.num_clusters() + 1):
                     scores = self.__compute_cluster_score(set_type,
-                                                          cluster)
+                                                          cluster,
+                                                          ref_matrix)
                     for row in range(len(self.gene_names())):
                         matrix[row][cluster - 1] = scores[row]
             return matrix
         else:
             return None
 
-    def __compute_cluster_score(self, set_type, cluster):
+    def __compute_cluster_score(self, set_type, cluster, ref_matrix):
         """Computes the cluster score for a given set type"""
         cluster_rows = self.rows_for_cluster(cluster)
         cluster_genes = [gene for gene in cluster_rows
@@ -169,7 +175,11 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                                    math.log10(self.bonferroni_cutoff()))
             scores = [dampened_pvalue / score if score != 0.0 else score
                       for score in scores]
-            # TODO: multiply by minimum row score
-            return scores
+            min_ref_score = ref_matrix.min()
+            scores = [score * min_ref_score for score in scores]
         else:
-            return [0.0 for _ in range(self.matrix().num_rows())]
+            scores = [0.0 for _ in range(self.matrix().num_rows())]
+        
+        # store the best enriched set determined
+        self.__last_min_enriched_set[set_type][cluster] = (min_set, min_pvalue)
+        return scores

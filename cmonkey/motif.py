@@ -120,7 +120,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                 result[feature_id] = row_name
         return result
 
-    def compute(self, iteration):
+    def compute(self, iteration, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
         if (self.interval == 0 or
             (iteration > 0 and (iteration % self.interval == 0))):

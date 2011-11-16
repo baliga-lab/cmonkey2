@@ -28,8 +28,12 @@ class ScoringFunctionBase:
         """returns this function's matrix object"""
         return self.__matrix
 
-    def compute(self, iteration):
-        """general compute method, iteration is the 0-based iteration number"""
+    def compute(self, iteration, reference_matrix=None):
+        """general compute method, iteration is the 0-based iteration number
+        the reference_matrix is actually a hack that allows the scoring
+        function to normalize its scores to the range of a reference
+        score matrix. In the normal case, those would be the gene expression
+        row scores"""
         raise Exception("please implement me")
 
     def num_clusters(self):
@@ -48,7 +52,6 @@ class ScoringFunctionBase:
         """returns the weight for the specified iteration"""
         return self.__weight_func(iteration)
 
-
 class ScoringFunctionCombiner:
     """Taking advantage of the composite pattern, this combiner function
     exposes the basic interface of a scoring function in order to
@@ -59,12 +62,18 @@ class ScoringFunctionCombiner:
         """creates a combiner instance"""
         self.__scoring_functions = scoring_functions
 
-    def compute(self, iteration):
+    def compute(self, iteration, ref_matrix=None):
         """compute scores for one iteration"""
         result_matrices = []
         score_weights = []
+        reference_matrix = ref_matrix
         for scoring_function in self.__scoring_functions:
-            matrix = scoring_function.compute(iteration)
+            # This  is actually a hack in order to propagate
+            # a reference matrix to the compute function
+            if reference_matrix == None and len(result_matrices) > 0:
+                reference_matrix = result_matrices[0]
+
+            matrix = scoring_function.compute(iteration, reference_matrix)
             if matrix != None:
                 result_matrices.append(matrix)
                 score_weights.append(scoring_function.weight(iteration))
