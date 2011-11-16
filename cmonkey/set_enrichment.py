@@ -4,29 +4,35 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import util
+import math
 import scoring
 import numpy as np
 import rpy2.robjects as robjects
+import datamatrix as dm
 
 
 class EnrichmentSet:
+    """Enrichment set representation"""
     def __init__(self, cutoff):
+        """instance creation"""
         self.genes = []
-        self.values = []
+        self.weights = []
         self.cutoff = cutoff
         self.__genes_above_cutoff = None
 
-    def add(self, elem, value):
+    def add(self, elem, weight):
+        """Adds a gene and a weight to this set"""
         self.genes.append(elem)
-        self.values.append(value)
+        self.weights.append(weight)
 
     def genes_above_cutoff(self):
+        """returns the genes that have a weight above the cutoff"""
         if self.__genes_above_cutoff == None:
             self.__genes_above_cutoff = []
             for index in range(0, len(self.genes)):
                 if self.cutoff == 'discrete':
                     self.__genes_above_cutoff.append(self.genes[index])
-                elif self.values[index] >= self.cutoff:
+                elif self.weights[index] >= self.cutoff:
                     self.__genes_above_cutoff.append(self.genes[index])
         return self.__genes_above_cutoff
 
@@ -35,12 +41,16 @@ class EnrichmentSet:
 
 
 class SetType:
+    """Set type representation"""
+
     def __init__(self, name, sets):
+        """instance creation"""
         self.name = name
         self.sets = sets
         self.__genes = None
 
     def genes(self):
+        """All genes contained in the sets"""
         if self.__genes == None:
             self.__genes = set()
             for enrichment_set in self.sets.values():
@@ -49,9 +59,10 @@ class SetType:
         return self.__genes
 
     def __repr__(self):
+        """string representation"""
         result = "SetType['%s'] = {\n" % self.name
         for key, value in self.sets.items():
-            result +=  "%s -> %s\n\n" % (key, value)
+            result += "%s -> %s\n\n" % (key, value)
         result += "}"
         return result
 
@@ -79,50 +90,86 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         self.__interval = interval
         self.__set_types = set_types
 
+    def bonferroni_cutoff(self):
+        """Bonferroni cutoff value"""
+        return float(self.num_clusters()) / 0.05
+
     def compute(self, iteration):
+        """compute method"""
         if (self.__interval == 0 or
             (iteration > 0 and (iteration % self.__interval == 0))):
-            result = {}
+            matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
+                                   self.gene_names())
             for set_type in self.__set_types:
-
                 for cluster in range(1, self.num_clusters() + 1):
-                    cluster_rows = self.rows_for_cluster(cluster)
-                    cluster_genes = [gene for gene in cluster_rows
-                                     if gene in set_type.genes()]
-                    phyper_q = []
-                    phyper_m = []
-                    phyper_n = []
-                    phyper_k = []
-
-                    for set_name, eset in set_type.sets.items():
-                        set_genes = eset.genes_above_cutoff()
-                        intersect = set(cluster_genes).intersection(set_genes)
-                        num_overlap = len(intersect)
-                        phyper_q.append(len(intersect))
-                        phyper_m.append(len(set_genes))
-
-                    num_sets = len(set_type.sets)
-                    phyper_n = (np.array([len(set_type.genes())
-                                         for _ in range(num_sets)]) -
-                                np.array(phyper_m))
-                    phyper_n = [value for value in phyper_n]
-                    phyper_k = [len(cluster_genes) for _ in range(num_sets)]
-
-                    print "Q = ", phyper_q
-                    print "M = ", phyper_m
-                    print "N = ", phyper_n
-                    print "K = ", phyper_k
-                    hyper_values = phyper(phyper_q, phyper_m, phyper_n, phyper_k)
-                    print "HYPER: ", hyper_values
-                    
-                    #print "SETTYPE = %s, GENES CLUSTER %d = %s" % (set_type.name, cluster, str(cluster_genes))
-                    # TODO: apply cutoff
-            return None
+                    scores = self.__compute_cluster_score(set_type,
+                                                          cluster)
+                    for row in range(len(self.gene_names())):
+                        matrix[row][cluster - 1] = scores[row]
+            return matrix
         else:
             return None
 
-def phyper(q, m, n, k):
-    r_phyper = robjects.r['phyper']
-    #kwargs = {'lower.tail': False}
-    return r_phyper(q, m, n, k, **kwargs)
-    return r_phyper(q, m, n, k)
+    def __compute_cluster_score(self, set_type, cluster):
+        """Computes the cluster score for a given set type"""
+        cluster_rows = self.rows_for_cluster(cluster)
+        cluster_genes = [gene for gene in cluster_rows
+                         if gene in set_type.genes()]
+        overlap_sizes = []
+        set_sizes = []
+
+        for set_name, eset in set_type.sets.items():
+            set_genes = eset.genes_above_cutoff()
+            intersect = set(cluster_genes).intersection(set_genes)
+            overlap_sizes.append(len(intersect))
+            set_sizes.append(len(set_genes))
+
+        num_sets = len(set_type.sets)
+        phyper_n = (np.array([len(set_type.genes())
+                              for _ in range(num_sets)]) -
+                    np.array(set_sizes))
+        phyper_n = [value for value in phyper_n]
+        phyper_k = [len(cluster_genes) for _ in range(num_sets)]
+        enrichment_pvalues = list(util.phyper(overlap_sizes, set_sizes,
+                                              phyper_n, phyper_k))
+        min_pvalue = min(enrichment_pvalues)
+        min_index = enrichment_pvalues.index(min_pvalue)
+        min_set = set_type.sets.keys()[min_index]
+        min_set_overlap = overlap_sizes[min_index]
+        if min_set_overlap > 0:
+            scores = [0.0 for _ in range(self.matrix().num_rows())]
+            min_genes = set_type.sets[min_set].genes
+            min_genes = [gene for gene in min_genes
+                         if gene in self.gene_names()]
+
+            if set_type.sets[min_set].cutoff == 'discrete':
+                overlap_genes = set(cluster_genes).intersection(set(min_genes))
+                for gene in min_genes:
+                    scores[self.gene_names().index(gene)] = 0.5
+                for gene in overlap_genes:
+                    scores[self.gene_names().index(gene)] = 1.0
+            else:
+                min_set_weights = []
+                for gene in min_genes:
+                    index = min_genes.index[gene]
+                    min_set_weights.append(
+                        set_type.sets[min_set].weights[index])
+                min_weight = min(min_set_weights)
+                max_weight = max(min_set_weights)
+                for gene in min_genes:
+                    index = min_genes.index[gene]
+                    scores[index] = min_set_weights[index] - min_weight
+                    scores[index] = min_set_weights[index] / max_weight
+
+            dampened_pvalue = enrichment_pvalues[min_index]
+            if dampened_pvalue <= self.bonferroni_cutoff():
+                dampened_pvalue = 1
+            else:
+                dampened_pvalue = (math.log10(dampened_pvalue) /
+                                   math.log10(self.bonferroni_cutoff()))
+            scores = [dampened_pvalue / score if score != 0.0 else score
+                      for score in scores]
+            # TODO: multiply by minimum row score
+            return scores
+        else:
+            return [0.0 for _ in range(self.matrix().num_rows())]

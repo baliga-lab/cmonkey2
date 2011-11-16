@@ -352,6 +352,14 @@ def rnorm(num_values, std_deviation):
     return r_rnorm(num_values, **kwargs)
 
 
+def phyper(q, m, n, k, lower_tail=False):
+    r_phyper = robjects.r['phyper']
+    kwargs = {'lower.tail': lower_tail}
+    return r_phyper(robjects.FloatVector(q),
+                    robjects.FloatVector(m),
+                    robjects.FloatVector(n),
+                    robjects.FloatVector(k), **kwargs)
+
 ######################################################################
 ### Misc functionality
 ######################################################################

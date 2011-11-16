@@ -7,7 +7,6 @@ import sys
 import logging
 import microbial_config as microbe
 import human
-import set_enrichment as se
 
 CMONKEY_VERSION = '4.0'
 
