@@ -473,6 +473,14 @@ class ClusterMembership:
                                           self.clusters_for_column(col)],
                    add_cluster_to_col)
 
+    def store_checkpoint_data(self, shelf):
+        """Save memberships into checkpoint"""
+        logging.info("Saving checkpoint data for memberships in iteration %d", shelf['iteration'])
+
+    def restore_checkpoint_data(self, shelf):
+        """Restore memberships from checkpoint information"""
+        logging.info("Restoring checkpoint data for memberships in iteration %d", shelf['iteration'])
+
 
 def _get_density_scores(membership, row_scores, col_scores):
     """We can't really implement density scores at the moment,

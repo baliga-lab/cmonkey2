@@ -9,6 +9,8 @@ import microarray
 import logging
 import os
 import datamatrix as dm
+from datetime import date
+import util
 
 
 class ScoringFunctionBase:
@@ -98,7 +100,8 @@ class ConfigurationBase:
     """configuration base class"""
 
     def __init__(self, organism_code, matrix_filename,
-                 num_iterations, cache_dir):
+                 num_iterations, cache_dir,
+                 checkpoint_file=None):
         """create instance"""
         logging.basicConfig(format=LOG_FORMAT,
                             datefmt='%Y-%m-%d %H:%M:%S',
@@ -108,6 +111,7 @@ class ConfigurationBase:
         self.__cache_dir = cache_dir
         self.__matrix_filename = matrix_filename
         self.__organism_code = organism_code
+        self.__start_iteration = 0
         self.__num_iterations = num_iterations
 
         self.__matrix = None
@@ -116,9 +120,24 @@ class ConfigurationBase:
         self.__row_scoring = None
         self.__column_scoring = None
 
+        if checkpoint_file == None:
+            today = date.today()
+            self.__checkpoint_basename = "cmonkey-checkpoint-%s-%d%d%d" % (
+                organism_code, today.year,
+                today.month, today.day)
+        else:
+            self.__checkpoint_basename = checkpoint_file.split(".")[0]
+            self.init_from_checkpoint(checkpoint_file)
+        logging.info("Checkpoints will be saved to '%s'", self.__checkpoint_basename)
+
     def organism_code(self):
         """returns the organism code"""
         return self.__organism_code
+
+    def start_iteration(self):
+        """returns the start iteration, if restored from a check point,
+        this is the iteration after the save point"""
+        return self.__start_iteration
 
     def num_iterations(self):
         """returns the number of iterations"""
@@ -175,3 +194,18 @@ class ConfigurationBase:
     def make_row_scoring(self):
         """implement in derived class"""
         pass
+
+    def save_checkpoint_data(self, iteration):
+        """save checkpoint data for the specified iteration"""
+        with util.open_shelf("%s.%d" % (self.__checkpoint_basename,
+                                        iteration)) as shelf:
+            shelf['iteration'] = iteration
+            self.membership().store_checkpoint_data(shelf)
+
+    def init_from_checkpoint(self, checkpoint_filename):
+        """initialize this object from a checkpoint file"""
+        logging.info("Continue run using checkpoint file '%s'",
+                     checkpoint_filename)
+        with util.open_shelf(checkpoint_filename) as shelf:
+            self.__start_iteration = shelf['iteration'] + 1
+            self.membership().restore_checkpoint_data(shelf)

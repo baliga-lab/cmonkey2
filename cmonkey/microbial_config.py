@@ -40,11 +40,13 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
                  organism_code,
                  matrix_filename,
                  num_iterations=NUM_ITERATIONS,
-                 cache_dir=CACHE_DIR):
+                 cache_dir=CACHE_DIR,
+                 checkpoint_file=None):
         """create instance"""
         scoring.ConfigurationBase.__init__(self, organism_code,
                                            matrix_filename,
-                                           num_iterations, cache_dir)
+                                           num_iterations, cache_dir,
+                                           checkpoint_file)
 
     def read_matrix(self, filename):
         """returns the matrix"""

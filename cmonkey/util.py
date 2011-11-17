@@ -12,6 +12,7 @@ import urllib
 import os
 import rpy2.robjects as robjects
 import gzip
+import shelve
 
 
 def make_delimited_file_from_lines(lines, sep, has_header, comment, quote):
@@ -369,6 +370,26 @@ def add_if_unique(sequence, item):
     """add the item to the Python sequence only if it does not exist"""
     if item not in sequence:
         sequence.append(item)
+
+
+class open_shelf:
+    """A shelf content manager, so the user does not have to care about
+    closing the shelf"""
+
+    def __init__(self, filename):
+        """create an instance"""
+        self.__filename = filename
+        self.__shelf = None
+
+    def __enter__(self):
+        """entering the manager"""
+        self.__shelf = shelve.open(self.__filename)
+        return self.__shelf
+
+    def __exit__(self, type, value, tb):
+        """exiting the manager"""
+        self.__shelf.sync()
+        self.__shelf.close()
 
 
 __all__ = ['DelimitedFile', 'best_matching_links', 'quantile', 'make_matrix',

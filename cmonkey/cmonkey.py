@@ -16,12 +16,14 @@ def run_cmonkey(config):
     gene_scoring = config.row_scoring()
     cond_scoring = config.column_scoring()
 
-    for iteration in range(config.num_iterations()):
+    for iteration in range(config.start_iteration(),
+                           config.num_iterations()):
         logging.info("Iteration # %d", iteration)
         config.membership().update(config.matrix(),
                                    gene_scoring.compute(iteration),
                                    cond_scoring.compute(iteration),
                                    iteration, config.num_iterations())
+        config.save_checkpoint_data(iteration)
     print "Done !!!!"
     print "cluster\t# rows"
     for cluster in range(1, config.membership().num_clusters() + 1):
@@ -35,9 +37,15 @@ if __name__ == '__main__':
     print('This program is licensed under the General Public License V3.')
     print('See README and LICENSE for details.\n')
     if len(sys.argv) <= 2:
-        print('Usage: ./run_cmonkey.sh <organism-code> <ratio-file>')
+        print('Usage: ./run_cmonkey.sh <organism-code> <ratio-file> [checkpoint-file]')
     else:
+        checkpoint_file = None
+        if len(sys.argv) > 3:
+            checkpoint_file = sys.argv[3]
+
         if sys.argv[1] == 'hsa':
-            run_cmonkey(human.CMonkeyConfiguration(sys.argv[2]))
+            run_cmonkey(human.CMonkeyConfiguration(sys.argv[2],
+                                                   checkpoint_file=checkpoint_file))
         else:
-            run_cmonkey(microbe.CMonkeyConfiguration(sys.argv[1], sys.argv[2]))
+            run_cmonkey(microbe.CMonkeyConfiguration(sys.argv[1], sys.argv[2],
+                                                     checkpoint_file=checkpoint_file))

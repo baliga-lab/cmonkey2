@@ -244,11 +244,14 @@ class Human(organism.OrganismBase):
 
 class CMonkeyConfiguration(scoring.ConfigurationBase):
     """Human-specific configuration class"""
-    def __init__(self, matrix_filename, num_iterations=NUM_ITERATIONS,
-                 cache_dir=CACHE_DIR):
+    def __init__(self, matrix_filename,
+                 num_iterations=NUM_ITERATIONS,
+                 cache_dir=CACHE_DIR,
+                 checkpoint_file=None):
         """create instance"""
         scoring.ConfigurationBase.__init__(self, 'hsa', matrix_filename,
-                                           num_iterations, cache_dir)
+                                           num_iterations, cache_dir,
+                                           checkpoint_file)
 
     def read_matrix(self, filename):
         """returns the matrix"""
