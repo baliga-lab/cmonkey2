@@ -272,11 +272,21 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
 
     def make_membership(self):
         """returns the seeded membership"""
-        return make_membership(self.matrix())
+        kmeans_iterations = self.config_params[memb.KEY_KMEANS_ITERATIONS]
+        num_clusters = self.config_params[memb.KEY_NUM_CLUSTERS]
+        return memb.ClusterMembership.create(
+            self.matrix().sorted_by_row_name(),
+            memb.make_kmeans_row_seeder(num_clusters,
+                                        kmeans_iterations),
+            microarray.seed_column_members,
+            self.config_params)
 
     def make_organism(self):
-        """returns the organism object to work on"""
-        return make_organism()
+        """returns a human organism object"""
+        nw_factories = [stringdb.get_network_factory3('human_data/string.csv')]
+        organism = Human(PROM_SEQFILE, P3UTR_SEQFILE, THESAURUS_FILE,
+                         nw_factories)
+        return organism
 
     def make_row_scoring(self):
         """returns the row scoring function"""
@@ -316,23 +326,6 @@ def read_matrix(filename):
     select_rows = select_probes(matrix, 2000, column_groups)
     matrix = matrix.submatrix_by_rows(select_rows)
     return intensities_to_ratios(matrix, controls, column_groups)
-
-
-def make_membership(matrix):
-    """returns a seeded membership"""
-    return memb.ClusterMembership.create(
-        matrix.sorted_by_row_name(),
-        memb.make_kmeans_row_seeder(NUM_CLUSTERS),
-        microarray.seed_column_members,
-        num_clusters=NUM_CLUSTERS)
-
-
-def make_organism():
-    """returns a human organism object"""
-    nw_factories = [stringdb.get_network_factory3('human_data/string.csv')]
-    organism = Human(PROM_SEQFILE, P3UTR_SEQFILE, THESAURUS_FILE,
-                     nw_factories)
-    return organism
 
 
 def make_gene_scoring_func(organism, membership, matrix):

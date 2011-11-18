@@ -354,6 +354,7 @@ def rnorm(num_values, std_deviation):
 
 
 def phyper(q, m, n, k, lower_tail=False):
+    """calls the R function phyper"""
     r_phyper = robjects.r['phyper']
     kwargs = {'lower.tail': lower_tail}
     return r_phyper(robjects.FloatVector(q),

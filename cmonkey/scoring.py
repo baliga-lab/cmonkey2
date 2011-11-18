@@ -11,13 +11,13 @@ import os
 import datamatrix as dm
 from datetime import date
 import util
+import membership as memb
 
 # Official keys to access values in the configuration map
 KEY_ORGANISM_CODE = 'organism_code'
 KEY_NUM_ITERATIONS = 'num_iterations'
 KEY_MATRIX_FILENAMES = 'matrix_filenames'
 KEY_CACHE_DIR = 'cache_dir'
-KEY_NUM_CLUSTERS = 'num_clusters'
 KEY_SEQUENCE_TYPES = 'sequence_types'
 KEY_SEARCH_DISTANCES = 'search_distances'
 KEY_SCAN_DISTANCES = 'scan_distances'
@@ -222,41 +222,64 @@ class ConfigurationBase:
 
 
 class ConfigurationBuilder:
+    """A helper class to define a configuration dictionary"""
 
     def __init__(self):
-        self.params = {}
+        """creates the instance"""
+        # initialize with defaults
+        self.params = {
+            memb.KEY_CLUSTERS_PER_ROW: memb.CLUSTERS_PER_ROW,
+            memb.KEY_CLUSTERS_PER_COL: memb.CLUSTERS_PER_COL,
+            memb.KEY_NUM_CLUSTERS: memb.NUM_CLUSTERS,
+            memb.KEY_PROB_ROW_CHANGE: memb.PROB_SEEING_ROW_CHANGE,
+            memb.KEY_PROB_COL_CHANGE: memb.PROB_SEEING_COL_CHANGE,
+            memb.KEY_MAX_CHANGES_PER_ROW: memb.MAX_CHANGES_PER_ROW,
+            memb.KEY_MAX_CHANGES_PER_COL: memb.MAX_CHANGES_PER_COL,
+            memb.KEY_MIN_CLUSTER_ROWS_ALLOWED: memb.MIN_CLUSTER_ROWS_ALLOWED,
+            memb.KEY_KMEANS_ITERATIONS: memb.KMEANS_ITERATIONS
+            }
 
     def build(self):
+        """returns the object that was built"""
         return self.params
 
     def with_organism(self, organism_code):
+        """define the organism code"""
         self.params[KEY_ORGANISM_CODE] = organism_code
         return self
 
     def with_num_iterations(self, num_iterations):
+        """define number of iterations"""
         self.params[KEY_NUM_ITERATIONS] = num_iterations
         return self
 
     def with_matrix_filenames(self, filenames):
+        """define the input matrix filenames. currently, only
+        the first one will be used"""
         self.params[KEY_MATRIX_FILENAMES] = filenames
         return self
 
     def with_cache_dir(self, cachedir):
+        """define the cache directory"""
         self.params[KEY_CACHE_DIR] = cachedir
         return self
 
     def with_num_clusters(self, num_clusters):
-        self.params[KEY_NUM_CLUSTERS] = num_clusters
+        """define the number of clusters"""
+        self.params[memb.KEY_NUM_CLUSTERS] = num_clusters
         return self
 
     def with_sequence_types(self, sequence_types):
+        """define the sequence types"""
         self.params[KEY_SEQUENCE_TYPES] = sequence_types
         return self
 
     def with_search_distances(self, distances):
+        """define the search distances"""
         self.params[KEY_SEARCH_DISTANCES] = distances
         return self
 
     def with_scan_distances(self, distances):
+        """define the scan instances"""
         self.params[KEY_SCAN_DISTANCES] = distances
         return self

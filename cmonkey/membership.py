@@ -15,16 +15,24 @@ import scipy.cluster.vq as clvq
 
 # Default values for membership creation
 NUM_CLUSTERS = 43
-NUM_CLUSTERS_PER_ROW = 2
-NUM_CLUSTERS_PER_COL = int(round(NUM_CLUSTERS * 2.0 / 3.0))
-MIN_CLUSTER_ROWS_ALLOWED = 3
-MAX_CLUSTER_ROWS_ALLOWED = 70
-
-PROBABILITY_SEEING_ROW_CHANGE = 0.5
-PROBABILITY_SEEING_COLUMN_CHANGE = 1.0
+CLUSTERS_PER_ROW = 2
+CLUSTERS_PER_COL = int(round(NUM_CLUSTERS * 2.0 / 3.0))
+PROB_SEEING_ROW_CHANGE = 0.5
+PROB_SEEING_COL_CHANGE = 1.0
 MAX_CHANGES_PER_ROW = 1
-MAX_CHANGES_PER_COLUMN = 5
+MAX_CHANGES_PER_COL = 5
+MIN_CLUSTER_ROWS_ALLOWED = 3
 KMEANS_ITERATIONS = 10
+
+KEY_NUM_CLUSTERS = 'memb.num_clusters'
+KEY_CLUSTERS_PER_ROW = 'memb.clusters_per_row'
+KEY_CLUSTERS_PER_COL = 'memb.clusters_per_col'
+KEY_PROB_ROW_CHANGE = 'memb.prob_row_change'
+KEY_PROB_COL_CHANGE = 'memb.prob_col_change'
+KEY_MAX_CHANGES_PER_ROW = 'memb.max_changes_per_row'
+KEY_MAX_CHANGES_PER_COL = 'memb.max_changes_per_col'
+KEY_MIN_CLUSTER_ROWS_ALLOWED = 'memb.min_cluster_rows_allowed'
+KEY_KMEANS_ITERATIONS = 'memb.kmeans_iterations'
 
 
 class ClusterMembership:
@@ -40,16 +48,8 @@ class ClusterMembership:
     A column seed function is called after this, which generates the
     entire column membership matrix.
     """
-    def __init__(self,
-                 row_is_member_of,
-                 column_is_member_of,
-                 num_clusters,
-                 num_clusters_per_row,
-                 num_clusters_per_col,
-                 probability_seeing_row_change,
-                 probability_seeing_col_change,
-                 max_changes_per_row,
-                 max_changes_per_column):
+    def __init__(self, row_is_member_of, column_is_member_of,
+                 config_params):
         """creates an instance of ClusterMembership"""
 
         def create_cluster_to_names_map(name_to_cluster_map):
@@ -63,14 +63,7 @@ class ClusterMembership:
                     result[cluster].append(name)
             return result
 
-        self.__num_clusters = num_clusters
-        self.__num_clusters_per_row = num_clusters_per_row
-        self.__num_clusters_per_col = num_clusters_per_col
-        self.__probability_seeing_row_change = probability_seeing_row_change
-        self.__probability_seeing_column_change = probability_seeing_col_change
-        self.__max_changes_per_row = max_changes_per_row
-        self.__max_changes_per_column = max_changes_per_column
-
+        self.__config_params = config_params
         self.__row_is_member_of = row_is_member_of
         self.__column_is_member_of = column_is_member_of
         self.__cluster_row_members = create_cluster_to_names_map(
@@ -83,13 +76,7 @@ class ClusterMembership:
     def create(cls, data_matrix,
                seed_row_memberships,
                seed_column_memberships,
-               num_clusters=NUM_CLUSTERS,
-               num_clusters_per_row=NUM_CLUSTERS_PER_ROW,
-               num_clusters_per_column=NUM_CLUSTERS_PER_COL,
-               probability_seeing_row_change=PROBABILITY_SEEING_ROW_CHANGE,
-               probability_seeing_col_change=PROBABILITY_SEEING_COLUMN_CHANGE,
-               max_changes_per_row=MAX_CHANGES_PER_ROW,
-               max_changes_per_col=MAX_CHANGES_PER_COLUMN):
+               config_params):
         """create instance of ClusterMembership using
         the provided seeding algorithms"""
         def make_member_map(membership, names):
@@ -105,37 +92,54 @@ class ClusterMembership:
 
         # using the seeding functions, build the initial membership
         # dictionaries
+        num_clusters_per_row = config_params[KEY_CLUSTERS_PER_ROW]
+        num_clusters = config_params[KEY_NUM_CLUSTERS]
+        num_clusters_per_col = config_params[KEY_CLUSTERS_PER_COL]
+
         num_rows = data_matrix.num_rows()
         row_membership = [[0 for _ in range(num_clusters_per_row)]
                           for _ in range(num_rows)]
         seed_row_memberships(row_membership, data_matrix)
         column_membership = seed_column_memberships(
-            data_matrix, row_membership, num_clusters, num_clusters_per_column)
+            data_matrix, row_membership, num_clusters, num_clusters_per_col)
         row_is_member_of = make_member_map(row_membership,
                                            data_matrix.row_names())
         col_is_member_of = make_member_map(column_membership,
                                            data_matrix.column_names())
-        return ClusterMembership(row_is_member_of,
-                                 col_is_member_of,
-                                 num_clusters,
-                                 num_clusters_per_row,
-                                 num_clusters_per_column,
-                                 probability_seeing_row_change,
-                                 probability_seeing_col_change,
-                                 max_changes_per_row,
-                                 max_changes_per_col)
+        return ClusterMembership(row_is_member_of, col_is_member_of,
+                                 config_params)
 
     def num_clusters(self):
         """returns the number of clusters"""
-        return self.__num_clusters
+        return self.__config_params[KEY_NUM_CLUSTERS]
 
     def num_clusters_per_row(self):
         """returns the number of clusters per row"""
-        return self.__num_clusters_per_row
+        return self.__config_params[KEY_CLUSTERS_PER_ROW]
 
     def num_clusters_per_column(self):
         """returns the number of clusters per row"""
-        return self.__num_clusters_per_col
+        return self.__config_params[KEY_CLUSTERS_PER_COL]
+
+    def __probability_seeing_row_change(self):
+        """returns the probability for seeing a row change"""
+        return self.__config_params[KEY_PROB_ROW_CHANGE]
+
+    def __probability_seeing_col_change(self):
+        """returns the probability for seeing a row change"""
+        return self.__config_params[KEY_PROB_COL_CHANGE]
+
+    def __max_changes_per_row(self):
+        """returns the maximum number of changes per row"""
+        return self.__config_params[KEY_MAX_CHANGES_PER_ROW]
+
+    def __max_changes_per_col(self):
+        """returns the maximum number of changes per column"""
+        return self.__config_params[KEY_MAX_CHANGES_PER_COL]
+
+    def __min_cluster_rows_allowed(self):
+        """returns the maximum number of changes per column"""
+        return self.__config_params[KEY_MIN_CLUSTER_ROWS_ALLOWED]
 
     def clusters_for_row(self, row_name):
         """determine the clusters for the specified row"""
@@ -208,7 +212,7 @@ class ClusterMembership:
 
     def add_cluster_to_row(self, row, cluster):
         """checked adding of a row to a cluster"""
-        if self.num_clusters_for_row(row) >= self.__num_clusters_per_row:
+        if self.num_clusters_for_row(row) >= self.num_clusters_per_row():
             raise Exception(("add_row_to_cluster() - exceeded clusters/row " +
                             "limit for row: '%s'" % str(row)))
         self.__add_cluster_to_row(row, cluster)
@@ -251,7 +255,8 @@ class ClusterMembership:
 
     def add_cluster_to_column(self, column, cluster):
         """checked adding of a column to a cluster"""
-        if self.num_clusters_for_column(column) >= self.__num_clusters_per_col:
+        if (self.num_clusters_for_column(column) >=
+            self.num_clusters_per_column()):
             raise Exception(("add_col_to_cluster() - exceeded clusters/col " +
                             "limit for col: '%s'" % str(column)))
         self.__add_cluster_to_column(column, cluster)
@@ -382,7 +387,7 @@ class ClusterMembership:
             2. if there is a conflict, replace a gene with a lower score in the
                scores matrix
             """
-            if self.num_clusters_for_row(row) < self.__num_clusters_per_row:
+            if self.num_clusters_for_row(row) < self.num_clusters_per_row():
                 self.add_cluster_to_row(row, cluster)
             else:
                 replace_lowest_scoring_row_member(row, cluster)
@@ -403,7 +408,8 @@ class ClusterMembership:
 
         def add_cluster_to_col(col, cluster):
             """adds a column to a cluster"""
-            if self.num_clusters_for_column(col) < self.__num_clusters_per_col:
+            if (self.num_clusters_for_column(col) <
+                self.num_clusters_per_column()):
                 self.add_cluster_to_column(col, cluster)
             else:
                 replace_lowest_scoring_col_member(col, cluster)
@@ -454,20 +460,20 @@ class ClusterMembership:
                     if cluster not in self.clusters_for_column(row_name)]
 
         update_for(rd_scores,
-                   self.__num_clusters_per_row,
-                   self.__probability_seeing_row_change,
+                   self.num_clusters_per_row(),
+                   self.__probability_seeing_row_change(),
                    self.is_row_in_clusters,
-                   self.__max_changes_per_row,
+                   self.__max_changes_per_row(),
                    lambda row, clusters: [cluster for cluster in clusters
                                          if cluster not in
                                          self.clusters_for_row(row)],
                    add_cluster_to_row)
         #print cd_scores
         update_for(cd_scores,
-                   self.__num_clusters_per_col,
-                   self.__probability_seeing_column_change,
+                   self.num_clusters_per_column(),
+                   self.__probability_seeing_col_change(),
                    self.is_column_in_clusters,
-                   self.__max_changes_per_column,
+                   self.__max_changes_per_col(),
                    lambda col, clusters: [cluster for cluster in clusters
                                           if cluster not in
                                           self.clusters_for_column(col)],
@@ -586,7 +592,8 @@ def _compensate_size(membership, matrix, rd_scores, cd_scores):
                 cluster - 1, compensate_row_size(num_rowmembers))
         else:
             rd_scores.multiply_column_by(
-                cluster - 1, compensate_row_size(MIN_CLUSTER_ROWS_ALLOWED))
+                cluster - 1,
+                compensate_row_size(self.__min_cluster_rows_allowed()))
 
     def compensate_columns(cluster):
         """compensate density scores for column dimension"""
@@ -611,7 +618,7 @@ def std_fuzzy_coefficient(iteration, num_iterations):
                             (float(num_iterations) / 3.0))) + 0.05
 
 
-def make_kmeans_row_seeder(num_clusters):
+def make_kmeans_row_seeder(num_clusters, num_iterations):
     """creates a row seeding function based on k-means"""
 
     def contains_all_clusters(seeding):
@@ -629,7 +636,7 @@ def make_kmeans_row_seeder(num_clusters):
             if len(seeding) > 0:
                 logging.info("not all clusters where assigned, retry seeding")
             seeding = clvq.kmeans2(matrix.values(), num_clusters,
-                                   KMEANS_ITERATIONS, minit='points')[1]
+                                   num_iterations, minit='points')[1]
         for row in range(len(seeding)):
             row_membership[row][0] = seeding[row] + 1
     return seed

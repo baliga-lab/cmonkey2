@@ -154,8 +154,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         (seqs, feature_ids, distance) -> seqs
         These filters are applied in the order they appear in the list
         """
-        MIN_LOG_SCORE = -20.0
-
         def apply_sequence_filters(seqs, feature_ids):
             """apply all filters in the filters list in order"""
             for sequence_filter in self.__sequence_filters:
@@ -209,6 +207,7 @@ class MemeScoringFunction(MotifScoringFunctionBase):
                                           weight_func, interval)
 
     def compute_meme_run(self, seqs):
+        """performs a MEME run"""
         return self.meme_suite.run_meme(seqs, self.used_seqs)
 
 

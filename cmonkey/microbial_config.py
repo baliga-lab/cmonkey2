@@ -61,12 +61,26 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
         return cls(params, checkpoint_file)
 
     def read_matrix(self, filename):
-        """returns the matrix"""
-        return read_matrix(filename)
+        """reads the data matrix from a file"""
+        matrix_factory = dm.DataMatrixFactory(
+            [dm.nochange_filter, dm.center_scale_filter])
+        infile = util.DelimitedFile.read(filename, has_header=True)
+        return matrix_factory.create_from(infile)
 
     def make_membership(self):
-        """returns the seeded membership"""
-        return make_membership(self.matrix())
+        """returns the seeded membership
+        We are using a fake row seed here in order to have reproducible,
+        deterministic results for development. Since the column seed is
+        deterministic and dependent on the row seed, we can use the real
+        column seed implementation here.
+        We currently assume the halo_ratios5.tsv file as input"""
+        fake_row_membership_seed = util.DelimitedFileMapper(
+            util.DelimitedFile.read('clusters.tsv', has_header=False), 0, 1)
+        return memb.ClusterMembership.create(
+            self.matrix().sorted_by_row_name(),
+            fake_seed_row_memberships(fake_row_membership_seed),
+            microarray.seed_column_members,
+            self.config_params)
 
     def make_organism(self):
         """returns the organism object to work on"""
@@ -112,18 +126,6 @@ def make_gene_scoring_func(organism, membership, matrix):
                                             network_scoring])
 
 
-def read_matrix(filename):
-    """reads the data matrix from a file"""
-    matrix_factory = dm.DataMatrixFactory(
-        [dm.nochange_filter, dm.center_scale_filter])
-    infile = util.DelimitedFile.read(filename, has_header=True)
-    # for now, we set a fixed set of clusters assignments
-    # that matches halo_ratios5.tsv
-    # This is to take out the random component out of the seeding
-    # and make it easier to compare results with R-cMonkey
-    return matrix_factory.create_from(infile)
-
-
 def make_organism(organism_code, matrix):
     """create the organism based on the organism code"""
     keggfile = util.DelimitedFile.read(KEGG_FILE_PATH, comment='#')
@@ -142,21 +144,6 @@ def make_organism(organism_code, matrix):
                                      mo_db,
                                      nw_factories)
     return org_factory.create(organism_code, SEARCH_DISTANCES, SCAN_DISTANCES)
-
-
-def make_membership(matrix):
-    """returns a seeded membership"""
-    # We are using a fake row seed here in order to have reproducible,
-    # deterministic results for development. Since the column seed is
-    # deterministic and dependent on the row seed, we can use the real
-    # column seed implementation here.
-    # We currently assume the halo_ratios5.tsv file as input
-    fake_row_membership_seed = util.DelimitedFileMapper(
-        util.DelimitedFile.read('clusters.tsv', has_header=False), 0, 1)
-    return memb.ClusterMembership.create(
-        matrix.sorted_by_row_name(),
-        fake_seed_row_memberships(fake_row_membership_seed),
-        microarray.seed_column_members)
 
 
 ############################################################
