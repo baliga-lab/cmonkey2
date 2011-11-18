@@ -33,6 +33,7 @@ NUM_CLUSTERS = 133
 ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 2000
 
+SEQUENCE_TYPES = ['promoter', 'p3utr']
 SEARCH_DISTANCES = {'promoter': (0, 700), 'p3utr': (0, 831)}
 SCAN_DISTANCES = {'promoter': (0, 700), 'p3utr': (0, 831)}
 
@@ -244,14 +245,26 @@ class Human(organism.OrganismBase):
 
 class CMonkeyConfiguration(scoring.ConfigurationBase):
     """Human-specific configuration class"""
-    def __init__(self, matrix_filename,
-                 num_iterations=NUM_ITERATIONS,
-                 cache_dir=CACHE_DIR,
+    def __init__(self, config_params,
                  checkpoint_file=None):
         """create instance"""
-        scoring.ConfigurationBase.__init__(self, 'hsa', matrix_filename,
-                                           num_iterations, cache_dir,
+        scoring.ConfigurationBase.__init__(self, config_params,
                                            checkpoint_file)
+
+    @classmethod
+    def create(cls, matrix_filename, checkpoint_file=None):
+        """creates an initialized instance"""
+        params = (scoring.ConfigurationBuilder().
+                  with_organism('hsa').
+                  with_matrix_filenames([matrix_filename]).
+                  with_num_iterations(NUM_ITERATIONS).
+                  with_cache_dir(CACHE_DIR).
+                  with_num_clusters(NUM_CLUSTERS).
+                  with_sequence_types(SEQUENCE_TYPES).
+                  with_search_distances(SEARCH_DISTANCES).
+                  with_scan_distances(SCAN_DISTANCES).
+                  build())
+        return cls(params, checkpoint_file)
 
     def read_matrix(self, filename):
         """returns the matrix"""

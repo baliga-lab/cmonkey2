@@ -37,15 +37,17 @@ if __name__ == '__main__':
     print('This program is licensed under the General Public License V3.')
     print('See README and LICENSE for details.\n')
     if len(sys.argv) <= 2:
-        print('Usage: ./run_cmonkey.sh <organism-code> <ratio-file> [checkpoint-file]')
+        print('Usage: ./run_cmonkey.sh <organism-code> <ratio-file> ' +
+              '[checkpoint-file]')
     else:
         checkpoint_file = None
         if len(sys.argv) > 3:
             checkpoint_file = sys.argv[3]
 
         if sys.argv[1] == 'hsa':
-            run_cmonkey(human.CMonkeyConfiguration(sys.argv[2],
-                                                   checkpoint_file=checkpoint_file))
+            run_cmonkey(human.CMonkeyConfiguration.create(
+                    sys.argv[2], checkpoint_file=checkpoint_file))
         else:
-            run_cmonkey(microbe.CMonkeyConfiguration(sys.argv[1], sys.argv[2],
-                                                     checkpoint_file=checkpoint_file))
+            run_cmonkey(microbe.CMonkeyConfiguration.create(
+                    sys.argv[1], sys.argv[2],
+                    checkpoint_file=checkpoint_file))

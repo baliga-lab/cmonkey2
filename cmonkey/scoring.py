@@ -12,6 +12,16 @@ import datamatrix as dm
 from datetime import date
 import util
 
+# Official keys to access values in the configuration map
+KEY_ORGANISM_CODE = 'organism_code'
+KEY_NUM_ITERATIONS = 'num_iterations'
+KEY_MATRIX_FILENAMES = 'matrix_filenames'
+KEY_CACHE_DIR = 'cache_dir'
+KEY_NUM_CLUSTERS = 'num_clusters'
+KEY_SEQUENCE_TYPES = 'sequence_types'
+KEY_SEARCH_DISTANCES = 'search_distances'
+KEY_SCAN_DISTANCES = 'scan_distances'
+
 
 class ScoringFunctionBase:
     """Base class for scoring functions"""
@@ -53,6 +63,7 @@ class ScoringFunctionBase:
     def weight(self, iteration):
         """returns the weight for the specified iteration"""
         return self.__weight_func(iteration)
+
 
 class ScoringFunctionCombiner:
     """Taking advantage of the composite pattern, this combiner function
@@ -99,21 +110,16 @@ class ScoringFunctionCombiner:
 class ConfigurationBase:
     """configuration base class"""
 
-    def __init__(self, organism_code, matrix_filename,
-                 num_iterations, cache_dir,
-                 checkpoint_file=None):
+    def __init__(self, config_params, checkpoint_file=None):
         """create instance"""
         logging.basicConfig(format=LOG_FORMAT,
                             datefmt='%Y-%m-%d %H:%M:%S',
                             level=logging.DEBUG)
-        if not os.path.exists(cache_dir):
-            os.mkdir(cache_dir)
-        self.__cache_dir = cache_dir
-        self.__matrix_filename = matrix_filename
-        self.__organism_code = organism_code
-        self.__start_iteration = 0
-        self.__num_iterations = num_iterations
+        self.config_params = config_params
+        if not os.path.exists(config_params[KEY_CACHE_DIR]):
+            os.mkdir(config_params[KEY_CACHE_DIR])
 
+        self.__start_iteration = 0
         self.__matrix = None
         self.__membership = None
         self.__organism = None
@@ -123,16 +129,17 @@ class ConfigurationBase:
         if checkpoint_file == None:
             today = date.today()
             self.__checkpoint_basename = "cmonkey-checkpoint-%s-%d%d%d" % (
-                organism_code, today.year,
+                config_params[KEY_ORGANISM_CODE], today.year,
                 today.month, today.day)
         else:
             self.__checkpoint_basename = checkpoint_file.split(".")[0]
             self.init_from_checkpoint(checkpoint_file)
-        logging.info("Checkpoints will be saved to '%s'", self.__checkpoint_basename)
+        logging.info("Checkpoints will be saved to '%s'",
+                     self.__checkpoint_basename)
 
     def organism_code(self):
         """returns the organism code"""
-        return self.__organism_code
+        return self.config_params[KEY_ORGANISM_CODE]
 
     def start_iteration(self):
         """returns the start iteration, if restored from a check point,
@@ -141,17 +148,18 @@ class ConfigurationBase:
 
     def num_iterations(self):
         """returns the number of iterations"""
-        return self.__num_iterations
+        return self.config_params[KEY_NUM_ITERATIONS]
 
     def cache_dir(self):
         """returns the cache directory"""
-        return self.__cache_dir
+        return self.config_params[KEY_CACHE_DIR]
 
     def matrix(self):
         """returns the input matrix"""
         if self.__matrix == None:
-            self.__matrix = self.read_matrix(
-                self.__matrix_filename).sorted_by_row_name()
+            self.__matrix = (self.read_matrix(
+                self.config_params[KEY_MATRIX_FILENAMES][0]).
+                             sorted_by_row_name())
         return self.__matrix
 
     def membership(self):
@@ -199,6 +207,7 @@ class ConfigurationBase:
         """save checkpoint data for the specified iteration"""
         with util.open_shelf("%s.%d" % (self.__checkpoint_basename,
                                         iteration)) as shelf:
+            shelf['config'] = self.config_params
             shelf['iteration'] = iteration
             self.membership().store_checkpoint_data(shelf)
 
@@ -207,5 +216,47 @@ class ConfigurationBase:
         logging.info("Continue run using checkpoint file '%s'",
                      checkpoint_filename)
         with util.open_shelf(checkpoint_filename) as shelf:
+            self.config_params = shelf['config']
             self.__start_iteration = shelf['iteration'] + 1
             self.membership().restore_checkpoint_data(shelf)
+
+
+class ConfigurationBuilder:
+
+    def __init__(self):
+        self.params = {}
+
+    def build(self):
+        return self.params
+
+    def with_organism(self, organism_code):
+        self.params[KEY_ORGANISM_CODE] = organism_code
+        return self
+
+    def with_num_iterations(self, num_iterations):
+        self.params[KEY_NUM_ITERATIONS] = num_iterations
+        return self
+
+    def with_matrix_filenames(self, filenames):
+        self.params[KEY_MATRIX_FILENAMES] = filenames
+        return self
+
+    def with_cache_dir(self, cachedir):
+        self.params[KEY_CACHE_DIR] = cachedir
+        return self
+
+    def with_num_clusters(self, num_clusters):
+        self.params[KEY_NUM_CLUSTERS] = num_clusters
+        return self
+
+    def with_sequence_types(self, sequence_types):
+        self.params[KEY_SEQUENCE_TYPES] = sequence_types
+        return self
+
+    def with_search_distances(self, distances):
+        self.params[KEY_SEARCH_DISTANCES] = distances
+        return self
+
+    def with_scan_distances(self, distances):
+        self.params[KEY_SCAN_DISTANCES] = distances
+        return self

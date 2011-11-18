@@ -179,7 +179,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             scores = [score * min_ref_score for score in scores]
         else:
             scores = [0.0 for _ in range(self.matrix().num_rows())]
-        
+
         # store the best enriched set determined
         self.__last_min_enriched_set[set_type][cluster] = (min_set, min_pvalue)
         return scores

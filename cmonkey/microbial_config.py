@@ -26,7 +26,9 @@ ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 2000
 NETWORK_SCORE_INTERVAL = 7
 MOTIF_SCORE_INTERVAL = 10
+NUM_CLUSTERS = 43
 
+SEQUENCE_TYPES = ['upstream']
 # used to select sequences and MEME
 SEARCH_DISTANCES = {'upstream': (-20, 150)}
 # used for background distribution and MAST
@@ -36,17 +38,27 @@ SCAN_DISTANCES = {'upstream': (-30, 250)}
 class CMonkeyConfiguration(scoring.ConfigurationBase):
     """Microbe-specific configuration class"""
 
-    def __init__(self,
-                 organism_code,
-                 matrix_filename,
-                 num_iterations=NUM_ITERATIONS,
-                 cache_dir=CACHE_DIR,
-                 checkpoint_file=None):
+    def __init__(self, config_params, checkpoint_file=None):
         """create instance"""
-        scoring.ConfigurationBase.__init__(self, organism_code,
-                                           matrix_filename,
-                                           num_iterations, cache_dir,
+        scoring.ConfigurationBase.__init__(self, config_params,
                                            checkpoint_file)
+
+    @classmethod
+    def create(cls, organism_code, matrix_filename,
+               checkpoint_file=None):
+        """Creates an initialized instance"""
+        params = (scoring.ConfigurationBuilder().
+                  with_organism(organism_code).
+                  with_num_iterations(NUM_ITERATIONS).
+                  with_matrix_filenames([matrix_filename]).
+                  with_cache_dir(CACHE_DIR).
+                  with_num_clusters(NUM_CLUSTERS).
+                  with_sequence_types(SEQUENCE_TYPES).
+                  with_search_distances(SEARCH_DISTANCES).
+                  with_scan_distances(SCAN_DISTANCES).
+                  build())
+        print "CONFIG: ", params
+        return cls(params, checkpoint_file)
 
     def read_matrix(self, filename):
         """returns the matrix"""
