@@ -147,7 +147,8 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                  interval=0):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
-                                             matrix, weight_func)
+                                             matrix, weight_func,
+                                             None)
         self.__organism = organism
         self.__interval = interval
 

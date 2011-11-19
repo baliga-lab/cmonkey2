@@ -290,9 +290,57 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
 
     def make_row_scoring(self):
         """returns the row scoring function"""
-        return make_gene_scoring_func(self.organism(),
-                                      self.membership(),
-                                      self.matrix())
+        row_scoring = microarray.RowScoringFunction(
+            self.membership(), self.matrix(), lambda iteration: ROW_WEIGHT)
+
+        sequence_filters = []
+        background_file_prom = meme.global_background_file(
+            self.organism(), self.matrix().row_names(), 'promoter',
+            use_revcomp=True)
+        background_file_p3utr = meme.global_background_file(
+            self.organism(), self.matrix().row_names(), 'p3utr',
+            use_revcomp=True)
+        meme_suite_prom = meme.MemeSuite430(
+            background_file=background_file_prom)
+        meme_suite_p3utr = meme.MemeSuite430(
+            background_file=background_file_p3utr)
+
+        motif_scoring = motif.MemeScoringFunction(
+            self.organism(),
+            self.membership(),
+            self.matrix(),
+            meme_suite_prom,
+            seqtype='promoter',
+            sequence_filters=sequence_filters,
+            pvalue_filter=motif.make_min_value_filter(-20.0),
+            weight_func=lambda iteration: 0.0,
+            interval=0)
+
+        network_scoring = nw.ScoringFunction(self.organism(),
+                                             self.membership(),
+                                             self.matrix(),
+                                             lambda iteration: 0.0, 7)
+
+        weeder_scoring = motif.WeederScoringFunction(
+            self.organism(), self.membership(), self.matrix(),
+            meme_suite_p3utr, 'p3utr',
+            pvalue_filter=motif.make_min_value_filter(-20.0),
+            weight_func=lambda iteration: 0.0,
+            interval=0)
+
+        #return scoring.ScoringFunctionCombiner([row_scoring, motif_scoring,
+        #                                        network_scoring, weeder_scoring])
+        pita = se.SetType.read_csv('pita', 'human_data/pita_miRNA_sets.csv')
+        target_scan = se.SetType.read_csv('target_scan',
+                                          'human_data/targetScan_miRNA_sets.csv')
+        set_types = [pita, target_scan]
+        set_enrichment_scoring = se.ScoringFunction(self.membership(),
+                                                    self.matrix(),
+                                                    set_types,
+                                                    lambda iteration: 0.0, 0)
+
+        return scoring.ScoringFunctionCombiner([row_scoring,
+                                                set_enrichment_scoring])
 
 
 def read_controls():
@@ -328,56 +376,9 @@ def read_matrix(filename):
     return intensities_to_ratios(matrix, controls, column_groups)
 
 
-def make_gene_scoring_func(organism, membership, matrix):
+#def make_gene_scoring_func(organism, membership, matrix):
     """setup the gene-related scoring functions here
     each object in this array supports the method
     compute(organism, membership, matrix) and returns
     a DataMatrix(genes x cluster)
     """
-    row_scoring = microarray.RowScoringFunction(membership, matrix,
-                                                lambda iteration: ROW_WEIGHT)
-
-    sequence_filters = []
-    background_file_prom = meme.global_background_file(organism,
-                                                       matrix.row_names(),
-                                                       'promoter',
-                                                       use_revcomp=True)
-    background_file_p3utr = meme.global_background_file(organism,
-                                                        matrix.row_names(),
-                                                        'p3utr',
-                                                        use_revcomp=True)
-    meme_suite_prom = meme.MemeSuite430(background_file=background_file_prom)
-    meme_suite_p3utr = meme.MemeSuite430(background_file=background_file_p3utr)
-
-    motif_scoring = motif.MemeScoringFunction(
-        organism,
-        membership,
-        matrix,
-        meme_suite_prom,
-        seqtype='promoter',
-        sequence_filters=sequence_filters,
-        pvalue_filter=motif.make_min_value_filter(-20.0),
-        weight_func=lambda iteration: 0.0,
-        interval=0)
-
-    network_scoring = nw.ScoringFunction(organism, membership, matrix,
-                                         lambda iteration: 0.0, 7)
-
-    weeder_scoring = motif.WeederScoringFunction(
-        organism, membership, matrix,
-        meme_suite_p3utr, 'p3utr',
-        pvalue_filter=motif.make_min_value_filter(-20.0),
-        weight_func=lambda iteration: 0.0,
-        interval=0)
-
-    #return scoring.ScoringFunctionCombiner([row_scoring, motif_scoring,
-    #                                        network_scoring, weeder_scoring])
-    pita = se.SetType.read_csv('pita', 'human_data/pita_miRNA_sets.csv')
-    target_scan = se.SetType.read_csv('target_scan',
-                                      'human_data/targetScan_miRNA_sets.csv')
-    set_types = [pita, target_scan]
-    set_enrichment_scoring = se.ScoringFunction(membership, matrix, set_types,
-                                                lambda iteration: 0.0, 0)
-
-    return scoring.ScoringFunctionCombiner([row_scoring,
-                                            set_enrichment_scoring])

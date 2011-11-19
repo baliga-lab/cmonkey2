@@ -82,69 +82,60 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             microarray.seed_column_members,
             self.config_params)
 
+    def row_scoring(self):
+        """setup the gene-related scoring functions here
+        each object in this array supports the method
+        compute(organism, membership, matrix) and returns
+        a DataMatrix(genes x cluster)
+        """
+        row_scoring = microarray.RowScoringFunction(self.membership(),
+                                                    self.matrix(),
+                                                    lambda iteration: ROW_WEIGHT)
+
+        meme_suite = meme.MemeSuite430()
+        sequence_filters = [
+            motif.unique_filter,
+            motif.get_remove_low_complexity_filter(meme_suite),
+            motif.get_remove_atgs_filter(SEARCH_DISTANCES['upstream'])]
+
+        motif_scoring = motif.MemeScoringFunction(
+            self.organism(),
+            self.membership(),
+            self.matrix(),
+            meme_suite,
+            sequence_filters=sequence_filters,
+            pvalue_filter=motif.make_min_value_filter(-20.0),
+            weight_func=lambda iteration: 0.0,
+            interval=MOTIF_SCORE_INTERVAL,
+            config_params=self.config_params)
+
+        network_scoring = nw.ScoringFunction(self.organism(), self.membership(),
+                                             self.matrix(),
+                                             lambda iteration: 0.0,
+                                             NETWORK_SCORE_INTERVAL)
+
+        return scoring.ScoringFunctionCombiner([row_scoring, motif_scoring,
+                                                network_scoring])
+
     def make_organism(self):
         """returns the organism object to work on"""
-        return make_organism(self.organism_code(), self.matrix())
-
-    def row_scoring(self):
-        """returns the row scoring function"""
-        return make_gene_scoring_func(self.organism(),
-                                      self.membership(),
-                                      self.matrix())
-
-
-def make_gene_scoring_func(organism, membership, matrix):
-    """setup the gene-related scoring functions here
-    each object in this array supports the method
-    compute(organism, membership, matrix) and returns
-    a DataMatrix(genes x cluster)
-    """
-    row_scoring = microarray.RowScoringFunction(membership, matrix,
-                                                lambda iteration: ROW_WEIGHT)
-
-    meme_suite = meme.MemeSuite430()
-    sequence_filters = [
-        motif.unique_filter,
-        motif.get_remove_low_complexity_filter(meme_suite),
-        motif.get_remove_atgs_filter(SEARCH_DISTANCES['upstream'])]
-
-    motif_scoring = motif.MemeScoringFunction(
-        organism,
-        membership,
-        matrix,
-        meme_suite,
-        sequence_filters=sequence_filters,
-        pvalue_filter=motif.make_min_value_filter(-20.0),
-        weight_func=lambda iteration: 0.0,
-        interval=MOTIF_SCORE_INTERVAL)
-
-    network_scoring = nw.ScoringFunction(organism, membership, matrix,
-                                         lambda iteration: 0.0,
-                                         NETWORK_SCORE_INTERVAL)
-
-    return scoring.ScoringFunctionCombiner([row_scoring, motif_scoring,
-                                            network_scoring])
-
-
-def make_organism(organism_code, matrix):
-    """create the organism based on the organism code"""
-    keggfile = util.DelimitedFile.read(KEGG_FILE_PATH, comment='#')
-    gofile = util.DelimitedFile.read(GO_FILE_PATH)
-    rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
-    mo_db = microbes_online.MicrobesOnline()
-    # note that for the moment, the STRING factory is hardwired to
-    # a preprocessed Halobacterium SP file
-    nw_factories = [
-        stringdb.get_network_factory2(stringdb.STRING_FILE2),
-        microbes_online.get_network_factory(
-            mo_db, max_operon_size=matrix.num_rows() / 20)]
-    org_factory = org.MicrobeFactory(org.make_kegg_code_mapper(keggfile),
-                                     org.make_rsat_organism_mapper(rsatdb),
-                                     org.make_go_taxonomy_mapper(gofile),
-                                     mo_db,
-                                     nw_factories)
-    return org_factory.create(organism_code, SEARCH_DISTANCES, SCAN_DISTANCES)
-
+        keggfile = util.DelimitedFile.read(KEGG_FILE_PATH, comment='#')
+        gofile = util.DelimitedFile.read(GO_FILE_PATH)
+        rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
+        mo_db = microbes_online.MicrobesOnline()
+        # note that for the moment, the STRING factory is hardwired to
+        # a preprocessed Halobacterium SP file
+        nw_factories = [
+            stringdb.get_network_factory2(stringdb.STRING_FILE2),
+            microbes_online.get_network_factory(
+                mo_db, max_operon_size=self.matrix().num_rows() / 20)]
+        org_factory = org.MicrobeFactory(org.make_kegg_code_mapper(keggfile),
+                                         org.make_rsat_organism_mapper(rsatdb),
+                                         org.make_go_taxonomy_mapper(gofile),
+                                         mo_db,
+                                         nw_factories)
+        return org_factory.create(self.organism_code(), SEARCH_DISTANCES,
+                                  SCAN_DISTANCES)
 
 ############################################################
 #### Replace with real seeding when everything works

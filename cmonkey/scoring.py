@@ -22,15 +22,22 @@ KEY_SEQUENCE_TYPES = 'sequence_types'
 KEY_SEARCH_DISTANCES = 'search_distances'
 KEY_SCAN_DISTANCES = 'scan_distances'
 
+KEY_MOTIF_MIN_CLUSTER_ROWS_ALLOWED = 'motif.min_cluster_rows_allowed'
+KEY_MOTIF_MAX_CLUSTER_ROWS_ALLOWED = 'motif.max_cluster_rows_allowed'
+MOTIF_MIN_CLUSTER_ROWS_ALLOWED = 3
+MOTIF_MAX_CLUSTER_ROWS_ALLOWED = 70
+
 
 class ScoringFunctionBase:
     """Base class for scoring functions"""
 
-    def __init__(self, membership, matrix, weight_func):
+    def __init__(self, membership, matrix, weight_func,
+                 config_params):
         """creates a function instance"""
         self.__membership = membership
         self.__matrix = matrix
         self.__weight_func = weight_func
+        self.config_params = config_params
 
     def membership(self):
         """returns this function's membership object"""
@@ -236,7 +243,9 @@ class ConfigurationBuilder:
             memb.KEY_MAX_CHANGES_PER_ROW: memb.MAX_CHANGES_PER_ROW,
             memb.KEY_MAX_CHANGES_PER_COL: memb.MAX_CHANGES_PER_COL,
             memb.KEY_MIN_CLUSTER_ROWS_ALLOWED: memb.MIN_CLUSTER_ROWS_ALLOWED,
-            memb.KEY_KMEANS_ITERATIONS: memb.KMEANS_ITERATIONS
+            memb.KEY_KMEANS_ITERATIONS: memb.KMEANS_ITERATIONS,
+            KEY_MOTIF_MIN_CLUSTER_ROWS_ALLOWED: MOTIF_MIN_CLUSTER_ROWS_ALLOWED,
+            KEY_MOTIF_MAX_CLUSTER_ROWS_ALLOWED: MOTIF_MAX_CLUSTER_ROWS_ALLOWED
             }
 
     def build(self):

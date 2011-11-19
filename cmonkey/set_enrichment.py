@@ -86,7 +86,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                  interval=0):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
-                                             matrix, weight_func)
+                                             matrix, weight_func, None)
         self.__interval = interval
         self.__set_types = set_types
         # stores (min_set, pvalue) pairs for each cluster and set type

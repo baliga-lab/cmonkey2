@@ -15,10 +15,6 @@ import tempfile
 import seqtools as st
 
 
-MIN_CLUSTER_ROWS_ALLOWED = 3
-MAX_CLUSTER_ROWS_ALLOWED = 70
-
-
 # Applicable sequence filters
 def unique_filter(seqs, feature_ids):
     """returns a map that contains only the keys that are in
@@ -79,11 +75,15 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
     def __init__(self, organism, membership, matrix,
                  meme_suite, seqtype,
-                 sequence_filters=[], pvalue_filter=None,
-                 weight_func=None, interval=0):
+                 sequence_filters=[],
+                 pvalue_filter=None,
+                 weight_func=None,
+                 interval=0,
+                 config_params=None):
         """creates a ScoringFunction"""
         scoring.ScoringFunctionBase.__init__(self, membership,
-                                             matrix, weight_func)
+                                             matrix, weight_func,
+                                             config_params)
         # attributes accessible by subclasses
         self.organism = organism
         self.meme_suite = meme_suite
@@ -162,6 +162,10 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
         cluster_pvalues = {}
         meme_run_results = {}
+        min_cluster_rows_allowed = self.config_params[
+            scoring.KEY_MOTIF_MIN_CLUSTER_ROWS_ALLOWED]
+        max_cluster_rows_allowed = self.config_params[
+            scoring.KEY_MOTIF_MAX_CLUSTER_ROWS_ALLOWED]
 
         for cluster in range(1, self.num_clusters() + 1):
             logging.info("compute motif scores for cluster %d", cluster)
@@ -170,8 +174,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             seqs = self.organism.sequences_for_genes_search(
                 genes, seqtype=self.seqtype)
             seqs = apply_sequence_filters(seqs, feature_ids)
-            if (len(seqs) >= MIN_CLUSTER_ROWS_ALLOWED
-                and len(seqs) <= MAX_CLUSTER_ROWS_ALLOWED):
+            if (len(seqs) >= min_cluster_rows_allowed
+                and len(seqs) <= max_cluster_rows_allowed):
                 meme_run_results[cluster] = self.compute_meme_run(seqs)
 
                 pvalues = {}
@@ -198,13 +202,17 @@ class MemeScoringFunction(MotifScoringFunctionBase):
     def __init__(self, organism, membership, matrix,
                  meme_suite,
                  seqtype='upstream',
-                 sequence_filters=[], pvalue_filter=None,
-                 weight_func=None, interval=0):
+                 sequence_filters=[],
+                 pvalue_filter=None,
+                 weight_func=None,
+                 interval=0,
+                 config_params=None):
         """creates a ScoringFunction"""
         MotifScoringFunctionBase.__init__(self, organism, membership,
                                           matrix, meme_suite, seqtype,
                                           sequence_filters, pvalue_filter,
-                                          weight_func, interval)
+                                          weight_func, interval,
+                                          config_params)
 
     def compute_meme_run(self, seqs):
         """performs a MEME run"""
@@ -222,7 +230,7 @@ class WeederScoringFunction(MotifScoringFunctionBase):
         MotifScoringFunctionBase.__init__(self, organism, membership, matrix,
                                           meme_suite, seqtype,
                                           sequence_filters, pvalue_filter,
-                                          weight_func, interval)
+                                          weight_func, interval, None)
 
     def compute_meme_run(self, seqs):
         """computes the values of a meme run"""
