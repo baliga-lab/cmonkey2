@@ -72,7 +72,8 @@ class ClusterMembershipTest(unittest.TestCase):
         membership = memb.ClusterMembership(
             {'R1': [1, 3], 'R2': [2, 3]},
             {'C1': [1, 2], 'C2': [2]},
-            3, 2, 5, 0, 0, 0, 0)
+            {'memb.num_clusters': 3,
+             'memb.clusters_per_row': 2})
         self.assertEquals([1, 3], membership.clusters_for_row('R1'))
         self.assertEquals([2, 3], membership.clusters_for_row('R2'))
         self.assertEquals([], membership.clusters_for_row('R3'))
@@ -103,7 +104,9 @@ class ClusterMembershipTest(unittest.TestCase):
         membership = memb.ClusterMembership.create(datamatrix,
                                                    seed_row_memberships,
                                                    seed_col_memberships,
-                                                   1, 2, 2, 0, 0, 0, 0)
+                                                   {'memb.clusters_per_row': 2,
+                                                    'memb.num_clusters': 1,
+                                                    'memb.clusters_per_col': 2})
         self.assertTrue(seed_row_memberships.was_called)
         self.assertTrue(seed_col_memberships.was_called)
         self.assertEquals(1, membership.num_clusters())
@@ -115,7 +118,10 @@ class ClusterMembershipTest(unittest.TestCase):
         seed_col_memberships = MockSeedColumnMemberships()
         membership = memb.ClusterMembership.create(datamatrix,
                                                    seed_row_memberships,
-                                                   seed_col_memberships)
+                                                   seed_col_memberships,
+                                                   {'memb.clusters_per_col': 2,
+                                                    'memb.clusters_per_row': 2,
+                                                    'memb.num_clusters': 43})
         self.assertTrue(seed_row_memberships.was_called)
         self.assertTrue(seed_col_memberships.was_called)
         self.assertEquals(memb.NUM_CLUSTERS, membership.num_clusters())
@@ -151,13 +157,8 @@ class ClusterMembershipTest(unittest.TestCase):
         membership = memb.ClusterMembership(
             row_is_member_of={'R1': [1, 3], 'R2': [2, 3]},
             column_is_member_of={},
-            num_clusters=3,
-            num_clusters_per_row=2,
-            num_clusters_per_col=5,
-            probability_seeing_row_change=1.0,
-            probability_seeing_col_change=1.0,
-            max_changes_per_row=1,
-            max_changes_per_column=1)
+            config_params={'memb.clusters_per_col': 5,
+                           'memb.clusters_per_row': 2})
         membership.add_cluster_to_row('R3', 1)
         self.assertEquals([1], membership.clusters_for_row('R3'))
         self.assertEquals(['R1', 'R3'], membership.rows_for_cluster(1))
@@ -167,13 +168,7 @@ class ClusterMembershipTest(unittest.TestCase):
         membership = memb.ClusterMembership(
             row_is_member_of={'R1': [1, 3], 'R2': [2, 3]},
             column_is_member_of={},
-            num_clusters=3,
-            num_clusters_per_row=2,
-            num_clusters_per_col=5,
-            probability_seeing_row_change=1.0,
-            probability_seeing_col_change=1.0,
-            max_changes_per_row=1,
-            max_changes_per_column=1)
+            config_params={})
         self.assertRaises(Exception,
                           membership.add_cluster_to_row, 'R1', 2)
 
@@ -182,13 +177,8 @@ class ClusterMembershipTest(unittest.TestCase):
         membership = memb.ClusterMembership(
             row_is_member_of={},
             column_is_member_of={'C1': [1, 3], 'C2': [2, 3]},
-            num_clusters=3,
-            num_clusters_per_row=1,
-            num_clusters_per_col=2,
-            probability_seeing_row_change=1.0,
-            probability_seeing_col_change=1.0,
-            max_changes_per_row=1,
-            max_changes_per_column=1)
+            config_params={'memb.clusters_per_col': 2,
+                           'memb.clusters_per_row': 1})
         membership.add_cluster_to_column('C3', 1)
         self.assertEquals([1], membership.clusters_for_column('C3'))
         self.assertEquals(['C1', 'C3'], membership.columns_for_cluster(1))
@@ -198,13 +188,7 @@ class ClusterMembershipTest(unittest.TestCase):
         membership = memb.ClusterMembership(
             row_is_member_of={},
             column_is_member_of={'C1': [1, 3], 'C2': [2, 3]},
-            num_clusters=3,
-            num_clusters_per_row=1,
-            num_clusters_per_col=2,
-            probability_seeing_row_change=1.0,
-            probability_seeing_col_change=1.0,
-            max_changes_per_row=1,
-            max_changes_per_column=1)
+            config_params={})
         self.assertRaises(Exception,
                           membership.add_cluster_to_column, 'C1', 2)
 
@@ -213,13 +197,7 @@ class ClusterMembershipTest(unittest.TestCase):
         membership = memb.ClusterMembership(
             row_is_member_of={'R1': [1, 3], 'R2': [2, 3]},
             column_is_member_of={},
-            num_clusters=3,
-            num_clusters_per_row=2,
-            num_clusters_per_col=5,
-            probability_seeing_row_change=1.0,
-            probability_seeing_col_change=1.0,
-            max_changes_per_row=1,
-            max_changes_per_column=1)
+            config_params={})
         membership.remove_cluster_from_row('R1', 3)
         self.assertEquals([1], membership.clusters_for_row('R1'))
         self.assertEquals(['R2'], membership.rows_for_cluster(3))
@@ -229,13 +207,7 @@ class ClusterMembershipTest(unittest.TestCase):
         membership = memb.ClusterMembership(
             row_is_member_of={},
             column_is_member_of={'C1': [1, 3], 'C2': [2, 3]},
-            num_clusters=3,
-            num_clusters_per_row=2,
-            num_clusters_per_col=2,
-            probability_seeing_row_change=1.0,
-            probability_seeing_col_change=1.0,
-            max_changes_per_row=1,
-            max_changes_per_column=1)
+            config_params={})
         membership.remove_cluster_from_column('C1', 3)
         self.assertEquals([1], membership.clusters_for_column('C1'))
         self.assertEquals(['C2'], membership.columns_for_cluster(3))
@@ -244,13 +216,7 @@ class ClusterMembershipTest(unittest.TestCase):
         membership = memb.ClusterMembership(
             row_is_member_of={},
             column_is_member_of={'C1': [1, 3], 'C2': [2, 3]},
-            num_clusters=3,
-            num_clusters_per_row=1,
-            num_clusters_per_col=2,
-            probability_seeing_row_change=1.0,
-            probability_seeing_col_change=1.0,
-            max_changes_per_row=1,
-            max_changes_per_column=1)
+            config_params={'memb.clusters_per_col': 2})
         membership.replace_column_cluster('C1', 1, 2)
         self.assertEquals([3, 2], membership.clusters_for_column('C1'))
         self.assertEquals(['C1', 'C2'], membership.columns_for_cluster(2))
@@ -259,13 +225,7 @@ class ClusterMembershipTest(unittest.TestCase):
         membership = memb.ClusterMembership(
             row_is_member_of={'R1': [1, 3], 'R2': [2, 3]},
             column_is_member_of={},
-            num_clusters=3,
-            num_clusters_per_row=2,
-            num_clusters_per_col=2,
-            probability_seeing_row_change=1.0,
-            probability_seeing_col_change=1.0,
-            max_changes_per_row=1,
-            max_changes_per_column=1)
+            config_params={'memb.clusters_per_row': 2})
         membership.replace_row_cluster('R1', 1, 2)
         self.assertEquals([3, 2], membership.clusters_for_row('R1'))
         self.assertEquals(['R1', 'R2'], membership.rows_for_cluster(2))

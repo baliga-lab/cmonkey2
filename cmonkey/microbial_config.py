@@ -88,9 +88,9 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
         compute(organism, membership, matrix) and returns
         a DataMatrix(genes x cluster)
         """
-        row_scoring = microarray.RowScoringFunction(self.membership(),
-                                                    self.matrix(),
-                                                    lambda iteration: ROW_WEIGHT)
+        row_scoring = microarray.RowScoringFunction(
+            self.membership(), self.matrix(),
+            lambda iteration: ROW_WEIGHT)
 
         meme_suite = meme.MemeSuite430()
         sequence_filters = [
@@ -109,7 +109,8 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             interval=MOTIF_SCORE_INTERVAL,
             config_params=self.config_params)
 
-        network_scoring = nw.ScoringFunction(self.organism(), self.membership(),
+        network_scoring = nw.ScoringFunction(self.organism(),
+                                             self.membership(),
                                              self.matrix(),
                                              lambda iteration: 0.0,
                                              NETWORK_SCORE_INTERVAL)

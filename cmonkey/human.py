@@ -328,11 +328,9 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             weight_func=lambda iteration: 0.0,
             interval=0)
 
-        #return scoring.ScoringFunctionCombiner([row_scoring, motif_scoring,
-        #                                        network_scoring, weeder_scoring])
         pita = se.SetType.read_csv('pita', 'human_data/pita_miRNA_sets.csv')
-        target_scan = se.SetType.read_csv('target_scan',
-                                          'human_data/targetScan_miRNA_sets.csv')
+        target_scan = se.SetType.read_csv(
+            'target_scan', 'human_data/targetScan_miRNA_sets.csv')
         set_types = [pita, target_scan]
         set_enrichment_scoring = se.ScoringFunction(self.membership(),
                                                     self.matrix(),
@@ -374,11 +372,3 @@ def read_matrix(filename):
     select_rows = select_probes(matrix, 2000, column_groups)
     matrix = matrix.submatrix_by_rows(select_rows)
     return intensities_to_ratios(matrix, controls, column_groups)
-
-
-#def make_gene_scoring_func(organism, membership, matrix):
-    """setup the gene-related scoring functions here
-    each object in this array supports the method
-    compute(organism, membership, matrix) and returns
-    a DataMatrix(genes x cluster)
-    """
