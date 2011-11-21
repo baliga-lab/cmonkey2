@@ -57,7 +57,6 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
                   with_search_distances(SEARCH_DISTANCES).
                   with_scan_distances(SCAN_DISTANCES).
                   build())
-        print "CONFIG: ", params
         return cls(params, checkpoint_file)
 
     def read_matrix(self, filename):
@@ -68,17 +67,13 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
         return matrix_factory.create_from(infile)
 
     def make_membership(self):
-        """returns the seeded membership
-        We are using a fake row seed here in order to have reproducible,
-        deterministic results for development. Since the column seed is
-        deterministic and dependent on the row seed, we can use the real
-        column seed implementation here.
-        We currently assume the halo_ratios5.tsv file as input"""
-        fake_row_membership_seed = util.DelimitedFileMapper(
-            util.DelimitedFile.read('clusters.tsv', has_header=False), 0, 1)
+        """returns the seeded membership"""
+        #fake_row_membership_seed = util.DelimitedFileMapper(
+        #    util.DelimitedFile.read('clusters.tsv', has_header=False), 0, 1)
         return memb.ClusterMembership.create(
             self.matrix().sorted_by_row_name(),
-            fake_seed_row_memberships(fake_row_membership_seed),
+            #fake_seed_row_memberships(fake_row_membership_seed),
+            memb.make_kmeans_row_seeder(NUM_CLUSTERS, NUM_ITERATIONS),
             microarray.seed_column_members,
             self.config_params)
 

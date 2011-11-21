@@ -122,9 +122,6 @@ class ConfigurationBase:
         logging.basicConfig(format=LOG_FORMAT,
                             datefmt='%Y-%m-%d %H:%M:%S',
                             level=logging.DEBUG)
-        self.config_params = config_params
-        if not os.path.exists(config_params[KEY_CACHE_DIR]):
-            os.mkdir(config_params[KEY_CACHE_DIR])
 
         self.__start_iteration = 0
         self.__matrix = None
@@ -134,6 +131,9 @@ class ConfigurationBase:
         self.__column_scoring = None
 
         if checkpoint_file == None:
+            self.config_params = config_params
+            if not os.path.exists(config_params[KEY_CACHE_DIR]):
+                os.mkdir(config_params[KEY_CACHE_DIR])
             today = date.today()
             self.__checkpoint_basename = "cmonkey-checkpoint-%s-%d%d%d" % (
                 config_params[KEY_ORGANISM_CODE], today.year,
@@ -172,6 +172,7 @@ class ConfigurationBase:
     def membership(self):
         """returns the seeded membership"""
         if self.__membership == None:
+            logging.info("creating and seeding memberships")
             self.__membership = self.make_membership()
         return self.__membership
 
@@ -225,7 +226,10 @@ class ConfigurationBase:
         with util.open_shelf(checkpoint_filename) as shelf:
             self.config_params = shelf['config']
             self.__start_iteration = shelf['iteration'] + 1
-            self.membership().restore_checkpoint_data(shelf)
+
+            self.__membership = memb.ClusterMembership.restore_from_checkpoint(
+                self.config_params, shelf)
+            # restore saved state in scoring functions
 
 
 class ConfigurationBuilder:

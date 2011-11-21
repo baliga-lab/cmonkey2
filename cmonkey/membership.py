@@ -33,6 +33,8 @@ KEY_MAX_CHANGES_PER_ROW = 'memb.max_changes_per_row'
 KEY_MAX_CHANGES_PER_COL = 'memb.max_changes_per_col'
 KEY_MIN_CLUSTER_ROWS_ALLOWED = 'memb.min_cluster_rows_allowed'
 KEY_KMEANS_ITERATIONS = 'memb.kmeans_iterations'
+KEY_ROW_IS_MEMBER_OF = 'memb.row_is_member_of'
+KEY_COL_IS_MEMBER_OF = 'memb.col_is_member_of'
 
 
 class ClusterMembership:
@@ -483,11 +485,16 @@ class ClusterMembership:
         """Save memberships into checkpoint"""
         logging.info("Saving checkpoint data for memberships in iteration %d",
                      shelf['iteration'])
+        shelf[KEY_ROW_IS_MEMBER_OF] = self.__row_is_member_of
+        shelf[KEY_COL_IS_MEMBER_OF] = self.__column_is_member_of
 
-    def restore_checkpoint_data(self, shelf):
+    @classmethod
+    def restore_from_checkpoint(cls, config_params, shelf):
         """Restore memberships from checkpoint information"""
-        logging.info("Restoring checkpoint for memberships in iteration %d",
-                     shelf['iteration'])
+        logging.info("Restoring cluster memberships from checkpoint data")
+        row_is_member_of = shelf[KEY_ROW_IS_MEMBER_OF]
+        col_is_member_of = shelf[KEY_COL_IS_MEMBER_OF]
+        return cls(row_is_member_of, col_is_member_of, config_params)
 
 
 def _get_density_scores(membership, row_scores, col_scores):

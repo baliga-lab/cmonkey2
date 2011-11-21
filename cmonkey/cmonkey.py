@@ -9,6 +9,7 @@ import microbial_config as microbe
 import human
 
 CMONKEY_VERSION = '4.0'
+CHECKPOINT_INTERVAL = 10
 
 
 def run_cmonkey(config):
@@ -23,7 +24,8 @@ def run_cmonkey(config):
                                    gene_scoring.compute(iteration),
                                    cond_scoring.compute(iteration),
                                    iteration, config.num_iterations())
-        config.save_checkpoint_data(iteration)
+        if iteration > 0 and  iteration % CHECKPOINT_INTERVAL == 0:
+            config.save_checkpoint_data(iteration)
     print "Done !!!!"
     print "cluster\t# rows"
     for cluster in range(1, config.membership().num_clusters() + 1):
