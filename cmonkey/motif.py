@@ -120,6 +120,10 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                 result[feature_id] = row_name
         return result
 
+    def name(self):
+        """returns the name of this scoring function"""
+        return "Motif"""
+
     def compute(self, iteration, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
         if (self.interval == 0 or
@@ -214,6 +218,10 @@ class MemeScoringFunction(MotifScoringFunctionBase):
                                           weight_func, interval,
                                           config_params)
 
+    def name(self):
+        """returns the name of this scoring function"""
+        return "MEME"
+
     def compute_meme_run(self, seqs):
         """performs a MEME run"""
         return self.meme_suite.run_meme(seqs, self.used_seqs)
@@ -231,6 +239,10 @@ class WeederScoringFunction(MotifScoringFunctionBase):
                                           meme_suite, seqtype,
                                           sequence_filters, pvalue_filter,
                                           weight_func, interval, None)
+
+    def name(self):
+        """returns the name of this scoring function"""
+        return "Weeder"
 
     def compute_meme_run(self, seqs):
         """computes the values of a meme run"""

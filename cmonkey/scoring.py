@@ -39,6 +39,10 @@ class ScoringFunctionBase:
         self.__weight_func = weight_func
         self.config_params = config_params
 
+    def name(self):
+        """returns the name of this function"""
+        raise Exception("please implement me")
+
     def membership(self):
         """returns this function's membership object"""
         return self.__membership
@@ -71,6 +75,14 @@ class ScoringFunctionBase:
         """returns the weight for the specified iteration"""
         return self.__weight_func(iteration)
 
+    def store_checkpoint_data(self, shelf):
+        """Default implementation does not store checkpoint data"""
+        pass
+
+    def restore_checkpoint_data(self, shelf):
+        """Default implementation does not store checkpoint data"""
+        pass
+
 
 class ScoringFunctionCombiner:
     """Taking advantage of the composite pattern, this combiner function
@@ -78,9 +90,12 @@ class ScoringFunctionCombiner:
     allow for nested scoring functions as they are used in the motif
     scoring
     """
-    def __init__(self, scoring_functions, weight_func=None):
+    def __init__(self, membership, scoring_functions, weight_func=None,
+                 log_subresults=False):
         """creates a combiner instance"""
+        self.__membership = membership
         self.__scoring_functions = scoring_functions
+        self.__log_subresults = log_subresults
 
     def compute(self, iteration, ref_matrix=None):
         """compute scores for one iteration"""
@@ -90,6 +105,7 @@ class ScoringFunctionCombiner:
         for scoring_function in self.__scoring_functions:
             # This  is actually a hack in order to propagate
             # a reference matrix to the compute function
+            # This could have negative impact on scalability
             if reference_matrix == None and len(result_matrices) > 0:
                 reference_matrix = result_matrices[0]
 
@@ -97,6 +113,9 @@ class ScoringFunctionCombiner:
             if matrix != None:
                 result_matrices.append(matrix)
                 score_weights.append(scoring_function.weight(iteration))
+
+                if self.__log_subresults:
+                    self.__log_subresult(scoring_function, matrix)
 
         if len(result_matrices) > 0:
             result_matrices = dm.quantile_normalize_scores(result_matrices,
@@ -109,9 +128,30 @@ class ScoringFunctionCombiner:
                 self.__scoring_functions[index].weight(iteration))
         return combined_score
 
+    def __log_subresult(self, score_function, matrix):
+        scores = []
+        for cluster in range(1, matrix.num_columns() + 1):
+            for row in range(matrix.num_rows()):
+                if self.__membership.is_row_member_of(matrix.row_name(row),
+                                                      cluster):
+                    scores.append(matrix[row][cluster - 1])
+        logging.info("function '%s', trim mean score: %f",
+                     score_function.name(),
+                     util.trim_mean(scores, 0.05))
+
     def weight(self, iteration):
         """returns the weight for the specified iteration"""
         return self.__weight_func(iteration)
+
+    def store_checkpoint_data(self, shelf):
+        """recursively invokes store_checkpoint_data() on the children"""
+        for scoring_func in self.__scoring_functions:
+            scoring_func.store_checkpoint_data(shelf)
+
+    def restore_checkpoint_data(self, shelf):
+        """recursively invokes store_checkpoint_data() on the children"""
+        for scoring_func in self.__scoring_functions:
+            scoring_func.restore_checkpoint_data(shelf)
 
 
 class ConfigurationBase:
@@ -218,6 +258,8 @@ class ConfigurationBase:
             shelf['config'] = self.config_params
             shelf['iteration'] = iteration
             self.membership().store_checkpoint_data(shelf)
+            self.row_scoring().store_checkpoint_data(shelf)
+            self.column_scoring().store_checkpoint_data(shelf)
 
     def init_from_checkpoint(self, checkpoint_filename):
         """initialize this object from a checkpoint file"""
@@ -229,7 +271,8 @@ class ConfigurationBase:
 
             self.__membership = memb.ClusterMembership.restore_from_checkpoint(
                 self.config_params, shelf)
-            # restore saved state in scoring functions
+            self.row_scoring().restore_checkpoint_data(shelf)
+            self.column_scoring().restore_checkpoint_data(shelf)
 
 
 class ConfigurationBuilder:

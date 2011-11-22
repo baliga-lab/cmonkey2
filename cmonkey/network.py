@@ -152,7 +152,13 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         self.__organism = organism
         self.__interval = interval
 
+    def name(self):
+        """returns the name of this function"""
+        return "Network"
+
     def compute(self, iteration, ref_matrix=None):
+        """compute method"""
+
         if (self.__interval == 0 or
             (iteration > 0 and (iteration % self.__interval == 0))):
             print "RUN NETWORK SCORING IN ITERATION ", iteration

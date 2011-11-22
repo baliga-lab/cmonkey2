@@ -230,6 +230,10 @@ class RowScoringFunction(scoring.ScoringFunctionBase):
                                              matrix, weight_func,
                                              None)
 
+    def name(self):
+        """returns the name of this scoring function"""
+        return "Row"
+
     def compute(self, iteration, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
         return compute_row_scores(self.membership(),
@@ -247,6 +251,10 @@ class ColumnScoringFunction(scoring.ScoringFunctionBase):
         """create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
                                              matrix, None, None)
+
+    def name(self):
+        """returns the name of this scoring function"""
+        return "Column"
 
     def compute(self, iteration, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""

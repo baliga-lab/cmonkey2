@@ -110,8 +110,10 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
                                              lambda iteration: 0.0,
                                              NETWORK_SCORE_INTERVAL)
 
-        return scoring.ScoringFunctionCombiner([row_scoring, motif_scoring,
-                                                network_scoring])
+        return scoring.ScoringFunctionCombiner(self.membership(),
+                                               [row_scoring, motif_scoring,
+                                                network_scoring],
+                                               log_subresults=True)
 
     def make_organism(self):
         """returns the organism object to work on"""
