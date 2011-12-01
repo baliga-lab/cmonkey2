@@ -29,7 +29,9 @@ class DataMatrix:
             for row_index in range(nrows):
                 inrow = values[row_index]
                 if len(inrow) != ncols:
-                    raise ValueError("number of columns should be %d" % ncols)
+                    raise ValueError(("row %d: number of columns should be %d " +
+                                     "(was %d)")
+                                     % (row_index, ncols, len(inrow)))
 
         if not row_names:
             self.__row_names = ["Row " + str(i) for i in range(nrows)]
@@ -387,9 +389,7 @@ def row_filter(matrix, fun):
     """generalize a matrix filter that is applying a function for each row"""
     values = []
     for row_index in range(matrix.num_rows()):
-        row = [value for value in matrix[row_index]
-               if not numpy.isnan(value)]
-        values.append(fun(row))
+        values.append(fun(matrix[row_index]))
     result = DataMatrix(matrix.num_rows(), matrix.num_columns(),
                         matrix.row_names(), matrix.column_names(),
                         values=values)
@@ -402,9 +402,12 @@ def center_scale_filter(matrix):
 
     def center_scale(row):
         """centers the provided row around the median"""
-        center = scipy.median(row)
-        scale = util.r_stddev(row)
-        return [((value - center) / scale) for value in row]
+        filtered = [value for value in row if not numpy.isnan(value)]
+        center = scipy.median(filtered)
+        scale = util.r_stddev(filtered)
+        nurow = [((value - center) / scale)
+                if not numpy.isnan(value) else value for value in row]
+        return nurow
 
     return row_filter(matrix, center_scale)
 

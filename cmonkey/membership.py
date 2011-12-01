@@ -11,7 +11,10 @@ import util
 import random
 import logging
 import sys
+import numpy
 import scipy.cluster.vq as clvq
+import rpy2.robjects as robjects
+
 
 # Default values for membership creation
 NUM_CLUSTERS = 43
@@ -22,7 +25,6 @@ PROB_SEEING_COL_CHANGE = 1.0
 MAX_CHANGES_PER_ROW = 1
 MAX_CHANGES_PER_COL = 5
 MIN_CLUSTER_ROWS_ALLOWED = 3
-KMEANS_ITERATIONS = 10
 
 KEY_NUM_CLUSTERS = 'memb.num_clusters'
 KEY_CLUSTERS_PER_ROW = 'memb.clusters_per_row'
@@ -32,7 +34,6 @@ KEY_PROB_COL_CHANGE = 'memb.prob_col_change'
 KEY_MAX_CHANGES_PER_ROW = 'memb.max_changes_per_row'
 KEY_MAX_CHANGES_PER_COL = 'memb.max_changes_per_col'
 KEY_MIN_CLUSTER_ROWS_ALLOWED = 'memb.min_cluster_rows_allowed'
-KEY_KMEANS_ITERATIONS = 'memb.kmeans_iterations'
 KEY_ROW_IS_MEMBER_OF = 'memb.row_is_member_of'
 KEY_COL_IS_MEMBER_OF = 'memb.col_is_member_of'
 
@@ -625,25 +626,19 @@ def std_fuzzy_coefficient(iteration, num_iterations):
                             (float(num_iterations) / 3.0))) + 0.05
 
 
-def make_kmeans_row_seeder(num_clusters, num_iterations):
+def make_kmeans_row_seeder(num_clusters):
     """creates a row seeding function based on k-means"""
-
-    def contains_all_clusters(seeding):
-        """check whether the seeding contains all clusters"""
-        seed_values = set(seeding)
-        for cluster in range(num_clusters):
-            if cluster not in seed_values:
-                return False
-        return True
 
     def seed(row_membership, matrix):
         """uses k-means seeding to seed row membership"""
-        seeding = []
-        while not contains_all_clusters(seeding):
-            if len(seeding) > 0:
-                logging.info("not all clusters where assigned, retry seeding")
-            seeding = clvq.kmeans2(matrix.values(), num_clusters,
-                                   num_iterations, minit='points')[1]
+        flat_values = [value if not numpy.isnan(value) else 0
+                       for value in matrix.flat_values()]
+        matrix_values = robjects.r.matrix(
+            robjects.FloatVector(flat_values), nrow=matrix.num_rows())
+        kmeans = robjects.r['kmeans']
+        kwargs = {'centers': num_clusters, 'iter.max': 20, 'nstart': 2}
+        seeding = kmeans(matrix_values, **kwargs)[0]
         for row in range(len(seeding)):
-            row_membership[row][0] = seeding[row] + 1
+            row_membership[row][0] = seeding[row]
+
     return seed

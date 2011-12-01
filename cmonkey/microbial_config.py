@@ -73,7 +73,7 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
         return memb.ClusterMembership.create(
             self.matrix().sorted_by_row_name(),
             #fake_seed_row_memberships(fake_row_membership_seed),
-            memb.make_kmeans_row_seeder(NUM_CLUSTERS, NUM_ITERATIONS),
+            memb.make_kmeans_row_seeder(NUM_CLUSTERS),
             microarray.seed_column_members,
             self.config_params)
 

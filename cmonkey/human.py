@@ -272,12 +272,10 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
 
     def make_membership(self):
         """returns the seeded membership"""
-        kmeans_iterations = self.config_params[memb.KEY_KMEANS_ITERATIONS]
         num_clusters = self.config_params[memb.KEY_NUM_CLUSTERS]
         return memb.ClusterMembership.create(
             self.matrix().sorted_by_row_name(),
-            memb.make_kmeans_row_seeder(num_clusters,
-                                        kmeans_iterations),
+            memb.make_kmeans_row_seeder(num_clusters),
             microarray.seed_column_members,
             self.config_params)
 
