@@ -82,23 +82,38 @@ def make_operon_pairs(operon, features):
 
     feature_map = {}  # mapping from VNG name to feature
     num_reverse = 0
+
+    # make sure we only take the genes that we have genomic information
+    # for, and ignore the rest
+    available_operon_genes = []
     for gene in operon:
+        if gene in features.keys():
+            available_operon_genes.append(gene)
+        else:
+            logging.warn("Microbles Online operon gene '%s' not found in " +
+                         "RSAT features", gene)
+
+    for gene in available_operon_genes:
         feature_map[gene] = features[gene]
         if feature_map[gene].location().reverse:
             num_reverse += 1
 
-    num_total = len(operon)
-    percent_reverse = float(num_reverse) / float(num_total)
-    if percent_reverse > 0.6:
-        head = get_reverse_head(feature_map)
-    elif percent_reverse < 0.4:
-        head = get_forward_head(feature_map)
+    num_total = len(available_operon_genes)
+    if num_total > 0:
+        percent_reverse = float(num_reverse) / float(num_total)
+        if percent_reverse > 0.6:
+            head = get_reverse_head(feature_map)
+        elif percent_reverse < 0.4:
+            head = get_forward_head(feature_map)
+        else:
+            logging.warning("can't determine head of operon - amounts " +
+                            "of reverse and forward genes are too similar (%f-%f)",
+                            percent_reverse, 1.0 - percent_reverse)
+            return []
+        return [(head, gene) for gene in available_operon_genes]
     else:
-        logging.warning("can't determine head of operon - amounts " +
-                        "of reverse and forward genes are too similar (%f-%f)",
-                        percent_reverse, 1.0 - percent_reverse)
+        logging.warning("Operon did not contain any available genes")
         return []
-    return [(head, gene) for gene in operon]
 
 
 def build_operons(names1, names2):

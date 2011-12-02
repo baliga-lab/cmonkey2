@@ -1,15 +1,1153 @@
+# Eukaryotes
 ## Animals
 ### Vertebrates
 #### Mammals
 T01001	hsa	H.sapiens	Homo sapiens (human)
+T01005	ptr	P.troglodytes	Pan troglodytes (chimpanzee)
+T01028	mcc	M.mulatta	Macaca mulatta (rhesus monkey)
 T01002	mmu	M.musculus	Mus musculus (mouse)
 T01003	rno	R.norvegicus	Rattus norvegicus (rat)
+T01007	cfa	C.familiaris	Canis familiaris (dog)
+T01008	bta	B.taurus	Bos taurus (cow)
+T01009	ssc	S.scrofa	Sus scrofa (pig)
+T01058	ecb	E.caballus	Equus caballus (horse)
+T01031	mdo	M.domestica	Monodelphis domestica (opossum)
+T01045	oaa	O.anatinus	Ornithorhynchus anatinus (platypus)
+#### Birds
+T01006	gga	G.gallus	Gallus gallus (chicken)
+#### Amphibians
+T01010	xla	X.laevis	Xenopus laevis (African clawed frog)
+T01011	xtr	X.tropicalis	Xenopus tropicalis (western clawed frog)
+#### Fishes
+T01004	dre	D.rerio	Danio rerio (zebrafish)
+T10001	dfru	F.rubripes	Fugu rubripes (Japanese puffer fish)
+T10005	dtni	T.nigroviridis	Tetraodon nigroviridis (green spotted puffer)
+T10011	dola	O.latipes	Oryzias latipes (Japanese medaka)
+### Lancelets
+T01074	bfo	B.floridae	Branchiostoma floridae (Florida lancelet)
+### Ascidians
+T01056	cin	C.intestinalis	Ciona intestinalis (sea squirt)
+T20027	ecsv	C.savignyi_est	Ciona savignyi (EST)
+T20029	emte	M.tectiformis_est	Molgula tectiformis (EST)
+### Echinoderms
+T01019	spu	S.purpuratus	Strongylocentrotus purpuratus (purple sea urchin)
+T20028	espu	S.purpuratus_est	Strongylocentrotus purpuratus (purple sea urchin) (EST)
+### Cnidarians
+T01037	nve	N.vectensis	Nematostella vectensis (sea anemone)
+### Insects
+#### Flies
+T00030(2000)	dme	D.melanogaster	Drosophila melanogaster (fruit fly)
+T01032	dpo	D.pseudoobscura	Drosophila pseudoobscura pseudoobscura
+T01059	dan	D.ananassae	Drosophila ananassae
+T01060	der	D.erecta	Drosophila erecta
+T01063	dpe	D.persimilis	Drosophila persimilis
+T01064	dse	D.sechellia	Drosophila sechellia
+T01065	dsi	D.simulans	Drosophila simulans
+T01067	dwi	D.willistoni	Drosophila willistoni
+T01068	dya	D.yakuba	Drosophila yakuba
+T01061	dgr	D.grimshawi	Drosophila grimshawi
+T01062	dmo	D.mojavensis	Drosophila mojavensis
+T01066	dvi	D.virilis	Drosophila virilis
+T01036	aga	A.gambiae	Anopheles gambiae (mosquito)
+T01053	aag	A.aegypti	Aedes aegypti (yellow fever mosquito)
 #### Bees
 T01057	ame	A.mellifera	Apis mellifera (honey bee)
+#### Butterflies and moths
+T10006	dbmo	B.mori	Bombyx mori (silkmoth)
+#### Beetles
+T01046	tca	T.castaneum	Tribolium castaneum (red flour beetle)
+#### Aphids
+T01076	api	A.pisum	Acyrthosiphon pisum (pea aphid)
+### Nematodes
+T00019(1998)	cel	C.elegans	Caenorhabditis elegans (nematode)
+T01054	cbr	C.briggsae	Caenorhabditis briggsae
+T01050	bmy	B.malayi	Brugia malayi (filaria)
+### Flatworms
+T20026	esja	S.japonicum_est	Schistosoma japonicum (fluke) (EST)
+### Placozoans
+T01069	tad	T.adhaerens	Trichoplax adhaerens
 
+## Plants
+### Dicotyledons
+#### Mustard family
+T00041(2000)	ath	A.thaliana	Arabidopsis thaliana (thale cress)
+T20005	eath	A.thaliana_est	Arabidopsis thaliana (thale cress) (EST)
+T20025	ebna	B.napus_est	Brassica napus (rape) (EST)
+T20054	ebrp	B.rapa_est	Brassica rapa subsp. pekinensis (Chinese cabbage) (EST)
+T20069	erst	R.sativus_est	Raphanus sativus (radish) (EST)
+T20068	errr	R.raphanistrum_est	Raphanus raphanistrum subsp. raphanistrum (wild radish) (EST)
+#### Mallow family
+T20035	eghi	G.hirsutum_est	Gossypium hirsutum (upland cotton) (EST)
+T20019	egra	G.raimondii_est	Gossypium raimondii (EST)
+T20024	egar	G.arboreum_est	Gossypium arboreum (tree cotton) (EST)
+#### Rue family
+T20023	ecsi	C.sinensis_est	Citrus sinensis (Valencia orange) (EST)
+T20055	eccl	C.clementina_est	Citrus clementina (mandarin orange) (EST)
+#### Pea family
+T20014	elja	L.japonicus_est	Lotus japonicus (lotus) (EST)
+T20004	egma	G.max_est	Glycine max (soybean) (EST)
+T20066	epvu	P.vulgaris_est	Phaseolus vulgaris (common bean) (EST)
+T20009	emtr	M.truncatula_est	Medicago truncatula (barrel medic) (EST)
+#### Rose family
+T20045	epps	P.persica_est	Prunus persica (peach) (EST)
+T20060	emdm	M.domestica_est	Malus x domestica (apple tree) (EST)
+#### Willow family
+T01077	pop	P.trichocarpa	Populus trichocarpa (black cottonwood)
+T20022	epop	P.trichocarpa_est	Populus trichocarpa (black cottonwood) (EST)
+T20064	eptt	P.tremula_tremuloides_est	Populus tremula x Populus tremuloides (EST)
+T20063	eptd	P.trichocarpa_deltoides_est	Populus trichocarpa x Populus deltoides (EST)
+T20018	eptp	P.tremula_est	Populus tremula (European aspen) (EST)
+#### Spurge family
+T20067	ercu	R.communis_est	Ricinus communis (castor bean) (EST)
+T20040	emec	M.esculenta_est	Manihot esculenta (cassava) (EST)
+T20033	eees	E.esula_est	Euphorbia esula (leafy spurge) (EST)
+#### Grape family
+T10014	dvvi	V.vinifera	Vitis vinifera (wine grape)
+T20013	evvi	V.vinifera_est	Vitis vinifera (wine grape) (EST)
+#### Nightshade family
+T20032	ecan	C.annuum_est	Capsicum annuum (chile pepper) (EST)
+T20011	estu	S.tuberosum_est	Solanum tuberosum (potato) (EST)
+T20012	esly	S.lycopersicum_est	Solanum lycopersicum (tomato) (EST)
+T20041	enbe	N.benthamiana_est	Nicotiana benthamiana (EST)
+T20042	enta	N.tabacum_est	Nicotiana tabacum (tobacco) (EST)
+#### Morning-glory family
+T20036	eini	I.nil_est	Ipomoea nil (Japanese morning glory) (EST)
+#### Broomrape family
+T20071	etpu	T.pusilla_est	Triphysaria pusilla (dwarf owl's clover) (EST)
+#### Plantain family
+T20052	eamj	A.majus_est	Antirrhinum majus (snapdragon) (EST)
+#### Coffee family
+T20056	eccn	C.canephora_est	Coffea canephora (robusta coffee) (EST)
+#### Daisy family
+T20017	elst	L.sativa_est	Lactuca sativa (lettuce) (EST)
+T20058	else	L.serriola_est	Lactuca serriola (prickly lettuce) (EST)
+T20038	elsi	L.saligna_est	Lactuca saligna (willow-leaf lettuce) (EST)
+T20039	elvi	L.virosa_est	Lactuca virosa (wild lettuce) (EST)
+T20037	elpe	L.perennis_est	Lactuca perennis (blue lettuce) (EST)
+T20050	eaan	A.annua_est	Artemisia annua (sweet wormwood) (EST)
+T20020	ehan	H.annuus_est	Helianthus annuus (sunflower) (EST)
+#### Amaranth family
+T20031	ebvl	B.vulgaris_est	Beta vulgaris (beet) (EST)
+#### Ice plant family
+T20059	emcr	M.crystallinum_est	Mesembryanthemum crystallinum (common ice plant) (EST)
+#### Buttercup family
+T20051	eafp	A.formosa_est	Aquilegia formosa x Aquilegia pubescens (EST)
+### Monocotyledons
+#### Grass family
+T01015	osa	O.sativa	Oryza sativa japonica (Japanese rice)
+T20006	eosa	O.sativa_est	Oryza sativa (rice) (EST)
+T20044	eosj	O.sativa_japonica_est	Oryza sativa japonica (Japanese rice) (EST)
+T20043	eosi	O.sativa_indica_est	Oryza sativa indica (Indian rice) (EST)
+T20034	efar	F.arundinacea_est	Festuca arundinacea (tall fescue) (EST)
+T20003	ehvu	H.vulgare_est	Hordeum vulgare (barley) (EST)
+T20001	etae	T.aestivum_est	Triticum aestivum (wheat) (EST)
+T20007	esof	S.officinarum_est	Saccharum officinarum (sugarcane) (EST)
+T20008	esbi	S.bicolor_est	Sorghum bicolor (sorghum) (EST)
+T20002	ezma	Z.mays_est	Zea mays (maize) (EST)
+T20065	epvr	P.virgatum_est	Panicum virgatum (switchgrass) (EST)
+### Basal angiosperm
+#### Amborella family
+T20053	eatr	A.trichopoda_est	Amborella trichopoda (EST)
+### Gymnosperm
+#### Pine family
+T20021	epgl	P.glauca_est	Picea glauca (white spruce) (EST)
+T20047	epsi	P.sitchensis_est	Picea sitchensis (sitka spruce) (EST)
+T20010	epta	P.taeda_est	Pinus taeda (loblolly pine) (EST)
+T20046	eppi	P.pinaster_est	Pinus pinaster (maritime pine) (EST)
+### Clubmosses
+#### Spike moss family
+T20070	esmo	S.moellendorffii_est	Selaginella moellendorffii (EST)
+### Mosses
+#### Gourd moss family
+T01041	ppp	P.patens_patens	Physcomitrella patens subsp. patens
+T20016	eppp	P.patens_patens_est	Physcomitrella patens subsp. patens (EST)
+### Bryophytes
+#### Marchantiaceae
+T20061	empm	M.polymorpha_est	Marchantia polymorpha (EST)
+### Green algae
+#### Volvocaceaex
+T20072	evcn	V.carteri_est	Volvox carteri f. nagariensis (EST)
+#### Chlamydomonadaceae
+T01039	cre	C.reinhardtii	Chlamydomonas reinhardtii
+T20057	ecre	C.reinhardtii_est	Chlamydomonas reinhardtii (EST)
+#### Mamiellaceae
+T01029	olu	O.lucimarinus	Ostreococcus lucimarinus
+T10009	dota	O.tauri	Ostreococcus tauri
+### Red algae
+#### Cyanidiaceae
+T00175(2004)	cme	C.merolae	Cyanidioschyzon merolae
+
+## Fungi
+### Ascomycetes
 #### Budding yeasts
 T00005(1997)	sce	S.cerevisiae	Saccharomyces cerevisiae
+T10003	dsrd	S.paradoxus	Saccharomyces paradoxus
+T10002	dsmi	S.mikatae	Saccharomyces mikatae
+T10004	dsba	S.bayanus	Saccharomyces bayanus
+T00167(2004)	ago	A.gossypii	Ashbya gossypii (Eremothecium gossypii)
+T01025	kla	K.lactis	Kluyveromyces lactis
+T10008	dkwa	K.waltii	Kluyveromyces waltii
+T01026	dha	D.hansenii	Debaryomyces hansenii
+T01023	pic	P.stipitis	Pichia stipitis
+T01049	vpo	V.polyspora	Vanderwaltozyma polyspora
+T00189(2004)	cal	C.albicans	Candida albicans
+T01024	cgr	C.glabrata	Candida glabrata
+T01033	yli	Y.lipolytica	Yarrowia lipolytica
+#### Fission yeasts
+T00076(2002)	spo	S.pombe	Schizosaccharomyces pombe
+#### Sordariomycetes
+T01034	ncr	N.crassa	Neurospora crassa
+T01048	pan	P.anserina	Podospora anserina
+T01027	mgr	M.grisea	Magnaporthe grisea
+T01038	fgr	F.graminearum	Fusarium graminearum
+#### Eurotiales
+T01016	ani	A.nidulans	Aspergillus nidulans
+T01017	afm	A.fumigatus	Aspergillus fumigatus
+T01018	aor	A.oryzae	Aspergillus oryzae
+T01030	ang	A.niger	Aspergillus niger
+T01070	nfi	N.fischeri	Neosartorya fischeri
+#### Others
+T01071	ssl	S.sclerotiorum	Sclerotinia sclerotiorum
+T01072	bfu	B.fuckeliana	Botryotinia fuckeliana
+### Basidiomycetes
+T00243(2005)	cne	C.neoformans	Cryptococcus neoformans JEC21
+T01040	cnb	C.neoformans_B3501A	Cryptococcus neoformans B-3501A
+T10013	dpch	P.chrysosporium	Phanerochaete chrysosporium
+T01044	lbc	L.bicolor	Laccaria bicolor
+T01021	uma	U.maydis	Ustilago maydis
+T01043	mgl	M.globosa	Malassezia globosa
+### Microsporidians
+T00105(2002)	ecu	E.cuniculi	Encephalitozoon cuniculi
+
+## Protists
+### Choanoflagellates
+T01042	mbr	M.brevicollis	Monosiga brevicollis
+### Diplomonads
+T01047	gla	G.lamblia	Giardia lamblia
+### Cellular slime molds
+T00245(2005)	ddi	D.discoideum	Dictyostelium discoideum
+### Alveolates
+#### Apicomplexa
+T00095(2002)	pfa	P.falciparum	Plasmodium falciparum 3D7
+T01051	pfd	P.falciparum_Dd2	Plasmodium falciparum Dd2
+T01052	pfh	P.falciparum_HB3	Plasmodium falciparum HB3
+T01035	pyo	P.yoelii	Plasmodium yoelii
+T10007	dpkn	P.knowlesi	Plasmodium knowlesi
+T01073	pvx	P.vivax	Plasmodium vivax
+T00253(2005)	tan	T.annulata	Theileria annulata
+T00254(2005)	tpv	T.parva	Theileria parva
+T00168(2004)	cpv	C.parvum	Cryptosporidium parvum
+T00210(2004)	cho	C.hominis	Cryptosporidium hominis
+#### Ciliates
+T01020	tet	T.thermophila	Tetrahymena thermophila
+T01055	ptm	P.tetraurelia	Paramecium tetraurelia
+### Euglenozoa
+T01013	tbr	T.brucei	Trypanosoma brucei
+T01012	tcr	T.cruzi	Trypanosoma cruzi
+T01014	lma	L.major	Leishmania major
+### Entamoeba
+T00238(2005)	ehi	E.histolytica	Entamoeba histolytica
+### Parabasalids
+T01022	tva	T.vaginalis	Trichomonas vaginalis
+### Diatoms
+T01075	pti	P.tricornutum	Phaeodactylum tricornutum
+T01078	tps	T.pseudonana	Thalassiosira pseudonana
+
+# Prokaryotes
+## Bacteria
+### Proteobacteria
+#### Gamma/enterobacteria
+T00007(1997)	eco	E.coli	Escherichia coli K-12 MG1655
+T00068(2001)	ecj	E.coli_J	Escherichia coli K-12 W3110
+T00666(2008)	ecd	E.coli_DH10B	Escherichia coli K-12 DH10B
+T00044(2001)	ece	E.coli_O157	Escherichia coli O157 EDL933 (EHEC)
+T00048(2001)	ecs	E.coli_O157J	Escherichia coli O157 Sakai (EHEC)
+T00778(2008)	ecf	E.coli_O157_EC4115	Escherichia coli O157 EC4115 (EHEC)
+T00106(2002)	ecc	E.coli_CFT073	Escherichia coli CFT073 (UPEC)
+T00338(2006)	eci	E.coli_UTI89	Escherichia coli UTI89 (UPEC)
+T00373(2006)	ecp	E.coli_536	Escherichia coli 536 (UPEC)
+T00425(2006)	ecv	E.coli_APEC	Escherichia coli APEC O1
+T00590(2007)	ecw	E.coli_E24377A	Escherichia coli E24377A
+T00591(2007)	ecx	E.coli_HS	Escherichia coli HS
+T00672(2008)	ecm	E.coli_SECEC	Escherichia coli SECEC
+T00784(2008)	ecy	E.coli_SE11	Escherichia coli SE11
+T00697(2008)	ecl	E.coli_ATCC8739	Escherichia coli ATCC 8739
+T00796(2008)	ecg	E.coli_0127	Escherichia coli O127
+T00826(2009)	eck	E.coli_55989	Escherichia coli 55989
+T00827(2009)	ecq	E.coli_ED1a	Escherichia coli ED1a
+T00828(2009)	ecr	E.coli_IAI1	Escherichia coli IAI1
+T00829(2009)	ect	E.coli_IAI39	Escherichia coli IAI39
+T00830(2009)	ecz	E.coli_S88	Escherichia coli S88
+T00831(2009)	eum	E.coli_UMN026	Escherichia coli UMN026
+T00854(2009)	elf	E.coli_LF82	Escherichia coli LF82
+T00811(2008)	efe	E.fergusonii	Escherichia fergusonii
+T00064(2001)	sty	S.typhi	Salmonella enterica subsp. enterica serovar Typhi CT18
+T00121(2003)	stt	S.typhi_Ty2	Salmonella enterica subsp. enterica serovar Typhi Ty2
+T00219(2004)	spt	S.enterica_Paratyphi	Salmonella enterica subsp. enterica serovar Paratyphi A
+T00756(2008)	sek	S.enterica_Paratyphi_AKU12601	Salmonella enterica subsp. enterica serovar Paratyphi A AKU12601
+T00628(2007)	spq	S.enterica_Paratyphi_B	Salmonella enterica subsp. enterica serovar Paratyphi B
+T00862(2009)	sei	S.enterica_Paratyphi_C	Salmonella enterica subsp. enterica serovar Paratyphi C
+T00240(2005)	sec	S.enterica_Choleraesuis	Salmonella enterica subsp. enterica serovar Choleraesuis
+T00738(2008)	seh	S.enterica_Heidelberg	Salmonella enterica subsp. enterica serovar Heidelberg
+T00739(2008)	see	S.enterica_Newport	Salmonella enterica subsp. enterica serovar Newport
+T00743(2008)	sew	S.enterica_Schwarzengrund	Salmonella enterica subsp. enterica serovar Schwarzengrund
+T00751(2008)	sea	S.enterica_Agona	Salmonella enterica subsp. enterica serovar Agona
+T00757(2008)	sed	S.enterica_Dublin	Salmonella enterica subsp. enterica serovar Dublin
+T00770(2008)	seg	S.enterica_Gallinarum	Salmonella enterica subsp. enterica serovar Gallinarum
+T00776(2008)	set	S.enterica_Enteritidis	Salmonella enterica subsp. enterica serovar Enteritidis
+T00627(2007)	ses	S.enterica_arizonae	Salmonella enterica subsp. arizonae
+T00065(2001)	stm	S.typhimurium	Salmonella typhimurium LT2
+T00063(2001)	ype	Y.pestis	Yersinia pestis CO92
+T00092(2002)	ypk	Y.pestis_KIM	Yersinia pestis KIM
+T00165(2004)	ypm	Y.pestis_Mediaevails	Yersinia pestis Mediaevails
+T00369(2006)	ypa	Y.pestis_Antiqua	Yersinia pestis Antiqua
+T00370(2006)	ypn	Y.pestis_Nepal516	Yersinia pestis Nepal516
+T00505(2007)	ypp	Y.pestis_Pestoides	Yersinia pestis Pestoides
+T00635(2007)	ypg	Y.pestis_Angola	Yersinia pestis Angola
+T00195(2004)	yps	Y.pseudotuberculosis	Yersinia pseudotuberculosis IP32953
+T00570(2007)	ypi	Y.pseudotuberculosis_IP31758	Yersinia pseudotuberculosis IP31758
+T00665(2008)	ypy	Y.pseudotuberculosis_YPIII	Yersinia pseudotuberculosis YPIII
+T00744(2008)	ypb	Y.pseudotuberculosis_PB1	Yersinia pseudotuberculosis PB1/+
+T00469(2007)	yen	Y.enterocolitica	Yersinia enterocolitica
+T00097(2002)	sfl	S.flexneri	Shigella flexneri 301 (serotype 2a)
+T00128(2003)	sfx	S.flexneri_2457T	Shigella flexneri 2457T (serotype 2a)
+T00377(2006)	sfv	S.flexneri_8401	Shigella flexneri 8401 (serotype 5b)
+T00274(2005)	ssn	S.sonnei	Shigella sonnei
+T00301(2005)	sbo	S.boydii	Shigella boydii Sb227
+T00700(2008)	sbc	S.boydii_CDC3083-94	Shigella boydii CDC 3083-94
+T00306(2005)	sdy	S.dysenteriae	Shigella dysenteriae
+T00186(2004)	eca	E.carotovora	Erwinia carotovora
+T00711(2008)	eta	E.tasmaniensis	Erwinia tasmaniensis
+T00149(2003)	plu	P.luminescens	Photorhabdus luminescens
+T00036(2000)	buc	Buchnera	Buchnera aphidicola APS
+T00087(2002)	bas	B.aphidicola_Sg	Buchnera aphidicola Sg
+T00111(2003)	bab	B.aphidicola_Bp	Buchnera aphidicola Bp
+T00423(2006)	bcc	B.aphidicola_Cc	Buchnera aphidicola Cc
+T00820(2009)	bap	B.aphidicola_5A	Buchnera aphidicola 5A
+T00821(2009)	bau	B.aphidicola_Tuc7	Buchnera aphidicola Tuc7
+T00101(2002)	wbr	W.brevipalpis	Wigglesworthia glossinidia
+T00316(2006)	sgl	S.glossinidius	Sodalis glossinidius
+T00507(2007)	ent	Enterobacter_638	Enterobacter sp. 638
+T00586(2007)	esa	E.sakazakii	Enterobacter sakazakii
+T00566(2007)	kpn	K.pneumoniae	Klebsiella pneumoniae
+T00772(2008)	kpe	K.pneumoniae_342	Klebsiella pneumoniae 342
+T00592(2007)	cko	C.koseri	Citrobacter koseri ATCC BAA-895
+T00595(2007)	spe	S.proteamaculans	Serratia proteamaculans
+T00753(2008)	pmr	P.mirabilis	Proteus mirabilis
+T00138(2003)	bfl	B.floridanus	Candidatus Blochmannia floridanus
+T00272(2005)	bpn	B.pennsylvanicus	Candidatus Blochmannia pennsylvanicus
+#### Gamma/others
+T00001(1995)	hin	H.influenzae	Haemophilus influenzae Rd KW20 (serotype d)
+T00248(2005)	hit	H.influenzae_NT	Haemophilus influenzae 86-028NP (nontypeable)
+T00543(2007)	hip	H.influenzae_PittEE	Haemophilus influenzae PittEE
+T00544(2007)	hiq	H.influenzae_PittGG	Haemophilus influenzae PittGG
+T00135(2003)	hdu	H.ducreyi	Haemophilus ducreyi
+T00825(2009)	hap	H.parasuis	Haemophilus parasuis
+T00386(2006)	hso	H.somnus	Haemophilus somnus 129PT
+T00673(2008)	hsm	H.somnus_2336	Haemophilus somnus 2336
+T00046(2001)	pmu	P.multocida	Pasteurella multocida
+T00201(2004)	msu	M.succiniciproducens	Mannheimia succiniciproducens
+T00476(2007)	apl	A.pleuropneumoniae	Actinobacillus pleuropneumoniae L20 (serotype 5b)
+T00644(2008)	apj	A.pleuropneumoniae_JL03	Actinobacillus pleuropneumoniae JL03 (serotype 3)
+T00717(2008)	apa	A.pleuropneumoniae_AP76	Actinobacillus pleuropneumoniae AP76 (serotype 7)
+T00558(2007)	asu	A.succinogenes	Actinobacillus succinogenes
+T00033(2000)	xfa	X.fastidiosa	Xylella fastidiosa 9a5c
+T00113(2003)	xft	X.fastidiosa_T	Xylella fastidiosa Temecula1
+T00677(2008)	xfm	X.fastidiosa_M12	Xylella fastidiosa M12
+T00692(2008)	xfn	X.fastidiosa_M23	Xylella fastidiosa M23
+T00083(2002)	xcc	X.campestris	Xanthomonas campestris pv. campestris ATCC 33913
+T00247(2005)	xcb	X.campestris_B	Xanthomonas campestris pv. campestris 8004
+T00759(2008)	xca	X.campestris_B100	Xanthomonas campestris pv. campestris B100
+T00288(2005)	xcv	X.campestris_vesicatoria	Xanthomonas campestris pv. vesicatoria
+T00084(2002)	xac	X.axonopodis	Xanthomonas axonopodis
+T00235(2005)	xoo	X.oryzae	Xanthomonas oryzae KACC10331
+T00360(2006)	xom	X.oryzae_MAFF311018	Xanthomonas oryzae MAFF311018
+T00763(2008)	xop	X.oryzae_PXO99A	Xanthomonas oryzae PXO99A
+T00718(2008)	sml	S.maltophilia	Stenotrophomonas maltophilia
+T00733(2008)	smt	S.maltophilia_R551-3	Stenotrophomonas maltophilia R551-3
+T00034(2000)	vch	V.cholerae	Vibrio cholerae O1
+T00520(2007)	vco	V.cholerae_O395	Vibrio cholerae O395
+T00108(2002)	vvu	V.vulnificus	Vibrio vulnificus CMCP6
+T00150(2003)	vvy	V.vulnificus_YJ016	Vibrio vulnificus YJ016
+T00120(2003)	vpa	V.parahaemolyticus	Vibrio parahaemolyticus
+T00589(2007)	vha	V.harveyi	Vibrio harveyi
+T00812(2008)	vsp	V.splendidus	Vibrio splendidus
+T00236(2005)	vfi	V.fischeri	Vibrio fischeri
+T00754(2008)	vfm	V.fischeri_MJ11	Vibrio fischeri MJ11
+T00782(2008)	vsa	A.salmonicida_LFI1238	Aliivibrio salmonicida LFI1238
+T00173(2004)	ppr	P.profundum	Photobacterium profundum
+T00035(2000)	pae	P.aeruginosa	Pseudomonas aeruginosa PAO1
+T00401(2006)	pau	P.aeruginosa_PA14	Pseudomonas aeruginosa UCBPP-PA14
+T00569(2007)	pap	P.aeruginosa_PA7	Pseudomonas aeruginosa PA7
+T00818(2009)	pag	P.aeruginosa_LESB58	Pseudomonas aeruginosa LESB58
+T00114(2003)	ppu	P.putida	Pseudomonas putida KT2440
+T00537(2007)	ppf	P.putida_F1	Pseudomonas putida F1
+T00650(2008)	ppg	P.putida_GB1	Pseudomonas putida GB-1
+T00675(2008)	ppw	P.putida_W619	Pseudomonas putida W619
+T00118(2003)	pst	P.syringae	Pseudomonas syringae pv. tomato DC3000
+T00246(2005)	psb	P.syringae_B728a	Pseudomonas syringae pv. syringae B728a
+T00266(2005)	psp	P.syringae_phaseolicola	Pseudomonas syringae pv. phaseolicola 1448A
+T00249(2005)	pfl	P.fluorescens	Pseudomonas fluorescens Pf-5
+T00283(2005)	pfo	P.fluorescens_PfO1	Pseudomonas fluorescens Pf0-1
+T00362(2006)	pen	P.entomophila	Pseudomonas entomophila
+T00510(2007)	pmy	P.mendocina	Pseudomonas mendocina
+T00511(2007)	psa	P.stutzeri	Pseudomonas stutzeri
+T00721(2008)	cja	C.japonicus	Cellvibrio japonicus
+T00256(2005)	par	P.arcticum	Psychrobacter arcticum
+T00350(2006)	pcr	P.cryohalolentis	Psychrobacter cryohalolentis
+T00541(2007)	prw	Psychrobacter_PRwf-1	Psychrobacter sp. PRwf-1
+T00185(2004)	aci	Acinetobacter_ADP1	Acinetobacter sp. ADP1
+T00486(2007)	acb	A.baumannii	Acinetobacter baumannii ATCC 17978
+T00660(2008)	abm	A.baumannii_SDF	Acinetobacter baumannii SDF
+T00667(2008)	aby	A.baumannii_AYE	Acinetobacter baumannii AYE
+T00710(2008)	abc	A.baumannii_ACICU	Acinetobacter baumannii ACICU
+T00793(2008)	abn	A.baumannii_AB0057	Acinetobacter baumannii AB0057
+T00795(2008)	abb	A.baumannii_AB307-0294	Acinetobacter baumannii AB307-0294
+T00099(2002)	son	S.oneidensis	Shewanella oneidensis
+T00344(2006)	sdn	S.denitrificans	Shewanella denitrificans
+T00395(2006)	sfr	S.frigidimarina	Shewanella frigidimarina
+T00445(2006)	saz	S.amazonensis	Shewanella amazonensis
+T00478(2007)	sbl	S.baltica	Shewanella baltica OS155
+T00571(2007)	sbm	S.baltica_OS185	Shewanella baltica OS185
+T00622(2007)	sbn	S.baltica_OS195	Shewanella baltica OS195
+T00803(2008)	sbp	S.baltica_OS223	Shewanella baltica OS223
+T00489(2007)	slo	S.loihica	Shewanella loihica
+T00513(2007)	spc	S.putrefaciens	Shewanella putrefaciens
+T00596(2007)	sse	S.sediminis	Shewanella sediminis
+T00606(2007)	spl	S.pealeana	Shewanella pealeana
+T00388(2006)	she	Shewanella_MR-4	Shewanella sp. MR-4
+T00389(2006)	shm	Shewanella_MR-7	Shewanella sp. MR-7
+T00428(2006)	shn	Shewanella_ANA3	Shewanella sp. ANA-3
+T00453(2007)	shw	Shewanella_W3-18-1	Shewanella sp. W3-18-1
+T00654(2008)	shl	S.halifaxensis	Shewanella halifaxensis
+T00676(2008)	swd	S.woodyi	Shewanella woodyi ATCC 51908
+T00791(2008)	swp	S.piezotolerans_WP3	Shewanella piezotolerans WP3
+T00218(2004)	ilo	I.loihiensis	Idiomarina loihiensis
+T00258(2005)	cps	C.psychrerythraea	Colwellia psychrerythraea
+T00282(2005)	pha	P.haloplanktis	Pseudoalteromonas haloplanktis
+T00372(2006)	pat	P.atlantica	Pseudoalteromonas atlantica
+T00335(2006)	sde	S.degradans	Saccharophagus degradans
+T00454(2007)	maq	M.aquaeolei	Marinobacter aquaeolei
+T00747(2008)	amc	A.macleodii	Alteromonas macleodii
+T00450(2006)	pin	P.ingrahamii	Psychromonas ingrahamii
+T00124(2003)	cbu	C.burnetii	Coxiella burnetii RSA 493
+T00632(2007)	cbs	C.burnetii_RSA331	Coxiella burnetii RSA 331
+T00583(2007)	cbd	C.burnetii_Dugway	Coxiella burnetii Dugway 5J108-111
+T00787(2008)	cbg	C.burnetii_CbuG_Q212	Coxiella burnetii CbuG_Q212
+T00788(2008)	cbc	C.burnetii_CbuK_Q154	Coxiella burnetii CbuK_Q154
+T00199(2004)	lpn	L.pneumophila	Legionella pneumophila Philadelphia 1
+T00208(2004)	lpf	L.pneumophila_Lens	Legionella pneumophila Lens
+T00209(2004)	lpp	L.pneumophila_Paris	Legionella pneumophila Paris
+T00532(2007)	lpc	L.pneumophila_Corby	Legionella pneumophila Corby
+T00205(2004)	mca	M.capsulatus	Methylococcus capsulatus
+T00214(2004)	ftu	F.tularensis	Francisella tularensis subsp. tularensis SCHU S4
+T00381(2006)	ftf	F.tularensis_FSC198	Francisella tularensis subsp. tularensis FSC 198
+T00495(2007)	ftw	F.tularensis_WY96-3418	Francisella tularensis subsp. tularensis WY96-3418
+T00331(2006)	ftl	F.tularensis_LVS	Francisella tularensis subsp. holarctica LVS
+T00399(2006)	fth	F.tularensis_OSU18	Francisella tularensis subsp. holarctica OSU18
+T00584(2007)	fta	F.tularensis_FTA	Francisella tularensis subsp. holarctica FTNF002-00
+T00432(2006)	ftn	F.tularensis_U112	Francisella tularensis subsp. novicida U112
+T00698(2008)	ftm	F.tularensis_FSC147	Francisella tularensis subsp. mediasiatica FSC147
+T00652(2008)	fph	F.philomiragia	Francisella philomiragia
+T00296(2005)	tcx	T.crunogena	Thiomicrospira crunogena
+T00281(2005)	noc	N.oceani	Nitrosococcus oceani
+T00391(2006)	aeh	A.ehrlichei	Alkalilimnicola ehrlichei
+T00462(2007)	hha	H.halophila	Halorhodospira halophila
+T00840(2009)	tgr	Thioalkalivibrio_HL-EbGR7	Thioalkalivibrio sp. HL-EbGR7
+T00307(2005)	hch	H.chejuensis	Hahella chejuensis
+T00347(2006)	csa	C.salexigens	Chromohalobacter salexigens
+T00380(2006)	abo	A.borkumensis	Alcanivorax borkumensis
+T00567(2007)	mmw	Marinomonas_MWYL1	Marinomonas sp. MWYL1
+T00424(2006)	aha	A.hydrophila	Aeromonas hydrophila
+T00500(2007)	asa	A.salmonicida	Aeromonas salmonicida
+T00517(2007)	dno	D.nodosus	Dichelobacter nodosus
+T00758(2008)	afe	A.ferrooxidans	Acidithiobacillus ferrooxidans ATCC 53993
+T00810(2008)	afr	A.ferrooxidans_ATCC23270	Acidithiobacillus ferrooxidans ATCC 23270
+T00349(2006)	bci	B.cicadellinicola	Baumannia cicadellinicola
+T00403(2006)	crp	C.ruddii	Candidatus Carsonella ruddii
+T00438(2006)	rma	R.magnifica	Candidatus Ruthia magnifica
+T00530(2007)	vok	V.okutanii	Candidatus Vesicomyosocius okutanii
+#### Beta
+T00027(2000)	nme	N.meningitidis	Neisseria meningitidis MC58 (serogroup B)
+T00031(2000)	nma	N.meningitidis_A	Neisseria meningitidis Z2491 (serogroup A)
+T00458(2007)	nmc	N.meningitidis_FAM18	Neisseria meningitidis FAM18 (serogroup C)
+T00633(2007)	nmn	N.meningitidis_053442	Neisseria meningitidis 053442 (serogroup C)
+T00237(2005)	ngo	N.gonorrhoeae	Neisseria gonorrhoeae
+T00728(2008)	ngk	N.gonorrhoeae_NCCP11945	Neisseria gonorrhoeae NCCP11945
+T00147(2003)	cvi	C.violaceum	Chromobacterium violaceum
+T00071(2001)	rso	R.solanacearum	Ralstonia solanacearum
+T00762(2008)	rpi	R.pickettii	Ralstonia pickettii
+T00268(2005)	reu	R.eutropha	Ralstonia eutropha JMP134
+T00416(2006)	reh	R.eutropha_H16	Ralstonia eutropha H16
+T00351(2006)	rme	R.metallidurans	Ralstonia metallidurans
+T00702(2008)	cti	C.taiwanensis	Cupriavidus taiwanensis
+T00204(2004)	bma	B.mallei	Burkholderia mallei ATCC 23344
+T00457(2007)	bmv	B.mallei_SAVP1	Burkholderia mallei SAVP1
+T00471(2007)	bml	B.mallei_NCTC10229	Burkholderia mallei NCTC 10229
+T00479(2007)	bmn	B.mallei_NCTC10247	Burkholderia mallei NCTC 10247
+T00340(2006)	bxe	B.xenovorans	Burkholderia xenovorans
+T00493(2007)	bvi	B.vietnamiensis	Burkholderia vietnamiensis
+T00286(2005)	bur	Burkholderia_383	Burkholderia sp. 383
+T00363(2006)	bcn	B.cenocepacia	Burkholderia cenocepacia AU1054
+T00415(2006)	bch	B.cenocepacia_HI2424	Burkholderia cenocepacia HI2424
+T00669(2008)	bcm	B.cenocepacia_MC0-3	Burkholderia cenocepacia MC0-3
+T00771(2008)	bcj	B.cenocepacia_J2315	Burkholderia cenocepacia J2315
+T00398(2006)	bam	B.cepacia	Burkholderia cepacia
+T00684(2008)	bac	B.ambifaria_MC40-6	Burkholderia ambifaria MC40-6
+T00624(2007)	bmu	B.multivorans	Burkholderia multivorans ATCC 17616 (JGI)
+T00740(2008)	bmj	B.multivorans_T	Burkholderia multivorans ATCC 17616 (Tohoku)
+T00203(2004)	bps	B.pseudomallei	Burkholderia pseudomallei K96243
+T00289(2005)	bpm	B.pseudomallei_1710b	Burkholderia pseudomallei 1710b
+T00480(2007)	bpl	B.pseudomallei_1106a	Burkholderia pseudomallei 1106a
+T00481(2007)	bpd	B.pseudomallei_668	Burkholderia pseudomallei 668
+T00311(2005)	bte	B.thailandensis	Burkholderia thailandensis
+T00704(2008)	bph	B.phymatum	Burkholderia phymatum
+T00765(2008)	bpy	B.phytofirmans	Burkholderia phytofirmans
+T00502(2007)	pnu	Polynucleobacter	Polynucleobacter sp. QLW-P1DMWA-1
+T00683(2008)	pne	P.necessarius	Polynucleobacter necessarius
+T00139(2003)	bpe	B.pertussis	Bordetella pertussis
+T00140(2003)	bpa	B.parapertussis	Bordetella parapertussis
+T00141(2003)	bbr	B.bronchiseptica	Bordetella bronchiseptica
+T00637(2007)	bpt	B.petrii	Bordetella petrii
+T00695(2008)	bav	B.avium	Bordetella avium
+T00334(2006)	rfr	R.ferrireducens	Rhodoferax ferrireducens
+T00343(2006)	pol	Polaromonas	Polaromonas sp. JS666
+T00459(2007)	pna	P.naphthalenivorans	Polaromonas naphthalenivorans
+T00451(2007)	aav	A.avenae	Acidovorax avenae
+T00455(2007)	ajs	Acidovorax_JS42	Acidovorax sp. JS42
+T00460(2007)	vei	V.eiseniae	Verminephrobacter eiseniae
+T00620(2007)	dac	D.acidovorans	Delftia acidovorans
+T00853(2009)	dia	Diaphorobacter	Diaphorobacter sp. TPSY
+T00470(2007)	mpt	M.petroleiphilum	Methylibium petroleiphilum
+T00490(2007)	har	H.arsenicoxydans	Herminiimonas arsenicoxydans
+T00561(2007)	mms	M.massiliensis	Minibacterium massiliensis
+T00681(2008)	lch	L.cholodnii	Leptothrix cholodnii
+T00130(2003)	neu	N.europaea	Nitrosomonas europaea
+T00393(2006)	net	N.eutropha	Nitrosomonas eutropha
+T00302(2005)	nmu	N.multiformis	Nitrosospira multiformis
+T00222(2004)	eba	Azoarcus_EbN1	Azoarcus sp. EbN1
+T00441(2006)	azo	Azoarcus_BH72	Azoarcus sp. BH72
+T00259(2005)	dar	D.aromatica	Dechloromonas aromatica
+T00804(2008)	tmz	Thauera	Thauera sp. MZ1T
+T00275(2005)	tbd	T.denitrificans	Thiobacillus denitrificans
+T00342(2006)	mfa	M.flagellatus	Methylobacillus flagellatus
 #### Epsilon
 T00008(1997)	hpy	H.pylori	Helicobacter pylori 26695
+T00020(1999)	hpj	H.pylori_J99	Helicobacter pylori J99
+T00365(2006)	hpa	H.pylori_HPAG1	Helicobacter pylori HPAG1
+T00742(2008)	hps	H.pylori_Shi470	Helicobacter pylori Shi470
+T00777(2008)	hpg	H.pylori_G27	Helicobacter pylori G27
+T00786(2008)	hpp	H.pylori_P12	Helicobacter pylori P12
+T00133(2003)	hhe	H.hepaticus	Helicobacter hepaticus
+T00371(2006)	hac	H.acinonychis	Helicobacter acinonychis
+T00146(2003)	wsu	W.succinogenes	Wolinella succinogenes
+T00298(2005)	tdn	T.denitrificans_ATCC33889	Thiomicrospira denitrificans
+T00026(2000)	cje	C.jejuni	Campylobacter jejuni NCTC11168
+T00227(2005)	cjr	C.jejuni_RM1221	Campylobacter jejuni RM1221
+T00461(2007)	cjj	C.jejuni_81-176	Campylobacter jejuni 81-176
+T00597(2007)	cju	C.jejuni_81116	Campylobacter jejuni 81116
+T00573(2007)	cjd	C.jejuni_doylei	Campylobacter jejuni subsp. doylei 269.97
+T00430(2006)	cff	C.fetus	Campylobacter fetus
+T00576(2007)	ccv	C.curvus	Campylobacter curvus
+T00577(2007)	cha	C.hominis_BAA-381	Campylobacter hominis ATCC BAA-381
+T00593(2007)	cco	C.concisus	Campylobacter concisus 13826
+T00858(2009)	cla	C.lari	Campylobacter lari
+T00600(2007)	abu	A.butzleri	Arcobacter butzleri
+T00565(2007)	nis	Nitratiruptor_SB155-2	Nitratiruptor sp. SB155-2
+T00572(2007)	sun	Sulfurovum_NBC37-1	Sulfurovum sp. NBC37-1
+T00860(2009)	nam	N.profundicola	Nautilia profundicola
+#### Delta
+T00155(2003)	gsu	G.sulfurreducens	Geobacter sulfurreducens
+T00295(2005)	gme	G.metallireducens	Geobacter metallireducens
+T00521(2007)	gur	G.uraniumreducens	Geobacter uraniumreducens
+T00708(2008)	glo	G.lovleyi	Geobacter lovleyi
+T00749(2008)	gbm	G.bemidjiensis	Geobacter bemidjiensis
+T00846(2009)	geo	Geobacter_FRC-32	Geobacter sp. FRC-32
+T00285(2005)	pca	P.carbinolicus	Pelobacter carbinolicus
+T00436(2006)	ppd	P.propionicus	Pelobacter propionicus
+T00171(2004)	dvu	D.vulgaris	Desulfovibrio vulgaris Hildenborough
+T00452(2007)	dvl	D.vulgaris_DP4	Desulfovibrio vulgaris DP4
+T00816(2009)	dvm	D.vulgaris_Miyazaki_F	Desulfovibrio vulgaris Miyazaki F
+T00294(2005)	dde	D.desulfuricans	Desulfovibrio desulfuricans G20
+T00837(2009)	dds	D.desulfuricans_ATCC27774	Desulfovibrio desulfuricans ATCC 27774
+T00354(2006)	lip	L.intracellularis	Lawsonia intracellularis
+T00159(2004)	bba	B.bacteriovorus	Bdellovibrio bacteriovorus
+T00192(2004)	dps	D.psychrophila	Desulfotalea psychrophila
+T00610(2007)	dol	D.oleovorans	Candidatus Desulfococcus oleovorans
+T00813(2009)	dal	D.alkenivorans	Desulfatibacillum alkenivorans
+T00861(2009)	dat	D.autotrophicum	Desulfobacterium autotrophicum
+T00326(2006)	ade	A.dehalogenans	Anaeromyxobacter dehalogenans 2CP-C
+T00833(2009)	acp	A.dehalogenans_2CP-1	Anaeromyxobacter dehalogenans 2CP-1
+T00559(2007)	afw	Anaeromyxobacter_Fw109-5	Anaeromyxobacter sp. Fw109-5
+T00748(2008)	ank	Anaeromyxobacter_K	Anaeromyxobacter sp. K
+T00366(2006)	mxa	M.xanthus	Myxococcus xanthus
+T00634(2007)	scl	S.cellulosum	Sorangium cellulosum
+T00346(2006)	sat	S.aciditrophicus	Syntrophus aciditrophicus
+T00418(2006)	sfu	S.fumaroxidans	Syntrophobacter fumaroxidans
+#### Alpha/rickettsias
+T00018(1998)	rpr	R.prowazekii	Rickettsia prowazekii
+T00193(2004)	rty	R.typhi	Rickettsia typhi
+T00061(2001)	rco	R.conorii	Rickettsia conorii
+T00252(2005)	rfe	R.felis	Rickettsia felis
+T00339(2006)	rbe	R.bellii	Rickettsia bellii RML369-C
+T00602(2007)	rbo	R.bellii_OSU85-389	Rickettsia bellii OSU 85-389
+T00601(2007)	rak	R.akari	Rickettsia akari
+T00603(2007)	rcm	R.canadensis	Rickettsia canadensis
+T00604(2007)	rri	R.rickettsii	Rickettsia rickettsii Sheila Smith
+T00643(2008)	rrj	R.rickettsii_Iowa	Rickettsia rickettsii Iowa
+T00605(2007)	rms	R.massiliae	Rickettsia massiliae
+T00531(2007)	ots	O.tsutsugamushi	Orientia tsutsugamushi Boryong
+T00705(2008)	ott	O.tsutsugamushi_Ikeda	Orientia tsutsugamushi Ikeda
+T00160(2004)	wol	Wolbachia_Mel	Wolbachia wMel
+T00234(2005)	wbm	Wolbachia_Bma	Wolbachia wBm
+T00866(2009)	wri	Wolbachia_wRi	Wolbachia sp. wRi
+T00719(2008)	wpi	W.pipientis	Wolbachia pipientis
+T00216(2004)	ama	A.marginale	Anaplasma marginale St. Maries
+T00855(2009)	amf	A.marginale_Florida	Anaplasma marginale Florida
+T00327(2006)	aph	A.phagocytophilum	Anaplasma phagocytophilum
+T00224(2005)	eru	E.ruminantium	Ehrlichia ruminantium Welgevonden (South Africa)
+T00233(2005)	erw	E.ruminantium_Welgevonden	Ehrlichia ruminantium Welgevonden (France)
+T00232(2005)	erg	E.ruminantium_Gardel	Ehrlichia ruminantium Gardel
+T00270(2005)	ecn	E.canis	Ehrlichia canis
+T00328(2006)	ech	E.chaffeensis	Ehrlichia chaffeensis
+T00329(2006)	nse	N.sennetsu	Neorickettsia sennetsu
+T00257(2005)	pub	P.ubique	Candidatus Pelagibacter ubique
+#### Alpha/rhizobacteria
+T00043(2000)	mlo	M.loti	Mesorhizobium loti
+T00374(2006)	mes	Mesorhizobium_BNC1	Mesorhizobium sp. BNC1
+T00580(2007)	pla	P.lavamentivorans	Parvibaculum lavamentivorans
+T00058(2001)	sme	S.meliloti	Sinorhizobium meliloti
+T00555(2007)	smd	S.medicae	Sinorhizobium medicae
+T00070(2001)	atu	A.tumefaciens	Agrobacterium tumefaciens C58 (UWash/Dupont)
+T00059(2001)	atc	A.tumefaciens_C	Agrobacterium tumefaciens C58 (Cereon)
+T00850(2009)	ara	A.radiobacter	Agrobacterium radiobacter K84
+T00851(2009)	avi	A.vitis	Agrobacterium vitis S4
+T00317(2006)	ret	R.etli	Rhizobium etli CFN 42
+T00720(2008)	rec	R.etli_CIAT652	Rhizobium etli CIAT 652
+T00402(2006)	rle	R.leguminosarum	Rhizobium leguminosarum
+T00779(2008)	rlt	R.leguminosarum_trifolii	Rhizobium leguminosarum bv. trifolii WSM2304
+T00072(2002)	bme	B.melitensis	Brucella melitensis 16M
+T00867(2009)	bmi	B.melitensis_ATCC23457	Brucella melitensis ATCC 23457
+T00304(2005)	bmf	B.melitensis_Abortus	Brucella melitensis biovar Abortus
+T00241(2005)	bmb	B.abortus	Brucella abortus 9-941
+T00703(2008)	bmc	B.abortus_S19	Brucella abortus S19
+T00096(2002)	bms	B.suis	Brucella suis 1330
+T00638(2007)	bmt	B.suis_ATCC23445	Brucella suis ATCC 23445
+T00534(2007)	bov	B.ovis	Brucella ovis
+T00623(2007)	bcs	B.canis	Brucella canis
+T00568(2007)	oan	O.anthropi	Ochrobactrum anthropi
+T00109(2002)	bja	B.japonicum	Bradyrhizobium japonicum
+T00516(2007)	bra	Bradyrhizobium_ORS278	Bradyrhizobium sp. ORS278
+T00528(2007)	bbt	Bradyrhizobium_BTAi1	Bradyrhizobium sp. BTAi1
+T00153(2003)	rpa	R.palustris	Rhodopseudomonas palustris CGA009
+T00321(2006)	rpb	R.palustris_HaA2	Rhodopseudomonas palustris HaA2
+T00336(2006)	rpc	R.palustris_BisB18	Rhodopseudomonas palustris BisB18
+T00345(2006)	rpd	R.palustris_BisB5	Rhodopseudomonas palustris BisB5
+T00400(2006)	rpe	R.palustris_BisA53	Rhodopseudomonas palustris BisA53
+T00722(2008)	rpt	R.palustris_TIE-1	Rhodopseudomonas palustris TIE-1
+T00276(2005)	nwi	N.winogradskyi	Nitrobacter winogradskyi
+T00348(2006)	nha	N.hamburgensis	Nitrobacter hamburgensis
+T00783(2008)	oca	O.carboxidovorans	Oligotropha carboxidovorans
+T00180(2004)	bhe	B.henselae	Bartonella henselae
+T00181(2004)	bqu	B.quintana	Bartonella quintana
+T00456(2007)	bbk	B.bacilliformis	Bartonella bacilliformis
+T00636(2007)	btr	B.tribocorum	Bartonella tribocorum
+T00581(2007)	xau	X.autotrophicus	Xanthobacter autotrophicus
+T00609(2007)	azc	A.caulinodans	Azorhizobium caulinodans
+T00640(2007)	mex	M.extorquens	Methylobacterium extorquens
+T00674(2008)	mrd	M.radiotolerans	Methylobacterium radiotolerans
+T00679(2008)	met	Methylobacterium_4-46	Methylobacterium sp. 4-46
+T00760(2008)	mpo	M.populi	Methylobacterium populi
+T00809(2008)	mch	M.chloromethanicum	Methylobacterium chloromethanicum
+T00839(2009)	mno	M.nodulans	Methylobacterium nodulans
+T00688(2008)	bid	B.indica	Beijerinckia indica
+T00802(2008)	msl	M.silvestris	Methylocella silvestris
+#### Alpha/others
+T00049(2001)	ccr	C.crescentus	Caulobacter crescentus CB15
+T00841(2009)	ccs	C.crescentus_NA1000	Caulobacter crescentus NA1000
+T00651(2008)	cak	Caulobacter_K31	Caulobacter sp. K31
+T00750(2008)	pzu	P.zucineum	Phenylobacterium zucineum
+T00215(2004)	sil	S.pomeroyi	Ruegeria pomeroyi
+T00359(2006)	sit	Silicibacter_TM1040	Silicibacter sp. TM1040
+T00284(2005)	rsp	R.sphaeroides	Rhodobacter sphaeroides 2.4.1
+T00484(2007)	rsh	R.sphaeroides_ATCC17029	Rhodobacter sphaeroides ATCC 17029
+T00512(2007)	rsq	R.sphaeroides_ATCC17025	Rhodobacter sphaeroides ATCC 17025
+T00844(2009)	rsk	R.sphaeroides_KD131	Rhodobacter sphaeroides KD131
+T00330(2006)	jan	Jannaschia_CCS1	Jannaschia sp. CCS1
+T00376(2006)	rde	R.denitrificans	Roseobacter denitrificans
+T00440(2006)	pde	P.denitrificans	Paracoccus denitrificans
+T00612(2007)	dsh	D.shibae	Dinoroseobacter shibae
+T00394(2006)	mmr	M.maris	Maricaulis maris
+T00397(2006)	hne	H.neptunium	Hyphomonas neptunium
+T00221(2004)	zmo	Z.mobilis	Zymomonas mobilis
+T00322(2006)	nar	N.aromaticivorans	Novosphingobium aromaticivorans
+T00361(2006)	sal	S.alaskensis	Sphingopyxis alaskensis
+T00538(2007)	swi	S.wittichii	Sphingomonas wittichii
+T00315(2006)	eli	E.litoralis	Erythrobacter litoralis
+T00230(2005)	gox	G.oxydans	Gluconobacter oxydans
+T00392(2006)	gbe	G.bethesdensis	Granulobacter bethesdensis
+T00527(2007)	acr	A.cryptum	Acidiphilium cryptum JF-5
+T00631(2007)	gdi	G.diazotrophicus	Gluconacetobacter diazotrophicus PAl 5 (Brazil)
+T00798(2008)	gdj	G.diazotrophicus_J	Gluconacetobacter diazotrophicus PAl 5 (JGI)
+T00310(2005)	rru	R.rubrum	Rhodospirillum rubrum
+T00785(2008)	rce	R.centenum	Rhodospirillum centenum
+T00305(2005)	mag	M.magneticum	Magnetospirillum magneticum
+#### Magnetococcus
+T00427(2006)	mgm	Magnetococcus_MC1	Magnetococcus sp. MC-1
+### Acidobacteria
+T00352(2006)	aba	A.bacterium	Acidobacteria bacterium
+T00868(2009)	aca	A.capsulatum	Acidobacterium capsulatum
+T00412(2006)	sus	S.usitatus	Solibacter usitatus
+### Firmicutes
+#### Bacillales
+T00010(1997)	bsu	B.subtilis	Bacillus subtilis
+T00039(2000)	bha	B.halodurans	Bacillus halodurans
+T00129(2003)	ban	B.anthracis	Bacillus anthracis Ames
+T00178(2004)	bar	B.anthracis_Ames0581	Bacillus anthracis Ames 0581
+T00169(2004)	baa	B.anthracis_A2012	Bacillus anthracis A2012
+T00184(2004)	bat	B.anthracis_Sterne	Bacillus anthracis Sterne
+T00127(2003)	bce	B.cereus	Bacillus cereus ATCC 14579
+T00162(2004)	bca	B.cereus_ATCC10987	Bacillus cereus ATCC 10987
+T00198(2004)	bcz	B.cereus_ZK	Bacillus cereus ZK
+T00560(2007)	bcy	B.cereus_NVH	Bacillus cereus subsp. cytotoxis NVH 391-98
+T00799(2008)	bcr	B.cereus_AH187	Bacillus cereus AH187
+T00805(2008)	bcb	B.cereus_B4264	Bacillus cereus B4264
+T00814(2009)	bcu	B.cereus_AH820	Bacillus cereus AH820
+T00815(2009)	bcg	B.cereus_G9842	Bacillus cereus G9842
+T00852(2009)	bcq	B.cereus_Q1	Bacillus cereus Q1
+T00869(2009)	bcx	B.cereus_03BB102	Bacillus cereus 03BB102
+T00179(2004)	btk	B.thuringiensis	Bacillus thuringiensis 97-27
+T00429(2006)	btl	B.thuringiensis_AlHakam	Bacillus thuringiensis Al Hakam
+T00642(2008)	bwe	B.weihenstephanensis	Bacillus weihenstephanensis
+T00197(2004)	bli	B.licheniformis	Bacillus licheniformis ATCC 14580
+T00200(2004)	bld	B.licheniformis_DSM13	Bacillus licheniformis DSM13
+T00228(2005)	bcl	B.clausii	Bacillus clausii
+T00582(2007)	bay	B.amyloliquefaciens	Bacillus amyloliquefaciens
+T00599(2007)	bpu	B.pumilus	Bacillus pumilus
+T00093(2002)	oih	O.iheyensis	Oceanobacillus iheyensis
+T00217(2004)	gka	G.kaustophilus	Geobacillus kaustophilus
+T00496(2007)	gtn	G.thermodenitrificans	Geobacillus thermodenitrificans
+T00790(2008)	afl	A.flavithermus	Anoxybacillus flavithermus
+T00656(2008)	lsp	L.sphaericus	Lysinibacillus sphaericus
+T00687(2008)	esi	E.sibiricum	Exiguobacterium sibiricum
+T00051(2001)	sau	S.aureus_N315	Staphylococcus aureus N315
+T00052(2001)	sav	S.aureus_Mu50	Staphylococcus aureus Mu50
+T00588(2007)	saw	S.aureus_Mu3	Staphylococcus aureus Mu3
+T00086(2002)	sam	S.aureus_MW2	Staphylococcus aureus MW2
+T00182(2004)	sar	S.aureus_MRSA252	Staphylococcus aureus MRSA252
+T00183(2004)	sas	S.aureus_MSSA476	Staphylococcus aureus MSSA476
+T00225(2005)	sac	S.aureus_COL	Staphylococcus aureus COL
+T00303(2005)	sab	S.aureus_RF122	Staphylococcus aureus RF122
+T00323(2006)	saa	S.aureus_USA300	Staphylococcus aureus USA300
+T00629(2007)	sax	S.aureus_USA300_TCH1516	Staphylococcus aureus USA300 TCH1516
+T00324(2006)	sao	S.aureus_NCTC8325	Staphylococcus aureus NCTC8325
+T00522(2007)	saj	S.aureus_JH9	Staphylococcus aureus JH9
+T00556(2007)	sah	S.aureus_JH1	Staphylococcus aureus JH1
+T00557(2007)	sae	S.aureus_Newman	Staphylococcus aureus Newman
+T00110(2003)	sep	S.epidermidis	Staphylococcus epidermidis ATCC 12228
+T00229(2005)	ser	S.epidermidis_RP62A	Staphylococcus epidermidis RP62A
+T00250(2005)	sha	S.haemolyticus	Staphylococcus haemolyticus
+T00269(2005)	ssp	S.saprophyticus	Staphylococcus saprophyticus
+T00863(2009)	sca	S.carnosus	Staphylococcus carnosus
+T00848(2009)	mcl	M.caseolyticus	Macrococcus caseolyticus
+T00066(2001)	lmo	L.monocytogenes	Listeria monocytogenes EGD-e
+T00174(2004)	lmf	L.monocytogenes_F2365	Listeria monocytogenes F2365
+T00801(2008)	lmh	L.monocytogenes_HCC23	Listeria monocytogenes HCC23
+T00067(2001)	lin	L.innocua	Listeria innocua
+T00422(2006)	lwe	L.welshimeri	Listeria welshimeri SLCC5334
+#### Lactobacillales
+T00045(2001)	lla	L.lactis	Lactococcus lactis subsp. lactis IL1403
+T00420(2006)	llc	L.lactis_SK11	Lactococcus lactis subsp. cremoris SK11
+T00475(2007)	llm	L.lactis_MG1363	Lactococcus lactis subsp. cremoris MG1363
+T00050(2001)	spy	S.pyogenes	Streptococcus pyogenes SF370 (serotype M1)
+T00262(2005)	spz	S.pyogenes_MGAS5005	Streptococcus pyogenes MGAS5005 (serotype M1)
+T00079(2002)	spm	S.pyogenes_M18	Streptococcus pyogenes MGAS8232 (serotype M18)
+T00089(2002)	spg	S.pyogenes_M3	Streptococcus pyogenes MGAS315 (serotype M3)
+T00119(2003)	sps	S.pyogenes_SSI1	Streptococcus pyogenes SSI-1 (serotype M3)
+T00355(2006)	sph	S.pyogenes_MGAS10270	Streptococcus pyogenes MGAS10270 (serotype M3)
+T00356(2006)	spi	S.pyogenes_MGAS10750	Streptococcus pyogenes MGAS10750 (serotype M3)
+T00357(2006)	spj	S.pyogenes_MGAS2096	Streptococcus pyogenes MGAS2096 (serotype M3)
+T00358(2006)	spk	S.pyogenes_MGAS9429	Streptococcus pyogenes MGAS9429 (serotype M3)
+T00497(2007)	spf	S.pyogenes_Manfredo	Streptococcus pyogenes Manfredo (serotype M5)
+T00191(2004)	spa	S.pyogenes_MGAS10394	Streptococcus pyogenes MGAS10394 (serotype M6)
+T00263(2005)	spb	S.pyogenes_MGAS6180	Streptococcus pyogenes MGAS6180 (serotype M28)
+T00780(2008)	soz	S.pyogenes_NZ131	Streptococcus pyogenes NZ131 (serotype M49)
+T00057(2001)	spn	S.pneumoniae	Streptococcus pneumoniae TIGR4
+T00060(2001)	spr	S.pneumoniae_R6	Streptococcus pneumoniae R6
+T00413(2006)	spd	S.pneumoniae_D39	Streptococcus pneumoniae D39
+T00658(2008)	spv	S.pneumoniae_Hungary19A_6	Streptococcus pneumoniae Hungary19A 6
+T00690(2008)	spw	S.pneumoniae_CGSP14	Streptococcus pneumoniae CGSP14
+T00734(2008)	spx	S.pneumoniae_G54	Streptococcus pneumoniae G54
+T00843(2009)	sne	S.pneumoniae_ATCC700669	Streptococcus pneumoniae ATCC 700669
+T00872(2009)	snm	S.pneumoniae_70585	Streptococcus pneumoniae 70585
+T00873(2009)	sjj	S.pneumoniae_JJA	Streptococcus pneumoniae JJA
+T00874(2009)	spp	S.pneumoniae_P1031	Streptococcus pneumoniae P1031
+T00875(2009)	snt	S.pneumoniae_Taiwan19F-14	Streptococcus pneumoniae Taiwan19F-14
+T00091(2002)	sag	S.agalactiae	Streptococcus agalactiae 2603 (serotype V)
+T00104(2002)	san	S.agalactiae_NEM316	Streptococcus agalactiae NEM316 (serotype III)
+T00278(2005)	sak	S.agalactiae_A909	Streptococcus agalactiae A909 (serotype Ia)
+T00100(2002)	smu	S.mutans	Streptococcus mutans
+T00212(2004)	stc	S.thermophilus_CNRZ	Streptococcus thermophilus CNRZ1066
+T00213(2004)	stl	S.thermophilus_LMG	Streptococcus thermophilus LMG18311
+T00414(2006)	ste	S.thermophilus_LMD9	Streptococcus thermophilus LMD-9
+T00473(2007)	ssa	S.sanguinis	Streptococcus sanguinis
+T00514(2007)	ssu	S.suis_05ZYH33	Streptococcus suis 05ZYH33
+T00515(2007)	ssv	S.suis_98HAH33	Streptococcus suis 98HAH33
+T00594(2007)	sgo	S.gordonii	Streptococcus gordonii
+T00871(2009)	seq	S.equi_zooepidemicus	Streptococcus equi subsp. zooepidemicus
+T00746(2008)	sez	S.equi	Streptococcus equi subsp. zooepidemicus MGCS10565
+T00877(2009)	seu	S.equi_equi	Streptococcus equi subsp. equi 4047
+T00849(2009)	sub	S.uberis	Streptococcus uberis
+T00115(2003)	lpl	L.plantarum	Lactobacillus plantarum
+T00158(2004)	ljo	L.johnsonii	Lactobacillus johnsonii
+T00231(2005)	lac	L.acidophilus	Lactobacillus acidophilus
+T00299(2005)	lsa	L.sakei	Lactobacillus sakei
+T00337(2006)	lsl	L.salivarius	Lactobacillus salivarius
+T00364(2006)	ldb	L.delbrueckii	Lactobacillus delbrueckii ATCC 11842
+T00419(2006)	lbu	L.delbrueckii_BAA-365	Lactobacillus delbrueckii ATCC BAA-365
+T00406(2006)	lbr	L.brevis	Lactobacillus brevis
+T00407(2006)	lca	L.casei	Lactobacillus casei ATCC 334
+T00723(2008)	lcb	L.casei_BL23	Lactobacillus casei BL23
+T00410(2006)	lga	L.gasseri	Lactobacillus gasseri
+T00535(2007)	lre	L.reuteri	Lactobacillus reuteri F275 (JGI)
+T00735(2008)	lrf	L.reuteri_K	Lactobacillus reuteri F275 (Kitasato)
+T00625(2007)	lhe	L.helveticus	Lactobacillus helveticus
+T00699(2008)	lfe	L.fermentum	Lactobacillus fermentum
+T00409(2006)	ppe	P.pentosaceus	Pediococcus pentosaceus
+T00123(2003)	efa	E.faecalis	Enterococcus faecalis
+T00408(2006)	ooe	O.oeni	Oenococcus oeni
+T00411(2006)	lme	L.mesenteroides	Leuconostoc mesenteroides
+T00663(2008)	lci	L.citreum	Leuconostoc citreum
+#### Clostridia
+T00056(2001)	cac	C.acetobutylicum	Clostridium acetobutylicum
+T00074(2002)	cpe	C.perfringens	Clostridium perfringens 13
+T00378(2006)	cpf	C.perfringens_ATCC13124	Clostridium perfringens ATCC 13124
+T00379(2006)	cpr	C.perfringens_SM101	Clostridium perfringens SM101
+T00112(2003)	ctc	C.tetani	Clostridium tetani E88
+T00431(2006)	cno	C.novyi	Clostridium novyi
+T00474(2007)	cth	C.thermocellum	Clostridium thermocellum
+T00487(2007)	cdf	C.difficile	Clostridium difficile
+T00533(2007)	cbo	C.botulinum	Clostridium botulinum A ATCC 3502
+T00574(2007)	cba	C.botulinum_A_ATCC19397	Clostridium botulinum A ATCC 19397
+T00575(2007)	cbh	C.botulinum_A_Hall	Clostridium botulinum A Hall
+T00670(2008)	cbl	C.botulinum_A3_LochMaree	Clostridium botulinum A3 Loch Maree
+T00696(2008)	cbk	C.botulinum_B_Eklund	Clostridium botulinum B Eklund 17B
+T00671(2008)	cbb	C.botulinum_B1	Clostridium botulinum B1 Okra
+T00767(2008)	cbt	C.botulinum_E3	Clostridium botulinum E3
+T00563(2007)	cbf	C.botulinum_F	Clostridium botulinum F Langeland
+T00547(2007)	cbe	C.beijerinckii	Clostridium beijerinckii
+T00564(2007)	ckl	C.kluyveri	Clostridium kluyveri DSM 555
+T00832(2009)	ckr	C.kluyveri_NBRC	Clostridium kluyveri NBRC 12016
+T00619(2007)	cpy	C.phytofermentans	Clostridium phytofermentans
+T00835(2009)	cce	C.cellulolyticum	Clostridium cellulolyticum
+T00551(2007)	amt	A.metalliredigens	Alkaliphilus metalliredigens
+T00607(2007)	aoe	A.oremlandii	Alkaliphilus oremlandii
+T00196(2004)	sth	S.thermophilum	Symbiobacterium thermophilum
+T00396(2006)	swo	S.wolfei	Syntrophomonas wolfei
+T00857(2009)	ate	A.thermophilum	Anaerocellum thermophilum
+T00287(2005)	chy	C.hydrogenoformans	Carboxydothermus hydrogenoformans
+T00333(2006)	dsy	D.hafniense	Desulfitobacterium hafniense Y51
+T00822(2009)	dhd	D.hafniense_DCB-2	Desulfitobacterium hafniense DCB-2
+T00494(2007)	drm	D.reducens	Desulfotomaculum reducens
+T00519(2007)	pth	P.thermopropionicum	Pelotomaculum thermopropionicum
+T00655(2008)	dau	D.audaxviator	Candidatus Desulforudis audaxviator
+T00653(2008)	hmo	H.modesticaldum	Heliobacterium modesticaldum
+T00661(2008)	fma	F.magna	Finegoldia magna
+T00081(2002)	tte	T.tengcongensis	Thermoanaerobacter tengcongensis
+T00648(2008)	tex	Thermoanaerobacter_X514	Thermoanaerobacter sp. X514
+T00649(2008)	tpd	T.pseudethanolicus	Thermoanaerobacter pseudethanolicus
+T00506(2007)	csc	C.saccharolyticus	Caldicellulosiruptor saccharolyticus
+T00308(2005)	mta	M.thermoacetica	Moorella thermoacetica
+T00773(2008)	cpo	C.proteolyticus	Coprothermobacter proteolyticus
+T00761(2008)	nth	N.thermophilus	Natranaerobius thermophilus
+T00838(2009)	hor	H.orenii	Halothermothrix orenii
+### Tenericutes
+#### Mollicutes
+T00002(1995)	mge	M.genitalium	Mycoplasma genitalium
+T00006(1997)	mpn	M.pneumoniae	Mycoplasma pneumoniae
+T00055(2001)	mpu	M.pulmonis	Mycoplasma pulmonis
+T00107(2002)	mpe	M.penetrans	Mycoplasma penetrans
+T00131(2003)	mga	M.gallisepticum	Mycoplasma gallisepticum
+T00161(2004)	mmy	M.mycoides	Mycoplasma mycoides
+T00176(2004)	mmo	M.mobile	Mycoplasma mobile
+T00206(2004)	mhy	M.hyopneumoniae	Mycoplasma hyopneumoniae 232
+T00260(2005)	mhj	M.hyopneumoniae_J	Mycoplasma hyopneumoniae J
+T00264(2005)	mhp	M.hyopneumoniae_7448	Mycoplasma hyopneumoniae 7448
+T00261(2005)	msy	M.synoviae	Mycoplasma synoviae
+T00309(2005)	mcp	M.capricolum	Mycoplasma capricolum
+T00536(2007)	maa	M.agalactiae	Mycoplasma agalactiae
+T00724(2008)	mat	M.arthritidis	Mycoplasma arthritidis
+T00040(2000)	uur	U.urealyticum	Ureaplasma parvum serovar 3 ATCC 700970
+T00680(2008)	upa	U.parvum	Ureaplasma parvum serovar 3 ATCC 27815
+T00781(2008)	uue	U.urealyticum_10	Ureaplasma urealyticum serovar 10 ATCC 33699
+T00154(2003)	poy	Phytoplasma_OY	Phytoplasma OY
+T00314(2006)	ayw	Phytoplasma_AYWB	Phytoplasma AYWB
+T00729(2008)	pml	Phytoplasma_mali	Candidatus Phytoplasma mali
+T00752(2008)	pal	Phytoplasma_australiense	Candidatus Phytoplasma australiense
+T00659(2008)	acl	A.laidlawii	Acholeplasma laidlawii
+T00187(2004)	mfl	M.florum	Mesoplasma florum
+### Actinobacteria
+T00015(1998)	mtu	M.tuberculosis	Mycobacterium tuberculosis H37Rv
+T00053(2001)	mtc	M.tuberculosis_CDC1551	Mycobacterium tuberculosis CDC1551
+T00540(2007)	mra	M.tuberculosis_H37Ra	Mycobacterium tuberculosis H37Ra
+T00545(2007)	mtf	M.tuberculosis_F11	Mycobacterium tuberculosis F11
+T00132(2003)	mbo	M.bovis	Mycobacterium bovis AF2122/97
+T00463(2007)	mbb	M.bovis_BCG	Mycobacterium bovis BCG Pasteur 1173P2
+T00864(2009)	mbt	M.bovis_BCG_Tokyo	Mycobacterium bovis BCG Tokyo 172
+T00047(2001)	mle	M.leprae	Mycobacterium leprae TN
+T00842(2009)	mlb	M.leprae_Br4923	Mycobacterium leprae Br4923
+T00156(2004)	mpa	M.avium_paratuberculosis	Mycobacterium avium paratuberculosis
+T00433(2006)	mav	M.avium_104	Mycobacterium avium 104
+T00434(2006)	msm	M.smegmatis	Mycobacterium smegmatis
+T00435(2006)	mul	M.ulcerans	Mycobacterium ulcerans
+T00449(2006)	mva	M.vanbaalenii	Mycobacterium vanbaalenii
+T00498(2007)	mgi	M.gilvum	Mycobacterium gilvum
+T00657(2008)	mab	M.abscessus	Mycobacterium abscessus ATCC 19977T
+T00367(2006)	mmc	Mycobacterium_MCS	Mycobacterium sp. MCS
+T00442(2006)	mkm	Mycobacterium_KMS	Mycobacterium sp. KMS
+T00482(2007)	mjl	Mycobacterium_JLS	Mycobacterium sp. JLS
+T00694(2008)	mmi	M.marinum	Mycobacterium marinum M
+T00102(2002)	cgl	C.glutamicum	Corynebacterium glutamicum ATCC 13032 (Kyowa Hakko)
+T00244(2005)	cgb	C.glutamicum_B	Corynebacterium glutamicum ATCC 13032 (Bielefeld)
+T00501(2007)	cgt	C.glutamicum_R	Corynebacterium glutamicum R
+T00103(2002)	cef	C.efficiens	Corynebacterium efficiens
+T00151(2003)	cdi	C.diphtheriae	Corynebacterium diphtheriae
+T00255(2005)	cjk	C.jeikeium	Corynebacterium jeikeium
+T00685(2008)	cur	C.urealyticum	Corynebacterium urealyticum
+T00207(2004)	nfa	N.farcinica	Nocardia farcinica
+T00382(2006)	rha	Rhodococcus_RHA1	Rhodococcus sp. RHA1
+T00085(2002)	sco	S.coelicolor	Streptomyces coelicolor
+T00126(2003)	sma	S.avermitilis	Streptomyces avermitilis
+T00691(2008)	sgr	S.griseus	Streptomyces griseus
+T00116(2003)	twh	T.whipplei	Tropheryma whipplei Twist
+T00117(2003)	tws	T.whipplei_S	Tropheryma whipplei TW08/27
+T00190(2004)	lxx	L.xyli	Leifsonia xyli xyli CTCB07
+T00529(2007)	cmi	C.michiganensis	Clavibacter michiganensis subsp. michiganensis
+T00678(2008)	cms	C.michiganensis_sepedonicus	Clavibacter michiganensis subsp. sepedonicus
+T00421(2006)	art	Arthrobacter_FB24	Arthrobacter sp. FB24
+T00447(2006)	aau	A.aurescens	Arthrobacter aurescens
+T00834(2009)	ach	A.chlorophenolicus	Arthrobacter chlorophenolicus
+T00641(2007)	rsa	R.salmoninarum	Renibacterium salmoninarum
+T00701(2008)	krh	K.rhizophila	Kocuria rhizophila
+T00188(2004)	pac	P.acnes	Propionibacterium acnes
+T00443(2006)	nca	Nocardioides_JS614	Nocardioides sp. JS614
+T00265(2005)	tfu	T.fusca	Thermobifida fusca
+T00320(2006)	fra	Frankia_CcI3	Frankia sp. CcI3
+T00608(2007)	fre	Frankia_EAN1pec	Frankia sp. EAN1pec
+T00384(2006)	fal	F.alni	Frankia alni
+T00426(2006)	ace	A.cellulolyticus	Acidothermus cellulolyticus
+T00562(2007)	kra	K.radiotolerans	Kineococcus radiotolerans
+T00492(2007)	sen	S.erythraea	Saccharopolyspora erythraea
+T00504(2007)	stp	S.tropica	Salinispora tropica
+T00613(2007)	saq	S.arenicola	Salinispora arenicola
+T00094(2002)	blo	B.longum	Bifidobacterium longum NCC2705
+T00707(2008)	blj	B.longum_DJO10A	Bifidobacterium longum DJO10A
+T00794(2008)	bln	B.longum_infantis_ATCC15697	Bifidobacterium longum subsp. infantis ATCC 15697
+T00437(2006)	bad	B.adolescentis	Bifidobacterium adolescentis
+T00819(2009)	bla	B.animalis_lactis	Bifidobacterium animalis subsp. lactis AD011
+T00368(2006)	rxy	R.xylanophilus	Rubrobacter xylanophilus
+### Fusobacteria
+T00077(2002)	fnu	F.nucleatum	Fusobacterium nucleatum
+### Planctomyces
+T00134(2003)	rba	R.baltica	Rhodopirellula baltica
+### Verrucomicrobia
+T00689(2008)	ote	O.terrae	Opitutus terrae
+T00727(2008)	min	M.infernorum	Methylacidiphilum infernorum
+T00736(2008)	amu	A.muciniphila	Akkermansia muciniphila
+### Chlamydia
+T00017(1998)	ctr	C.trachomatis	Chlamydia trachomatis D/UW-3/CX (serovar D)
+T00280(2005)	cta	C.trachomatis_A	Chlamydia trachomatis A/HAR-13 (serovar A)
+T00645(2008)	ctb	C.trachomatis_434Bu	Chlamydia trachomatis 434/Bu
+T00646(2008)	ctl	C.trachomatis_L2b	Chlamydia trachomatis L2b/UCH-1/proctitis
+T00028(2000)	cmu	C.muridarum	Chlamydia muridarum
+T00021(1999)	cpn	C.pneumoniae	Chlamydophila pneumoniae CWL029
+T00029(2000)	cpa	C.pneumoniae_AR39	Chlamydophila pneumoniae AR39
+T00032(2000)	cpj	C.pneumoniae_J138	Chlamydophila pneumoniae J138
+T00136(2003)	cpt	C.pneumoniae_TW183	Chlamydophila pneumoniae TW183
+T00125(2003)	cca	C.caviae	Chlamydophila caviae
+T00242(2005)	cab	C.abortus	Chlamydophila abortus
+T00332(2006)	cfe	C.felis	Chlamydophila felis
+T00172(2004)	pcu	Parachlamydia_UWE25	Candidatus Protochlamydia amoebophila
+### Spirochete
+T00012(1997)	bbu	B.burgdorferi	Borrelia burgdorferi
+T00194(2004)	bga	B.garinii	Borrelia garinii
+T00383(2006)	baf	B.afzelii	Borrelia afzelii
+T00807(2008)	bbz	B.burgdorferi_ZS7	Borrelia burgdorferi ZS7
+T00737(2008)	btu	B.turicatae	Borrelia turicatae
+T00764(2008)	bhr	B.hermsii	Borrelia hermsii
+T00768(2008)	bdu	B.duttonii	Borrelia duttonii
+T00769(2008)	bre	B.recurrentis	Borrelia recurrentis
+T00016(1998)	tpa	T.pallidum	Treponema pallidum subsp. pallidum Nichols
+T00716(2008)	tpp	T.pallidum_SS14	Treponema pallidum subsp. pallidum SS14
+T00157(2004)	tde	T.denticola	Treponema denticola
+T00098(2002)	lil	L.interrogans	Leptospira interrogans serovar lai
+T00166(2004)	lic	L.interrogans_Copenhageni	Leptospira interrogans serovar Copenhageni
+T00404(2006)	lbj	L.borgpetersenii_JB197	Leptospira borgpetersenii JB197
+T00405(2006)	lbl	L.borgpetersenii_L550	Leptospira borgpetersenii L550
+T00693(2008)	lbi	L.biflexa	Leptospira biflexa serovar Patoc Patoc 1 (Paris)
+T00712(2008)	lbf	L.biflexa_Patoc1_Ames	Leptospira biflexa serovar Patoc Patoc 1 (Ames)
+T00865(2009)	bhy	B.hyodysenteriae	Brachyspira hyodysenteriae
+### Cyanobacteria
+T00004(1996)	syn	Synechocystis	Synechocystis sp. PCC6803
+T00144(2003)	syw	Synechococcus_WH8102	Synechococcus sp. WH8102
+T00163(2004)	syc	Synechococcus_PCC6301	Synechococcus elongatus PCC6301
+T00300(2005)	syf	Synechococcus_PCC7942	Synechococcus elongatus PCC7942
+T00292(2005)	syd	Synechococcus_CC9605	Synechococcus sp. CC9605
+T00293(2005)	sye	Synechococcus_CC9902	Synechococcus sp. CC9902
+T00390(2006)	syg	Synechococcus_CC9311	Synechococcus sp. CC9311
+T00523(2007)	syr	Synechococcus_RCC307	Synechococcus sp. RCC307
+T00524(2007)	syx	Synechococcus_WH7803	Synechococcus sp. WH7803
+T00664(2008)	syp	Synechococcus_PCC7002	Synechococcus sp. PCC7002
+T00318(2006)	cya	Cyanobacteria_CYA	Cyanobacteria Yellowstone A-Prime
+T00319(2006)	cyb	Cyanobacteria_CYB	Cyanobacteria Yellowstone B-Prime
+T00090(2002)	tel	T.elongatus	Thermosynechococcus elongatus
+T00647(2008)	mar	M.aeruginosa	Microcystis aeruginosa
+T00686(2008)	cyt	Cyanothece_ATCC51142	Cyanothece sp. ATCC 51142
+T00806(2008)	cyp	Cyanothece_PCC8801	Cyanothece sp. PCC 8801
+T00808(2008)	cyc	Cyanothece_PCC7424	Cyanothece sp. PCC 7424
+T00836(2009)	cyn	Cyanothece_PCC7425	Cyanothece sp. PCC 7425
+T00148(2003)	gvi	G.violaceus	Gloeobacter violaceus
+T00069(2001)	ana	Anabaena	Anabaena sp. PCC7120
+T00713(2008)	npu	N.punctiforme	Nostoc punctiforme
+T00277(2005)	ava	A.variabilis	Anabaena variabilis
+T00137(2003)	pma	P.marinus	Prochlorococcus marinus SS120
+T00142(2003)	pmm	P.marinus_MED4	Prochlorococcus marinus MED4
+T00143(2003)	pmt	P.marinus_MIT9313	Prochlorococcus marinus MIT9313
+T00267(2005)	pmn	P.marinus_NATL2A	Prochlorococcus marinus NATL2A
+T00297(2005)	pmi	P.marinus_MIT9312	Prochlorococcus marinus MIT9312
+T00464(2007)	pmb	P.marinus_AS9601	Prochlorococcus marinus AS9601
+T00465(2007)	pmc	P.marinus_MIT9515	Prochlorococcus marinus MIT 9515
+T00466(2007)	pmf	P.marinus_MIT9303	Prochlorococcus marinus MIT 9303
+T00488(2007)	pmg	P.marinus_MIT9301	Prochlorococcus marinus MIT 9301
+T00598(2007)	pmh	P.marinus_MIT9215	Prochlorococcus marinus MIT 9215
+T00616(2007)	pmj	P.marinus_MIT9211	Prochlorococcus marinus MIT 9211
+T00467(2007)	pme	P.marinus_NATL1A	Prochlorococcus marinus NATL1A
+T00387(2006)	ter	T.erythraeum	Trichodesmium erythraeum
+T00617(2007)	amr	A.marina	Acaryochloris marina
+### Bacteroides
+T00122(2003)	bth	B.thetaiotaomicron	Bacteroides thetaiotaomicron
+T00202(2004)	bfr	B.fragilis	Bacteroides fragilis YCH46
+T00239(2005)	bfs	B.fragilis_NCTC9343	Bacteroides fragilis NCTC9343
+T00546(2007)	bvu	B.vulgatus	Bacteroides vulgatus
+T00145(2003)	pgi	P.gingivalis	Porphyromonas gingivalis W83
+T00714(2008)	pgn	P.gingivalis_ATCC33277	Porphyromonas gingivalis ATCC 33277
+T00549(2007)	pdi	P.distasonis	Parabacteroides distasonis
+T00792(2008)	aps	A.pseudotrichonymphae	Candidatus Azobacteroides pseudotrichonymphae
+T00312(2005)	sru	S.ruber	Salinibacter ruber
+T00385(2006)	chu	C.hutchinsonii	Cytophaga hutchinsonii
+T00448(2006)	gfo	G.forsetii	Gramella forsetii
+T00508(2007)	fjo	F.johnsoniae	Flavobacterium johnsoniae
+T00548(2007)	fps	F.psychrophilum	Flavobacterium psychrophilum
+T00630(2007)	smg	S.muelleri	Candidatus Sulcia muelleri
+T00730(2008)	aas	A.asiaticus	Candidatus Amoebophilus asiaticus
+### Green sulfur bacteria
+T00088(2002)	cte	C.tepidum	Chlorobaculum tepidum
+T00725(2008)	cpc	C.parvum_NCIB8327	Chlorobaculum parvum NCIB 8327
+T00290(2005)	cch	C.chlorochromatii	Chlorobium chlorochromatii
+T00439(2006)	cph	C.phaeobacteroides	Chlorobium phaeobacteroides DSM 266
+T00709(2008)	cpb	C.phaeobacteroides_BS1	Chlorobium phaeobacteroides BS1
+T00766(2008)	cli	C.limicola	Chlorobium limicola
+T00499(2007)	pvi	P.vibrioformis	Prosthecochloris vibrioformis
+T00291(2005)	plt	P.luteolum	Pelodictyon luteolum
+T00731(2008)	pph	P.phaeoclathratiforme	Pelodictyon phaeoclathratiforme
+T00726(2008)	cts	C.thalassium	Chloroherpeton thalassium
+T00732(2008)	paa	P.aestuarii	Prosthecochloris aestuarii
+### Green nonsulfur bacteria
+T00223(2005)	det	D.ethenogenes	Dehalococcoides ethenogenes
+T00273(2005)	deh	Dehalococcoides_CBDB1	Dehalococcoides sp. CBDB1
+T00518(2007)	deb	Dehalococcoides_BAV1	Dehalococcoides sp. BAV1
+T00542(2007)	rrs	Roseiflexus_RS-1	Roseiflexus sp. RS-1
+T00585(2007)	rca	R.castenholzii	Roseiflexus castenholzii DSM13941	
+T00639(2007)	cau	C.aurantiacus	Chloroflexus aurantiacus
+T00824(2009)	cag	C.aggregans	Chloroflexus aggregans
+T00859(2009)	chl	Chloroflexus_Y-400-fl	Chloroflexus sp. Y-400-fl
+T00614(2007)	hau	H.aurantiacus	Herpetosiphon aurantiacus
+T00845(2009)	tro	T.roseum	Thermomicrobium roseum
+### Termite group
+T00741(2008)	emi	E.minutum	Elusimicrobium minutum
+T00755(2008)	rsd	Rs-D17	Uncultured Termite group 1 bacterium phylotype Rs-D17
+### Deinococcus-Thermus
+T00025(1999)	dra	D.radiodurans	Deinococcus radiodurans
+T00353(2006)	dge	D.geothermalis	Deinococcus geothermalis
+T00170(2004)	tth	T.thermophilus	Thermus thermophilus HB27
+T00220(2004)	ttj	T.thermophilus_HB8	Thermus thermophilus HB8
+### Hyperthermophilic bacteria
+T00013(1998)	aae	A.aeolicus	Aquifex aeolicus
+T00745(2008)	hya	Hydrogenobaculum_Y04AAS1	Hydrogenobaculum sp. Y04AAS1
+T00715(2008)	sul	Sulfurihydrogenibium_YO3AOP1	Sulfurihydrogenibium sp. YO3AOP1
+T00876(2009)	saf	S.azorense	Sulfurihydrogenibium azorense
+T00870(2009)	pmx	P.marina	Persephonella marina
+T00022(1999)	tma	T.maritima	Thermotoga maritima
+T00525(2007)	tpt	T.petrophila	Thermotoga petrophila
+T00618(2007)	tle	T.lettingae	Thermotoga lettingae
+T00706(2008)	trq	Thermotoga_RQ2	Thermotoga sp. RQ2
+T00847(2009)	tna	T.neapolitana	Thermotoga neapolitana
+T00550(2007)	tme	T.melanesiensis	Thermosipho melanesiensis
+T00797(2008)	taf	T.africanus	Thermosipho africanus
+T00579(2007)	fno	F.nodosum	Fervidobacterium nodosum
+T00621(2007)	pmo	P.mobilis	Petrotoga mobilis
+T00774(2008)	dth	D.thermophilum	Dictyoglomus thermophilum
+T00800(2008)	dtu	D.turgidum	Dictyoglomus turgidum
+T00775(2008)	tye	T.yellowstonii	Thermodesulfovibrio yellowstonii
+
+## Archaea
+### Euryarchaeota
+T00003(1996)	mja	M.jannaschii	Methanococcus jannaschii
+T00164(2004)	mmp	M.maripaludis	Methanococcus maripaludis S2
+T00491(2007)	mmq	M.maripaludis_C5	Methanococcus maripaludis C5
+T00615(2007)	mmx	M.maripaludis_C6	Methanococcus maripaludis C6
+T00553(2007)	mmz	M.maripaludis_C7	Methanococcus maripaludis C7
+T00552(2007)	mae	M.aeolicus	Methanococcus aeolicus
+T00554(2007)	mvn	M.vannielii	Methanococcus vannielii
+T00080(2002)	mac	M.acetivorans	Methanosarcina acetivorans
+T00271(2005)	mba	M.barkeri	Methanosarcina barkeri
+T00082(2002)	mma	M.mazei	Methanosarcina mazei
+T00341(2006)	mbu	M.burtonii	Methanococcoides burtonii
+T00417(2006)	mtp	M.thermophila	Methanosaeta thermophila
+T00325(2006)	mhu	M.hungatei	Methanospirillum hungatei
+T00472(2007)	mla	M.labreanum	Methanocorpusculum labreanum
+T00477(2007)	mem	M.marisnigri	Methanoculleus marisnigri
+T00578(2007)	mbn	M.boonei	Candidatus Methanoregula boonei
+T00009(1997)	mth	M.thermoautotrophicum	Methanobacterium thermoautotrophicum
+T00313(2006)	mst	M.stadtmanae	Methanosphaera stadtmanae
+T00539(2007)	msi	M.smithii	Methanobrevibacter smithii ATCC 35061
+T00078(2002)	mka	M.kandleri	Methanopyrus kandleri
+T00011(1997)	afu	A.fulgidus	Archaeoglobus fulgidus
 T00038(2000)	hal	Halobacterium	Halobacterium sp. NRC-1
 T00662(2008)	hsl	H.salinarum	Halobacterium salinarum R1
+T00211(2004)	hma	H.marismortui	Haloarcula marismortui
+T00375(2006)	hwa	H.walsbyi	Haloquadratum walsbyi
+T00279(2005)	nph	N.pharaonis	Natronomonas pharaonis
+T00856(2009)	hla	H.lacusprofundi	Halorubrum lacusprofundi
+T00037(2000)	tac	T.acidophilum	Thermoplasma acidophilum
+T00042(2000)	tvo	T.volcanium	Thermoplasma volcanium
+T00177(2004)	pto	P.torridus	Picrophilus torridus
+T00014(1998)	pho	P.horikoshii	Pyrococcus horikoshii
+T00024(1999)	pab	P.abyssi	Pyrococcus abyssi
+T00075(2002)	pfu	P.furiosus	Pyrococcus furiosus
+T00226(2005)	tko	T.kodakaraensis	Thermococcus kodakaraensis
+T00789(2008)	ton	T.onnurineus	Thermococcus onnurineus
+T00823(2009)	mpl	M.palustris	Candidatus Methanosphaerula palustris
+T00526(2007)	rci	RC-I_MRE50	Uncultured methanogenic archaeon RC-I
+### Crenarchaeota
+T00023(1999)	ape	A.pernix	Aeropyrum pernix
+T00485(2007)	smr	S.marinus	Staphylothermus marinus
+T00587(2007)	iho	I.hospitalis	Ignicoccus hospitalis
+T00817(2009)	dka	D.kamchatkensis	Desulfurococcus kamchatkensis
+T00468(2007)	hbu	H.butylicus	Hyperthermus butylicus
+T00054(2001)	sso	S.solfataricus	Sulfolobus solfataricus
+T00062(2001)	sto	S.tokodaii	Sulfolobus tokodaii
+T00251(2005)	sai	S.acidocaldarius	Sulfolobus acidocaldarius
+T00509(2007)	mse	M.sedula	Metallosphaera sedula
+T00073(2002)	pai	P.aerophilum	Pyrobaculum aerophilum
+T00444(2006)	pis	P.islandicum	Pyrobaculum islandicum
+T00483(2007)	pcl	P.calidifontis	Pyrobaculum calidifontis
+T00503(2007)	pas	P.arsenaticum	Pyrobaculum arsenaticum
+T00611(2007)	cma	C.maquilingensis	Caldivirga maquilingensis
+T00682(2008)	tne	T.neutrophilus	Thermoproteus neutrophilus
+T00446(2006)	tpe	T.pendens	Thermofilum pendens
+T00626(2007)	nmr	N.maritimus	Nitrosopumilus maritimus
+### Nanoarchaeota
+T00152(2003)	neq	N.equitans	Nanoarchaeum equitans
+### Korarchaeota
+T00668(2008)	kcr	K.cryptofilum	Candidatus Korarchaeum cryptofilum

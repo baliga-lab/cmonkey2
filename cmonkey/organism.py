@@ -6,6 +6,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import re
+import string
 import logging
 import thesaurus
 import util
@@ -289,10 +290,12 @@ class Microbe(OrganismBase):
             if line[6] == 'R':
                 is_reverse = True
 
+            # note that feature positions can sometimes start with a '>'
+            # or '<', so make sure it is stripped away
             return st.Feature(line[0], line[1], line[2],
                               st.Location(contig,
-                                          int(line[4]),
-                                          int(line[5]),
+                                          int(string.lstrip(line[4], '<>')),
+                                          int(string.lstrip(line[5], '<>')),
                                           is_reverse))
 
         features = {}
