@@ -107,7 +107,8 @@ def make_operon_pairs(operon, features):
             head = get_forward_head(feature_map)
         else:
             logging.warning("can't determine head of operon - amounts " +
-                            "of reverse and forward genes are too similar (%f-%f)",
+                            "of reverse and forward genes are too similar " +
+                            "(%f-%f)",
                             percent_reverse, 1.0 - percent_reverse)
             return []
         return [(head, gene) for gene in available_operon_genes]

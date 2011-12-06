@@ -129,6 +129,7 @@ class ScoringFunctionCombiner:
         return combined_score
 
     def __log_subresult(self, score_function, matrix):
+        """output an accumulated subresult to the log"""
         scores = []
         for cluster in range(1, matrix.num_columns() + 1):
             for row in range(matrix.num_rows()):

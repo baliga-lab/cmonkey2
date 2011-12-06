@@ -29,8 +29,8 @@ class DataMatrix:
             for row_index in range(nrows):
                 inrow = values[row_index]
                 if len(inrow) != ncols:
-                    raise ValueError(("row %d: number of columns should be %d " +
-                                     "(was %d)")
+                    raise ValueError(("row %d: number of columns should be " +
+                                      "%d (was %d)")
                                      % (row_index, ncols, len(inrow)))
 
         if not row_names:
