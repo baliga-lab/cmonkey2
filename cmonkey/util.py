@@ -13,6 +13,7 @@ import os
 import rpy2.robjects as robjects
 import gzip
 import shelve
+import time
 
 
 def make_delimited_file_from_lines(lines, sep, has_header, comment, quote):
@@ -391,6 +392,11 @@ class open_shelf:
         """exiting the manager"""
         self.__shelf.sync()
         self.__shelf.close()
+
+
+def current_millis():
+    """returns the current time in milliseconds"""
+    return int(math.floor(time.time() * 1000))
 
 
 __all__ = ['DelimitedFile', 'best_matching_links', 'quantile', 'make_matrix',

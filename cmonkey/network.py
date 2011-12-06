@@ -161,7 +161,6 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
         if (self.__interval == 0 or
             (iteration > 0 and (iteration % self.__interval == 0))):
-            print "RUN NETWORK SCORING IN ITERATION ", iteration
             return self.__compute()
         else:
             return None
@@ -177,8 +176,12 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
         for network in networks:
             logging.info("Compute scores for network '%s'", network.name())
+            start_time = util.current_millis()
             network_score = self.__compute_network_cluster_scores(network)
             self.__update_score_matrix(matrix, network_score, weight)
+            elapsed = util.current_millis() - start_time
+            logging.info("NETWORK '%s' SCORING TIME: %f s.",
+                         network.name(), (elapsed / 1000.0))
             #score_means[network.name()] = self.__compute_cluster_score_means(
             #    network_score)
             #self.__update_network_iteration_scores(network_iteration_scores,

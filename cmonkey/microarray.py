@@ -6,6 +6,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import numpy
+import logging
 import datamatrix as dm
 import util
 import scoring
@@ -236,9 +237,13 @@ class RowScoringFunction(scoring.ScoringFunctionBase):
 
     def compute(self, iteration, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
-        return compute_row_scores(self.membership(),
-                                  self.matrix(),
-                                  self.num_clusters())
+        start_time = util.current_millis()
+        result = compute_row_scores(self.membership(),
+                                    self.matrix(),
+                                    self.num_clusters())
+        elapsed = util.current_millis() - start_time
+        logging.info("ROW SCORING TIME: %f s.", (elapsed / 1000.0))
+        return result
 
 
 class ColumnScoringFunction(scoring.ScoringFunctionBase):
@@ -258,9 +263,13 @@ class ColumnScoringFunction(scoring.ScoringFunctionBase):
 
     def compute(self, iteration, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
-        return compute_column_scores(self.membership(),
-                                     self.matrix(),
-                                     self.num_clusters())
+        start_time = util.current_millis()
+        result = compute_column_scores(self.membership(),
+                                       self.matrix(),
+                                       self.num_clusters())
+        elapsed = util.current_millis() - start_time
+        logging.info("COLUMN SCORING TIME: %f s.", (elapsed / 1000.0))
+        return result
 
     def apply_weight(self, result, iteration):
         """applies the stored weight"""

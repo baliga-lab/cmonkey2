@@ -13,6 +13,7 @@ import weeder
 import meme
 import tempfile
 import seqtools as st
+import util
 
 
 # Applicable sequence filters
@@ -128,7 +129,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         """compute method, iteration is the 0-based iteration number"""
         if (self.interval == 0 or
             (iteration > 0 and (iteration % self.interval == 0))):
-            print "RUN MOTIF SCORING IN ITERATION ", iteration
+            global_start_time = util.current_millis()
             pvalues = self.compute_pvalues(iteration)
             remapped = {}
             for cluster in pvalues:
@@ -147,6 +148,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                     if (cluster in remapped.keys() and
                         row in remapped[cluster].keys()):
                         matrix[row_index][cluster - 1] = remapped[cluster][row]
+            global_elapsed = util.current_millis() - global_start_time
+            logging.info("GLOBAL MOTIF TIME: %d seconds", (global_elapsed / 1000.0))
             return matrix
         else:
             return None
@@ -173,6 +176,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
         for cluster in range(1, self.num_clusters() + 1):
             logging.info("compute motif scores for cluster %d", cluster)
+            start_time = util.current_millis()
             genes = sorted(self.rows_for_cluster(cluster))
             feature_ids = self.organism.feature_ids_for(genes)
             seqs = self.organism.sequences_for_genes_search(
@@ -193,6 +197,11 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                 for motif_info in meme_run_results[cluster].motif_infos:
                     print ("consensus: ", motif_info.consensus_string(),
                            " evalue: ", motif_info.evalue())
+                # measure cluster scoring time
+                elapsed = util.current_millis() - start_time
+                logging.info("MOTIF/CLUSTER TIME (# seqs = %d, seqlen = " +
+                             "%d): %f seconds", len(seqs), len(seqs.values()[0]),
+                             (elapsed / 1000.0))
             else:
                 logging.info("# seqs (= %d) outside of defined limits, "
                              "skipping cluster %d", len(seqs), cluster)
