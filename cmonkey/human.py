@@ -312,7 +312,8 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             sequence_filters=sequence_filters,
             pvalue_filter=motif.make_min_value_filter(-20.0),
             weight_func=lambda iteration: 0.0,
-            interval=0)
+            interval=0,
+            config_params=self.config_params)
 
         network_scoring = nw.ScoringFunction(self.organism(),
                                              self.membership(),
@@ -335,8 +336,14 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
                                                     set_types,
                                                     lambda iteration: 0.0, 0)
 
-        return scoring.ScoringFunctionCombiner([row_scoring,
-                                                set_enrichment_scoring])
+        #return scoring.ScoringFunctionCombiner([row_scoring,
+        #                                        set_enrichment_scoring])
+        motif_combiner = scoring.ScoringFunctionCombiner(self.membership(),
+                                                         [motif_scoring, weeder_scoring],
+                                                         weight_func=lambda iteration: 0.5)
+        return scoring.ScoringFunctionCombiner(self.membership(),
+                                               [row_scoring, motif_combiner,
+                                                network_scoring])
 
 
 def read_controls():
