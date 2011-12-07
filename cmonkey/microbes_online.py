@@ -12,9 +12,14 @@ import sys
 import logging
 import util
 import network
+import MySQLdb as mysql
 
 
 MICROBES_ONLINE_BASE_URL = 'http://www.microbesonline.org'
+MYSQL_HOST = 'pub.microbesonline.org'
+MYSQL_USER = 'guest'
+MYSQL_PASSWD = 'guest'
+MYSQL_DB = 'genomics'
 
 
 class MicrobesOnline:
@@ -34,6 +39,28 @@ class MicrobesOnline:
                        'gnc%s.named' % str(organism_id)])
         cache_file = '/'.join([self.cache_dir,
                               'gnc%s.named' % str(organism_id)])
+        return util.read_url_cached(url, cache_file)
+
+    def get_genome_info_for(self, organism_id):
+        """Returns the Genome info from Microbes Online"""
+        logging.info('MicrobesOnline.get_genome_info_for(%s)',
+                     str(organism_id))
+        url = '/'.join([self.base_url, 'cgi-bin',
+                        'genomeInfo.cgi?tId=%s;export=tab' %
+                        str(organism_id)])
+        cache_file = '/'.join([self.cache_dir,
+                              'mo_%s.genome_info' % str(organism_id)])
+        return util.read_url_cached(url, cache_file)
+
+    def get_genome_for(self, organism_id):
+        """Returns the genome from Microbes Online, stored in FASTA format"""
+        logging.info('MicrobesOnline.get_genome_for(%s)',
+                     str(organism_id))
+        url = '/'.join([self.base_url, 'cgi-bin',
+                        'genomeInfo.cgi?tId=%s;export=genome' %
+                        str(organism_id)])
+        cache_file = '/'.join([self.cache_dir,
+                              'mo_genome_%s.fasta' % str(organism_id)])
         return util.read_url_cached(url, cache_file)
 
 
@@ -215,6 +242,34 @@ def get_network_factory(microbes_online, max_operon_size):
         return network.Network.create('operons', edges)
 
     return make_network
+
+
+#######################################################################
+#### DIRECT MYSQL ACCESS
+#######################################################################
+
+def mysql_connect():
+    """create a database connection"""
+    return mysql.connect(host=MYSQL_HOST, user=MYSQL_USER,
+                         passwd=MYSQL_PASSWD, db=MYSQL_DB)
+
+
+def mysql_synonyms(conn, taxonomy_id):
+    """Retrieve synonyms through direct MySQL access"""
+    cursor = conn.cursor()
+    cursor.execute('select distinct Locus.locusId, Synonym.name, ' +
+                   'Synonym.type from ' +
+                   'Scaffold join Locus using (scaffoldId) join ' +
+                   'Synonym using (locusId, version) ' +
+                   'where Locus.priority=1 and Locus.type=1 and ' +
+                   'Scaffold.isActive=1 and Synonym.type in (0, 1, 3) and ' +
+                   'Scaffold.taxonomyId= %(taxid)s order by ' +
+                   'Locus.locusId, Synonym.type',
+                   {'taxid': taxonomy_id})
+    row = cursor.fetchone()
+    while row:
+        print "%d: %s (%s)" % (row[0], row[1], row[2])
+        row = cursor.fetchone()
 
 
 __all__ = ['MicrobesOnline', 'get_network_factory', 'get_operon_pairs']

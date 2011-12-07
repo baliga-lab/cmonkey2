@@ -134,7 +134,9 @@ def mock_go_mapper(rsat_organism):
 
 
 class MockMicrobesOnline:
-    pass
+    def get_operon_predictions_for(self, organism_id):
+        with open('testdata/gnc64091.named') as infile:
+            return infile.read()
 
 
 class MicrobeFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -189,7 +191,7 @@ class MicrobeTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                [],
                                SEARCH_DISTANCES,
                                SCAN_DISTANCES)
-        seqs = organism.sequences_for_genes_upstream(['VNG12345G'], (-30, 250))
+        seqs = organism.sequences_for_genes_scan(['VNG12345G'], seqtype='upstream')
         self.assertEquals((st.Location('NC_000915.1', -128, 152, False),
                            'ACGTTTAAAAGAGAGAGAGACACAGTATATATTTTTTTAAAA'),
                           seqs['NP_206803.1'])

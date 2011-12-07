@@ -243,17 +243,6 @@ class Microbe(OrganismBase):
             outseqs[gene] = unique_seqs[head]
         return outseqs
 
-    def sequences_for_genes_upstream(self, gene_aliases, distance):
-        """get the gene sequences as a map from feature id -> sequence for
-        the given gene aliases
-        """
-        features = self.__read_features(
-            self.feature_ids_for(gene_aliases))
-        logging.info("# Features read: %d", len(features))
-        return util.ThesaurusBasedMap(
-            self.thesaurus(),
-            self.__read_sequences(features, distance, st.extract_upstream))
-
     def __operon_map(self):
         """Returns the operon map for this particular organism.
         Microbes Online works on VNG names, but RSAT is working on
