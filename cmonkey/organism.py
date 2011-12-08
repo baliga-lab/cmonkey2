@@ -138,9 +138,6 @@ class OrganismBase:
         """Helper method to retrieve a list of feature_ids for the
         specified alias list"""
         synonyms = self.thesaurus()
-        for alias in synonyms:
-            if alias not in synonyms:
-                logging.warn("gene '%s' not contained in feature_names.tab")
         return [synonyms[alias] for alias in gene_aliases if alias in synonyms]
 
 

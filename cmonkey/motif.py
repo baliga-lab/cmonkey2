@@ -100,8 +100,10 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             sorted(matrix.row_names()), seqtype=self.seqtype)
         logging.info("used sequences for motifing retrieved")
         logging.info("building reverse map...")
+        start_time = util.current_millis()
         self.reverse_map = self.__build_reverse_map(matrix)
-        logging.info("reverse map built.")
+        logging.info("reverse map built in %d ms.",
+                     util.current_millis() - start_time)
 
     def __build_reverse_map(self, matrix):
         """build a map that reconstructs the original row name from
@@ -115,10 +117,15 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                 return None
 
         result = {}
+        num_not_found = 0
         for row_name in matrix.row_names():
             feature_id = feature_id_for(row_name)
             if feature_id != None:
                 result[feature_id] = row_name
+            else:
+                num_not_found += 1
+        if num_not_found > 0:
+            logging.warn("%d genes not found in synonyms.", num_not_found)
         return result
 
     def name(self):
