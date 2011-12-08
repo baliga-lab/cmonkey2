@@ -10,6 +10,7 @@ import logging
 import datamatrix as dm
 import util
 import scoring
+import multiprocessing as mp
 
 
 def seed_column_members(data_matrix, row_membership, num_clusters,
@@ -130,39 +131,62 @@ def compute_row_scores(membership, matrix, num_clusters):
     """for each cluster 1, 2, .. num_clusters compute the row scores
     for the each row name in the input name matrix"""
     clusters = range(1, num_clusters + 1)
+    start_time = util.current_millis()
     cluster_row_scores = __compute_row_scores_for_clusters(
         membership, matrix, clusters)
+    logging.info("__compute_row_scores_for_clusters() in %f s.",
+                 (util.current_millis() - start_time) / 1000.0)
+    start_time = util.current_millis()
     cluster_row_scores = __replace_non_numeric_values(cluster_row_scores,
                                                       membership,
                                                       matrix, clusters)
+    logging.info("__replace_non_numeric_values() in %f s.",
+                 (util.current_millis() - start_time) / 1000.0)
 
     # rearrange result into a DataMatrix, where rows are indexed by gene
     # and columns represent clusters
+    start_time = util.current_millis()
     result = dm.DataMatrix(matrix.num_rows(), num_clusters,
                            row_names=matrix.row_names())
     for cluster in range(num_clusters):
         row_scores = cluster_row_scores[cluster]
         for row_index in range(matrix.num_rows()):
             result[row_index][cluster] = row_scores[0][row_index]
+    logging.info("made result matrix in %f s.",
+                 (util.current_millis() - start_time) / 1000.0)
+
     return result.sorted_by_row_name()
 
 
+def compute_row_scores_for_cluster(cluster_data):
+    """This function computes the row score for a cluster"""
+    cluster, membership, matrix = cluster_data
+    sm1 = matrix.submatrix_by_name(
+        row_names=membership.rows_for_cluster(cluster),
+        column_names=membership.columns_for_cluster(cluster))
+    if sm1.num_columns() > 1:
+        matrix_filtered = matrix.submatrix_by_name(
+            column_names=membership.columns_for_cluster(cluster))
+        row_scores_for_cluster = __compute_row_scores_for_submatrix(
+            matrix_filtered, sm1)
+        return row_scores_for_cluster
+    else:
+        return None
+    
 def __compute_row_scores_for_clusters(membership, matrix, clusters):
     """compute the pure row scores for the specified clusters
     without nowmalization"""
-    result = []
-    for cluster in clusters:
-        sm1 = matrix.submatrix_by_name(
-            row_names=membership.rows_for_cluster(cluster),
-            column_names=membership.columns_for_cluster(cluster))
-        if sm1.num_columns() > 1:
-            matrix_filtered = matrix.submatrix_by_name(
-                column_names=membership.columns_for_cluster(cluster))
-            row_scores_for_cluster = __compute_row_scores_for_submatrix(
-                matrix_filtered, sm1)
-            result.append(row_scores_for_cluster)
-        else:
-            result.append(None)
+    USE_MULTIPROCESSING = True
+    if USE_MULTIPROCESSING:
+        pool = mp.Pool()
+        result = pool.map(compute_row_scores_for_cluster,
+                          [(cluster, membership, matrix)
+                           for cluster in clusters])
+    else:
+        result = []
+        for cluster in clusters:
+            result.append(compute_row_scores_for_cluster((cluster,
+                                                         membership, matrix)))
     return result
 
 
