@@ -46,13 +46,23 @@ class ComputeArrayScoresTest(unittest.TestCase):
                                         has_header=True, quote='"')
         return dm.DataMatrixFactory([]).create_from(dfile)
 
-    def test_compute_row_scores(self):
+    def test_compute_row_scores_multiprocessing(self):
         membership = self.__read_members()
         ratios = self.__read_ratios()
         print "(reading reference row scores...)"
         refresult = self.__read_rowscores_refresult()
         print "(compute my own row scores...)"
-        result = ma.compute_row_scores(membership, ratios, 43)
+        result = ma.compute_row_scores(membership, ratios, 43, True)
+        print "(comparing computed with reference results...)"
+        self.__compare_with_refresult(refresult, result)
+
+    def test_compute_row_scores_single(self):
+        membership = self.__read_members()
+        ratios = self.__read_ratios()
+        print "(reading reference row scores...)"
+        refresult = self.__read_rowscores_refresult()
+        print "(compute my own row scores...)"
+        result = ma.compute_row_scores(membership, ratios, 43, False)
         print "(comparing computed with reference results...)"
         self.__compare_with_refresult(refresult, result)
 

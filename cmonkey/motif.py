@@ -6,6 +6,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import logging
+import multiprocessing as mp
 import numpy
 import scoring
 import datamatrix as dm
@@ -49,26 +50,28 @@ def get_remove_atgs_filter(distance):
     return remove_atgs_filter
 
 
-def make_min_value_filter(min_value):
-    """A function generator which creates a value filter"""
+class MinPValueFilter:
+    """A minimum p-value filter. Implemented as a class, so multiprocessing
+    can deal with it"""
+    def __init__(self, min_value):
+        self.__min_value = min_value
 
-    def min_value_filter(values):
+    def __call__(self, values):
         """all values that are below min_value are set to the
         minimum value above min_value"""
         allowed_vals = [value for key, value in values.items()
-                        if value > min_value]
+                        if value > self.__min_value]
         result = {}
         if len(allowed_vals) == 0:
             logging.warn("all values are below the threshold -> no result !!")
         else:
             min_allowed = min(allowed_vals)
             for key, value in values.items():
-                if value < min_value:
+                if value < self.__min_value:
                     result[key] = min_allowed
                 else:
                     result[key] = value
         return result
-    return min_value_filter
 
 
 class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
@@ -175,45 +178,71 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             return seqs
 
         cluster_pvalues = {}
-        meme_run_results = {}
         min_cluster_rows_allowed = self.config_params[
             scoring.KEY_MOTIF_MIN_CLUSTER_ROWS_ALLOWED]
         max_cluster_rows_allowed = self.config_params[
             scoring.KEY_MOTIF_MAX_CLUSTER_ROWS_ALLOWED]
+        use_multiprocessing = self.config_params[
+            scoring.KEY_MULTIPROCESSING]
 
+        # create parameters
+        params = []
         for cluster in range(1, self.num_clusters() + 1):
-            logging.info("compute motif scores for cluster %d", cluster)
-            start_time = util.current_millis()
             genes = sorted(self.rows_for_cluster(cluster))
             feature_ids = self.organism.feature_ids_for(genes)
             seqs = self.organism.sequences_for_genes_search(
                 genes, seqtype=self.seqtype)
             seqs = apply_sequence_filters(seqs, feature_ids)
-            if (len(seqs) >= min_cluster_rows_allowed
-                and len(seqs) <= max_cluster_rows_allowed):
-                meme_run_results[cluster] = self.compute_meme_run(seqs)
+            params.append(ComputeScoreParams(cluster, genes, seqs,
+                                             self.used_seqs,
+                                             self.meme_runner(),
+                                             self.__pvalue_filter,
+                                             min_cluster_rows_allowed,
+                                             max_cluster_rows_allowed))
 
-                pvalues = {}
-                pe_values = meme_run_results[cluster].pe_values
-                for feature_id, pvalue, evalue in pe_values:
-                    pvalues[feature_id] = numpy.log(pvalue)
-                if self.__pvalue_filter != None:
-                    pvalues = self.__pvalue_filter(pvalues)
-                cluster_pvalues[cluster] = pvalues
-
-                for motif_info in meme_run_results[cluster].motif_infos:
-                    print ("consensus: ", motif_info.consensus_string(),
-                           " evalue: ", motif_info.evalue())
-                # measure cluster scoring time
-                elapsed = util.current_millis() - start_time
-                logging.info("MOTIF/CLUSTER TIME (# seqs = %d, seqlen = " +
-                             "%d): %f seconds", len(seqs), len(seqs.values()[0]),
-                             (elapsed / 1000.0))
-            else:
-                logging.info("# seqs (= %d) outside of defined limits, "
-                             "skipping cluster %d", len(seqs), cluster)
-
+        if use_multiprocessing:
+            pool = mp.Pool()
+            results = pool.map(compute_cluster_score, params)
+            for cluster in range(1, self.num_clusters() + 1):
+                cluster_pvalues[cluster] = results[cluster - 1]
+        else:
+            for cluster in range(1, self.num_clusters() + 1):
+                cluster_pvalues[cluster] = compute_cluster_score(
+                    params[cluster - 1])
         return cluster_pvalues
+
+
+class ComputeScoreParams:
+    def __init__(self, cluster, genes, seqs, used_seqs, meme_runner,
+                 pvalue_filter, min_cluster_rows, max_cluster_rows):
+        self.cluster = cluster
+        self.genes = genes
+        self.seqs = seqs
+        self.used_seqs = used_seqs
+        self.meme_runner = meme_runner
+        self.pvalue_filter = pvalue_filter
+        self.min_cluster_rows = min_cluster_rows
+        self.max_cluster_rows = max_cluster_rows
+
+def compute_cluster_score(params):
+    """This function computes the MEME score for a cluster"""
+    pvalues = {}
+    if (len(params.seqs) >= params.min_cluster_rows
+        and len(params.seqs) <= params.max_cluster_rows):
+        run_result = params.meme_runner(params.seqs, params.used_seqs)
+        pe_values = run_result.pe_values
+        for feature_id, pvalue, evalue in pe_values:
+            pvalues[feature_id] = numpy.log(pvalue)
+        if params.pvalue_filter != None:
+            pvalues = params.pvalue_filter(pvalues)
+
+        for motif_info in run_result.motif_infos:
+            logging.info("consensus: %s, evalue: %f", motif_info.consensus_string(),
+                         motif_info.evalue())
+    else:
+        logging.info("# seqs (= %d) outside of defined limits, "
+                     "skipping cluster %d", len(params.seqs), params.cluster)
+    return pvalues
 
 
 class MemeScoringFunction(MotifScoringFunctionBase):
@@ -238,10 +267,8 @@ class MemeScoringFunction(MotifScoringFunctionBase):
         """returns the name of this scoring function"""
         return "MEME"
 
-    def compute_meme_run(self, seqs):
-        """performs a MEME run"""
-        return self.meme_suite.run_meme(seqs, self.used_seqs)
-
+    def meme_runner(self):
+        return self.meme_suite
 
 class WeederScoringFunction(MotifScoringFunctionBase):
     """Motif scoring function that runs Weeder instead of MEME"""
@@ -249,19 +276,31 @@ class WeederScoringFunction(MotifScoringFunctionBase):
     def __init__(self, organism, membership, matrix,
                  meme_suite, seqtype,
                  sequence_filters=[], pvalue_filter=None,
-                 weight_func=None, interval=0):
+                 weight_func=None, interval=0,
+                 config_params=None):
         """creates a scoring function"""
         MotifScoringFunctionBase.__init__(self, organism, membership, matrix,
                                           meme_suite, seqtype,
                                           sequence_filters, pvalue_filter,
-                                          weight_func, interval, None)
+                                          weight_func, interval, config_params)
 
     def name(self):
         """returns the name of this scoring function"""
         return "Weeder"
 
-    def compute_meme_run(self, seqs):
-        """computes the values of a meme run"""
+    def meme_runner(self):
+        return WeederRunner(self.meme_suite)
+
+
+class WeederRunner:
+    """Wrapper around Weeder so we can use the multiprocessing module"""
+
+    def __init__(self, meme_suite):
+        """create a runner object"""
+        self.meme_suite = meme_suite
+
+    def __call__(self, seqs, all_seqs):
+        """call the runner like a function"""
         with tempfile.NamedTemporaryFile(prefix='weeder.fasta',
                                          delete=False) as outfile:
             filename = outfile.name
@@ -272,7 +311,7 @@ class WeederScoringFunction(MotifScoringFunctionBase):
         meme_outfile = '%s.meme' % filename
         dbfile = self.meme_suite.make_sequence_file(
             [(feature_id, locseq[1])
-             for feature_id, locseq in self.used_seqs.items()])
+             for feature_id, locseq in all_seqs.items()])
         logging.info("# PSSMS created: %d", len(pssms))
         logging.info("run MAST on '%s'", meme_outfile)
         try:
@@ -284,3 +323,4 @@ class WeederScoringFunction(MotifScoringFunctionBase):
             return meme.MemeRunResult(pe_values, annotations, [])
         except:
             return meme.MemeRunResult([], {}, [])
+

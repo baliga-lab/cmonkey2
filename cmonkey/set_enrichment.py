@@ -5,6 +5,7 @@ more information and licensing details.
 """
 import util
 import math
+import logging
 import scoring
 import numpy as np
 import rpy2.robjects as robjects
@@ -83,10 +84,11 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
     def __init__(self, membership, matrix, set_types,
                  weight_func=None,
-                 interval=0):
+                 interval=0, config_params=None):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
-                                             matrix, weight_func, None)
+                                             matrix, weight_func,
+                                             config_params)
         self.__interval = interval
         self.__set_types = set_types
         # stores (min_set, pvalue) pairs for each cluster and set type
@@ -103,6 +105,8 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """compute method"""
         if (self.__interval == 0 or
             (iteration > 0 and (iteration % self.__interval == 0))):
+
+            start_time = util.current_millis()
             matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
                                    self.gene_names())
             for set_type in self.__set_types:
@@ -112,6 +116,8 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                                                           ref_matrix)
                     for row in range(len(self.gene_names())):
                         matrix[row][cluster - 1] = scores[row]
+            logging.info("SET ENRICHMENT FINISHED IN %f s.\n",
+                         (util.current_millis() - start_time) / 1000.0)
             return matrix
         else:
             return None

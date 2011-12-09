@@ -127,13 +127,14 @@ def __subtract_and_square(matrix, vector):
     return numpy.square(result)
 
 
-def compute_row_scores(membership, matrix, num_clusters):
+def compute_row_scores(membership, matrix, num_clusters,
+                       use_multiprocessing):
     """for each cluster 1, 2, .. num_clusters compute the row scores
     for the each row name in the input name matrix"""
     clusters = range(1, num_clusters + 1)
     start_time = util.current_millis()
     cluster_row_scores = __compute_row_scores_for_clusters(
-        membership, matrix, clusters)
+        membership, matrix, clusters, use_multiprocessing)
     logging.info("__compute_row_scores_for_clusters() in %f s.",
                  (util.current_millis() - start_time) / 1000.0)
     start_time = util.current_millis()
@@ -161,23 +162,23 @@ def compute_row_scores(membership, matrix, num_clusters):
 def compute_row_scores_for_cluster(cluster_data):
     """This function computes the row score for a cluster"""
     cluster, membership, matrix = cluster_data
-    sm1 = matrix.submatrix_by_name(
-        row_names=membership.rows_for_cluster(cluster),
-        column_names=membership.columns_for_cluster(cluster))
+    rnames = membership.rows_for_cluster(cluster)
+    cnames = membership.columns_for_cluster(cluster)
+    sm1 = matrix.submatrix_by_name(row_names=rnames, column_names=cnames)
+
     if sm1.num_columns() > 1:
-        matrix_filtered = matrix.submatrix_by_name(
-            column_names=membership.columns_for_cluster(cluster))
+        matrix_filtered = matrix.submatrix_by_name(column_names=cnames)
         row_scores_for_cluster = __compute_row_scores_for_submatrix(
             matrix_filtered, sm1)
         return row_scores_for_cluster
     else:
         return None
     
-def __compute_row_scores_for_clusters(membership, matrix, clusters):
+def __compute_row_scores_for_clusters(membership, matrix, clusters,
+                                      use_multiprocessing):
     """compute the pure row scores for the specified clusters
     without nowmalization"""
-    USE_MULTIPROCESSING = True
-    if USE_MULTIPROCESSING:
+    if use_multiprocessing:
         pool = mp.Pool()
         result = pool.map(compute_row_scores_for_cluster,
                           [(cluster, membership, matrix)
@@ -249,11 +250,12 @@ def __quantile_normalize_scores(cluster_row_scores, membership, clusters):
 class RowScoringFunction(scoring.ScoringFunctionBase):
     """Scoring algorithm for microarray data based on genes"""
 
-    def __init__(self, membership, matrix, weight_func=None):
+    def __init__(self, membership, matrix, weight_func=None,
+                 config_params=None):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
                                              matrix, weight_func,
-                                             None)
+                                             config_params)
 
     def name(self):
         """returns the name of this scoring function"""
@@ -262,9 +264,12 @@ class RowScoringFunction(scoring.ScoringFunctionBase):
     def compute(self, iteration, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
         start_time = util.current_millis()
-        result = compute_row_scores(self.membership(),
-                                    self.matrix(),
-                                    self.num_clusters())
+        result = compute_row_scores(
+            self.membership(),
+            self.matrix(),
+            self.num_clusters(),
+            self.config_params[scoring.KEY_MULTIPROCESSING])
+
         elapsed = util.current_millis() - start_time
         logging.info("ROW SCORING TIME: %f s.", (elapsed / 1000.0))
         return result
@@ -276,10 +281,11 @@ class ColumnScoringFunction(scoring.ScoringFunctionBase):
     function output format and can therefore not be combined in
     a generic way (the format is |condition x cluster|)"""
 
-    def __init__(self, membership, matrix):
+    def __init__(self, membership, matrix,
+                 config_params=None):
         """create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
-                                             matrix, None, None)
+                                             matrix, None, config_params)
 
     def name(self):
         """returns the name of this scoring function"""

@@ -144,11 +144,11 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     """Network scoring function"""
 
     def __init__(self, organism, membership, matrix, weight_func=None,
-                 interval=0):
+                 interval=0, config_params=None):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
                                              matrix, weight_func,
-                                             None)
+                                             config_params)
         self.__organism = organism
         self.__interval = interval
 

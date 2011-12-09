@@ -21,11 +21,13 @@ KEY_CACHE_DIR = 'cache_dir'
 KEY_SEQUENCE_TYPES = 'sequence_types'
 KEY_SEARCH_DISTANCES = 'search_distances'
 KEY_SCAN_DISTANCES = 'scan_distances'
+KEY_MULTIPROCESSING = 'multiprocessing'
 
 KEY_MOTIF_MIN_CLUSTER_ROWS_ALLOWED = 'motif.min_cluster_rows_allowed'
 KEY_MOTIF_MAX_CLUSTER_ROWS_ALLOWED = 'motif.max_cluster_rows_allowed'
 MOTIF_MIN_CLUSTER_ROWS_ALLOWED = 3
 MOTIF_MAX_CLUSTER_ROWS_ALLOWED = 70
+USE_MULTIPROCESSING = True
 
 
 class ScoringFunctionBase:
@@ -38,6 +40,8 @@ class ScoringFunctionBase:
         self.__matrix = matrix
         self.__weight_func = weight_func
         self.config_params = config_params
+        if config_params == None:
+            raise Exception('NO CONFIG PARAMS !!!')
 
     def name(self):
         """returns the name of this function"""
@@ -96,6 +100,7 @@ class ScoringFunctionCombiner:
         self.__membership = membership
         self.__scoring_functions = scoring_functions
         self.__log_subresults = log_subresults
+        self.__weight_func = weight_func
 
     def compute(self, iteration, ref_matrix=None):
         """compute scores for one iteration"""
@@ -117,9 +122,11 @@ class ScoringFunctionCombiner:
                 if self.__log_subresults:
                     self.__log_subresult(scoring_function, matrix)
 
-        if len(result_matrices) > 0:
+        if len(result_matrices) > 1:
             result_matrices = dm.quantile_normalize_scores(result_matrices,
                                                            score_weights)
+        if len(result_matrices) == 0:
+            logging.warn("NO RESULTS !!!")
         combined_score = (result_matrices[0] *
                           self.__scoring_functions[0].weight(iteration))
         for index in range(1, len(result_matrices)):
@@ -208,6 +215,9 @@ class ConfigurationBase:
             self.__matrix = (self.read_matrix(
                 self.config_params[KEY_MATRIX_FILENAMES][0]).
                              sorted_by_row_name())
+            logging.info("READ MATRIX, # GENES: %d, # CONDITIONS: %d",
+                         self.__matrix.num_rows(),
+                         self.__matrix.num_columns())
         return self.__matrix
 
     def membership(self):
@@ -233,7 +243,8 @@ class ConfigurationBase:
         """returns the column scoring function"""
         if self.__column_scoring == None:
             self.__column_scoring = microarray.ColumnScoringFunction(
-                self.membership(), self.matrix())
+                self.membership(), self.matrix(),
+                config_params=self.config_params)
         return self.__column_scoring
 
     def make_membership(self):
@@ -292,7 +303,8 @@ class ConfigurationBuilder:
             memb.KEY_MAX_CHANGES_PER_COL: memb.MAX_CHANGES_PER_COL,
             memb.KEY_MIN_CLUSTER_ROWS_ALLOWED: memb.MIN_CLUSTER_ROWS_ALLOWED,
             KEY_MOTIF_MIN_CLUSTER_ROWS_ALLOWED: MOTIF_MIN_CLUSTER_ROWS_ALLOWED,
-            KEY_MOTIF_MAX_CLUSTER_ROWS_ALLOWED: MOTIF_MAX_CLUSTER_ROWS_ALLOWED
+            KEY_MOTIF_MAX_CLUSTER_ROWS_ALLOWED: MOTIF_MAX_CLUSTER_ROWS_ALLOWED,
+            KEY_MULTIPROCESSING: USE_MULTIPROCESSING
             }
 
     def build(self):

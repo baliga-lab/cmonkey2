@@ -25,7 +25,7 @@ CACHE_DIR = 'cache'
 ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 2000
 NETWORK_SCORE_INTERVAL = 7
-MOTIF_SCORE_INTERVAL = 10
+MOTIF_SCORE_INTERVAL = 1
 NUM_CLUSTERS = 43
 
 SEQUENCE_TYPES = ['upstream']
@@ -85,7 +85,8 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
         """
         row_scoring = microarray.RowScoringFunction(
             self.membership(), self.matrix(),
-            lambda iteration: ROW_WEIGHT)
+            lambda iteration: ROW_WEIGHT,
+            config_params=self.config_params)
 
         meme_suite = meme.MemeSuite430()
         sequence_filters = [
@@ -99,7 +100,7 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             self.matrix(),
             meme_suite,
             sequence_filters=sequence_filters,
-            pvalue_filter=motif.make_min_value_filter(-20.0),
+            pvalue_filter=motif.MinPValueFilter(-20.0),
             weight_func=lambda iteration: 0.0,
             interval=MOTIF_SCORE_INTERVAL,
             config_params=self.config_params)
@@ -108,7 +109,8 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
                                              self.membership(),
                                              self.matrix(),
                                              lambda iteration: 0.0,
-                                             NETWORK_SCORE_INTERVAL)
+                                             NETWORK_SCORE_INTERVAL,
+                                             config_params=self.config_params)
 
         return scoring.ScoringFunctionCombiner(self.membership(),
                                                [row_scoring, motif_scoring,

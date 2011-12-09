@@ -77,6 +77,9 @@ class MemeSuite:
                 seqs_for_dust[feature_id] = seq
         return process_with_dust(seqs_for_dust)
 
+    def __call__(self, input_seqs, all_seqs):
+        return self.run_meme(input_seqs, all_seqs)
+
     def run_meme(self, input_seqs, all_seqs):
         """Runs the meme tool. input_seqs is a dictionary of
         (feature_id : (location, sequence)) that are to be provided as meme

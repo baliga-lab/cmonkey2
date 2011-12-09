@@ -29,13 +29,14 @@ P3UTR_SEQFILE = 'human_data/p3utrSeqs_set3pUTR_Final.csv.gz'
 THESAURUS_FILE = 'human_data/synonymThesaurus.csv.gz'
 
 RUG_PROPS = ['MIXED', 'ASTROCYTOMA', 'GBM', 'OLIGODENDROGLIOMA']
-NUM_CLUSTERS = 133
+NUM_CLUSTERS = 720 #133
 ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 2000
 
 SEQUENCE_TYPES = ['promoter', 'p3utr']
 SEARCH_DISTANCES = {'promoter': (0, 700), 'p3utr': (0, 831)}
 SCAN_DISTANCES = {'promoter': (0, 700), 'p3utr': (0, 831)}
+MAX_MOTIF_WIDTH = 12
 
 
 def genes_per_group_proportional(num_genes_total, num_per_group):
@@ -228,7 +229,6 @@ class Human(organism.OrganismBase):
             else:
                 #logging.warn("Alias '%s' not in thesaurus !", alias)
                 pass
-        logging.info("sequences all retrieved")
         return result
 
     def thesaurus(self):
@@ -289,7 +289,9 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
     def make_row_scoring(self):
         """returns the row scoring function"""
         row_scoring = microarray.RowScoringFunction(
-            self.membership(), self.matrix(), lambda iteration: ROW_WEIGHT)
+            self.membership(), self.matrix(),
+            lambda iteration: ROW_WEIGHT,
+            config_params=self.config_params)
 
         sequence_filters = []
         background_file_prom = meme.global_background_file(
@@ -299,8 +301,10 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             self.organism(), self.matrix().row_names(), 'p3utr',
             use_revcomp=True)
         meme_suite_prom = meme.MemeSuite430(
+            max_width=MAX_MOTIF_WIDTH,
             background_file=background_file_prom)
         meme_suite_p3utr = meme.MemeSuite430(
+            max_width=MAX_MOTIF_WIDTH,
             background_file=background_file_p3utr)
 
         motif_scoring = motif.MemeScoringFunction(
@@ -310,22 +314,24 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             meme_suite_prom,
             seqtype='promoter',
             sequence_filters=sequence_filters,
-            pvalue_filter=motif.make_min_value_filter(-20.0),
+            pvalue_filter=motif.MinPValueFilter(-20.0),
             weight_func=lambda iteration: 0.0,
-            interval=0,
+            interval=10,
             config_params=self.config_params)
 
         network_scoring = nw.ScoringFunction(self.organism(),
                                              self.membership(),
                                              self.matrix(),
-                                             lambda iteration: 0.0, 7)
+                                             lambda iteration: 0.0, 0,
+                                             config_params=self.config_params)
 
         weeder_scoring = motif.WeederScoringFunction(
             self.organism(), self.membership(), self.matrix(),
             meme_suite_p3utr, 'p3utr',
-            pvalue_filter=motif.make_min_value_filter(-20.0),
+            pvalue_filter=motif.MinPValueFilter(-20.0),
             weight_func=lambda iteration: 0.0,
-            interval=0)
+            interval=10,
+            config_params=self.config_params)
 
         pita = se.SetType.read_csv('pita', 'human_data/pita_miRNA_sets.csv')
         target_scan = se.SetType.read_csv(
@@ -334,16 +340,17 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
         set_enrichment_scoring = se.ScoringFunction(self.membership(),
                                                     self.matrix(),
                                                     set_types,
-                                                    lambda iteration: 0.0, 0)
+                                                    lambda iteration: 0.0, 0,
+                                                    config_params=self.config_params)
 
-        #return scoring.ScoringFunctionCombiner([row_scoring,
-        #                                        set_enrichment_scoring])
         motif_combiner = scoring.ScoringFunctionCombiner(self.membership(),
                                                          [motif_scoring, weeder_scoring],
                                                          weight_func=lambda iteration: 0.5)
-        return scoring.ScoringFunctionCombiner(self.membership(),
-                                               [row_scoring, motif_combiner,
-                                                network_scoring])
+
+        return scoring.ScoringFunctionCombiner(self.membership(), [row_scoring, network_scoring, set_enrichment_scoring])
+        #return scoring.ScoringFunctionCombiner(self.membership(),
+        #                                       [row_scoring, motif_combiner,
+        #                                        network_scoring, set_enrichment_scoring])
 
 
 def read_controls():
@@ -374,6 +381,6 @@ def read_matrix(filename):
     matrix = matrix_factory.create_from(infile)
 
     column_groups = {1: range(matrix.num_columns())}
-    select_rows = select_probes(matrix, 2000, column_groups)
-    matrix = matrix.submatrix_by_rows(select_rows)
+    #select_rows = select_probes(matrix, 2000, column_groups)
+    #matrix = matrix.submatrix_by_rows(select_rows)
     return intensities_to_ratios(matrix, controls, column_groups)
