@@ -351,3 +351,8 @@ class ConfigurationBuilder:
         """define the scan instances"""
         self.params[KEY_SCAN_DISTANCES] = distances
         return self
+
+    def with_multiprocessing(self, flag):
+        """define whether to use multiprocessing"""
+        self.params[KEY_MULTIPROCESSING] = flag
+        return self

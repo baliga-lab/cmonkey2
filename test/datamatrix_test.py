@@ -397,3 +397,8 @@ class CenterScaleFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEqual(0.70710678237309499, filtered[0][1])
         self.assertAlmostEqual(-0.70710678237309499, filtered[1][0])
         self.assertAlmostEqual(0.70710678237309499, filtered[1][1])
+
+if __name__ == '__main__':
+    SUITE = []
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DataMatrixTest))
+    unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))
