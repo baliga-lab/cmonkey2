@@ -4,7 +4,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import logging
-import numpy
+import numpy as np
 import scipy
 import util
 import thesaurus
@@ -75,7 +75,7 @@ def select_probes(matrix, num_genes_total, column_groups, proportional=True):
     def coeff_var(row_values):
         """computes the coefficient of variation"""
         sigma = util.r_stddev(row_values)
-        mu = numpy.mean(row_values)
+        mu = np.mean(row_values)
         return sigma / mu
 
     num_per_group = {group: len(indexes)
@@ -102,9 +102,10 @@ def select_probes(matrix, num_genes_total, column_groups, proportional=True):
 def intensities_to_ratios(matrix, controls, column_groups):
     """turn intensities into ratios
     Warning: input matrix is modified !!!"""
-    control_indexes = [matrix.column_names().index(control)
+    colnames = matrix.column_names()
+    control_indexes = [np.where(colnames == control)[0][0]
                        for control in controls
-                       if control in matrix.column_names()]
+                       if control in colnames]
     for group_columns in column_groups.values():
         group_controls = [index for index in control_indexes
                           if index in group_columns]

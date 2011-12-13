@@ -71,6 +71,14 @@ class ScoringFunctionBase:
         """returns the gene names"""
         return self.__matrix.row_names()
 
+    def num_genes(self):
+        """returns the number of rows"""
+        return self.__matrix.num_rows()
+
+    def gene_at(self, index):
+        """returns the gene at the specified index"""
+        return self.__matrix.row_name(index)
+
     def rows_for_cluster(self, cluster):
         """returns the rows for the specified cluster"""
         return self.__membership.rows_for_cluster(cluster)

@@ -6,7 +6,7 @@ more information and licensing details.
 import unittest
 import copy
 import datamatrix as dm
-import numpy
+import numpy as np
 
 
 class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -55,8 +55,7 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_create_with_init_value(self):
         """create DataMatrix with an initialization value"""
         matrix = dm.DataMatrix(2, 2, init_value=42.0)
-        self.assertTrue(numpy.equal(numpy.array([[42.0, 42.0], [42.0, 42.0]]),
-                                    matrix.values()).all())
+        self.assertTrue((matrix.values() == [[42.0, 42.0], [42.0, 42.0]]).all())
 
     def test_set_value(self):
         """set a value in the matrix"""
@@ -67,8 +66,7 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_init_with_values_none(self):
         """invoke set_values() with None should result in ValueError"""
         matrix = dm.DataMatrix(2, 2)
-        self.assertTrue(numpy.equal(numpy.array([[0, 0], [0, 0]]),
-                                    matrix.values()).all())
+        self.assertTrue((matrix.values() == [[0, 0], [0, 0]]).all())
 
     def test_init_with_values_wrong_row_count(self):
         """invoke set_values() with wrong row count should result in
@@ -85,8 +83,7 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """invoke set_values() with wrong row count should result in
         ValueError"""
         matrix = dm.DataMatrix(2, 2, values=[[1, 2], [2, 3]])
-        self.assertTrue(numpy.equal(numpy.array([[1, 2], [2, 3]]),
-                                    matrix.values()).all())
+        self.assertTrue((matrix.values() == [[1, 2], [2, 3]]).all())
 
     def test_submatrix_by_name_rows_only(self):
         """test creating sub matrices by row/column names"""
@@ -98,10 +95,9 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                        [8, 9, 10, 11],
                                        [12, 13, 14, 15]])
         submatrix = matrix.submatrix_by_name(row_names=['R0', 'R2'])
-        self.assertEquals(['R0', 'R2'], submatrix.row_names())
-        self.assertTrue(numpy.equal(numpy.array([[1, 2, 3, 4],
-                                                 [8, 9, 10, 11]]),
-                                    submatrix.values()).all())
+        self.assertTrue((submatrix.row_names() == ['R0', 'R2']).all())
+        self.assertTrue((submatrix.values() == [[1, 2, 3, 4],
+                                                [8, 9, 10, 11]]).all())
 
     def test_submatrix_by_name_columns_only(self):
         """test creating sub matrices by row/column names"""
@@ -114,12 +110,11 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                        [12, 13, 14, 15]])
         submatrix = matrix.submatrix_by_name(row_names=None,
                                              column_names=['C1', 'C3'])
-        self.assertEquals(['C1', 'C3'], submatrix.column_names())
-        self.assertTrue(numpy.equal(numpy.array([[2, 4],
-                                                 [5, 7],
-                                                 [9, 11],
-                                                 [13, 15]]),
-                                    submatrix.values()).all())
+        self.assertTrue((submatrix.column_names() == ['C1', 'C3']).all())
+        self.assertTrue((submatrix.values() == [[2, 4],
+                                                [5, 7],
+                                                [9, 11],
+                                                [13, 15]]).all())
 
     def test_submatrix_by_name_rows_and_cols(self):
         """test creating sub matrices by row/column name selection"""
@@ -132,11 +127,10 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                        [12, 13, 14, 15]])
         submatrix = matrix.submatrix_by_name(row_names=['R0', 'R2'],
                                              column_names=['C1', 'C3'])
-        self.assertEquals(['R0', 'R2'], submatrix.row_names())
-        self.assertEquals(['C1', 'C3'], submatrix.column_names())
-        self.assertTrue(numpy.equal(numpy.array([[2, 4],
-                                                 [9, 11]]),
-                                    submatrix.values()).all())
+        self.assertTrue((submatrix.row_names() == ['R0', 'R2']).all())
+        self.assertTrue((submatrix.column_names() == ['C1', 'C3']).all())
+        self.assertTrue((submatrix.values() == [[2, 4],
+                                                [9, 11]]).all())
 
     def test_submatrix_by_name_rows_and_cols_with_nonexisting(self):
         """test creating sub matrices by row/column name selection
@@ -150,11 +144,10 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                        [12, 13, 14, 15]])
         submatrix = matrix.submatrix_by_name(row_names=['R0', 'R2', 'R5'],
                                              column_names=['C1', 'C3', 'C5'])
-        self.assertEquals(['R0', 'R2'], submatrix.row_names())
-        self.assertEquals(['C1', 'C3'], submatrix.column_names())
-        self.assertTrue(numpy.equal(numpy.array([[2, 4],
-                                                 [9, 11]]),
-                                    submatrix.values()).all())
+        self.assertTrue((submatrix.row_names() == ['R0', 'R2']).all())
+        self.assertTrue((submatrix.column_names() == ['C1', 'C3']).all())
+        self.assertTrue((submatrix.values() == [[2, 4],
+                                                [9, 11]]).all())
 
     def test_submatrix_by_rows(self):
         """test creating sub matrices by providing row indexes"""
@@ -166,10 +159,9 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                        [5, 6],
                                        [7, 8]])
         submatrix = matrix.submatrix_by_rows([1, 3])
-        self.assertEquals(['R1', 'R3'], submatrix.row_names())
-        self.assertEquals(['C0', 'C1'], submatrix.column_names())
-        self.assertTrue(numpy.equal(numpy.array([[3, 4], [7, 8]]),
-                                    submatrix.values()).all())
+        self.assertTrue((submatrix.row_names() == ['R1', 'R3']).all())
+        self.assertTrue((submatrix.column_names() == ['C0', 'C1']).all())
+        self.assertTrue((submatrix.values() == [[3, 4], [7, 8]]).all())
 
     def test_sorted_by_rowname(self):
         matrix = dm.DataMatrix(3, 3,
@@ -179,11 +171,10 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                        [4, 5, 6],
                                        [8, 9, 10]])
         sorted_matrix = matrix.sorted_by_row_name()
-        self.assertEquals(['R0', 'R1', 'R2'], sorted_matrix.row_names())
-        self.assertTrue(numpy.equal(numpy.array([[1, 2, 3],
-                                                 [8, 9, 10],
-                                                 [4, 5, 6]]),
-                                    sorted_matrix.values()).all())
+        self.assertTrue((sorted_matrix.row_names() == ['R0', 'R1', 'R2']).all())
+        self.assertTrue((sorted_matrix.values() == [[1, 2, 3],
+                                                    [8, 9, 10],
+                                                    [4, 5, 6]]).all())
 
     def test_sorted_by_rowname_duplicate_row_names(self):
         matrix = dm.DataMatrix(4, 3,
@@ -194,12 +185,11 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                        [8, 9, 10],
                                        [11, 12, 13]])
         sorted_matrix = matrix.sorted_by_row_name()
-        self.assertEquals(['R0', 'R1', 'R1', 'R2'], sorted_matrix.row_names())
-        self.assertTrue(numpy.equal(numpy.array([[1, 2, 3],
-                                                 [8, 9, 10],
-                                                 [11, 12, 13],
-                                                 [4, 5, 6]]),
-                                    sorted_matrix.values()).all())
+        self.assertTrue((sorted_matrix.row_names() == ['R0', 'R1', 'R1', 'R2']).all())
+        self.assertTrue((sorted_matrix.values() == [[1, 2, 3],
+                                                    [8, 9, 10],
+                                                    [11, 12, 13],
+                                                    [4, 5, 6]]).all())
 
     def test_multiply_by(self):
         """tests the multiply_by method"""
@@ -209,11 +199,10 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                values=[[1, 2],
                                        [3, 4]])
         multiplied = matrix * 2
-        self.assertEquals(['R0', 'R1'], multiplied.row_names())
-        self.assertEquals(['C0', 'C1'], multiplied.column_names())
+        self.assertTrue((multiplied.row_names() == ['R0', 'R1']).all())
+        self.assertTrue((multiplied.column_names() == ['C0', 'C1']).all())
         self.assertNotEquals(matrix, multiplied)
-        self.assertTrue(numpy.equal(numpy.array([[2, 4], [6, 8]]),
-                                    multiplied.values()).all())
+        self.assertTrue((multiplied.values() == [[2, 4], [6, 8]]).all())
 
     def test_multiply_column_by(self):
         """tests the multiply_column_by method"""
@@ -223,11 +212,10 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                values=[[1, 2],
                                        [3, 4]])
         multiplied = matrix.multiply_column_by(1, 2)
-        self.assertEquals(['R0', 'R1'], multiplied.row_names())
-        self.assertEquals(['C0', 'C1'], multiplied.column_names())
+        self.assertTrue((multiplied.row_names() == ['R0', 'R1']).all())
+        self.assertTrue((multiplied.column_names() == ['C0', 'C1']).all())
         self.assertEquals(matrix, multiplied)
-        self.assertTrue(numpy.equal(numpy.array([[1, 4], [3, 8]]),
-                                    multiplied.values()).all())
+        self.assertTrue((multiplied.values() == [[1, 4], [3, 8]]).all())
 
     def test_add_matrix(self):
         """tests the + operator"""
@@ -242,12 +230,11 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                 values=[[2, 3],
                                         [4, 5]])
         matrix3 = matrix1 + matrix2
-        self.assertEquals(['R0', 'R1'], matrix3.row_names())
-        self.assertEquals(['C0', 'C1'], matrix3.column_names())
+        self.assertTrue((matrix3.row_names() == ['R0', 'R1']).all())
+        self.assertTrue((matrix3.column_names() == ['C0', 'C1']).all())
         self.assertNotEquals(matrix3, matrix1)
         self.assertNotEquals(matrix3, matrix2)
-        self.assertTrue(numpy.equal(numpy.array([[3, 5], [7, 9]]),
-                                    matrix3.values()).all())
+        self.assertTrue((matrix3.values() == [[3, 5], [7, 9]]).all())
 
     def test_add_scalar(self):
         """tests the + operator"""
@@ -257,11 +244,10 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                 values=[[1, 2],
                                         [3, 4]])
         matrix2 = matrix1 + 3
-        self.assertEquals(['R0', 'R1'], matrix2.row_names())
-        self.assertEquals(['C0', 'C1'], matrix2.column_names())
+        self.assertTrue((matrix2.row_names() == ['R0', 'R1']).all())
+        self.assertTrue((matrix2.column_names() == ['C0', 'C1']).all())
         self.assertNotEquals(matrix2, matrix1)
-        self.assertTrue(numpy.equal(numpy.array([[4, 5], [6, 7]]),
-                                    matrix2.values()).all())
+        self.assertTrue((matrix2.values() == [[4, 5], [6, 7]]).all())
 
 class DataMatrixCollectionTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for MatrixCollection"""
@@ -311,10 +297,10 @@ class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         matrix = factory.create_from(self.dfile)
         self.assertEquals(2, matrix.num_rows())
         self.assertEquals(2, matrix.num_columns())
-        self.assertEquals(["H2", "H3"], matrix.column_names())
-        self.assertEquals(["R1", "R2"], matrix.row_names())
-        self.assertTrue(numpy.equal(numpy.array([1, 2]), matrix[0]).all())
-        self.assertTrue(numpy.equal(numpy.array([3, 4]), matrix[1]).all())
+        self.assertTrue((matrix.column_names() == ["H2", "H3"]).all())
+        self.assertTrue((matrix.row_names() == ["R1", "R2"]).all())
+        self.assertTrue((matrix[0] == [1, 2]).all())
+        self.assertTrue((matrix[1] == [3, 4]).all())
 
     def test_with_na_values(self):
         """test a factory with a DelimitedFile containing NA values"""
@@ -322,11 +308,11 @@ class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         matrix = factory.create_from(self.dfile_with_na)
         self.assertEquals(2, matrix.num_rows())
         self.assertEquals(2, matrix.num_columns())
-        self.assertEquals(["H2", "H3"], matrix.column_names())
-        self.assertEquals(["R1", "R2"], matrix.row_names())
-        self.assertTrue(numpy.isnan(matrix[0][0]))
+        self.assertTrue((matrix.column_names() == ["H2", "H3"]).all())
+        self.assertTrue((matrix.row_names() == ["R1", "R2"]).all())
+        self.assertTrue(np.isnan(matrix[0][0]))
         self.assertEquals(2.0, matrix[0][1])
-        self.assertTrue(numpy.isnan(matrix[1][0]))
+        self.assertTrue(np.isnan(matrix[1][0]))
         self.assertEquals(4.0, matrix[1][1])
 
     def test_simple_filter(self):
@@ -335,10 +321,10 @@ class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         matrix = factory.create_from(self.dfile)
         self.assertEquals(2, matrix.num_rows())
         self.assertEquals(2, matrix.num_columns())
-        self.assertEquals(["H2", "H3"], matrix.column_names())
-        self.assertEquals(["R1", "R2"], matrix.row_names())
-        self.assertTrue(numpy.equal(numpy.array([2, 4]), matrix[0]).all())
-        self.assertTrue(numpy.equal(numpy.array([6, 8]), matrix[1]).all())
+        self.assertTrue((matrix.column_names() == ["H2", "H3"]).all())
+        self.assertTrue((matrix.row_names() == ["R1", "R2"]).all())
+        self.assertTrue((matrix[0] == [2, 4]).all())
+        self.assertTrue((matrix[1] == [6, 8]).all())
 
 
 def times2(matrix):
@@ -360,29 +346,26 @@ class NoChangeFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
         filtered = dm.nochange_filter(matrix)
         self.assertEquals(2, filtered.num_rows())
         self.assertEquals(2, filtered.num_columns())
-        self.assertTrue(numpy.equal(numpy.array([[0.24, -0.35],
-                                                 [-0.42, 0.42]]),
-                                    filtered.values()).all())
+        self.assertTrue((filtered.values() == [[0.24, -0.35],
+                                               [-0.42, 0.42]]).all())
 
     def test_remove_row(self):
         """remove one row"""
         matrix = dm.DataMatrix(2, 2, ['R1', 'R2'], ['C1', 'C2'],
-                               values=[[0.24, -0.35], [-0.001, numpy.nan]])
+                               values=[[0.24, -0.35], [-0.001, np.nan]])
         filtered = dm.nochange_filter(matrix)
         self.assertEquals(1, filtered.num_rows())
         self.assertEquals(2, filtered.num_columns())
-        self.assertTrue(numpy.equal(numpy.array([[0.24, -0.35]]),
-                                    filtered.values()).all())
+        self.assertTrue((filtered.values() == [[0.24, -0.35]]).all())
 
     def test_remove_column(self):
         """remove one column"""
         matrix = dm.DataMatrix(2, 2, ['R1', 'R2'], ['C1', 'C2'],
-                               values=[[0.001, -0.35], [numpy.nan, 0.42]])
+                               values=[[0.001, -0.35], [np.nan, 0.42]])
         filtered = dm.nochange_filter(matrix)
         self.assertEquals(2, filtered.num_rows())
         self.assertEquals(1, filtered.num_columns())
-        self.assertTrue(numpy.equal(numpy.array([[-0.35], [0.42]]),
-                                    filtered.values()).all())
+        self.assertTrue((filtered.values() == [[-0.35], [0.42]]).all())
 
 
 class CenterScaleFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -401,4 +384,6 @@ class CenterScaleFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
 if __name__ == '__main__':
     SUITE = []
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DataMatrixTest))
+    #SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DataMatrixFactoryTest))
+    #SUITE.append(unittest.TestLoader().loadTestsFromTestCase(CenterScaleFilterTest))
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))

@@ -152,8 +152,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             # convert remapped to an actual scoring matrix
             matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
                                    self.gene_names())
-            for row in matrix.row_names():
-                row_index = matrix.row_names().index(row)
+            #row_indexes = matrix.row
+            for row_index in range(matrix.num_rows()):
+                row = matrix.row_name(row_index)
                 for cluster in range(1, self.num_clusters() + 1):
                     if (cluster in remapped.keys() and
                         row in remapped[cluster].keys()):

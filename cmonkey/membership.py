@@ -317,9 +317,19 @@ class ClusterMembership:
                                                        column_scores,
                                                        iteration,
                                                        num_iterations)
+
+        start = util.current_millis()
+        logging.info("GET_DENSITY_SCORES()...")
         rd_scores, cd_scores = _get_density_scores(self, row_scores,
                                                    column_scores)
+        elapsed = util.current_millis() - start
+        logging.info("GET_DENSITY_SCORES() took %f s.", elapsed / 1000.0)
+
+        start = util.current_millis()
+        logging.info("COMPENSATE_SIZE()...")
         _compensate_size(self, matrix, rd_scores, cd_scores)
+        elapsed = util.current_millis() - start
+        logging.info("COMPENSATE_SIZE() took %f s.", elapsed / 1000.0)
         self._update_memberships(rd_scores, cd_scores)
 
     def __fuzzify(self, row_scores, column_scores, iteration,
@@ -400,8 +410,7 @@ class ClusterMembership:
             current_clusters = self.__row_is_member_of[row]
             min_score = sys.maxint
             min_cluster = None
-            member_names = rd_scores.row_names()
-            member_index = member_names.index(row)
+            member_index = rd_scores.row_indexes([row])[0]
 
             for current_cluster in current_clusters:
                 if rd_scores[member_index][current_cluster - 1] < min_score:
@@ -423,8 +432,7 @@ class ClusterMembership:
             current_clusters = self.__column_is_member_of[column]
             min_score = sys.maxint
             min_cluster = None
-            member_names = cd_scores.row_names()
-            member_index = member_names.index(column)
+            member_index = cd_scores.row_indexes([column])[0]
 
             for current_cluster in current_clusters:
                 if cd_scores[member_index][current_cluster - 1] < min_score:
@@ -449,9 +457,6 @@ class ClusterMembership:
                     seeing_change(probability_seeing_change)):
                     change_clusters = get_change_clusters(rowname,
                                                           best_members)
-                    #if len(change_clusters) < max_changes:
-                    #    print "# CHANGES = ", len(change_clusters), ": ",
-                    #          change_clusters, " FROM: ", best_members
                     for change in range(min(max_changes,
                                             len(change_clusters))):
                         add_member_to_cluster(rowname, change_clusters[change])
@@ -542,8 +547,7 @@ def _get_rr_scores(membership, rowscores, bandwidth, cluster):
         num_rows = rowscores.num_rows()
         return [(1.0 / num_rows) for _ in range(num_rows)]
     else:
-        row_names = rowscores.row_names()
-        score_indexes = [row_names.index(name) for name in cluster_rows]
+        score_indexes = rowscores.row_indexes(cluster_rows)
         kscores = rowscores.column_values(cluster - 1)
         cluster_scores = [kscores[index] for index in score_indexes]
         cluster_bandwidth = bandwidth * bwscale(len(cluster_rows))
@@ -554,7 +558,7 @@ def _get_rr_scores(membership, rowscores, bandwidth, cluster):
 def _get_cc_scores(membership, scores, bandwidth, cluster):
     """calculate the density scores for the given column score values in the
     specified cluster"""
-    cluster_rows = membership.columns_for_cluster(cluster)
+    cluster_rows = membership.rows_for_cluster(cluster)
     cluster_columns = membership.columns_for_cluster(cluster)
     if len(cluster_rows) == 0 or len(cluster_columns) <= 1:
         # This is a little weird, but is here to at least attempt to simulate
@@ -562,8 +566,7 @@ def _get_cc_scores(membership, scores, bandwidth, cluster):
         num_rows = scores.num_rows()
         return [(1.0 / num_rows) for _ in range(num_rows)]
     else:
-        row_names = scores.row_names()
-        score_indexes = [row_names.index(name) for name in cluster_columns]
+        score_indexes = scores.row_indexes(cluster_columns)
         kscores = scores.column_values(cluster - 1)
         cluster_scores = [kscores[index] for index in score_indexes]
         return util.density(kscores, cluster_scores, bandwidth,

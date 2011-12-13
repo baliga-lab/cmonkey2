@@ -202,9 +202,9 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     def __update_score_matrix(self, matrix, network_score, weight):
         """add values into the result score matrix"""
         for cluster in range(1, self.num_clusters() + 1):
-            for gene in self.gene_names():
+            for row_index in range(self.matrix().num_rows()):
+                gene = self.gene_at(row_index)
                 if gene in network_score[cluster].keys():
-                    row_index = self.gene_names().index(gene)
                     weighted_score = network_score[cluster][gene] * weight
                     matrix[row_index][cluster - 1] += weighted_score
 

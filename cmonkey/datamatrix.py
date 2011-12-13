@@ -4,7 +4,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import scipy
-import numpy
+import numpy as np
 import util
 
 
@@ -33,25 +33,25 @@ class DataMatrix:
                                       "%d (was %d)")
                                      % (row_index, ncols, len(inrow)))
 
-        if not row_names:
-            self.__row_names = ["Row " + str(i) for i in range(nrows)]
+        if row_names == None:
+            self.__row_names = np.array(["Row " + str(i) for i in range(nrows)])
         else:
             if len(row_names) != nrows:
                 raise ValueError("number of row names should be %d" % nrows)
-            self.__row_names = row_names
+            self.__row_names = np.array(row_names)
 
-        if not col_names:
-            self.__column_names = ["Col " + str(i) for i in range(ncols)]
+        if col_names == None:
+            self.__column_names = np.array(["Col " + str(i) for i in range(ncols)])
         else:
             if len(col_names) != ncols:
                 raise ValueError("number of column names should be %d" % ncols)
-            self.__column_names = col_names
+            self.__column_names = np.array(col_names)
 
         if values != None:
             check_values()
-            self.__values = numpy.array(values, dtype=numpy.float64)
+            self.__values = np.array(values, dtype=np.float64)
         else:
-            self.__values = numpy.zeros((nrows, ncols))
+            self.__values = np.zeros((nrows, ncols))
             if init_value != None:
                 self.__values.fill(init_value)
 
@@ -67,12 +67,34 @@ class DataMatrix:
             return len(self.__column_names)
 
     def row_names(self):
-        """return the row names"""
+        """return the row names.
+        Note: a NumPy array is returned, which does not have an index()
+        method"""
         return self.__row_names
 
     def column_names(self):
-        """return the column names"""
+        """return the column names.
+        Note: a NumPy array is returned, which does not have an index()
+        method"""
         return self.__column_names
+
+    def row_indexes(self, row_names):
+        """returns the row indexes with the matching names"""
+        return self.__find_indexes(self.__row_names, row_names)
+
+    def column_indexes(self, column_names):
+        """returns the column indexes with the matching names"""
+        return self.__find_indexes(self.__column_names, column_names)
+
+    def __find_indexes(self, names, search_names):
+        """generic finder method to search name indexes in a numpy array"""
+        result = []
+        for name in search_names:
+            indexes = np.where(names == name)
+            if len(indexes[0]) > 0:
+                result.append(indexes[0][0])
+        return result
+
 
     def values(self):
         """returns this matrix's values"""
@@ -125,11 +147,6 @@ class DataMatrix:
         on memberships.
         Note: Currently, no duplicate row names or column names are
         supported"""
-        def find_indexes(search_names, my_names):
-            """returns the indexes for the specified search names"""
-            return [my_names.index(name) for name in search_names
-                    if name in my_names]
-
         def make_values(row_indexes, column_indexes):
             """creates an array from the selected rows and columns"""
             if row_indexes == None and column_indexes == None:
@@ -147,7 +164,7 @@ class DataMatrix:
         else:
             row_names = [name for name in row_names
                          if name in self.__row_names]
-            row_indexes = find_indexes(row_names, self.row_names())
+            row_indexes = self.row_indexes(row_names)
 
         if column_names == None:
             column_names = self.column_names()
@@ -155,7 +172,7 @@ class DataMatrix:
         else:
             column_names = [name for name in column_names
                             if name in self.__column_names]
-            col_indexes = find_indexes(column_names, self.column_names())
+            col_indexes = self.column_indexes(column_names)
 
         new_values = make_values(row_indexes, col_indexes)
         return DataMatrix(len(row_names), len(column_names), row_names,
@@ -194,7 +211,7 @@ class DataMatrix:
 
     def max(self):
         """return the maximum value in this matrix"""
-        return numpy.amax(self.values())
+        return np.amax(self.values())
 
     def quantile(self, probability):
         """returns the result of the quantile function over all contained
@@ -203,7 +220,7 @@ class DataMatrix:
 
     def min(self):
         """return the minimum value in this matrix"""
-        return numpy.amin(self.values())
+        return np.amin(self.values())
 
     def __neg__(self):
         """returns a new DataMatrix with the values in the matrix negated"""
@@ -328,7 +345,7 @@ class DataMatrixFactory:
             for col in range(ncols):
                 strval = lines[row][col + 1]
                 if strval == 'NA':
-                    value = numpy.nan
+                    value = np.nan
                 else:
                     value = float(strval)
                 data_matrix[row][col] = value
@@ -354,7 +371,7 @@ def nochange_filter(matrix):
             count = 0
             for col_index in range(data_matrix.num_columns()):
                 value = data_matrix[row_index][col_index]
-                if numpy.isnan(value) or abs(value) <= ROW_THRESHOLD:
+                if np.isnan(value) or abs(value) <= ROW_THRESHOLD:
                     count += 1
             mean = float(count) / data_matrix.num_columns()
             if mean < FILTER_THRESHOLD:
@@ -368,7 +385,7 @@ def nochange_filter(matrix):
             count = 0
             for row_index in range(data_matrix.num_rows()):
                 value = data_matrix[row_index][col_index]
-                if numpy.isnan(value) or abs(value) <= COLUMN_THRESHOLD:
+                if np.isnan(value) or abs(value) <= COLUMN_THRESHOLD:
                     count += 1
             mean = float(count) / data_matrix.num_rows()
             if mean < FILTER_THRESHOLD:
@@ -407,11 +424,11 @@ def center_scale_filter(matrix):
 
     def center_scale(row):
         """centers the provided row around the median"""
-        filtered = [value for value in row if not numpy.isnan(value)]
+        filtered = [value for value in row if not np.isnan(value)]
         center = scipy.median(filtered)
         scale = util.r_stddev(filtered)
         nurow = [((value - center) / scale)
-                if not numpy.isnan(value) else value for value in row]
+                if not np.isnan(value) else value for value in row]
         return nurow
 
     return row_filter(matrix, center_scale)
@@ -437,7 +454,7 @@ def quantile_normalize_scores(matrices, weights=None):
         num_values = len(in_values[0])
         scale = sum(weights)
         for row in range(len(in_values[0])):
-            result.append(numpy.mean([inarray[row]
+            result.append(np.mean([inarray[row]
                                       for inarray in in_values]) / scale)
         return result
 
@@ -449,7 +466,7 @@ def quantile_normalize_scores(matrices, weights=None):
             in_values.append(values)
         result = []
         for row in range(len(in_values[0])):
-            result.append(numpy.mean([inarray[row] for inarray in in_values]))
+            result.append(np.mean([inarray[row] for inarray in in_values]))
         return result
 
     def compute_ranks(flat_values):

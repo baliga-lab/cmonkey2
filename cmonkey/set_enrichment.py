@@ -105,7 +105,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """compute method"""
         if (self.__interval == 0 or
             (iteration > 0 and (iteration % self.__interval == 0))):
-
+            logging.info("Compute scores for set enrichment...")
             start_time = util.current_millis()
             matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
                                    self.gene_names())
@@ -153,23 +153,23 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             min_genes = set_type.sets[min_set].genes
             min_genes = [gene for gene in min_genes
                          if gene in self.gene_names()]
+            min_indexes = self.matrix().row_indexes(min_genes)
 
             if set_type.sets[min_set].cutoff == 'discrete':
                 overlap_genes = set(cluster_genes).intersection(set(min_genes))
-                for gene in min_genes:
-                    scores[self.gene_names().index(gene)] = 0.5
-                for gene in overlap_genes:
-                    scores[self.gene_names().index(gene)] = 1.0
+                overlap_indexes = self.matrix().row_indexes(overlap_genes)
+                for index in min_indexes:
+                    scores[index] = 0.5
+                for index in overlap_indexes:
+                    scores[index] = 1.0
             else:
                 min_set_weights = []
-                for gene in min_genes:
-                    index = min_genes.index[gene]
+                for index in min_indexes:
                     min_set_weights.append(
                         set_type.sets[min_set].weights[index])
                 min_weight = min(min_set_weights)
                 max_weight = max(min_set_weights)
-                for gene in min_genes:
-                    index = min_genes.index[gene]
+                for index in min_indexes:
                     scores[index] = min_set_weights[index] - min_weight
                     scores[index] = min_set_weights[index] / max_weight
 
