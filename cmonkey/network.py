@@ -8,6 +8,7 @@ import logging
 import util
 import datamatrix as dm
 import scoring
+import multiprocessing as mp
 
 
 class NetworkEdge:
@@ -122,8 +123,9 @@ class Network:
         return Network(name, network_edges)
 
 
-def compute_network_scores(network, genes, all_genes):
+def compute_network_scores(args):
     """Generic method to compute network scores"""
+    network, genes, all_genes = args
     edges = network.edges_with_source_in(genes)
     fedges = [edge for edge in edges if edge.target_in(all_genes)]
 
@@ -193,10 +195,24 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     def __compute_network_cluster_scores(self, network):
         """computes the cluster scores for the given network"""
         result = {}
-        for cluster in xrange(1, self.num_clusters() + 1):
-            result[cluster] = compute_network_scores(
-                network, sorted(self.rows_for_cluster(cluster)),
-                self.gene_names())
+        use_multiprocessing = self.config_params[
+            scoring.KEY_MULTIPROCESSING]
+        if use_multiprocessing:
+            pool = mp.Pool()
+            args = []
+            for cluster in xrange(1, self.num_clusters() + 1):
+                args.append((network, sorted(self.rows_for_cluster(cluster)),
+                    self.gene_names()))
+            map_results = pool.map(compute_network_scores, args)
+            pool.close()
+            for cluster in xrange(1, self.num_clusters() + 1):
+                result[cluster] = map_results[cluster - 1]
+        else:
+            for cluster in xrange(1, self.num_clusters() + 1):
+                result[cluster] = compute_network_scores(
+                    (network, sorted(self.rows_for_cluster(cluster)),
+                    self.gene_names()))
+
         return result
 
     def __update_score_matrix(self, matrix, network_score, weight):

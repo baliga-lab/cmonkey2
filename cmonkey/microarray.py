@@ -183,6 +183,7 @@ def __compute_row_scores_for_clusters(membership, matrix, clusters,
         result = pool.map(compute_row_scores_for_cluster,
                           [(cluster, membership, matrix)
                            for cluster in clusters])
+        pool.close()
     else:
         result = []
         for cluster in clusters:

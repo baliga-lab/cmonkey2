@@ -206,6 +206,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             results = pool.map(compute_cluster_score, params)
             for cluster in xrange(1, self.num_clusters() + 1):
                 cluster_pvalues[cluster] = results[cluster - 1]
+            pool.close()
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
                 cluster_pvalues[cluster] = compute_cluster_score(
