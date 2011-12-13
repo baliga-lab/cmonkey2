@@ -137,7 +137,7 @@ class ScoringFunctionCombiner:
             logging.warn("NO RESULTS !!!")
         combined_score = (result_matrices[0] *
                           self.__scoring_functions[0].weight(iteration))
-        for index in range(1, len(result_matrices)):
+        for index in xrange(1, len(result_matrices)):
             combined_score += (
                 result_matrices[index] *
                 self.__scoring_functions[index].weight(iteration))
@@ -146,8 +146,8 @@ class ScoringFunctionCombiner:
     def __log_subresult(self, score_function, matrix):
         """output an accumulated subresult to the log"""
         scores = []
-        for cluster in range(1, matrix.num_columns() + 1):
-            for row in range(matrix.num_rows()):
+        for cluster in xrange(1, matrix.num_columns() + 1):
+            for row in xrange(matrix.num_rows()):
                 if self.__membership.is_row_member_of(matrix.row_name(row),
                                                       cluster):
                     scores.append(matrix[row][cluster - 1])

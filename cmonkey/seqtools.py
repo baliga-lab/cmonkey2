@@ -112,7 +112,7 @@ def subseq_counts(seqs, subseq_len):
     subseq_len their respective count in the input sequences"""
     counts = {}
     for seq in seqs:
-        for index in range(0, len(seq) - subseq_len + 1):
+        for index in xrange(0, len(seq) - subseq_len + 1):
             subseq = seq[index:index + subseq_len]
             if not subseq in counts:
                 counts[subseq] = 0
@@ -139,7 +139,7 @@ def markov_background(seqs, order):
     1,..,(order + 1)"""
     result = []
     seqs = replace_degenerate_residues(seqs)
-    for subseq_len in range(1, (order + 2)):
+    for subseq_len in xrange(1, (order + 2)):
         result.append(subseq_frequencies(seqs, subseq_len))
     return result
 

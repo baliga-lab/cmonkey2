@@ -134,14 +134,14 @@ def levenshtein_distance(str1, str2):
     strlen1 = len(str1)
     strlen2 = len(str2)
 
-    dist = [[0 for _ in range(strlen2 + 1)] for _ in range(strlen1 + 1)]
-    for row in range(strlen1 + 1):
+    dist = [[0 for _ in xrange(strlen2 + 1)] for _ in xrange(strlen1 + 1)]
+    for row in xrange(strlen1 + 1):
         dist[row][0] = row
-    for col in range(strlen2 + 1):
+    for col in xrange(strlen2 + 1):
         dist[0][col] = col
 
-    for col in range(strlen2):
-        for row in range(strlen1):
+    for col in xrange(strlen2):
+        for row in xrange(strlen1):
             if str1[row] == str2[col]:
                 dist[row + 1][col + 1] = dist[row][col]
             else:
@@ -225,7 +225,7 @@ def make_matrix(row_names, num_columns, init_value=0):
     init_value. The rows are accessed by row name"""
     result = {}
     for name in row_names:
-        result[name] = [init_value for _ in range(num_columns)]
+        result[name] = [init_value for _ in xrange(num_columns)]
     return result
 
 

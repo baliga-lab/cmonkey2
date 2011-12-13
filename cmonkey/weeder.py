@@ -40,7 +40,7 @@ def run_weeder(fasta_file):
                                              LLR_VALUE,
                                              apssm.e_value(),
                                              num_sites))
-            for row in range(apssm.sequence_length()):
+            for row in xrange(apssm.sequence_length()):
                 outfile.write('%f,%f,%f,%f\n' % (apssm[row][0],
                                                  apssm[row][1],
                                                  apssm[row][2],
@@ -50,7 +50,7 @@ def run_weeder(fasta_file):
         """writes the pssm to the .f2 file"""
         with open('%s.%d.f2' % (fasta_file, pssm_num), 'w') as outfile:
             outfile.write(',gene,strand,start,p.value,site\n')
-            for index in range(len(apssm.sites())):
+            for index in xrange(len(apssm.sites())):
                 site = apssm.sites()[index]
                 strand = '+'
                 if site.is_reverse:
@@ -71,7 +71,7 @@ def run_weeder(fasta_file):
     __launch_weeder(fasta_file)
     pssms = [pssm8 for pssm8 in __read_pssms_for(fasta_file)
              if pssm8.sequence_length() == 8]
-    for index in range(len(pssms)):
+    for index in xrange(len(pssms)):
         unique_target_sites = []
         for site in pssms[index].sites():
             if site.gene not in unique_target_sites:

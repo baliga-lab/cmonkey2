@@ -153,9 +153,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
                                    self.gene_names())
             #row_indexes = matrix.row
-            for row_index in range(matrix.num_rows()):
+            for row_index in xrange(matrix.num_rows()):
                 row = matrix.row_name(row_index)
-                for cluster in range(1, self.num_clusters() + 1):
+                for cluster in xrange(1, self.num_clusters() + 1):
                     if (cluster in remapped.keys() and
                         row in remapped[cluster].keys()):
                         matrix[row_index][cluster - 1] = remapped[cluster][row]
@@ -188,7 +188,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
         # create parameters
         params = []
-        for cluster in range(1, self.num_clusters() + 1):
+        for cluster in xrange(1, self.num_clusters() + 1):
             genes = sorted(self.rows_for_cluster(cluster))
             feature_ids = self.organism.feature_ids_for(genes)
             seqs = self.organism.sequences_for_genes_search(
@@ -204,10 +204,10 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         if use_multiprocessing:
             pool = mp.Pool()
             results = pool.map(compute_cluster_score, params)
-            for cluster in range(1, self.num_clusters() + 1):
+            for cluster in xrange(1, self.num_clusters() + 1):
                 cluster_pvalues[cluster] = results[cluster - 1]
         else:
-            for cluster in range(1, self.num_clusters() + 1):
+            for cluster in xrange(1, self.num_clusters() + 1):
                 cluster_pvalues[cluster] = compute_cluster_score(
                     params[cluster - 1])
         return cluster_pvalues

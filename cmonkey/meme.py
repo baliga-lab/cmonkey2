@@ -223,7 +223,7 @@ class MemeMotifInfo:
         remember: letter order is ACGT"""
         alphabet = 'ACGT'
         result = ""
-        for row in range(len(self.__pssm)):
+        for row in xrange(len(self.__pssm)):
             rowvals = self.__pssm[row]
             max_index = rowvals.index(max(rowvals))
             score = rowvals[max_index]
@@ -322,7 +322,7 @@ def read_meme_output(output_text, num_motifs):
 
     lines = output_text.split('\n')
     result = []
-    for motif_number in range(1, num_motifs + 1):
+    for motif_number in xrange(1, num_motifs + 1):
         result.append(read_motif_info(motif_number, lines))
     return result
 
@@ -416,7 +416,7 @@ def read_mast_output(output_text, genes):
     def read_pvalues(pvalue_line, indexes):
         """reads the p-values contained in a p-value line"""
         pvalues = []
-        for index_num in range(len(indexes)):
+        for index_num in xrange(len(indexes)):
             if index_num < len(indexes) - 1:
                 pvalues.append(
                     float(pvalue_line[indexes[index_num]:

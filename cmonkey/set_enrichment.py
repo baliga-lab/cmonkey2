@@ -30,7 +30,7 @@ class EnrichmentSet:
         """returns the genes that have a weight above the cutoff"""
         if self.__genes_above_cutoff == None:
             self.__genes_above_cutoff = []
-            for index in range(0, len(self.genes)):
+            for index in xrange(0, len(self.genes)):
                 if self.cutoff == 'discrete':
                     self.__genes_above_cutoff.append(self.genes[index])
                 elif self.weights[index] >= self.cutoff:
@@ -38,7 +38,8 @@ class EnrichmentSet:
         return self.__genes_above_cutoff
 
     def __repr__(self):
-        return "Cutoff = %s, elems: %s" % (self.cutoff, self.genes)
+        return ("Enrichment set: Cutoff = %s, # genes: %d # above cutoff: %d" %
+                (self.cutoff, len(self.genes), len(self.genes_above_cutoff())))
 
 
 class SetType:
@@ -63,7 +64,7 @@ class SetType:
         """string representation"""
         result = "SetType['%s'] = {\n" % self.name
         for key, value in self.sets.items():
-            result += "%s -> %s\n\n" % (key, value)
+            result += "%s -> %s\n" % (key, value)
         result += "}"
         return result
 
@@ -110,11 +111,12 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
                                    self.gene_names())
             for set_type in self.__set_types:
-                for cluster in range(1, self.num_clusters() + 1):
+                #logging.info("PROCESSING SET TYPE [%s]", repr(set_type))
+                for cluster in xrange(1, self.num_clusters() + 1):
                     scores = self.__compute_cluster_score(set_type,
                                                           cluster,
                                                           ref_matrix)
-                    for row in range(len(self.gene_names())):
+                    for row in xrange(len(self.gene_names())):
                         matrix[row][cluster - 1] = scores[row]
             logging.info("SET ENRICHMENT FINISHED IN %f s.\n",
                          (util.current_millis() - start_time) / 1000.0)
@@ -138,10 +140,10 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
         num_sets = len(set_type.sets)
         phyper_n = (np.array([len(set_type.genes())
-                              for _ in range(num_sets)]) -
+                              for _ in xrange(num_sets)]) -
                     np.array(set_sizes))
         phyper_n = [value for value in phyper_n]
-        phyper_k = [len(cluster_genes) for _ in range(num_sets)]
+        phyper_k = [len(cluster_genes) for _ in xrange(num_sets)]
         enrichment_pvalues = list(util.phyper(overlap_sizes, set_sizes,
                                               phyper_n, phyper_k))
         min_pvalue = min(enrichment_pvalues)
@@ -149,7 +151,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         min_set = set_type.sets.keys()[min_index]
         min_set_overlap = overlap_sizes[min_index]
         if min_set_overlap > 0:
-            scores = [0.0 for _ in range(self.matrix().num_rows())]
+            scores = [0.0 for _ in xrange(self.matrix().num_rows())]
             min_genes = set_type.sets[min_set].genes
             min_genes = [gene for gene in min_genes
                          if gene in self.gene_names()]
@@ -184,7 +186,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             min_ref_score = ref_matrix.min()
             scores = [score * min_ref_score for score in scores]
         else:
-            scores = [0.0 for _ in range(self.matrix().num_rows())]
+            scores = [0.0 for _ in xrange(self.matrix().num_rows())]
 
         # store the best enriched set determined
         self.__last_min_enriched_set[set_type][cluster] = (min_set, min_pvalue)

@@ -26,7 +26,7 @@ class DataMatrix:
             """Sets values from a two-dimensional list"""
             if len(values) != nrows:
                 raise ValueError("number of rows should be %d" % nrows)
-            for row_index in range(nrows):
+            for row_index in xrange(nrows):
                 inrow = values[row_index]
                 if len(inrow) != ncols:
                     raise ValueError(("row %d: number of columns should be " +
@@ -41,7 +41,7 @@ class DataMatrix:
             self.__row_names = np.array(row_names)
 
         if col_names == None:
-            self.__column_names = np.array(["Col " + str(i) for i in range(ncols)])
+            self.__column_names = np.array(["Col " + str(i) for i in xrange(ncols)])
         else:
             if len(col_names) != ncols:
                 raise ValueError("number of column names should be %d" % ncols)
@@ -107,14 +107,14 @@ class DataMatrix:
     def row_values(self, row):
         """returns the values in the specified row"""
         result = []
-        for column in range(self.num_columns()):
+        for column in xrange(self.num_columns()):
             result.append(self.__values[row][column])
         return result
 
     def column_values(self, column):
         """returns the values in the specified column"""
         result = []
-        for row in range(self.num_rows()):
+        for row in xrange(self.num_rows()):
             result.append(self.__values[row][column])
         return result
 
@@ -181,7 +181,7 @@ class DataMatrix:
     def sorted_by_row_name(self):
         """returns a version of this table, sorted by row name"""
         row_pairs = []
-        for row_index in range(len(self.__row_names)):
+        for row_index in xrange(len(self.__row_names)):
             row_pairs.append((self.__row_names[row_index], row_index))
         row_pairs.sort()
         new_rows = []
@@ -263,7 +263,7 @@ class DataMatrix:
         result = "%10s" % 'Row'
         result += ' '.join([("%10s" % name)
                             for name in self.__column_names]) + '\n'
-        for row_index in range(self.num_rows()):
+        for row_index in xrange(self.num_rows()):
             result += ("%10s" % self.__row_names[row_index]) + ' '
             result += ' '.join([("%10f" % value)
                                  for value in self.__values[row_index]])
@@ -338,11 +338,11 @@ class DataMatrixFactory:
         ncols = len(header) - 1
         colnames = header[1:len(header)]
         rownames = []
-        for row in range(nrows):
+        for row in xrange(nrows):
             rownames.append(lines[row][0])
         data_matrix = DataMatrix(nrows, ncols, rownames, colnames)
-        for row in range(nrows):
-            for col in range(ncols):
+        for row in xrange(nrows):
+            for col in xrange(ncols):
                 strval = lines[row][col + 1]
                 if strval == 'NA':
                     value = np.nan
@@ -367,9 +367,9 @@ def nochange_filter(matrix):
     def nochange_filter_rows(data_matrix):
         """subfunction of nochange_filter to filter row-wise"""
         keep = []
-        for row_index in range(data_matrix.num_rows()):
+        for row_index in xrange(data_matrix.num_rows()):
             count = 0
-            for col_index in range(data_matrix.num_columns()):
+            for col_index in xrange(data_matrix.num_columns()):
                 value = data_matrix[row_index][col_index]
                 if np.isnan(value) or abs(value) <= ROW_THRESHOLD:
                     count += 1
@@ -381,9 +381,9 @@ def nochange_filter(matrix):
     def nochange_filter_columns(data_matrix):
         """subfunction of nochange_filter to filter column-wise"""
         keep = []
-        for col_index in range(data_matrix.num_columns()):
+        for col_index in xrange(data_matrix.num_columns()):
             count = 0
-            for row_index in range(data_matrix.num_rows()):
+            for row_index in xrange(data_matrix.num_rows()):
                 value = data_matrix[row_index][col_index]
                 if np.isnan(value) or abs(value) <= COLUMN_THRESHOLD:
                     count += 1
@@ -400,8 +400,8 @@ def nochange_filter(matrix):
     numcols = len(cols_to_keep)
 
     result = DataMatrix(numrows, numcols, rownames, colnames)
-    for row_index in range(numrows):
-        for col_index in range(numcols):
+    for row_index in xrange(numrows):
+        for col_index in xrange(numcols):
             value = matrix[rows_to_keep[row_index]][cols_to_keep[col_index]]
             result[row_index][col_index] = value
     return result
@@ -410,7 +410,7 @@ def nochange_filter(matrix):
 def row_filter(matrix, fun):
     """generalize a matrix filter that is applying a function for each row"""
     values = []
-    for row_index in range(matrix.num_rows()):
+    for row_index in xrange(matrix.num_rows()):
         values.append(fun(matrix[row_index]))
     result = DataMatrix(matrix.num_rows(), matrix.num_columns(),
                         matrix.row_names(), matrix.column_names(),
@@ -439,21 +439,21 @@ def quantile_normalize_scores(matrices, weights=None):
     def extract_flat_values():
         """optimization: flat_values are only retrieved once"""
         result = []
-        for index in range(len(matrices)):
+        for index in xrange(len(matrices)):
             result.append(matrices[index].flat_values())
         return result
 
     def compute_tmp_mean_weighted(flat_values):
         """compute weighted row means"""
         in_values = []
-        for index in range(len(matrices)):
+        for index in xrange(len(matrices)):
             values = flat_values[index] * weights[index]
             values.sort()
             in_values.append(values)
         result = []
         num_values = len(in_values[0])
         scale = sum(weights)
-        for row in range(len(in_values[0])):
+        for row in xrange(len(in_values[0])):
             result.append(np.mean([inarray[row]
                                       for inarray in in_values]) / scale)
         return result
@@ -461,11 +461,11 @@ def quantile_normalize_scores(matrices, weights=None):
     def compute_tmp_mean_unweighted(flat_values):
         """compute unweighted row means"""
         in_values = []
-        for index in range(len(matrices)):
+        for index in xrange(len(matrices)):
             values = sorted(flat_values)
             in_values.append(values)
         result = []
-        for row in range(len(in_values[0])):
+        for row in xrange(len(in_values[0])):
             result.append(np.mean([inarray[row] for inarray in in_values]))
         return result
 
@@ -474,7 +474,7 @@ def quantile_normalize_scores(matrices, weights=None):
         sorted_values"""
         sorted_values = sorted(flat_values)
         first_index = {}
-        for index in range(len(sorted_values)):
+        for index in xrange(len(sorted_values)):
             if sorted_values[index] not in first_index:
                 first_index[sorted_values[index]] = index
         return [first_index[value] for value in flat_values]
@@ -483,14 +483,14 @@ def quantile_normalize_scores(matrices, weights=None):
         """builds the resulting matrices by looking at the rank of their
         original values and retrieving the means at the specified position"""
         result = []
-        for index in range(len(matrices)):
+        for index in xrange(len(matrices)):
             ranks = compute_ranks(flat_values[index])
             outmatrix = DataMatrix(matrices[index].num_rows(),
                                    matrices[index].num_columns(),
                                    matrices[index].row_names(),
                                    matrices[index].column_names())
-            for row in range(outmatrix.num_rows()):
-                for col in range(outmatrix.num_columns()):
+            for row in xrange(outmatrix.num_rows()):
+                for col in xrange(outmatrix.num_columns()):
                     seqindex = row * outmatrix.num_columns() + col
                     outmatrix[row][col] = tmp_mean[ranks[seqindex]]
             result.append(outmatrix)

@@ -86,10 +86,10 @@ class ClusterMembership:
             """using a membership array, build a dictionary representing
             the contained memberships for a name"""
             result = {}
-            for row_index in range(len(names)):
+            for row_index in xrange(len(names)):
                 row = membership[row_index]
                 result[names[row_index]] = sorted([row[col_index] for col_index
-                                                   in range(len(row))
+                                                   in xrange(len(row))
                                                    if row[col_index] > 0])
             return result
 
@@ -100,8 +100,8 @@ class ClusterMembership:
         num_clusters_per_col = config_params[KEY_CLUSTERS_PER_COL]
 
         num_rows = data_matrix.num_rows()
-        row_membership = [[0 for _ in range(num_clusters_per_row)]
-                          for _ in range(num_rows)]
+        row_membership = [[0 for _ in xrange(num_clusters_per_row)]
+                          for _ in xrange(num_rows)]
         seed_row_memberships(row_membership, data_matrix)
         column_membership = seed_column_memberships(
             data_matrix, row_membership, num_clusters, num_clusters_per_col)
@@ -340,8 +340,8 @@ class ClusterMembership:
         num_col_fuzzy_values = (column_scores.num_rows() *
                                 column_scores.num_columns())
         row_sd_values = []
-        for col in range(row_scores.num_columns()):
-            for row in range(row_scores.num_rows()):
+        for col in xrange(row_scores.num_columns()):
+            for row in xrange(row_scores.num_rows()):
                 row_name = row_scores.row_name(row)
                 if self.is_row_member_of(row_name, col + 1):
                     row_sd_values.append(row_scores[row][col])
@@ -349,8 +349,8 @@ class ClusterMembership:
         row_rnorm = util.rnorm(num_row_fuzzy_values, row_sd)
 
         col_sd_values = []
-        for col in range(column_scores.num_columns()):
-            for row in range(column_scores.num_rows()):
+        for col in xrange(column_scores.num_columns()):
+            for row in xrange(column_scores.num_rows()):
                 row_name = column_scores.row_name(row)
                 if self.is_column_member_of(row_name, col + 1):
                     col_sd_values.append(column_scores[row][col])
@@ -361,13 +361,13 @@ class ClusterMembership:
                      fuzzy_coeff, row_sd, col_sd)
 
         # add fuzzy values to the row/column scores
-        for col in range(row_scores.num_columns()):
-            for row in range(row_scores.num_rows()):
+        for col in xrange(row_scores.num_columns()):
+            for row in xrange(row_scores.num_rows()):
                 row_scores[row][col] += row_rnorm[
                     row * row_scores.num_columns() + col]
 
-        for col in range(column_scores.num_columns()):
-            for row in range(column_scores.num_rows()):
+        for col in xrange(column_scores.num_columns()):
+            for row in xrange(column_scores.num_rows()):
                 column_scores[row][col] += col_rnorm[
                     row * row_scores.num_columns() + col]
 
@@ -380,12 +380,12 @@ class ClusterMembership:
             """retrieve the best scored gene clusters from the given
             row/column score matrix"""
             result = {}
-            for row in range(scores.num_rows()):
+            for row in xrange(scores.num_rows()):
                 row_values = scores.row_values(row)
                 ranked_scores = sorted(row_values, reverse=True)
                 rowname = scores.row_names()[row]
                 result[rowname] = []
-                for index in range(num_per_cluster):
+                for index in xrange(num_per_cluster):
                     result[rowname].append(row_values.index(
                             ranked_scores[index]) + 1)
             return result
@@ -450,14 +450,14 @@ class ClusterMembership:
             """generically updating row/column memberships according to
             rd_scores/cd_scores"""
             best_clusters = get_best_clusters(scores, num_clusters)
-            for row in range(scores.num_rows()):
+            for row in xrange(scores.num_rows()):
                 rowname = scores.row_names()[row]
                 best_members = best_clusters[rowname]
                 if (not is_in_all_clusters(rowname, best_members) and
                     seeing_change(probability_seeing_change)):
                     change_clusters = get_change_clusters(rowname,
                                                           best_members)
-                    for change in range(min(max_changes,
+                    for change in xrange(min(max_changes,
                                             len(change_clusters))):
                         add_member_to_cluster(rowname, change_clusters[change])
 
@@ -514,10 +514,10 @@ def _get_density_scores(membership, row_scores, col_scores):
                               row_scores.num_columns(),
                               row_scores.row_names(),
                               row_scores.column_names())
-    for cluster in range(1, num_clusters + 1):
+    for cluster in xrange(1, num_clusters + 1):
         rr_scores = _get_rr_scores(membership, row_scores, rowscore_bandwidth,
                                    cluster)
-        for row in range(row_scores.num_rows()):
+        for row in xrange(row_scores.num_rows()):
             rd_scores[row][cluster - 1] = rr_scores[row]
 
     cscore_range = abs(col_scores.max() - col_scores.min())
@@ -526,10 +526,10 @@ def _get_density_scores(membership, row_scores, col_scores):
                               col_scores.num_columns(),
                               col_scores.row_names(),
                               col_scores.column_names())
-    for cluster in range(1, num_clusters + 1):
+    for cluster in xrange(1, num_clusters + 1):
         cc_scores = _get_cc_scores(membership, col_scores, colscore_bandwidth,
                                    cluster)
-        for row in range(col_scores.num_rows()):
+        for row in xrange(col_scores.num_rows()):
             cd_scores[row][cluster - 1] = cc_scores[row]
     return (rd_scores, cd_scores)
 
@@ -545,7 +545,7 @@ def _get_rr_scores(membership, rowscores, bandwidth, cluster):
     cluster_columns = membership.columns_for_cluster(cluster)
     if len(cluster_rows) == 0 or len(cluster_columns) == 0:
         num_rows = rowscores.num_rows()
-        return [(1.0 / num_rows) for _ in range(num_rows)]
+        return [(1.0 / num_rows) for _ in xrange(num_rows)]
     else:
         score_indexes = rowscores.row_indexes(cluster_rows)
         kscores = rowscores.column_values(cluster - 1)
@@ -564,7 +564,7 @@ def _get_cc_scores(membership, scores, bandwidth, cluster):
         # This is a little weird, but is here to at least attempt to simulate
         # what the original cMonkey is doing
         num_rows = scores.num_rows()
-        return [(1.0 / num_rows) for _ in range(num_rows)]
+        return [(1.0 / num_rows) for _ in xrange(num_rows)]
     else:
         score_indexes = scores.row_indexes(cluster_columns)
         kscores = scores.column_values(cluster - 1)
@@ -618,7 +618,7 @@ def _compensate_size(membership, matrix, rd_scores, cd_scores):
                 compensate_column_size(matrix.num_columns() / 10.0))
 
     num_clusters = membership.num_clusters()
-    for cluster in range(1, num_clusters + 1):
+    for cluster in xrange(1, num_clusters + 1):
         compensate_rows(cluster)
         compensate_columns(cluster)
 
@@ -641,7 +641,7 @@ def make_kmeans_row_seeder(num_clusters):
         kmeans = robjects.r['kmeans']
         kwargs = {'centers': num_clusters, 'iter.max': 20, 'nstart': 2}
         seeding = kmeans(matrix_values, **kwargs)[0]
-        for row in range(len(seeding)):
+        for row in xrange(len(seeding)):
             row_membership[row][0] = seeding[row]
 
     return seed

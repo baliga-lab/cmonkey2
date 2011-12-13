@@ -22,9 +22,9 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
     num_cols = data_matrix.num_columns()
     # create a submatrix for each cluster
     column_scores = []
-    for cluster_num in range(1, num_clusters + 1):
+    for cluster_num in xrange(1, num_clusters + 1):
         current_cluster_rows = []
-        for row_index in range(num_rows):
+        for row_index in xrange(num_rows):
             if row_membership[row_index][0] == cluster_num:
                 current_cluster_rows.append(data_matrix.row_name(row_index))
         submatrix = data_matrix.submatrix_by_name(
@@ -33,9 +33,9 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
         column_scores.append(scores)
 
     column_members = []
-    for column_index in range(num_cols):
+    for column_index in xrange(num_cols):
         scores_to_order = []
-        for row_index in range(num_clusters):
+        for row_index in xrange(num_clusters):
             scores_to_order.append(column_scores[row_index][column_index])
         column_members.append(order(scores_to_order)[:num_clusters_per_column])
     return column_members
@@ -53,19 +53,19 @@ def compute_column_scores(membership, matrix, num_clusters):
     def compute_substitution(cluster_column_scores):
         """calculate substitution value for missing column scores"""
         membership_values = []
-        for cluster in range(1, num_clusters + 1):
+        for cluster in xrange(1, num_clusters + 1):
             columns = membership.columns_for_cluster(cluster)
             column_scores = cluster_column_scores[cluster - 1]
             if column_scores != None:
-                for row in range(column_scores.num_rows()):
-                    for col in range(column_scores.num_columns()):
+                for row in xrange(column_scores.num_rows()):
+                    for col in xrange(column_scores.num_columns()):
                         if column_scores.column_name(col) in columns:
                             membership_values.append(column_scores[row][col])
         return util.quantile(membership_values, 0.95)
 
     cluster_column_scores = []
     null_scores_found = False
-    for cluster in range(1, num_clusters + 1):
+    for cluster in xrange(1, num_clusters + 1):
         submatrix = matrix.submatrix_by_name(
             row_names=membership.rows_for_cluster(cluster))
         if submatrix.num_rows() > 1:
@@ -82,9 +82,9 @@ def compute_column_scores(membership, matrix, num_clusters):
     # and conditions in the rows
     result = dm.DataMatrix(matrix.num_columns(), num_clusters,
                            row_names=matrix.column_names())
-    for cluster in range(num_clusters):
+    for cluster in xrange(num_clusters):
         column_scores = cluster_column_scores[cluster]
-        for row_index in range(matrix.num_columns()):
+        for row_index in xrange(matrix.num_columns()):
             if column_scores == None:
                 result[row_index][cluster] = substitution
             else:
@@ -122,7 +122,7 @@ def __subtract_and_square(matrix, vector):
     for row in matrix:
         new_row = []
         result.append(new_row)
-        for col_index in range(len(row)):
+        for col_index in xrange(len(row)):
             new_row.append(row[col_index] - vector[col_index])
     return numpy.square(result)
 
@@ -131,7 +131,7 @@ def compute_row_scores(membership, matrix, num_clusters,
                        use_multiprocessing):
     """for each cluster 1, 2, .. num_clusters compute the row scores
     for the each row name in the input name matrix"""
-    clusters = range(1, num_clusters + 1)
+    clusters = xrange(1, num_clusters + 1)
     start_time = util.current_millis()
     cluster_row_scores = __compute_row_scores_for_clusters(
         membership, matrix, clusters, use_multiprocessing)
@@ -149,9 +149,9 @@ def compute_row_scores(membership, matrix, num_clusters,
     start_time = util.current_millis()
     result = dm.DataMatrix(matrix.num_rows(), num_clusters,
                            row_names=matrix.row_names())
-    for cluster in range(num_clusters):
+    for cluster in xrange(num_clusters):
         row_scores = cluster_row_scores[cluster]
-        for row_index in range(matrix.num_rows()):
+        for row_index in xrange(matrix.num_rows()):
             result[row_index][cluster] = row_scores[0][row_index]
     logging.info("made result matrix in %f s.",
                  (util.current_millis() - start_time) / 1000.0)
@@ -220,8 +220,8 @@ def __replace_non_numeric_values(cluster_row_scores, membership, matrix,
                                         col_names=matrix.row_names(),
                                         init_value=qvalue))
         else:
-            for row_index in range(row_scores.num_rows()):
-                for col_index in range(row_scores.num_columns()):
+            for row_index in xrange(row_scores.num_rows()):
+                for col_index in xrange(row_scores.num_columns()):
                     if not numpy.isfinite(row_scores[row_index][col_index]):
                         row_scores[row_index][col_index] = qvalue
             result.append(row_scores)
@@ -238,7 +238,7 @@ def __quantile_normalize_scores(cluster_row_scores, membership, clusters):
 
         if row_scores_for_cluster != None:
             row_scores_names = row_scores_for_cluster.column_names()
-            for col_index in range(row_scores_for_cluster.num_columns()):
+            for col_index in xrange(row_scores_for_cluster.num_columns()):
                 score = row_scores_for_cluster[0][col_index]
                 gene_name = row_scores_names[col_index]
                 if (numpy.isfinite(score)
