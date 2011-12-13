@@ -197,7 +197,7 @@ class DataMatrix:
         """Returns a new DataMatrix containing the column means"""
         return DataMatrix(1, self.num_columns(), row_names=["Column Means"],
                           col_names=self.column_names(),
-                          values=[util.column_means(self.values())])
+                          values=[util.column_means(self.__values)])
 
     ######################################################################
     #### Operations on the matrix values
@@ -211,7 +211,7 @@ class DataMatrix:
 
     def max(self):
         """return the maximum value in this matrix"""
-        return np.amax(self.values())
+        return np.amax(self.__values)
 
     def quantile(self, probability):
         """returns the result of the quantile function over all contained
@@ -220,13 +220,13 @@ class DataMatrix:
 
     def min(self):
         """return the minimum value in this matrix"""
-        return np.amin(self.values())
+        return np.amin(self.__values)
 
     def __neg__(self):
         """returns a new DataMatrix with the values in the matrix negated"""
         return DataMatrix(self.num_rows(), self.num_columns(),
                           self.row_names(), self.column_names(),
-                          -self.values())
+                          -self.__values)
 
     def __add__(self, value):
         """adding a value to this matrix can be either a scalar or a matrix"""
@@ -252,7 +252,7 @@ class DataMatrix:
         """returns a new DataMatrix with the values in the matrix negated"""
         return DataMatrix(self.num_rows(), self.num_columns(),
                           self.row_names(), self.column_names(),
-                          self.values() * factor)
+                          self.__values * factor)
 
     def __repr__(self):
         """returns a string representation of this matrix"""

@@ -140,7 +140,7 @@ class ClusterMembership:
         """returns the maximum number of changes per column"""
         return self.__config_params[KEY_MAX_CHANGES_PER_COL]
 
-    def __min_cluster_rows_allowed(self):
+    def min_cluster_rows_allowed(self):
         """returns the maximum number of changes per column"""
         return self.__config_params[KEY_MIN_CLUSTER_ROWS_ALLOWED]
 
@@ -604,7 +604,7 @@ def _compensate_size(membership, matrix, rd_scores, cd_scores):
         else:
             rd_scores.multiply_column_by(
                 cluster - 1,
-                compensate_row_size(self.__min_cluster_rows_allowed()))
+                compensate_row_size(membership.min_cluster_rows_allowed()))
 
     def compensate_columns(cluster):
         """compensate density scores for column dimension"""
