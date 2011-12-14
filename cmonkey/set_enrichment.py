@@ -10,6 +10,7 @@ import scoring
 import numpy as np
 import rpy2.robjects as robjects
 import datamatrix as dm
+import multiprocessing as mp
 
 
 class EnrichmentSet:
@@ -79,6 +80,14 @@ class SetType:
             sets[line[0]].add(line[1].upper(), 1)
         return SetType(name, sets)
 
+# global variables that are shared by the child processe
+# when running in multiprocessing. This is an attempt to avoid
+# that the scoring function slows itself down by using to much
+# memory
+SET_MATRIX = None
+SET_REF_MATRIX = None
+SET_MEMBERSHIP = None
+SET_SET_TYPE = None
 
 class ScoringFunction(scoring.ScoringFunctionBase):
     """Network scoring function"""
@@ -104,90 +113,122 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
     def compute(self, iteration, ref_matrix):
         """compute method"""
+        global SET_MATRIX, SET_MEMBERSHIP, SET_REF_MATRIX, SET_SET_TYPE
+
         if (self.__interval == 0 or
             (iteration > 0 and (iteration % self.__interval == 0))):
             logging.info("Compute scores for set enrichment...")
             start_time = util.current_millis()
             matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
                                    self.gene_names())
+            use_multiprocessing = self.config_params[
+                scoring.KEY_MULTIPROCESSING]
+            SET_MATRIX = self.matrix()
+            SET_MEMBERSHIP = self.membership()
+            SET_REF_MATRIX = ref_matrix
+
             for set_type in self.__set_types:
+                SET_SET_TYPE = set_type
                 #logging.info("PROCESSING SET TYPE [%s]", repr(set_type))
+                logging.info("PROCESSING SET TYPE '%s'", set_type.name)
+                start1 = util.current_millis()
+                if use_multiprocessing:
+                    pool = mp.Pool()
+                    results = pool.map(compute_cluster_score,
+                            [(cluster, self.bonferroni_cutoff())
+                             for cluster in xrange(1, self.num_clusters() + 1)])
+                    pool.close()
+                    pass
+                else:
+                    results = []
+                    for cluster in xrange(1, self.num_clusters() + 1):
+                        results.append(compute_cluster_score(
+                                (cluster, self.bonferroni_cutoff())))
+
+                elapsed1 = util.current_millis() - start1
+                logging.info("ENRICHMENT SCORES COMPUTED in %f s, STORING...",
+                             elapsed1 / 1000.0)
+
                 for cluster in xrange(1, self.num_clusters() + 1):
-                    scores = self.__compute_cluster_score(set_type,
-                                                          cluster,
-                                                          ref_matrix)
+                    # store the best enriched set determined
+                    scores, min_set, min_pvalue = results[cluster - 1]
+                    self.__last_min_enriched_set[set_type][cluster] = (
+                        min_set, min_pvalue)
+
                     for row in xrange(len(self.gene_names())):
                         matrix[row][cluster - 1] = scores[row]
+
             logging.info("SET ENRICHMENT FINISHED IN %f s.\n",
                          (util.current_millis() - start_time) / 1000.0)
             return matrix
         else:
             return None
 
-    def __compute_cluster_score(self, set_type, cluster, ref_matrix):
-        """Computes the cluster score for a given set type"""
-        cluster_rows = self.rows_for_cluster(cluster)
-        cluster_genes = [gene for gene in cluster_rows
-                         if gene in set_type.genes()]
-        overlap_sizes = []
-        set_sizes = []
+def compute_cluster_score(args):
+    """Computes the cluster score for a given set type"""
+    cluster, cutoff = args
+    set_type = SET_SET_TYPE
+    matrix = SET_MATRIX
+    ref_matrix = SET_REF_MATRIX
+    cluster_rows = SET_MEMBERSHIP.rows_for_cluster(cluster)
+    cluster_genes = [gene for gene in cluster_rows
+                     if gene in set_type.genes()]
+    overlap_sizes = []
+    set_sizes = []
 
-        for set_name, eset in set_type.sets.items():
-            set_genes = eset.genes_above_cutoff()
-            intersect = set(cluster_genes).intersection(set_genes)
-            overlap_sizes.append(len(intersect))
-            set_sizes.append(len(set_genes))
+    for set_name, eset in set_type.sets.items():
+        set_genes = eset.genes_above_cutoff()
+        intersect = set(cluster_genes).intersection(set_genes)
+        overlap_sizes.append(len(intersect))
+        set_sizes.append(len(set_genes))
 
-        num_sets = len(set_type.sets)
-        phyper_n = (np.array([len(set_type.genes())
-                              for _ in xrange(num_sets)]) -
-                    np.array(set_sizes))
-        phyper_n = [value for value in phyper_n]
-        phyper_k = [len(cluster_genes) for _ in xrange(num_sets)]
-        enrichment_pvalues = list(util.phyper(overlap_sizes, set_sizes,
-                                              phyper_n, phyper_k))
-        min_pvalue = min(enrichment_pvalues)
-        min_index = enrichment_pvalues.index(min_pvalue)
-        min_set = set_type.sets.keys()[min_index]
-        min_set_overlap = overlap_sizes[min_index]
-        if min_set_overlap > 0:
-            scores = [0.0 for _ in xrange(self.matrix().num_rows())]
-            min_genes = set_type.sets[min_set].genes
-            min_genes = [gene for gene in min_genes
-                         if gene in self.gene_names()]
-            min_indexes = self.matrix().row_indexes(min_genes)
+    num_sets = len(set_type.sets)
+    phyper_n = (np.array([len(set_type.genes())
+                          for _ in xrange(num_sets)]) -
+                np.array(set_sizes))
+    phyper_n = [value for value in phyper_n]
+    phyper_k = [len(cluster_genes) for _ in xrange(num_sets)]
+    enrichment_pvalues = list(util.phyper(overlap_sizes, set_sizes,
+                                          phyper_n, phyper_k))
+    min_pvalue = min(enrichment_pvalues)
+    min_index = enrichment_pvalues.index(min_pvalue)
+    min_set = set_type.sets.keys()[min_index]
+    min_set_overlap = overlap_sizes[min_index]
+    if min_set_overlap > 0:
+        scores = [0.0 for _ in xrange(matrix.num_rows())]
+        min_genes = set_type.sets[min_set].genes
+        min_genes = [gene for gene in min_genes
+                     if gene in matrix.row_names()]
+        min_indexes = matrix.row_indexes(min_genes)
 
-            if set_type.sets[min_set].cutoff == 'discrete':
-                overlap_genes = set(cluster_genes).intersection(set(min_genes))
-                overlap_indexes = self.matrix().row_indexes(overlap_genes)
-                for index in min_indexes:
-                    scores[index] = 0.5
-                for index in overlap_indexes:
-                    scores[index] = 1.0
-            else:
-                min_set_weights = []
-                for index in min_indexes:
-                    min_set_weights.append(
-                        set_type.sets[min_set].weights[index])
-                min_weight = min(min_set_weights)
-                max_weight = max(min_set_weights)
-                for index in min_indexes:
-                    scores[index] = min_set_weights[index] - min_weight
-                    scores[index] = min_set_weights[index] / max_weight
-
-            dampened_pvalue = enrichment_pvalues[min_index]
-            if dampened_pvalue <= self.bonferroni_cutoff():
-                dampened_pvalue = 1
-            else:
-                dampened_pvalue = (math.log10(dampened_pvalue) /
-                                   math.log10(self.bonferroni_cutoff()))
-            scores = [dampened_pvalue / score if score != 0.0 else score
-                      for score in scores]
-            min_ref_score = ref_matrix.min()
-            scores = [score * min_ref_score for score in scores]
+        if set_type.sets[min_set].cutoff == 'discrete':
+            overlap_genes = set(cluster_genes).intersection(set(min_genes))
+            overlap_indexes = matrix.row_indexes(overlap_genes)
+            for index in min_indexes:
+                scores[index] = 0.5
+            for index in overlap_indexes:
+                scores[index] = 1.0
         else:
-            scores = [0.0 for _ in xrange(self.matrix().num_rows())]
+            min_set_weights = []
+            for index in min_indexes:
+                min_set_weights.append(
+                    set_type.sets[min_set].weights[index])
+            min_weight = min(min_set_weights)
+            max_weight = max(min_set_weights)
+            for index in min_indexes:
+                scores[index] = min_set_weights[index] - min_weight
+                scores[index] = min_set_weights[index] / max_weight
 
-        # store the best enriched set determined
-        self.__last_min_enriched_set[set_type][cluster] = (min_set, min_pvalue)
-        return scores
+        dampened_pvalue = enrichment_pvalues[min_index]
+        if dampened_pvalue <= cutoff:
+            dampened_pvalue = 1
+        else:
+            dampened_pvalue = (math.log10(dampened_pvalue) /
+                               math.log10(cutoff))
+        scores = [dampened_pvalue / score if score != 0.0 else score
+                  for score in scores]
+        min_ref_score = ref_matrix.min()
+        scores = [score * min_ref_score for score in scores]
+    else:
+        scores = [0.0 for _ in xrange(matrix.num_rows())]
+    return scores, min_set, min_pvalue
