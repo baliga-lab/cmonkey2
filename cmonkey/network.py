@@ -123,9 +123,16 @@ class Network:
         return Network(name, network_edges)
 
 
-def compute_network_scores(args):
+COMPUTE_NETWORK = None
+ALL_GENES = None
+
+def compute_network_scores(genes):
     """Generic method to compute network scores"""
-    network, genes, all_genes = args
+    #network, genes, all_genes = args
+    global COMPUTE_NETWORK, ALL_GENES
+    network = COMPUTE_NETWORK
+    all_genes = genes
+
     edges = network.edges_with_source_in(genes)
     fedges = [edge for edge in edges if edge.target_in(all_genes)]
 
@@ -194,15 +201,21 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
     def __compute_network_cluster_scores(self, network):
         """computes the cluster scores for the given network"""
+        global COMPUTE_NETWORK, ALL_GENES
         result = {}
         use_multiprocessing = self.config_params[
             scoring.KEY_MULTIPROCESSING]
+        # Set the huge memory objects into globals
+        # These are readonly anyways, but using Manager.list() or something
+        # similar brings this down to a crawl
+        COMPUTE_NETWORK = network
+        ALL_GENES = self.gene_names()
+
         if use_multiprocessing:
             pool = mp.Pool()
             args = []
             for cluster in xrange(1, self.num_clusters() + 1):
-                args.append((network, sorted(self.rows_for_cluster(cluster)),
-                    self.gene_names()))
+                args.append(sorted(self.rows_for_cluster(cluster)))
             map_results = pool.map(compute_network_scores, args)
             pool.close()
             for cluster in xrange(1, self.num_clusters() + 1):
@@ -210,8 +223,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
                 result[cluster] = compute_network_scores(
-                    (network, sorted(self.rows_for_cluster(cluster)),
-                    self.gene_names()))
+                    sorted(self.rows_for_cluster(cluster)))
 
         return result
 

@@ -158,10 +158,15 @@ def compute_row_scores(membership, matrix, num_clusters,
 
     return result.sorted_by_row_name()
 
+ROW_SCORE_MATRIX = None
+ROW_SCORE_MEMBERSHIP = None
 
-def compute_row_scores_for_cluster(cluster_data):
+def compute_row_scores_for_cluster(cluster):
     """This function computes the row score for a cluster"""
-    cluster, membership, matrix = cluster_data
+    global ROW_SCORE_MATRIX, ROW_SCORE_MEMBERSHIP
+    membership = ROW_SCORE_MEMBERSHIP
+    matrix = ROW_SCORE_MATRIX
+
     rnames = membership.rows_for_cluster(cluster)
     cnames = membership.columns_for_cluster(cluster)
     sm1 = matrix.submatrix_by_name(row_names=rnames, column_names=cnames)
@@ -178,17 +183,21 @@ def __compute_row_scores_for_clusters(membership, matrix, clusters,
                                       use_multiprocessing):
     """compute the pure row scores for the specified clusters
     without nowmalization"""
+    # note that we set the data into globals before we fork it off
+    # to save memory and pickling time
+    global ROW_SCORE_MATRIX, ROW_SCORE_MEMBERSHIP
+    ROW_SCORE_MATRIX = matrix
+    ROW_SCORE_MEMBERSHIP = membership
+
     if use_multiprocessing:
         pool = mp.Pool()
         result = pool.map(compute_row_scores_for_cluster,
-                          [(cluster, membership, matrix)
-                           for cluster in clusters])
+                          [cluster for cluster in clusters])
         pool.close()
     else:
         result = []
         for cluster in clusters:
-            result.append(compute_row_scores_for_cluster((cluster,
-                                                         membership, matrix)))
+            result.append(compute_row_scores_for_cluster(cluster))
     return result
 
 
