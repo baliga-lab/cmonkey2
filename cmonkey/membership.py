@@ -320,21 +320,23 @@ class ClusterMembership:
 
         start = util.current_millis()
         logging.info("GET_DENSITY_SCORES()...")
-        rd_scores, cd_scores = _get_density_scores(self, row_scores,
-                                                   column_scores)
+        rd_scores, cd_scores = get_density_scores(self, row_scores,
+                                                  column_scores)
         elapsed = util.current_millis() - start
         logging.info("GET_DENSITY_SCORES() took %f s.", elapsed / 1000.0)
 
         start = util.current_millis()
         logging.info("COMPENSATE_SIZE()...")
-        _compensate_size(self, matrix, rd_scores, cd_scores)
+        compensate_size(self, matrix, rd_scores, cd_scores)
         elapsed = util.current_millis() - start
         logging.info("COMPENSATE_SIZE() took %f s.", elapsed / 1000.0)
-        self._update_memberships(rd_scores, cd_scores)
+        self.__update_memberships(rd_scores, cd_scores)
 
     def __fuzzify(self, row_scores, column_scores, iteration,
                   num_iterations):
         """Provide an iteration-specific fuzzification"""
+        logging.info("__fuzzify(), setup...")
+        start_time = util.current_millis()
         fuzzy_coeff = std_fuzzy_coefficient(iteration + 1, num_iterations)
         num_row_fuzzy_values = row_scores.num_rows() * row_scores.num_columns()
         num_col_fuzzy_values = (column_scores.num_rows() *
@@ -356,9 +358,12 @@ class ClusterMembership:
                     col_sd_values.append(column_scores[row][col])
         col_sd = util.r_stddev(col_sd_values) * fuzzy_coeff
         col_rnorm = util.rnorm(num_col_fuzzy_values, col_sd)
+        elapsed = util.current_millis() - start_time
+        logging.info("fuzzify() SETUP finished in %f s.", elapsed / 1000.0)
 
         logging.info("fuzzifying scores, coeff = %f, row sd = %f, col sd = %f",
                      fuzzy_coeff, row_sd, col_sd)
+        start_time = util.current_millis()
 
         # add fuzzy values to the row/column scores
         for col in xrange(row_scores.num_columns()):
@@ -370,10 +375,11 @@ class ClusterMembership:
             for row in xrange(column_scores.num_rows()):
                 column_scores[row][col] += col_rnorm[
                     row * row_scores.num_columns() + col]
-
+        elapsed = util.current_millis() - start_time
+        logging.info("fuzzify() finished in %f s.", elapsed / 1000.0)
         return row_scores, column_scores
 
-    def _update_memberships(self, rd_scores, cd_scores):
+    def __update_memberships(self, rd_scores, cd_scores):
         """update memberships according to rd_scores and cd_scores"""
 
         def get_best_clusters(scores, num_per_cluster):
@@ -503,7 +509,7 @@ class ClusterMembership:
         return cls(row_is_member_of, col_is_member_of, config_params)
 
 
-def _get_density_scores(membership, row_scores, col_scores):
+def get_density_scores(membership, row_scores, col_scores):
     """We can't really implement density scores at the moment,
     there seems to be no equivalent to R's density() and approx()
     in scipy"""
@@ -515,7 +521,7 @@ def _get_density_scores(membership, row_scores, col_scores):
                               row_scores.row_names(),
                               row_scores.column_names())
     for cluster in xrange(1, num_clusters + 1):
-        rr_scores = _get_rr_scores(membership, row_scores, rowscore_bandwidth,
+        rr_scores = __get_rr_scores(membership, row_scores, rowscore_bandwidth,
                                    cluster)
         for row in xrange(row_scores.num_rows()):
             rd_scores[row][cluster - 1] = rr_scores[row]
@@ -527,14 +533,14 @@ def _get_density_scores(membership, row_scores, col_scores):
                               col_scores.row_names(),
                               col_scores.column_names())
     for cluster in xrange(1, num_clusters + 1):
-        cc_scores = _get_cc_scores(membership, col_scores, colscore_bandwidth,
+        cc_scores = __get_cc_scores(membership, col_scores, colscore_bandwidth,
                                    cluster)
         for row in xrange(col_scores.num_rows()):
             cd_scores[row][cluster - 1] = cc_scores[row]
     return (rd_scores, cd_scores)
 
 
-def _get_rr_scores(membership, rowscores, bandwidth, cluster):
+def __get_rr_scores(membership, rowscores, bandwidth, cluster):
     """calculate the density scores for the given row score values in the
     specified cluster"""
     def bwscale(value):
@@ -555,7 +561,7 @@ def _get_rr_scores(membership, rowscores, bandwidth, cluster):
                             min(kscores) - 1, max(kscores) + 1)
 
 
-def _get_cc_scores(membership, scores, bandwidth, cluster):
+def __get_cc_scores(membership, scores, bandwidth, cluster):
     """calculate the density scores for the given column score values in the
     specified cluster"""
     cluster_rows = membership.rows_for_cluster(cluster)
@@ -573,7 +579,7 @@ def _get_cc_scores(membership, scores, bandwidth, cluster):
                             min(kscores) - 1, max(kscores) + 1)
 
 
-def _compensate_size(membership, matrix, rd_scores, cd_scores):
+def compensate_size(membership, matrix, rd_scores, cd_scores):
     """size compensation function"""
     def compensate_dim_size(size, dimsize, clusters_per_dim, num_clusters):
         """compensate size for a dimension"""

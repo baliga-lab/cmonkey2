@@ -131,8 +131,14 @@ class ScoringFunctionCombiner:
                     self.__log_subresult(scoring_function, matrix)
 
         if len(result_matrices) > 1:
+            logging.info("COMBINING THE SCORES OF %d matrices (quantile normalize)",
+                         len(result_matrices))
+            start_time = util.current_millis()
             result_matrices = dm.quantile_normalize_scores(result_matrices,
                                                            score_weights)
+            elapsed = util.current_millis() - start_time
+            logging.info("SCORES COMBINED IN %f s", elapsed / 1000.0)
+
         if len(result_matrices) == 0:
             logging.warn("NO RESULTS !!!")
         combined_score = (result_matrices[0] *
