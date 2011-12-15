@@ -381,9 +381,63 @@ class CenterScaleFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEqual(-0.70710678237309499, filtered[1][0])
         self.assertAlmostEqual(0.70710678237309499, filtered[1][1])
 
+class QuantileNormalizeTest(unittest.TestCase): # pylint: disable-msg=R0904
+    """Test cases for quantile normalization. This is the
+    central algorithm for combining lists of scoring matrices"""
+
+    def test_as_flat_values_empty_input(self):
+        """tests as_sorted_flat_values() with no input"""
+        self.assertTrue((dm.as_sorted_flat_values([]) == []).all())
+
+    def test_as_sorted_flat_values(self):
+        """tests that the flat values of the input matrices are
+        all put in one big numpy array"""
+        m1 = dm.DataMatrix(2, 2, values=[[2, np.nan], [3, 4]])
+        m2 = dm.DataMatrix(2, 2, values=[[6, 5], [4, 3]])
+        flat_values = dm.as_sorted_flat_values([m1, m2])
+        self.assertEquals(4, len(flat_values))
+        self.assertTrue((flat_values[0] == [2, 3]).all())
+        self.assertTrue((flat_values[1] == [3, 4]).all())
+        self.assertTrue((flat_values[2] == [4, 5]).all())
+        self.assertTrue(np.isnan(flat_values[3][0]))
+        self.assertEquals(6, flat_values[3][1])
+
+    def test_unweighted_row_means(self):
+        """tests unweighted_row_means"""
+        matrix = np.array([[1.0, 2.0, 3.0],
+                           [np.nan, 2.0, 6.0]])
+        rowmeans = dm.unweighted_row_means(matrix)
+        self.assertEquals(2, len(rowmeans))
+        self.assertTrue((rowmeans == [2.0, 4.0]).all())
+
+    def test_unweighted_row_means(self):
+        """tests unweighted_row_means"""
+        matrix = np.array([[1.0, 2.0, 3.0],
+                           [np.nan, 2.0, 6.0]])
+        rowmeans = dm.weighted_row_means(matrix, [1, 2, 3])
+        self.assertEquals(2, len(rowmeans))
+        self.assertAlmostEqual(0.7777777777, rowmeans[0])
+        self.assertAlmostEqual(1.8333333333, rowmeans[1])
+
+    def test_ranks(self):
+        ranked = dm.ranks(np.array([3.0, 1.0, 2.0]))
+        self.assertTrue((ranked ==  [2, 0, 1]).all())
+
+    def test_qm_result_matrices(self):
+        m1 = dm.DataMatrix(2, 2, values=[[2, 1], [3, 4]])
+        m2 = dm.DataMatrix(2, 2, values=[[6, 5], [4, 3]])
+        tmp_mean = np.array([1.0, 2.0, 3.0, 4.0])
+        result = dm.qm_result_matrices([m1, m2], tmp_mean)
+        self.assertEquals(2, len(result))
+        qm1 = result[0]
+        qm2 = result[1]
+        self.assertTrue((qm1.values() == [[2, 1], [3, 4]]).all())
+        self.assertTrue((qm2.values() == [[4, 3], [2, 1]]).all())
+
 if __name__ == '__main__':
     SUITE = []
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DataMatrixTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(QuantileNormalizeTest))
+    #SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DataMatrixTest))
     #SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DataMatrixFactoryTest))
     #SUITE.append(unittest.TestLoader().loadTestsFromTestCase(CenterScaleFilterTest))
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))

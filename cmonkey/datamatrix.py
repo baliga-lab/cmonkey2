@@ -6,6 +6,7 @@ more information and licensing details.
 import scipy
 import numpy as np
 import util
+import logging
 
 
 class DataMatrix:
@@ -436,72 +437,66 @@ def center_scale_filter(matrix):
 
 def quantile_normalize_scores(matrices, weights=None):
     """quantile normalize scores against each other"""
-    def extract_flat_values():
-        """optimization: flat_values are only retrieved once"""
-        result = []
-        for index in xrange(len(matrices)):
-            result.append(matrices[index].flat_values())
-        return result
 
-    def compute_tmp_mean_weighted(flat_values):
-        """compute weighted row means"""
-        in_values = []
-        for index in xrange(len(matrices)):
-            values = flat_values[index] * weights[index]
-            values.sort()
-            in_values.append(values)
-        result = []
-        num_values = len(in_values[0])
-        scale = sum(weights)
-        for row in xrange(len(in_values[0])):
-            result.append(np.mean([inarray[row]
-                                      for inarray in in_values]) / scale)
-        return result
-
-    def compute_tmp_mean_unweighted(flat_values):
-        """compute unweighted row means"""
-        in_values = []
-        for index in xrange(len(matrices)):
-            values = sorted(flat_values)
-            in_values.append(values)
-        result = []
-        for row in xrange(len(in_values[0])):
-            result.append(np.mean([inarray[row] for inarray in in_values]))
-        return result
-
-    def compute_ranks(flat_values):
-        """optimization: write a map from value to first index in
-        sorted_values"""
-        sorted_values = sorted(flat_values)
-        first_index = {}
-        for index in xrange(len(sorted_values)):
-            if sorted_values[index] not in first_index:
-                first_index[sorted_values[index]] = index
-        return [first_index[value] for value in flat_values]
-
-    def build_result_matrices(tmp_mean):
-        """builds the resulting matrices by looking at the rank of their
-        original values and retrieving the means at the specified position"""
-        result = []
-        for index in xrange(len(matrices)):
-            ranks = compute_ranks(flat_values[index])
-            outmatrix = DataMatrix(matrices[index].num_rows(),
-                                   matrices[index].num_columns(),
-                                   matrices[index].row_names(),
-                                   matrices[index].column_names())
-            for row in xrange(outmatrix.num_rows()):
-                for col in xrange(outmatrix.num_columns()):
-                    seqindex = row * outmatrix.num_columns() + col
-                    outmatrix[row][col] = tmp_mean[ranks[seqindex]]
-            result.append(outmatrix)
-        return result
-
-    flat_values = extract_flat_values()
+    flat_values = as_sorted_flat_values(matrices)
+    start_time = util.current_millis()
     if weights != None:
-        tmp_mean = compute_tmp_mean_weighted(flat_values)
+        tmp_mean = weighted_row_means(flat_values, weights)
     else:
-        tmp_mean = compute_tmp_mean_unweighted(flat_values)
-    return build_result_matrices(tmp_mean)
+        tmp_mean = unweighted_row_means(flat_values)
+    elapsed = util.current_millis() - start_time
+    logging.info("weighted means in %f s.", elapsed / 1000.0)
+    start_time = util.current_millis()
+    result = qm_result_matrices(matrices, tmp_mean)
+    elapsed = util.current_millis() - start_time
+    logging.info("result matrices built in %f s.", elapsed / 1000.0)
+    return result
+
+
+def as_sorted_flat_values(matrices):
+    """rearranges the scores in the input matrices into a matrix
+    with |matrices| columns where the columns contain the values
+    of each matrix in sorted order"""
+    return np.transpose(np.asarray([np.sort(matrix.flat_values())
+                                    for matrix in matrices]))
+
+
+def unweighted_row_means(matrix):
+    """compute unweighted row means in"""
+    # mask the array to accommodate for NaN values
+    return np.mean(np.ma.masked_array(matrix, np.isnan(matrix)),
+                   axis=1)
+
+
+def weighted_row_means(matrix, weights):
+    """compute weighted row means"""
+    scaled = np.apply_along_axis(lambda x, s: x * s, 1, matrix, weights)
+    scale = sum(weights)
+    return unweighted_row_means(scaled) / scale
+
+def ranks(values):
+    """optimization: write a map from value to first index in
+    sorted_values"""
+    values = values.argsort()
+    ranks = np.empty(len(values), int)
+    ranks[values] = np.arange(len(values))
+    return ranks
+
+def qm_result_matrices(matrices, tmp_mean):
+    """builds the resulting matrices by looking at the rank of their
+    original values and retrieving the means at the specified position"""
+    result = []
+    for matrix in matrices:
+        vranks = ranks(np.array(matrix.flat_values()))
+        values = np.reshape(tmp_mean[vranks], (matrix.num_rows(),
+                                                 matrix.num_columns()))
+        outmatrix = DataMatrix(matrix.num_rows(),
+                               matrix.num_columns(),
+                               matrix.row_names(),
+                               matrix.column_names(),
+                               values=values)
+        result.append(outmatrix)
+    return result
 
 
 __all__ = ['DataMatrix', 'DataMatrixCollection', 'DataMatrixFactory',
