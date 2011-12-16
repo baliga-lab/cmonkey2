@@ -27,6 +27,7 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(dmtest.DataMatrixFactoryTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(dmtest.NoChangeFilterTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(dmtest.CenterScaleFilterTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(dmtest.QuantileNormalizeTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ut.DelimitedFileTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ut.UtilsTest))

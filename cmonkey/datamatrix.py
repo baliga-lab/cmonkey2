@@ -439,6 +439,7 @@ def quantile_normalize_scores(matrices, weights=None):
     """quantile normalize scores against each other"""
 
     flat_values = as_sorted_flat_values(matrices)
+    logging.info("COMPUTING WEIGHTED MEANS...")
     start_time = util.current_millis()
     if weights != None:
         tmp_mean = weighted_row_means(flat_values, weights)
@@ -470,7 +471,13 @@ def unweighted_row_means(matrix):
 
 def weighted_row_means(matrix, weights):
     """compute weighted row means"""
-    scaled = np.apply_along_axis(lambda x, s: x * s, 1, matrix, weights)
+    start_time = util.current_millis()
+    # multiply each column of matrix with each component of the
+    # weight vector: Using matrix multiplication resulted in speedup
+    # from 125 s. to 0.125 seconds over apply_along_axis() (1000x faster)!
+    scaled = weights * matrix
+    elapsed = util.current_millis() - start_time
+    logging.info("APPLIED WEIGHTS TO COLUMNS in %f s.", elapsed / 1000.0)
     scale = sum(weights)
     return unweighted_row_means(scaled) / scale
 
