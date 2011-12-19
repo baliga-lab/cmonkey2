@@ -335,16 +335,14 @@ def density(kvalues, cluster_values, bandwidth, dmin, dmax):
     r_density = robjects.r['density']
     kwargs = {'bw': bandwidth, 'adjust': 2, 'from': dmin,
               'to': dmax, 'n': 256, 'na.rm': True}
-    # x = dvalues[0], y = dvalues[1]
-    dvalues = r_density(robjects.FloatVector(cluster_values), **kwargs)
-    r_rev = robjects.r['rev']
-    r_cumsum = robjects.r['cumsum']
-    r_approx = robjects.r['approx']
-    r_pvalues = r_approx(dvalues[0], r_rev(r_cumsum(r_rev(dvalues[1]))),
-                         kvalues)[1]
-    pvalues = [pvalue for pvalue in r_pvalues]
-    psum = sum(pvalues)
-    return [(pvalue / psum) for pvalue in pvalues]
+    rdens = robjects.r("""
+      rdens <- function(cluster_values, kvalues, ...) {
+        d <- density(cluster_values, ...);
+        p <- approx(d$x, rev(cumsum(rev(d$y))), kvalues)$y
+        p / sum(p, na.rm=T)
+      }""")
+    return rdens(robjects.FloatVector(cluster_values),
+                 robjects.FloatVector(kvalues), **kwargs)
 
 
 def rnorm(num_values, std_deviation):

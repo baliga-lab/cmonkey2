@@ -520,11 +520,15 @@ def get_density_scores(membership, row_scores, col_scores):
                               row_scores.num_columns(),
                               row_scores.row_names(),
                               row_scores.column_names())
+
+    start_time = util.current_millis()
     for cluster in xrange(1, num_clusters + 1):
         rr_scores = __get_rr_scores(membership, row_scores, rowscore_bandwidth,
                                    cluster)
         for row in xrange(row_scores.num_rows()):
             rd_scores[row][cluster - 1] = rr_scores[row]
+    elapsed = util.current_millis() - start_time
+    logging.info("RR_SCORES IN %f s.", elapsed / 1000.0)
 
     cscore_range = abs(col_scores.max() - col_scores.min())
     colscore_bandwidth = max(cscore_range / 100.0, 0.001)
@@ -532,11 +536,16 @@ def get_density_scores(membership, row_scores, col_scores):
                               col_scores.num_columns(),
                               col_scores.row_names(),
                               col_scores.column_names())
+
+    start_time = util.current_millis()
     for cluster in xrange(1, num_clusters + 1):
         cc_scores = __get_cc_scores(membership, col_scores, colscore_bandwidth,
                                    cluster)
         for row in xrange(col_scores.num_rows()):
             cd_scores[row][cluster - 1] = cc_scores[row]
+    elapsed = util.current_millis() - start_time
+    logging.info("CC_SCORES IN %f s.", elapsed / 1000.0)
+
     return (rd_scores, cd_scores)
 
 

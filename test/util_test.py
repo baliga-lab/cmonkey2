@@ -169,8 +169,23 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         self.assertAlmostEqual(-1.4586770, util.trim_mean(values, 0.05))
 
+    def test_density(self):
+        kvalues = [3.4268700450682301, 3.3655160468930152, -8.0654569044842539,
+                   2.0762815314005487, 4.8537715329554203, 1.2374476248622075]
+        cluster_values = [-3.5923001345962162, 0.77069901513184735,
+                           -4.942909785931378, -3.1580950032999096] 
+        bandwidth = 2.69474878768
+        dmin = -13.8848342423
+        dmax = 12.6744452247
+        result = util.density(kvalues, cluster_values, bandwidth, dmin, dmax)
+        self.assertAlmostEquals(0.08663036966690765, result[0])
+        self.assertAlmostEquals(0.08809242907902183, result[1])
+        self.assertAlmostEquals(0.49712338305039777, result[2])
+        self.assertAlmostEquals(0.12248549621579163, result[3])
+        self.assertAlmostEquals(0.05708884005243133, result[4])
+        self.assertAlmostEquals(0.14857948193544993, result[5])
 
-class Order2StringTest(unittest.TestCase):  # pylint: disable-msg=R0904
+class Order2StringTest(unittest.TestCase):  # pylint: disable-msg=R09042
     """Test class for order2string"""
 
     def test_order2string(self):
