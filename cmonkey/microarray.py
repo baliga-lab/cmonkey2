@@ -5,7 +5,7 @@ of cMonkey.
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import numpy
+import numpy as np
 import logging
 import datamatrix as dm
 import util
@@ -107,24 +107,17 @@ def compute_column_scores_submatrix(matrix):
     for details
     """
     colmeans = matrix.column_means().values()[0]
-    matrix_minus_colmeans_squared = __subtract_and_square(matrix, colmeans)
-    var_norm = numpy.abs(colmeans) + 0.01
+    matrix_minus_colmeans_squared = subtract_and_square(matrix, colmeans)
+    var_norm = np.abs(colmeans) + 0.01
     result = util.column_means(matrix_minus_colmeans_squared) / var_norm
     return dm.DataMatrix(1, matrix.num_columns(), ['Col. Scores'],
                          matrix.column_names(), [result])
 
 
-def __subtract_and_square(matrix, vector):
+def subtract_and_square(matrix, vector):
     """reusable function to subtract a vector from each row of
     the input matrix and square the values in the result matrix"""
-    result = []
-    # subtract each row by the given vector
-    for row in matrix:
-        new_row = []
-        result.append(new_row)
-        for col_index in xrange(len(row)):
-            new_row.append(row[col_index] - vector[col_index])
-    return numpy.square(result)
+    return np.square(matrix.values() - vector)
 
 
 def compute_row_scores(membership, matrix, num_clusters,
@@ -147,12 +140,15 @@ def compute_row_scores(membership, matrix, num_clusters,
     # rearrange result into a DataMatrix, where rows are indexed by gene
     # and columns represent clusters
     start_time = util.current_millis()
-    result = dm.DataMatrix(matrix.num_rows(), num_clusters,
-                           row_names=matrix.row_names())
+    values = [[0.0 for col in xrange(num_clusters)]
+              for row in xrange(matrix.num_rows())]
     for cluster in xrange(num_clusters):
         row_scores = cluster_row_scores[cluster]
         for row_index in xrange(matrix.num_rows()):
-            result[row_index][cluster] = row_scores[0][row_index]
+            values[row_index][cluster] = row_scores[0][row_index]
+    result = dm.DataMatrix(matrix.num_rows(), num_clusters,
+                           row_names=matrix.row_names(),
+                           values=values)
     logging.info("made result matrix in %f s.",
                  (util.current_millis() - start_time) / 1000.0)
 
@@ -210,8 +206,8 @@ def __compute_row_scores_for_submatrix(matrix, submatrix):
     order for the column means to be applied properly.
     The result is a DataMatrix with one row containing all the row scores"""
     colmeans = submatrix.column_means().values()[0]
-    matrix_minus_colmeans_squared = __subtract_and_square(matrix, colmeans)
-    scores = numpy.log(util.row_means(matrix_minus_colmeans_squared) + 1e-99)
+    matrix_minus_colmeans_squared = subtract_and_square(matrix, colmeans)
+    scores = np.log(util.row_means(matrix_minus_colmeans_squared) + 1e-99)
     return dm.DataMatrix(1, matrix.num_rows(),
                          row_names=['Row Scores'],
                          col_names=matrix.row_names(),
@@ -232,7 +228,7 @@ def __replace_non_numeric_values(cluster_row_scores, membership, matrix,
         else:
             for row_index in xrange(row_scores.num_rows()):
                 for col_index in xrange(row_scores.num_columns()):
-                    if not numpy.isfinite(row_scores[row_index][col_index]):
+                    if not np.isfinite(row_scores[row_index][col_index]):
                         row_scores[row_index][col_index] = qvalue
             result.append(row_scores)
     return result
@@ -251,7 +247,7 @@ def __quantile_normalize_scores(cluster_row_scores, membership, clusters):
             for col_index in xrange(row_scores_for_cluster.num_columns()):
                 score = row_scores_for_cluster[0][col_index]
                 gene_name = row_scores_names[col_index]
-                if (numpy.isfinite(score)
+                if (np.isfinite(score)
                     and membership.is_row_member_of(gene_name, cluster)):
                     values_for_quantile.append(score)
     return util.quantile(values_for_quantile, 0.95)

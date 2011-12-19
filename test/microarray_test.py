@@ -84,3 +84,11 @@ class ComputeArrayScoresTest(unittest.TestCase):
                 # rounding, so we have a slightly higher rounding difference
                 self.assertAlmostEquals(refresult[row_index][col_index],
                                         result[row_index][col_index], 3)
+
+    def test_subtract_and_square(self):
+        matrix = dm.DataMatrix(2, 3, values=[[11.0, 12.0, 13.0],
+                                             [14.0, 15.0, 16.0]])
+        result = ma.subtract_and_square(matrix, [5.0, 6.0, 3.0])
+        print result
+        self.assertTrue(([[36.0, 36.0, 100.0],
+                          [81.0, 81.0, 169.0]] == result).all())
