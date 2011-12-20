@@ -222,14 +222,12 @@ def __replace_non_numeric_values(cluster_row_scores, membership, matrix,
     result = []
     for row_scores in cluster_row_scores:
         if not row_scores:
+            """no scores available, use the quantile normalized score"""
             result.append(dm.DataMatrix(1, matrix.num_rows(),
                                         col_names=matrix.row_names(),
                                         init_value=qvalue))
         else:
-            for row_index in xrange(row_scores.num_rows()):
-                for col_index in xrange(row_scores.num_columns()):
-                    if not np.isfinite(row_scores[row_index][col_index]):
-                        row_scores[row_index][col_index] = qvalue
+            row_scores.replace_nan_with(qvalue)
             result.append(row_scores)
     return result
 

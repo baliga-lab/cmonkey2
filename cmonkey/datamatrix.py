@@ -223,6 +223,10 @@ class DataMatrix:
         """return the minimum value in this matrix"""
         return np.amin(self.__values)
 
+    def replace_nan_with(self, value):
+        """replaces NaN with the specified value"""
+        self.__values[np.isnan(self.__values)] = value
+
     def __neg__(self):
         """returns a new DataMatrix with the values in the matrix negated"""
         return DataMatrix(self.num_rows(), self.num_columns(),
