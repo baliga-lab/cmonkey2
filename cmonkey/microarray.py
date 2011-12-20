@@ -140,12 +140,12 @@ def compute_row_scores(membership, matrix, num_clusters,
     # rearrange result into a DataMatrix, where rows are indexed by gene
     # and columns represent clusters
     start_time = util.current_millis()
-    values = [[0.0 for col in xrange(num_clusters)]
-              for row in xrange(matrix.num_rows())]
+    values = np.zeros((matrix.num_rows(), num_clusters))
+
+    # note that cluster is 0 based on a matrix
     for cluster in xrange(num_clusters):
         row_scores = cluster_row_scores[cluster]
-        for row_index in xrange(matrix.num_rows()):
-            values[row_index][cluster] = row_scores[0][row_index]
+        values[:, cluster] = row_scores[0]
     result = dm.DataMatrix(matrix.num_rows(), num_clusters,
                            row_names=matrix.row_names(),
                            values=values)
