@@ -124,16 +124,16 @@ def compute_row_scores(membership, matrix, num_clusters,
                        use_multiprocessing):
     """for each cluster 1, 2, .. num_clusters compute the row scores
     for the each row name in the input name matrix"""
-    clusters = xrange(1, num_clusters + 1)
+    #clusters = xrange(1, num_clusters + 1)
     start_time = util.current_millis()
     cluster_row_scores = __compute_row_scores_for_clusters(
-        membership, matrix, clusters, use_multiprocessing)
+        membership, matrix, num_clusters, use_multiprocessing)
     logging.info("__compute_row_scores_for_clusters() in %f s.",
                  (util.current_millis() - start_time) / 1000.0)
     start_time = util.current_millis()
     cluster_row_scores = __replace_non_numeric_values(cluster_row_scores,
                                                       membership,
-                                                      matrix, clusters)
+                                                      matrix, num_clusters)
     logging.info("__replace_non_numeric_values() in %f s.",
                  (util.current_millis() - start_time) / 1000.0)
 
@@ -145,7 +145,7 @@ def compute_row_scores(membership, matrix, num_clusters,
     # note that cluster is 0 based on a matrix
     for cluster in xrange(num_clusters):
         row_scores = cluster_row_scores[cluster]
-        values[:, cluster] = row_scores[0]
+        values[:, cluster] = row_scores
     result = dm.DataMatrix(matrix.num_rows(), num_clusters,
                            row_names=matrix.row_names(),
                            values=values)
@@ -156,6 +156,29 @@ def compute_row_scores(membership, matrix, num_clusters,
 
 ROW_SCORE_MATRIX = None
 ROW_SCORE_MEMBERSHIP = None
+
+
+def __compute_row_scores_for_clusters(membership, matrix, num_clusters,
+                                      use_multiprocessing):
+    """compute the pure row scores for the specified clusters
+    without nowmalization"""
+    # note that we set the data into globals before we fork it off
+    # to save memory and pickling time
+    global ROW_SCORE_MATRIX, ROW_SCORE_MEMBERSHIP
+    ROW_SCORE_MATRIX = matrix
+    ROW_SCORE_MEMBERSHIP = membership
+
+    if use_multiprocessing:
+        pool = mp.Pool()
+        result = pool.map(compute_row_scores_for_cluster,
+                          [cluster for cluster in xrange(1, num_clusters + 1)])
+        pool.close()
+    else:
+        result = []
+        for cluster in range(1, num_clusters + 1):
+            result.append(compute_row_scores_for_cluster(cluster))
+    return result
+
 
 def compute_row_scores_for_cluster(cluster):
     """This function computes the row score for a cluster"""
@@ -174,27 +197,6 @@ def compute_row_scores_for_cluster(cluster):
         return row_scores_for_cluster
     else:
         return None
-    
-def __compute_row_scores_for_clusters(membership, matrix, clusters,
-                                      use_multiprocessing):
-    """compute the pure row scores for the specified clusters
-    without nowmalization"""
-    # note that we set the data into globals before we fork it off
-    # to save memory and pickling time
-    global ROW_SCORE_MATRIX, ROW_SCORE_MEMBERSHIP
-    ROW_SCORE_MATRIX = matrix
-    ROW_SCORE_MEMBERSHIP = membership
-
-    if use_multiprocessing:
-        pool = mp.Pool()
-        result = pool.map(compute_row_scores_for_cluster,
-                          [cluster for cluster in clusters])
-        pool.close()
-    else:
-        result = []
-        for cluster in clusters:
-            result.append(compute_row_scores_for_cluster(cluster))
-    return result
 
 
 def __compute_row_scores_for_submatrix(matrix, submatrix):
@@ -206,45 +208,44 @@ def __compute_row_scores_for_submatrix(matrix, submatrix):
     order for the column means to be applied properly.
     The result is a DataMatrix with one row containing all the row scores"""
     colmeans = submatrix.column_means().values()[0]
-    matrix_minus_colmeans_squared = subtract_and_square(matrix, colmeans)
-    scores = np.log(util.row_means(matrix_minus_colmeans_squared) + 1e-99)
-    return dm.DataMatrix(1, matrix.num_rows(),
-                         row_names=['Row Scores'],
-                         col_names=matrix.row_names(),
-                         values=[scores])
+    return np.log(util.row_means(subtract_and_square(matrix, colmeans)) + 1e-99)
 
 
 def __replace_non_numeric_values(cluster_row_scores, membership, matrix,
-                                 clusters):
+                                 num_clusters):
     """perform adjustments for NaN or inf values"""
-    qvalue = __quantile_normalize_scores(cluster_row_scores, membership,
-                                         clusters)
+    qvalue = __quantile_normalize_scores(cluster_row_scores,
+                                         matrix.row_names(),
+                                         membership,
+                                         num_clusters)
     result = []
     for row_scores in cluster_row_scores:
-        if not row_scores:
+        if row_scores == None:
             """no scores available, use the quantile normalized score"""
-            result.append(dm.DataMatrix(1, matrix.num_rows(),
-                                        col_names=matrix.row_names(),
-                                        init_value=qvalue))
+            row_scores = np.zeros(matrix.num_rows())
+            row_scores.fill(qvalue)
         else:
-            row_scores.replace_nan_with(qvalue)
-            result.append(row_scores)
+            row_scores[np.isnan(row_scores)] = qvalue
+        result.append(row_scores)
+
     return result
 
 
-def __quantile_normalize_scores(cluster_row_scores, membership, clusters):
+def __quantile_normalize_scores(cluster_row_scores,
+                                row_names,
+                                membership,
+                                num_clusters):
     """quantile normalize the row scores in cluster_row_scores
     that are not NaN or +/-Inf and are in a row cluster membership
     """
     values_for_quantile = []
-    for cluster in clusters:
+    for cluster in xrange(1, num_clusters + 1):
         row_scores_for_cluster = cluster_row_scores[cluster - 1]
 
         if row_scores_for_cluster != None:
-            row_scores_names = row_scores_for_cluster.column_names()
-            for col_index in xrange(row_scores_for_cluster.num_columns()):
-                score = row_scores_for_cluster[0][col_index]
-                gene_name = row_scores_names[col_index]
+            for row in xrange(len(row_scores_for_cluster)):
+                score = row_scores_for_cluster[row]
+                gene_name = row_names[row]
                 if (np.isfinite(score)
                     and membership.is_row_member_of(gene_name, cluster)):
                     values_for_quantile.append(score)

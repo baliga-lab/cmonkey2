@@ -323,7 +323,7 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
         network_scoring = nw.ScoringFunction(self.organism(),
                                              self.membership(),
                                              self.matrix(),
-                                             lambda iteration: 0.0, 0,
+                                             lambda iteration: 0.0, 7,
                                              config_params=self.config_params)
 
         weeder_scoring = motif.WeederScoringFunction(
@@ -341,7 +341,7 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
         set_enrichment_scoring = se.ScoringFunction(self.membership(),
                                                     self.matrix(),
                                                     set_types,
-                                                    lambda iteration: 0.0, 0,
+                                                    lambda iteration: 0.0, 7,
                                                     config_params=self.config_params)
 
         motif_combiner = scoring.ScoringFunctionCombiner(self.membership(),
