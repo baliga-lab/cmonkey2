@@ -153,9 +153,9 @@ class ScoringFunctionCombiner:
         """output an accumulated subresult to the log"""
         scores = []
         for cluster in xrange(1, matrix.num_columns() + 1):
+            cluster_rows = self.__membership.rows_for_cluster(cluster)
             for row in xrange(matrix.num_rows()):
-                if self.__membership.is_row_member_of(matrix.row_name(row),
-                                                      cluster):
+                if matrix.row_name(row) in cluster_rows:
                     scores.append(matrix[row][cluster - 1])
         logging.info("function '%s', trim mean score: %f",
                      score_function.name(),

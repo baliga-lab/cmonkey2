@@ -241,13 +241,12 @@ def __quantile_normalize_scores(cluster_row_scores,
     values_for_quantile = []
     for cluster in xrange(1, num_clusters + 1):
         row_scores_for_cluster = cluster_row_scores[cluster - 1]
-
+        cluster_rows = membership.rows_for_cluster(cluster)
         if row_scores_for_cluster != None:
             for row in xrange(len(row_scores_for_cluster)):
                 score = row_scores_for_cluster[row]
                 gene_name = row_names[row]
-                if (np.isfinite(score)
-                    and membership.is_row_member_of(gene_name, cluster)):
+                if np.isfinite(score) and (gene_name in cluster_rows):
                     values_for_quantile.append(score)
     return util.quantile(values_for_quantile, 0.95)
 

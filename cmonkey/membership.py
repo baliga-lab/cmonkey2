@@ -168,7 +168,10 @@ class ClusterMembership:
 
     def rows_for_cluster(self, cluster):
         """determine the rows that belong to a cluster"""
-        return sorted(self.__cluster_row_members[cluster])
+        if cluster in self.__cluster_row_members:
+            return sorted(self.__cluster_row_members[cluster])
+        else:
+            return []
 
     def columns_for_cluster(self, cluster):
         """determine the rows that belong to a cluster"""
@@ -177,39 +180,25 @@ class ClusterMembership:
         else:
             return []
 
-    def is_row_member_of(self, row_name, cluster):
-        """determines whether a certain row is member of a cluster"""
-        return row_name in self.rows_for_cluster(cluster)
-
-    def is_column_member_of(self, column_name, cluster):
-        """determines whether a certain column is member of a cluster"""
-        return column_name in self.columns_for_cluster(cluster)
-
     def num_row_members(self, cluster):
         """returns the number of row members in the specified cluster"""
-        if cluster in self.__cluster_row_members:
-            return len(self.__cluster_row_members[cluster])
-        else:
-            return 0
+        return len(self.rows_for_cluster(cluster))
 
     def num_column_members(self, cluster):
         """returns the number of row members in the specified cluster"""
-        if cluster in self.__cluster_column_members:
-            return len(self.__cluster_column_members[cluster])
-        else:
-            return 0
+        return len(self.columns_for_cluster(cluster))
 
     def is_row_in_clusters(self, row, clusters):
         """returns true if the specified row is in all spefied clusters"""
         for cluster in clusters:
-            if not self.is_row_member_of(row, cluster):
+            if not row in self.rows_for_cluster(cluster):
                 return False
         return True
 
     def is_column_in_clusters(self, col, clusters):
         """returns true if the specified row is in all spefied clusters"""
         for cluster in clusters:
-            if not self.is_column_member_of(col, cluster):
+            if not col in self.columns_for_cluster(cluster):
                 return False
         return True
 
@@ -346,19 +335,21 @@ class ClusterMembership:
         # optimization: unwrap the numpy arrays to access them directly
         row_score_values = row_scores.values()
         col_score_values = column_scores.values()
-
+        
+        row_names = row_scores.row_names() # iterate the row names directly
         for col in xrange(row_scores.num_columns()):
+            cluster_rows = self.rows_for_cluster(col + 1)
             for row in xrange(row_scores.num_rows()):
-                row_name = row_scores.row_name(row)
-                if self.is_row_member_of(row_name, col + 1):
+                if row_names[row] in cluster_rows:
                     row_sd_values.append(row_score_values[row][col])
         row_rnorm = util.sd_rnorm(row_sd_values, num_row_fuzzy_values, fuzzy_coeff)
 
         col_sd_values = []
+        row_names = column_scores.row_names()
         for col in xrange(column_scores.num_columns()):
+            cluster_cols = self.columns_for_cluster(col + 1)
             for row in xrange(column_scores.num_rows()):
-                row_name = column_scores.row_name(row)
-                if self.is_column_member_of(row_name, col + 1):
+                if row_names[row] in cluster_cols:
                     col_sd_values.append(col_score_values[row][col])
 
         col_rnorm = util.sd_rnorm(col_sd_values, num_col_fuzzy_values, fuzzy_coeff)

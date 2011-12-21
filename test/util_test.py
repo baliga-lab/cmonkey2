@@ -185,6 +185,13 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEquals(0.05708884005243133, result[4])
         self.assertAlmostEquals(0.14857948193544993, result[5])
 
+    def test_sd_rnorm(self):
+        result = util.sd_rnorm([1.3, 1.6, 1.2, 1.05], 9, 0.748951)
+        # the results are fairly random, make sure we have the right
+        # number of values
+        self.assertEquals(9, len(result))
+        
+
 class Order2StringTest(unittest.TestCase):  # pylint: disable-msg=R09042
     """Test class for order2string"""
 
