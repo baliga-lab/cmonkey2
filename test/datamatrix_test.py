@@ -63,6 +63,14 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         matrix[0][1] = 42.0
         self.assertEquals(42.0, matrix[0][1])
 
+    def test_set_value_on_np_array(self):
+        """set a value in the matrix by directly manipulating the underlying NumPy array"""
+        matrix = dm.DataMatrix(3, 4)
+        matrix.values()[0][1] = 4711.0
+        self.assertEquals(4711.0, matrix[0][1])
+        matrix.values()[0][1] += 2.0
+        self.assertEquals(4713.0, matrix[0][1])
+
     def test_init_with_values_none(self):
         """invoke set_values() with None should result in ValueError"""
         matrix = dm.DataMatrix(2, 2)

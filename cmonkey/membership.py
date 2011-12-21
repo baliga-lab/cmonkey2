@@ -360,15 +360,16 @@ class ClusterMembership:
         start_time = util.current_millis()
 
         # add fuzzy values to the row/column scores
-        for col in xrange(row_scores.num_columns()):
-            for row in xrange(row_scores.num_rows()):
-                row_scores[row][col] += row_rnorm[
-                    row * row_scores.num_columns() + col]
+        num_rowscore_columns = row_scores.num_columns()
+        for row in xrange(row_scores.num_rows()):
+            for col in xrange(row_scores.num_columns()):
+                row_score_values[row][col] += row_rnorm[
+                    row * num_rowscore_columns + col]
 
-        for col in xrange(column_scores.num_columns()):
-            for row in xrange(column_scores.num_rows()):
-                column_scores[row][col] += col_rnorm[
-                    row * row_scores.num_columns() + col]
+        for row in xrange(column_scores.num_rows()):
+            for col in xrange(column_scores.num_columns()):
+                col_score_values[row][col] += col_rnorm[
+                    row * num_rowscore_columns + col]
         elapsed = util.current_millis() - start_time
         logging.info("fuzzify() finished in %f s.", elapsed / 1000.0)
         return row_scores, column_scores
