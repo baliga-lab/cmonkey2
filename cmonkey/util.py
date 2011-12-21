@@ -361,6 +361,19 @@ def phyper(q, m, n, k, lower_tail=False):
                     robjects.FloatVector(n),
                     robjects.FloatVector(k), **kwargs)
 
+def sd_rnorm(values, num_rnorm_values, fuzzy_coeff):
+    """computes standard deviation on values and then calls rnorm to
+    generate the num_rnorm_values. This combines stddev and rnorm
+    in one function for reducing rpy2 call overhead"""
+    func = robjects.r("""
+      sd_rnorm <- function(values, num_out_values, fuzzy_coeff) {
+        sdval <- sd(values, na.rm=T) * fuzzy_coeff
+        rnorm(num_out_values, sd=sdval)
+      }
+    """)
+    return func(robjects.FloatVector(values), num_rnorm_values,
+                fuzzy_coeff)
+
 ######################################################################
 ### Misc functionality
 ######################################################################

@@ -342,27 +342,30 @@ class ClusterMembership:
         num_col_fuzzy_values = (column_scores.num_rows() *
                                 column_scores.num_columns())
         row_sd_values = []
+
+        # optimization: unwrap the numpy arrays to access them directly
+        row_score_values = row_scores.values()
+        col_score_values = column_scores.values()
+
         for col in xrange(row_scores.num_columns()):
             for row in xrange(row_scores.num_rows()):
                 row_name = row_scores.row_name(row)
                 if self.is_row_member_of(row_name, col + 1):
-                    row_sd_values.append(row_scores[row][col])
-        row_sd = util.r_stddev(row_sd_values) * fuzzy_coeff
-        row_rnorm = util.rnorm(num_row_fuzzy_values, row_sd)
+                    row_sd_values.append(row_score_values[row][col])
+        row_rnorm = util.sd_rnorm(row_sd_values, num_row_fuzzy_values, fuzzy_coeff)
 
         col_sd_values = []
         for col in xrange(column_scores.num_columns()):
             for row in xrange(column_scores.num_rows()):
                 row_name = column_scores.row_name(row)
                 if self.is_column_member_of(row_name, col + 1):
-                    col_sd_values.append(column_scores[row][col])
-        col_sd = util.r_stddev(col_sd_values) * fuzzy_coeff
-        col_rnorm = util.rnorm(num_col_fuzzy_values, col_sd)
+                    col_sd_values.append(col_score_values[row][col])
+
+        col_rnorm = util.sd_rnorm(col_sd_values, num_col_fuzzy_values, fuzzy_coeff)
+
         elapsed = util.current_millis() - start_time
         logging.info("fuzzify() SETUP finished in %f s.", elapsed / 1000.0)
-
-        logging.info("fuzzifying scores, coeff = %f, row sd = %f, col sd = %f",
-                     fuzzy_coeff, row_sd, col_sd)
+        logging.info("fuzzifying scores...")
         start_time = util.current_millis()
 
         # add fuzzy values to the row/column scores
