@@ -11,7 +11,7 @@ import util
 import random
 import logging
 import sys
-import numpy
+import numpy as np
 import scipy.cluster.vq as clvq
 import rpy2.robjects as robjects
 
@@ -360,16 +360,10 @@ class ClusterMembership:
         start_time = util.current_millis()
 
         # add fuzzy values to the row/column scores
-        num_rowscore_columns = row_scores.num_columns()
-        for row in xrange(row_scores.num_rows()):
-            for col in xrange(row_scores.num_columns()):
-                row_score_values[row][col] += row_rnorm[
-                    row * num_rowscore_columns + col]
-
-        for row in xrange(column_scores.num_rows()):
-            for col in xrange(column_scores.num_columns()):
-                col_score_values[row][col] += col_rnorm[
-                    row * num_rowscore_columns + col]
+        row_score_values += np.array(row_rnorm).reshape(row_scores.num_rows(),
+                                                        row_scores.num_columns())
+        col_score_values += np.array(col_rnorm).reshape(column_scores.num_rows(),
+                                                        column_scores.num_columns())
         elapsed = util.current_millis() - start_time
         logging.info("fuzzify() finished in %f s.", elapsed / 1000.0)
         return row_scores, column_scores
@@ -644,7 +638,7 @@ def make_kmeans_row_seeder(num_clusters):
 
     def seed(row_membership, matrix):
         """uses k-means seeding to seed row membership"""
-        flat_values = [value if not numpy.isnan(value) else 0
+        flat_values = [value if not np.isnan(value) else 0
                        for value in matrix.flat_values()]
         matrix_values = robjects.r.matrix(
             robjects.FloatVector(flat_values), nrow=matrix.num_rows())
