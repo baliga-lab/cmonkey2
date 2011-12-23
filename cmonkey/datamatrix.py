@@ -206,8 +206,7 @@ class DataMatrix:
 
     def multiply_column_by(self, column, factor):
         """Mulitplies the specified column by a certain factor"""
-        for row in range(self.num_rows()):
-            self.__values[row][column] *= factor
+        self.__values[:,column] *= factor
         return self
 
     def max(self):
