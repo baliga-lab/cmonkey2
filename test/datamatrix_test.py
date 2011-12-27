@@ -257,6 +257,49 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertNotEquals(matrix2, matrix1)
         self.assertTrue((matrix2.values() == [[4, 5], [6, 7]]).all())
 
+    def test_max(self):
+        """tests the max() method"""
+        matrix = dm.DataMatrix(2, 2,
+                                row_names=['R0', 'R1'],
+                                col_names=['C0', 'C1'],
+                                values=[[1, np.inf],
+                                        [np.nan, 4]])
+        self.assertEquals(4, matrix.max())
+
+    def test_min(self):
+        """tests the min() method"""
+        matrix = dm.DataMatrix(2, 2,
+                                row_names=['R0', 'R1'],
+                                col_names=['C0', 'C1'],
+                                values=[[1, -np.inf],
+                                        [np.nan, 4]])
+        self.assertEquals(1, matrix.min())
+
+    def test_row_values(self):
+        """tests the row_values() method"""
+        matrix = dm.DataMatrix(2, 3,
+                               values=[[1.0, 2.0, 3.0],
+                                       [4.0, 5.0, 6.0]])
+        rowvals = matrix.row_values(0)
+        self.assertTrue((rowvals == [1.0, 2.0, 3.0]).all())
+        rowvals[0] = 42.0
+        self.assertTrue((rowvals == [42.0, 2.0, 3.0]).all())
+        self.assertTrue((matrix.values() == [[1.0, 2.0, 3.0],
+                                             [4.0, 5.0, 6.0]]).all())
+
+    def test_column_values(self):
+        """tests the column_values() method"""
+        matrix = dm.DataMatrix(2, 3,
+                               values=[[1.0, 2.0, 3.0],
+                                       [4.0, 5.0, 6.0]])
+        colvals = matrix.column_values(1)
+        self.assertTrue((colvals == [2.0, 5.0]).all())
+        colvals[1] = 42.0
+        self.assertTrue((colvals == [2.0, 42.0]).all())
+        self.assertTrue((matrix.values() == [[1.0, 2.0, 3.0],
+                                             [4.0, 5.0, 6.0]]).all())
+
+
 class DataMatrixCollectionTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for MatrixCollection"""
 

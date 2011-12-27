@@ -107,17 +107,11 @@ class DataMatrix:
 
     def row_values(self, row):
         """returns the values in the specified row"""
-        result = []
-        for column in xrange(self.num_columns()):
-            result.append(self.__values[row][column])
-        return result
+        return self.__values[[row]][0]
 
     def column_values(self, column):
         """returns the values in the specified column"""
-        result = []
-        for row in xrange(self.num_rows()):
-            result.append(self.__values[row][column])
-        return result
+        return self.__values[:,[column]].flatten()
 
     def __getitem__(self, row_index):
         """return the row at the specified position"""
@@ -211,7 +205,7 @@ class DataMatrix:
 
     def max(self):
         """return the maximum value in this matrix"""
-        return np.amax(self.__values)
+        return np.amax(self.__values[np.isfinite(self.__values)])
 
     def quantile(self, probability):
         """returns the result of the quantile function over all contained
@@ -220,7 +214,7 @@ class DataMatrix:
 
     def min(self):
         """return the minimum value in this matrix"""
-        return np.amin(self.__values)
+        return np.amin(self.__values[np.isfinite(self.__values)])
 
     def replace_nan_with(self, value):
         """replaces NaN with the specified value"""

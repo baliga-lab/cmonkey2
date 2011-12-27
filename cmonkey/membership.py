@@ -561,8 +561,10 @@ def __get_rr_scores(membership, rowscores, bandwidth, cluster):
         kscores = rowscores.column_values(cluster - 1)
         cluster_scores = [kscores[index] for index in score_indexes]
         cluster_bandwidth = bandwidth * bwscale(len(cluster_rows))
+        kscores_finite = kscores[np.isfinite(kscores)]
         return util.density(kscores, cluster_scores, cluster_bandwidth,
-                            min(kscores) - 1, max(kscores) + 1)
+                            np.amin(kscores_finite) - 1,
+                            np.amax(kscores_finite) + 1)
 
 
 def __get_cc_scores(membership, scores, bandwidth, cluster):
@@ -579,8 +581,10 @@ def __get_cc_scores(membership, scores, bandwidth, cluster):
         score_indexes = scores.row_indexes(cluster_columns)
         kscores = scores.column_values(cluster - 1)
         cluster_scores = [kscores[index] for index in score_indexes]
+        kscores_finite = kscores[np.isfinite(kscores)]
         return util.density(kscores, cluster_scores, bandwidth,
-                            min(kscores) - 1, max(kscores) + 1)
+                            np.amin(kscores_finite) - 1,
+                            np.amax(kscores_finite) + 1)
 
 
 def compensate_size(membership, matrix, rd_scores, cd_scores):
