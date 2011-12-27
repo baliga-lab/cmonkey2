@@ -462,6 +462,7 @@ class ClusterMembership:
             return [cluster for cluster in clusters
                     if cluster not in self.clusters_for_column(row_name)]
 
+        start_time = util.current_millis()
         update_for(rd_scores,
                    self.num_clusters_per_row(),
                    self.__probability_seeing_row_change(),
@@ -471,7 +472,10 @@ class ClusterMembership:
                                          if cluster not in
                                          self.clusters_for_row(row)],
                    add_cluster_to_row)
-        #print cd_scores
+        elapsed = util.current_millis() - start_time
+        logging.info("update_for rdscores finished in %f s.", elapsed / 1000.0)
+
+        start_time = util.current_millis()
         update_for(cd_scores,
                    self.num_clusters_per_column(),
                    self.__probability_seeing_col_change(),
@@ -481,6 +485,8 @@ class ClusterMembership:
                                           if cluster not in
                                           self.clusters_for_column(col)],
                    add_cluster_to_col)
+        elapsed = util.current_millis() - start_time
+        logging.info("update_for cdscores finished in %f s.", elapsed / 1000.0)
 
     def store_checkpoint_data(self, shelf):
         """Save memberships into checkpoint"""
