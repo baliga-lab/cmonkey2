@@ -371,20 +371,6 @@ class ClusterMembership:
     def __update_memberships(self, rd_scores, cd_scores):
         """update memberships according to rd_scores and cd_scores"""
 
-        def get_best_clusters(scores, num_per_cluster):
-            """retrieve the best scored gene clusters from the given
-            row/column score matrix"""
-            result = {}
-            for row in xrange(scores.num_rows()):
-                row_values = scores.row_values(row)
-                ranked_scores = sorted(row_values, reverse=True)
-                rowname = scores.row_names()[row]
-                result[rowname] = []
-                for index in xrange(num_per_cluster):
-                    result[rowname].append(row_values.index(
-                            ranked_scores[index]) + 1)
-            return result
-
         def seeing_change(prob):
             """returns true if the update is seeing the change"""
             return prob >= 1.0 or random.uniform(0.0, 1.0) <= prob
@@ -504,10 +490,24 @@ class ClusterMembership:
         return cls(row_is_member_of, col_is_member_of, config_params)
 
 
+def get_best_clusters(scores, num_per_cluster):
+    """retrieve the best scored gene clusters from the given
+    row/column score matrix"""
+    result = {}
+    for row in xrange(scores.num_rows()):
+        row_values = scores.row_values(row)
+        row_values = [value for value in row_values] ## compatibility hack
+        ranked_scores = sorted(row_values, reverse=True)
+        rowname = scores.row_names()[row]
+        result[rowname] = []
+        for index in xrange(num_per_cluster):
+            result[rowname].append(row_values.index(
+                    ranked_scores[index]) + 1)
+    return result
+
+
 def get_density_scores(membership, row_scores, col_scores):
-    """We can't really implement density scores at the moment,
-    there seems to be no equivalent to R's density() and approx()
-    in scipy"""
+    """getting density scores improves small clusters"""
     num_clusters = membership.num_clusters()
     rscore_range = abs(row_scores.max() - row_scores.min())
     rowscore_bandwidth = max(rscore_range / 100.0, 0.001)
@@ -553,15 +553,17 @@ def __get_rr_scores(membership, rowscores, bandwidth, cluster):
 
     cluster_rows = membership.rows_for_cluster(cluster)
     cluster_columns = membership.columns_for_cluster(cluster)
-    if len(cluster_rows) == 0 or len(cluster_columns) == 0:
+    kscores = rowscores.column_values(cluster - 1)
+    kscores_finite = kscores[np.isfinite(kscores)]
+
+    if (len(cluster_rows) == 0 or len(kscores_finite) == 0 or
+        len(cluster_columns) == 0):
         num_rows = rowscores.num_rows()
         return [(1.0 / num_rows) for _ in xrange(num_rows)]
     else:
         score_indexes = rowscores.row_indexes(cluster_rows)
-        kscores = rowscores.column_values(cluster - 1)
         cluster_scores = [kscores[index] for index in score_indexes]
         cluster_bandwidth = bandwidth * bwscale(len(cluster_rows))
-        kscores_finite = kscores[np.isfinite(kscores)]
         return util.density(kscores, cluster_scores, cluster_bandwidth,
                             np.amin(kscores_finite) - 1,
                             np.amax(kscores_finite) + 1)
@@ -572,16 +574,18 @@ def __get_cc_scores(membership, scores, bandwidth, cluster):
     specified cluster"""
     cluster_rows = membership.rows_for_cluster(cluster)
     cluster_columns = membership.columns_for_cluster(cluster)
-    if len(cluster_rows) == 0 or len(cluster_columns) <= 1:
+    kscores = scores.column_values(cluster - 1)
+    kscores_finite = kscores[np.isfinite(kscores)]
+
+    if (len(cluster_rows) == 0 or len(kscores_finite) == 0 or
+        len(cluster_columns) <= 1):
         # This is a little weird, but is here to at least attempt to simulate
         # what the original cMonkey is doing
         num_rows = scores.num_rows()
         return [(1.0 / num_rows) for _ in xrange(num_rows)]
     else:
         score_indexes = scores.row_indexes(cluster_columns)
-        kscores = scores.column_values(cluster - 1)
         cluster_scores = [kscores[index] for index in score_indexes]
-        kscores_finite = kscores[np.isfinite(kscores)]
         return util.density(kscores, cluster_scores, bandwidth,
                             np.amin(kscores_finite) - 1,
                             np.amax(kscores_finite) + 1)

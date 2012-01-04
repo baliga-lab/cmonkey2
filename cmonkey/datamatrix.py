@@ -141,7 +141,11 @@ class DataMatrix:
         in cMonkey, because submatrices are often selected based
         on memberships.
         Note: Currently, no duplicate row names or column names are
-        supported"""
+        supported. Furthermore, the submatrices potentially share
+        the original matrix's values and so, writing to the submatrix
+        will change the original matrix, too. Recommended to use
+        submatrices read-only
+        """
         def make_values(row_indexes, column_indexes):
             """creates an array from the selected rows and columns"""
             if row_indexes == None and column_indexes == None:

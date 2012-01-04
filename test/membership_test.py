@@ -234,3 +234,10 @@ class ClusterMembershipTest(unittest.TestCase):
                            0.20619111210390084, 0.1657092217551106,
                            0.13571949977708733, 0.11350256730258876,
                            0.09704385891782485, 0.08485094785750477], result)
+
+    def test_get_best_clusters(self):
+        matrix = dm.DataMatrix(3, 4, values=[[1.0, 2.0, 3.0, 4.0],
+                                          [4.0, 5.0, 6.0, 7.0],
+                                          [7.0, 8.0, 9.0, 10.0]])
+        result = memb.get_best_clusters(matrix, 2)
+        print result
