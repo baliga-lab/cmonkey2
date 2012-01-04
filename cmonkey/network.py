@@ -3,7 +3,7 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import numpy
+import numpy as np
 import logging
 import util
 import datamatrix as dm
@@ -145,7 +145,7 @@ def compute_network_scores(genes):
     final_gene_scores = {}
     for gene, scores in gene_scores.items():
         final_gene_scores[gene] = sum(scores) / len(genes)
-        final_gene_scores[gene] = -numpy.log(final_gene_scores[gene] + 1)
+        final_gene_scores[gene] = -np.log(final_gene_scores[gene] + 1)
     return final_gene_scores
 
 

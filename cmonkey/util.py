@@ -195,8 +195,10 @@ def quantile(values, probability):
 def r_stddev(values):
     """This is a standard deviation function, adjusted so it will
     return approximately the same value as R's sd() function would"""
-    num_values = len(values)
-    return round(np.std(values) / np.sqrt(float(num_values - 1) /
+    values = np.array(values)
+    masked = values[np.isfinite(values)] 
+    num_values = len(masked)
+    return round(np.std(masked) / np.sqrt(float(num_values - 1) /
                                           float(num_values)), 8)
 
 
@@ -205,7 +207,8 @@ def r_variance_columns(matrix):
     a bias of (n/n-1) over the results to match with R"""
     num_rows = len(matrix)
     bias = float(num_rows) / float(num_rows - 1)
-    result = np.var(matrix, 0)
+    masked = np.ma.masked_array(matrix, np.isnan(matrix))
+    result = np.var(masked, 0)
     return [(value * bias) for value in result]
 
 
@@ -223,16 +226,6 @@ def row_means(matrix):
     """computes the row means of a matrix"""
     return np.mean(np.ma.masked_array(matrix, np.isnan(matrix)),
                    axis=1)
-
-
-def make_matrix(row_names, num_columns, init_value=0):
-    """creates a two-dimensional matrix with len(row_names) rows and
-    num_cols columns, where all fields are initialized with
-    init_value. The rows are accessed by row name"""
-    result = {}
-    for name in row_names:
-        result[name] = [init_value for _ in xrange(num_columns)]
-    return result
 
 
 class DocumentNotFound(Exception):
@@ -417,6 +410,6 @@ def current_millis():
     return int(math.floor(time.time() * 1000))
 
 
-__all__ = ['DelimitedFile', 'best_matching_links', 'quantile', 'make_matrix',
+__all__ = ['DelimitedFile', 'best_matching_links', 'quantile',
            'DocumentNotFound', 'CMonkeyURLopener', 'read_url',
            'read_url_cached', 'ThesaurusBasedMap', 'trim_mean']

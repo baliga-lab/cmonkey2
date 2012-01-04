@@ -7,7 +7,7 @@ more information and licensing details.
 """
 import logging
 import multiprocessing as mp
-import numpy
+import numpy as np
 import scoring
 import datamatrix as dm
 import weeder
@@ -234,7 +234,7 @@ def compute_cluster_score(params):
         run_result = params.meme_runner(params.seqs, params.used_seqs)
         pe_values = run_result.pe_values
         for feature_id, pvalue, evalue in pe_values:
-            pvalues[feature_id] = numpy.log(pvalue)
+            pvalues[feature_id] = np.log(pvalue)
         if params.pvalue_filter != None:
             pvalues = params.pvalue_filter(pvalues)
 

@@ -101,13 +101,6 @@ class BestMatchingLinksTest(unittest.TestCase):  # pylint: disable-msg=R0904
 class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for utility functions"""
 
-    def test_make_matrix(self):
-        """tests the make_matrix function"""
-        matrix = util.make_matrix(["row1", "row2"], 3)
-        self.assertEquals(2, len(matrix))
-        self.assertEquals(3, len(matrix['row1']))
-        self.assertEquals(0, matrix['row1'][0])
-
     def test_quantile(self):
         """tests the quantile function"""
         data = [1, 2, 3, 4, 5]
@@ -122,6 +115,10 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """tests the standard deviation function"""
         self.assertEquals(0.1, util.r_stddev([0.1, 0.2, 0.3]))
 
+    def test_r_stddev_with_nan(self):
+        """tests the standard deviation function"""
+        self.assertEquals(0.1, util.r_stddev([0.1, 0.2, 0.3, np.nan]))
+
     def test_r_variance_columns(self):
         """tests the column variance function"""
         matrix = [[0.0010, 0.1234, 0.21370, 0.0342],
@@ -131,7 +128,18 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEqual(0.1157139233, result[0])
         self.assertAlmostEqual(0.1482354433, result[1])
         self.assertAlmostEqual(0.8356519353, result[2])
-        self.assertAlmostEqual(0.0007737517, result[3])
+        self.assertAlmostEqual(0.0007737516, result[3])
+
+    def test_r_variance_columns_with_nans(self):
+        """tests the column variance function"""
+        matrix = [[np.nan, 0.1234, 0.21370, 0.0342],
+                  [0.2123, -0.2135, -0.99980, -0.0213],
+                  [-0.4534, 0.5546, 0.79123, np.nan]]
+        result = util.r_variance_columns(matrix)
+        self.assertAlmostEqual(0.1661836837, result[0])
+        self.assertAlmostEqual(0.1482354433, result[1])
+        self.assertAlmostEqual(0.8356519353, result[2])
+        self.assertAlmostEqual(0.0011550937, result[3])
 
     def test_column_means(self):
         """tests the column_means() function"""
