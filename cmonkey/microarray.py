@@ -106,7 +106,7 @@ def compute_column_scores_submatrix(matrix):
     http://en.wikipedia.org/wiki/Index_of_dispersion
     for details
     """
-    colmeans = matrix.column_means().values()[0]
+    colmeans = matrix.column_means()
     matrix_minus_colmeans_squared = subtract_and_square(matrix, colmeans)
     var_norm = np.abs(colmeans) + 0.01
     result = util.column_means(matrix_minus_colmeans_squared) / var_norm
@@ -207,7 +207,7 @@ def __compute_row_scores_for_submatrix(matrix, submatrix):
     matrix should be filtered by the columns of a specific cluster in
     order for the column means to be applied properly.
     The result is a DataMatrix with one row containing all the row scores"""
-    colmeans = submatrix.column_means().values()[0]
+    colmeans = submatrix.column_means()
     return np.log(util.row_means(subtract_and_square(matrix, colmeans)) + 1e-99)
 
 

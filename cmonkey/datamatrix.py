@@ -193,10 +193,8 @@ class DataMatrix:
                           values=new_rows)
 
     def column_means(self):
-        """Returns a new DataMatrix containing the column means"""
-        return DataMatrix(1, self.num_columns(), row_names=["Column Means"],
-                          col_names=self.column_names(),
-                          values=[util.column_means(self.__values)])
+        """Returns a numpy array, containing the column means"""
+        return util.column_means(self.__values)
 
     ######################################################################
     #### Operations on the matrix values
