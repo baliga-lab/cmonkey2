@@ -6,7 +6,7 @@ more information and licensing details.
 import BeautifulSoup as bs
 import operator
 import math
-import numpy
+import numpy as np
 import scipy.stats
 import urllib
 import os
@@ -196,8 +196,8 @@ def r_stddev(values):
     """This is a standard deviation function, adjusted so it will
     return approximately the same value as R's sd() function would"""
     num_values = len(values)
-    return round(numpy.std(values) / numpy.sqrt(float(num_values - 1) /
-                                                float(num_values)), 8)
+    return round(np.std(values) / np.sqrt(float(num_values - 1) /
+                                          float(num_values)), 8)
 
 
 def r_variance_columns(matrix):
@@ -205,18 +205,24 @@ def r_variance_columns(matrix):
     a bias of (n/n-1) over the results to match with R"""
     num_rows = len(matrix)
     bias = float(num_rows) / float(num_rows - 1)
-    result = numpy.var(matrix, 0)
+    result = np.var(matrix, 0)
     return [(value * bias) for value in result]
 
 
+def mean(nparray):
+    """computes the mean of a numpy array, ignoring NaN values"""
+    return np.mean(np.ma.masked_array(nparray, np.isnan(nparray)))
+
 def column_means(matrix):
     """computes the column means of a matrix"""
-    return numpy.mean(matrix, axis=0)
+    return np.mean(np.ma.masked_array(matrix, np.isnan(matrix)),
+                   axis=0)
 
 
 def row_means(matrix):
     """computes the row means of a matrix"""
-    return numpy.mean(matrix, axis=1)
+    return np.mean(np.ma.masked_array(matrix, np.isnan(matrix)),
+                   axis=1)
 
 
 def make_matrix(row_names, num_columns, init_value=0):
@@ -320,11 +326,12 @@ def trim_mean(values, trim):
     if not values or len(values) == 0:
         return 0
     if trim == 0.5:
-        return numpy.median(values)
+        return np.median(values)
 
     k_floor = int(math.floor(trim * len(values)))
     trim_values_floor = values[k_floor:len(values) - k_floor]
-    return numpy.mean(trim_values_floor)
+    return np.mean(np.ma.masked_array(trim_values_floor,
+                                      np.isnan(trim_values_floor)))
 
 
 ######################################################################

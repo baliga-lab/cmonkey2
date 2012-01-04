@@ -443,7 +443,7 @@ def quantile_normalize_scores(matrices, weights=None):
     if weights != None:
         tmp_mean = weighted_row_means(flat_values, weights)
     else:
-        tmp_mean = unweighted_row_means(flat_values)
+        tmp_mean = util.row_means(flat_values)
     elapsed = util.current_millis() - start_time
     logging.info("weighted means in %f s.", elapsed / 1000.0)
     start_time = util.current_millis()
@@ -461,13 +461,6 @@ def as_sorted_flat_values(matrices):
                                     for matrix in matrices]))
 
 
-def unweighted_row_means(matrix):
-    """compute unweighted row means in"""
-    # mask the array to accommodate for NaN values
-    return np.mean(np.ma.masked_array(matrix, np.isnan(matrix)),
-                   axis=1)
-
-
 def weighted_row_means(matrix, weights):
     """compute weighted row means"""
     start_time = util.current_millis()
@@ -478,7 +471,7 @@ def weighted_row_means(matrix, weights):
     elapsed = util.current_millis() - start_time
     logging.info("APPLIED WEIGHTS TO COLUMNS in %f s.", elapsed / 1000.0)
     scale = sum(weights)
-    return unweighted_row_means(scaled) / scale
+    return util.row_means(scaled) / scale
 
 def ranks(values):
     """optimization: write a map from value to first index in

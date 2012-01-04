@@ -75,7 +75,7 @@ def select_probes(matrix, num_genes_total, column_groups, proportional=True):
     def coeff_var(row_values):
         """computes the coefficient of variation"""
         sigma = util.r_stddev(row_values)
-        mu = np.mean(row_values)
+        mu = util.mean(row_values)
         return sigma / mu
 
     num_per_group = {group: len(indexes)

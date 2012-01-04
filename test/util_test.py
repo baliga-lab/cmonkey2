@@ -5,6 +5,7 @@ more information and licensing details.
 """
 import unittest
 import util
+import numpy as np
 
 
 class DelimitedFileTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -143,6 +144,17 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEqual(0.00171, result[2])
         self.assertAlmostEqual(0.00534107, result[3])
 
+    def test_column_means_with_nans(self):
+        """tests the column_means() function, containing NaNs"""
+        matrix = [[0.0010, 0.1234, 0.21370, np.nan],
+                  [0.2123, np.nan, -0.99980, -0.0213],
+                  [np.nan, 0.5546, 0.79123, 0.00312321]]
+        result = util.column_means(matrix)
+        self.assertAlmostEqual(0.10664999, result[0])
+        self.assertAlmostEqual(0.33899999, result[1])
+        self.assertAlmostEqual(0.00171, result[2])
+        self.assertAlmostEqual(-0.00908839499, result[3])
+
     def test_row_means(self):
         """tests the row_means() function"""
         matrix = [[0.0010, 0.1234, 0.21370, 0.0342],
@@ -152,6 +164,16 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEqual(0.0930750, result[0])
         self.assertAlmostEqual(-0.255575, result[1])
         self.assertAlmostEqual(0.2238883025, result[2])
+
+    def test_row_means_with_nans(self):
+        """tests the row_means() function"""
+        matrix = [[0.0010, np.nan, 0.21370, 0.0342],
+                  [0.2123, -0.2135, -0.99980, -0.0213],
+                  [-0.4534, 0.5546, 0.79123, np.nan]]
+        result = util.row_means(matrix)
+        self.assertAlmostEqual(0.08296666, result[0])
+        self.assertAlmostEqual(-0.255575, result[1])
+        self.assertAlmostEqual(0.297476666, result[2])
 
     def test_trim_mean_nonmedian(self):
         self.assertAlmostEqual(
@@ -168,6 +190,12 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         values = [0.0, 0.0, -8.7520618359684352, -8.7520618359684352, 0.0, 0.0,
                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         self.assertAlmostEqual(-1.4586770, util.trim_mean(values, 0.05))
+
+    def test_mean_with_nans(self):
+        """tests the mean() function"""
+        array = np.array([2.0, 3.0, np.nan, 1.0])
+        result = util.mean(array)
+        self.assertAlmostEqual(2.0, result)
 
     def test_density(self):
         kvalues = [3.4268700450682301, 3.3655160468930152, -8.0654569044842539,
