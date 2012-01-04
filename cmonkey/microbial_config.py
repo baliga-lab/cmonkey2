@@ -27,6 +27,7 @@ NUM_ITERATIONS = 2000
 NETWORK_SCORE_INTERVAL = 7
 MOTIF_SCORE_INTERVAL = 10
 NUM_CLUSTERS = 43
+MAX_CLUSTER_ROWS = 110
 
 SEQUENCE_TYPES = ['upstream']
 # used to select sequences and MEME
@@ -56,6 +57,8 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
                   with_sequence_types(SEQUENCE_TYPES).
                   with_search_distances(SEARCH_DISTANCES).
                   with_scan_distances(SCAN_DISTANCES).
+                  with_num_clusters(NUM_CLUSTERS).
+                  with_max_cluster_rows(MAX_CLUSTER_ROWS).
                   build())
         return cls(params, checkpoint_file)
 
@@ -63,7 +66,8 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
         """reads the data matrix from a file"""
         matrix_factory = dm.DataMatrixFactory(
             [dm.nochange_filter, dm.center_scale_filter])
-        infile = util.DelimitedFile.read(filename, has_header=True)
+        infile = util.DelimitedFile.read(filename, has_header=True,
+                                         quote='\"')
         return matrix_factory.create_from(infile)
 
     def make_membership(self):

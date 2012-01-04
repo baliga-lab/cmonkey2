@@ -370,3 +370,8 @@ class ConfigurationBuilder:
         """define whether to use multiprocessing"""
         self.params[KEY_MULTIPROCESSING] = flag
         return self
+
+    def with_max_cluster_rows(self, num_rows):
+        """define whether to use multiprocessing"""
+        self.params[KEY_MOTIF_MAX_CLUSTER_ROWS_ALLOWED] = num_rows
+        return self
