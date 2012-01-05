@@ -340,7 +340,7 @@ class DataMatrixFactory:
         rownames = []
         for row in xrange(nrows):
             rownames.append(lines[row][0])
-        data_matrix = DataMatrix(nrows, ncols, rownames, colnames)
+        values = np.empty([nrows, ncols])
         for row in xrange(nrows):
             for col in xrange(ncols):
                 strval = lines[row][col + 1]
@@ -348,7 +348,9 @@ class DataMatrixFactory:
                     value = np.nan
                 else:
                     value = float(strval)
-                data_matrix[row][col] = value
+                values[row][col] = value
+        data_matrix = DataMatrix(nrows, ncols, rownames, colnames,
+                                 values=values)
 
         for matrix_filter in self.filters:
             data_matrix = matrix_filter(data_matrix)
