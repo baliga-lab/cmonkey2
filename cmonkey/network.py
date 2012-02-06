@@ -126,6 +126,7 @@ class Network:
 COMPUTE_NETWORK = None
 ALL_GENES = None
 
+
 def compute_network_scores(genes):
     """Generic method to compute network scores"""
     #network, genes, all_genes = args

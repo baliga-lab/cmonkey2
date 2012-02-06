@@ -8,7 +8,6 @@ import math
 import logging
 import scoring
 import numpy as np
-import rpy2.robjects as robjects
 import datamatrix as dm
 import multiprocessing as mp
 
@@ -89,6 +88,7 @@ SET_REF_MATRIX = None
 SET_MEMBERSHIP = None
 SET_SET_TYPE = None
 
+
 class ScoringFunction(scoring.ScoringFunctionBase):
     """Network scoring function"""
 
@@ -136,7 +136,8 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                     pool = mp.Pool()
                     results = pool.map(compute_cluster_score,
                             [(cluster, self.bonferroni_cutoff())
-                             for cluster in xrange(1, self.num_clusters() + 1)])
+                             for cluster in xrange(1,
+                                                   self.num_clusters() + 1)])
                     pool.close()
                     pass
                 else:
@@ -163,6 +164,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             return matrix
         else:
             return None
+
 
 def compute_cluster_score(args):
     """Computes the cluster score for a given set type"""

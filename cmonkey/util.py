@@ -196,7 +196,7 @@ def r_stddev(values):
     """This is a standard deviation function, adjusted so it will
     return approximately the same value as R's sd() function would"""
     values = np.array(values)
-    masked = values[np.isfinite(values)] 
+    masked = values[np.isfinite(values)]
     num_values = len(masked)
     return round(np.std(masked) / np.sqrt(float(num_values - 1) /
                                           float(num_values)), 8)
@@ -215,6 +215,7 @@ def r_variance_columns(matrix):
 def mean(nparray):
     """computes the mean of a numpy array, ignoring NaN values"""
     return np.mean(np.ma.masked_array(nparray, np.isnan(nparray)))
+
 
 def column_means(matrix):
     """computes the column means of a matrix"""
@@ -360,6 +361,7 @@ def phyper(q, m, n, k, lower_tail=False):
                     robjects.FloatVector(m),
                     robjects.FloatVector(n),
                     robjects.FloatVector(k), **kwargs)
+
 
 def sd_rnorm(values, num_rnorm_values, fuzzy_coeff):
     """computes standard deviation on values and then calls rnorm to

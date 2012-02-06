@@ -12,7 +12,6 @@ import random
 import logging
 import sys
 import numpy as np
-import scipy.cluster.vq as clvq
 import rpy2.robjects as robjects
 
 
@@ -335,14 +334,16 @@ class ClusterMembership:
         # optimization: unwrap the numpy arrays to access them directly
         row_score_values = row_scores.values()
         col_score_values = column_scores.values()
-        
-        row_names = row_scores.row_names() # iterate the row names directly
+
+        # iterate the row names directly
+        row_names = row_scores.row_names()
         for col in xrange(row_scores.num_columns()):
             cluster_rows = self.rows_for_cluster(col + 1)
             for row in xrange(row_scores.num_rows()):
                 if row_names[row] in cluster_rows:
                     row_sd_values.append(row_score_values[row][col])
-        row_rnorm = util.sd_rnorm(row_sd_values, num_row_fuzzy_values, fuzzy_coeff)
+        row_rnorm = util.sd_rnorm(row_sd_values, num_row_fuzzy_values,
+                                  fuzzy_coeff)
 
         col_sd_values = []
         row_names = column_scores.row_names()
@@ -352,7 +353,8 @@ class ClusterMembership:
                 if row_names[row] in cluster_cols:
                     col_sd_values.append(col_score_values[row][col])
 
-        col_rnorm = util.sd_rnorm(col_sd_values, num_col_fuzzy_values, fuzzy_coeff)
+        col_rnorm = util.sd_rnorm(col_sd_values, num_col_fuzzy_values,
+                                  fuzzy_coeff)
 
         elapsed = util.current_millis() - start_time
         logging.info("fuzzify() SETUP finished in %f s.", elapsed / 1000.0)
@@ -360,10 +362,10 @@ class ClusterMembership:
         start_time = util.current_millis()
 
         # add fuzzy values to the row/column scores
-        row_score_values += np.array(row_rnorm).reshape(row_scores.num_rows(),
-                                                        row_scores.num_columns())
-        col_score_values += np.array(col_rnorm).reshape(column_scores.num_rows(),
-                                                        column_scores.num_columns())
+        row_score_values += np.array(row_rnorm).reshape(
+            row_scores.num_rows(), row_scores.num_columns())
+        col_score_values += np.array(col_rnorm).reshape(
+            column_scores.num_rows(), column_scores.num_columns())
         elapsed = util.current_millis() - start_time
         logging.info("fuzzify() finished in %f s.", elapsed / 1000.0)
         return row_scores, column_scores
@@ -496,7 +498,7 @@ def get_best_clusters(scores, num_per_cluster):
     result = {}
     for row in xrange(scores.num_rows()):
         row_values = scores.row_values(row)
-        row_values = [value for value in row_values] ## compatibility hack
+        row_values = [value for value in row_values]  # compatibility hack
         ranked_scores = sorted(row_values, reverse=True)
         rowname = scores.row_names()[row]
         result[rowname] = []

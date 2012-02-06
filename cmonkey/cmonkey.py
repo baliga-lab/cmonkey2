@@ -10,6 +10,7 @@ import human
 
 CMONKEY_VERSION = '4.0'
 CHECKPOINT_INTERVAL = 3
+CHECKPOINT_FILE = None
 
 
 def run_cmonkey(config):
@@ -42,14 +43,13 @@ if __name__ == '__main__':
         print('Usage: ./run_cmonkey.sh <organism-code> <ratio-file> ' +
               '[checkpoint-file]')
     else:
-        checkpoint_file = None
         if len(sys.argv) > 3:
-            checkpoint_file = sys.argv[3]
+            CHECKPOINT_FILE = sys.argv[3]
 
         if sys.argv[1] == 'hsa':
             run_cmonkey(human.CMonkeyConfiguration.create(
-                    sys.argv[2], checkpoint_file=checkpoint_file))
+                    sys.argv[2], checkpoint_file=CHECKPOINT_FILE))
         else:
             run_cmonkey(microbe.CMonkeyConfiguration.create(
                     sys.argv[1], sys.argv[2],
-                    checkpoint_file=checkpoint_file))
+                    checkpoint_file=CHECKPOINT_FILE))

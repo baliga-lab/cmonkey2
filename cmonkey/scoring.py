@@ -131,8 +131,9 @@ class ScoringFunctionCombiner:
                     self.__log_subresult(scoring_function, matrix)
 
         if len(result_matrices) > 1:
-            logging.info("COMBINING THE SCORES OF %d matrices (quantile normalize)",
-                         len(result_matrices))
+            logging.info(
+                "COMBINING THE SCORES OF %d matrices (quantile normalize)",
+                len(result_matrices))
             start_time = util.current_millis()
             result_matrices = dm.quantile_normalize_scores(result_matrices,
                                                            score_weights)

@@ -35,14 +35,16 @@ class DataMatrix:
                                      % (row_index, ncols, len(inrow)))
 
         if row_names == None:
-            self.__row_names = np.array(["Row " + str(i) for i in range(nrows)])
+            self.__row_names = np.array(["Row " + str(i)
+                                         for i in range(nrows)])
         else:
             if len(row_names) != nrows:
                 raise ValueError("number of row names should be %d" % nrows)
             self.__row_names = np.array(row_names)
 
         if col_names == None:
-            self.__column_names = np.array(["Col " + str(i) for i in xrange(ncols)])
+            self.__column_names = np.array(["Col " + str(i)
+                                            for i in xrange(ncols)])
         else:
             if len(col_names) != ncols:
                 raise ValueError("number of column names should be %d" % ncols)
@@ -96,7 +98,6 @@ class DataMatrix:
                 result.append(indexes[0][0])
         return result
 
-
     def values(self):
         """returns this matrix's values"""
         return self.__values
@@ -111,7 +112,7 @@ class DataMatrix:
 
     def column_values(self, column):
         """returns the values in the specified column"""
-        return self.__values[:,[column]].flatten()
+        return self.__values[:, [column]].flatten()
 
     def __getitem__(self, row_index):
         """return the row at the specified position"""
@@ -151,11 +152,11 @@ class DataMatrix:
             if row_indexes == None and column_indexes == None:
                 return self.__values
             elif row_indexes == None:
-                return self.__values[:,column_indexes]
+                return self.__values[:, column_indexes]
             elif column_indexes == None:
                 return self.__values[row_indexes]
             else:
-                return self.__values[row_indexes][:,column_indexes]
+                return self.__values[row_indexes][:, column_indexes]
 
         if row_names == None:
             row_names = self.row_names()
@@ -202,7 +203,7 @@ class DataMatrix:
 
     def multiply_column_by(self, column, factor):
         """Mulitplies the specified column by a certain factor"""
-        self.__values[:,column] *= factor
+        self.__values[:, column] *= factor
         return self
 
     def max(self):
@@ -475,6 +476,7 @@ def weighted_row_means(matrix, weights):
     scale = sum(weights)
     return util.row_means(scaled) / scale
 
+
 def ranks(values):
     """optimization: write a map from value to first index in
     sorted_values"""
@@ -482,6 +484,7 @@ def ranks(values):
     ranks = np.empty(len(values), int)
     ranks[values] = np.arange(len(values))
     return ranks
+
 
 def qm_result_matrices(matrices, tmp_mean):
     """builds the resulting matrices by looking at the rank of their

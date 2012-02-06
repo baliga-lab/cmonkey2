@@ -3,7 +3,6 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import logging
 import numpy as np
 import scipy
 import util
@@ -29,7 +28,7 @@ P3UTR_SEQFILE = 'human_data/p3utrSeqs_set3pUTR_Final.csv.gz'
 THESAURUS_FILE = 'human_data/synonymThesaurus.csv.gz'
 
 RUG_PROPS = ['MIXED', 'ASTROCYTOMA', 'GBM', 'OLIGODENDROGLIOMA']
-NUM_CLUSTERS = 720 #133
+NUM_CLUSTERS = 720  # 133
 ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 2000
 
@@ -338,20 +337,25 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
         target_scan = se.SetType.read_csv(
             'target_scan', 'human_data/targetScan_miRNA_sets.csv')
         set_types = [pita, target_scan]
-        set_enrichment_scoring = se.ScoringFunction(self.membership(),
-                                                    self.matrix(),
-                                                    set_types,
-                                                    lambda iteration: 0.0, 7,
-                                                    config_params=self.config_params)
+        set_enrichment_scoring = se.ScoringFunction(
+            self.membership(),
+            self.matrix(),
+            set_types,
+            lambda iteration: 0.0, 7,
+            config_params=self.config_params)
 
-        motif_combiner = scoring.ScoringFunctionCombiner(self.membership(),
-                                                         [motif_scoring, weeder_scoring],
-                                                         weight_func=lambda iteration: 0.5)
+        #motif_combiner = scoring.ScoringFunctionCombiner(
+        #    self.membership(),
+        #    [motif_scoring, weeder_scoring],
+        #    weight_func=lambda iteration: 0.5)
 
-        return scoring.ScoringFunctionCombiner(self.membership(), [row_scoring, network_scoring, set_enrichment_scoring])
-        #return scoring.ScoringFunctionCombiner(self.membership(),
-        #                                       [row_scoring, motif_combiner,
-        #                                        network_scoring, set_enrichment_scoring])
+        return scoring.ScoringFunctionCombiner(
+            self.membership(),
+            [row_scoring, network_scoring, set_enrichment_scoring])
+        #return scoring.ScoringFunctionCombiner(
+        #    self.membership(),
+        #    [row_scoring, motif_combiner, network_scoring,
+        #     set_enrichment_scoring])
 
 
 def read_controls():

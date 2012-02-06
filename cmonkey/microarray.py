@@ -208,7 +208,8 @@ def __compute_row_scores_for_submatrix(matrix, submatrix):
     order for the column means to be applied properly.
     The result is a DataMatrix with one row containing all the row scores"""
     colmeans = submatrix.column_means()
-    return np.log(util.row_means(subtract_and_square(matrix, colmeans)) + 1e-99)
+    return np.log(
+        util.row_means(subtract_and_square(matrix, colmeans)) + 1e-99)
 
 
 def __replace_non_numeric_values(cluster_row_scores, membership, matrix,

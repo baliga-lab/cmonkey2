@@ -160,7 +160,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                         row in remapped[cluster].keys()):
                         matrix[row_index][cluster - 1] = remapped[cluster][row]
             global_elapsed = util.current_millis() - global_start_time
-            logging.info("GLOBAL MOTIF TIME: %d seconds", (global_elapsed / 1000.0))
+            logging.info("GLOBAL MOTIF TIME: %d seconds",
+                         (global_elapsed / 1000.0))
             return matrix
         else:
             return None
@@ -215,8 +216,10 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
 
 class ComputeScoreParams:
+    """representation of parameters to compute motif scores"""
     def __init__(self, cluster, genes, seqs, used_seqs, meme_runner,
                  pvalue_filter, min_cluster_rows, max_cluster_rows):
+        """constructor"""
         self.cluster = cluster
         self.genes = genes
         self.seqs = seqs
@@ -225,6 +228,7 @@ class ComputeScoreParams:
         self.pvalue_filter = pvalue_filter
         self.min_cluster_rows = min_cluster_rows
         self.max_cluster_rows = max_cluster_rows
+
 
 def compute_cluster_score(params):
     """This function computes the MEME score for a cluster"""
@@ -239,7 +243,8 @@ def compute_cluster_score(params):
             pvalues = params.pvalue_filter(pvalues)
 
         for motif_info in run_result.motif_infos:
-            logging.info("consensus: %s, evalue: %f", motif_info.consensus_string(),
+            logging.info("consensus: %s, evalue: %f",
+                         motif_info.consensus_string(),
                          motif_info.evalue())
     else:
         logging.info("# seqs (= %d) outside of defined limits, "
@@ -270,7 +275,9 @@ class MemeScoringFunction(MotifScoringFunctionBase):
         return "MEME"
 
     def meme_runner(self):
+        """returns the MEME runner object"""
         return self.meme_suite
+
 
 class WeederScoringFunction(MotifScoringFunctionBase):
     """Motif scoring function that runs Weeder instead of MEME"""
@@ -291,6 +298,7 @@ class WeederScoringFunction(MotifScoringFunctionBase):
         return "Weeder"
 
     def meme_runner(self):
+        """returns the MEME runner object"""
         return WeederRunner(self.meme_suite)
 
 
@@ -325,4 +333,3 @@ class WeederRunner:
             return meme.MemeRunResult(pe_values, annotations, [])
         except:
             return meme.MemeRunResult([], {}, [])
-
