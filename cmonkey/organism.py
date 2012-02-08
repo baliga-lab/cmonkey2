@@ -328,6 +328,106 @@ class Microbe(OrganismBase):
         return result
 
 
+class GenericOrganism(OrganismBase):
+    """Implementation of a generic organism that retrieves all of its data
+    through data files"""
+
+    def __init__(self, prom_seq_filename, p3utr_seq_filename,
+                 thesaurus_filename, nw_factories,
+                 search_distances, scan_distances):
+        """Creates the organism"""
+        OrganismBase.__init__(self, 'hsa', nw_factories)
+        self.__prom_seq_filename = prom_seq_filename
+        self.__p3utr_seq_filename = p3utr_seq_filename
+        self.__thesaurus_filename = thesaurus_filename
+        self.__search_distances = search_distances
+        self.__scan_distances = scan_distances
+
+        # lazy-loaded values
+        self.__synonyms = None
+        self.__p3utr_seqs = None
+        self.__prom_seqs = None
+
+    def species(self):
+        """Retrieves the species of this object"""
+        return 'hsa'
+
+    def is_eukaryote(self):
+        """Determines whether this object is an eukaryote"""
+        return False
+
+    def sequences_for_genes_search(self, gene_aliases, seqtype):
+        """retrieve the sequences for the specified"""
+        distance = self.__search_distances[seqtype]
+        if seqtype == 'p3utr':
+            return self.__get_p3utr_seqs(gene_aliases, distance)
+        else:
+            return self.__get_promoter_seqs(gene_aliases, distance)
+
+    def sequences_for_genes_scan(self, gene_aliases, seqtype):
+        """retrieve the sequences for the specified"""
+        distance = self.__scan_distances[seqtype]
+        if seqtype == 'p3utr':
+            return self.__get_p3utr_seqs(gene_aliases, distance)
+        else:
+            return self.__get_promoter_seqs(gene_aliases, distance)
+
+    def __get_p3utr_seqs(self, gene_aliases, distance):
+        """Retrieves genomic sequences from the 3" UTR set"""
+        #print "GET_P3UTR SEQS, distance: ", distance
+        if self.__p3utr_seqs == None:
+            dfile = util.DelimitedFile.read(self.__p3utr_seq_filename, sep=',')
+            self.__p3utr_seqs = {}
+            for line in dfile.lines():
+                self.__p3utr_seqs[line[0].upper()] = line[1]
+        result = {}
+        for alias in gene_aliases:
+            if alias in self.thesaurus():
+                gene = self.thesaurus()[alias]
+                if gene in self.__p3utr_seqs:
+                    result[gene] = self.__p3utr_seqs[gene]
+                else:
+                    #logging.warn("Gene '%s' not found in 3' UTRs", gene)
+                    pass
+            else:
+                #logging.warn("Alias '%s' not in thesaurus !", alias)
+                pass
+        return result
+
+    def __get_promoter_seqs(self, gene_aliases, distance):
+        """Retrieves genomic sequences from the promoter set"""
+        #logging.info("GET PROMOTER SEQS, # GENES: %d", len(gene_aliases))
+        if self.__prom_seqs == None:
+            dfile = util.DelimitedFile.read(self.__prom_seq_filename, sep=',')
+            self.__prom_seqs = {}
+            for line in dfile.lines():
+                self.__prom_seqs[line[0].upper()] = line[1]
+        result = {}
+        for alias in gene_aliases:
+            if alias in self.thesaurus():
+                gene = self.thesaurus()[alias]
+                if gene in self.__prom_seqs:
+                    seq = self.__prom_seqs[gene]
+                    # result[gene] = st.subsequence(seq, distance[0],
+                    #                               distance[1])
+                    result[gene] = seq
+                else:
+                    #logging.warn("Gene '%s' not found in promoter seqs", gene)
+                    pass
+            else:
+                #logging.warn("Alias '%s' not in thesaurus !", alias)
+                pass
+        return result
+
+    def thesaurus(self):
+        """Reads the synonyms from the provided CSV file"""
+        if not self.__synonyms:
+            self.__synonyms = thesaurus.create_from_delimited_file2(
+                self.__thesaurus_filename)
+        return self.__synonyms
+
+
+
 __all__ = ['make_kegg_code_mapper', 'make_go_taxonomy_mapper',
            'make_rsat_organism_mapper',
            'Organism', 'OrganismFactory']
