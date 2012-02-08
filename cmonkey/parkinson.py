@@ -1,4 +1,4 @@
-"""leishmania.py - Mouse/Leishmania configuration
+"""parkinson.py - Homo Sapiens/Parkinson's disease configuration
 
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
@@ -17,17 +17,17 @@ CHECKPOINT_INTERVAL = 3
 CHECKPOINT_FILE = None
 
 NUM_ITERATIONS = 2000
-CACHE_DIR = 'leishmania_cache'
+CACHE_DIR = 'parkinson_cache'
 NUM_CLUSTERS = 267
 ROW_WEIGHT = 6.0
 
-THESAURUS_FILE = 'leishmania_data/synonymThesaurus.csv.gz'
+THESAURUS_FILE = 'parkinson_data/synonymThesaurus.csv.gz'
 
 SEQUENCE_TYPES = ['upstream', 'p3utr']
 SEARCH_DISTANCES = {'upstream': (0, 700), 'p3utr': (0, 831)}
 SCAN_DISTANCES = {'upstream': (0, 700), 'p3utr': (0, 831)}
-PROM_SEQFILE = 'leishmania_data/promoterSeqs_Mus_musculus_RA.csv'
-P3UTR_SEQFILE = 'leishmania_data/p3utrSeqs_Mus_musculus_RA.csv.gz'
+PROM_SEQFILE = 'parkinson_data/promoterSeqs_Mus_musculus_RA.csv'
+P3UTR_SEQFILE = 'parkinson_data/p3utrSeqs_Mus_musculus_RA.csv.gz'
 SEQ_FILENAMES = {'upstream': PROM_SEQFILE, 'p3utr': P3UTR_SEQFILE}
 
 
@@ -43,7 +43,7 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
     def create(cls, matrix_filename, checkpoint_file=None):
         """creates an initialized instance"""
         params = (scoring.ConfigurationBuilder().
-                  with_organism('mmu').
+                  with_organism('hsa').
                   with_matrix_filenames([matrix_filename]).
                   with_num_iterations(NUM_ITERATIONS).
                   with_cache_dir(CACHE_DIR).
@@ -73,8 +73,8 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
 
     def make_organism(self):
         """returns a configured organism object"""
-        nw_factories = [stringdb.get_network_factory2('leishmania_data/mouse_links_preprocessed.csv', sep=';')]
-        return organism.GenericOrganism('mmu', THESAURUS_FILE, nw_factories,
+        nw_factories = [stringdb.get_network_factory2('parkinson_data/human_links_preprocessed.csv', sep=';')]
+        return organism.GenericOrganism('hsa', THESAURUS_FILE, nw_factories,
                                         seq_filenames=SEQ_FILENAMES,
                                         search_distances=SEARCH_DISTANCES,
                                         scan_distances=SCAN_DISTANCES)
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     print('This program is licensed under the General Public License V3.')
     print('See README and LICENSE for details.\n')
     if len(sys.argv) < 2:
-        print('Usage: ./leishmania.sh <ratio-file> [checkpoint-file]')
+        print('Usage: ./parkinson.sh <ratio-file> [checkpoint-file]')
     else:
         if len(sys.argv) > 2:
             CHECKPOINT_FILE = sys.argv[2]
