@@ -7,6 +7,7 @@ import unittest
 import membership as memb
 import datamatrix as dm
 import microarray as ma
+import scoring
 
 
 class MockSeedRowMemberships:
@@ -129,7 +130,7 @@ class ClusterMembershipTest(unittest.TestCase):
                                        'R7', 'R8', 'R9', 'R10'],
                                ['C1', 'C2', 'C3', 'C4', 'C5'],
                                MATRIX1)
-        result = ma.compute_column_scores_submatrix(matrix)
+        result = scoring.compute_column_scores_submatrix(matrix)
         scores = result[0]
         self.assertEqual(5, len(scores))
         self.assertAlmostEqual(0.03085775, scores[0])

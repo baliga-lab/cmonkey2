@@ -55,7 +55,7 @@ def get_network_factory(filename):
     return make_network
 
 
-def get_network_factory2(filename):
+def get_network_factory2(filename, sep='\t'):
     """STRING network factory from preprocessed edge file
     (protein1, protein2, combined_score), scores are already
     normalized to 1000"""

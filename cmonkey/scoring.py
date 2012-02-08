@@ -5,13 +5,13 @@ more information and licensing details.
 """
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 
-import microarray
 import logging
 import os
 import datamatrix as dm
 from datetime import date
 import util
 import membership as memb
+import numpy as np
 
 # Official keys to access values in the configuration map
 KEY_ORGANISM_CODE = 'organism_code'
@@ -94,6 +94,108 @@ class ScoringFunctionBase:
     def restore_checkpoint_data(self, shelf):
         """Default implementation does not store checkpoint data"""
         pass
+
+
+class ColumnScoringFunction(ScoringFunctionBase):
+    """Scoring algorithm for microarray data based on conditions.
+    Note that the score does not correspond to the normal scoring
+    function output format and can therefore not be combined in
+    a generic way (the format is |condition x cluster|)"""
+
+    def __init__(self, membership, matrix,
+                 config_params=None):
+        """create scoring function instance"""
+        ScoringFunctionBase.__init__(self, membership,
+                                     matrix, None, config_params)
+
+    def name(self):
+        """returns the name of this scoring function"""
+        return "Column"
+
+    def compute(self, iteration, ref_matrix=None):
+        """compute method, iteration is the 0-based iteration number"""
+        start_time = util.current_millis()
+        result = compute_column_scores(self.membership(),
+                                       self.matrix(),
+                                       self.num_clusters())
+        elapsed = util.current_millis() - start_time
+        logging.info("COLUMN SCORING TIME: %f s.", (elapsed / 1000.0))
+        return result
+
+    def apply_weight(self, result, iteration):
+        """applies the stored weight"""
+        return result
+
+def compute_column_scores(membership, matrix, num_clusters):
+    """Computes the column scores for the specified number of clusters"""
+
+    def compute_substitution(cluster_column_scores):
+        """calculate substitution value for missing column scores"""
+        membership_values = []
+        for cluster in xrange(1, num_clusters + 1):
+            columns = membership.columns_for_cluster(cluster)
+            column_scores = cluster_column_scores[cluster - 1]
+            if column_scores != None:
+                for row in xrange(column_scores.num_rows()):
+                    for col in xrange(column_scores.num_columns()):
+                        if column_scores.column_name(col) in columns:
+                            membership_values.append(column_scores[row][col])
+        return util.quantile(membership_values, 0.95)
+
+    cluster_column_scores = []
+    null_scores_found = False
+    for cluster in xrange(1, num_clusters + 1):
+        submatrix = matrix.submatrix_by_name(
+            row_names=membership.rows_for_cluster(cluster))
+        if submatrix.num_rows() > 1:
+            cluster_column_scores.append(compute_column_scores_submatrix(
+                    submatrix))
+        else:
+            cluster_column_scores.append(None)
+            null_scores_found = True
+
+    if null_scores_found:
+        substitution = compute_substitution(cluster_column_scores)
+
+    # Convert scores into a matrix that have the clusters as columns
+    # and conditions in the rows
+    result = dm.DataMatrix(matrix.num_columns(), num_clusters,
+                           row_names=matrix.column_names())
+    for cluster in xrange(num_clusters):
+        column_scores = cluster_column_scores[cluster]
+        for row_index in xrange(matrix.num_columns()):
+            if column_scores == None:
+                result[row_index][cluster] = substitution
+            else:
+                result[row_index][cluster] = column_scores[0][row_index]
+    return result
+
+def compute_column_scores_submatrix(matrix):
+    """For a given matrix, compute the column scores.
+    This is used to compute the column scores of the sub matrices that
+    were determined by the pre-seeding, so typically, matrix is a
+    submatrix of the input matrix that contains only the rows that
+    belong to a certain cluster.
+    The result is a DataMatrix with one row containing all the
+    column scores
+
+    This function normalizes diff^2 by the mean expression level, similar
+    to "Index of Dispersion", see
+    http://en.wikipedia.org/wiki/Index_of_dispersion
+    for details
+    """
+    colmeans = matrix.column_means()
+    matrix_minus_colmeans_squared = subtract_and_square(matrix, colmeans)
+    var_norm = np.abs(colmeans) + 0.01
+    result = util.column_means(matrix_minus_colmeans_squared) / var_norm
+    return dm.DataMatrix(1, matrix.num_columns(), ['Col. Scores'],
+                         matrix.column_names(), [result])
+
+
+def subtract_and_square(matrix, vector):
+    """reusable function to subtract a vector from each row of
+    the input matrix and square the values in the result matrix"""
+    return np.square(matrix.values() - vector)
 
 
 class ScoringFunctionCombiner:
@@ -257,7 +359,7 @@ class ConfigurationBase:
     def column_scoring(self):
         """returns the column scoring function"""
         if self.__column_scoring == None:
-            self.__column_scoring = microarray.ColumnScoringFunction(
+            self.__column_scoring = ColumnScoringFunction(
                 self.membership(), self.matrix(),
                 config_params=self.config_params)
         return self.__column_scoring

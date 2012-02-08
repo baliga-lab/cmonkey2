@@ -8,6 +8,7 @@ import datamatrix as dm
 import util
 import membership as memb
 import microarray as ma
+import scoring
 import numpy
 
 
@@ -70,7 +71,7 @@ class ComputeArrayScoresTest(unittest.TestCase):
         membership = self.__read_members()
         ratios = self.__read_ratios()
         refresult = self.__read_colscores_refresult()
-        result = ma.compute_column_scores(membership, ratios, 43)
+        result = scoring.compute_column_scores(membership, ratios, 43)
         self.__compare_with_refresult(refresult, result)
 
     def __compare_with_refresult(self, refresult, result):
@@ -88,6 +89,6 @@ class ComputeArrayScoresTest(unittest.TestCase):
     def test_subtract_and_square(self):
         matrix = dm.DataMatrix(2, 3, values=[[11.0, 12.0, 13.0],
                                              [14.0, 15.0, 16.0]])
-        result = ma.subtract_and_square(matrix, [5.0, 6.0, 3.0])
+        result = scoring.subtract_and_square(matrix, [5.0, 6.0, 3.0])
         self.assertTrue(([[36.0, 36.0, 100.0],
                           [81.0, 81.0, 169.0]] == result).all())
