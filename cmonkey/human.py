@@ -23,8 +23,6 @@ CACHE_DIR = 'humancache'
 CONTROLS_FILE = 'human_data/controls.csv'
 RUG_FILE = 'human_data/rug.csv'
 
-PROM_SEQFILE = 'human_data/promoterSeqs_set3pUTR_Final.csv.gz'
-P3UTR_SEQFILE = 'human_data/p3utrSeqs_set3pUTR_Final.csv.gz'
 THESAURUS_FILE = 'human_data/synonymThesaurus.csv.gz'
 
 RUG_PROPS = ['MIXED', 'ASTROCYTOMA', 'GBM', 'OLIGODENDROGLIOMA']
@@ -35,6 +33,9 @@ NUM_ITERATIONS = 2000
 SEQUENCE_TYPES = ['promoter', 'p3utr']
 SEARCH_DISTANCES = {'promoter': (0, 700), 'p3utr': (0, 831)}
 SCAN_DISTANCES = {'promoter': (0, 700), 'p3utr': (0, 831)}
+PROM_SEQFILE = 'human_data/promoterSeqs_set3pUTR_Final.csv.gz'
+P3UTR_SEQFILE = 'human_data/p3utrSeqs_set3pUTR_Final.csv.gz'
+SEQ_FILENAMES = {'promoter': PROM_SEQFILE, 'p3utr': P3UTR_SEQFILE}
 MAX_MOTIF_WIDTH = 12
 
 
@@ -183,9 +184,8 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
     def make_organism(self):
         """returns a human organism object"""
         nw_factories = [stringdb.get_network_factory3('human_data/string.csv')]
-        return organism.GenericOrganism(PROM_SEQFILE, P3UTR_SEQFILE,
-                                        THESAURUS_FILE,
-                                        nw_factories,
+        return organism.GenericOrganism('hsa', THESAURUS_FILE, nw_factories,
+                                        seq_filenames=SEQ_FILENAMES,
                                         search_distances=SEARCH_DISTANCES,
                                         scan_distances=SCAN_DISTANCES)
 
