@@ -11,6 +11,9 @@ import datamatrix as dm
 import membership as memb
 import util
 import cmonkey
+import meme
+import stringdb
+import organism
 
 CMONKEY_VERSION = '4.0'
 CHECKPOINT_INTERVAL = 3
@@ -20,6 +23,7 @@ NUM_ITERATIONS = 2000
 CACHE_DIR = 'leishmania_cache'
 NUM_CLUSTERS = 267
 ROW_WEIGHT = 6.0
+MAX_MOTIF_WIDTH = 12
 
 THESAURUS_FILE = 'leishmania_data/synonymThesaurus.csv.gz'
 
@@ -87,6 +91,26 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             lambda iteration: ROW_WEIGHT,
             config_params=self.config_params)
 
+        # motifing
+        sequence_filters = []
+        #print "THESAURUS: ", self.organism().thesaurus()
+        #for gene in self.matrix().row_names():
+        #    if not gene in self.organism().thesaurus():
+        #        print "NOT FOUND: ", gene
+        background_file_prom = meme.global_background_file(
+            self.organism(), self.matrix().row_names(), 'upstream',
+            use_revcomp=True)
+        """
+        background_file_p3utr = meme.global_background_file(
+            self.organism(), self.matrix().row_names(), 'p3utr',
+            use_revcomp=True)
+        meme_suite_prom = meme.MemeSuite430(
+            max_width=MAX_MOTIF_WIDTH,
+            background_file=background_file_prom)
+        meme_suite_p3utr = meme.MemeSuite430(
+            max_width=MAX_MOTIF_WIDTH,
+            background_file=background_file_p3utr)
+            """
         return scoring.ScoringFunctionCombiner(
             self.membership(), [row_scoring])
 

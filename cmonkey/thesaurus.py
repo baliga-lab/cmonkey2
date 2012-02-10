@@ -25,8 +25,10 @@ def create_from_delimited_file2(dfile):
         dfile = util.DelimitedFile.read(dfile, sep=',', has_header=False)
     result = {}
     for line in dfile.lines():
+        original = line[0].upper()  # original should map to itself
+        result[original] = original
         for alternative in line[1].split(';'):
-            result[alternative.upper()] = line[0].upper()
+            result[alternative.upper()] = original
     return result
 
 
