@@ -12,8 +12,10 @@ import membership as memb
 import util
 import cmonkey
 import meme
+import motif
 import stringdb
 import organism
+import network as nw
 
 CMONKEY_VERSION = '4.0'
 CHECKPOINT_INTERVAL = 3
@@ -100,7 +102,6 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
         background_file_prom = meme.global_background_file(
             self.organism(), self.matrix().row_names(), 'upstream',
             use_revcomp=True)
-        """
         background_file_p3utr = meme.global_background_file(
             self.organism(), self.matrix().row_names(), 'p3utr',
             use_revcomp=True)
@@ -110,9 +111,35 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
         meme_suite_p3utr = meme.MemeSuite430(
             max_width=MAX_MOTIF_WIDTH,
             background_file=background_file_p3utr)
-            """
+
+        motif_scoring = motif.MemeScoringFunction(
+            self.organism(),
+            self.membership(),
+            self.matrix(),
+            meme_suite_prom,
+            seqtype='upstream',
+            sequence_filters=sequence_filters,
+            pvalue_filter=motif.MinPValueFilter(-20.0),
+            weight_func=lambda iteration: 0.0,
+            interval=10,
+            config_params=self.config_params)
+
+        network_scoring = nw.ScoringFunction(self.organism(),
+                                             self.membership(),
+                                             self.matrix(),
+                                             lambda iteration: 0.0, 7,
+                                             config_params=self.config_params)
+
+        weeder_scoring = motif.WeederScoringFunction(
+            self.organism(), self.membership(), self.matrix(),
+            meme_suite_p3utr, 'p3utr',
+            pvalue_filter=motif.MinPValueFilter(-20.0),
+            weight_func=lambda iteration: 0.0,
+            interval=10,
+            config_params=self.config_params)
+
         return scoring.ScoringFunctionCombiner(
-            self.membership(), [row_scoring])
+            self.membership(), [row_scoring, network_scoring, motif_scoring, weeder_scoring])
 
 
 if __name__ == '__main__':

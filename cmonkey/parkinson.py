@@ -10,6 +10,11 @@ import microarray
 import datamatrix as dm
 import membership as memb
 import util
+import meme
+import motif
+import stringdb
+import organism
+import network as nw
 import cmonkey
 
 CMONKEY_VERSION = '4.0'
@@ -20,14 +25,15 @@ NUM_ITERATIONS = 2000
 CACHE_DIR = 'parkinson_cache'
 NUM_CLUSTERS = 267
 ROW_WEIGHT = 6.0
+MAX_MOTIF_WIDTH = 12
 
 THESAURUS_FILE = 'parkinson_data/synonymThesaurus.csv.gz'
 
 SEQUENCE_TYPES = ['upstream', 'p3utr']
 SEARCH_DISTANCES = {'upstream': (0, 700), 'p3utr': (0, 831)}
 SCAN_DISTANCES = {'upstream': (0, 700), 'p3utr': (0, 831)}
-PROM_SEQFILE = 'parkinson_data/promoterSeqs_Mus_musculus_RA.csv'
-P3UTR_SEQFILE = 'parkinson_data/p3utrSeqs_Mus_musculus_RA.csv.gz'
+PROM_SEQFILE = 'parkinson_data/promoterSeqs_ilmn_Homo_sapiens.csv.gz'
+P3UTR_SEQFILE = 'parkinson_data/p3utrSeqs_ilmn_Homo_sapiens.csv.gz'
 SEQ_FILENAMES = {'upstream': PROM_SEQFILE, 'p3utr': P3UTR_SEQFILE}
 
 
@@ -87,8 +93,53 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             lambda iteration: ROW_WEIGHT,
             config_params=self.config_params)
 
+        # motifing
+        sequence_filters = []
+        #print "THESAURUS: ", self.organism().thesaurus()
+        #for gene in self.matrix().row_names():
+        #    if not gene in self.organism().thesaurus():
+        #        print "NOT FOUND: ", gene
+        background_file_prom = meme.global_background_file(
+            self.organism(), self.matrix().row_names(), 'upstream',
+            use_revcomp=True)
+        background_file_p3utr = meme.global_background_file(
+            self.organism(), self.matrix().row_names(), 'p3utr',
+            use_revcomp=True)
+        meme_suite_prom = meme.MemeSuite430(
+            max_width=MAX_MOTIF_WIDTH,
+            background_file=background_file_prom)
+        meme_suite_p3utr = meme.MemeSuite430(
+            max_width=MAX_MOTIF_WIDTH,
+            background_file=background_file_p3utr)
+
+        motif_scoring = motif.MemeScoringFunction(
+            self.organism(),
+            self.membership(),
+            self.matrix(),
+            meme_suite_prom,
+            seqtype='upstream',
+            sequence_filters=sequence_filters,
+            pvalue_filter=motif.MinPValueFilter(-20.0),
+            weight_func=lambda iteration: 0.0,
+            interval=10,
+            config_params=self.config_params)
+
+        network_scoring = nw.ScoringFunction(self.organism(),
+                                             self.membership(),
+                                             self.matrix(),
+                                             lambda iteration: 0.0, 7,
+                                             config_params=self.config_params)
+
+        weeder_scoring = motif.WeederScoringFunction(
+            self.organism(), self.membership(), self.matrix(),
+            meme_suite_p3utr, 'p3utr',
+            pvalue_filter=motif.MinPValueFilter(-20.0),
+            weight_func=lambda iteration: 0.0,
+            interval=10,
+            config_params=self.config_params)
+
         return scoring.ScoringFunctionCombiner(
-            self.membership(), [row_scoring])
+            self.membership(), [row_scoring, network_scoring, motif_scoring, weeder_scoring])
 
 
 if __name__ == '__main__':

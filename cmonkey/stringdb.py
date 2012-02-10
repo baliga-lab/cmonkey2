@@ -62,7 +62,7 @@ def get_network_factory2(filename, sep='\t'):
     def read_edges2(filename):
         """just read a preprocessed file, much faster to debug"""
         logging.info("stringdb.read_edges2()")
-        dfile = util.DelimitedFile.read(filename)
+        dfile = util.DelimitedFile.read(filename, sep)
         result = []
         for line in dfile.lines():
             result.append(network.NetworkEdge(line[0], line[1],
