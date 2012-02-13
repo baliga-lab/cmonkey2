@@ -166,9 +166,9 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """returns the name of this function"""
         return "Network"
 
-    def compute(self, iteration, ref_matrix=None):
+    def compute(self, iteration_result, ref_matrix=None):
         """compute method"""
-
+        iteration = iteration_result['iteration']
         if (self.__interval == 0 or
             (iteration > 0 and (iteration % self.__interval == 0))):
             return self.__compute()

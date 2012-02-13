@@ -218,6 +218,10 @@ class MemeMotifInfo:
         """returns the sites"""
         return self.__sites
 
+    def pssm(self):
+        """return the PSSM rows"""
+        return self.__pssm
+
     def consensus_string(self, cutoff1=0.7, cutoff2=0.4):
         """returns the consensus string from the pssm table
         remember: letter order is ACGT"""

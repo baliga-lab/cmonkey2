@@ -192,7 +192,7 @@ class RowScoringFunction(scoring.ScoringFunctionBase):
         """returns the name of this scoring function"""
         return "Row"
 
-    def compute(self, iteration, ref_matrix=None):
+    def compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
         start_time = util.current_millis()
         result = compute_row_scores(

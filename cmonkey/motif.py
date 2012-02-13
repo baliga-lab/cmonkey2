@@ -135,12 +135,13 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         """returns the name of this scoring function"""
         return "Motif"""
 
-    def compute(self, iteration, ref_matrix=None):
+    def compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
+        iteration = iteration_result['iteration']
         if (self.interval == 0 or
             (iteration > 0 and (iteration % self.interval == 0))):
             global_start_time = util.current_millis()
-            pvalues = self.compute_pvalues(iteration)
+            pvalues = self.compute_pvalues(iteration_result)
             remapped = {}
             for cluster in pvalues:
                 pvalues_k = pvalues[cluster]
@@ -152,7 +153,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             # convert remapped to an actual scoring matrix
             matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
                                    self.gene_names())
-            #row_indexes = matrix.row
             for row_index in xrange(matrix.num_rows()):
                 row = matrix.row_name(row_index)
                 for cluster in xrange(1, self.num_clusters() + 1):
@@ -166,7 +166,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         else:
             return None
 
-    def compute_pvalues(self, iteration):
+    def compute_pvalues(self, iteration_result):
         """Compute motif scores. In order to influence the sequences
         that go into meme, the user can specify a list of sequence filter
         functions that have the signature
@@ -202,17 +202,28 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                                              min_cluster_rows_allowed,
                                              max_cluster_rows_allowed))
 
+        iteration_result['motifs'] = {}
         if use_multiprocessing:
             pool = mp.Pool()
             results = pool.map(compute_cluster_score, params)
             for cluster in xrange(1, self.num_clusters() + 1):
-                cluster_pvalues[cluster] = results[cluster - 1]
+                pvalues, run_result = results[cluster - 1]
+                cluster_pvalues[cluster] = pvalues
+                iteration_result['motifs'][cluster] = meme_json(run_result)
             pool.close()
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
-                cluster_pvalues[cluster] = compute_cluster_score(
-                    params[cluster - 1])
+                pvalues, run_result = compute_cluster_score(params[cluster - 1])
+                cluster_pvalues[cluster] = pvalues
+                iteration_result['motifs'][cluster] = meme_json(run_result)
+
         return cluster_pvalues
+
+def meme_json(run_result):
+    result = []
+    for motif_info in run_result.motif_infos:
+        result.append(motif_info.pssm())
+    return result
 
 
 class ComputeScoreParams:
@@ -233,6 +244,7 @@ class ComputeScoreParams:
 def compute_cluster_score(params):
     """This function computes the MEME score for a cluster"""
     pvalues = {}
+    run_result = None
     if (len(params.seqs) >= params.min_cluster_rows
         and len(params.seqs) <= params.max_cluster_rows):
         run_result = params.meme_runner(params.seqs, params.used_seqs)
@@ -241,15 +253,10 @@ def compute_cluster_score(params):
             pvalues[feature_id] = np.log(pvalue)
         if params.pvalue_filter != None:
             pvalues = params.pvalue_filter(pvalues)
-
-        for motif_info in run_result.motif_infos:
-            logging.info("consensus: %s, evalue: %f",
-                         motif_info.consensus_string(),
-                         motif_info.evalue())
     else:
         logging.info("# seqs (= %d) outside of defined limits, "
                      "skipping cluster %d", len(params.seqs), params.cluster)
-    return pvalues
+    return pvalues, run_result
 
 
 class MemeScoringFunction(MotifScoringFunctionBase):

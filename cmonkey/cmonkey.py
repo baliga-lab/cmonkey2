@@ -7,6 +7,7 @@ import sys
 import logging
 import microbial_config as microbe
 import human
+import json
 
 CMONKEY_VERSION = '4.0'
 CHECKPOINT_INTERVAL = 3
@@ -21,12 +22,15 @@ def run_cmonkey(config):
     for iteration in range(config.start_iteration(),
                            config.num_iterations()):
         logging.info("Iteration # %d", iteration)
+        iteration_result = {'iteration': iteration}
         config.membership().update(config.matrix(),
-                                   gene_scoring.compute(iteration),
-                                   cond_scoring.compute(iteration),
+                                   gene_scoring.compute(iteration_result),
+                                   cond_scoring.compute(iteration_result),
                                    iteration, config.num_iterations())
         if iteration > 0 and  iteration % CHECKPOINT_INTERVAL == 0:
             config.save_checkpoint_data(iteration)
+        with open('out/%d-results.json' % iteration, 'w') as outfile:
+            outfile.write(json.dumps(iteration_result))
     print "Done !!!!"
     print "cluster\t# rows"
     for cluster in range(1, config.membership().num_clusters() + 1):
