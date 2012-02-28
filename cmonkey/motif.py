@@ -221,8 +221,10 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
 def meme_json(run_result):
     result = []
-    for motif_info in run_result.motif_infos:
-        result.append(motif_info.pssm())
+    if run_result != None:
+        for motif_info in run_result.motif_infos:
+            result.append({'motif_num': motif_info.motif_num(),
+                           'pssm': motif_info.pssm()})
     return result
 
 

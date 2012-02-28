@@ -29,6 +29,14 @@ def run_cmonkey(config):
                                    iteration, config.num_iterations())
         if iteration > 0 and  iteration % CHECKPOINT_INTERVAL == 0:
             config.save_checkpoint_data(iteration)
+
+        # Write a snapshot
+        iteration_result['columns'] = {}
+        iteration_result['rows'] = {}
+        for cluster in range(1, config.membership().num_clusters() + 1):
+            iteration_result['columns'][cluster] = config.membership().columns_for_cluster(cluster)
+            iteration_result['rows'][cluster] = config.membership().rows_for_cluster(cluster)
+
         with open('out/%d-results.json' % iteration, 'w') as outfile:
             outfile.write(json.dumps(iteration_result))
     print "Done !!!!"

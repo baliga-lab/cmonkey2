@@ -189,14 +189,19 @@ class MemeMotifInfo:
     """Only a motif's info line, the
     probability matrix and the site information is relevant"""
     # pylint: disable-msg=R0913
-    def __init__(self, width, num_sites, llr, evalue, sites, pssm):
+    def __init__(self, motif_num, width, num_sites, llr, evalue, sites, pssm):
         """Creates a MemeMotifInfo instance"""
+        self.__motif_num = motif_num
         self.__width = width
         self.__num_sites = num_sites
         self.__llr = llr
         self.__evalue = evalue
         self.__sites = sites
         self.__pssm = pssm
+
+    def motif_num(self):
+        """returns the motif number"""
+        return self.__motif_num
 
     def width(self):
         """Returns the width"""
@@ -317,7 +322,8 @@ def read_meme_output(output_text, num_motifs):
         """Reads the MemeMotifInfo with the specified number from the input"""
         info_line_index = next_info_line(motif_number, lines)
         info_line = lines[info_line_index]
-        return MemeMotifInfo(extract_width(info_line),
+        return MemeMotifInfo(motif_number,
+                             extract_width(info_line),
                              extract_num_sites(info_line),
                              extract_llr(info_line),
                              extract_evalue(info_line),

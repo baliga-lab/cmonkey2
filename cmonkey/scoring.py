@@ -246,15 +246,16 @@ class ScoringFunctionCombiner:
             elapsed = util.current_millis() - start_time
             logging.info("SCORES COMBINED IN %f s", elapsed / 1000.0)
 
-        if len(result_matrices) == 0:
-            logging.warn("NO RESULTS !!!")
-        combined_score = (result_matrices[0] *
-                          self.__scoring_functions[0].weight(iteration))
-        for index in xrange(1, len(result_matrices)):
-            combined_score += (
-                result_matrices[index] *
-                self.__scoring_functions[index].weight(iteration))
-        return combined_score
+        if len(result_matrices) > 0:
+            combined_score = (result_matrices[0] *
+                              self.__scoring_functions[0].weight(iteration))
+            for index in xrange(1, len(result_matrices)):
+                combined_score += (
+                    result_matrices[index] *
+                    self.__scoring_functions[index].weight(iteration))
+            return combined_score
+        else:
+            return None
 
     def __log_subresult(self, score_function, matrix):
         """output an accumulated subresult to the log"""
