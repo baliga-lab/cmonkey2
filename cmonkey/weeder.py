@@ -11,18 +11,6 @@ import pssm
 LAUNCHER = 'weederlauncher'
 LLR_VALUE = 'NA'
 
-class WeederMotifInfo:
-    """Weeder motif information class"""
-    def __init__(self, motif_num, pssm):
-        self.__motif_num = motif_num
-        self.__pssm = pssm
-
-    def motif_num(self):
-        return self.__motif_num
-
-    def pssm(self):
-        return self.__pssm
-
 
 class Site:
     """A site value object holding entries from the wee file"""

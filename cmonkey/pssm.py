@@ -27,6 +27,14 @@ class Pssm:
         """accesses the row at the specified index"""
         return self.__values[row]
 
+    def values(self):
+        """returns the PSSM as an array"""
+        return self.__values
+
+    def evalue(self):
+        """returns the evalue"""
+        return self.__e_value
+
     def sequence_length(self):
         """returns the sequence length this PSSM is based on"""
         return len(self.__values)

@@ -205,7 +205,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         iteration_result['motifs'] = {}
         if use_multiprocessing:
             pool = mp.Pool()
+            print "COMPUTE MOTIF STUFF: # PARAMS: %d" % (len(params))
             results = pool.map(compute_cluster_score, params)
+
             for cluster in xrange(1, self.num_clusters() + 1):
                 pvalues, run_result = results[cluster - 1]
                 cluster_pvalues[cluster] = pvalues
@@ -312,7 +314,11 @@ class WeederScoringFunction(MotifScoringFunctionBase):
 
 
 class WeederRunner:
-    """Wrapper around Weeder so we can use the multiprocessing module"""
+    """Wrapper around Weeder so we can use the multiprocessing module.
+    The function basically runs Weeder ont the specified set of sequences,
+    converts its output to a MEME output file and runs MAST on the MEME output
+    to generate a MEME run result.
+    """
 
     def __init__(self, meme_suite):
         """create a runner object"""
@@ -333,12 +339,24 @@ class WeederRunner:
              for feature_id, locseq in all_seqs.items()])
         logging.info("# PSSMS created: %d", len(pssms))
         logging.info("run MAST on '%s'", meme_outfile)
+
+        motif_infos = []
+        for i in xrange(len(pssms)):
+            pssm = pssms[i]
+            motif_infos.append(meme.MemeMotifInfo(pssm.values(), i + 1,
+                                                  pssm.sequence_length(),
+                                                  len(pssm.sites()),
+                                                  None, pssm.evalue(),
+                                                  pssm.sites()))
+
         try:
             mast_out = self.meme_suite.mast(
                 meme_outfile, dbfile,
                 self.meme_suite.global_background_file())
             pe_values, annotations = meme.read_mast_output(mast_out,
                                                            seqs.keys())
-            return meme.MemeRunResult(pe_values, annotations, [])
+            return meme.MemeRunResult(pe_values, annotations, motif_infos)
         except:
             return meme.MemeRunResult([], {}, [])
+
+

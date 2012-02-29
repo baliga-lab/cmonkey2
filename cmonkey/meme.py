@@ -189,19 +189,23 @@ class MemeMotifInfo:
     """Only a motif's info line, the
     probability matrix and the site information is relevant"""
     # pylint: disable-msg=R0913
-    def __init__(self, motif_num, width, num_sites, llr, evalue, sites, pssm):
+    def __init__(self, pssm, motif_num, width, num_sites, llr, evalue, sites):
         """Creates a MemeMotifInfo instance"""
+        self.__pssm = pssm
         self.__motif_num = motif_num
         self.__width = width
         self.__num_sites = num_sites
         self.__llr = llr
         self.__evalue = evalue
         self.__sites = sites
-        self.__pssm = pssm
 
     def motif_num(self):
         """returns the motif number"""
         return self.__motif_num
+
+    def pssm(self):
+        """return the PSSM rows"""
+        return self.__pssm
 
     def width(self):
         """Returns the width"""
@@ -222,10 +226,6 @@ class MemeMotifInfo:
     def sites(self):
         """returns the sites"""
         return self.__sites
-
-    def pssm(self):
-        """return the PSSM rows"""
-        return self.__pssm
 
     def consensus_string(self, cutoff1=0.7, cutoff2=0.4):
         """returns the consensus string from the pssm table
@@ -322,13 +322,13 @@ def read_meme_output(output_text, num_motifs):
         """Reads the MemeMotifInfo with the specified number from the input"""
         info_line_index = next_info_line(motif_number, lines)
         info_line = lines[info_line_index]
-        return MemeMotifInfo(motif_number,
+        return MemeMotifInfo(read_pssm(info_line_index + 1, lines),
+                             motif_number,
                              extract_width(info_line),
                              extract_num_sites(info_line),
                              extract_llr(info_line),
                              extract_evalue(info_line),
-                             read_sites(info_line_index + 1, lines),
-                             read_pssm(info_line_index + 1, lines))
+                             read_sites(info_line_index + 1, lines))
 
     lines = output_text.split('\n')
     result = []
