@@ -16,6 +16,8 @@ import tempfile
 import seqtools as st
 import util
 
+def always_run(iteration):
+  return True
 
 # Applicable sequence filters
 def unique_filter(seqs, feature_ids):
@@ -82,7 +84,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                  sequence_filters=[],
                  pvalue_filter=None,
                  weight_func=None,
-                 interval=0,
+#                 interval=0,
+                 run_this_iteration=always_run,
                  config_params=None):
         """creates a ScoringFunction"""
         scoring.ScoringFunctionBase.__init__(self, membership,
@@ -92,7 +95,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.organism = organism
         self.meme_suite = meme_suite
         self.seqtype = seqtype
-        self.interval = interval
+#        self.interval = interval
+        self.run_this_iteration = run_this_iteration
         self.__sequence_filters = sequence_filters
         self.__pvalue_filter = pvalue_filter
 
@@ -137,8 +141,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
     def compute(self, iteration, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
-        if (self.interval == 0 or
-            (iteration > 0 and (iteration % self.interval == 0))):
+#        if (self.interval == 0 or
+#            (iteration > 0 and (iteration % self.interval == 0))):
+        if self.run_this_iteration(iteration):
             global_start_time = util.current_millis()
             pvalues = self.compute_pvalues(iteration)
             remapped = {}
@@ -261,13 +266,15 @@ class MemeScoringFunction(MotifScoringFunctionBase):
                  sequence_filters=[],
                  pvalue_filter=None,
                  weight_func=None,
-                 interval=0,
+#                 interval=0,
+                 run_this_iteration=always_run,
                  config_params=None):
         """creates a ScoringFunction"""
         MotifScoringFunctionBase.__init__(self, organism, membership,
                                           matrix, meme_suite, seqtype,
                                           sequence_filters, pvalue_filter,
-                                          weight_func, interval,
+#                                          Weight_func, interval,
+                                          weight_func, run_this_iteration,
                                           config_params)
 
     def name(self):

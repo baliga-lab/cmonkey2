@@ -9,7 +9,8 @@ import microbial_config as microbe
 import human
 
 CMONKEY_VERSION = '4.0'
-CHECKPOINT_INTERVAL = 3
+#CHECKPOINT_INTERVAL = 3
+CHECKPOINT_INTERVAL = 100
 CHECKPOINT_FILE = None
 
 

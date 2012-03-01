@@ -23,11 +23,18 @@ RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
 ROW_WEIGHT = 6.0
-NUM_ITERATIONS = 2000
+#NUM_ITERATIONS = 2000
+NUM_ITERATIONS = 200
 NETWORK_SCORE_INTERVAL = 7
+FIRST_MOTIF_ITERATION = 100
 MOTIF_SCORE_INTERVAL = 10
 NUM_CLUSTERS = 43
 MAX_CLUSTER_ROWS = 110
+
+def motif_iteration(iteration):
+  if iteration < FIRST_MOTIF_ITERATION: return False
+  if not iteration %% MOTIF_SCORE_INTERVAL == 0: return False
+  return True
 
 SEQUENCE_TYPES = ['upstream']
 # used to select sequences and MEME
@@ -106,7 +113,8 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
             weight_func=lambda iteration: 0.0,
-            interval=MOTIF_SCORE_INTERVAL,
+#            interval=MOTIF_SCORE_INTERVAL,
+            run_this_iteration = motif_iteration,
             config_params=self.config_params)
 
         network_scoring = nw.ScoringFunction(self.organism(),
