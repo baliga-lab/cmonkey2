@@ -40,8 +40,8 @@ def run_cmonkey(config):
             iteration_result['columns'][cluster] = config.membership().columns_for_cluster(cluster)
             iteration_result['rows'][cluster] = config.membership().rows_for_cluster(cluster)
 
-        with open('out/%d-results.json' % iteration, 'w') as outfile:
-            outfile.write(json.dumps(iteration_result))
+#        with open('out/%d-results.json' % iteration, 'w') as outfile:
+#            outfile.write(json.dumps(iteration_result))
     print "Done !!!!"
     print "cluster\t# rows"
     for cluster in range(1, config.membership().num_clusters() + 1):
