@@ -24,8 +24,6 @@ COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
 ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 2000
-NETWORK_SCORE_INTERVAL = 7
-MOTIF_SCORE_INTERVAL = 10
 NUM_CLUSTERS = 43
 MAX_CLUSTER_ROWS = 110
 
@@ -106,14 +104,14 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
             weight_func=lambda iteration: 0.0,
-            interval=MOTIF_SCORE_INTERVAL,
+            run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
 
         network_scoring = nw.ScoringFunction(self.organism(),
                                              self.membership(),
                                              self.matrix(),
                                              lambda iteration: 0.0,
-                                             NETWORK_SCORE_INTERVAL,
+                                             scoring.default_network_iterations,
                                              config_params=self.config_params)
 
         return scoring.ScoringFunctionCombiner(self.membership(),

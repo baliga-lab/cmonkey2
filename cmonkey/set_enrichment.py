@@ -94,12 +94,13 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
     def __init__(self, membership, matrix, set_types,
                  weight_func=None,
-                 interval=0, config_params=None):
+                 run_in_iteration=lambda iteration: True,
+                 config_params=None):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
                                              matrix, weight_func,
                                              config_params)
-        self.__interval = interval
+        self.__run_in_iteration = run_in_iteration
         self.__set_types = set_types
         # stores (min_set, pvalue) pairs for each cluster and set type
         # for the last run of the function
@@ -111,12 +112,12 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """Bonferroni cutoff value"""
         return float(self.num_clusters()) / 0.05
 
-    def compute(self, iteration, ref_matrix):
+    def compute(self, iteration_result, ref_matrix):
         """compute method"""
         global SET_MATRIX, SET_MEMBERSHIP, SET_REF_MATRIX, SET_SET_TYPE
+        iteration = iteration_result['iteration']
 
-        if (self.__interval == 0 or
-            (iteration > 0 and (iteration % self.__interval == 0))):
+        if self.__run_in_iteration(iteration):
             logging.info("Compute scores for set enrichment...")
             start_time = util.current_millis()
             matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),

@@ -29,6 +29,11 @@ MOTIF_MIN_CLUSTER_ROWS_ALLOWED = 3
 MOTIF_MAX_CLUSTER_ROWS_ALLOWED = 70
 USE_MULTIPROCESSING = True
 
+def default_motif_iterations(iteration):
+    return iteration >= 500 and iteration % 10 == 0
+
+def default_network_iterations(iteration):
+    return iteration > 0 and iteration % 7 == 0
 
 class ScoringFunctionBase:
     """Base class for scoring functions"""
