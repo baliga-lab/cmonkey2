@@ -121,7 +121,7 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
             weight_func=lambda iteration: 0.0,
-            interval=3,
+            interval=10,
             config_params=self.config_params)
 
         weeder_scoring = motif.WeederScoringFunction(
@@ -129,7 +129,7 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             meme_suite_p3utr, 'p3utr',
             pvalue_filter=motif.MinPValueFilter(-20.0),
             weight_func=lambda iteration: 0.0,
-            interval=3,
+            interval=10,
             config_params=self.config_params)
 
         motif_combiner = scoring.ScoringFunctionCombiner(
@@ -142,10 +142,10 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
                                              lambda iteration: 0.0, 7,
                                              config_params=self.config_params)
 
-        #return scoring.ScoringFunctionCombiner(
-        #    self.membership(), [row_scoring, network_scoring, motif_combiner])
         return scoring.ScoringFunctionCombiner(
-            self.membership(), [row_scoring, motif_combiner])
+            self.membership(), [row_scoring, network_scoring, motif_combiner])
+        #return scoring.ScoringFunctionCombiner(
+        #    self.membership(), [row_scoring, motif_combiner])
 
 
 if __name__ == '__main__':

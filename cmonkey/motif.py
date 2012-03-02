@@ -202,7 +202,16 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                                              min_cluster_rows_allowed,
                                              max_cluster_rows_allowed))
 
-        iteration_result['motifs'] = {}
+        # create motif result map if necessary
+        if not 'motifs' in iteration_result:
+            iteration_result['motifs'] = {}
+        for cluster in xrange(1, self.num_clusters() + 1):
+            if not cluster in iteration_result['motifs']:
+                iteration_result['motifs'][cluster] = { }
+            if not self.seqtype in iteration_result['motifs'][cluster]:
+                iteration_result['motifs'][cluster][self.seqtype] = { }
+
+        # compute and store motif results
         if use_multiprocessing:
             pool = mp.Pool()
             print "COMPUTE MOTIF STUFF: # PARAMS: %d" % (len(params))
@@ -211,15 +220,16 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             for cluster in xrange(1, self.num_clusters() + 1):
                 pvalues, run_result = results[cluster - 1]
                 cluster_pvalues[cluster] = pvalues
-                iteration_result['motifs'][cluster] = meme_json(run_result)
+                iteration_result['motifs'][cluster][self.seqtype] = meme_json(run_result)
             pool.close()
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
                 pvalues, run_result = compute_cluster_score(params[cluster - 1])
                 cluster_pvalues[cluster] = pvalues
-                iteration_result['motifs'][cluster] = meme_json(run_result)
+                iteration_result['motifs'][cluster][self.seqtype] = meme_json(run_result)
 
         return cluster_pvalues
+
 
 def meme_json(run_result):
     result = []
