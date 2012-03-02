@@ -83,7 +83,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                  sequence_filters=[],
                  pvalue_filter=None,
                  weight_func=None,
-                 interval=None,
+                 run_in_iteration=lambda iteration: True,
                  config_params=None):
         """creates a ScoringFunction"""
         scoring.ScoringFunctionBase.__init__(self, membership,
@@ -93,8 +93,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.organism = organism
         self.meme_suite = meme_suite
         self.seqtype = seqtype
-        if interval: self.interval = interval
-        else: self.interval = self.default_interval
+        self.run_in_iteration = run_in_iteration
         self.__sequence_filters = sequence_filters
         self.__pvalue_filter = pvalue_filter
 
@@ -137,15 +136,12 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         """returns the name of this scoring function"""
         return "Motif"""
 
-    def default_interval(self,iteration):
-        """default function to define intervals for motifing"""
-        return True
-
-    def compute(self, iteration, ref_matrix=None):
+    def compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
-        if self.interval(iteration):
+        iteration = iteration_result['iteration']
+        if self.run_in_iteration(iteration):
             global_start_time = util.current_millis()
-            pvalues = self.compute_pvalues(iteration)
+            pvalues = self.compute_pvalues(iteration_result)
             remapped = {}
             for cluster in pvalues:
                 pvalues_k = pvalues[cluster]
@@ -157,7 +153,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             # convert remapped to an actual scoring matrix
             matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
                                    self.gene_names())
-            #row_indexes = matrix.row
             for row_index in xrange(matrix.num_rows()):
                 row = matrix.row_name(row_index)
                 for cluster in xrange(1, self.num_clusters() + 1):
@@ -171,7 +166,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         else:
             return None
 
-    def compute_pvalues(self, iteration):
+    def compute_pvalues(self, iteration_result):
         """Compute motif scores. In order to influence the sequences
         that go into meme, the user can specify a list of sequence filter
         functions that have the signature
@@ -207,17 +202,42 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                                              min_cluster_rows_allowed,
                                              max_cluster_rows_allowed))
 
+        # create motif result map if necessary
+        if not 'motifs' in iteration_result:
+            iteration_result['motifs'] = {}
+        for cluster in xrange(1, self.num_clusters() + 1):
+            if not cluster in iteration_result['motifs']:
+                iteration_result['motifs'][cluster] = { }
+            if not self.seqtype in iteration_result['motifs'][cluster]:
+                iteration_result['motifs'][cluster][self.seqtype] = { }
+
+        # compute and store motif results
         if use_multiprocessing:
             pool = mp.Pool()
+            print "COMPUTE MOTIF STUFF: # PARAMS: %d" % (len(params))
             results = pool.map(compute_cluster_score, params)
+
             for cluster in xrange(1, self.num_clusters() + 1):
-                cluster_pvalues[cluster] = results[cluster - 1]
+                pvalues, run_result = results[cluster - 1]
+                cluster_pvalues[cluster] = pvalues
+                iteration_result['motifs'][cluster][self.seqtype] = meme_json(run_result)
             pool.close()
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
-                cluster_pvalues[cluster] = compute_cluster_score(
-                    params[cluster - 1])
+                pvalues, run_result = compute_cluster_score(params[cluster - 1])
+                cluster_pvalues[cluster] = pvalues
+                iteration_result['motifs'][cluster][self.seqtype] = meme_json(run_result)
+
         return cluster_pvalues
+
+
+def meme_json(run_result):
+    result = []
+    if run_result != None:
+        for motif_info in run_result.motif_infos:
+            result.append({'motif_num': motif_info.motif_num(),
+                           'pssm': motif_info.pssm()})
+    return result
 
 
 class ComputeScoreParams:
@@ -238,6 +258,7 @@ class ComputeScoreParams:
 def compute_cluster_score(params):
     """This function computes the MEME score for a cluster"""
     pvalues = {}
+    run_result = None
     if (len(params.seqs) >= params.min_cluster_rows
         and len(params.seqs) <= params.max_cluster_rows):
         run_result = params.meme_runner(params.seqs, params.used_seqs)
@@ -246,15 +267,10 @@ def compute_cluster_score(params):
             pvalues[feature_id] = np.log(pvalue)
         if params.pvalue_filter != None:
             pvalues = params.pvalue_filter(pvalues)
-
-        for motif_info in run_result.motif_infos:
-            logging.info("consensus: %s, evalue: %f",
-                         motif_info.consensus_string(),
-                         motif_info.evalue())
     else:
         logging.info("# seqs (= %d) outside of defined limits, "
                      "skipping cluster %d", len(params.seqs), params.cluster)
-    return pvalues
+    return pvalues, run_result
 
 
 class MemeScoringFunction(MotifScoringFunctionBase):
@@ -266,13 +282,13 @@ class MemeScoringFunction(MotifScoringFunctionBase):
                  sequence_filters=[],
                  pvalue_filter=None,
                  weight_func=None,
-                 interval=None,
+                 run_in_iteration=scoring.default_motif_iterations,
                  config_params=None):
         """creates a ScoringFunction"""
         MotifScoringFunctionBase.__init__(self, organism, membership,
                                           matrix, meme_suite, seqtype,
                                           sequence_filters, pvalue_filter,
-                                          weight_func, interval,
+                                          weight_func, run_in_iteration,
                                           config_params)
 
     def name(self):
@@ -290,13 +306,14 @@ class WeederScoringFunction(MotifScoringFunctionBase):
     def __init__(self, organism, membership, matrix,
                  meme_suite, seqtype,
                  sequence_filters=[], pvalue_filter=None,
-                 weight_func=None, interval=None,
+                 weight_func=None,
+                 run_in_iteration=scoring.default_motif_iterations,
                  config_params=None):
         """creates a scoring function"""
         MotifScoringFunctionBase.__init__(self, organism, membership, matrix,
                                           meme_suite, seqtype,
                                           sequence_filters, pvalue_filter,
-                                          weight_func, interval, config_params)
+                                          weight_func, run_in_iteration, config_params)
 
     def name(self):
         """returns the name of this scoring function"""
@@ -308,7 +325,11 @@ class WeederScoringFunction(MotifScoringFunctionBase):
 
 
 class WeederRunner:
-    """Wrapper around Weeder so we can use the multiprocessing module"""
+    """Wrapper around Weeder so we can use the multiprocessing module.
+    The function basically runs Weeder ont the specified set of sequences,
+    converts its output to a MEME output file and runs MAST on the MEME output
+    to generate a MEME run result.
+    """
 
     def __init__(self, meme_suite):
         """create a runner object"""
@@ -329,12 +350,24 @@ class WeederRunner:
              for feature_id, locseq in all_seqs.items()])
         logging.info("# PSSMS created: %d", len(pssms))
         logging.info("run MAST on '%s'", meme_outfile)
+
+        motif_infos = []
+        for i in xrange(len(pssms)):
+            pssm = pssms[i]
+            motif_infos.append(meme.MemeMotifInfo(pssm.values(), i + 1,
+                                                  pssm.sequence_length(),
+                                                  len(pssm.sites()),
+                                                  None, pssm.evalue(),
+                                                  pssm.sites()))
+
         try:
             mast_out = self.meme_suite.mast(
                 meme_outfile, dbfile,
                 self.meme_suite.global_background_file())
             pe_values, annotations = meme.read_mast_output(mast_out,
                                                            seqs.keys())
-            return meme.MemeRunResult(pe_values, annotations, [])
+            return meme.MemeRunResult(pe_values, annotations, motif_infos)
         except:
             return meme.MemeRunResult([], {}, [])
+
+

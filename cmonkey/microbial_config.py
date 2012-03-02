@@ -115,14 +115,14 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
             weight_func=lambda iteration: 0.0,
-            interval=motif_score_interval,
+            run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
 
         network_scoring = nw.ScoringFunction(self.organism(),
                                              self.membership(),
                                              self.matrix(),
                                              lambda iteration: 0.0,
-                                             NETWORK_SCORE_INTERVAL,
+                                             scoring.default_network_iterations,
                                              config_params=self.config_params)
 
         return scoring.ScoringFunctionCombiner(self.membership(),

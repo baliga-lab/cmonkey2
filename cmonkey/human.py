@@ -220,13 +220,14 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
             weight_func=lambda iteration: 0.0,
-            interval=10,
+            run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
 
         network_scoring = nw.ScoringFunction(self.organism(),
                                              self.membership(),
                                              self.matrix(),
-                                             lambda iteration: 0.0, 7,
+                                             lambda iteration: 0.0,
+                                             scoring.default_network_iterations,
                                              config_params=self.config_params)
 
         weeder_scoring = motif.WeederScoringFunction(
@@ -234,7 +235,7 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             meme_suite_p3utr, 'p3utr',
             pvalue_filter=motif.MinPValueFilter(-20.0),
             weight_func=lambda iteration: 0.0,
-            interval=10,
+            run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
 
         pita = se.SetType.read_csv('pita', 'human_data/pita_miRNA_sets.csv')

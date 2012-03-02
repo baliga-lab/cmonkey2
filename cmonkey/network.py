@@ -155,23 +155,23 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     """Network scoring function"""
 
     def __init__(self, organism, membership, matrix, weight_func=None,
-                 interval=0, config_params=None):
+                 run_in_iteration=scoring.default_network_iterations,
+                 config_params=None):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
                                              matrix, weight_func,
                                              config_params)
         self.__organism = organism
-        self.__interval = interval
+        self.__run_in_iteration = run_in_iteration
 
     def name(self):
         """returns the name of this function"""
         return "Network"
 
-    def compute(self, iteration, ref_matrix=None):
+    def compute(self, iteration_result, ref_matrix=None):
         """compute method"""
-
-        if (self.__interval == 0 or
-            (iteration > 0 and (iteration % self.__interval == 0))):
+        iteration = iteration_result['iteration']
+        if self.__run_in_iteration(iteration):
             return self.__compute()
         else:
             return None

@@ -122,25 +122,32 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
             weight_func=lambda iteration: 0.0,
-            interval=10,
+            run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
-
-        network_scoring = nw.ScoringFunction(self.organism(),
-                                             self.membership(),
-                                             self.matrix(),
-                                             lambda iteration: 0.0, 7,
-                                             config_params=self.config_params)
 
         weeder_scoring = motif.WeederScoringFunction(
             self.organism(), self.membership(), self.matrix(),
             meme_suite_p3utr, 'p3utr',
             pvalue_filter=motif.MinPValueFilter(-20.0),
             weight_func=lambda iteration: 0.0,
-            interval=10,
+            run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
 
+        motif_combiner = scoring.ScoringFunctionCombiner(
+            self.membership(), [motif_scoring, weeder_scoring],
+            weight_func=lambda iteration: 0.5)
+
+        network_scoring = nw.ScoringFunction(self.organism(),
+                                             self.membership(),
+                                             self.matrix(),
+                                             lambda iteration: 0.0,
+                                             scoring.default_network_iterations,
+                                             config_params=self.config_params)
+
         return scoring.ScoringFunctionCombiner(
-            self.membership(), [row_scoring, network_scoring, motif_scoring, weeder_scoring])
+            self.membership(), [row_scoring, network_scoring, motif_combiner])
+        #return scoring.ScoringFunctionCombiner(
+        #    self.membership(), [row_scoring, motif_combiner])
 
 
 if __name__ == '__main__':
