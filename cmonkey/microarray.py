@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """microarray.py - cMonkey microarray related processing
 This module captures the microarray-specific scoring component
 of cMonkey.

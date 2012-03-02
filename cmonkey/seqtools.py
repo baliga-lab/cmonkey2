@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """seqtools.py - utilities to operate on genomic sequences
 
 This file is part of cMonkey Python. Please see README and LICENSE for
@@ -5,6 +6,8 @@ more information and licensing details.
 """
 import re
 import random
+import string
+from util import DelimitedFile
 
 
 class Location:  # pylint: disable-msg=R0903
@@ -56,6 +59,32 @@ class Feature:  # pylint: disable-msg=R0902
         return ("%s[%s] - %s, %s" %
                 (self.__feature_id, self.__feature_type,
                  self.__name, repr(self.__location)))
+
+
+def read_feature(line):
+    """Creates and adds a feature and associated contig from current
+    DelimitedFile line"""
+    contig = line[3]
+    is_reverse = False
+    if line[6] == 'R':
+        is_reverse = True
+
+    # note that feature positions can sometimes start with a '>'
+    # or '<', so make sure it is stripped away
+    return Feature(line[0], line[1], line[2],
+                   Location(contig,
+                            int(string.lstrip(line[4], '<>')),
+                            int(string.lstrip(line[5], '<>')),
+                            is_reverse))
+
+
+def read_features_from_file(filename):
+    """Returns a list containing the features"""
+    features = {}
+    dfile = DelimitedFile.read(filename, comment='--')
+    for line in dfile.lines():
+        features[ line[0] ] = read_feature(line)
+    return features
 
 
 def extract_upstream(source, location, distance):
@@ -197,7 +226,8 @@ def write_sequences_to_fasta_file(outputfile, seqs):
         outputfile.write('>%s\n' % seq[0])
         outputfile.write('%s\n' % seq[1])
 
+
 __all__ = ['subsequence', 'extract_upstream', 'markov_background',
            'read_sequences_from_fasta_string',
            'read_sequences_from_fasta_file',
-           'write_sequences_to_fasta_file', 'Feature']
+           'write_sequences_to_fasta_file', 'Feature', 'read_features_from_file']

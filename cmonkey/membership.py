@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """membership.py - cMonkey cluster membership functionality
 This module captures the microarray-specific scoring component
 of cMonkey.

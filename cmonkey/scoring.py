@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """scoring.py - cMonkey scoring base classes
 
 This file is part of cMonkey Python. Please see README and LICENSE for
@@ -22,7 +23,6 @@ KEY_SEQUENCE_TYPES = 'sequence_types'
 KEY_SEARCH_DISTANCES = 'search_distances'
 KEY_SCAN_DISTANCES = 'scan_distances'
 KEY_MULTIPROCESSING = 'multiprocessing'
-KEY_RUN_AT_ITERATIONS = 'run_at_iterations'
 
 KEY_MOTIF_MIN_CLUSTER_ROWS_ALLOWED = 'motif.min_cluster_rows_allowed'
 KEY_MOTIF_MAX_CLUSTER_ROWS_ALLOWED = 'motif.max_cluster_rows_allowed'
@@ -95,11 +95,6 @@ class ScoringFunctionBase:
     def restore_checkpoint_data(self, shelf):
         """Default implementation does not store checkpoint data"""
         pass
-
-    def run_this_iteration(self, iteration):
-        if self.config_params.has_key['runiters']:
-            if iteration in self.config_params['runiters']: return True
-        return False
 
 class ColumnScoringFunction(ScoringFunctionBase):
     """Scoring algorithm for microarray data based on conditions.
@@ -482,9 +477,4 @@ class ConfigurationBuilder:
     def with_max_cluster_rows(self, num_rows):
         """define whether to use multiprocessing"""
         self.params[KEY_MOTIF_MAX_CLUSTER_ROWS_ALLOWED] = num_rows
-        return self
-
-    def with_run_at_iterations(self, iterations):
-        """define which iterations during which to run"""
-        self.params[KEY_RUN_AT_ITERATIONS] = iterations
         return self

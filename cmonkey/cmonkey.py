@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """cmonkey.py - cMonkey top-level module
 
 This file is part of cMonkey Python. Please see README and LICENSE for
@@ -6,6 +7,7 @@ more information and licensing details.
 import sys
 import logging
 import microbial_config as microbe
+import tps_config as tps
 import human
 
 CMONKEY_VERSION = '4.0'
@@ -50,6 +52,10 @@ if __name__ == '__main__':
         if sys.argv[1] == 'hsa':
             run_cmonkey(human.CMonkeyConfiguration.create(
                     sys.argv[2], checkpoint_file=CHECKPOINT_FILE))
+        elif sys.argv[1] == 'tps':
+            run_cmonkey(tps.CMonkeyConfiguration.create(
+                    sys.argv[1], sys.argv[2],
+                    checkpoint_file=CHECKPOINT_FILE))
         else:
             run_cmonkey(microbe.CMonkeyConfiguration.create(
                     sys.argv[1], sys.argv[2],

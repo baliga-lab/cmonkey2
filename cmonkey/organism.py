@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """organism.py - organism-specific functionality in cMonkey
 This module captures a microbial organism that receives data
 from Microbes Online and RSAT

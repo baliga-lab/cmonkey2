@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """motif.py - cMonkey motif related processing
 This module captures the motif-specific scoring component
 of cMonkey.
@@ -16,8 +17,6 @@ import tempfile
 import seqtools as st
 import util
 
-def always_run(iteration):
-  return True
 
 # Applicable sequence filters
 def unique_filter(seqs, feature_ids):
@@ -84,8 +83,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                  sequence_filters=[],
                  pvalue_filter=None,
                  weight_func=None,
-#                 interval=0,
-                 run_this_iteration=always_run,
+                 interval=None,
                  config_params=None):
         """creates a ScoringFunction"""
         scoring.ScoringFunctionBase.__init__(self, membership,
@@ -95,8 +93,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.organism = organism
         self.meme_suite = meme_suite
         self.seqtype = seqtype
-#        self.interval = interval
-        self.run_this_iteration = run_this_iteration
+        if interval: self.interval = interval
+        else: self.interval = self.default_interval
         self.__sequence_filters = sequence_filters
         self.__pvalue_filter = pvalue_filter
 
@@ -139,11 +137,13 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         """returns the name of this scoring function"""
         return "Motif"""
 
+    def default_interval(self,iteration):
+        """default function to define intervals for motifing"""
+        return True
+
     def compute(self, iteration, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
-#        if (self.interval == 0 or
-#            (iteration > 0 and (iteration % self.interval == 0))):
-        if self.run_this_iteration(iteration):
+        if self.interval(iteration):
             global_start_time = util.current_millis()
             pvalues = self.compute_pvalues(iteration)
             remapped = {}
@@ -266,15 +266,13 @@ class MemeScoringFunction(MotifScoringFunctionBase):
                  sequence_filters=[],
                  pvalue_filter=None,
                  weight_func=None,
-#                 interval=0,
-                 run_this_iteration=always_run,
+                 interval=None,
                  config_params=None):
         """creates a ScoringFunction"""
         MotifScoringFunctionBase.__init__(self, organism, membership,
                                           matrix, meme_suite, seqtype,
                                           sequence_filters, pvalue_filter,
-#                                          Weight_func, interval,
-                                          weight_func, run_this_iteration,
+                                          weight_func, interval,
                                           config_params)
 
     def name(self):
@@ -292,7 +290,7 @@ class WeederScoringFunction(MotifScoringFunctionBase):
     def __init__(self, organism, membership, matrix,
                  meme_suite, seqtype,
                  sequence_filters=[], pvalue_filter=None,
-                 weight_func=None, interval=0,
+                 weight_func=None, interval=None,
                  config_params=None):
         """creates a scoring function"""
         MotifScoringFunctionBase.__init__(self, organism, membership, matrix,

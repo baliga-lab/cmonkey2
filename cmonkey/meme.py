@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """meme.py - cMonkey meme suite integration
 These are functions and classes to conveniently call the needed
 commands of the MEME suite in order to find motifs

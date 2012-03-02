@@ -1,0 +1,30 @@
+-- dump date   	2012
+-- class       	Genbank::Feature
+-- table       	feature
+-- table       	main
+-- field 1	id
+-- field 2	type
+-- field 3	name
+-- field 4	contig
+-- field 5	start_pos
+-- field 6	end_pos
+-- field 7	strand
+-- field 8	description
+-- field 9	chrom_position
+-- field 10	organism
+-- field 11	GeneID
+-- header
+-- id	type	name	contig	start_pos	end_pos	strand	description	chrom_position	organism	GeneID
+3671129	CDS	ThpsMt01	mitochondrion	10178	10252	D	[trnM(cau)] 	10178..10252	Thalassiosira psuedonana	3671129
+3671130	CDS	ThpsMt02	mitochondrion	10340	10413	D	[trnI(gau)] 	10340..10413	Thalassiosira psuedonana	3671130
+3671131	CDS	ThpsMp04	mitochondrion	10630	11400	D	[atp6] ATPase subunit 6	10630..11400	Thalassiosira psuedonana	3671131
+3671132	CDS	ThpsMt03	mitochondrion	11421	11495	D	[trnH(gug)] 	11421..11495	Thalassiosira psuedonana	3671132
+3671133	CDS	ThpsMt04	mitochondrion	18664	18736	D	[trnV(uac)] 	18664..18736	Thalassiosira psuedonana	3671133
+3671134	CDS	ThpsMp05	mitochondrion	16112	16717	D	[nad6] NADH dehydrogenase subunit 6	16112..16717	Thalassiosira psuedonana	3671134
+3671135	CDS	ThpsMp06	mitochondrion	16833	17594	D	[cox2] cytochrome oxidase subunit II	16833..17594	Thalassiosira psuedonana	3671135
+3671136	CDS	ThpsMp07	mitochondrion	17780	18601	D	[cox3] cytochrome oxidase subunit III	17780..18601	Thalassiosira psuedonana	3671136
+3671137	CDS	ThpsMt05	mitochondrion	18823	18895	D	[trnW(uca)] 	18823..18895	Thalassiosira psuedonana	3671137
+3671138	CDS	ThpsMt06	mitochondrion	20585	20658	D	[trnC(gca)] 	20585..20658	Thalassiosira psuedonana	3671138
+3671139	CDS	ThpsMp08	mitochondrion	19016	20557	D	[nad2] NADH dehydrogenase subunit 2	19016..20557	Thalassiosira psuedonana	3671139
+3671140	CDS	ThpsMt07	mitochondrion	20668	20741	D	[trnR(ucu)] 	20668..20741	Thalassiosira psuedonana	3671140
+3671141	CDS	ThpsMt08	mitochondrion	23404	23476	D	[trnF(gaa)] 	23404..23476	Thalassiosira psuedonana	3671141
