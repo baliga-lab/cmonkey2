@@ -21,8 +21,7 @@ import membership as memb
 CACHE_DIR = 'cache'
 STRING_LINKS = 'tps/string_links.tps.tab'
 ROW_WEIGHT = 6.0
-#NUM_ITERATIONS = 2000
-NUM_ITERATIONS = 200
+NUM_ITERATIONS = 2000
 NETWORK_SCORE_INTERVAL = 7
 MOTIF_SCORE_INTERVAL = 10
 NUM_CLUSTERS = 43
@@ -31,15 +30,25 @@ MAX_CLUSTER_ROWS = 110
 """these are the default meme iterations ("meme.iters") in the R version"""
 #MEME_ITERS = range( 600, 1200, 100 ) + \
 #debug
-MEME_ITERS = [10] + range( 600, 1200, 100 ) + \
+MEME_ITERS = range( 600, 1200, 100 ) + \
              range( 1250, 1500, 50 ) + \
              range( 1525, 1800, 25 ) + \
              range( 1810, max( NUM_ITERATIONS, 1820 ) + 10 )
 
-def motif_score_interval(iteration):
+debug = False
+debug = True
+if debug:
+    NUM_ITERATIONS = 200
+    MEME_ITERS = [100,200]
+    NETWORK_SCORE_INTERVAL = 50
+
+def meme_iterations(iteration):
     return iteration in MEME_ITERS
 
-THESAURUS_FILE = 'tps/tps.synonymThesaurus.csv.gz' # TO DO?
+def network_iterations(iteration):
+    return iteration > 0 and iteration % NETWORK_SCORE_INTERVAL == 0
+
+THESAURUS_FILE = 'tps/tps.synonyms'
 PROM_SEQFILE = 'tps/tps.upstream.-350.50.csv'
 SEQ_FILENAMES = {'upstream': PROM_SEQFILE}
 SEQUENCE_TYPES = ['upstream']
@@ -110,7 +119,7 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
         meme_suite = meme.MemeSuite430()
         sequence_filters = [
             motif.unique_filter,
-            motif.get_remove_low_complexity_filter(meme_suite),
+#            motif.get_remove_low_complexity_filter(meme_suite),
             motif.get_remove_atgs_filter(SEARCH_DISTANCES['upstream'])]
 
         motif_scoring = motif.MemeScoringFunction(
@@ -121,13 +130,13 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
             weight_func=lambda iteration: 0.0,
-            run_in_iteration=motif_score_interval,
+            run_in_iteration=meme_iterations,
             config_params=self.config_params)
 
         network_scoring = nw.ScoringFunction(self.organism(),
                                              self.membership(),
                                              self.matrix(),
-                                             lambda iteration: 0.0,
+                                             network_iterations,
                                              scoring.default_network_iterations,
                                              config_params=self.config_params)
 

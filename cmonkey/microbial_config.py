@@ -37,12 +37,12 @@ SEARCH_DISTANCES = {'upstream': (-20, 150)}
 SCAN_DISTANCES = {'upstream': (-30, 250)}
 
 """these are the default meme iterations ("meme.iters") in the R version"""
-MEME_ITERS = range( 600, 1200, 100 ) + \
+MEME_ITERS = [2] + range( 600, 1200, 100 ) + \
              range( 1250, 1500, 50 ) + \
              range( 1525, 1800, 25 ) + \
              range( 1810, max( NUM_ITERATIONS, 1820 ) + 10 )
 
-def motif_score_interval(iteration):
+def meme_iterations(iteration):
     return iteration in MEME_ITERS
 
 class CMonkeyConfiguration(scoring.ConfigurationBase):
@@ -115,7 +115,8 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
             weight_func=lambda iteration: 0.0,
-            run_in_iteration=scoring.default_motif_iterations,
+#            run_in_iteration=scoring.default_motif_iterations,
+            run_in_iteration=meme_iterations,
             config_params=self.config_params)
 
         network_scoring = nw.ScoringFunction(self.organism(),

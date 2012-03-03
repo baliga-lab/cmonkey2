@@ -369,10 +369,13 @@ class GenericOrganism(OrganismBase):
     def __sequences_for_genes(self, seqtype, gene_aliases, distance):
         """retrieves the specified sequences from the supplied genomic data"""
         if not seqtype in self.__seqs:
+            logging.info('loading %s sequences' %seqtype)
             dfile = util.DelimitedFile.read(self.__seq_filenames[seqtype], sep=',')
             self.__seqs[seqtype] = {}
             for line in dfile.lines():
-                self.__seqs[seqtype][line[0].upper()] = line[1]
+                self.__seqs[seqtype][line[0].upper()] = line[1].upper()
+            logging.info('loaded %i %s sequences' \
+                          %( len(self.__seqs[seqtype]), seqtype))
         result = {}
         for alias in gene_aliases:
             if alias in self.thesaurus():

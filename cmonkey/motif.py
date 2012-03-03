@@ -259,8 +259,10 @@ def compute_cluster_score(params):
     """This function computes the MEME score for a cluster"""
     pvalues = {}
     run_result = None
-    if (len(params.seqs) >= params.min_cluster_rows
-        and len(params.seqs) <= params.max_cluster_rows):
+    nseqs = len(params.seqs)
+    logging.info('computing cluster score for %s seqs...' %nseqs)
+    if (nseqs >= params.min_cluster_rows
+        and nseqs <= params.max_cluster_rows):
         run_result = params.meme_runner(params.seqs, params.used_seqs)
         pe_values = run_result.pe_values
         for feature_id, pvalue, evalue in pe_values:
