@@ -10,6 +10,7 @@ import microbial_config as microbe
 import tps_config as tps
 import human
 import json
+import os
 
 CMONKEY_VERSION = '4.0'
 #CHECKPOINT_INTERVAL = 3
@@ -40,8 +41,9 @@ def run_cmonkey(config):
             iteration_result['columns'][cluster] = config.membership().columns_for_cluster(cluster)
             iteration_result['rows'][cluster] = config.membership().rows_for_cluster(cluster)
 
-#        with open('out/%d-results.json' % iteration, 'w') as outfile:
-#            outfile.write(json.dumps(iteration_result))
+        if not os.path.exists('out'): os.mkdir('out')
+        with open('out/%d-results.json' % iteration, 'w') as outfile:
+            outfile.write(json.dumps(iteration_result))
     print "Done !!!!"
     print "cluster\t# rows"
     for cluster in range(1, config.membership().num_clusters() + 1):
