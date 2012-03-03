@@ -25,8 +25,6 @@ COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
 ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 2000
-NETWORK_SCORE_INTERVAL = 7
-#MOTIF_SCORE_INTERVAL = 10
 NUM_CLUSTERS = 43
 MAX_CLUSTER_ROWS = 110
 
@@ -37,7 +35,7 @@ SEARCH_DISTANCES = {'upstream': (-20, 150)}
 SCAN_DISTANCES = {'upstream': (-30, 250)}
 
 """these are the default meme iterations ("meme.iters") in the R version"""
-MEME_ITERS = [2] + range( 600, 1200, 100 ) + \
+MEME_ITERS = range( 600, 1200, 100 ) + \
              range( 1250, 1500, 50 ) + \
              range( 1525, 1800, 25 ) + \
              range( 1810, max( NUM_ITERATIONS, 1820 ) + 10 )
