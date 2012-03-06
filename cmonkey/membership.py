@@ -307,6 +307,10 @@ class ClusterMembership:
                                                        iteration,
                                                        num_iterations)
 
+        rpc = map(len, self.__cluster_row_members.values())
+        logging.info('Rows per cluster: %i to %i (median %d)' \
+          %( min(rpc), max(rpc), np.median(rpc) ) )
+
         start = util.current_millis()
         logging.info("GET_DENSITY_SCORES()...")
         rd_scores, cd_scores = get_density_scores(self, row_scores,
