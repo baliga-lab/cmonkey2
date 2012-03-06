@@ -10,7 +10,7 @@ import human
 import json
 
 CMONKEY_VERSION = '4.0'
-CHECKPOINT_INTERVAL = 3
+CHECKPOINT_INTERVAL = 100
 CHECKPOINT_FILE = None
 
 
@@ -27,8 +27,8 @@ def run_cmonkey(config):
                                    gene_scoring.compute(iteration_result),
                                    cond_scoring.compute(iteration_result),
                                    iteration, config.num_iterations())
-        if iteration > 0 and  iteration % CHECKPOINT_INTERVAL == 0:
-            config.save_checkpoint_data(iteration)
+        #if iteration > 0 and  iteration % CHECKPOINT_INTERVAL == 0:
+        #    config.save_checkpoint_data(iteration)
 
         # Write a snapshot
         iteration_result['columns'] = {}
