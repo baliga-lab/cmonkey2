@@ -27,7 +27,8 @@ MOTIF_SCORE_INTERVAL = 10
 #NUM_CLUSTERS = 43
 NUM_CLUSTERS = 250
 #MAX_CLUSTER_ROWS = 110
-MAX_CLUSTER_ROWS = 80
+#MAX_CLUSTER_ROWS = 80
+MAX_CLUSTER_ROWS = 100
 
 """these are the default meme iterations ("meme.iters") in the R version"""
 MEME_ITERS = range( 600, 1200, 100 ) + \
@@ -35,12 +36,16 @@ MEME_ITERS = range( 600, 1200, 100 ) + \
              range( 1525, 1800, 25 ) + \
              range( 1810, max( NUM_ITERATIONS, 1820 ) + 10 )
 
-debug = False
-#debug = True
-if debug:
+mode = 'normal'
+#mode = 'debug'
+#mode = 'short'
+if mode == 'debug':
     NUM_ITERATIONS = 200
-    MEME_ITERS = [100,200]
-    NETWORK_SCORE_INTERVAL = 50
+    MEME_ITERS = [2,100,200]
+    NETWORK_SCORE_INTERVAL = 5
+if mode == 'short':
+    NUM_ITERATIONS = 500
+    MEME_ITERS = [100] + range(200,500,50)
 
 def meme_iterations(iteration):
     return iteration in MEME_ITERS
