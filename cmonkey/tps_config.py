@@ -23,13 +23,14 @@ STRING_LINKS = 'tps/string_links.tps.tab'
 ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 2000
 NETWORK_SCORE_INTERVAL = 7
+MOTIF_SCORE_INTERVAL = 10
 #NUM_CLUSTERS = 43
 NUM_CLUSTERS = 250
-MAX_CLUSTER_ROWS = 110
+#MAX_CLUSTER_ROWS = 110
+#MAX_CLUSTER_ROWS = 80
+MAX_CLUSTER_ROWS = 100
 
 """these are the default meme iterations ("meme.iters") in the R version"""
-#MEME_ITERS = range( 600, 1200, 100 ) + \
-#debug
 MEME_ITERS = range( 600, 1200, 100 ) + \
              range( 1250, 1500, 50 ) + \
              range( 1525, 1800, 25 ) + \
@@ -52,7 +53,7 @@ def meme_iterations(iteration):
 def network_iterations(iteration):
     return iteration > 0 and iteration % NETWORK_SCORE_INTERVAL == 0
 
-THESAURUS_FILE = 'tps/tps.synonyms'
+THESAURUS_FILE = 'tps/tps.synonyms.gz'
 PROM_SEQFILE = 'tps/tps.upstream.-350.50.csv'
 SEQ_FILENAMES = {'upstream': PROM_SEQFILE}
 SEQUENCE_TYPES = ['upstream']
