@@ -13,10 +13,12 @@ Testing
 * Developed and tested with Python 2.7.2
 * scipy >= 0.9.0
 * numpy >= 1.6.0
+* MySQLdb >= 1.2.3
 * BeautifulSoup >= 3.2.0
+* R >= 2.14.1
 * rpy2 >= 2.2.1
 * MEME 4.3.0
-
+* csh (for running MEME)
 for the human setup, Weeder 1.4.2 is needed
 
 ### Running the Unit Tests
