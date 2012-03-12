@@ -3,6 +3,8 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
+import os
+import os.path
 import sys
 import logging
 import microbial_config as microbe
@@ -18,6 +20,9 @@ def run_cmonkey(config):
     """init of the cMonkey system"""
     gene_scoring = config.row_scoring()
     cond_scoring = config.column_scoring()
+    output_dir   = config.output_directory()
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
 
     for iteration in range(config.start_iteration(),
                            config.num_iterations()):
@@ -37,7 +42,7 @@ def run_cmonkey(config):
             iteration_result['columns'][cluster] = config.membership().columns_for_cluster(cluster)
             iteration_result['rows'][cluster] = config.membership().rows_for_cluster(cluster)
 
-        with open('out/%d-results.json' % iteration, 'w') as outfile:
+        with open('%s/%d-results.json' % (output_dir, iteration), 'w') as outfile:
             outfile.write(json.dumps(iteration_result))
     print "Done !!!!"
     print "cluster\t# rows"

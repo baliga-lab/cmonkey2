@@ -22,6 +22,7 @@ KEY_SEQUENCE_TYPES = 'sequence_types'
 KEY_SEARCH_DISTANCES = 'search_distances'
 KEY_SCAN_DISTANCES = 'scan_distances'
 KEY_MULTIPROCESSING = 'multiprocessing'
+KEY_OUTPUT_DIR = 'output_dir'
 
 KEY_MOTIF_MIN_CLUSTER_ROWS_ALLOWED = 'motif.min_cluster_rows_allowed'
 KEY_MOTIF_MAX_CLUSTER_ROWS_ALLOWED = 'motif.max_cluster_rows_allowed'
@@ -323,6 +324,10 @@ class ConfigurationBase:
         """returns the organism code"""
         return self.config_params[KEY_ORGANISM_CODE]
 
+    def output_directory(self):
+        """returns the output directory"""
+        return self.config_params[KEY_OUTPUT_DIR]
+
     def start_iteration(self):
         """returns the start iteration, if restored from a check point,
         this is the iteration after the save point"""
@@ -431,6 +436,7 @@ class ConfigurationBuilder:
             memb.KEY_MIN_CLUSTER_ROWS_ALLOWED: memb.MIN_CLUSTER_ROWS_ALLOWED,
             KEY_MOTIF_MIN_CLUSTER_ROWS_ALLOWED: MOTIF_MIN_CLUSTER_ROWS_ALLOWED,
             KEY_MOTIF_MAX_CLUSTER_ROWS_ALLOWED: MOTIF_MAX_CLUSTER_ROWS_ALLOWED,
+            KEY_OUTPUT_DIR: 'out',
             KEY_MULTIPROCESSING: USE_MULTIPROCESSING
             }
 
