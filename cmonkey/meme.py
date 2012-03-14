@@ -177,9 +177,11 @@ class MemeSuite430(MemeSuite):
     def mast(self, meme_outfile_path, database_file_path,
              bgfile_path):
         """runs the mast command"""
+        # note: originally run with -ev 99999, but MAST will crash with
+        # memory errors
         command = ['mast', meme_outfile_path, '-d', database_file_path,
                    '-bfile', bgfile_path, '-nostatus', '-stdout', '-text',
-                   '-brief', '-ev', '99999', '-mev', '99999', '-mt', '0.99',
+                   '-brief', '-ev', '1500', '-mev', '99999', '-mt', '0.99',
                    '-seqp', '-remcorr']
         output = subprocess.check_output(command)
         return output
