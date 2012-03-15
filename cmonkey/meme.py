@@ -122,6 +122,27 @@ class MemeSuite:
             return MemeRunResult(pe_values, annotations, motif_infos)
         except:
             return MemeRunResult([], {}, [])
+        finally:
+            logging.info("DELETING ALL TMP FILES...")
+            try:
+                os.remove(seqfile)
+            except:
+                logging.warn("could not remove tmp file: '%s'", seqfile)
+            try:
+                os.remove(meme_outfile)
+            except:
+                logging.warn("could not remove tmp file: '%s'", meme_outfile)
+            try:
+                os.remove(dbfile)
+            except:
+                logging.warn("could not remove tmp file: '%s'", dbfile)
+
+            if self.__background_file == None:
+                try:
+                    os.remove(bgfile)
+                except:
+                    logging.warn("could not remove tmp file: '%s'", bgfile)
+
 
     def make_sequence_file(self, seqs):
         """Creates a FASTA file from a list of(feature_id, sequence)
