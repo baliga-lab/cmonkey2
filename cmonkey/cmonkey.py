@@ -53,7 +53,7 @@ def run_cmonkey(config):
 
 
 if __name__ == '__main__':
-    print('cMonkey (Python port) (c) 2011, Institute for Systems Biology')
+    print('cMonkey (Python port) (c) 2011-2012, Institute for Systems Biology')
     print('This program is licensed under the General Public License V3.')
     print('See README and LICENSE for details.\n')
     if len(sys.argv) <= 2:
