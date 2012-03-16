@@ -358,10 +358,10 @@ class ClusterMembership:
         col_rnorm = util.sd_rnorm(col_sd_values, num_col_fuzzy_values,
                                   fuzzy_coeff)
 
-        elapsed = util.current_millis() - start_time
-        logging.info("fuzzify() SETUP finished in %f s.", elapsed / 1000.0)
-        logging.info("fuzzifying scores...")
-        start_time = util.current_millis()
+        #elapsed = util.current_millis() - start_time
+        #logging.info("fuzzify() SETUP finished in %f s.", elapsed / 1000.0)
+        #logging.info("fuzzifying scores...")
+        #start_time = util.current_millis()
 
         # add fuzzy values to the row/column scores
         row_score_values += np.array(row_rnorm).reshape(
@@ -452,7 +452,7 @@ class ClusterMembership:
             return [cluster for cluster in clusters
                     if cluster not in self.clusters_for_column(row_name)]
 
-        start_time = util.current_millis()
+        #start_time = util.current_millis()
         update_for(rd_scores,
                    self.num_clusters_per_row(),
                    self.__probability_seeing_row_change(),
@@ -462,10 +462,10 @@ class ClusterMembership:
                                          if cluster not in
                                          self.clusters_for_row(row)],
                    add_cluster_to_row)
-        elapsed = util.current_millis() - start_time
-        logging.info("update_for rdscores finished in %f s.", elapsed / 1000.0)
+        #elapsed = util.current_millis() - start_time
+        #logging.info("update_for rdscores finished in %f s.", elapsed / 1000.0)
 
-        start_time = util.current_millis()
+        #start_time = util.current_millis()
         update_for(cd_scores,
                    self.num_clusters_per_column(),
                    self.__probability_seeing_col_change(),
@@ -475,8 +475,8 @@ class ClusterMembership:
                                           if cluster not in
                                           self.clusters_for_column(col)],
                    add_cluster_to_col)
-        elapsed = util.current_millis() - start_time
-        logging.info("update_for cdscores finished in %f s.", elapsed / 1000.0)
+        #elapsed = util.current_millis() - start_time
+        #logging.info("update_for cdscores finished in %f s.", elapsed / 1000.0)
 
     def store_checkpoint_data(self, shelf):
         """Save memberships into checkpoint"""
@@ -520,14 +520,14 @@ def get_density_scores(membership, row_scores, col_scores):
                               row_scores.row_names(),
                               row_scores.column_names())
 
-    start_time = util.current_millis()
+    #start_time = util.current_millis()
     for cluster in xrange(1, num_clusters + 1):
         rr_scores = __get_rr_scores(membership, row_scores, rowscore_bandwidth,
                                    cluster)
         for row in xrange(row_scores.num_rows()):
             rd_scores[row][cluster - 1] = rr_scores[row]
-    elapsed = util.current_millis() - start_time
-    logging.info("RR_SCORES IN %f s.", elapsed / 1000.0)
+    #elapsed = util.current_millis() - start_time
+    #logging.info("RR_SCORES IN %f s.", elapsed / 1000.0)
 
     cscore_range = abs(col_scores.max() - col_scores.min())
     colscore_bandwidth = max(cscore_range / 100.0, 0.001)
@@ -536,14 +536,14 @@ def get_density_scores(membership, row_scores, col_scores):
                               col_scores.row_names(),
                               col_scores.column_names())
 
-    start_time = util.current_millis()
+    #start_time = util.current_millis()
     for cluster in xrange(1, num_clusters + 1):
         cc_scores = __get_cc_scores(membership, col_scores, colscore_bandwidth,
                                    cluster)
         for row in xrange(col_scores.num_rows()):
             cd_scores[row][cluster - 1] = cc_scores[row]
-    elapsed = util.current_millis() - start_time
-    logging.info("CC_SCORES IN %f s.", elapsed / 1000.0)
+    #elapsed = util.current_millis() - start_time
+    #logging.info("CC_SCORES IN %f s.", elapsed / 1000.0)
 
     return (rd_scores, cd_scores)
 

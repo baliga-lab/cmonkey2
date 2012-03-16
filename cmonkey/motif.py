@@ -213,7 +213,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         # compute and store motif results
         if use_multiprocessing:
             pool = mp.Pool()
-            print "COMPUTE MOTIF STUFF: # PARAMS: %d" % (len(params))
             results = pool.map(compute_cluster_score, params)
 
             for cluster in xrange(1, self.num_clusters() + 1):
