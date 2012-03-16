@@ -7,7 +7,6 @@ import os
 import os.path
 import sys
 import logging
-import microbial_config as microbe
 import human
 import json
 import cmonkey_run

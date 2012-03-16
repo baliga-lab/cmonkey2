@@ -292,7 +292,10 @@ class ScoringFunctionCombiner:
 
 
 class ConfigurationBase:
-    """configuration base class"""
+    """configuration base class
+    Note: This class has been deprecated since it has been replaced with CMonkeyRun.
+    -----
+    """
 
     def __init__(self, config_params, checkpoint_file=None):
         """create instance"""
