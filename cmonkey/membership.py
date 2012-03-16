@@ -25,7 +25,7 @@ MAX_CHANGES_PER_ROW = 1
 MAX_CHANGES_PER_COL = 5
 MIN_CLUSTER_ROWS_ALLOWED = 3
 
-KEY_NUM_CLUSTERS = 'memb.num_clusters'
+KEY_NUM_CLUSTERS = 'num_clusters'
 KEY_CLUSTERS_PER_ROW = 'memb.clusters_per_row'
 KEY_CLUSTERS_PER_COL = 'memb.clusters_per_col'
 KEY_PROB_ROW_CHANGE = 'memb.prob_row_change'
@@ -33,6 +33,8 @@ KEY_PROB_COL_CHANGE = 'memb.prob_col_change'
 KEY_MAX_CHANGES_PER_ROW = 'memb.max_changes_per_row'
 KEY_MAX_CHANGES_PER_COL = 'memb.max_changes_per_col'
 KEY_MIN_CLUSTER_ROWS_ALLOWED = 'memb.min_cluster_rows_allowed'
+
+# These keys are for save points
 KEY_ROW_IS_MEMBER_OF = 'memb.row_is_member_of'
 KEY_COL_IS_MEMBER_OF = 'memb.col_is_member_of'
 

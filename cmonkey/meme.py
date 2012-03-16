@@ -128,7 +128,7 @@ class MemeSuite:
         except:
             return MemeRunResult([], {}, [])
         finally:
-            logging.info("DELETING ALL TMP FILES...")
+            #logging.info("DELETING ALL TMP FILES...")
             try:
                 os.remove(seqfile)
             except:
@@ -557,7 +557,7 @@ def make_background_file(bgseqs, use_revcomp):
     with tempfile.NamedTemporaryFile(prefix='memebg',
                                      delete=False) as outfile:
         filename = outfile.name
-        logging.info("make background file '%s'", filename)
+        #logging.info("make background file '%s'", filename)
         outfile.write("# %s order Markov background model\n" %
                       util.order2string(len(bgmodel) - 1))
         for order_row in bgmodel:
