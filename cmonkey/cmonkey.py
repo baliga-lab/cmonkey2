@@ -56,17 +56,17 @@ if __name__ == '__main__':
     print('cMonkey (Python port) (c) 2011-2012, Institute for Systems Biology')
     print('This program is licensed under the General Public License V3.')
     print('See README and LICENSE for details.\n')
-    if len(sys.argv) <= 2:
+    if len(sys.argv) <= 3:
         print('Usage: ./run_cmonkey.sh <organism-code> <ratio-file> ' +
-              '[checkpoint-file]')
+              '<string-file> [checkpoint-file]')
     else:
-        if len(sys.argv) > 3:
-            CHECKPOINT_FILE = sys.argv[3]
+        if len(sys.argv) > 4:
+            CHECKPOINT_FILE = sys.argv[4]
 
         if sys.argv[1] == 'hsa':
             run_cmonkey(human.CMonkeyConfiguration.create(
                     sys.argv[2], checkpoint_file=CHECKPOINT_FILE))
         else:
             run_cmonkey(microbe.CMonkeyConfiguration.create(
-                    sys.argv[1], sys.argv[2],
+                    sys.argv[1], sys.argv[2], sys.argv[3],
                     checkpoint_file=CHECKPOINT_FILE))

@@ -23,6 +23,7 @@ KEY_SEARCH_DISTANCES = 'search_distances'
 KEY_SCAN_DISTANCES = 'scan_distances'
 KEY_MULTIPROCESSING = 'multiprocessing'
 KEY_OUTPUT_DIR = 'output_dir'
+KEY_STRING_FILE = 'string_file'
 
 KEY_MOTIF_MIN_CLUSTER_ROWS_ALLOWED = 'motif.min_cluster_rows_allowed'
 KEY_MOTIF_MAX_CLUSTER_ROWS_ALLOWED = 'motif.max_cluster_rows_allowed'
@@ -493,4 +494,9 @@ class ConfigurationBuilder:
     def with_max_cluster_rows(self, num_rows):
         """define whether to use multiprocessing"""
         self.params[KEY_MOTIF_MAX_CLUSTER_ROWS_ALLOWED] = num_rows
+        return self
+
+    def with_string_file(self, filepath):
+        """defines the path to the organism-specific STRING file"""
+        self.params[KEY_STRING_FILE] = filepath
         return self

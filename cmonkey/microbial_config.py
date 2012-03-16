@@ -43,7 +43,7 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
                                            checkpoint_file)
 
     @classmethod
-    def create(cls, organism_code, matrix_filename,
+    def create(cls, organism_code, matrix_filename, string_filename=None,
                checkpoint_file=None):
         """Creates an initialized instance"""
         params = (scoring.ConfigurationBuilder().
@@ -57,6 +57,7 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
                   with_scan_distances(SCAN_DISTANCES).
                   with_num_clusters(NUM_CLUSTERS).
                   with_max_cluster_rows(MAX_CLUSTER_ROWS).
+                  with_string_file(string_filename).
                   build())
         return cls(params, checkpoint_file)
 
@@ -125,12 +126,17 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
         gofile = util.DelimitedFile.read(GO_FILE_PATH)
         rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
         mo_db = microbes_online.MicrobesOnline()
-        # note that for the moment, the STRING factory is hardwired to
-        # a preprocessed Halobacterium SP file
-        nw_factories = [
-            stringdb.get_network_factory2(stringdb.STRING_FILE2),
-            microbes_online.get_network_factory(
-                mo_db, max_operon_size=self.matrix().num_rows() / 20)]
+        stringfile = self.config_params[scoring.KEY_STRING_FILE]
+
+        nw_factories = []
+        if stringfile != None:
+            nw_factories.append(stringdb.get_network_factory2(stringfile))
+        else:
+            logging.warn("no STRING file specified !")
+
+        nw_factories.append(microbes_online.get_network_factory(
+                mo_db, max_operon_size=self.matrix().num_rows() / 20))
+
         org_factory = org.MicrobeFactory(org.make_kegg_code_mapper(keggfile),
                                          org.make_rsat_organism_mapper(rsatdb),
                                          org.make_go_taxonomy_mapper(gofile),
