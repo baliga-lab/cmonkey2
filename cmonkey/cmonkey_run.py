@@ -9,6 +9,7 @@ import microbes_online
 import organism as org
 import scoring
 import network as nw
+import stringdb
 import os
 from datetime import date
 import json
@@ -108,7 +109,7 @@ class CMonkeyRun:
             meme_suite,
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
-            weight_func=lambda iteration: 0.0,
+            weight_func=lambda iteration: 1.0,  # TODO
             run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
 

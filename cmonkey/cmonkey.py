@@ -10,6 +10,9 @@ import logging
 import microbial_config as microbe
 import human
 import json
+import cmonkey_run
+import datamatrix as dm
+import util
 
 CMONKEY_VERSION = '4.0'
 CHECKPOINT_INTERVAL = 100
@@ -67,6 +70,9 @@ if __name__ == '__main__':
             run_cmonkey(human.CMonkeyConfiguration.create(
                     sys.argv[2], checkpoint_file=CHECKPOINT_FILE))
         else:
-            run_cmonkey(microbe.CMonkeyConfiguration.create(
-                    sys.argv[1], sys.argv[2], sys.argv[3],
-                    checkpoint_file=CHECKPOINT_FILE))
+            matrix_factory = dm.DataMatrixFactory([dm.nochange_filter, dm.center_scale_filter])
+            infile = util.DelimitedFile.read(sys.argv[2], has_header=True, quote='\"')
+            matrix = matrix_factory.create_from(infile)
+            cmonkey_run = cmonkey_run.CMonkeyRun(sys.argv[1], matrix, 43)
+            cmonkey_run['string_file'] = sys.argv[3]
+            cmonkey_run.run()
