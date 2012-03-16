@@ -75,7 +75,12 @@ class MemeSuite:
         for feature_id, seq in seqs.items():
             if len(seq[1]) > self.__max_width:
                 seqs_for_dust[feature_id] = seq
-        return process_with_dust(seqs_for_dust)
+        # only non-empty-input gets into dust, dust can not
+        # handle empty input
+        if len(seqs_for_dust) > 0:
+            return process_with_dust(seqs_for_dust)
+        else:
+            return {}
 
     def __call__(self, input_seqs, all_seqs):
         return self.run_meme(input_seqs, all_seqs)
