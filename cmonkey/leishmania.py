@@ -16,6 +16,7 @@ import motif
 import stringdb
 import organism
 import network as nw
+import cmonkey_run
 
 CMONKEY_VERSION = '4.0'
 CHECKPOINT_INTERVAL = 3
@@ -37,47 +38,21 @@ P3UTR_SEQFILE = 'leishmania_data/p3utrSeqs_Mus_musculus_RA.csv.gz'
 SEQ_FILENAMES = {'upstream': PROM_SEQFILE, 'p3utr': P3UTR_SEQFILE}
 
 
-class CMonkeyConfiguration(scoring.ConfigurationBase):
-    """Leishmania-specific configuration class"""
-    def __init__(self, config_params,
-                 checkpoint_file=None):
-        """create instance"""
-        scoring.ConfigurationBase.__init__(self, config_params,
-                                           checkpoint_file)
+class LeishmaniaCMonkeyRun(cmonkey_run.CMonkeyRun):
+    def __init__(self, organism_code, ratio_matrix, num_clusters):
+        cmonkey_run.CMonkeyRun.__init__(self, organism_code, ratio_matrix, num_clusters)
+        self.__organism = None
+        self['cache_dir'] = 'leishmania_cache'
+        self['sequence_types'] = SEQUENCE_TYPES
+        self['search_distances'] = SEARCH_DISTANCES
+        self['scan_distances'] = SCAN_DISTANCES
 
-    @classmethod
-    def create(cls, matrix_filename, checkpoint_file=None):
-        """creates an initialized instance"""
-        params = (scoring.ConfigurationBuilder().
-                  with_organism('mmu').
-                  with_matrix_filenames([matrix_filename]).
-                  with_num_iterations(NUM_ITERATIONS).
-                  with_cache_dir(CACHE_DIR).
-                  with_num_clusters(NUM_CLUSTERS).
-                  with_sequence_types(SEQUENCE_TYPES).
-                  with_search_distances(SEARCH_DISTANCES).
-                  with_scan_distances(SCAN_DISTANCES).
-                  build())
-        return cls(params, checkpoint_file)
+    def organism(self):
+        if self.__organism == None:
+            self.__organism = self.make_mmu()
+        return self.__organism
 
-    def read_matrix(self, filename):
-        """returns the matrix"""
-        matrix_factory = dm.DataMatrixFactory(
-            [dm.nochange_filter, dm.center_scale_filter])
-        infile = util.DelimitedFile.read(filename, has_header=True,
-                                         quote='\"')
-        return matrix_factory.create_from(infile)
-
-    def make_membership(self):
-        """returns the seeded membership"""
-        num_clusters = self.config_params[memb.KEY_NUM_CLUSTERS]
-        return memb.ClusterMembership.create(
-            self.matrix().sorted_by_row_name(),
-            memb.make_kmeans_row_seeder(num_clusters),
-            microarray.seed_column_members,
-            self.config_params)
-
-    def make_organism(self):
+    def make_mmu(self):
         """returns a configured organism object"""
         nw_factories = [stringdb.get_network_factory2('leishmania_data/mouse_links_preprocessed.csv', sep=';')]
         return organism.GenericOrganism('mmu', THESAURUS_FILE, nw_factories,
@@ -85,25 +60,20 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
                                         search_distances=SEARCH_DISTANCES,
                                         scan_distances=SCAN_DISTANCES)
 
-
     def make_row_scoring(self):
         """returns the row scoring function"""
         row_scoring = microarray.RowScoringFunction(
-            self.membership(), self.matrix(),
+            self.membership(), self.ratio_matrix,
             lambda iteration: ROW_WEIGHT,
             config_params=self.config_params)
 
         # motifing
         sequence_filters = []
-        #print "THESAURUS: ", self.organism().thesaurus()
-        #for gene in self.matrix().row_names():
-        #    if not gene in self.organism().thesaurus():
-        #        print "NOT FOUND: ", gene
         background_file_prom = meme.global_background_file(
-            self.organism(), self.matrix().row_names(), 'upstream',
+            self.organism(), self.ratio_matrix.row_names(), 'upstream',
             use_revcomp=True)
         background_file_p3utr = meme.global_background_file(
-            self.organism(), self.matrix().row_names(), 'p3utr',
+            self.organism(), self.ratio_matrix.row_names(), 'p3utr',
             use_revcomp=True)
         meme_suite_prom = meme.MemeSuite430(
             max_width=MAX_MOTIF_WIDTH,
@@ -115,7 +85,7 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
         motif_scoring = motif.MemeScoringFunction(
             self.organism(),
             self.membership(),
-            self.matrix(),
+            self.ratio_matrix,
             meme_suite_prom,
             seqtype='upstream',
             sequence_filters=sequence_filters,
@@ -125,7 +95,7 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
             config_params=self.config_params)
 
         weeder_scoring = motif.WeederScoringFunction(
-            self.organism(), self.membership(), self.matrix(),
+            self.organism(), self.membership(), self.ratio_matrix,
             meme_suite_p3utr, 'p3utr',
             pvalue_filter=motif.MinPValueFilter(-20.0),
             weight_func=lambda iteration: 0.0,
@@ -138,15 +108,13 @@ class CMonkeyConfiguration(scoring.ConfigurationBase):
 
         network_scoring = nw.ScoringFunction(self.organism(),
                                              self.membership(),
-                                             self.matrix(),
+                                             self.ratio_matrix,
                                              lambda iteration: 0.0,
                                              scoring.default_network_iterations,
                                              config_params=self.config_params)
 
         return scoring.ScoringFunctionCombiner(
             self.membership(), [row_scoring, network_scoring, motif_combiner])
-        #return scoring.ScoringFunctionCombiner(
-        #    self.membership(), [row_scoring, motif_combiner])
 
 
 if __name__ == '__main__':
@@ -158,7 +126,9 @@ if __name__ == '__main__':
     else:
         if len(sys.argv) > 2:
             CHECKPOINT_FILE = sys.argv[2]
-        
-        conf = CMonkeyConfiguration.create(
-            sys.argv[1], checkpoint_file=CHECKPOINT_FILE)
-        cmonkey.run_cmonkey(conf)
+
+        matrix_factory = dm.DataMatrixFactory([dm.nochange_filter, dm.center_scale_filter])
+        infile = util.DelimitedFile.read(sys.argv[1], has_header=True, quote='\"')
+        matrix = matrix_factory.create_from(infile)
+        cmonkey_run = LeishmaniaCMonkeyRun('mmu', matrix, NUM_CLUSTERS)
+        cmonkey_run.run()
