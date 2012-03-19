@@ -7,7 +7,6 @@ import os
 import os.path
 import sys
 import logging
-import human
 import json
 import cmonkey_run
 import datamatrix as dm
@@ -65,13 +64,9 @@ if __name__ == '__main__':
         if len(sys.argv) > 4:
             CHECKPOINT_FILE = sys.argv[4]
 
-        if sys.argv[1] == 'hsa':
-            run_cmonkey(human.CMonkeyConfiguration.create(
-                    sys.argv[2], checkpoint_file=CHECKPOINT_FILE))
-        else:
-            matrix_factory = dm.DataMatrixFactory([dm.nochange_filter, dm.center_scale_filter])
-            infile = util.DelimitedFile.read(sys.argv[2], has_header=True, quote='\"')
-            matrix = matrix_factory.create_from(infile)
-            cmonkey_run = cmonkey_run.CMonkeyRun(sys.argv[1], matrix, 43)
-            cmonkey_run['string_file'] = sys.argv[3]
-            cmonkey_run.run()
+        matrix_factory = dm.DataMatrixFactory([dm.nochange_filter, dm.center_scale_filter])
+        infile = util.DelimitedFile.read(sys.argv[2], has_header=True, quote='\"')
+        matrix = matrix_factory.create_from(infile)
+        cmonkey_run = cmonkey_run.CMonkeyRun(sys.argv[1], matrix, 43)
+        cmonkey_run['string_file'] = sys.argv[3]
+        cmonkey_run.run()
