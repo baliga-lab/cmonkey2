@@ -42,7 +42,7 @@ class LeishmaniaCMonkeyRun(cmonkey_run.CMonkeyRun):
     def __init__(self, organism_code, ratio_matrix, num_clusters):
         cmonkey_run.CMonkeyRun.__init__(self, organism_code, ratio_matrix, num_clusters)
         self.__organism = None
-        self['cache_dir'] = 'leishmania_cache'
+        self['cache_dir'] = CACHE_DIR
         self['sequence_types'] = SEQUENCE_TYPES
         self['search_distances'] = SEARCH_DISTANCES
         self['scan_distances'] = SCAN_DISTANCES
