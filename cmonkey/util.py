@@ -212,6 +212,12 @@ def r_variance_columns(matrix):
     return [(value * bias) for value in result]
 
 
+def max_row_var(matrix):
+    """computes the maximum row variance of a matrix"""
+    masked = np.ma.masked_array(matrix, np.isnan(matrix))
+    return np.mean(np.var(masked, 1, ddof=1))
+
+
 def mean(nparray):
     """computes the mean of a numpy array, ignoring NaN values"""
     return np.mean(np.ma.masked_array(nparray, np.isnan(nparray)))

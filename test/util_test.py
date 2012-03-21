@@ -226,7 +226,25 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         # the results are fairly random, make sure we have the right
         # number of values
         self.assertEquals(9, len(result))
-        
+
+    def test_max_row_var(self):
+        """tests maximum row variance function"""
+        matrix = [[1, 5,  9, 13],
+                  [2, 6, 10, 14],
+                  [3, 7, 11, 15],
+                  [4, 8, 12, 16]]
+        result = util.max_row_var(matrix)
+        self.assertAlmostEqual(26.666666666666664, result)
+
+    def test_max_row_var_with_nans(self):
+        """tests maximum row variance with NaNs"""
+        matrix = [[1, np.nan, 9],
+                  [np.nan, 6, 10],
+                  [3, 7, np.nan],
+                  [4, 8, 12]]
+        result = util.max_row_var(matrix)
+        self.assertAlmostEqual(16.0, result)
+
 
 class Order2StringTest(unittest.TestCase):  # pylint: disable-msg=R09042
     """Test class for order2string"""
