@@ -17,7 +17,10 @@ object Formatter {
   def formatFloats(vals: Seq[Float]) = {
     "[%s]".format(vals.mkString(", "))
   }
-  
+  def formatInts(vals: Seq[Int]) = {
+    "[%s]".format(vals.mkString(", "))
+  }
+
   private def squote(value: Any): String = "'%s'".format(value.toString)
 
   def toHSSeries(ratios: RatioMatrix) = {
@@ -35,6 +38,56 @@ object Formatter {
   private def toHSSeriesEntry(name: String, values: Array[Float]) = {
     "{ name: '%s', data: %s }".format(name, formatFloats(values))
   }
+
+  def toHSSeries(values: Array[Double]) = {
+    val builder = new StringBuilder
+    builder.append("[ { name: 'mean resid', data: [")
+    for (i <- 0 until values.length) {
+      if (i > 0) builder.append(", ")
+      builder.append("%f".format(values(i)))
+    }
+    builder.append("] }]")
+    builder.toString
+  }
+
+  def toNRowNColHSSeries(stats: Map[Int, IterationStats]) = {
+    val iterations = stats.keySet.toArray
+    java.util.Arrays.sort(iterations)
+
+    val meanRows = new Array[Double](iterations.length)
+    val meanColumns = new Array[Double](iterations.length)
+
+    for (i <- 0 until iterations.length) {
+      var totalRows = 0.0
+      var totalColumns = 0.0
+      for (cluster <- stats(iterations(i)).clusters.keys) {
+        totalRows += stats(iterations(i)).clusters(cluster).numRows
+        totalColumns += stats(iterations(i)).clusters(cluster).numColumns
+      }
+      val numClusters = stats(iterations(i)).clusters.size
+      meanRows(i) = totalRows / numClusters
+      meanColumns(i) = totalColumns / numClusters
+    }
+
+    // columns
+    val builder = new StringBuilder
+    builder.append("[ { name: 'columns', data: [")
+    for (i <- 0 until iterations.length) {
+      if (i > 0) builder.append(", ")
+      builder.append("%f".format(meanColumns(i)))
+    }
+    builder.append("] }, ")
+
+    // rows
+    builder.append("{ name: 'rows', data: [")
+    for (i <- 0 until iterations.length) {
+      if (i > 0) builder.append(", ")
+      builder.append("%f".format(meanRows(i)))
+    }
+    builder.append("] }]")
+
+    builder.toString
+  }
 }
 
 case class Snapshot(rows: Map[Int, List[String]], columns: Map[Int, List[String]],
@@ -44,10 +97,13 @@ case class Snapshot(rows: Map[Int, List[String]], columns: Map[Int, List[String]
   }
 }
 
+case class ClusterStats(numRows: Int, numColumns: Int, residual: Double)
+case class IterationStats(clusters: Map[Int, ClusterStats], medianResidual: Double)
 
 object Application extends Controller {
 
   val JsonFilePattern = Pattern.compile("(\\d+)-results.json")
+  val StatsFilePattern = Pattern.compile("(\\d+)-stats.json")
   val AppConfig = Play.current.configuration
   val ProjectConfigFile = new File("project.conf")
   val ProjectConfig = new java.util.Properties
@@ -61,6 +117,22 @@ object Application extends Controller {
   val RatiosFactory = new RatioMatrixFactory(
     new File(ProjectConfig.getProperty("cmonkey.ratios.file")),
     Synonyms)
+
+  implicit object StatsFormat extends Format[IterationStats] {
+    def reads(json: JsValue): IterationStats = {
+      val residual = (json \ "median_residual").asInstanceOf[JsNumber].value.doubleValue
+      val clusters = (json \ "cluster").as[JsObject]
+      val clusterStats = new HashMap[Int, ClusterStats]
+      for (field <- clusters.fields) {
+        val cstats = field._2.as[JsObject]
+        clusterStats(field._1.toInt) = ClusterStats(cstats.value("num_rows").asInstanceOf[JsNumber].value.intValue,
+                                                    cstats.value("num_columns").asInstanceOf[JsNumber].value.intValue,
+                                                    cstats.value("residual").asInstanceOf[JsNumber].value.doubleValue)
+      }
+      IterationStats(clusterStats.toMap, residual)
+    }
+    def writes(snapshot: IterationStats): JsValue = JsUndefined("TODO")
+  }
 
   implicit object SnapshotFormat extends Format[Snapshot] {
     def reads(json: JsValue): Snapshot = {
@@ -137,16 +209,58 @@ object Application extends Controller {
     result.sortWith((v1: Int, v2: Int) => v1 < v2)
   }
 
+  private def readStats = {
+    val files = OutDirectory.listFiles(new FilenameFilter {
+      def accept(dir: File, name: String) = StatsFilePattern.matcher(name).matches
+    })
+    val stats = new HashMap[Int, IterationStats]
+
+    for (i <- 0 until files.length) {
+      val file = files(i)
+      val in = new BufferedReader(new FileReader(file))
+      val buffer = new StringBuilder
+      var line = in.readLine
+      while (line != null) {
+        buffer.append(line)
+        line = in.readLine
+      }
+      in.close
+
+      val statsOption = Some(play.api.libs.json.Json.parse(buffer.toString).as[IterationStats])      
+      if (statsOption != None) {
+        val matcher = StatsFilePattern.matcher(file.getName)
+        matcher.matches
+        val iteration = matcher.group(1).toInt
+        //result(iteration - 1) = statsOption.get.medianResidual
+        stats(iteration) = statsOption.get
+      }
+    }
+    stats
+  }
+
   // **********************************************************************
   // ****** VIEWS
   // **********************************************************************
 
-  def index = index2(0)
+  def index = index2(1)
 
   def index2(iteration: Int) = Action {
     val iterations = availableIterations
     println("# Iterations found: " + iterations.length)
-    Ok(views.html.index(readSnapshot(iteration), iterations, iteration))
+
+    // create sorted results
+    val stats = readStats
+    val statsIterations = stats.keySet.toArray
+    java.util.Arrays.sort(statsIterations)
+    val meanResiduals = new Array[Double](stats.size)
+    var i = 0
+    for (key <- statsIterations) {
+      meanResiduals(i) = stats(key).medianResidual
+      i += 1
+    }
+
+    Ok(views.html.index(readSnapshot(iteration), iterations, iteration,
+                        statsIterations, meanResiduals, stats.toMap))
   }
 
   def cluster(iteration: Int, cluster: Int) = Action {

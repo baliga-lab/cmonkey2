@@ -13,6 +13,7 @@ import stringdb
 import os
 from datetime import date
 import json
+import numpy as np
 
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
 GO_FILE_PATH = 'testdata/proteome2taxid'
@@ -21,6 +22,8 @@ COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
 
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
+STATS_FREQ = 10
+RESULT_FREQ = 10
 
 class CMonkeyRun:
     def __init__(self, organism_code, ratio_matrix, num_clusters):
@@ -42,7 +45,7 @@ class CMonkeyRun:
         self['string_file'] = None
         self['cache_dir'] = CACHE_DIR
         self['output_dir'] = 'out'
-        self['start_iteration'] = 0
+        self['start_iteration'] = 1
         self['num_iterations'] = 2000
         self['multiprocessing'] = True
 
@@ -180,7 +183,7 @@ class CMonkeyRun:
         
 
         for iteration in range(self['start_iteration'],
-                               self['num_iterations']):
+                               self['num_iterations'] + 1):
             logging.info("Iteration # %d", iteration)
             iteration_result = {'iteration': iteration}
             self.membership().update(self.ratio_matrix,
@@ -190,15 +193,39 @@ class CMonkeyRun:
             #if iteration > 0 and  iteration % CHECKPOINT_INTERVAL == 0:
             #    config.save_checkpoint_data(iteration)
 
-            # Write a snapshot
-            iteration_result['columns'] = {}
-            iteration_result['rows'] = {}
-            for cluster in range(1, self['num_clusters'] + 1):
-                iteration_result['columns'][cluster] = self.membership().columns_for_cluster(cluster)
-                iteration_result['rows'][cluster] = self.membership().rows_for_cluster(cluster)
+            if iteration == 1 or (iteration % RESULT_FREQ == 0):
+                # Write a snapshot
+                iteration_result['columns'] = {}
+                iteration_result['rows'] = {}
+                for cluster in range(1, self['num_clusters'] + 1):
+                    iteration_result['columns'][cluster] = self.membership().columns_for_cluster(cluster)
+                    iteration_result['rows'][cluster] = self.membership().rows_for_cluster(cluster)
 
-            with open('%s/%d-results.json' % (output_dir, iteration), 'w') as outfile:
-                outfile.write(json.dumps(iteration_result))
+                # write results
+                with open('%s/%d-results.json' % (output_dir, iteration), 'w') as outfile:
+                    outfile.write(json.dumps(iteration_result))
+
+            if iteration == 1 or (iteration % STATS_FREQ == 0):
+                # write stats for this iteration
+                residuals = []
+                cluster_stats = {}
+                for cluster in range(1, self['num_clusters'] + 1):
+                    row_names = iteration_result['rows'][cluster]
+                    column_names = iteration_result['columns'][cluster]
+                    if len(column_names) <= 1 or len(row_names) <= 1:
+                        residual = 1.0
+                    else:
+                        matrix = self.ratio_matrix.submatrix_by_name(row_names, column_names)
+                        residual = matrix.residual()
+                    residuals.append(residual)
+                    cluster_stats[cluster] = {'num_rows': len(row_names),
+                                              'num_columns': len(column_names),
+                                              'residual': residual
+                                              }
+                stats = {'cluster': cluster_stats, 'median_residual': np.median(residuals) }
+                with open('%s/%d-stats.json' % (output_dir, iteration), 'w') as outfile:
+                    outfile.write(json.dumps(stats))
+
         print "Done !!!!"
 
     ############################################################

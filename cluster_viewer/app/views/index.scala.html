@@ -1,4 +1,5 @@
-@(snapshot: Option[Snapshot], iterations: Seq[Int], iteration: Int)
+@(snapshot: Option[Snapshot], iterations: Seq[Int], iteration: Int,
+statsIterations: Seq[Int], meanResiduals: Array[Double], iterationStats: Map[Int, IterationStats])
 
 @main("Play 2.0 - Cluster View") {
    <script type="text/javascript">
@@ -14,11 +15,73 @@
          $('#select_iteration').change(function (event) {
              window.location.href = "/" + $(this).val();
          });
+
+         // residual graph
+         var residualChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'residual-graph',
+                 type: 'line',
+                 width: 400,
+                 height: 300,
+                 style: 'float: left'
+             },
+             title: {
+                 text: 'Mean Residual'
+             },
+             plotOptions: {
+                 line: {
+                     marker: {
+                         enabled: false
+                     },
+                 }
+             },
+             xAxis: {
+                 categories: @(Formatter.formatInts(statsIterations)),
+                 tickInterval: 5
+             },
+             yAxis: {
+                 title: {
+                     text: 'mean resids'
+                 }
+             },
+             series: @(Formatter.toHSSeries(meanResiduals))
+         });
+         // cluster member graph
+         var clusterMemberChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'cluster-member-graph',
+                 type: 'line',
+                 width: 400,
+                 height: 300,
+                 style: 'float: right'
+             },
+             title: {
+                 text: 'Mean nrow, ncol/iter'
+             },
+             plotOptions: {
+                 line: {
+                     marker: {
+                         enabled: false
+                     },
+                 }
+             },
+             xAxis: {
+                 categories: @(Formatter.formatInts(statsIterations)),
+                 tickInterval: 5
+             },
+             yAxis: {
+                 title: {
+                     text: 'mean nrow, ncol/iter'
+                 }
+             },
+             series: @(Formatter.toNRowNColHSSeries(iterationStats))
+         });
+
      });
    </script>
    <h2>cMonkey/Python Result Viewer</h2>
    <h4>Iteration <select id="select_iteration">
-   @for(iter <- iterations) {@if(iter == iteration) {<option value="@iter" selected>@(iter + 1)</option>} else {<option value="@iter">@(iter + 1)</option>}}
+   @for(iter <- iterations) {@if(iter == iteration) {<option value="@iter" selected>@iter</option>} else {<option value="@iter">@iter</option>}}
    </select>/2000: Available clusters (@snapshot.get.clusters.length)</h4>
    <div style="height: 10px;">&nbsp;</div>
    <p style="font-size: smaller">Progress: @((iteration / 2000.0) * 100) %</p>
@@ -30,7 +93,14 @@
        </span>
      </div>
    </div>
+
    <div style="height: 10px;">&nbsp;</div>
+   <div id="stats-box" class="stats-box">
+     <span id="residual-graph"></span>
+     <span id="cluster-member-graph"></span>
+   </div>
+   <div style="height: 10px;">&nbsp;</div>
+
    @if(snapshot == None) {
      No Snapshot
    } else {
