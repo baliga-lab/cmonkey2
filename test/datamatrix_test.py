@@ -299,6 +299,32 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertTrue((matrix.values() == [[1.0, 2.0, 3.0],
                                              [4.0, 5.0, 6.0]]).all())
 
+    def test_residual(self):
+        """tests the residual() method"""
+        matrix = dm.DataMatrix(2, 2,
+                               values=[[4.0, 7.0],
+                                       [5.0, 8.0]])
+        self.assertEquals(0, matrix.residual())
+
+    def test_residual2(self):
+        """tests the residual() method"""
+        matrix = dm.DataMatrix(3, 3,
+                               values=[[1000, -4000, 7000],
+                                       [-2000, 5000, -8000],
+                                       [3000, -6000, 9000]])
+        self.assertAlmostEqual(4049.38271604938, matrix.residual())
+
+    def test_residual_var_normalize(self):
+        """tests the residual() method. Note that this method
+        seems to make rounding errors in the 5th place"""
+        matrix = dm.DataMatrix(3, 3,
+                               values=[[1000, -4000, 7000],
+                                       [-2000, 5000, -8000],
+                                       [3000, -6000, 9000]])
+        max_row_var = matrix.row_variance()
+        self.assertAlmostEqual(0.000105128205128205,
+                               matrix.residual(max_row_variance=max_row_var), places=4)
+
 
 class DataMatrixCollectionTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for MatrixCollection"""

@@ -5,6 +5,7 @@ more information and licensing details.
 """
 import unittest
 import util
+import operator
 import numpy as np
 
 
@@ -244,6 +245,14 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
                   [4, 8, 12]]
         result = util.max_row_var(matrix)
         self.assertAlmostEqual(16.0, result)
+
+    def test_r_outer(self):
+        """tests the r_outer function"""
+        result = util.r_outer([5.5, 6.5], [4.5, 7.5], operator.add)
+        self.assertAlmostEqual(10.0, result[0][0])
+        self.assertAlmostEqual(13.0, result[0][1])
+        self.assertAlmostEqual(11.0, result[1][0])
+        self.assertAlmostEqual(14.0, result[1][1])
 
 
 class Order2StringTest(unittest.TestCase):  # pylint: disable-msg=R09042

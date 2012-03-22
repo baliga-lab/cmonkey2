@@ -217,6 +217,12 @@ def max_row_var(matrix):
     masked = np.ma.masked_array(matrix, np.isnan(matrix))
     return np.mean(np.var(masked, 1, ddof=1))
 
+def r_outer(x, y, f):
+    """emulates the R "outer" function, calculating the outer product
+    with a user-defined function"""
+    x = np.array(x)
+    y = np.array(y)
+    return f(x[:, np.newaxis], y)
 
 def mean(nparray):
     """computes the mean of a numpy array, ignoring NaN values"""
