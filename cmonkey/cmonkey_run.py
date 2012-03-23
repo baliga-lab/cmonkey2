@@ -69,7 +69,7 @@ class CMonkeyRun:
         self['motif.max_cluster_rows_allowed'] = 70
 
         today = date.today()
-        self.CHECKPOINT_ITERVAL = None
+        self.CHECKPOINT_INTERVAL = None
         self.__checkpoint_basename = "cmonkey-checkpoint-%s-%d%d%d" % (
             organism_code, today.year, today.month, today.day)
 
