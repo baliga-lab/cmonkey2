@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """seqtools.py - utilities to operate on genomic sequences
 
 This file is part of cMonkey Python. Please see README and LICENSE for
@@ -5,6 +6,8 @@ more information and licensing details.
 """
 import re
 import random
+import string
+from util import DelimitedFile
 
 
 class Location:  # pylint: disable-msg=R0903
@@ -58,6 +61,32 @@ class Feature:  # pylint: disable-msg=R0902
                  self.__name, repr(self.__location)))
 
 
+def read_feature(line):
+    """Creates and adds a feature and associated contig from current
+    DelimitedFile line"""
+    contig = line[3]
+    is_reverse = False
+    if line[6] == 'R':
+        is_reverse = True
+
+    # note that feature positions can sometimes start with a '>'
+    # or '<', so make sure it is stripped away
+    return Feature(line[0], line[1], line[2],
+                   Location(contig,
+                            int(string.lstrip(line[4], '<>')),
+                            int(string.lstrip(line[5], '<>')),
+                            is_reverse))
+
+
+def read_features_from_file(filename):
+    """Returns a list containing the features"""
+    features = {}
+    dfile = DelimitedFile.read(filename, comment='--')
+    for line in dfile.lines():
+        features[ line[0] ] = read_feature(line)
+    return features
+
+
 def extract_upstream(source, location, distance):
     """Extract a subsequence of the specified  size from the source sequence
     Depending on the strand orientation, the sequence is cut around either
@@ -74,6 +103,24 @@ def extract_upstream(source, location, distance):
     return (final_location,
             subsequence(source, winstart, winend, location.reverse))
 
+def extract_downstream(source, location, distance):
+    """Extract a subsequence of the specified  size from the source sequence
+    Depending on the strand orientation, the sequence is cut around either
+    the start or the end position. NOTE that HERE, distance =
+      (number of bases upstream of end, number of bases downstream of end).
+    This is the most sensible, but it is NOT the same format as extract_upstream."""
+    if location.reverse:
+        winstart = location.start + 1 - distance[1]
+        winend = location.start + 1 + distance[0]
+    else:
+        winstart = location.end - 1 - distance[0]
+        winend = location.end - 1 + distance[1]
+
+    final_location = Location(location.contig, winstart, winend,
+                              location.reverse)
+    return (final_location,
+            subsequence(source, winstart, winend, location.reverse))
+
 
 def subsequence(sequence, start, stop, reverse=False):
     """extracts a subsequence from a longer genomic sequence by coordinates.
@@ -81,6 +128,9 @@ def subsequence(sequence, start, stop, reverse=False):
     calculated. Not that the start/stop positions are shifted to comply with
     the original cMonkey's behavior
     """
+    if start < 1: start = 1
+    lseq = len(sequence)
+    if stop > lseq: stop = lseq+1
     result = sequence[start - 1:stop - 1]
     if reverse:
         result = revcomp(result)
@@ -197,7 +247,8 @@ def write_sequences_to_fasta_file(outputfile, seqs):
         outputfile.write('>%s\n' % seq[0])
         outputfile.write('%s\n' % seq[1])
 
+
 __all__ = ['subsequence', 'extract_upstream', 'markov_background',
            'read_sequences_from_fasta_string',
            'read_sequences_from_fasta_file',
-           'write_sequences_to_fasta_file', 'Feature']
+           'write_sequences_to_fasta_file', 'Feature', 'read_features_from_file']

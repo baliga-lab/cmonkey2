@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """membership.py - cMonkey cluster membership functionality
 This module captures the microarray-specific scoring component
 of cMonkey.
@@ -307,6 +308,10 @@ class ClusterMembership:
                                                        column_scores,
                                                        iteration,
                                                        num_iterations)
+
+        rpc = map(len, self.__cluster_row_members.values())
+        logging.info('Rows per cluster: %i to %i (median %d)' \
+          %( min(rpc), max(rpc), np.median(rpc) ) )
 
         start = util.current_millis()
         logging.info("GET_DENSITY_SCORES()...")
