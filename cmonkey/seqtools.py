@@ -103,6 +103,24 @@ def extract_upstream(source, location, distance):
     return (final_location,
             subsequence(source, winstart, winend, location.reverse))
 
+def extract_downstream(source, location, distance):
+    """Extract a subsequence of the specified  size from the source sequence
+    Depending on the strand orientation, the sequence is cut around either
+    the start or the end position. NOTE that HERE, distance =
+      (number of bases upstream of end, number of bases downstream of end).
+    This is the most sensible, but it is NOT the same format as extract_upstream."""
+    if location.reverse:
+        winstart = location.start + 1 - distance[1]
+        winend = location.start + 1 + distance[0]
+    else:
+        winstart = location.end - 1 - distance[0]
+        winend = location.end - 1 + distance[1]
+
+    final_location = Location(location.contig, winstart, winend,
+                              location.reverse)
+    return (final_location,
+            subsequence(source, winstart, winend, location.reverse))
+
 
 def subsequence(sequence, start, stop, reverse=False):
     """extracts a subsequence from a longer genomic sequence by coordinates.
@@ -110,6 +128,9 @@ def subsequence(sequence, start, stop, reverse=False):
     calculated. Not that the start/stop positions are shifted to comply with
     the original cMonkey's behavior
     """
+    if start < 1: start = 1
+    lseq = len(sequence)
+    if stop > lseq: stop = lseq
     result = sequence[start - 1:stop - 1]
     if reverse:
         result = revcomp(result)

@@ -30,32 +30,33 @@ MOTIF_SCORE_INTERVAL = 10
 MAX_CLUSTER_ROWS = 100
 
 SEQUENCE_TYPES = ['upstream']
-SEARCH_DISTANCES = {'upstream': (0, 400)}
-SCAN_DISTANCES = {'upstream': (0, 400)}
-PROM_SEQFILE = 'tps/tps.upstream.-350.50.csv'
-SEQ_FILENAMES = {'upstream': PROM_SEQFILE}
+SEARCH_DISTANCES = {'upstream': (0, 450),'downstream': (0,600)}
+SCAN_DISTANCES = {'upstream': (0, 450),'downstream': (0,600)}
+UPSTREAM_FILE = 'tps/tps.upstream.-400.50.csv'
+DOWNSTREAM_FILE = 'tps/tps.downstream.-100.500.csv'
+SEQ_FILENAMES = {'upstream': UPSTREAM_FILE, 'downstream': DOWNSTREAM_FILE }
 MAX_MOTIF_WIDTH = 20
 STRING_LINKS = 'tps/string_links.tps.tab'
 
 """these are the default meme iterations ("meme.iters") in the R version"""
-MEME_ITERS = range( 600, 1200, 100 ) + \
+MOTIF_ITERS = range( 600, 1200, 100 ) + \
              range( 1250, 1500, 50 ) + \
              range( 1525, 1800, 25 ) + \
              range( 1810, max( NUM_ITERATIONS, 1820 ) + 10 )
 
 mode = 'normal'
-#mode = 'debug'
+mode = 'debug'
 #mode = 'short'
 if mode == 'debug':
     NUM_ITERATIONS = 200
-    MEME_ITERS = [2,100,200]
+    MOTIF_ITERS = [2,100,200]
     NETWORK_SCORE_INTERVAL = 5
 if mode == 'short':
     NUM_ITERATIONS = 500
-    MEME_ITERS = [100] + range(200,500,50)
+    MOTIF_ITERS = [100] + range(200,500,50)
 
-def meme_iterations(iteration):
-    return iteration in MEME_ITERS
+def motif_iterations(iteration):
+    return iteration in MOTIF_ITERS
 
 def network_iterations(iteration):
     return iteration > 0 and iteration % NETWORK_SCORE_INTERVAL == 0
@@ -92,23 +93,37 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
             config_params=self.config_params)
 
         sequence_filters = []
-        background_file_prom = meme.global_background_file(
+        background_file_upstream = meme.global_background_file(
             self.organism(), self.ratio_matrix.row_names(), 'upstream',
             use_revcomp=True)
-        meme_suite_prom = meme.MemeSuite430(
+        background_file_downstream = meme.global_background_file(
+            self.organism(), self.ratio_matrix.row_names(), 'downstream',
+            use_revcomp=True)
+        meme_suite_upstream = meme.MemeSuite430(
             max_width=MAX_MOTIF_WIDTH,
-            background_file=background_file_prom)
+            background_file=background_file_upstream)
+        meme_suite_downstream = meme.MemeSuite430(
+            max_width=MAX_MOTIF_WIDTH,
+            background_file=background_file_downstream)
 
         motif_scoring = motif.MemeScoringFunction(
             self.organism(),
             self.membership(),
             self.ratio_matrix,
-            meme_suite_prom,
+            meme_suite_upstream,
             seqtype='upstream',
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
             weight_func=lambda iteration: 0.0,
-            run_in_iteration=meme_iterations,
+            run_in_iteration=motif_iterations,
+            config_params=self.config_params)
+
+        weeder_scoring = motif.WeederScoringFunction(
+            self.organism(), self.membership(), self.ratio_matrix,
+            meme_suite_downstream, 'downstream',
+            pvalue_filter=motif.MinPValueFilter(-20.0),
+            weight_func=lambda iteration: 0.0,
+            run_in_iteration=motif_iterations,
             config_params=self.config_params)
 
         network_scoring = nw.ScoringFunction(self.organism(),
@@ -118,9 +133,14 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
                                              scoring.default_network_iterations,
                                              config_params=self.config_params)
 
+        motif_combiner = scoring.ScoringFunctionCombiner(
+            self.membership(),
+            [motif_scoring, weeder_scoring],
+            weight_func=lambda iteration: 0.5)
+
         return scoring.ScoringFunctionCombiner(
             self.membership(),
-            [row_scoring, motif_scoring, network_scoring])
+            [row_scoring, motif_combiner, network_scoring])
 
 
 if __name__ == '__main__':
