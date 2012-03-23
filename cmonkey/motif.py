@@ -244,10 +244,13 @@ def meme_json(run_result):
 
         for motif_info in run_result.motif_infos:
             motif_num = motif_info.motif_num()
+            motif_annot = None
+            if motif_num in motif_annotations:
+                motif_annot = motif_annotations[motif_num]
             result.append({'motif_num': motif_num,
                            'pssm': motif_info.pssm(),
                            'evalue': motif_info.evalue(),
-                           'annotations': motif_annotations[motif_num]})
+                           'annotations': motif_annot})
     return result
 
 
