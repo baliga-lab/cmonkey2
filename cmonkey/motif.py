@@ -233,9 +233,25 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 def meme_json(run_result):
     result = []
     if run_result != None:
+        motif_annotations = {}  # map motif_num -> [annotations]
+        for gene in run_result.annotations:
+            for annotation in run_result.annotations[gene]:
+                motif_num = annotation[2]
+                if motif_num not in motif_annotations:
+                    motif_annotations[motif_num] = []
+
+                motif_annotations[motif_num].append(
+                    {'position': annotation[0], 'pvalue': annotation[1]})
+
         for motif_info in run_result.motif_infos:
-            result.append({'motif_num': motif_info.motif_num(),
-                           'pssm': motif_info.pssm()})
+            motif_num = motif_info.motif_num()
+            motif_annot = None
+            if motif_num in motif_annotations:
+                motif_annot = motif_annotations[motif_num]
+            result.append({'motif_num': motif_num,
+                           'pssm': motif_info.pssm(),
+                           'evalue': motif_info.evalue(),
+                           'annotations': motif_annot})
     return result
 
 

@@ -90,8 +90,9 @@ object Formatter {
   }
 }
 
+case class MotifInfo(motifNum: Int, evalue: Double, pssm: Array[Array[Float]])
 case class Snapshot(rows: Map[Int, List[String]], columns: Map[Int, List[String]],
-                    motifs: Map[Int, Map[String, Array[Array[Array[Float]]]]]) {
+                    motifs: Map[Int, Map[String, Array[MotifInfo]]]) {
   def clusters: Seq[Int] = {
     rows.keys.toSeq.sorted
   }
@@ -150,20 +151,29 @@ object Application extends Controller {
         clusterCols(field._1.toInt) = field._2.as[List[String]]
       }
 
-      val clusterMotifs = new HashMap[Int, Map[String, Array[Array[Array[Float]]]]]
+      val clusterMotifs = new HashMap[Int, Map[String, Array[MotifInfo]]]
       try {
         val motifs = motifsVal.as[JsObject]        
         for (field <- motifs.fields) {
           val cluster = field._1
           val seqTypeObj = field._2.as[JsObject]
 
-          val seqTypeMotifs = new HashMap[String, Array[Array[Array[Float]]]]
+          val seqTypeMotifs = new HashMap[String, Array[MotifInfo]]
 
+          // iterate over the sequence types, which are keys
           for (stfield <- seqTypeObj.fields) {
             val seqType = stfield._1
-            val stMotifs = stfield._2.asInstanceOf[JsArray].value          
-            val pssms = stMotifs.map(m => m.asInstanceOf[JsObject].value("pssm").as[Array[Array[Float]]])
-            seqTypeMotifs(seqType) = pssms.toArray
+            // an array of motif objects (motif_num, evalue, annotations, pssm)
+            val stMotifs = stfield._2.asInstanceOf[JsArray].value
+            val motifInfos = new java.util.ArrayList[MotifInfo]
+            for (motif <- stMotifs) {
+              val motifObj = motif.asInstanceOf[JsObject]
+              val pssm = motifObj.value("pssm").as[Array[Array[Float]]]
+              val evalue = motifObj.value("evalue").asInstanceOf[JsNumber].value.doubleValue
+              val motifNum = motifObj.value("motif_num").asInstanceOf[JsNumber].value.intValue
+              motifInfos.add(MotifInfo(motifNum, evalue, pssm))
+            }
+            seqTypeMotifs(seqType) = motifInfos.toArray(new Array[MotifInfo](0))
           }
           clusterMotifs(field._1.toInt) = seqTypeMotifs.toMap
         }
@@ -231,7 +241,6 @@ object Application extends Controller {
         val matcher = StatsFilePattern.matcher(file.getName)
         matcher.matches
         val iteration = matcher.group(1).toInt
-        //result(iteration - 1) = statsOption.get.medianResidual
         stats(iteration) = statsOption.get
       }
     }
@@ -268,22 +277,32 @@ object Application extends Controller {
     val ratios = RatiosFactory.readRatios(snapshot.get.rows(cluster).toArray)
     val rows    = snapshot.get.rows(cluster)
     val columns = snapshot.get.columns(cluster)
+
+    val motifInfos = new java.util.ArrayList[MotifInfo]
+    val motifMap = snapshot.get.motifs(cluster)
+    for (seqType <- motifMap.keys) {
+      val motifMapInfos = motifMap(seqType)
+      for (info <- motifMapInfos) motifInfos.add(info)
+    }
+
+    // NOTE: there is no differentiation between sequence types yet !!!!
     val pssm = if (snapshot.get.motifs.size > 0) {
       toJsonPssm(snapshot.get.motifs(cluster))
     } else {
       new Array[String](0)
     }
-    Ok(views.html.cluster(iteration, cluster, rows, columns, ratios, pssm))
+    Ok(views.html.cluster(iteration, cluster, rows, columns, ratios,
+                          motifInfos.toArray(new Array[MotifInfo](0)), pssm))
   }
 
-  private def toJsonPssm(stPssms: Map[String, Array[Array[Array[Float]]]]): Array[String] = {
+  private def toJsonPssm(motifMap: Map[String, Array[MotifInfo]]): Array[String] = {
     val result = new java.util.ArrayList[String]
-    for (seqType <- stPssms.keys) {
-      val pssms = stPssms(seqType)
-      printf("SEQ TYPE: %s, # PSSMs: %d\n", seqType, pssms.length)
-      for (i <- 0 until pssms.length) {
+    for (seqType <- motifMap.keys) {
+      val motifInfos = motifMap(seqType)
+      printf("SEQ TYPE: %s, # PSSMs: %d\n", seqType, motifInfos.length)
+      for (i <- 0 until motifInfos.length) {
         result.add(Json.stringify(JsObject(List("alphabet" -> Json.toJson(Array("A", "C", "G", "T")),
-                                                "values" -> Json.toJson(pssms(i))))))
+                                                "values" -> Json.toJson(motifInfos(i).pssm)))))
       }
     }
     println("# PSSMS: " + result.length)

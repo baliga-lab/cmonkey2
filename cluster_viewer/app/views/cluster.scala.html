@@ -1,5 +1,6 @@
 @(iteration: Int, cluster: Int, rows: List[String], columns: List[String],
-  ratios: RatioMatrix, motifs: Array[String])
+  ratios: RatioMatrix, motifInfos: Array[MotifInfo],
+  motifs: Array[String])
 
 <div id="cluster-view">
   <script type="text/javascript">
@@ -39,8 +40,12 @@
   <h3>Cluster @cluster at iteration @iteration</h3>
   <div id="expression-graph"></div>
   @for(i <- 0 until motifs.length) {
+    <span style="display: inline; float: left; margin-right: 10px;">
+    <div>Motif @i, evalue: @(motifInfos(i).evalue)</div>
     <div id="canvas@i"></div>
+    </span>
   }
+  <div style="clear: both"></div>
   <div id="cluster-members">
     <span style="float: left; margin-right: 20px">
       <span>Row members</span>
