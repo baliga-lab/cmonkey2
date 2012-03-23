@@ -130,7 +130,7 @@ def subsequence(sequence, start, stop, reverse=False):
     """
     if start < 1: start = 1
     lseq = len(sequence)
-    if stop > lseq: stop = lseq
+    if stop > lseq: stop = lseq+1
     result = sequence[start - 1:stop - 1]
     if reverse:
         result = revcomp(result)
