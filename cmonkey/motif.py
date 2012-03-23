@@ -240,7 +240,7 @@ def meme_json(run_result):
                     motif_annotations[motif_num] = []
 
                 motif_annotations[motif_num].append(
-                    {'position': annotation[0], 'pvalue': annotation[1]})
+                    {'gene': gene, 'position': annotation[0], 'pvalue': annotation[1]})
 
         for motif_info in run_result.motif_infos:
             motif_num = motif_info.motif_num()

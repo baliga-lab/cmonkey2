@@ -164,6 +164,7 @@ object Application extends Controller {
           for (stfield <- seqTypeObj.fields) {
             val seqType = stfield._1
             // an array of motif objects (motif_num, evalue, annotations, pssm)
+            // annotations are triples of (gene, position, pvalue)
             val stMotifs = stfield._2.asInstanceOf[JsArray].value
             val motifInfos = new java.util.ArrayList[MotifInfo]
             for (motif <- stMotifs) {
