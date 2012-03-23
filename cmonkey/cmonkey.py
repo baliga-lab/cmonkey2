@@ -14,7 +14,6 @@ import datamatrix as dm
 import util
 
 CMONKEY_VERSION = '4.0'
-#CHECKPOINT_INTERVAL = 3
 CHECKPOINT_INTERVAL = 100
 CHECKPOINT_FILE = None
 

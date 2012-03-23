@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 import logging
 import microarray
 import membership as memb
@@ -68,6 +69,7 @@ class CMonkeyRun:
         self['motif.max_cluster_rows_allowed'] = 70
 
         today = date.today()
+        self.CHECKPOINT_ITERVAL = None
         self.__checkpoint_basename = "cmonkey-checkpoint-%s-%d%d%d" % (
             organism_code, today.year, today.month, today.day)
 
@@ -180,7 +182,7 @@ class CMonkeyRun:
         output_dir = self['output_dir']
         self.__make_dirs_if_needed()
 
-        
+
 
         for iteration in range(self['start_iteration'],
                                self['num_iterations'] + 1):
@@ -190,8 +192,9 @@ class CMonkeyRun:
                                      row_scoring.compute(iteration_result),
                                      col_scoring.compute(iteration_result),
                                      iteration, self['num_iterations'])
-            #if iteration > 0 and  iteration % CHECKPOINT_INTERVAL == 0:
-            #    config.save_checkpoint_data(iteration)
+
+            if iteration > 0 and self.CHECKPOINT_INTERVAL and iteration % self.CHECKPOINT_INTERVAL == 0:
+                self.save_checkpoint_data(iteration, row_scoring, col_scoring)
 
             if iteration == 1 or (iteration % RESULT_FREQ == 0):
                 # Write a snapshot
@@ -232,17 +235,17 @@ class CMonkeyRun:
     ###### CHECKPOINTING
     ##############################
 
-    def save_checkpoint_data(self, iteration):
+    def save_checkpoint_data(self, iteration, row_scoring, col_scoring):
         """save checkpoint data for the specified iteration"""
         with util.open_shelf("%s.%d" % (self.__checkpoint_basename,
                                         iteration)) as shelf:
             shelf['config'] = self.config_params
             shelf['iteration'] = iteration
             self.membership().store_checkpoint_data(shelf)
-            self.row_scoring().store_checkpoint_data(shelf)
-            self.column_scoring().store_checkpoint_data(shelf)
+            row_scoring.store_checkpoint_data(shelf)
+            col_scoring.store_checkpoint_data(shelf)
 
-    def init_from_checkpoint(self, checkpoint_filename):
+    def init_from_checkpoint(self, checkpoint_filename, row_scoring, col_scoring):
         """initialize this object from a checkpoint file"""
         logging.info("Continue run using checkpoint file '%s'",
                      checkpoint_filename)
@@ -251,5 +254,6 @@ class CMonkeyRun:
             self['start_iteration'] = shelf['iteration'] + 1
             self.__membership = memb.ClusterMembership.restore_from_checkpoint(
                 self.config_params, shelf)
-            self.row_scoring().restore_checkpoint_data(shelf)
-            self.column_scoring().restore_checkpoint_data(shelf)
+            row_scoring().restore_checkpoint_data(shelf)
+            col_scoring().restore_checkpoint_data(shelf)
+            #return row_scoring, col_scoring necessary??

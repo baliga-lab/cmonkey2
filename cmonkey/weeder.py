@@ -8,6 +8,7 @@ import subprocess as sp
 import logging
 import re
 import pssm
+import os
 
 LAUNCHER = 'weederlauncher'
 LLR_VALUE = 'NA'
@@ -33,6 +34,10 @@ class Site:
 
 
 def run_weeder(fasta_file):
+    if not os.path.exists(fasta_file):
+        logging.warning("Weeder FASTA file %s not found! Skipping")
+        return []
+
     """run the weeder command and interpret its result"""
     def write_f1_file(pssm_num, apssm, num_sites):
         """writes the pssm to the .f1 file"""

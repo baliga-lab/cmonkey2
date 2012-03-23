@@ -18,6 +18,8 @@ import util
 import cmonkey_run
 
 
+CHECKPOINT_INTERVAL = 100
+CHECKPOINT_FILE = 'tps.cp'
 CACHE_DIR = 'tpscache'
 
 THESAURUS_FILE = 'tps/tps.synonyms.gz'
@@ -45,12 +47,14 @@ MOTIF_ITERS = range( 600, 1200, 100 ) + \
              range( 1810, max( NUM_ITERATIONS, 1820 ) + 10 )
 
 mode = 'normal'
-mode = 'debug'
+#mode = 'debug'
 #mode = 'short'
 if mode == 'debug':
     NUM_ITERATIONS = 200
-    MOTIF_ITERS = [2,100,200]
+    MOTIF_ITERS = [5,100,200]
     NETWORK_SCORE_INTERVAL = 5
+    NUM_CLUSTERS = 100
+
 if mode == 'short':
     NUM_ITERATIONS = 500
     MOTIF_ITERS = [100] + range(200,500,50)
@@ -71,6 +75,7 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
         self['sequence_types'] = SEQUENCE_TYPES
         self['search_distances'] = SEARCH_DISTANCES
         self['scan_distances'] = SCAN_DISTANCES
+        self.CHECKPOINT_INTERVAL = CHECKPOINT_INTERVAL
 
     def organism(self):
         if self.__organism == None:
@@ -106,7 +111,7 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
             max_width=MAX_MOTIF_WIDTH,
             background_file=background_file_downstream)
 
-        motif_scoring = motif.MemeScoringFunction(
+        upstream_motif_scoring = motif.MemeScoringFunction(
             self.organism(),
             self.membership(),
             self.ratio_matrix,
@@ -118,13 +123,26 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
             run_in_iteration=motif_iterations,
             config_params=self.config_params)
 
-        weeder_scoring = motif.WeederScoringFunction(
-            self.organism(), self.membership(), self.ratio_matrix,
-            meme_suite_downstream, 'downstream',
+        downstream_motif_scoring = motif.MemeScoringFunction(
+            self.organism(),
+            self.membership(),
+            self.ratio_matrix,
+            meme_suite_downstream,
+            seqtype='downstream',
+            sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
             weight_func=lambda iteration: 0.0,
             run_in_iteration=motif_iterations,
             config_params=self.config_params)
+
+# NOTE: it looks like Weeder scoring isn't fully implemented yet? At this time, all other run configs seem to be passing MemeSuite430 into the WeederScoringFuncion
+#        weeder_scoring = motif.WeederScoringFunction(
+#            self.organism(), self.membership(), self.ratio_matrix,
+#            meme_suite_downstream, 'downstream',
+#            pvalue_filter=motif.MinPValueFilter(-20.0),
+#            weight_func=lambda iteration: 0.0,
+#            run_in_iteration=motif_iterations,
+#            config_params=self.config_params)
 
         network_scoring = nw.ScoringFunction(self.organism(),
                                              self.membership(),
@@ -135,7 +153,7 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
 
         motif_combiner = scoring.ScoringFunctionCombiner(
             self.membership(),
-            [motif_scoring, weeder_scoring],
+            [upstream_motif_scoring, downstream_motif_scoring],
             weight_func=lambda iteration: 0.5)
 
         return scoring.ScoringFunctionCombiner(
@@ -153,7 +171,9 @@ if __name__ == '__main__':
         if len(sys.argv) > 2:
             CHECKPOINT_FILE = sys.argv[2]
         matrix_factory = dm.DataMatrixFactory([dm.nochange_filter, dm.center_scale_filter])
-        infile = util.DelimitedFile.read(sys.argv[1], has_header=True, quote='\"')
+        ratios = sys.argv[1]
+        if mode == 'debug': ratios = 'tps_ratios.1000x4.tsv'
+        infile = util.DelimitedFile.read(ratios, has_header=True, quote='\"')
         matrix = matrix_factory.create_from(infile)
         cmonkey_run = TpsCMonkeyRun('tps', matrix, NUM_CLUSTERS)
         cmonkey_run.run()
