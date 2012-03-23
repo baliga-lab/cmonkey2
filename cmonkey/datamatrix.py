@@ -6,6 +6,7 @@ more information and licensing details.
 """
 import scipy
 import numpy as np
+import operator
 import util
 import logging
 
@@ -58,6 +59,7 @@ class DataMatrix:
             self.__values = np.zeros((nrows, ncols))
             if init_value != None:
                 self.__values.fill(init_value)
+        self.__row_variance = None
 
     def num_rows(self):
         """returns the number of rows"""
@@ -198,6 +200,10 @@ class DataMatrix:
         """Returns a numpy array, containing the column means"""
         return util.column_means(self.__values)
 
+    def row_means(self):
+        """Returns a numpy array, containing the column means"""
+        return util.row_means(self.__values)
+
     ######################################################################
     #### Operations on the matrix values
     ######################################################################
@@ -255,6 +261,26 @@ class DataMatrix:
         return DataMatrix(self.num_rows(), self.num_columns(),
                           self.row_names(), self.column_names(),
                           self.__values * factor)
+
+    def row_variance(self):
+        if self.__row_variance == None:
+            self.__row_variance = util.max_row_var(self.__values)
+        return self.__row_variance
+
+    def residual(self, max_row_variance=None):
+        """computes the residual for this matrix, if max_row_variance is given,
+        result is normalized by the row variance"""
+        d_rows = self.row_means()
+        d_cols = self.column_means()
+        d_all = util.mean(d_rows)
+        tmp = self.__values + d_all - util.r_outer(d_rows, d_cols, operator.add)
+        average = util.mean(np.abs(tmp))
+        if max_row_variance != None:
+            row_var = self.row_variance()
+            if np.isnan(row_var) or row_var > max_row_variance:
+                row_var = max_row_variance
+            average = average / row_var
+        return average
 
     def __repr__(self):
         """returns a string representation of this matrix"""

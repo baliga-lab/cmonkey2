@@ -4,6 +4,7 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
+import sys
 import numpy as np
 import scipy
 import util
@@ -18,6 +19,7 @@ import motif
 import meme
 import membership as memb
 import set_enrichment as se
+import cmonkey_run
 
 
 CACHE_DIR = 'humancache'
@@ -139,129 +141,6 @@ def center_scale_filter(matrix, group_columns, group_controls):
     return matrix
 
 
-##################
-# Organism interface
-
-######################################################################
-##### Configuration
-######################################################################
-
-class CMonkeyConfiguration(scoring.ConfigurationBase):
-    """Human-specific configuration class"""
-    def __init__(self, config_params,
-                 checkpoint_file=None):
-        """create instance"""
-        scoring.ConfigurationBase.__init__(self, config_params,
-                                           checkpoint_file)
-
-    @classmethod
-    def create(cls, matrix_filename, checkpoint_file=None):
-        """creates an initialized instance"""
-        params = (scoring.ConfigurationBuilder().
-                  with_organism('hsa').
-                  with_matrix_filenames([matrix_filename]).
-                  with_num_iterations(NUM_ITERATIONS).
-                  with_cache_dir(CACHE_DIR).
-                  with_num_clusters(NUM_CLUSTERS).
-                  with_sequence_types(SEQUENCE_TYPES).
-                  with_search_distances(SEARCH_DISTANCES).
-                  with_scan_distances(SCAN_DISTANCES).
-                  build())
-        return cls(params, checkpoint_file)
-
-    def read_matrix(self, filename):
-        """returns the matrix"""
-        return read_matrix(filename)
-
-    def make_membership(self):
-        """returns the seeded membership"""
-        num_clusters = self.config_params[memb.KEY_NUM_CLUSTERS]
-        return memb.ClusterMembership.create(
-            self.matrix().sorted_by_row_name(),
-            memb.make_kmeans_row_seeder(num_clusters),
-            microarray.seed_column_members,
-            self.config_params)
-
-    def make_organism(self):
-        """returns a human organism object"""
-        nw_factories = [stringdb.get_network_factory3('human_data/string.csv')]
-        return organism.GenericOrganism('hsa', THESAURUS_FILE, nw_factories,
-                                        seq_filenames=SEQ_FILENAMES,
-                                        search_distances=SEARCH_DISTANCES,
-                                        scan_distances=SCAN_DISTANCES)
-
-    def make_row_scoring(self):
-        """returns the row scoring function"""
-        row_scoring = microarray.RowScoringFunction(
-            self.membership(), self.matrix(),
-            lambda iteration: ROW_WEIGHT,
-            config_params=self.config_params)
-
-        sequence_filters = []
-        background_file_prom = meme.global_background_file(
-            self.organism(), self.matrix().row_names(), 'promoter',
-            use_revcomp=True)
-        background_file_p3utr = meme.global_background_file(
-            self.organism(), self.matrix().row_names(), 'p3utr',
-            use_revcomp=True)
-        meme_suite_prom = meme.MemeSuite430(
-            max_width=MAX_MOTIF_WIDTH,
-            background_file=background_file_prom)
-        meme_suite_p3utr = meme.MemeSuite430(
-            max_width=MAX_MOTIF_WIDTH,
-            background_file=background_file_p3utr)
-
-        motif_scoring = motif.MemeScoringFunction(
-            self.organism(),
-            self.membership(),
-            self.matrix(),
-            meme_suite_prom,
-            seqtype='promoter',
-            sequence_filters=sequence_filters,
-            pvalue_filter=motif.MinPValueFilter(-20.0),
-            weight_func=lambda iteration: 0.0,
-            run_in_iteration=scoring.default_motif_iterations,
-            config_params=self.config_params)
-
-        network_scoring = nw.ScoringFunction(self.organism(),
-                                             self.membership(),
-                                             self.matrix(),
-                                             lambda iteration: 0.0,
-                                             scoring.default_network_iterations,
-                                             config_params=self.config_params)
-
-        weeder_scoring = motif.WeederScoringFunction(
-            self.organism(), self.membership(), self.matrix(),
-            meme_suite_p3utr, 'p3utr',
-            pvalue_filter=motif.MinPValueFilter(-20.0),
-            weight_func=lambda iteration: 0.0,
-            run_in_iteration=scoring.default_motif_iterations,
-            config_params=self.config_params)
-
-        pita = se.SetType.read_csv('pita', 'human_data/pita_miRNA_sets.csv')
-        target_scan = se.SetType.read_csv(
-            'target_scan', 'human_data/targetScan_miRNA_sets.csv')
-        set_types = [pita, target_scan]
-        set_enrichment_scoring = se.ScoringFunction(
-            self.membership(),
-            self.matrix(),
-            set_types,
-            lambda iteration: 0.0, 7,
-            config_params=self.config_params)
-
-        #motif_combiner = scoring.ScoringFunctionCombiner(
-        #    self.membership(),
-        #    [motif_scoring, weeder_scoring],
-        #    weight_func=lambda iteration: 0.5)
-
-        return scoring.ScoringFunctionCombiner(
-            self.membership(),
-            [row_scoring, network_scoring, set_enrichment_scoring])
-        #return scoring.ScoringFunctionCombiner(
-        #    self.membership(),
-        #    [row_scoring, motif_combiner, network_scoring,
-        #     set_enrichment_scoring])
-
 
 def read_controls():
     """reads the controls file"""
@@ -294,3 +173,109 @@ def read_matrix(filename):
     #select_rows = select_probes(matrix, 2000, column_groups)
     #matrix = matrix.submatrix_by_rows(select_rows)
     return intensities_to_ratios(matrix, controls, column_groups)
+
+
+class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
+
+    def __init__(self, organism_code, ratio_matrix, num_clusters):
+        cmonkey_run.CMonkeyRun.__init__(self, organism_code, ratio_matrix, num_clusters)
+        self.__organism = None
+        self['cache_dir'] = CACHE_DIR
+        self['sequence_types'] = SEQUENCE_TYPES
+        self['search_distances'] = SEARCH_DISTANCES
+        self['scan_distances'] = SCAN_DISTANCES
+
+    def organism(self):
+        if self.__organism == None:
+            self.__organism = self.make_hsa()
+        return self.__organism
+
+    def make_hsa(self):
+        """returns a human organism object"""
+        nw_factories = [stringdb.get_network_factory3('human_data/string.csv')]
+        return organism.GenericOrganism('hsa', THESAURUS_FILE, nw_factories,
+                                        seq_filenames=SEQ_FILENAMES,
+                                        search_distances=SEARCH_DISTANCES,
+                                        scan_distances=SCAN_DISTANCES)
+
+    def make_row_scoring(self):
+        """returns the row scoring function"""
+        row_scoring = microarray.RowScoringFunction(
+            self.membership(), self.ratio_matrix,
+            lambda iteration: ROW_WEIGHT,
+            config_params=self.config_params)
+
+        sequence_filters = []
+        background_file_prom = meme.global_background_file(
+            self.organism(), self.ratio_matrix.row_names(), 'promoter',
+            use_revcomp=True)
+        background_file_p3utr = meme.global_background_file(
+            self.organism(), self.ratio_matrix.row_names(), 'p3utr',
+            use_revcomp=True)
+        meme_suite_prom = meme.MemeSuite430(
+            max_width=MAX_MOTIF_WIDTH,
+            background_file=background_file_prom)
+        meme_suite_p3utr = meme.MemeSuite430(
+            max_width=MAX_MOTIF_WIDTH,
+            background_file=background_file_p3utr)
+
+        motif_scoring = motif.MemeScoringFunction(
+            self.organism(),
+            self.membership(),
+            self.ratio_matrix,
+            meme_suite_prom,
+            seqtype='promoter',
+            sequence_filters=sequence_filters,
+            pvalue_filter=motif.MinPValueFilter(-20.0),
+            weight_func=lambda iteration: 0.0,
+            run_in_iteration=scoring.default_motif_iterations,
+            config_params=self.config_params)
+
+        network_scoring = nw.ScoringFunction(self.organism(),
+                                             self.membership(),
+                                             self.ratio_matrix,
+                                             lambda iteration: 0.0,
+                                             scoring.default_network_iterations,
+                                             config_params=self.config_params)
+
+        weeder_scoring = motif.WeederScoringFunction(
+            self.organism(), self.membership(), self.ratio_matrix,
+            meme_suite_p3utr, 'p3utr',
+            pvalue_filter=motif.MinPValueFilter(-20.0),
+            weight_func=lambda iteration: 0.0,
+            run_in_iteration=scoring.default_motif_iterations,
+            config_params=self.config_params)
+
+        pita = se.SetType.read_csv('pita', 'human_data/pita_miRNA_sets.csv')
+        target_scan = se.SetType.read_csv(
+            'target_scan', 'human_data/targetScan_miRNA_sets.csv')
+        set_types = [pita, target_scan]
+        set_enrichment_scoring = se.ScoringFunction(
+            self.membership(),
+            self.ratio_matrix,
+            set_types,
+            lambda iteration: 0.0, 7,
+            config_params=self.config_params)
+
+        motif_combiner = scoring.ScoringFunctionCombiner(
+            self.membership(),
+            [motif_scoring, weeder_scoring],
+            weight_func=lambda iteration: 0.5)
+
+        return scoring.ScoringFunctionCombiner(
+            self.membership(),
+            [row_scoring, motif_combiner, network_scoring,
+             set_enrichment_scoring])
+
+
+if __name__ == '__main__':
+    print('cMonkey (Python port) (c) 2011, Institute for Systems Biology')
+    print('This program is licensed under the General Public License V3.')
+    print('See README and LICENSE for details.\n')
+    if len(sys.argv) < 2:
+        print('Usage: ./rembrandt.sh <ratio-file> [checkpoint-file]')
+    else:
+        if len(sys.argv) > 2:
+            CHECKPOINT_FILE = sys.argv[2]
+        cmonkey_run = RembrandtCMonkeyRun('hsa', read_matrix(sys.argv[1]), NUM_CLUSTERS)
+        cmonkey_run.run()

@@ -76,7 +76,12 @@ class MemeSuite:
         for feature_id, seq in seqs.items():
             if len(seq[1]) > self.__max_width:
                 seqs_for_dust[feature_id] = seq
-        return process_with_dust(seqs_for_dust)
+        # only non-empty-input gets into dust, dust can not
+        # handle empty input
+        if len(seqs_for_dust) > 0:
+            return process_with_dust(seqs_for_dust)
+        else:
+            return {}
 
     def __call__(self, input_seqs, all_seqs):
         return self.run_meme(input_seqs, all_seqs)
@@ -123,6 +128,27 @@ class MemeSuite:
             return MemeRunResult(pe_values, annotations, motif_infos)
         except:
             return MemeRunResult([], {}, [])
+        finally:
+            #logging.info("DELETING ALL TMP FILES...")
+            try:
+                os.remove(seqfile)
+            except:
+                logging.warn("could not remove tmp file: '%s'", seqfile)
+            try:
+                os.remove(meme_outfile)
+            except:
+                logging.warn("could not remove tmp file: '%s'", meme_outfile)
+            try:
+                os.remove(dbfile)
+            except:
+                logging.warn("could not remove tmp file: '%s'", dbfile)
+
+            if self.__background_file == None:
+                try:
+                    os.remove(bgfile)
+                except:
+                    logging.warn("could not remove tmp file: '%s'", bgfile)
+
 
     def make_sequence_file(self, seqs):
         """Creates a FASTA file from a list of(feature_id, sequence)
@@ -178,9 +204,11 @@ class MemeSuite430(MemeSuite):
     def mast(self, meme_outfile_path, database_file_path,
              bgfile_path):
         """runs the mast command"""
+        # note: originally run with -ev 99999, but MAST will crash with
+        # memory errors
         command = ['mast', meme_outfile_path, '-d', database_file_path,
                    '-bfile', bgfile_path, '-nostatus', '-stdout', '-text',
-                   '-brief', '-ev', '99999', '-mev', '99999', '-mt', '0.99',
+                   '-brief', '-ev', '1500', '-mev', '99999', '-mt', '0.99',
                    '-seqp', '-remcorr']
         output = subprocess.check_output(command)
         return output
@@ -530,7 +558,7 @@ def make_background_file(bgseqs, use_revcomp):
     with tempfile.NamedTemporaryFile(prefix='memebg',
                                      delete=False) as outfile:
         filename = outfile.name
-        logging.info("make background file '%s'", filename)
+        #logging.info("make background file '%s'", filename)
         outfile.write("# %s order Markov background model\n" %
                       util.order2string(len(bgmodel) - 1))
         for order_row in bgmodel:

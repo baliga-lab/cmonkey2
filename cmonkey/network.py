@@ -163,6 +163,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                                              config_params)
         self.__organism = organism
         self.__run_in_iteration = run_in_iteration
+        self.__networks = None
 
     def name(self):
         """returns the name of this function"""
@@ -178,14 +179,17 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
     def __compute(self):
         """compute method, iteration is the 0-based iteration number"""
-        networks = retrieve_networks(self.__organism)
-        weight = 0.5  # for now it's fixed, we need to make them flexible
+        # networks are cached
+        if self.__networks == None:
+            self.__networks = retrieve_networks(self.__organism)
+
+        weight = 0.5  # TODO: for now it's fixed, we need to make them flexible
         matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
                                self.gene_names())
         #network_iteration_scores = self.__create_network_iteration_scores()
         #score_means = {}  # a dictionary indexed with network names
 
-        for network in networks:
+        for network in self.__networks:
             logging.info("Compute scores for network '%s'", network.name())
             start_time = util.current_millis()
             network_score = self.__compute_network_cluster_scores(network)
@@ -292,8 +296,8 @@ def retrieve_networks(organism):
     networks = organism.networks()
     max_score = 0
     for network in networks:
-        logging.info("Network '%s' with %d edges", network.name(),
-                     network.num_edges())
+        #logging.info("Network '%s' with %d edges", network.name(),
+        #             network.num_edges())
         nw_total = network.total_score()
         if nw_total > max_score:
             max_score = nw_total

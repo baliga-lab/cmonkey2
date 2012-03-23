@@ -73,7 +73,7 @@ class ClusterMembershipTest(unittest.TestCase):
         membership = memb.ClusterMembership(
             {'R1': [1, 3], 'R2': [2, 3]},
             {'C1': [1, 2], 'C2': [2]},
-            {'memb.num_clusters': 3,
+            {'num_clusters': 3,
              'memb.clusters_per_row': 2})
         self.assertEquals([1, 3], membership.clusters_for_row('R1'))
         self.assertEquals([2, 3], membership.clusters_for_row('R2'))
@@ -103,7 +103,7 @@ class ClusterMembershipTest(unittest.TestCase):
                                                    seed_row_memberships,
                                                    seed_col_memberships,
                                                    {'memb.clusters_per_row': 2,
-                                                    'memb.num_clusters': 1,
+                                                    'num_clusters': 1,
                                                     'memb.clusters_per_col': 2})
         self.assertTrue(seed_row_memberships.was_called)
         self.assertTrue(seed_col_memberships.was_called)
@@ -119,7 +119,7 @@ class ClusterMembershipTest(unittest.TestCase):
                                                    seed_col_memberships,
                                                    {'memb.clusters_per_col': 2,
                                                     'memb.clusters_per_row': 2,
-                                                    'memb.num_clusters': 43})
+                                                    'num_clusters': 43})
         self.assertTrue(seed_row_memberships.was_called)
         self.assertTrue(seed_col_memberships.was_called)
         self.assertEquals(memb.NUM_CLUSTERS, membership.num_clusters())
