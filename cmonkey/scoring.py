@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """scoring.py - cMonkey scoring base classes
 
 This file is part of cMonkey Python. Please see README and LICENSE for
@@ -104,7 +105,6 @@ class ScoringFunctionBase:
     def restore_checkpoint_data(self, shelf):
         """Default implementation does not store checkpoint data"""
         pass
-
 
 class ColumnScoringFunction(ScoringFunctionBase):
     """Scoring algorithm for microarray data based on conditions.
