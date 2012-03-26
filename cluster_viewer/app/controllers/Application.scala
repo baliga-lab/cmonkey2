@@ -170,7 +170,9 @@ object Application extends Controller {
             for (motif <- stMotifs) {
               val motifObj = motif.asInstanceOf[JsObject]
               val pssm = motifObj.value("pssm").as[Array[Array[Float]]]
-              val evalue = motifObj.value("evalue").asInstanceOf[JsNumber].value.doubleValue
+              val evalue = if (motifObj.keys.contains("evalue")) {
+                motifObj.value("evalue").asInstanceOf[JsNumber].value.doubleValue
+              } else 0.0
               val motifNum = motifObj.value("motif_num").asInstanceOf[JsNumber].value.intValue
               motifInfos.add(MotifInfo(motifNum, evalue, pssm))
             }
@@ -279,21 +281,26 @@ object Application extends Controller {
     val rows    = snapshot.get.rows(cluster)
     val columns = snapshot.get.columns(cluster)
 
-    val motifInfos = new java.util.ArrayList[MotifInfo]
-    val motifMap = snapshot.get.motifs(cluster)
-    for (seqType <- motifMap.keys) {
-      val motifMapInfos = motifMap(seqType)
-      for (info <- motifMapInfos) motifInfos.add(info)
-    }
+    if (snapshot.get.motifs.contains(cluster)) {
+      val motifInfos = new java.util.ArrayList[MotifInfo]
+      val motifMap = snapshot.get.motifs(cluster)
+      for (seqType <- motifMap.keys) {
+        val motifMapInfos = motifMap(seqType)
+        for (info <- motifMapInfos) motifInfos.add(info)
+      }
 
-    // NOTE: there is no differentiation between sequence types yet !!!!
-    val pssm = if (snapshot.get.motifs.size > 0) {
-      toJsonPssm(snapshot.get.motifs(cluster))
+      // NOTE: there is no differentiation between sequence types yet !!!!
+      val pssm = if (snapshot.get.motifs.size > 0) {
+        toJsonPssm(snapshot.get.motifs(cluster))
+      } else {
+        new Array[String](0)
+      }
+      Ok(views.html.cluster(iteration, cluster, rows, columns, ratios,
+                            motifInfos.toArray(new Array[MotifInfo](0)), pssm))
     } else {
-      new Array[String](0)
+      Ok(views.html.cluster(iteration, cluster, rows, columns, ratios,
+                            new Array[MotifInfo](0), new Array[String](0)))
     }
-    Ok(views.html.cluster(iteration, cluster, rows, columns, ratios,
-                          motifInfos.toArray(new Array[MotifInfo](0)), pssm))
   }
 
   private def toJsonPssm(motifMap: Map[String, Array[MotifInfo]]): Array[String] = {
