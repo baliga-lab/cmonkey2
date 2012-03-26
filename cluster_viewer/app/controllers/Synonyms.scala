@@ -43,7 +43,7 @@ class SynonymsMapCSV2(file: File) extends SynonymsMap {
         entries(original) = original
         val alternatives = comps(1).split(";")
         for (alternative <- alternatives) {
-          entries(original) = alternative.toUpperCase
+          entries(alternative.toUpperCase) = original
         }
         line = in.readLine
       }
