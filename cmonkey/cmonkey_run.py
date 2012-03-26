@@ -179,10 +179,18 @@ class CMonkeyRun:
     def run(self):
         row_scoring = self.make_row_scoring()
         col_scoring = self.make_column_scoring()
-        output_dir = self['output_dir']
         self.__make_dirs_if_needed()
+        self.run_iterations(row_scoring, col_scoring)
 
+    def run_from_checkpoint(self,checkpoint_filename):
+        row_scoring = self.make_row_scoring()
+        col_scoring = self.make_column_scoring()
+        self.__make_dirs_if_needed()
+        self.init_from_checkpoint(checkpoint_filename, row_scoring, col_scoring)
+        self.run_iterations(row_scoring, col_scoring)
 
+    def run_iterations(self, row_scoring, col_scoring):
+        output_dir = self['output_dir']
 
         for iteration in range(self['start_iteration'],
                                self['num_iterations'] + 1):
@@ -254,6 +262,6 @@ class CMonkeyRun:
             self['start_iteration'] = shelf['iteration'] + 1
             self.__membership = memb.ClusterMembership.restore_from_checkpoint(
                 self.config_params, shelf)
-            row_scoring().restore_checkpoint_data(shelf)
-            col_scoring().restore_checkpoint_data(shelf)
+            row_scoring.restore_checkpoint_data(shelf)
+            col_scoring.restore_checkpoint_data(shelf)
             #return row_scoring, col_scoring necessary??

@@ -5,6 +5,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import sys
+import os
 import organism
 import scoring
 import microarray
@@ -19,7 +20,7 @@ import cmonkey_run
 
 
 CHECKPOINT_INTERVAL = 100
-CHECKPOINT_FILE = 'tps.cp'
+CHECKPOINT_FILE = None
 CACHE_DIR = 'tpscache'
 
 THESAURUS_FILE = 'tps/tps.synonyms.gz'
@@ -176,4 +177,5 @@ if __name__ == '__main__':
         infile = util.DelimitedFile.read(ratios, has_header=True, quote='\"')
         matrix = matrix_factory.create_from(infile)
         cmonkey_run = TpsCMonkeyRun('tps', matrix, NUM_CLUSTERS)
-        cmonkey_run.run()
+        if os.path.exists(CHECKPOINT_FILE): cmonkey_run.run_from_checkpoint(CHECKPOINT_FILE)
+        else: cmonkey_run.run()
