@@ -176,6 +176,10 @@ class CMonkeyRun:
         if not os.path.exists(cache_dir):
             os.mkdir(cache_dir)
 
+        # write the normalized ratio matrix for stats and visualization
+        if not os.path.exists(output_dir + '/ratios.tsv'):
+            self.ratio_matrix.write_tsv_file(output_dir + '/ratios.tsv')
+
     def run(self):
         row_scoring = self.make_row_scoring()
         col_scoring = self.make_column_scoring()

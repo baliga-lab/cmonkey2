@@ -35,9 +35,13 @@ object Application extends Controller {
   val Synonyms = SynonymsFactory.getSynonyms(
     ProjectConfig.getProperty("cmonkey.synonyms.format"),
     ProjectConfig.getProperty("cmonkey.synonyms.file"))
-  val RatiosFactory = new RatioMatrixFactory(
-    new File(ProjectConfig.getProperty("cmonkey.ratios.file")),
-    Synonyms)
+
+  val ratiosFile = if (ProjectConfig.getProperty("cmonkey.ratios.file") != null) {
+    new File(ProjectConfig.getProperty("cmonkey.ratios.file"))
+  } else {
+    new File(OutDirectory, "ratios.tsv")
+  }
+  val RatiosFactory = new RatioMatrixFactory(ratiosFile, Synonyms)
 
   implicit object StatsFormat extends Format[IterationStats] {
     def reads(json: JsValue): IterationStats = {

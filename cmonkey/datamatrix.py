@@ -298,6 +298,18 @@ class DataMatrix:
             result += '\n'
         return result
 
+    def write_tsv_file(self, path):
+        """writes this matrix to tab-separated file"""
+        with open(path, 'w') as outfile:
+            title = ['GENE']
+            title.extend(self.__column_names)
+            titlerow = '\t'.join(title)
+            outfile.write(titlerow + '\n')
+            for row_index in range(len(self.__row_names)):
+                row = [self.__row_names[row_index]]
+                row.extend([('%f' % value) for value in self.__values[row_index]])
+                outfile.write('\t'.join(row) + '\n')
+            outfile.flush()
 
 class DataMatrixCollection:
     """A collection of DataMatrix objects containing gene expression values
