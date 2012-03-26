@@ -35,7 +35,7 @@ statsIterations: Seq[Int], meanResiduals: Array[Double], iterationStats: Map[Int
                  }
              },
              xAxis: {
-                 categories: @(Formatter.formatInts(statsIterations)),
+                 categories: @(HighchartsFormatter.formatInts(statsIterations)),
                  tickInterval: 10
              },
              yAxis: {
@@ -43,7 +43,7 @@ statsIterations: Seq[Int], meanResiduals: Array[Double], iterationStats: Map[Int
                      text: 'mean resids'
                  }
              },
-             series: @(Formatter.toHSSeries(meanResiduals))
+             series: @(HighchartsFormatter.toHSSeries(meanResiduals))
          });
          // cluster member graph
          var clusterMemberChart = new Highcharts.Chart({
@@ -64,7 +64,7 @@ statsIterations: Seq[Int], meanResiduals: Array[Double], iterationStats: Map[Int
                  }
              },
              xAxis: {
-                 categories: @(Formatter.formatInts(statsIterations)),
+                 categories: @(HighchartsFormatter.formatInts(statsIterations)),
                  tickInterval: 10
              },
              yAxis: {
@@ -72,7 +72,7 @@ statsIterations: Seq[Int], meanResiduals: Array[Double], iterationStats: Map[Int
                      text: 'mean nrow, ncol/iter'
                  }
              },
-             series: @(Formatter.toNRowNColHSSeries(iterationStats))
+             series: @(HighchartsFormatter.toNRowNColHSSeries(iterationStats))
          });
 
      });
