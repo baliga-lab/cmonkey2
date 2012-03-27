@@ -10,6 +10,10 @@ case class IterationStats(clusters: Map[Int, ClusterStats], medianResidual: Doub
 
 object StatsReader {
   val StatsFilePattern = Pattern.compile("(\\d+)-stats.json")
+}
+
+class StatsReader(OutFile: File) {
+  import StatsReader._
 
   implicit object StatsFormat extends Format[IterationStats] {
     def reads(json: JsValue): IterationStats = {

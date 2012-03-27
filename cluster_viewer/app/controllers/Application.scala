@@ -8,6 +8,9 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._
 import play.api.libs.json._
 
+case class IntHistogram(xvalues: Array[Int], yvalues: Array[Int])
+case class ResidualHistogram(xvalues: Array[String], yvalues: Array[Int])
+
 object Application extends Controller {
 
   val AppConfig = Play.current.configuration
@@ -20,6 +23,7 @@ object Application extends Controller {
     ProjectConfig.getProperty("cmonkey.synonyms.format"),
     ProjectConfig.getProperty("cmonkey.synonyms.file"))
   val snapshotReader = new SnapshotReader(OutDirectory, Synonyms)
+  val statsReader = new StatsReader(OutDirectory)
 
   val ratiosFile = if (ProjectConfig.getProperty("cmonkey.ratios.file") != null) {
     new File(ProjectConfig.getProperty("cmonkey.ratios.file"))
@@ -28,8 +32,7 @@ object Application extends Controller {
   }
   val RatiosFactory = new RatioMatrixFactory(ratiosFile, Synonyms)
 
-
-  private def availableIterations = {
+  private def snapshotIterations = {
     val fileNames = OutDirectory.list(new FilenameFilter {
       def accept(dir: File, name: String) = SnapshotReader.JsonFilePattern.matcher(name).matches
     })
@@ -49,22 +52,85 @@ object Application extends Controller {
   def index = index2(1)
 
   def index2(iteration: Int) = Action {
-    val iterations = availableIterations
-    println("# Iterations found: " + iterations.length)
-
-    // create sorted results
-    val stats = StatsReader.readStats(OutDirectory)
+    // sort keys ascending by iteration number
+    val stats = statsReader.readStats(OutDirectory).toMap
     val statsIterations = stats.keySet.toArray
     java.util.Arrays.sort(statsIterations)
+
+    makeRowStats(stats)
+    Ok(views.html.index(snapshotReader.readSnapshot(iteration),
+                        snapshotIterations,
+                        iteration,
+                        statsIterations,
+                        makeMeanResiduals(statsIterations, stats),
+                        stats,
+                        makeRowStats(stats),
+                        makeColumnStats(stats),
+                        makeResidualHistogram(stats)))
+  }
+
+  private def makeRowStats(stats: Map[Int, IterationStats]) = {
+    makeIntHistogram(stats, (cs: ClusterStats) => cs.numRows)
+  }
+  private def makeColumnStats(stats: Map[Int, IterationStats]) = {
+    makeIntHistogram(stats, (cs: ClusterStats) => cs.numColumns)
+  }
+
+  private def makeIntHistogram(stats: Map[Int, IterationStats], getKey: ClusterStats => Int) = {
+    val histogram = new HashMap[Int, Int]   // # rows -> # clusters
+    val maxIteration = stats.keys.max
+    for (cluster <- stats(maxIteration).clusters.keys) {
+      val key = getKey(stats(maxIteration).clusters(cluster))
+      if (!histogram.contains(key)) histogram(key) = 0
+      histogram(key) += 1
+    }
+
+    val sortedKeys = histogram.keySet.toArray
+    java.util.Arrays.sort(sortedKeys)
+    val values = new Array[Int](sortedKeys.length)
+    var i = 0
+    for (key <- sortedKeys) {
+      values(i) = histogram(key)
+      i += 1
+    }
+    IntHistogram(sortedKeys, values)
+  }
+
+  private def makeResidualHistogram(stats: Map[Int, IterationStats]): ResidualHistogram = {
+    val numBuckets = 20
+    val maxIteration = stats.keys.max
+    var minResidual = 10000000.0f
+    var maxResidual = -10000000.0f
+    for (cluster <- stats(maxIteration).clusters.keys) {
+      val residual = stats(maxIteration).clusters(cluster).residual.asInstanceOf[Float]
+      if (residual < minResidual) minResidual = residual
+      if (residual > maxResidual) maxResidual = residual
+    }
+
+    val xvalues = new Array[String](numBuckets)
+    val yvalues = new Array[Int](numBuckets)
+    val interval = (maxResidual - minResidual) / numBuckets
+    // making labels
+    for (i <- 0 until numBuckets) {
+      xvalues(i) = "%.2f".format(minResidual + interval * i)
+    }
+    // dump residuals in the right buckets
+    for (cluster <- stats(maxIteration).clusters.keys) {
+      val residual = stats(maxIteration).clusters(cluster).residual.asInstanceOf[Float]
+      val bucketnum = math.min(numBuckets - 1, ((residual - minResidual) / interval).asInstanceOf[Int])
+      yvalues(bucketnum) += 1
+    }
+    ResidualHistogram(xvalues, yvalues)
+  }
+
+  private def makeMeanResiduals(statsIterations: Array[Int], stats: Map[Int, IterationStats]) = {
     val meanResiduals = new Array[Double](stats.size)
     var i = 0
     for (key <- statsIterations) {
       meanResiduals(i) = stats(key).medianResidual
       i += 1
     }
-
-    Ok(views.html.index(snapshotReader.readSnapshot(iteration), iterations, iteration,
-                        statsIterations, meanResiduals, stats.toMap))
+    meanResiduals
   }
 
   def cluster(iteration: Int, cluster: Int) = Action {

@@ -1,5 +1,8 @@
 @(snapshot: Option[Snapshot], iterations: Seq[Int], iteration: Int,
-statsIterations: Seq[Int], meanResiduals: Array[Double], iterationStats: Map[Int, IterationStats])
+statsIterations: Seq[Int], meanResiduals: Array[Double],
+iterationStats: Map[Int, IterationStats],
+rowStats: IntHistogram, columnStats: IntHistogram,
+residualHistogram: ResidualHistogram)
 
 @main("Play 2.0 - Cluster View") {
    <script type="text/javascript">
@@ -21,16 +24,13 @@ statsIterations: Seq[Int], meanResiduals: Array[Double], iterationStats: Map[Int
              chart: {
                  renderTo: 'residual-graph',
                  type: 'line',
-                 width: 300,
-                 height: 200
+                 width: 300, height: 200
              },
              title: { text: 'Mean Residual' },
-             plotOptions: {
-                 line: { marker: { enabled: false }, }
-             },
+             plotOptions: { line: { marker: { enabled: false }, } },
              xAxis: {
                  categories: @(HighchartsFormatter.formatInts(statsIterations)),
-                 tickInterval: 10
+                 tickInterval: 30
              },
              yAxis: { title: { text: 'mean resids' } },
              series: @(HighchartsFormatter.toHSSeries(meanResiduals))
@@ -40,35 +40,32 @@ statsIterations: Seq[Int], meanResiduals: Array[Double], iterationStats: Map[Int
              chart: {
                  renderTo: 'cluster-member-graph',
                  type: 'line',
-                 width: 300,
-                 height: 200
+                 width: 300, height: 200
              },
              title: { text: 'Mean nrow, ncol/iter' },
-             plotOptions: {
-                 line: { marker: { enabled: false }, }
-             },
+             plotOptions: { line: { marker: { enabled: false }, } },
              xAxis: {
                  categories: @(HighchartsFormatter.formatInts(statsIterations)),
-                 tickInterval: 10
+                 tickInterval: 30
              },
              yAxis: { title: { text: 'mean nrow, ncol/iter' } },
              series: @(HighchartsFormatter.toNRowNColHSSeries(iterationStats))
          });
 
          // cluster nrows graph
-         var clusterGenesChart = new Highcharts.Chart({
+         var clusterRowsChart = new Highcharts.Chart({
              chart: {
                  renderTo: 'cluster-row-graph',
                  type: 'column',
-                 width: 300,
-                 height: 200
+                 width: 300, height: 200
              },
-             title: { text: 'cluster nrows' },
+             title: { text: '# clusters -> # rows' },
              xAxis: {
-                 categories: [1, 2, 3]
+                 categories: @(HighchartsFormatter.formatInts(rowStats.xvalues)),
+                 tickInterval: 5
              },
-             yAxis: { title: { text: 'rows' } },
-             series: [ { name: 'foo', data: [3, 4, 5] } ]
+             yAxis: { title: { text: '# clusters' } },
+             series: [ { name: '# rows', data: @(HighchartsFormatter.formatInts(rowStats.yvalues)) } ]
          });
 
          // cluster ncols graph
@@ -76,15 +73,31 @@ statsIterations: Seq[Int], meanResiduals: Array[Double], iterationStats: Map[Int
              chart: {
                  renderTo: 'cluster-column-graph',
                  type: 'column',
-                 width: 300,
-                 height: 200
+                 width: 300, height: 200
              },
-             title: { text: 'cluster ncols' },
+             title: { text: '# clusters -> # columns' },
              xAxis: {
-                 categories: [1, 2, 3]
+                 categories: @(HighchartsFormatter.formatInts(columnStats.xvalues)),
+                 tickInterval: 2
              },
-             yAxis: { title: { text: 'columns' } },
-             series: [ { name: 'foo', data: [3, 3.1, 2.8] } ]
+             yAxis: { title: { text: '# clusters' } },
+             series: [ { name: '# columns', data: @(HighchartsFormatter.formatInts(columnStats.yvalues)) } ]
+         });
+
+         // cluster residual graph
+         var clusterResidualChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'cluster-residual-graph',
+                 type: 'column',
+                 width: 300, height: 200
+             },
+             title: { text: 'cluster residuals' },
+             xAxis: {
+                 categories: @(HighchartsFormatter.formatStrings(residualHistogram.xvalues)),
+                 tickInterval: 3
+             },
+             yAxis: { title: { text: '# clusters' } },
+             series: [ { name: 'residual', data: @(HighchartsFormatter.formatInts(residualHistogram.yvalues)) } ]
          });
 
      });
@@ -109,12 +122,20 @@ statsIterations: Seq[Int], meanResiduals: Array[Double], iterationStats: Map[Int
 
    <div id="stats-box" class="stats-box">
      <span id="residual-graph" class="graph-left"></span><span id="cluster-member-graph" class="graph-center"></span>
+     <div style="clear:both"></div>
    </div>
-   <div style="clear:both"></div>
+
+
    <div id="stats-box" class="stats-box">
      <span id="cluster-row-graph" class="graph-left"></span><span id="cluster-column-graph" class="graph-center"></span>
+     <div style="clear:both"></div>
    </div>
-   <div style="clear:both"></div>
+
+   <div id="stats-box" class="stats-box">
+     <span id="cluster-residual-graph" class="graph-left"></span>
+     <div style="clear:both"></div>
+   </div>
+
    <div style="height: 10px;">&nbsp;</div>
 
    @if(snapshot == None) {
