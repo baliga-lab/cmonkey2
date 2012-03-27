@@ -24,25 +24,15 @@ statsIterations: Seq[Int], meanResiduals: Array[Double], iterationStats: Map[Int
                  width: 300,
                  height: 200
              },
-             title: {
-                 text: 'Mean Residual'
-             },
+             title: { text: 'Mean Residual' },
              plotOptions: {
-                 line: {
-                     marker: {
-                         enabled: false
-                     },
-                 }
+                 line: { marker: { enabled: false }, }
              },
              xAxis: {
                  categories: @(HighchartsFormatter.formatInts(statsIterations)),
                  tickInterval: 10
              },
-             yAxis: {
-                 title: {
-                     text: 'mean resids'
-                 }
-             },
+             yAxis: { title: { text: 'mean resids' } },
              series: @(HighchartsFormatter.toHSSeries(meanResiduals))
          });
          // cluster member graph
@@ -53,36 +43,59 @@ statsIterations: Seq[Int], meanResiduals: Array[Double], iterationStats: Map[Int
                  width: 300,
                  height: 200
              },
-             title: {
-                 text: 'Mean nrow, ncol/iter'
-             },
+             title: { text: 'Mean nrow, ncol/iter' },
              plotOptions: {
-                 line: {
-                     marker: {
-                         enabled: false
-                     },
-                 }
+                 line: { marker: { enabled: false }, }
              },
              xAxis: {
                  categories: @(HighchartsFormatter.formatInts(statsIterations)),
                  tickInterval: 10
              },
-             yAxis: {
-                 title: {
-                     text: 'mean nrow, ncol/iter'
-                 }
-             },
+             yAxis: { title: { text: 'mean nrow, ncol/iter' } },
              series: @(HighchartsFormatter.toNRowNColHSSeries(iterationStats))
+         });
+
+         // cluster nrows graph
+         var clusterGenesChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'cluster-row-graph',
+                 type: 'column',
+                 width: 300,
+                 height: 200
+             },
+             title: { text: 'cluster nrows' },
+             xAxis: {
+                 categories: [1, 2, 3]
+             },
+             yAxis: { title: { text: 'rows' } },
+             series: [ { name: 'foo', data: [3, 4, 5] } ]
+         });
+
+         // cluster ncols graph
+         var clusterColumnsChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'cluster-column-graph',
+                 type: 'column',
+                 width: 300,
+                 height: 200
+             },
+             title: { text: 'cluster ncols' },
+             xAxis: {
+                 categories: [1, 2, 3]
+             },
+             yAxis: { title: { text: 'columns' } },
+             series: [ { name: 'foo', data: [3, 3.1, 2.8] } ]
          });
 
      });
    </script>
    <h2>cMonkey/Python Results</h2>
-   <h4>Iteration <select id="select_iteration">
+   <div>Iteration <select id="select_iteration">
    @for(iter <- iterations) {@if(iter == iteration) {<option value="@iter" selected>@iter</option>} else {<option value="@iter">@iter</option>}}
-   </select>/2000: Available clusters (@snapshot.get.clusters.length)</h4>
+   </select>/2000: Available clusters (@snapshot.get.clusters.length)
+   </div>
+
    <div style="height: 10px;">&nbsp;</div>
-   <p style="font-size: smaller">Progress: @((iterations(iterations.length - 1) / 2000.0) * 100) %</p>
    <div class="ui-progress-bar ui-container" id="progress_bar" style="width: 20%; height: 15px;">
      <div class="ui-progress" style="height: 12px; width: @((iterations(iterations.length - 1) / 2000.0) * 100)%;">
        <span class="ui-label" style="display:none;">
@@ -91,10 +104,15 @@ statsIterations: Seq[Int], meanResiduals: Array[Double], iterationStats: Map[Int
        </span>
      </div>
    </div>
-
+   <div style="font-size: smaller">Progress: @((iterations(iterations.length - 1) / 2000.0) * 100) %</div>
    <div style="height: 10px;">&nbsp;</div>
+
    <div id="stats-box" class="stats-box">
-     <span id="residual-graph"></span><span id="cluster-member-graph"></span>
+     <span id="residual-graph" class="graph-left"></span><span id="cluster-member-graph" class="graph-center"></span>
+   </div>
+   <div style="clear:both"></div>
+   <div id="stats-box" class="stats-box">
+     <span id="cluster-row-graph" class="graph-left"></span><span id="cluster-column-graph" class="graph-center"></span>
    </div>
    <div style="clear:both"></div>
    <div style="height: 10px;">&nbsp;</div>
