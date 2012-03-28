@@ -54,7 +54,7 @@ class ParkinsonCMonkeyRun(cmonkey_run.CMonkeyRun):
 
     def make_hsa(self):
         """returns a configured organism object"""
-        nw_factories = [stringdb.get_network_factory2('parkinson_data/human_links_preprocessed.csv', sep=';')]
+        nw_factories = [stringdb.get_network_factory2('parkinson_data/human_links_preprocessed.csv', weight=1.0, sep=';')]
         return organism.GenericOrganism('hsa', THESAURUS_FILE, nw_factories,
                                         seq_filenames=SEQ_FILENAMES,
                                         search_distances=self['search_distances'],

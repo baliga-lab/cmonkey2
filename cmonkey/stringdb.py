@@ -45,17 +45,17 @@ def normalize_edge_list(edges, max_score):
     return edges
 
 
-def get_network_factory(filename):
+def get_network_factory(filename, weight):
     """temporary STRING network factory using the default STRING format"""
     def make_network(_):
         """make network"""
         return network.Network.create("STRING",
-                                      read_edges(filename))
+                                      read_edges(filename), weight)
 
     return make_network
 
 
-def get_network_factory2(filename, sep='\t'):
+def get_network_factory2(filename, weight, sep='\t'):
     """STRING network factory from preprocessed edge file
     (protein1, protein2, combined_score), scores are already
     normalized to 1000"""
@@ -71,12 +71,12 @@ def get_network_factory2(filename, sep='\t'):
 
     def make_network(_):
         """make network"""
-        return network.Network.create("STRING", read_edges2(filename))
+        return network.Network.create("STRING", read_edges2(filename), weight)
 
     return make_network
 
 
-def get_network_factory3(filename):
+def get_network_factory3(filename, weight):
     """STRING network factory from preprocessed edge file
     (row, protein1, protein2, combined_score), scores are not yet
     normalized to 1000"""
@@ -93,7 +93,7 @@ def get_network_factory3(filename):
 
     def make_network(_):
         """make network"""
-        return network.Network.create("STRING", read_edges3(filename))
+        return network.Network.create("STRING", read_edges3(filename), weight)
 
     return make_network
 

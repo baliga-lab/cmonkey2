@@ -192,7 +192,7 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
 
     def make_hsa(self):
         """returns a human organism object"""
-        nw_factories = [stringdb.get_network_factory3('human_data/string.csv')]
+        nw_factories = [stringdb.get_network_factory3('human_data/string.csv', weight=1.0)]
         return organism.GenericOrganism('hsa', THESAURUS_FILE, nw_factories,
                                         seq_filenames=SEQ_FILENAMES,
                                         search_distances=SEARCH_DISTANCES,

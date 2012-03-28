@@ -216,7 +216,7 @@ def __get_predictions(microbes_online, organism):
     return preds
 
 
-def get_network_factory(microbes_online, max_operon_size):
+def get_network_factory(microbes_online, max_operon_size, weight):
     """function to create a network factory method"""
 
     def get_operon_edges(microbes_online, organism):
@@ -240,7 +240,7 @@ def get_network_factory(microbes_online, max_operon_size):
         logging.info("MicrobesOnline - make_network()")
         edges = get_operon_edges(microbes_online, organism)
         logging.info("%d edges computed", len(edges))
-        return network.Network.create('operons', edges)
+        return network.Network.create('operons', edges, weight)
 
     return make_network
 

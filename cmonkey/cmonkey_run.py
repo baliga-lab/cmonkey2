@@ -152,12 +152,12 @@ class CMonkeyRun:
 
         nw_factories = []
         if stringfile != None:
-            nw_factories.append(stringdb.get_network_factory2(stringfile))
+            nw_factories.append(stringdb.get_network_factory2(stringfile, 0.5))
         else:
             logging.warn("no STRING file specified !")
 
         nw_factories.append(microbes_online.get_network_factory(
-                mo_db, max_operon_size=self.ratio_matrix.num_rows() / 20))
+                mo_db, max_operon_size=self.ratio_matrix.num_rows() / 20, weight=0.5))
 
         org_factory = org.MicrobeFactory(org.make_kegg_code_mapper(keggfile),
                                          org.make_rsat_organism_mapper(rsatdb),
