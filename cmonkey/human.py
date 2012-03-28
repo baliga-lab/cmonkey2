@@ -227,7 +227,7 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             seqtype='promoter',
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
-            weight_func=lambda iteration: 0.0,
+            scaling_func=lambda iteration: 0.0,
             run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
 
@@ -242,7 +242,7 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             self.organism(), self.membership(), self.ratio_matrix,
             meme_suite_p3utr, 'p3utr',
             pvalue_filter=motif.MinPValueFilter(-20.0),
-            weight_func=lambda iteration: 0.0,
+            scaling_func=lambda iteration: 0.0,
             run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
 
@@ -260,7 +260,7 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
         motif_combiner = scoring.ScoringFunctionCombiner(
             self.membership(),
             [motif_scoring, weeder_scoring],
-            weight_func=lambda iteration: 0.5)
+            scaling_func=lambda iteration: 0.5)
 
         return scoring.ScoringFunctionCombiner(
             self.membership(),

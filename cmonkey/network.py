@@ -156,14 +156,17 @@ def compute_network_scores(genes):
 
 
 class ScoringFunction(scoring.ScoringFunctionBase):
-    """Network scoring function"""
+    """Network scoring function. Note that even though there are several
+    networks, scoring can't be generalized with the default ScoringCombiner,
+    since the scores are computed through weighted addition rather than
+    quantile normalization"""
 
-    def __init__(self, organism, membership, matrix, weight_func=None,
+    def __init__(self, organism, membership, matrix, scaling_func=None,
                  run_in_iteration=scoring.default_network_iterations,
                  config_params=None):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
-                                             matrix, weight_func,
+                                             matrix, scaling_func,
                                              config_params)
         self.__organism = organism
         self.__run_in_iteration = run_in_iteration

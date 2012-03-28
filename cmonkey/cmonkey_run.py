@@ -42,7 +42,7 @@ class CMonkeyRun:
         # defaults
         self.row_seeder = memb.make_kmeans_row_seeder(num_clusters)
         self.column_seeder = microarray.seed_column_members
-        self['row_weight'] = 6.0
+        self['row_scaling'] = 6.0
         self['string_file'] = None
         self['cache_dir'] = CACHE_DIR
         self['output_dir'] = 'out'
@@ -98,7 +98,7 @@ class CMonkeyRun:
         # Default row scoring functions
         row_scoring = microarray.RowScoringFunction(
             self.membership(), self.ratio_matrix,
-            lambda iteration: self['row_weight'],
+            scaling_func=lambda iteration: self['row_scaling'],
             config_params=self.config_params)
 
         meme_suite = meme.MemeSuite430()
@@ -114,14 +114,14 @@ class CMonkeyRun:
             meme_suite,
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
-            weight_func=lambda iteration: 1.0,  # TODO
+            scaling_func=lambda iteration: 1.0,  # TODO
             run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
 
         network_scoring = nw.ScoringFunction(self.organism(),
                                              self.membership(),
                                              self.ratio_matrix,
-                                             weight_func=lambda iteration: 0.0,
+                                             scaling_func=lambda iteration: 0.0,
                                              run_in_iteration=scoring.default_network_iterations,
                                              config_params=self.config_params)
 

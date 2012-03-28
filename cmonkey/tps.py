@@ -120,7 +120,7 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
             seqtype='upstream',
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
-            weight_func=lambda iteration: 0.0,
+            scaling_func=lambda iteration: 0.0,
             run_in_iteration=motif_iterations,
             config_params=self.config_params)
 
@@ -132,7 +132,7 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
             seqtype='downstream',
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
-            weight_func=lambda iteration: 0.0,
+            scaling_func=lambda iteration: 0.0,
             run_in_iteration=motif_iterations,
             config_params=self.config_params)
 
@@ -141,7 +141,7 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
 #            self.organism(), self.membership(), self.ratio_matrix,
 #            meme_suite_downstream, 'downstream',
 #            pvalue_filter=motif.MinPValueFilter(-20.0),
-#            weight_func=lambda iteration: 0.0,
+#            scaling_func=lambda iteration: 0.0,
 #            run_in_iteration=motif_iterations,
 #            config_params=self.config_params)
 
@@ -155,7 +155,7 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
         motif_combiner = scoring.ScoringFunctionCombiner(
             self.membership(),
             [upstream_motif_scoring, downstream_motif_scoring],
-            weight_func=lambda iteration: 0.5)
+            scaling_func=lambda iteration: 0.5)
 
         return scoring.ScoringFunctionCombiner(
             self.membership(),
