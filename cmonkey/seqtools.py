@@ -137,22 +137,17 @@ def subsequence(sequence, start, stop, reverse=False):
     return result
 
 
+REV_DICT = { 'A': 'T', 'G': 'C', 'C': 'G', 'T': 'A' }
 def revcomp(sequence):
     """compute the reverse complement of the input string"""
-    return "".join([revchar(c) for c in sequence[::-1]])
+    return "".join([__revchar(c) for c in sequence[::-1]])
 
 
-def revchar(nucleotide):
+def __revchar(nucleotide):
     """for a nucleotide character, return its complement"""
     nucleotide = nucleotide.upper()
-    if nucleotide == 'A':
-        return 'T'
-    elif nucleotide == 'G':
-        return 'C'
-    elif nucleotide == 'C':
-        return 'G'
-    elif nucleotide == 'T':
-        return 'A'
+    if nucleotide in REV_DICT:
+        return REV_DICT[nucleotide]
     else:
         return nucleotide
 

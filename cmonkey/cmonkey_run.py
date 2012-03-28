@@ -121,8 +121,8 @@ class CMonkeyRun:
         network_scoring = nw.ScoringFunction(self.organism(),
                                              self.membership(),
                                              self.ratio_matrix,
-                                             lambda iteration: 0.0,
-                                             scoring.default_network_iterations,
+                                             weight_func=lambda iteration: 0.0,
+                                             run_in_iteration=scoring.default_network_iterations,
                                              config_params=self.config_params)
 
         row_scoring_functions = [row_scoring, motif_scoring, network_scoring]
