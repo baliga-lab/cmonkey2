@@ -58,10 +58,11 @@ class NetworkEdge:
 class Network:
     """class to represent a network graph"""
 
-    def __init__(self, name, edges):
+    def __init__(self, name, edges, weight):
         """creates a network from a list of edges"""
         self.__name = name
         self.__edges = edges
+        self.__weight = weight
 
     def name(self):
         """returns the name of the network"""
@@ -70,6 +71,10 @@ class Network:
     def edges(self):
         """returns the list of edges"""
         return self.__edges
+
+    def weight(self):
+        """returns the scoring weight of this network"""
+        return self.__weight
 
     def num_edges(self):
         """returns the number of edges in this graph"""
@@ -102,7 +107,7 @@ class Network:
                                                len(self.__edges))
 
     @classmethod
-    def create(cls, name, edges):
+    def create(cls, name, edges, weight):
         """standard Factory method"""
         added = {}
         network_edges = []
@@ -121,7 +126,7 @@ class Network:
             if key_rev not in added:
                 add_edge(NetworkEdge(edge.target(), edge.source(),
                                      edge.score()))
-        return Network(name, network_edges)
+        return Network(name, network_edges, weight)
 
 
 COMPUTE_NETWORK = None
@@ -130,7 +135,6 @@ ALL_GENES = None
 
 def compute_network_scores(genes):
     """Generic method to compute network scores"""
-    #network, genes, all_genes = args
     global COMPUTE_NETWORK, ALL_GENES
     network = COMPUTE_NETWORK
     all_genes = genes
@@ -152,14 +156,17 @@ def compute_network_scores(genes):
 
 
 class ScoringFunction(scoring.ScoringFunctionBase):
-    """Network scoring function"""
+    """Network scoring function. Note that even though there are several
+    networks, scoring can't be generalized with the default ScoringCombiner,
+    since the scores are computed through weighted addition rather than
+    quantile normalization"""
 
-    def __init__(self, organism, membership, matrix, weight_func=None,
+    def __init__(self, organism, membership, matrix, scaling_func=None,
                  run_in_iteration=scoring.default_network_iterations,
                  config_params=None):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
-                                             matrix, weight_func,
+                                             matrix, scaling_func,
                                              config_params)
         self.__organism = organism
         self.__run_in_iteration = run_in_iteration
@@ -183,17 +190,17 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         if self.__networks == None:
             self.__networks = retrieve_networks(self.__organism)
 
-        weight = 0.5  # TODO: for now it's fixed, we need to make them flexible
         matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
                                self.gene_names())
         #network_iteration_scores = self.__create_network_iteration_scores()
         #score_means = {}  # a dictionary indexed with network names
 
         for network in self.__networks:
-            logging.info("Compute scores for network '%s'", network.name())
+            logging.info("Compute scores for network '%s', WEIGHT: %f",
+                         network.name(), network.weight())
             start_time = util.current_millis()
             network_score = self.__compute_network_cluster_scores(network)
-            self.__update_score_matrix(matrix, network_score, weight)
+            self.__update_score_matrix(matrix, network_score, network.weight())
             elapsed = util.current_millis() - start_time
             logging.info("NETWORK '%s' SCORING TIME: %f s.",
                          network.name(), (elapsed / 1000.0))

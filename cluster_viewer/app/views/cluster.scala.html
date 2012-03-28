@@ -23,14 +23,14 @@
             text: 'Gene Expressions'
          },
          xAxis: {
-            categories: @(Formatter.formatStrings(ratios.columns))
+            categories: @(HighchartsFormatter.formatStrings(ratios.columns))
          },
          yAxis: {
             title: {
                text: 'log10'
             }
          },
-         series: @(Formatter.toHSSeries(ratios))
+         series: @(HighchartsFormatter.toHSSeries(ratios))
       });
       @for(i <- 0 until motifs.length) {
         isblogo.makeLogo('canvas@i', pssm@i, canvasOptions);

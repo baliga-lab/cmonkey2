@@ -182,11 +182,11 @@ def __quantile_normalize_scores(cluster_row_scores,
 class RowScoringFunction(scoring.ScoringFunctionBase):
     """Scoring algorithm for microarray data based on genes"""
 
-    def __init__(self, membership, matrix, weight_func=None,
+    def __init__(self, membership, matrix, scaling_func=None,
                  config_params=None):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
-                                             matrix, weight_func,
+                                             matrix, scaling_func,
                                              config_params)
 
     def name(self):

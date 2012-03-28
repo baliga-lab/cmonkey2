@@ -54,7 +54,7 @@ class ParkinsonCMonkeyRun(cmonkey_run.CMonkeyRun):
 
     def make_hsa(self):
         """returns a configured organism object"""
-        nw_factories = [stringdb.get_network_factory2('parkinson_data/human_links_preprocessed.csv', sep=';')]
+        nw_factories = [stringdb.get_network_factory2('parkinson_data/human_links_preprocessed.csv', weight=1.0, sep=';')]
         return organism.GenericOrganism('hsa', THESAURUS_FILE, nw_factories,
                                         seq_filenames=SEQ_FILENAMES,
                                         search_distances=self['search_distances'],
@@ -90,7 +90,7 @@ class ParkinsonCMonkeyRun(cmonkey_run.CMonkeyRun):
             seqtype='upstream',
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
-            weight_func=lambda iteration: 0.0,
+            scaling_func=lambda iteration: 0.0,
             run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
 
@@ -105,7 +105,7 @@ class ParkinsonCMonkeyRun(cmonkey_run.CMonkeyRun):
             self.organism(), self.membership(), self.ratio_matrix,
             meme_suite_p3utr, 'p3utr',
             pvalue_filter=motif.MinPValueFilter(-20.0),
-            weight_func=lambda iteration: 0.0,
+            scaling_func=lambda iteration: 0.0,
             run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
 

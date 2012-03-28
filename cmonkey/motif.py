@@ -82,12 +82,12 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                  meme_suite, seqtype,
                  sequence_filters=[],
                  pvalue_filter=None,
-                 weight_func=None,
+                 scaling_func=None,
                  run_in_iteration=lambda iteration: True,
                  config_params=None):
         """creates a ScoringFunction"""
         scoring.ScoringFunctionBase.__init__(self, membership,
-                                             matrix, weight_func,
+                                             matrix, scaling_func,
                                              config_params)
         # attributes accessible by subclasses
         self.organism = organism
@@ -298,14 +298,14 @@ class MemeScoringFunction(MotifScoringFunctionBase):
                  seqtype='upstream',
                  sequence_filters=[],
                  pvalue_filter=None,
-                 weight_func=None,
+                 scaling_func=None,
                  run_in_iteration=scoring.default_motif_iterations,
                  config_params=None):
         """creates a ScoringFunction"""
         MotifScoringFunctionBase.__init__(self, organism, membership,
                                           matrix, meme_suite, seqtype,
                                           sequence_filters, pvalue_filter,
-                                          weight_func, run_in_iteration,
+                                          scaling_func, run_in_iteration,
                                           config_params)
 
     def name(self):
@@ -323,14 +323,14 @@ class WeederScoringFunction(MotifScoringFunctionBase):
     def __init__(self, organism, membership, matrix,
                  meme_suite, seqtype,
                  sequence_filters=[], pvalue_filter=None,
-                 weight_func=None,
+                 scaling_func=None,
                  run_in_iteration=scoring.default_motif_iterations,
                  config_params=None):
         """creates a scoring function"""
         MotifScoringFunctionBase.__init__(self, organism, membership, matrix,
                                           meme_suite, seqtype,
                                           sequence_filters, pvalue_filter,
-                                          weight_func, run_in_iteration, config_params)
+                                          scaling_func, run_in_iteration, config_params)
 
     def name(self):
         """returns the name of this scoring function"""

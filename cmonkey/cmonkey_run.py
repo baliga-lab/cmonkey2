@@ -42,7 +42,7 @@ class CMonkeyRun:
         # defaults
         self.row_seeder = memb.make_kmeans_row_seeder(num_clusters)
         self.column_seeder = microarray.seed_column_members
-        self['row_weight'] = 6.0
+        self['row_scaling'] = 6.0
         self['string_file'] = None
         self['cache_dir'] = CACHE_DIR
         self['output_dir'] = 'out'
@@ -98,7 +98,7 @@ class CMonkeyRun:
         # Default row scoring functions
         row_scoring = microarray.RowScoringFunction(
             self.membership(), self.ratio_matrix,
-            lambda iteration: self['row_weight'],
+            scaling_func=lambda iteration: self['row_scaling'],
             config_params=self.config_params)
 
         meme_suite = meme.MemeSuite430()
@@ -114,15 +114,15 @@ class CMonkeyRun:
             meme_suite,
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
-            weight_func=lambda iteration: 1.0,  # TODO
+            scaling_func=lambda iteration: 1.0,  # TODO
             run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
 
         network_scoring = nw.ScoringFunction(self.organism(),
                                              self.membership(),
                                              self.ratio_matrix,
-                                             lambda iteration: 0.0,
-                                             scoring.default_network_iterations,
+                                             scaling_func=lambda iteration: 0.0,
+                                             run_in_iteration=scoring.default_network_iterations,
                                              config_params=self.config_params)
 
         row_scoring_functions = [row_scoring, motif_scoring, network_scoring]
@@ -152,12 +152,12 @@ class CMonkeyRun:
 
         nw_factories = []
         if stringfile != None:
-            nw_factories.append(stringdb.get_network_factory2(stringfile))
+            nw_factories.append(stringdb.get_network_factory2(stringfile, 0.5))
         else:
             logging.warn("no STRING file specified !")
 
         nw_factories.append(microbes_online.get_network_factory(
-                mo_db, max_operon_size=self.ratio_matrix.num_rows() / 20))
+                mo_db, max_operon_size=self.ratio_matrix.num_rows() / 20, weight=0.5))
 
         org_factory = org.MicrobeFactory(org.make_kegg_code_mapper(keggfile),
                                          org.make_rsat_organism_mapper(rsatdb),
@@ -175,6 +175,10 @@ class CMonkeyRun:
         cache_dir = self['cache_dir']
         if not os.path.exists(cache_dir):
             os.mkdir(cache_dir)
+
+        # write the normalized ratio matrix for stats and visualization
+        if not os.path.exists(output_dir + '/ratios.tsv'):
+            self.ratio_matrix.write_tsv_file(output_dir + '/ratios.tsv')
 
     def run(self):
         row_scoring = self.make_row_scoring()
