@@ -332,7 +332,7 @@ class ClusterMembership:
         """Provide an iteration-specific fuzzification"""
         logging.info("__fuzzify(), setup...")
         start_time = util.current_millis()
-        fuzzy_coeff = std_fuzzy_coefficient(iteration + 1, num_iterations)
+        fuzzy_coeff = std_fuzzy_coefficient(iteration, num_iterations)
         num_row_fuzzy_values = row_scores.num_rows() * row_scores.num_columns()
         num_col_fuzzy_values = (column_scores.num_rows() *
                                 column_scores.num_columns())
@@ -349,6 +349,9 @@ class ClusterMembership:
             for row in xrange(row_scores.num_rows()):
                 if row_names[row] in cluster_rows:
                     row_sd_values.append(row_score_values[row][col])
+
+        # Note: If there are no non-NaN values in row_sd_values, row_rnorm
+        # will have all NaNs
         row_rnorm = util.sd_rnorm(row_sd_values, num_row_fuzzy_values,
                                   fuzzy_coeff)
 
@@ -360,6 +363,8 @@ class ClusterMembership:
                 if row_names[row] in cluster_cols:
                     col_sd_values.append(col_score_values[row][col])
 
+        # Note: If there are no non-NaN values in col_sd_values, col_rnorm
+        # will have all NaNs
         col_rnorm = util.sd_rnorm(col_sd_values, num_col_fuzzy_values,
                                   fuzzy_coeff)
 
