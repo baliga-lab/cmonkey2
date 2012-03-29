@@ -107,6 +107,7 @@ class CMonkeyRun:
             motif.get_remove_low_complexity_filter(meme_suite),
             motif.get_remove_atgs_filter(self['search_distances']['upstream'])]
 
+        motif_scaling_fun = scoring.get_default_motif_scaling(self['num_iterations'])
         motif_scoring = motif.MemeScoringFunction(
             self.organism(),
             self.membership(),
@@ -114,14 +115,15 @@ class CMonkeyRun:
             meme_suite,
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
-            scaling_func=lambda iteration: 1.0,  # TODO
+            scaling_func=motif_scaling_fun,
             run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
 
+        network_scaling_fun = scoring.get_default_network_scaling(self['num_iterations'])
         network_scoring = nw.ScoringFunction(self.organism(),
                                              self.membership(),
                                              self.ratio_matrix,
-                                             scaling_func=lambda iteration: 0.0,
+                                             scaling_func=network_scaling_fun,
                                              run_in_iteration=scoring.default_network_iterations,
                                              config_params=self.config_params)
 

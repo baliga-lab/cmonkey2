@@ -32,6 +32,30 @@ MOTIF_MIN_CLUSTER_ROWS_ALLOWED = 3
 MOTIF_MAX_CLUSTER_ROWS_ALLOWED = 70
 USE_MULTIPROCESSING = True
 
+def get_default_motif_scaling(num_iterations):
+    """this scaling function is based on the tricky default motif scaling
+    sequence in the R reference"""
+    def default_motif_scaling(iteration):
+        steps = int(round(num_iterations * 0.75))
+        if iteration > steps:
+            return np.nan
+        else:
+            return (1.0 / (steps - 1)) * (iteration - 1)
+    return default_motif_scaling
+
+
+def get_default_network_scaling(num_iterations):
+    """this scaling function is based on the tricky default network scaling
+    sequence in the R reference"""
+    def default_network_scaling(iteration):
+        steps = int(round(num_iterations * 0.75))
+        if iteration > steps:
+            return np.nan
+        else:
+            return (0.5 / (steps - 1)) * (iteration - 1)
+    return default_network_scaling
+
+
 def default_motif_iterations(iteration):
     return iteration >= 500 and iteration % 10 == 0
 

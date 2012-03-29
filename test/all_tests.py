@@ -17,6 +17,7 @@ import meme_test as met
 import pssm_test as pt
 import read_wee_test as rwt
 import human_test as ht
+import scoring_test as st
 
 
 # pylint: disable-msg=C0301
@@ -63,5 +64,7 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(rwt.ReadWeeTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ht.HumanTest))
+
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(st.DefaultScalingTest))
 
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))
