@@ -38,7 +38,7 @@ def get_default_motif_scaling(num_iterations):
     def default_motif_scaling(iteration):
         steps = int(round(num_iterations * 0.75))
         if iteration > steps:
-            return np.nan
+            return 1.0
         else:
             return (1.0 / (steps - 1)) * (iteration - 1)
     return default_motif_scaling
@@ -50,7 +50,7 @@ def get_default_network_scaling(num_iterations):
     def default_network_scaling(iteration):
         steps = int(round(num_iterations * 0.75))
         if iteration > steps:
-            return np.nan
+            return 0.5
         else:
             return (0.5 / (steps - 1)) * (iteration - 1)
     return default_network_scaling
