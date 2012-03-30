@@ -5,10 +5,13 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import re
+import logging
 import random
 import string
 from util import DelimitedFile
 
+logger = logging.getLogger('seqtools')
+logger.setLevel(logging.DEBUG)
 
 class Location:  # pylint: disable-msg=R0903
     """representation of a genomic position, a simple value object"""
@@ -187,6 +190,81 @@ def markov_background(seqs, order):
     for subseq_len in xrange(1, (order + 2)):
         result.append(subseq_frequencies(seqs, subseq_len))
     return result
+
+
+def all_kmers(length, seqs, seq=[], pos=0, choices=['A','C','G','T'] ):
+    """works with lists intead of strings as this is believed to be faster"""
+    #logger.debug(pos)
+    if seq == []:
+        for i in range(length): seq.append('')
+    for choice in choices:
+        seq[pos] = choice
+        if pos == length-1:
+            kmer = string.join(seq, '')
+            #logger.debug('added kmer %s' %kmer)
+            seqs.append(kmer)
+        else: all_kmers(length, seqs, seq, pos+1, choices)
+
+
+class KMerCounts:
+    """class to tally total K-mers (1-dimensional)"""
+    def __init__(self,seqs,kmers=[],klen=6):
+        self.counts = {}
+        self.init_kmers(kmers)
+        self.count_kmers(seqs,klen)
+
+    def init_kmers(self,kmers,fill=False):
+        if kmers == []: all_kmers(klen, kmers)
+        if fill:
+            """ensure a value for all expected K-mers (not always required)"""
+            for kmer in kmers: self.counts[kmer] = 0
+
+    def count_kmers(self,seqs,klen=6):
+        """this is written for O(n) where n is the number of sequences.
+           No K-mer loop, for speed."""
+        for seq in seqs:
+            logger.debug('seq: %s...' %seq[:10])
+            lseq = len(seq)
+            i = 0
+            while i < lseq:
+                if i+klen >= lseq: break
+                subseq = seq[i:i+klen].upper()
+                if not self.counts.has_key(subseq): self.counts[subseq] = 0
+                self.counts[subseq] += 1
+                # reverse complement k-mers?
+                i += 1
+
+    def __str__(self):
+        return self.string_output()
+
+    def string_output(self,sep=' '):
+        out = []
+        keys = self.counts.keys()
+        keys.sort()
+        for kmer in keys:
+            out.append('%s%s%i' %(kmer,sep,self.counts[kmer]))
+        return string.join(out,'\n')
+
+
+class KMersPerSequence:
+    """class to contain number of K-mers per sequence
+       (2-dimensional sparse dictionary/hash"""
+    def __init__(self,seqs,kmers=[],klen=6):
+        self.counts = {}
+        self.kmers = kmers
+        self.klen = klen
+
+        if self.kmers == []: all_kmers(self.klen, self.kmers)
+        logger.debug('%s K-mers of length %i created' %(len(self.kmers),self.klen))
+        logger.info("computing K-mer counts for %s sequences" %len(seqs))
+        self.count_kmers(seqs)
+
+    def count_kmers(self,seqs):
+        for seq in seqs:
+            logger.info('counting K-mers for seq %s... (%ibp)' %(seq[:10],len(seq)))
+            counter = KMerCounts([seq],self.kmers,self.klen)
+            for kmer,count in counter.counts.items():
+                self.counts[ (seq,kmer) ] = count
 
 
 def replace_degenerate_residues(seqs):

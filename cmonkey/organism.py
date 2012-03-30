@@ -318,6 +318,8 @@ class Microbe(OrganismBase):
             location = feature.location()
             sequences[feature.id()] = extractor(
                 contig_seqs[location.contig], location, distance)
+        if len(sequences) == 0:
+            logging.error('No sequences read for %s!' %self.code)
         return sequences
 
     def __str__(self):

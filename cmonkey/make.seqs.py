@@ -18,7 +18,7 @@ from optparse import OptionParser
 import util
 
 def make_sequences( genome_fasta_file, gene_features_file,
-        outfile='sequences.csv', distance={'upstream':300,'downstream':100}, from_end=False ):
+        outfile='sequences.csv', distance={'upstream':300,'downstream':100}, from_end=False, fasta=False ):
 
     if from_end:
         distance = ( distance['upstream'], distance['downstream'] )
@@ -53,10 +53,11 @@ def make_sequences( genome_fasta_file, gene_features_file,
 #        print sequences[feature.id()]
 
     outf = open(outfile,'w')
-#    st.write_sequences_to_fasta_file(outf,sequences)
-    sep = ','
-    for id, seq in sequences:
-        outf.write( '%s%s%s\n' %(id,sep,seq) )
+    if fasta: st.write_sequences_to_fasta_file(outf,sequences)
+    else:
+        sep = ','
+        for id, seq in sequences:
+            outf.write( '%s%s%s\n' %(id,sep,seq) )
     outf.close()
 
 if __name__ == "__main__":
@@ -65,10 +66,11 @@ if __name__ == "__main__":
     p.add_option('-u','--upstream',type='int',default=250)
     p.add_option('-d','--downstream',type='int',default=50)
     p.add_option('-e','--fromend',action='store_true',default=False,help='relative to gene end instead of gene start')
+    p.add_option('-f','--fasta',action='store_true',default=False,help='output in fasta format')
     opt,args = p.parse_args()
 
     if len(args) < 2:
         print('Usage: ./make.sequences.py <genome-fasta-file> <gene-features-file> [options]')
 
-    make_sequences( args[0], args[1], opt.output, distance={'upstream':opt.upstream, 'downstream':opt.downstream}, from_end=opt.fromend )
+    make_sequences( args[0], args[1], opt.output, distance={'upstream':opt.upstream, 'downstream':opt.downstream}, from_end=opt.fromend, opt.fasta )
     print 'NOW VERIFY YOUR SEQUENCES! There are differing formats for supplying upstream and downstream shifts! (e.g. (200,100), (-200,100), (100,200)....) This script assumes that: -u 200 -d 100 means: from 200 upstream to 100 downstream'
