@@ -187,9 +187,9 @@ class CMonkeyRun:
             self.ratio_matrix.write_tsv_file(output_dir + '/ratios.tsv')
 
     def run(self):
+        self.__make_dirs_if_needed()
         row_scoring = self.make_row_scoring()
         col_scoring = self.make_column_scoring()
-        self.__make_dirs_if_needed()
         self.run_iterations(row_scoring, col_scoring)
 
     def run_from_checkpoint(self,checkpoint_filename):
