@@ -1,4 +1,3 @@
-project.conf
 logs
 project/project
 project/target
@@ -6,3 +5,4 @@ target
 tmp
 .history
 dist
+project.conf
