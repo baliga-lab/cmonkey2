@@ -101,6 +101,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         scoring.ScoringFunctionBase.__init__(self, membership,
                                              matrix, scaling_func,
                                              config_params)
+        self.__last_computed_result = None
         self.__run_in_iteration = run_in_iteration
         self.__set_types = set_types
         # stores (min_set, pvalue) pairs for each cluster and set type
@@ -114,7 +115,10 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         return float(self.num_clusters()) / 0.05
 
     def compute(self, iteration_result, ref_matrix):
-        """compute method"""
+        """compute method
+        Note: will return None if not computed yet and the result of a previous
+        scoring if the function is not supposed to actually run in this iteration
+        """
         global SET_MATRIX, SET_MEMBERSHIP, SET_REF_MATRIX, SET_SET_TYPE
         iteration = iteration_result['iteration']
 
@@ -163,9 +167,9 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
             logging.info("SET ENRICHMENT FINISHED IN %f s.\n",
                          (util.current_millis() - start_time) / 1000.0)
-            return matrix
-        else:
-            return None
+            self.__last_computed_result = matrix
+
+        return self.__last_computed_result
 
 
 def compute_cluster_score(args):

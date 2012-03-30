@@ -56,11 +56,16 @@ def get_default_network_scaling(num_iterations):
     return default_network_scaling
 
 
+def schedule(starts_at, every):
+    def runs_in_iteration(iteration):
+        return iteration >= starts_at and (iteration - starts_at) % every == 0
+    return runs_in_iteration
+
 def default_motif_iterations(iteration):
-    return iteration >= 500 and iteration % 10 == 0
+    return schedule(500, 10)
 
 def default_network_iterations(iteration):
-    return iteration > 0 and iteration % 7 == 0
+    return schedule(1, 7)
 
 class ScoringFunctionBase:
     """Base class for scoring functions"""

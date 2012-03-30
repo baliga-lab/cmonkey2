@@ -96,6 +96,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.run_in_iteration = run_in_iteration
         self.__sequence_filters = sequence_filters
         self.__pvalue_filter = pvalue_filter
+        self.__last_computed_result = None
 
         # precompute the sequences for all genes that are referenced in the
         # input ratios, they are used as a basis to compute the background
@@ -137,8 +138,12 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         return "Motif"""
 
     def compute(self, iteration_result, ref_matrix=None):
-        """compute method, iteration is the 0-based iteration number"""
+        """compute method for the specified iteration
+        Note: will return None if not computed yet and the result of a previous
+        scoring if the function is not supposed to actually run in this iteration
+        """
         iteration = iteration_result['iteration']
+
         if self.run_in_iteration(iteration):
             global_start_time = util.current_millis()
             pvalues = self.compute_pvalues(iteration_result)
@@ -162,9 +167,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             global_elapsed = util.current_millis() - global_start_time
             logging.info("GLOBAL MOTIF TIME: %d seconds",
                          (global_elapsed / 1000.0))
-            return matrix
-        else:
-            return None
+            self.__last_computed_result = matrix
+
+        return self.__last_computed_result
 
     def compute_pvalues(self, iteration_result):
         """Compute motif scores. In order to influence the sequences
