@@ -42,6 +42,8 @@ class DataMatrix:
                 raise ValueError("number of row names should be %d" % nrows)
             self.__row_names = np.array(row_names)
 
+        self.__rownames_original = self.__row_names
+
         if col_names == None:
             self.__column_names = np.array(["Col " + str(i)
                                             for i in xrange(ncols)])
@@ -71,9 +73,33 @@ class DataMatrix:
 
     def row_names(self):
         """return the row names.
-        Note: a NumPy array is returned, which does not have an index()
+        Note: a NumPy array is returned, which does not have an index()        #really? is this an numpy array or a list?
         method"""
         return self.__row_names
+    def set_row_names(self, new_row_names):
+        """
+        set the rownames new, leave self.__rownames_original untouched
+        
+        """
+        self.__row_names = new_row_names
+
+    def translateRowNames(self, thesaurus):
+        """ Frank Schmitz:
+            translate the rownames into common used IDs, for later speed improvement and compatibility
+            leave the self.___rownames_originals untouched
+        """
+        
+        logging.info("\x1b[31mmatrix:\t\x1b[0mtranslating matrix")
+        nrowL = []
+        for rowname in self.__row_names:
+            try:
+                nrowL.append(thesaurus[rowname])
+            except KeyError:
+                if rowname in thesaurus.keys():
+                    nrowL.append(rowname)
+                else:
+                    nrowL.append("".join(["unMapped_", rowname]))
+        self.set_row_names(np.array(nrowL))
 
     def column_names(self):
         """return the column names.
@@ -356,7 +382,6 @@ class DataMatrixFactory:
         for matrix_filter in self.filters:
             data_matrix = matrix_filter(data_matrix)
         return data_matrix
-
 
 FILTER_THRESHOLD = 0.98
 ROW_THRESHOLD = 0.17

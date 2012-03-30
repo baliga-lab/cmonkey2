@@ -1,0 +1,19 @@
+
+
+new classes
+
+Kapsel
+capsule for an organism or representation of the run environment
+contains networks and NW factories
+contains thesaurus, can add up to many
+contains sequences
+contains Einheit(en)
+
+
+Einheit
+
+
+contains SubEinheit(en)
+
+SubEinheit
+

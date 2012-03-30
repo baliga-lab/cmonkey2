@@ -12,7 +12,9 @@ import seqtools as st
 import os
 import util
 import re
+import pprint as pprint
 
+MEME_CUTOFF = '1e9'     # lazy value to pass ALL
 
 class MemeRunResult:
     """Result data for a single MEME run"""
@@ -187,16 +189,16 @@ class MemeSuite430(MemeSuite):
         and positional priors file. Returns a tuple of
         (list of MemeMotifInfo objects, meme output)
         """
-        command = ['meme', infile_path, '-bfile', bgfile_path,
+        command = ['/usr/local/meme430/bin/meme', infile_path, '-bfile', bgfile_path,
                    '-time', '600', '-dna', '-revcomp',
                    '-maxsize', '9999999', '-nmotifs', str(num_motifs),
-                   '-evt', '1e9', '-minw', '6', '-maxw', str(self.max_width()),
+                   '-evt', MEME_CUTOFF, '-minw', '6', '-maxw', str(self.max_width()),
                    '-mod',  'zoops', '-nostatus', '-text']
 
         if pspfile_path:
             command.append(['-psp', pspfile_path])
 
-        #logging.info("running: %s", " ".join(command))
+        logging.info("running: %s", " ".join(command))
         output = subprocess.check_output(command)
         return (read_meme_output(output, num_motifs), output)
 
@@ -205,12 +207,57 @@ class MemeSuite430(MemeSuite):
         """runs the mast command"""
         # note: originally run with -ev 99999, but MAST will crash with
         # memory errors
-        command = ['mast', meme_outfile_path, '-d', database_file_path,
+        command = ['mast430', meme_outfile_path, '-d', database_file_path,
                    '-bfile', bgfile_path, '-nostatus', '-stdout', '-text',
                    '-brief', '-ev', '1500', '-mev', '99999', '-mt', '0.99',
                    '-seqp', '-remcorr']
         output = subprocess.check_output(command)
         return output
+
+
+class MemeSuite481(MemeSuite):
+    """Version 4.8.1 of MEME"""
+
+    def meme(self, infile_path, bgfile_path, num_motifs=2,
+             pspfile_path=None):
+        """runs the meme command on the specified input file, background file
+        and positional priors file. Returns a tuple of
+        (list of MemeMotifInfo objects, meme output)
+        """
+        command = ['meme', infile_path, '-bfile', bgfile_path,
+                   '-time', '600', '-dna', '-revcomp',
+                   '-maxsize', '9999999', '-nmotifs', str(num_motifs),
+                   '-evt', str(MEME_CUTOFF), '-minw', '6', '-maxw', str(self.max_width()),
+                   '-mod',  'zoops', '-nostatus', '-text']
+
+        if pspfile_path:
+            command.append(['-psp', pspfile_path])
+
+        logging.info("\x1b[33mMAST:\t\x1b[0mrunning: %s", " ".join(command))
+        output = subprocess.check_output(command)
+        return (read_meme_output(output, num_motifs), output)
+
+    def mast(self, meme_outfile_path, database_file_path,
+             bgfile_path):
+        """runs the mast command"""
+        # note: originally run with -ev 99999, but MAST will crash with
+        # memory errors
+        """
+        command = ['mast', meme_outfile_path, '-d', database_file_path,
+                   '-bfile', bgfile_path, '-nostatus', '-stdout', '-text',
+                   '-brief', '-ev', '1500', '-mev', '99999', '-mt', '0.99',
+                   '-seqp', '-remcorr']
+        """
+        command = ['mast', meme_outfile_path, database_file_path,
+                   '-bfile', bgfile_path, '-nostatus', '-ev', '1500', 
+                   '-mev', '99999', '-mt', '0.99',
+                   '-seqp', '-remcorr']
+        logging.info("\x1b[33mMAST:\t\x1b[0mrunning: %s", " ".join(command))
+        
+        output = subprocess.check_output(command)
+        return output
+
+
 
 
 class MemeMotifInfo:
@@ -360,6 +407,7 @@ def read_meme_output(output_text, num_motifs):
 
     lines = output_text.split('\n')
     result = []
+    #pprint.pprint( lines)    #was just diagnostic
     for motif_number in xrange(1, num_motifs + 1):
         result.append(read_motif_info(motif_number, lines))
     return result
@@ -537,9 +585,18 @@ def __next_regex_index(pat, start_index, lines):
         current_line = lines[line_index]
     return line_index
 
+# Frank Schmitz:
+# a new variant of the make background file
+# puts all seqs into a gigantic string, divided by spaces
+# this one can be searched through regex without iterations
+# regexs are a child of the devil...hell they're fast
+# but - in the case of repeat masked files, it is till terribly slow
+# consider another alternative to 'fill in' the masked
 
-def make_background_file(bgseqs, use_revcomp):
+def make_background_file_FS(bgseqs, use_revcomp):
     """create a meme background file and returns its name"""
+    logging.info("\x1b[31mmeme:\t\x1b[0mgenerating Seq background model")
+    
     def make_seqs(seqs):
         """prepare the input sequences for feeding into meme.
         This means only taking the unique sequences and their reverse
@@ -550,30 +607,35 @@ def make_background_file(bgseqs, use_revcomp):
             util.add_if_unique(meme_input_seqs, seq)
             if use_revcomp:
                 util.add_if_unique(meme_input_seqs, st.revcomp(seq))
-        return meme_input_seqs
+        bigstring = "  ".join(meme_input_seqs)
+        return bigstring
 
     filename = None
-    bgmodel = st.markov_background(make_seqs(bgseqs), 3)
+    bgmodel = st.markov_background_FS(make_seqs(bgseqs), 3)
+    logging.info("\x1b[31mmeme:\t\x1b[0mMarkov model built")
     with tempfile.NamedTemporaryFile(prefix='memebg',
                                      delete=False) as outfile:
         filename = outfile.name
-        #logging.info("make background file '%s'", filename)
+        logging.info("make background file '%s'", filename)
         outfile.write("# %s order Markov background model\n" %
                       util.order2string(len(bgmodel) - 1))
         for order_row in bgmodel:
             for seq, frequency in order_row.items():
                 outfile.write('%s %10s\n' %
                               (seq, str(round(frequency, 8))))
+    logging.info("done FS background Seqs")
     return filename
 
 
-def global_background_file(organism, gene_aliases, seqtype, use_revcomp=True):
+
+
+def global_background_file_FS(organism, gene_aliases, seqtype, use_revcomp=True):
     """returns a background file that was computed on the set of all
     used sequences"""
     global_seqs = organism.sequences_for_genes_scan(gene_aliases,
                                                     seqtype=seqtype)
     logging.info("Computing global background file on seqtype '%s' " +
                  "(%d sequences)", seqtype, len(global_seqs))
-    return make_background_file(global_seqs, use_revcomp)
+    return make_background_file_FS(global_seqs, use_revcomp)
 
 __all__ = ['read_meme_output']

@@ -5,7 +5,7 @@ import meme
 import motif
 import util
 import rsat
-import microbes_online
+#import microbes_online den schrott brauche ma net
 import organism as org
 import scoring
 import network as nw
@@ -48,9 +48,10 @@ class CMonkeyRun:
 
         # used to select sequences and MEME
         self['sequence_types'] = ['upstream']
-        self['search_distances'] = {'upstream': (-20, 150)}
+        self['search_distances'] = {'upstream': (-500, 1500)}   #" Frank Schmitz - -1500 to + 500 makes more sense
         # used for background distribution and MAST
-        self['scan_distances'] = {'upstream': (-30, 250)}
+        self['scan_distances'] = {'upstream': (-1000, 2500)}   #" Frank Schmitz - -2500 to + 1000 makes more sense
+                                                                # Frank Schmitz - great, I did not know about the MAST backgrnd correction!
 
         # membership update default parameters
         self['memb.clusters_per_row'] = 2
@@ -67,6 +68,7 @@ class CMonkeyRun:
         today = date.today()
         self.__checkpoint_basename = "cmonkey-checkpoint-%s-%d%d%d" % (
             organism_code, today.year, today.month, today.day)
+        print today
 
 
     def __getitem__(self, key):
@@ -101,7 +103,8 @@ class CMonkeyRun:
             motif.unique_filter,
             motif.get_remove_low_complexity_filter(meme_suite),
             motif.get_remove_atgs_filter(self['search_distances']['upstream'])]
-
+        '''
+        '''
         motif_scoring = motif.MemeScoringFunction(
             self.organism(),
             self.membership(),
@@ -119,7 +122,6 @@ class CMonkeyRun:
                                              lambda iteration: 0.0,
                                              scoring.default_network_iterations,
                                              config_params=self.config_params)
-
         row_scoring_functions = [row_scoring, motif_scoring, network_scoring]
         return scoring.ScoringFunctionCombiner(self.membership(),
                                                row_scoring_functions,
@@ -127,7 +129,7 @@ class CMonkeyRun:
 
     def membership(self):
         if self.__membership == None:
-            logging.info("creating and seeding memberships")
+            logging.info("\x1b[31mMain:\t\x1b[0mcreating and seeding memberships")
             self.__membership = self.__make_membership()
         return self.__membership
 
@@ -141,7 +143,9 @@ class CMonkeyRun:
         """returns the organism object to work on"""
         keggfile = util.DelimitedFile.read(KEGG_FILE_PATH, comment='#')
         gofile = util.DelimitedFile.read(GO_FILE_PATH)
+        # Frank Schmitz - consider reading the rsatdb from local files
         rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, self['cache_dir'])
+        # Frank Schmitz - is this really needed? in case of human and mouse or other eucaryotes surely not
         mo_db = microbes_online.MicrobesOnline()
         stringfile = self.config_params['string_file']
 
@@ -175,13 +179,14 @@ class CMonkeyRun:
         row_scoring = self.make_row_scoring()
         col_scoring = self.make_column_scoring()
         output_dir = self['output_dir']
+        logging.debug("\x1b[31mMain:\t\x1b[0moutput Dir is %s" % (output_dir))
         self.__make_dirs_if_needed()
 
         
 
         for iteration in range(self['start_iteration'],
                                self['num_iterations']):
-            logging.info("Iteration # %d", iteration)
+            logging.info("\x1b[31mMain:\t\x1b[0mIteration # %d", iteration)
             iteration_result = {'iteration': iteration}
             self.membership().update(self.ratio_matrix,
                                      row_scoring.compute(iteration_result),

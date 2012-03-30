@@ -3,6 +3,7 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
+import itertools as it
 import re
 import random
 
@@ -87,24 +88,14 @@ def subsequence(sequence, start, stop, reverse=False):
     return result
 
 
+DNAcD = {"A" : "T", "C" : "G", "G" : "C", "T" : "A", "N" : "N"}
+
 def revcomp(sequence):
-    """compute the reverse complement of the input string"""
-    return "".join([revchar(c) for c in sequence[::-1]])
-
-
-def revchar(nucleotide):
-    """for a nucleotide character, return its complement"""
-    nucleotide = nucleotide.upper()
-    if nucleotide == 'A':
-        return 'T'
-    elif nucleotide == 'G':
-        return 'C'
-    elif nucleotide == 'C':
-        return 'G'
-    elif nucleotide == 'T':
-        return 'A'
-    else:
-        return nucleotide
+    """
+    Frank S - seems more economic this way, but did NOT benchmark!
+    
+    """
+    return "".join([DNAcD[x] for x in reversed(sequence)])
 
 
 def subseq_counts(seqs, subseq_len):
@@ -119,6 +110,7 @@ def subseq_counts(seqs, subseq_len):
             counts[subseq] += 1
     return counts
 
+'''
 
 def subseq_frequencies(seqs, subseq_len):
     """return a dictionary containing for each subsequence of
@@ -131,7 +123,6 @@ def subseq_frequencies(seqs, subseq_len):
         result[subseq] = float(count) / float(total)
     return result
 
-
 def markov_background(seqs, order):
     """computes the markov background model of the specified
     order for the given input sequences. This is implemented
@@ -143,13 +134,49 @@ def markov_background(seqs, order):
         result.append(subseq_frequencies(seqs, subseq_len))
     return result
 
+'''
+# a variation on the markov model theme
+# using itertools and re for the generation of combinations
+# and for finding instances of NA-combis
 
-def replace_degenerate_residues(seqs):
+def markov_background_FS(seq, order):
+    """computes the markov background model of the specified
+    order for the given input sequences. This is implemented
+    by gathering the frequencies of subsequences of length
+    1,..,(order + 1)"""
+    result = []
+    seqs = replace_degenerate_residues([seq])
+    for subseq_len in xrange(1, (order + 2)):
+        result.append(subseq_frequencies_FS(seqs[0], subseq_len))
+    return result
+
+def subseq_frequencies_FS(seqs, subseq_len):
+    """return a dictionary containing for each subsequence of
+    length subseq_len their respective frequency within the
+    input sequences"""
+    result = {}
+    freqtab = {}
+    totalcount = 0
+    for i in it.product('ACGT', repeat = subseq_len):
+        j = "".join(i)
+        pat = re.compile(j)
+        counts = len(pat.findall(seqs))
+        result[j] = counts
+    total = sum([count for count in result.values()])
+    for pat, count in result.iteritems():
+        freqtab[pat] = float(count) / float(total)
+    return freqtab
+
+
+
+def replace_degenerate_residues_old(seqs):
     """gets rid of funny characters in gene sequences by employing a
     replacement strategy"""
     replacements = {'R': ['G', 'A'], 'Y': ['T', 'C'], 'K': ['G', 'T'],
                     'M': ['A', 'C'], 'S': ['G', 'C'], 'W': ['A', 'T'],
-                    'N': ['G', 'A', 'T', 'C']}
+                    'N': ['G', 'A', 'T', 'C'],
+                    ' ': [' ']}                         # need the space char for the seperation of individual
+                                                        # seqs within one large string
 
     pat = re.compile('[ACGTX]*([^ACGTX])[ACGTX]*')
     result = []
@@ -161,6 +188,38 @@ def replace_degenerate_residues(seqs):
             seq = seq[:match.start(1)] + replace_char + seq[match.end(1):]
         result.append(seq)
     return result
+
+def replace_degenerate_residues(seqs):
+    #try a different strategy to fill in the degenerate bases
+    
+    """gets rid of funny characters in gene sequences by employing a
+    replacement strategy"""
+    replacements = {'R': ['G', 'A'], 'Y': ['T', 'C'], 'K': ['G', 'T'],
+                    'M': ['A', 'C'], 'S': ['G', 'C'], 'W': ['A', 'T'],
+                    'N': ['G', 'A', 'T', 'C'],
+                    ' ': [' ']}                         # need the space char for the seperation of individual
+                                                        # seqs within one large string
+
+    def make_sub(text, probability): 
+        def sub(match): 
+            if random.random() < probability: 
+                return text[0] 
+            return text[1] 
+        return sub 
+    result = []
+    for seq in seqs:
+        for sear, rep in replacements.iteritems():
+            resid = len(rep)
+            reppos = 0
+            for R in rep:
+                if reppos != resid:
+                    seq = re.compile(sear).sub(make_sub([rep[reppos], sear], (1 / float(resid - reppos))), seq)
+                else:
+                    seq = re.compile(sear).sub(make_sub([rep[reppos], sear], 1), seq)
+                reppos += 1
+        result.append(seq)
+    return result
+
 
 
 def read_sequences_from_fasta_string(fasta_string):
@@ -194,6 +253,7 @@ def read_sequences_from_fasta_file(filepath):
 def write_sequences_to_fasta_file(outputfile, seqs):
     """Write a list of sequence tuples to the specified outputfile"""
     for seq in seqs:
+        if len(seq[1]) == 0: continue       # do not allow 0 length sequences
         outputfile.write('>%s\n' % seq[0])
         outputfile.write('%s\n' % seq[1])
 

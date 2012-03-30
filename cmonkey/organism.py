@@ -11,7 +11,9 @@ import logging
 import thesaurus
 import util
 import seqtools as st
-import microbes_online as mo
+
+# import microbes_online as mo     # I cannot have this to be imported
+                                    # because of the lack of Mysqldb
 
 
 def make_kegg_code_mapper(dfile):

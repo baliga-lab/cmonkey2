@@ -32,10 +32,10 @@ MOTIF_MAX_CLUSTER_ROWS_ALLOWED = 70
 USE_MULTIPROCESSING = True
 
 def default_motif_iterations(iteration):
-    return iteration >= 500 and (iteration + 1) % 10 == 0
+    return iteration >= 900 and (iteration + 1) % 10 == 0
 
 def default_network_iterations(iteration):
-    return iteration > 0 and (iteration + 1) % 7 == 0
+    return iteration > 5 and (iteration + 1) % 5 == 0
 
 class ScoringFunctionBase:
     """Base class for scoring functions"""
@@ -129,7 +129,7 @@ class ColumnScoringFunction(ScoringFunctionBase):
                                        self.matrix(),
                                        self.num_clusters())
         elapsed = util.current_millis() - start_time
-        logging.info("COLUMN SCORING TIME: %f s.", (elapsed / 1000.0))
+        logging.info("\x1b[34mScoring:\t\x1b[0mCOLUMN SCORING TIME: %f s.", (elapsed / 1000.0))
         return result
 
     def apply_weight(self, result, iteration):
@@ -251,7 +251,7 @@ class ScoringFunctionCombiner:
             result_matrices = dm.quantile_normalize_scores(result_matrices,
                                                            score_weights)
             elapsed = util.current_millis() - start_time
-            logging.info("SCORES COMBINED IN %f s", elapsed / 1000.0)
+            logging.info("\x1b[34mScoring:\t\x1b[0mSCORES COMBINED IN %f s", elapsed / 1000.0)
 
         if len(result_matrices) > 0:
             combined_score = (result_matrices[0] *

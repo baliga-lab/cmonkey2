@@ -3,7 +3,7 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import BeautifulSoup as bs
+#import BeautifulSoup as bs
 import operator
 import math
 import numpy as np

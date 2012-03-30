@@ -9,6 +9,7 @@ import util
 import datamatrix as dm
 import scoring
 import multiprocessing as mp
+import networkx as nx
 
 
 class NetworkEdge:
@@ -123,6 +124,81 @@ class Network:
         return Network(name, network_edges)
 
 
+class FS_Network():
+
+    def __init__(self, name, edges):
+        """creates a network from a list of edges"""
+        self.__network = nx.Graph()
+        self.__name = name
+        for edge in edges:
+            self.__network.add_edge(edge[0], edge[1], {'score': edge[2]})
+
+    def getGraph(self):
+        return self.__network
+
+    def addEdges(self, source, target, score):
+        self.__network.add_edge(source, target, {'score':score})
+
+    def name(self):
+        """returns the name of the network"""
+        return self.__name
+
+    def edges(self):
+        """returns the list of edges"""
+        return self.__network.edges()
+
+    def num_edges(self):
+        """returns the number of edges in this graph"""
+        return len(self.__network.edges())
+
+    def total_score(self):
+        """returns the sum of edge scores"""
+        total = 0.0
+        for edge in self.__network.edges(data = True):
+            total += edge[2]['score']
+        return total
+
+    def normalize_scores_to(self, score):
+        """normalizes all edge scores so that they sum up to
+        the specified score"""
+        total = self.total_score()
+        if score != total:
+            # score_e / score_total * score == score_e * (score_total / score)
+            # we use this to save a division per loop iteration
+            scale = float(score) / float(total)
+            for edge in self.__edges:
+                edge.set_score(edge.score() * scale)
+
+    def __repr__(self):
+        return "Network: %s\n# edges: %d\n" % (self.__name,
+                                               len(self.__network.edges()))
+    def TranslateNetwork(self, Thesaurus):
+        tempG = nx.Graph()
+        logging.debug("\x1b[31mNetwork:\t\x1b[0mI currently have a network of %s nodes and %s edges" % (len(self.__network.nodes()), len(self.__network.edges())))
+        logging.debug("\x1b[31mNetwork:\t\x1b[0mtranslating network")
+        for edge in self.__network.edges_iter(data=True):
+            try:
+                newS = Thesaurus[edge[0]]
+                newT = Thesaurus[edge[1]]
+                infoD = edge[2]
+                tempG.add_edge(newS, newT, infoD)
+            except KeyError:
+                pass
+        logging.debug("\x1b[31mNetwork:\t\x1b[0mnetwork translated...")
+        logging.debug("\x1b[31mNetwork:\t\x1b[0m...into a network of %s nodes and %s edges" % (len(tempG.nodes()), len(tempG.edges())))
+        
+        self.__network = tempG
+
+
+    def ShrinkNetwork(self, genes_all):
+        tempG = self.__network.subgraph(genes_all)
+        logging.debug("\x1b[31mNetwork:\t\x1b[0mnetwork shrunk...")
+        logging.debug("\x1b[31mNetwork:\t\x1b[0m...into a network of %s nodes and %s edges" % (len(tempG.nodes()), len(tempG.edges())))
+        
+        self.__network = tempG
+    
+
+
 COMPUTE_NETWORK = None
 ALL_GENES = None
 
@@ -133,7 +209,23 @@ def compute_network_scores(genes):
     global COMPUTE_NETWORK, ALL_GENES
     network = COMPUTE_NETWORK
     all_genes = genes
-
+    # get all edges within subnetwork
+    # for edge in  G.edges.iter(all_genes, data = True)
+    # 
+    # if edge[0] in all_genes and edge[1] in all_genes:
+    # source = edge[0]
+    # target = edge[1]
+    # edge[3]['Score']
+    # if target not in gene_scores:
+    #     gene_scores[target] = []
+    # gene_scores[target].append(score)
+    # if source not in gene_scores:
+    #     gene_scores[source] = []
+    # gene_scores[source].append(score)
+    
+    # also consider using H = G.subgraph(all_genes)
+    # gene_scores[gene] = sum(x for x in H.edges(gene, data=True)[3]['Score'])
+    
     edges = network.edges_with_source_in(genes)
     fedges = [edge for edge in edges if edge.target_in(all_genes)]
 
@@ -146,6 +238,29 @@ def compute_network_scores(genes):
     final_gene_scores = {}
     for gene, scores in gene_scores.items():
         final_gene_scores[gene] = sum(scores) / len(genes)
+        final_gene_scores[gene] = -np.log(final_gene_scores[gene] + 1)
+    return final_gene_scores
+
+
+
+
+def compute_network_scores_FS(genes):
+    """Generic method to compute network scores"""
+    #network, genes, all_genes = args
+    global COMPUTE_NETWORK, ALL_GENES
+    network = COMPUTE_NETWORK
+    all_genes = genes
+    
+    gene_scores = {}
+    H = network.getGraph().subgraph(all_genes)
+    #logging.debug("\x1b[31mNetwork:\t\x1b[0mtrimmed to a NW of %s nodes and %s edges with %s genes" %(len(H.nodes()), len(H.edges()), len(all_genes)))
+    for gene in all_genes:
+        gene_scores[gene] = sum(x[2]['score'] for x in H.edges(gene, data=True))
+    
+
+    final_gene_scores = {}
+    for gene, scores in gene_scores.items():
+        final_gene_scores[gene] = scores / len(genes)
         final_gene_scores[gene] = -np.log(final_gene_scores[gene] + 1)
     return final_gene_scores
 
@@ -189,12 +304,12 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         #score_means = {}  # a dictionary indexed with network names
 
         for network in self.__networks:
-            logging.info("Compute scores for network '%s'", network.name())
+            logging.info("\x1b[31mNetwork:\t\x1b[0mCompute scores for network '%s'", network.name())
             start_time = util.current_millis()
             network_score = self.__compute_network_cluster_scores(network)
             self.__update_score_matrix(matrix, network_score, weight)
             elapsed = util.current_millis() - start_time
-            logging.info("NETWORK '%s' SCORING TIME: %f s.",
+            logging.info("\x1b[31mNetwork:\t\x1b[0mNETWORK '%s' SCORING TIME: %f s.",
                          network.name(), (elapsed / 1000.0))
             #score_means[network.name()] = self.__compute_cluster_score_means(
             #    network_score)
@@ -221,14 +336,19 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             args = []
             for cluster in xrange(1, self.num_clusters() + 1):
                 args.append(sorted(self.rows_for_cluster(cluster)))
-            map_results = pool.map(compute_network_scores, args)
+            map_results = pool.map(compute_network_scores_FS, args)        # Frank Schmitz - change to the FS routine
+            #map_results = pool.map(compute_network_scores, args)
             pool.close()
             for cluster in xrange(1, self.num_clusters() + 1):
                 result[cluster] = map_results[cluster - 1]
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
-                result[cluster] = compute_network_scores(
+                result[cluster] = compute_network_scores_FS(
                     sorted(self.rows_for_cluster(cluster)))
+                
+                        # Frank Schmitz - change to the FS routine
+                #result[cluster] = compute_network_scores(
+                #    sorted(self.rows_for_cluster(cluster)))
 
         return result
 
