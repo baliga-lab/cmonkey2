@@ -5,7 +5,6 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import re
-import sys
 import logging
 import random
 import string

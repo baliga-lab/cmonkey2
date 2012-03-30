@@ -6,15 +6,12 @@ more information and licensing details.
 """
 import sys
 import os
-#import organism
 import scoring
 import microarray
-#import stringdb
 import network as nw
 import motif
 import meme
 import datamatrix as dm
-#import membership as memb
 import util
 import cmonkey_run
 

@@ -55,6 +55,7 @@ def get_default_network_scaling(num_iterations):
             return (0.5 / (steps - 1)) * (iteration - 1)
     return default_network_scaling
 
+
 def schedule(starts_at, every):
     def runs_in_iteration(iteration):
         return iteration >= starts_at and (iteration - starts_at) % every == 0
