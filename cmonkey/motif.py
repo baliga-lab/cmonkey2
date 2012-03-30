@@ -145,6 +145,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         iteration = iteration_result['iteration']
 
         if self.run_in_iteration(iteration):
+            logging.info('Scoring motifs...')
             global_start_time = util.current_millis()
             pvalues = self.compute_pvalues(iteration_result)
             remapped = {}
@@ -200,6 +201,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             seqs = self.organism.sequences_for_genes_search(
                 genes, seqtype=self.seqtype)
             seqs = apply_sequence_filters(seqs, feature_ids)
+            if len(seqs) == 0:
+                logging.warn('Cluster %i with %i genes: no sequences!' \
+                                %(cluster,len(seqs)) )
             params.append(ComputeScoreParams(cluster, genes, seqs,
                                              self.used_seqs,
                                              self.meme_runner(),
