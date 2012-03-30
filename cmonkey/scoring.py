@@ -32,8 +32,18 @@ MOTIF_MIN_CLUSTER_ROWS_ALLOWED = 3
 MOTIF_MAX_CLUSTER_ROWS_ALLOWED = 70
 USE_MULTIPROCESSING = True
 
+#def default_motif_iterations(iteration):
+#    return iteration >= 500 and iteration % 10 == 0
+
+"""these are the default meme iterations ("meme.iters") in the R version"""
+MOTIF_ITERS = range( 600, 1200, 100 ) + \
+#MOTIF_ITERS = range( 2, 10, 2 ) + \
+              range( 1250, 1500, 50 ) + \
+              range( 1525, 1800, 25 ) + \
+              range( 1810, 5000, 10 )
+
 def default_motif_iterations(iteration):
-    return iteration >= 500 and iteration % 10 == 0
+    return iteration in MOTIF_ITERS
 
 def default_network_iterations(iteration):
     return iteration > 0 and iteration % 7 == 0
