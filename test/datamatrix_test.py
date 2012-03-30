@@ -511,6 +511,61 @@ class QuantileNormalizeTest(unittest.TestCase): # pylint: disable-msg=R0904
         self.assertTrue((qm1.values() == [[2, 1], [3, 4]]).all())
         self.assertTrue((qm2.values() == [[4, 3], [2, 1]]).all())
 
+    def test_quantile_normalize_scores_with_all_defined_weights(self):
+        """happy path for quantile normalization"""
+        m1 = dm.DataMatrix(2, 2, values=[[1, 3], [2, 4]])
+        m2 = dm.DataMatrix(2, 2, values=[[2.3, 2.5], [2.1, 2.31]])
+        result = dm.quantile_normalize_scores([m1, m2], [6.0, 1.0])
+
+        outmatrix1 = result[0]
+        self.assertAlmostEqual(0.5785714, outmatrix1[0][0])
+        self.assertAlmostEqual(1.45071428, outmatrix1[0][1])
+        self.assertAlmostEqual(1.02142857, outmatrix1[1][0])
+        self.assertAlmostEqual(1.89285714, outmatrix1[1][1])
+
+        outmatrix2 = result[1]
+        self.assertAlmostEqual(1.02142857, outmatrix2[0][0])
+        self.assertAlmostEqual(1.89285714, outmatrix2[0][1])
+        self.assertAlmostEqual(0.5785714, outmatrix2[1][0])
+        self.assertAlmostEqual(1.45071428, outmatrix2[1][1])
+
+    def test_quantile_normalize_scores_with_no_weights(self):
+        """no weights -> fall back to row means"""
+        m1 = dm.DataMatrix(2, 2, values=[[1, 3], [2, 4]])
+        m2 = dm.DataMatrix(2, 2, values=[[2.3, 2.5], [2.1, 2.31]])
+        result = dm.quantile_normalize_scores([m1, m2], None)
+
+        outmatrix1 = result[0]
+        self.assertAlmostEqual(1.55, outmatrix1[0][0])
+        self.assertAlmostEqual(2.655, outmatrix1[0][1])
+        self.assertAlmostEqual(2.15, outmatrix1[1][0])
+        self.assertAlmostEqual(3.25, outmatrix1[1][1])
+
+        outmatrix2 = result[1]
+        self.assertAlmostEqual(2.15, outmatrix2[0][0])
+        self.assertAlmostEqual(3.25, outmatrix2[0][1])
+        self.assertAlmostEqual(1.55, outmatrix2[1][0])
+        self.assertAlmostEqual(2.655, outmatrix2[1][1])
+
+    def test_quantile_normalize_scores_with_undefined_weight(self):
+        """one undefined weight"""
+        m1 = dm.DataMatrix(2, 2, values=[[1, 3], [2, 4]])
+        m2 = dm.DataMatrix(2, 2, values=[[2.3, 2.5], [2.1, 2.31]])
+        result = dm.quantile_normalize_scores([m1, m2], [6.0, np.nan])
+
+        outmatrix1 = result[0]
+        self.assertAlmostEqual(1.0, outmatrix1[0][0])
+        self.assertAlmostEqual(3.0, outmatrix1[0][1])
+        self.assertAlmostEqual(2.0, outmatrix1[1][0])
+        self.assertAlmostEqual(4.0, outmatrix1[1][1])
+
+        outmatrix2 = result[1]
+        self.assertAlmostEqual(2.0, outmatrix2[0][0])
+        self.assertAlmostEqual(4.0, outmatrix2[0][1])
+        self.assertAlmostEqual(1.0, outmatrix2[1][0])
+        self.assertAlmostEqual(3.0, outmatrix2[1][1])
+
+
 if __name__ == '__main__':
     SUITE = []
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(QuantileNormalizeTest))

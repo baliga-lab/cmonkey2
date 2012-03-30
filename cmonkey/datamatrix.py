@@ -512,7 +512,7 @@ def weighted_row_means(matrix, weights):
     scaled = weights * matrix
     elapsed = util.current_millis() - start_time
     logging.info("APPLIED WEIGHTS TO COLUMNS in %f s.", elapsed / 1000.0)
-    scale = sum(weights)
+    scale = np.sum(np.ma.masked_array(weights, np.isnan(weights)))
     return util.row_means(scaled) / scale
 
 
