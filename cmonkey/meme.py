@@ -578,7 +578,7 @@ def __next_regex_index(pat, start_index, lines):
     return line_index
 
 
-def make_background_file(bgseqs, use_revcomp):
+def make_background_file(bgseqs, use_revcomp, bgorder=3):
     """create a meme background file and returns its name"""
     def make_seqs(seqs):
         """prepare the input sequences for feeding into meme.
@@ -593,7 +593,7 @@ def make_background_file(bgseqs, use_revcomp):
         return meme_input_seqs
 
     filename = None
-    bgmodel = st.markov_background(make_seqs(bgseqs), 3)
+    bgmodel = st.markov_background(make_seqs(bgseqs), bgorder)
     with tempfile.NamedTemporaryFile(prefix='memebg',
                                      delete=False) as outfile:
         filename = outfile.name
@@ -607,13 +607,14 @@ def make_background_file(bgseqs, use_revcomp):
     return filename
 
 
-def global_background_file(organism, gene_aliases, seqtype, use_revcomp=True):
+def global_background_file(organism, gene_aliases, seqtype, bgorder=3,
+                           use_revcomp=True):
     """returns a background file that was computed on the set of all
     used sequences"""
     global_seqs = organism.sequences_for_genes_scan(gene_aliases,
                                                     seqtype=seqtype)
     logging.info("Computing global background file on seqtype '%s' " +
                  "(%d sequences)", seqtype, len(global_seqs))
-    return make_background_file(global_seqs, use_revcomp)
+    return make_background_file(global_seqs, use_revcomp, bgorder)
 
 __all__ = ['read_meme_output']

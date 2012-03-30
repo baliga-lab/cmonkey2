@@ -171,18 +171,22 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         self.__organism = organism
         self.__run_in_iteration = run_in_iteration
         self.__networks = None
+        self.__last_computed_result = None
 
     def name(self):
         """returns the name of this function"""
         return "Network"
 
     def compute(self, iteration_result, ref_matrix=None):
-        """compute method"""
+        """compute method
+        Note: will return None if not computed yet and the result of a previous
+        scoring if the function is not supposed to actually run in this iteration
+        """
         iteration = iteration_result['iteration']
         if self.__run_in_iteration(iteration):
-            return self.__compute()
-        else:
-            return None
+            logging.info("RUNNING A NEW NETWORK SCORING")
+            self.__last_computed_result = self.__compute()
+        return self.__last_computed_result
 
     def __compute(self):
         """compute method, iteration is the 0-based iteration number"""

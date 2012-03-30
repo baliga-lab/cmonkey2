@@ -65,11 +65,17 @@ MOTIF_ITERS = range( 2, 10, 2 ) + \
 #def default_motif_iterations(iteration):
 #    return iteration >= 500 && iteration % 10 == 0
 
+def schedule(starts_at, every):
+    def runs_in_iteration(iteration):
+        return iteration >= starts_at and (iteration - starts_at) % every == 0
+    return runs_in_iteration
+
 def default_motif_iterations(iteration):
+#    return schedule(500, 10)
     return iteration in MOTIF_ITERS
 
 def default_network_iterations(iteration):
-    return iteration > 0 and iteration % 7 == 0
+    return schedule(1, 7)
 
 class ScoringFunctionBase:
     """Base class for scoring functions"""

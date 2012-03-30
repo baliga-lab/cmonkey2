@@ -117,7 +117,7 @@ class CMonkeyRun:
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
             scaling_func=motif_scaling_fun,
-            run_in_iteration=scoring.default_motif_iterations,
+            run_in_iteration=scoring.schedule(100, 10),
             config_params=self.config_params)
 
         network_scaling_fun = scoring.get_default_network_scaling(self['num_iterations'])
@@ -125,7 +125,7 @@ class CMonkeyRun:
                                              self.membership(),
                                              self.ratio_matrix,
                                              scaling_func=network_scaling_fun,
-                                             run_in_iteration=scoring.default_network_iterations,
+                                             run_in_iteration=scoring.schedule(1, 7),
                                              config_params=self.config_params)
 
         row_scoring_functions = [row_scoring, motif_scoring, network_scoring]
