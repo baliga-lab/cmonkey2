@@ -101,7 +101,8 @@ class CMonkeyRun:
             scaling_func=lambda iteration: self['row_scaling'],
             config_params=self.config_params)
 
-        meme_suite = meme.MemeSuite430()
+        #meme_suite = meme.MemeSuite430()
+        meme_suite = meme.MemeSuite481(remove_tempfiles=True)
         sequence_filters = [
             motif.unique_filter,
             motif.get_remove_low_complexity_filter(meme_suite),

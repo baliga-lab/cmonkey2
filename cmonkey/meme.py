@@ -36,11 +36,13 @@ class MemeSuite:
     meme - discover motifs in a set of sequences
     mast - search for a group of motifs in a set of sequences
     """
-    def __init__(self, max_width=24, use_revcomp=True, background_file=None):
+    def __init__(self, max_width=24, use_revcomp=True, background_file=None,
+            remove_tempfiles=True):
         """Create MemeSuite instance"""
         self.__max_width = max_width
         self.__use_revcomp = use_revcomp
         self.__background_file = background_file
+        self.__remove_tempfiles = remove_tempfiles
 
     def global_background_file(self):
         """returns the global background file used with this meme suite
@@ -129,25 +131,26 @@ class MemeSuite:
         except:
             return MemeRunResult([], {}, [])
         finally:
-            #logging.info("DELETING ALL TMP FILES...")
-            try:
-                os.remove(seqfile)
-            except:
-                logging.warn("could not remove tmp file: '%s'", seqfile)
-            try:
-                os.remove(meme_outfile)
-            except:
-                logging.warn("could not remove tmp file: '%s'", meme_outfile)
-            try:
-                os.remove(dbfile)
-            except:
-                logging.warn("could not remove tmp file: '%s'", dbfile)
-
-            if self.__background_file == None:
+            if self.__remove_tempfiles:
+                #logging.info("DELETING ALL TMP FILES...")
                 try:
-                    os.remove(bgfile)
+                    os.remove(seqfile)
                 except:
-                    logging.warn("could not remove tmp file: '%s'", bgfile)
+                    logging.warn("could not remove tmp file: '%s'", seqfile)
+                try:
+                    os.remove(meme_outfile)
+                except:
+                    logging.warn("could not remove tmp file: '%s'", meme_outfile)
+                try:
+                    os.remove(dbfile)
+                except:
+                    logging.warn("could not remove tmp file: '%s'", dbfile)
+
+                if self.__background_file == None:
+                    try:
+                        os.remove(bgfile)
+                    except:
+                        logging.warn("could not remove tmp file: '%s'", bgfile)
 
 
     def make_sequence_file(self, seqs):
@@ -210,6 +213,42 @@ class MemeSuite430(MemeSuite):
                    '-bfile', bgfile_path, '-nostatus', '-stdout', '-text',
                    '-brief', '-ev', '1500', '-mev', '99999', '-mt', '0.99',
                    '-seqp', '-remcorr']
+        output = subprocess.check_output(command)
+        return output
+
+
+class MemeSuite481(MemeSuite):
+    """Version 4.8.1 of MEME"""
+
+    def meme(self, infile_path, bgfile_path, num_motifs=2,
+             pspfile_path=None):
+        """runs the meme command on the specified input file, background file
+        and positional priors file. Returns a tuple of
+        (list of MemeMotifInfo objects, meme output)
+        """
+        command = ['meme', infile_path, '-bfile', bgfile_path,
+                   '-time', '600', '-dna', '-revcomp',
+                   '-maxsize', '9999999', '-nmotifs', str(num_motifs),
+                   '-evt', '1e9', '-minw', '6', '-maxw', str(self.max_width()),
+                   '-mod',  'zoops', '-nostatus', '-text']
+
+        if pspfile_path:
+            command.append(['-psp', pspfile_path])
+
+        #logging.info("running: %s", " ".join(command))
+        output = subprocess.check_output(command)
+        return (read_meme_output(output, num_motifs), output)
+
+    def mast(self, meme_outfile_path, database_file_path,
+             bgfile_path):
+        """runs the mast command"""
+        # note: originally run with -ev 99999, but MAST will crash with
+        # memory errors
+        command = ['mast', meme_outfile_path, database_file_path,
+                   '-bfile', bgfile_path, '-nostatus', '-hit_list',
+                   '-ev', '1500', '-mev', '99999', '-mt', '0.99',
+                   '-seqp', '-remcorr']
+        #logging.info("running: %s", " ".join(command))
         output = subprocess.check_output(command)
         return output
 
