@@ -73,6 +73,10 @@ class CMonkeyRun:
         self.__checkpoint_basename = "cmonkey-checkpoint-%s-%d%d%d" % (
             organism_code, today.year, today.month, today.day)
 
+    def report_params(self):
+        logging.info('cmonkey_run config_params:')
+        for param,value in self.config_params.items():
+            logging.info('%s=%s' %(param,str(value)))
 
     def __getitem__(self, key):
         return self.config_params[key]
@@ -101,8 +105,7 @@ class CMonkeyRun:
             scaling_func=lambda iteration: self['row_scaling'],
             config_params=self.config_params)
 
-        #meme_suite = meme.MemeSuite430()
-        meme_suite = meme.MemeSuite481(remove_tempfiles=True)
+        meme_suite = meme.MemeSuite430()
         sequence_filters = [
             motif.unique_filter,
             motif.get_remove_low_complexity_filter(meme_suite),
@@ -197,6 +200,7 @@ class CMonkeyRun:
         self.run_iterations(row_scoring, col_scoring)
 
     def run_iterations(self, row_scoring, col_scoring):
+        self.report_params()
         output_dir = self['output_dir']
 
         for iteration in range(self['start_iteration'],

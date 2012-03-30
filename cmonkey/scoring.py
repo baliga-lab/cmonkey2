@@ -55,15 +55,8 @@ def get_default_network_scaling(num_iterations):
             return (0.5 / (steps - 1)) * (iteration - 1)
     return default_network_scaling
 
-"""these are the default meme iterations ("meme.iters") in the R version"""
-#MOTIF_ITERS = range( 600, 1200, 100 ) + \
-MOTIF_ITERS = range( 2, 10, 2 ) + \
-              range( 1250, 1500, 50 ) + \
-              range( 1525, 1800, 25 ) + \
-              range( 1810, 5000, 10 )
-
-#def default_motif_iterations(iteration):
-#    return iteration >= 500 && iteration % 10 == 0
+def default_motif_iterations(iteration):
+    return iteration >= 500 and iteration % 10 == 0
 
 def schedule(starts_at, every):
     def runs_in_iteration(iteration):
