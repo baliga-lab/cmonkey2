@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """scoring.py - cMonkey scoring base classes
 
 This file is part of cMonkey Python. Please see README and LICENSE for
@@ -31,21 +32,45 @@ MOTIF_MIN_CLUSTER_ROWS_ALLOWED = 3
 MOTIF_MAX_CLUSTER_ROWS_ALLOWED = 70
 USE_MULTIPROCESSING = True
 
+def get_default_motif_scaling(num_iterations):
+    """this scaling function is based on the tricky default motif scaling
+    sequence in the R reference"""
+    def default_motif_scaling(iteration):
+        steps = int(round(num_iterations * 0.75))
+        if iteration > steps:
+            return 1.0
+        else:
+            return (1.0 / (steps - 1)) * (iteration - 1)
+    return default_motif_scaling
+
+
+def get_default_network_scaling(num_iterations):
+    """this scaling function is based on the tricky default network scaling
+    sequence in the R reference"""
+    def default_network_scaling(iteration):
+        steps = int(round(num_iterations * 0.75))
+        if iteration > steps:
+            return 0.5
+        else:
+            return (0.5 / (steps - 1)) * (iteration - 1)
+    return default_network_scaling
+
+
 def default_motif_iterations(iteration):
-    return iteration >= 900 and (iteration + 1) % 10 == 0
+    return iteration > 49 and iteration % 50 == 0
 
 def default_network_iterations(iteration):
-    return iteration > 5 and (iteration + 1) % 5 == 0
+    return iteration > 0 and iteration % 5 == 0
 
 class ScoringFunctionBase:
     """Base class for scoring functions"""
 
-    def __init__(self, membership, matrix, weight_func,
+    def __init__(self, membership, matrix, scaling_func,
                  config_params):
         """creates a function instance"""
         self.__membership = membership
         self.__matrix = matrix
-        self.__weight_func = weight_func
+        self.__scaling_func = scaling_func
         self.config_params = config_params
         if config_params == None:
             raise Exception('NO CONFIG PARAMS !!!')
@@ -93,9 +118,9 @@ class ScoringFunctionBase:
         """returns the rows for the specified cluster"""
         return self.__membership.rows_for_cluster(cluster)
 
-    def weight(self, iteration):
-        """returns the weight for the specified iteration"""
-        return self.__weight_func(iteration)
+    def scaling(self, iteration):
+        """returns the quantile normalization scaling for the specified iteration"""
+        return self.__scaling_func(iteration)
 
     def store_checkpoint_data(self, shelf):
         """Default implementation does not store checkpoint data"""
@@ -104,7 +129,6 @@ class ScoringFunctionBase:
     def restore_checkpoint_data(self, shelf):
         """Default implementation does not store checkpoint data"""
         pass
-
 
 class ColumnScoringFunction(ScoringFunctionBase):
     """Scoring algorithm for microarray data based on conditions.
@@ -129,11 +153,7 @@ class ColumnScoringFunction(ScoringFunctionBase):
                                        self.matrix(),
                                        self.num_clusters())
         elapsed = util.current_millis() - start_time
-        logging.info("\x1b[34mScoring:\t\x1b[0mCOLUMN SCORING TIME: %f s.", (elapsed / 1000.0))
-        return result
-
-    def apply_weight(self, result, iteration):
-        """applies the stored weight"""
+        #logging.info("COLUMN SCORING TIME: %f s.", (elapsed / 1000.0))
         return result
 
 def compute_column_scores(membership, matrix, num_clusters):
@@ -214,18 +234,18 @@ class ScoringFunctionCombiner:
     allow for nested scoring functions as they are used in the motif
     scoring
     """
-    def __init__(self, membership, scoring_functions, weight_func=None,
+    def __init__(self, membership, scoring_functions, scaling_func=None,
                  log_subresults=False):
         """creates a combiner instance"""
         self.__membership = membership
         self.__scoring_functions = scoring_functions
         self.__log_subresults = log_subresults
-        self.__weight_func = weight_func
+        self.__scaling_func = scaling_func
 
     def compute(self, iteration_result, ref_matrix=None):
         """compute scores for one iteration"""
         result_matrices = []
-        score_weights = []
+        score_scalings = []
         reference_matrix = ref_matrix
         iteration = iteration_result['iteration']
         for scoring_function in self.__scoring_functions:
@@ -238,28 +258,28 @@ class ScoringFunctionCombiner:
             matrix = scoring_function.compute(iteration_result, reference_matrix)
             if matrix != None:
                 result_matrices.append(matrix)
-                score_weights.append(scoring_function.weight(iteration))
+                score_scalings.append(scoring_function.scaling(iteration))
 
                 if self.__log_subresults:
                     self.__log_subresult(scoring_function, matrix)
 
         if len(result_matrices) > 1:
-            logging.info(
-                "COMBINING THE SCORES OF %d matrices (quantile normalize)",
-                len(result_matrices))
+            #logging.info(
+            #    "\x1b[34mScoring:\t\x1b[0mCOMBINING THE SCORES OF %d matrices (quantile normalize)",
+            #    len(result_matrices))
             start_time = util.current_millis()
             result_matrices = dm.quantile_normalize_scores(result_matrices,
-                                                           score_weights)
+                                                           score_scalings)
             elapsed = util.current_millis() - start_time
-            logging.info("\x1b[34mScoring:\t\x1b[0mSCORES COMBINED IN %f s", elapsed / 1000.0)
+            #logging.info("\x1b[34mScoring:\t\x1b[0mSCORES COMBINED IN %f s", elapsed / 1000.0)
 
         if len(result_matrices) > 0:
             combined_score = (result_matrices[0] *
-                              self.__scoring_functions[0].weight(iteration))
+                              self.__scoring_functions[0].scaling(iteration))
             for index in xrange(1, len(result_matrices)):
                 combined_score += (
                     result_matrices[index] *
-                    self.__scoring_functions[index].weight(iteration))
+                    self.__scoring_functions[index].scaling(iteration))
             return combined_score
         else:
             return None
@@ -272,13 +292,13 @@ class ScoringFunctionCombiner:
             for row in xrange(matrix.num_rows()):
                 if matrix.row_name(row) in cluster_rows:
                     scores.append(matrix[row][cluster - 1])
-        logging.info("function '%s', trim mean score: %f",
-                     score_function.name(),
-                     util.trim_mean(scores, 0.05))
+        #logging.info("function '%s', trim mean score: %f",
+        #             score_function.name(),
+        #             util.trim_mean(scores, 0.05))
 
-    def weight(self, iteration):
-        """returns the weight for the specified iteration"""
-        return self.__weight_func(iteration)
+    def scaling(self, iteration):
+        """returns the scaling for the specified iteration"""
+        return self.__scaling_func(iteration)
 
     def store_checkpoint_data(self, shelf):
         """recursively invokes store_checkpoint_data() on the children"""

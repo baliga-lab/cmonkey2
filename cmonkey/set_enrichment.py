@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """set_enrichment.py - cMonkey set_enrichment scoring.
 
 This file is part of cMonkey Python. Please see README and LICENSE for
@@ -93,12 +94,12 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     """Network scoring function"""
 
     def __init__(self, membership, matrix, set_types,
-                 weight_func=None,
+                 scaling_func=None,
                  run_in_iteration=lambda iteration: True,
                  config_params=None):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
-                                             matrix, weight_func,
+                                             matrix, scaling_func,
                                              config_params)
         self.__run_in_iteration = run_in_iteration
         self.__set_types = set_types

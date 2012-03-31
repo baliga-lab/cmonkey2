@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """datatypes.py - data types for cMonkey
 
 This file is part of cMonkey Python. Please see README and LICENSE for
@@ -5,6 +6,7 @@ more information and licensing details.
 """
 import scipy
 import numpy as np
+import operator
 import util
 import logging
 
@@ -42,7 +44,8 @@ class DataMatrix:
                 raise ValueError("number of row names should be %d" % nrows)
             self.__row_names = np.array(row_names)
 
-        self.__rownames_original = self.__row_names
+        self.__rownames_original = self.__row_names         # Frank Schmitz
+
 
         if col_names == None:
             self.__column_names = np.array(["Col " + str(i)
@@ -59,6 +62,7 @@ class DataMatrix:
             self.__values = np.zeros((nrows, ncols))
             if init_value != None:
                 self.__values.fill(init_value)
+        self.__row_variance = None
 
     def num_rows(self):
         """returns the number of rows"""
@@ -73,7 +77,7 @@ class DataMatrix:
 
     def row_names(self):
         """return the row names.
-        Note: a NumPy array is returned, which does not have an index()        #really? is this an numpy array or a list?
+        Note: a NumPy array is returned, which does not have an index()
         method"""
         return self.__row_names
     def set_row_names(self, new_row_names):
@@ -100,6 +104,8 @@ class DataMatrix:
                 else:
                     nrowL.append("".join(["unMapped_", rowname]))
         self.set_row_names(np.array(nrowL))
+
+
 
     def column_names(self):
         """return the column names.
@@ -223,6 +229,10 @@ class DataMatrix:
         """Returns a numpy array, containing the column means"""
         return util.column_means(self.__values)
 
+    def row_means(self):
+        """Returns a numpy array, containing the column means"""
+        return util.row_means(self.__values)
+
     ######################################################################
     #### Operations on the matrix values
     ######################################################################
@@ -281,6 +291,26 @@ class DataMatrix:
                           self.row_names(), self.column_names(),
                           self.__values * factor)
 
+    def row_variance(self):
+        if self.__row_variance == None:
+            self.__row_variance = util.max_row_var(self.__values)
+        return self.__row_variance
+
+    def residual(self, max_row_variance=None):
+        """computes the residual for this matrix, if max_row_variance is given,
+        result is normalized by the row variance"""
+        d_rows = self.row_means()
+        d_cols = self.column_means()
+        d_all = util.mean(d_rows)
+        tmp = self.__values + d_all - util.r_outer(d_rows, d_cols, operator.add)
+        average = util.mean(np.abs(tmp))
+        if max_row_variance != None:
+            row_var = self.row_variance()
+            if np.isnan(row_var) or row_var > max_row_variance:
+                row_var = max_row_variance
+            average = average / row_var
+        return average
+
     def __repr__(self):
         """returns a string representation of this matrix"""
         return str(self)
@@ -297,6 +327,18 @@ class DataMatrix:
             result += '\n'
         return result
 
+    def write_tsv_file(self, path):
+        """writes this matrix to tab-separated file"""
+        with open(path, 'w') as outfile:
+            title = ['GENE']
+            title.extend(self.__column_names)
+            titlerow = '\t'.join(title)
+            outfile.write(titlerow + '\n')
+            for row_index in range(len(self.__row_names)):
+                row = [self.__row_names[row_index]]
+                row.extend([('%f' % value) for value in self.__values[row_index]])
+                outfile.write('\t'.join(row) + '\n')
+            outfile.flush()
 
 class DataMatrixCollection:
     """A collection of DataMatrix objects containing gene expression values
@@ -382,6 +424,7 @@ class DataMatrixFactory:
         for matrix_filter in self.filters:
             data_matrix = matrix_filter(data_matrix)
         return data_matrix
+
 
 FILTER_THRESHOLD = 0.98
 ROW_THRESHOLD = 0.17
@@ -498,7 +541,7 @@ def weighted_row_means(matrix, weights):
     scaled = weights * matrix
     elapsed = util.current_millis() - start_time
     logging.info("APPLIED WEIGHTS TO COLUMNS in %f s.", elapsed / 1000.0)
-    scale = sum(weights)
+    scale = np.sum(np.ma.masked_array(weights, np.isnan(weights)))
     return util.row_means(scaled) / scale
 
 

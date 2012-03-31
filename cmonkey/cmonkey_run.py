@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 import logging
 import microarray
 import membership as memb
@@ -5,7 +6,7 @@ import meme
 import motif
 import util
 import rsat
-#import microbes_online den schrott brauche ma net
+#import microbes_online        # Frank Schmitz
 import organism as org
 import scoring
 import network as nw
@@ -13,6 +14,7 @@ import stringdb
 import os
 from datetime import date
 import json
+import numpy as np
 
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
 GO_FILE_PATH = 'testdata/proteome2taxid'
@@ -21,6 +23,8 @@ COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
 
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
+STATS_FREQ = 10
+RESULT_FREQ = 10
 
 class CMonkeyRun:
     def __init__(self, organism_code, ratio_matrix, num_clusters):
@@ -38,20 +42,19 @@ class CMonkeyRun:
         # defaults
         self.row_seeder = memb.make_kmeans_row_seeder(num_clusters)
         self.column_seeder = microarray.seed_column_members
-        self['row_weight'] = 6.0
+        self['row_scaling'] = 6.0
         self['string_file'] = None
         self['cache_dir'] = CACHE_DIR
         self['output_dir'] = 'out'
-        self['start_iteration'] = 0
+        self['start_iteration'] = 1
         self['num_iterations'] = 2000
         self['multiprocessing'] = True
 
         # used to select sequences and MEME
         self['sequence_types'] = ['upstream']
-        self['search_distances'] = {'upstream': (-500, 1500)}   #" Frank Schmitz - -1500 to + 500 makes more sense
+        self['search_distances'] = {'upstream': (-1500, 5000)}
         # used for background distribution and MAST
-        self['scan_distances'] = {'upstream': (-1000, 2500)}   #" Frank Schmitz - -2500 to + 1000 makes more sense
-                                                                # Frank Schmitz - great, I did not know about the MAST backgrnd correction!
+        self['scan_distances'] = {'upstream': (-2000, 750)}
 
         # membership update default parameters
         self['memb.clusters_per_row'] = 2
@@ -66,9 +69,9 @@ class CMonkeyRun:
         self['motif.max_cluster_rows_allowed'] = 70
 
         today = date.today()
+        self.CHECKPOINT_INTERVAL = 100
         self.__checkpoint_basename = "cmonkey-checkpoint-%s-%d%d%d" % (
             organism_code, today.year, today.month, today.day)
-        print today
 
 
     def __getitem__(self, key):
@@ -95,7 +98,7 @@ class CMonkeyRun:
         # Default row scoring functions
         row_scoring = microarray.RowScoringFunction(
             self.membership(), self.ratio_matrix,
-            lambda iteration: self['row_weight'],
+            scaling_func=lambda iteration: self['row_scaling'],
             config_params=self.config_params)
 
         meme_suite = meme.MemeSuite430()
@@ -103,8 +106,8 @@ class CMonkeyRun:
             motif.unique_filter,
             motif.get_remove_low_complexity_filter(meme_suite),
             motif.get_remove_atgs_filter(self['search_distances']['upstream'])]
-        '''
-        '''
+
+        motif_scaling_fun = scoring.get_default_motif_scaling(self['num_iterations'])
         motif_scoring = motif.MemeScoringFunction(
             self.organism(),
             self.membership(),
@@ -112,16 +115,18 @@ class CMonkeyRun:
             meme_suite,
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
-            weight_func=lambda iteration: 1.0,  # TODO
+            scaling_func=motif_scaling_fun,
             run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
 
+        network_scaling_fun = scoring.get_default_network_scaling(self['num_iterations'])
         network_scoring = nw.ScoringFunction(self.organism(),
                                              self.membership(),
                                              self.ratio_matrix,
-                                             lambda iteration: 0.0,
-                                             scoring.default_network_iterations,
+                                             scaling_func=network_scaling_fun,
+                                             run_in_iteration=scoring.default_network_iterations,
                                              config_params=self.config_params)
+
         row_scoring_functions = [row_scoring, motif_scoring, network_scoring]
         return scoring.ScoringFunctionCombiner(self.membership(),
                                                row_scoring_functions,
@@ -129,7 +134,7 @@ class CMonkeyRun:
 
     def membership(self):
         if self.__membership == None:
-            logging.info("\x1b[31mMain:\t\x1b[0mcreating and seeding memberships")
+            logging.info("creating and seeding memberships")
             self.__membership = self.__make_membership()
         return self.__membership
 
@@ -143,20 +148,18 @@ class CMonkeyRun:
         """returns the organism object to work on"""
         keggfile = util.DelimitedFile.read(KEGG_FILE_PATH, comment='#')
         gofile = util.DelimitedFile.read(GO_FILE_PATH)
-        # Frank Schmitz - consider reading the rsatdb from local files
         rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, self['cache_dir'])
-        # Frank Schmitz - is this really needed? in case of human and mouse or other eucaryotes surely not
         mo_db = microbes_online.MicrobesOnline()
         stringfile = self.config_params['string_file']
 
         nw_factories = []
         if stringfile != None:
-            nw_factories.append(stringdb.get_network_factory2(stringfile))
+            nw_factories.append(stringdb.get_network_factory2(stringfile, 0.5))
         else:
             logging.warn("no STRING file specified !")
 
         nw_factories.append(microbes_online.get_network_factory(
-                mo_db, max_operon_size=self.ratio_matrix.num_rows() / 20))
+                mo_db, max_operon_size=self.ratio_matrix.num_rows() / 20, weight=0.5))
 
         org_factory = org.MicrobeFactory(org.make_kegg_code_mapper(keggfile),
                                          org.make_rsat_organism_mapper(rsatdb),
@@ -175,52 +178,88 @@ class CMonkeyRun:
         if not os.path.exists(cache_dir):
             os.mkdir(cache_dir)
 
+        # write the normalized ratio matrix for stats and visualization
+        if not os.path.exists(output_dir + '/ratios.tsv'):
+            self.ratio_matrix.write_tsv_file(output_dir + '/ratios.tsv')
+
     def run(self):
         row_scoring = self.make_row_scoring()
         col_scoring = self.make_column_scoring()
-        output_dir = self['output_dir']
-        logging.debug("\x1b[31mMain:\t\x1b[0moutput Dir is %s" % (output_dir))
         self.__make_dirs_if_needed()
+        self.run_iterations(row_scoring, col_scoring)
 
-        
+    def run_from_checkpoint(self,checkpoint_filename):
+        row_scoring = self.make_row_scoring()
+        col_scoring = self.make_column_scoring()
+        self.__make_dirs_if_needed()
+        self.init_from_checkpoint(checkpoint_filename, row_scoring, col_scoring)
+        self.run_iterations(row_scoring, col_scoring)
+
+    def run_iterations(self, row_scoring, col_scoring):
+        output_dir = self['output_dir']
 
         for iteration in range(self['start_iteration'],
-                               self['num_iterations']):
-            logging.info("\x1b[31mMain:\t\x1b[0mIteration # %d", iteration)
+                               self['num_iterations'] + 1):
+            logging.info("Iteration # %d", iteration)
             iteration_result = {'iteration': iteration}
             self.membership().update(self.ratio_matrix,
                                      row_scoring.compute(iteration_result),
                                      col_scoring.compute(iteration_result),
                                      iteration, self['num_iterations'])
-            #if iteration > 0 and  iteration % CHECKPOINT_INTERVAL == 0:
-            #    config.save_checkpoint_data(iteration)
 
-            # Write a snapshot
-            iteration_result['columns'] = {}
-            iteration_result['rows'] = {}
-            for cluster in range(1, self['num_clusters'] + 1):
-                iteration_result['columns'][cluster] = self.membership().columns_for_cluster(cluster)
-                iteration_result['rows'][cluster] = self.membership().rows_for_cluster(cluster)
+            if iteration > 0 and self.CHECKPOINT_INTERVAL and iteration % self.CHECKPOINT_INTERVAL == 0:
+                self.save_checkpoint_data(iteration, row_scoring, col_scoring)
 
-            with open('%s/%d-results.json' % (output_dir, iteration), 'w') as outfile:
-                outfile.write(json.dumps(iteration_result))
+            if iteration == 1 or (iteration % RESULT_FREQ == 0):
+                # Write a snapshot
+                iteration_result['columns'] = {}
+                iteration_result['rows'] = {}
+                for cluster in range(1, self['num_clusters'] + 1):
+                    iteration_result['columns'][cluster] = self.membership().columns_for_cluster(cluster)
+                    iteration_result['rows'][cluster] = self.membership().rows_for_cluster(cluster)
+
+                # write results
+                with open('%s/%d-results.json' % (output_dir, iteration), 'w') as outfile:
+                    outfile.write(json.dumps(iteration_result))
+
+            if iteration == 1 or (iteration % STATS_FREQ == 0):
+                # write stats for this iteration
+                residuals = []
+                cluster_stats = {}
+                for cluster in range(1, self['num_clusters'] + 1):
+                    row_names = iteration_result['rows'][cluster]
+                    column_names = iteration_result['columns'][cluster]
+                    if len(column_names) <= 1 or len(row_names) <= 1:
+                        residual = 1.0
+                    else:
+                        matrix = self.ratio_matrix.submatrix_by_name(row_names, column_names)
+                        residual = matrix.residual()
+                    residuals.append(residual)
+                    cluster_stats[cluster] = {'num_rows': len(row_names),
+                                              'num_columns': len(column_names),
+                                              'residual': residual
+                                              }
+                stats = {'cluster': cluster_stats, 'median_residual': np.median(residuals) }
+                with open('%s/%d-stats.json' % (output_dir, iteration), 'w') as outfile:
+                    outfile.write(json.dumps(stats))
+
         print "Done !!!!"
 
     ############################################################
     ###### CHECKPOINTING
     ##############################
 
-    def save_checkpoint_data(self, iteration):
+    def save_checkpoint_data(self, iteration, row_scoring, col_scoring):
         """save checkpoint data for the specified iteration"""
         with util.open_shelf("%s.%d" % (self.__checkpoint_basename,
                                         iteration)) as shelf:
             shelf['config'] = self.config_params
             shelf['iteration'] = iteration
             self.membership().store_checkpoint_data(shelf)
-            self.row_scoring().store_checkpoint_data(shelf)
-            self.column_scoring().store_checkpoint_data(shelf)
+            row_scoring.store_checkpoint_data(shelf)
+            col_scoring.store_checkpoint_data(shelf)
 
-    def init_from_checkpoint(self, checkpoint_filename):
+    def init_from_checkpoint(self, checkpoint_filename, row_scoring, col_scoring):
         """initialize this object from a checkpoint file"""
         logging.info("Continue run using checkpoint file '%s'",
                      checkpoint_filename)
@@ -229,5 +268,6 @@ class CMonkeyRun:
             self['start_iteration'] = shelf['iteration'] + 1
             self.__membership = memb.ClusterMembership.restore_from_checkpoint(
                 self.config_params, shelf)
-            self.row_scoring().restore_checkpoint_data(shelf)
-            self.column_scoring().restore_checkpoint_data(shelf)
+            row_scoring.restore_checkpoint_data(shelf)
+            col_scoring.restore_checkpoint_data(shelf)
+            #return row_scoring, col_scoring necessary??

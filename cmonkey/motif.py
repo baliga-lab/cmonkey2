@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """motif.py - cMonkey motif related processing
 This module captures the motif-specific scoring component
 of cMonkey.
@@ -44,7 +45,8 @@ def get_remove_atgs_filter(distance):
         just masks a window of 4 letters with N's"""
         for feature_id in seqs:
             chars = [c for c in seqs[feature_id]]
-            chars[distance[1]:distance[1] + 4] = "NNNN"
+            startPos = - distance[0]
+            chars[ startPos : startPos + 4] = "NNNN"
             seqs[feature_id] = "".join(chars)
         return seqs
     return remove_atgs_filter
@@ -81,12 +83,12 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                  meme_suite, seqtype,
                  sequence_filters=[],
                  pvalue_filter=None,
-                 weight_func=None,
+                 scaling_func=None,
                  run_in_iteration=lambda iteration: True,
                  config_params=None):
         """creates a ScoringFunction"""
         scoring.ScoringFunctionBase.__init__(self, membership,
-                                             matrix, weight_func,
+                                             matrix, scaling_func,
                                              config_params)
         # attributes accessible by subclasses
         self.organism = organism
@@ -193,7 +195,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             feature_ids = self.organism.feature_ids_for(genes)
             seqs = self.organism.sequences_for_genes_search(
                 genes, seqtype=self.seqtype)
+            # should I stay or should I go? Frank Schmitz
             seqs = apply_sequence_filters(seqs, feature_ids)
+
             params.append(ComputeScoreParams(cluster, genes, seqs,
                                              self.used_seqs,
                                              self.meme_runner(),
@@ -232,9 +236,25 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 def meme_json(run_result):
     result = []
     if run_result != None:
+        motif_annotations = {}  # map motif_num -> [annotations]
+        for gene in run_result.annotations:
+            for annotation in run_result.annotations[gene]:
+                motif_num = annotation[2]
+                if motif_num not in motif_annotations:
+                    motif_annotations[motif_num] = []
+
+                motif_annotations[motif_num].append(
+                    {'gene': gene, 'position': annotation[0], 'pvalue': annotation[1]})
+
         for motif_info in run_result.motif_infos:
-            result.append({'motif_num': motif_info.motif_num(),
-                           'pssm': motif_info.pssm()})
+            motif_num = motif_info.motif_num()
+            motif_annot = None
+            if motif_num in motif_annotations:
+                motif_annot = motif_annotations[motif_num]
+            result.append({'motif_num': motif_num,
+                           'pssm': motif_info.pssm(),
+                           'evalue': motif_info.evalue(),
+                           'annotations': motif_annot})
     return result
 
 
@@ -257,8 +277,10 @@ def compute_cluster_score(params):
     """This function computes the MEME score for a cluster"""
     pvalues = {}
     run_result = None
-    if (len(params.seqs) >= params.min_cluster_rows
-        and len(params.seqs) <= params.max_cluster_rows):
+    nseqs = len(params.seqs)
+    logging.info('computing cluster score for %s seqs...' %nseqs)
+    if (nseqs >= params.min_cluster_rows
+        and nseqs <= params.max_cluster_rows):
         run_result = params.meme_runner(params.seqs, params.used_seqs)
         pe_values = run_result.pe_values
         for feature_id, pvalue, evalue in pe_values:
@@ -276,17 +298,17 @@ class MemeScoringFunction(MotifScoringFunctionBase):
 
     def __init__(self, organism, membership, matrix,
                  meme_suite,
-                 seqtype='upstream',
+                 seqtype='Promoter',
                  sequence_filters=[],
                  pvalue_filter=None,
-                 weight_func=None,
+                 scaling_func=None,
                  run_in_iteration=scoring.default_motif_iterations,
                  config_params=None):
         """creates a ScoringFunction"""
         MotifScoringFunctionBase.__init__(self, organism, membership,
                                           matrix, meme_suite, seqtype,
                                           sequence_filters, pvalue_filter,
-                                          weight_func, run_in_iteration,
+                                          scaling_func, run_in_iteration,
                                           config_params)
 
     def name(self):
@@ -304,14 +326,14 @@ class WeederScoringFunction(MotifScoringFunctionBase):
     def __init__(self, organism, membership, matrix,
                  meme_suite, seqtype,
                  sequence_filters=[], pvalue_filter=None,
-                 weight_func=None,
+                 scaling_func=None,
                  run_in_iteration=scoring.default_motif_iterations,
                  config_params=None):
         """creates a scoring function"""
         MotifScoringFunctionBase.__init__(self, organism, membership, matrix,
                                           meme_suite, seqtype,
                                           sequence_filters, pvalue_filter,
-                                          weight_func, run_in_iteration, config_params)
+                                          scaling_func, run_in_iteration, config_params)
 
     def name(self):
         """returns the name of this scoring function"""

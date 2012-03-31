@@ -45,17 +45,17 @@ def normalize_edge_list(edges, max_score):
     return edges
 
 
-def get_network_factory(filename, weight):
+def get_network_factory(filename):
     """temporary STRING network factory using the default STRING format"""
     def make_network(_):
         """make network"""
         return network.Network.create("STRING",
-                                      read_edges(filename), weight)
+                                      read_edges(filename))
 
     return make_network
 
 
-def get_network_factory2(filename, weight, sep='\t'):
+def get_network_factory2(filename, sep='\t'):
     """STRING network factory from preprocessed edge file
     (protein1, protein2, combined_score), scores are already
     normalized to 1000"""
@@ -71,14 +71,11 @@ def get_network_factory2(filename, weight, sep='\t'):
 
     def make_network(_):
         """make network"""
-        return network.Network.create("STRING", read_edges2(filename), weight)
+        return network.Network.create("STRING", read_edges2(filename))
 
     return make_network
 
-
-
-
-def get_network_factory2_FS(filename, weight, sep='\t'):
+def get_network_factory2_FS(filename, sep='\t'):
     """STRING network factory from preprocessed edge file
     (protein1, protein2, combined_score), scores are already
     normalized to 1000"""
@@ -94,15 +91,14 @@ def get_network_factory2_FS(filename, weight, sep='\t'):
 
     def make_network(_):
         """make network"""
-        return network.FS_Network("STRING", read_edges2(filename), weight)
+        return network.FS_Network("STRING", read_edges2(filename))
 
     return make_network
 
 
 
 
-
-def get_network_factory3(filename, weight):
+def get_network_factory3(filename):
     """STRING network factory from preprocessed edge file
     (row, protein1, protein2, combined_score), scores are not yet
     normalized to 1000"""
@@ -119,7 +115,7 @@ def get_network_factory3(filename, weight):
 
     def make_network(_):
         """make network"""
-        return network.Network.create("STRING", read_edges3(filename), weight)
+        return network.Network.create("STRING", read_edges3(filename))
 
     return make_network
 

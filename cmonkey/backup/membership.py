@@ -1,4 +1,3 @@
-# vi: sw=4 ts=4 et:
 """membership.py - cMonkey cluster membership functionality
 This module captures the microarray-specific scoring component
 of cMonkey.
@@ -309,30 +308,26 @@ class ClusterMembership:
                                                        iteration,
                                                        num_iterations)
 
-        rpc = map(len, self.__cluster_row_members.values())
-        logging.info('Rows per cluster: %i to %i (median %d)' \
-          %( min(rpc), max(rpc), np.median(rpc) ) )
-
         start = util.current_millis()
-        #logging.info("GET_DENSITY_SCORES()...")
+        logging.info("\x1b[34mScoring:\t\x1b[0mGET_DENSITY_SCORES()...")
         rd_scores, cd_scores = get_density_scores(self, row_scores,
                                                   column_scores)
         elapsed = util.current_millis() - start
-        #logging.info("GET_DENSITY_SCORES() took %f s.", elapsed / 1000.0)
+        logging.info("\x1b[34mScoring:\t\x1b[0mGET_DENSITY_SCORES() took %f s.", elapsed / 1000.0)
 
         start = util.current_millis()
-        #logging.info("COMPENSATE_SIZE()...")
+        logging.info("\x1b[34mScoring:\t\x1b[0mCOMPENSATE_SIZE()...")
         compensate_size(self, matrix, rd_scores, cd_scores)
         elapsed = util.current_millis() - start
-        #logging.info("COMPENSATE_SIZE() took %f s.", elapsed / 1000.0)
+        logging.info("\x1b[34mScoring:\t\x1b[0mCOMPENSATE_SIZE() took %f s.", elapsed / 1000.0)
         self.__update_memberships(rd_scores, cd_scores)
 
     def __fuzzify(self, row_scores, column_scores, iteration,
                   num_iterations):
         """Provide an iteration-specific fuzzification"""
-        #logging.info("__fuzzify(), setup...")
+        logging.info("\x1b[34mScoring:\t\x1b[0m__fuzzify(), setup...")
         start_time = util.current_millis()
-        fuzzy_coeff = std_fuzzy_coefficient(iteration, num_iterations)
+        fuzzy_coeff = std_fuzzy_coefficient(iteration + 1, num_iterations)
         num_row_fuzzy_values = row_scores.num_rows() * row_scores.num_columns()
         num_col_fuzzy_values = (column_scores.num_rows() *
                                 column_scores.num_columns())
@@ -349,9 +344,6 @@ class ClusterMembership:
             for row in xrange(row_scores.num_rows()):
                 if row_names[row] in cluster_rows:
                     row_sd_values.append(row_score_values[row][col])
-
-        # Note: If there are no non-NaN values in row_sd_values, row_rnorm
-        # will have all NaNs
         row_rnorm = util.sd_rnorm(row_sd_values, num_row_fuzzy_values,
                                   fuzzy_coeff)
 
@@ -363,8 +355,6 @@ class ClusterMembership:
                 if row_names[row] in cluster_cols:
                     col_sd_values.append(col_score_values[row][col])
 
-        # Note: If there are no non-NaN values in col_sd_values, col_rnorm
-        # will have all NaNs
         col_rnorm = util.sd_rnorm(col_sd_values, num_col_fuzzy_values,
                                   fuzzy_coeff)
 
@@ -379,7 +369,7 @@ class ClusterMembership:
         col_score_values += np.array(col_rnorm).reshape(
             column_scores.num_rows(), column_scores.num_columns())
         elapsed = util.current_millis() - start_time
-        #logging.info("fuzzify() finished in %f s.", elapsed / 1000.0)
+        logging.info("\x1b[34mScoring:\t\x1b[0mfuzzify() finished in %f s.", elapsed / 1000.0)
         return row_scores, column_scores
 
     def __update_memberships(self, rd_scores, cd_scores):

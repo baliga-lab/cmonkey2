@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """network.py - cMonkey network module
 
 This file is part of cMonkey Python. Please see README and LICENSE for
@@ -10,7 +11,6 @@ import datamatrix as dm
 import scoring
 import multiprocessing as mp
 import networkx as nx
-
 
 class NetworkEdge:
     """class to represent a network edge"""
@@ -58,10 +58,11 @@ class NetworkEdge:
 class Network:
     """class to represent a network graph"""
 
-    def __init__(self, name, edges):
+    def __init__(self, name, edges, weight):
         """creates a network from a list of edges"""
         self.__name = name
         self.__edges = edges
+        self.__weight = weight
 
     def name(self):
         """returns the name of the network"""
@@ -70,6 +71,10 @@ class Network:
     def edges(self):
         """returns the list of edges"""
         return self.__edges
+
+    def weight(self):
+        """returns the scoring weight of this network"""
+        return self.__weight
 
     def num_edges(self):
         """returns the number of edges in this graph"""
@@ -102,7 +107,7 @@ class Network:
                                                len(self.__edges))
 
     @classmethod
-    def create(cls, name, edges):
+    def create(cls, name, edges, weight):
         """standard Factory method"""
         added = {}
         network_edges = []
@@ -121,15 +126,16 @@ class Network:
             if key_rev not in added:
                 add_edge(NetworkEdge(edge.target(), edge.source(),
                                      edge.score()))
-        return Network(name, network_edges)
+        return Network(name, network_edges, weight)
 
 
 class FS_Network():
 
-    def __init__(self, name, edges):
+    def __init__(self, name, edges, weight):
         """creates a network from a list of edges"""
         self.__network = nx.Graph()
         self.__name = name
+        self.__weight = weight
         for edge in edges:
             self.__network.add_edge(edge[0], edge[1], {'score': edge[2]})
 
@@ -146,6 +152,10 @@ class FS_Network():
     def edges(self):
         """returns the list of edges"""
         return self.__network.edges()
+    def weight(self):
+        """returns the scoring weight of this network"""
+        return self.__weight
+
 
     def num_edges(self):
         """returns the number of edges in this graph"""
@@ -199,33 +209,18 @@ class FS_Network():
     
 
 
+
+
 COMPUTE_NETWORK = None
 ALL_GENES = None
 
 
 def compute_network_scores(genes):
     """Generic method to compute network scores"""
-    #network, genes, all_genes = args
     global COMPUTE_NETWORK, ALL_GENES
     network = COMPUTE_NETWORK
     all_genes = genes
-    # get all edges within subnetwork
-    # for edge in  G.edges.iter(all_genes, data = True)
-    # 
-    # if edge[0] in all_genes and edge[1] in all_genes:
-    # source = edge[0]
-    # target = edge[1]
-    # edge[3]['Score']
-    # if target not in gene_scores:
-    #     gene_scores[target] = []
-    # gene_scores[target].append(score)
-    # if source not in gene_scores:
-    #     gene_scores[source] = []
-    # gene_scores[source].append(score)
-    
-    # also consider using H = G.subgraph(all_genes)
-    # gene_scores[gene] = sum(x for x in H.edges(gene, data=True)[3]['Score'])
-    
+
     edges = network.edges_with_source_in(genes)
     fedges = [edge for edge in edges if edge.target_in(all_genes)]
 
@@ -240,8 +235,6 @@ def compute_network_scores(genes):
         final_gene_scores[gene] = sum(scores) / len(genes)
         final_gene_scores[gene] = -np.log(final_gene_scores[gene] + 1)
     return final_gene_scores
-
-
 
 
 def compute_network_scores_FS(genes):
@@ -266,14 +259,17 @@ def compute_network_scores_FS(genes):
 
 
 class ScoringFunction(scoring.ScoringFunctionBase):
-    """Network scoring function"""
+    """Network scoring function. Note that even though there are several
+    networks, scoring can't be generalized with the default ScoringCombiner,
+    since the scores are computed through weighted addition rather than
+    quantile normalization"""
 
-    def __init__(self, organism, membership, matrix, weight_func=None,
+    def __init__(self, organism, membership, matrix, scaling_func=None,
                  run_in_iteration=scoring.default_network_iterations,
                  config_params=None):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
-                                             matrix, weight_func,
+                                             matrix, scaling_func,
                                              config_params)
         self.__organism = organism
         self.__run_in_iteration = run_in_iteration
@@ -297,19 +293,19 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         if self.__networks == None:
             self.__networks = retrieve_networks(self.__organism)
 
-        weight = 0.5  # TODO: for now it's fixed, we need to make them flexible
         matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
                                self.gene_names())
         #network_iteration_scores = self.__create_network_iteration_scores()
         #score_means = {}  # a dictionary indexed with network names
 
         for network in self.__networks:
-            logging.info("\x1b[31mNetwork:\t\x1b[0mCompute scores for network '%s'", network.name())
+            logging.info("Compute scores for network '%s', WEIGHT: %f",
+                         network.name(), network.weight())
             start_time = util.current_millis()
             network_score = self.__compute_network_cluster_scores(network)
-            self.__update_score_matrix(matrix, network_score, weight)
+            self.__update_score_matrix(matrix, network_score, network.weight())
             elapsed = util.current_millis() - start_time
-            logging.info("\x1b[31mNetwork:\t\x1b[0mNETWORK '%s' SCORING TIME: %f s.",
+            logging.info("NETWORK '%s' SCORING TIME: %f s.",
                          network.name(), (elapsed / 1000.0))
             #score_means[network.name()] = self.__compute_cluster_score_means(
             #    network_score)
@@ -336,19 +332,14 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             args = []
             for cluster in xrange(1, self.num_clusters() + 1):
                 args.append(sorted(self.rows_for_cluster(cluster)))
-            map_results = pool.map(compute_network_scores_FS, args)        # Frank Schmitz - change to the FS routine
-            #map_results = pool.map(compute_network_scores, args)
+            map_results = pool.map(compute_network_scores_FS, args)     # Frank Schmitz
             pool.close()
             for cluster in xrange(1, self.num_clusters() + 1):
                 result[cluster] = map_results[cluster - 1]
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
-                result[cluster] = compute_network_scores_FS(
+                result[cluster] = compute_network_scores_FS(            # Frank Schmitz
                     sorted(self.rows_for_cluster(cluster)))
-                
-                        # Frank Schmitz - change to the FS routine
-                #result[cluster] = compute_network_scores(
-                #    sorted(self.rows_for_cluster(cluster)))
 
         return result
 

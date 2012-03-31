@@ -135,38 +135,6 @@ def markov_background(seqs, order):
     return result
 
 '''
-# a variation on the markov model theme
-# using itertools and re for the generation of combinations
-# and for finding instances of NA-combis
-
-def markov_background_FS(seq, order):
-    """computes the markov background model of the specified
-    order for the given input sequences. This is implemented
-    by gathering the frequencies of subsequences of length
-    1,..,(order + 1)"""
-    result = []
-    seqs = replace_degenerate_residues([seq])
-    for subseq_len in xrange(1, (order + 2)):
-        result.append(subseq_frequencies_FS(seqs[0], subseq_len))
-    return result
-
-def subseq_frequencies_FS(seqs, subseq_len):
-    """return a dictionary containing for each subsequence of
-    length subseq_len their respective frequency within the
-    input sequences"""
-    result = {}
-    freqtab = {}
-    totalcount = 0
-    for i in it.product('ACGT', repeat = subseq_len):
-        j = "".join(i)
-        pat = re.compile(j)
-        counts = len(pat.findall(seqs))
-        result[j] = counts
-    total = sum([count for count in result.values()])
-    for pat, count in result.iteritems():
-        freqtab[pat] = float(count) / float(total)
-    return freqtab
-
 
 
 def replace_degenerate_residues_old(seqs):
@@ -188,6 +156,11 @@ def replace_degenerate_residues_old(seqs):
             seq = seq[:match.start(1)] + replace_char + seq[match.end(1):]
         result.append(seq)
     return result
+
+
+###
+# Frank Schmitz
+###
 
 def replace_degenerate_residues(seqs):
     #try a different strategy to fill in the degenerate bases
@@ -219,6 +192,38 @@ def replace_degenerate_residues(seqs):
                 reppos += 1
         result.append(seq)
     return result
+
+# a variation on the markov model theme
+# using itertools and re for the generation of combinations
+# and for finding instances of NA-combis
+
+def markov_background_FS(seq, order):
+    """computes the markov background model of the specified
+    order for the given input sequences. This is implemented
+    by gathering the frequencies of subsequences of length
+    1,..,(order + 1)"""
+    result = []
+    seqs = replace_degenerate_residues([seq])
+    for subseq_len in xrange(1, (order + 2)):
+        result.append(subseq_frequencies_FS(seqs[0], subseq_len))
+    return result
+
+def subseq_frequencies_FS(seqs, subseq_len):
+    """return a dictionary containing for each subsequence of
+    length subseq_len their respective frequency within the
+    input sequences"""
+    result = {}
+    freqtab = {}
+    totalcount = 0
+    for i in it.product('ACGT', repeat = subseq_len):
+        j = "".join(i)
+        pat = re.compile(j)
+        counts = len(pat.findall(seqs))
+        result[j] = counts
+    total = sum([count for count in result.values()])
+    for pat, count in result.iteritems():
+        freqtab[pat] = float(count) / float(total)
+    return freqtab
 
 
 

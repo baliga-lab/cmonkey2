@@ -5,6 +5,8 @@ Created on Mar 25, 2012
 '''
 
 
+MIN_SEQ_LENGTH = 8      # minimum Sequence Length to be included in search
+
 import cPickle
 import logging
 import organism as org
@@ -74,16 +76,16 @@ class Kapsel():
         return self.__sequenceFileType
         
     
-    def addNWfactory(self, factory, nwfactname = "no Name"):
+    def addNWfactory(self, factory, weight, nwfactname = "no Name"):
         # this one adds a NW factory to the list, to ve used later on
-        self.__network_factories.append(factory)
+        self.__network_factories.append((factory, weight))
         logging.info("\x1b[31mKapsel:\t\x1b[0mNW factory %s added" %(nwfactname))
 
     def networks(self):
         """returns this organism's networks"""
         if self.__networks == None:
             self.__networks = []
-            for make_network in self.__network_factories:
+            for make_network, weight in self.__network_factories:
                 self.__networks.append(make_network(self))
             for NW in self.__networks:
                 NW.TranslateNetwork(self.thesaurus())
@@ -133,13 +135,14 @@ class Kapsel():
         self.__UTRfile = UTRfile
     
     
-    def addRSAT_feature(self, grabtype, boundaries):
+    def addRSAT_feature(self, grabtype, Sboundaries, Bboundaries):
         """
         this method slurps the features / cds file from RSAT into a collection of
         gene - specific sequence / subunits
          
         the information - but no sequece YET  - is pushed into the gene instance
         """
+        boundaries = Sboundaries + Bboundaries
         infile = util.DelimitedFile.read(self.__featfile, sep='\t', has_header=False, comment = "--")
         logging.info("\x1b[31mKapsel:\t\x1b[0mread features/cds File, type %s" % (grabtype))
         for line in infile.lines():
@@ -179,7 +182,7 @@ class Kapsel():
             # save gene into Dict    
             self.__GeneDict[geneID] = gene
     
-    def addRSAT_UTR(self, grabtype, boundaries):
+    def addRSAT_UTR(self, grabtype, Sboundaries, Bboundaries):
         """
         this method slurps the features / cds file from RSAT into a collection of
         gene - specific sequence / subunits
@@ -187,6 +190,7 @@ class Kapsel():
         the information - but no sequece YET  - is pushed into the gene instance
 
         """
+        boundaries = Sboundaries + Bboundaries
         infile = util.DelimitedFile.read(self.__UTRfile, sep='\t', has_header=False, comment = "--")
         logging.info("\x1b[31mKapsel:\t\x1b[0mread UTR File, type %s" % grabtype)
         for line in infile.lines():
@@ -280,6 +284,7 @@ class Kapsel():
                 gA = self.__synonyms[gene]
                 newAliases.append(gA)
             except KeyError:
+                print "%s not found in thesaurus - fuck!" % (gene)
                 pass
         logging.info("working on %s genes for background model generation" % (len(newAliases)))
         
@@ -325,6 +330,7 @@ class Kapsel():
             except KeyError:
                 SeqL = []
             for Seq in SeqL:
+                if len(Seq) < MIN_SEQ_LENGTH: continue
                 tempD["Seq%04d" % (arbicount)] = Seq
                 arbicount += 1
         #logging.info("collected %s sequences for motif generation" % (len(tempD)))
