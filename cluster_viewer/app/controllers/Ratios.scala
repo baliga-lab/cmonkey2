@@ -26,7 +26,7 @@ class RatioMatrixFactory(ratiofile: File, synonyms: SynonymsMap) {
         if (line != null) {
           val comps = line.split("\t")
           rows.add(synonyms(comps(0).replaceAll("\"", "").trim))
-          values.add(comps.tail.map(str => str.toFloat).toArray)
+          values.add(comps.tail.map(str => if (str != "nan") str.toFloat else Float.NaN).toArray)
         }
       }
       rowTitles = rows.toArray(new Array[String](0))
