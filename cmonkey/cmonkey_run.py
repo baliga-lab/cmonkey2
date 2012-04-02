@@ -27,7 +27,7 @@ STATS_FREQ = 10
 RESULT_FREQ = 10
 
 class CMonkeyRun:
-    def __init__(self, organism_code, ratio_matrix, num_clusters):
+    def __init__(self, organism_code, ratio_matrix, num_clusters=None):
         logging.basicConfig(format=LOG_FORMAT,
                             datefmt='%Y-%m-%d %H:%M:%S',
                             level=logging.DEBUG)
@@ -36,8 +36,21 @@ class CMonkeyRun:
         self.config_params = {}
         self.ratio_matrix = ratio_matrix.sorted_by_row_name()
 
+        # membership update default parameters
+        # these come first, since a lot depends on clustering numbers
+        self['memb.clusters_per_row'] = 2
+        if num_clusters == None:
+            num_clusters = int(round(self.ratio_matrix.num_rows() *
+                                     self['memb.clusters_per_row'] / 20.0))
+        self['memb.clusters_per_col'] = int(round(num_clusters * 2.0 / 3.0))
+        self['memb.prob_row_change'] = 0.5
+        self['memb.prob_col_change'] = 1.0
+        self['memb.max_changes_per_row'] = 1
+        self['memb.max_changes_per_col'] = 5
+
         self['organism_code'] = organism_code
         self['num_clusters'] = num_clusters
+        logging.info("# CLUSTERS: %d", self['num_clusters'])
 
         # defaults
         self.row_seeder = memb.make_kmeans_row_seeder(num_clusters)
@@ -56,13 +69,6 @@ class CMonkeyRun:
         # used for background distribution and MAST
         self['scan_distances'] = {'upstream': (-30, 250)}
 
-        # membership update default parameters
-        self['memb.clusters_per_row'] = 2
-        self['memb.clusters_per_col'] = int(round(num_clusters * 2.0 / 3.0))
-        self['memb.prob_row_change'] = 0.5
-        self['memb.prob_col_change'] = 1.0
-        self['memb.max_changes_per_row'] = 1
-        self['memb.max_changes_per_col'] = 5
 
         # motifing default parameters
         self['motif.min_cluster_rows_allowed'] = 3
