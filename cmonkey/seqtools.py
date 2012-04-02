@@ -4,6 +4,7 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
+import itertools as it
 import re
 import logging
 import random
@@ -272,7 +273,8 @@ def replace_degenerate_residues(seqs):
     replacement strategy"""
     replacements = {'R': ['G', 'A'], 'Y': ['T', 'C'], 'K': ['G', 'T'],
                     'M': ['A', 'C'], 'S': ['G', 'C'], 'W': ['A', 'T'],
-                    'N': ['G', 'A', 'T', 'C']}
+                    'N': ['G', 'A', 'T', 'C'],
+                    ' ': [' ']}
 
     pat = re.compile('[ACGTX]*([^ACGTX])[ACGTX]*')
     result = []
@@ -317,6 +319,7 @@ def read_sequences_from_fasta_file(filepath):
 def write_sequences_to_fasta_file(outputfile, seqs):
     """Write a list of sequence tuples to the specified outputfile"""
     for seq in seqs:
+        if len(seq[1]) == 0: continue       # do not allow 0 length sequences
         outputfile.write('>%s\n' % seq[0])
         outputfile.write('%s\n' % seq[1])
 

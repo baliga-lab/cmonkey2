@@ -13,8 +13,13 @@ import sys
 import logging
 import util
 import network
-import MySQLdb as mysql
 
+# most people won't need MicrobesOnline integration, so we'll make the
+# import optional
+try:
+    import MySQLdb as mysql
+except ImportError:
+    logging.warn("Could not import MySQLdb - Microbes Online MySQL integration will not work")
 
 MICROBES_ONLINE_BASE_URL = 'http://www.microbesonline.org'
 MYSQL_HOST = 'pub.microbesonline.org'

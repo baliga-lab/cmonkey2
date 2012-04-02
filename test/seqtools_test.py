@@ -101,6 +101,13 @@ class SeqtoolsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         newseq = st.replace_degenerate_residues(seqs)[0]
         self.assertTrue(re.match('ACGT[GA][TC][GT][AC][GC][AT][GATC]', newseq) != None)
 
+    def test_replace_degenerate_residues_multi(self):
+        """Test ensures that spaces in the string will be preserved"""
+        seqs = ['ACGTRY KMSWN']
+        newseq = st.replace_degenerate_residues(seqs)[0]
+        self.assertTrue(re.match('ACGT[GA][TC] [GT][AC][GC][AT][GATC]', newseq) != None)
+
+
 class FastaTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for FASTA related functions"""
 
@@ -142,3 +149,13 @@ class FastaTest(unittest.TestCase):  # pylint: disable-msg=R0904
             st.write_sequences_to_fasta_file(outputfile, seqs)
         seqs2 = st.read_sequences_from_fasta_file('/tmp/fasta_tmp.fa')
         self.assertEquals(seqs, seqs2)
+
+    def test_write_sequences_to_fasta_file_empty_seqs(self):
+        """Tests ensures that only non-empty sequences will be written to FASTA"""
+        seqs = [['seq1', 'TATATA'], ['seq2', '']]
+        with open('/tmp/fasta_tmp.fa', 'w') as outputfile:
+            st.write_sequences_to_fasta_file(outputfile, seqs)
+        seqs2 = st.read_sequences_from_fasta_file('/tmp/fasta_tmp.fa')
+        self.assertEquals(1, len(seqs2))
+        self.assertEquals(seqs[0][0], seqs2[0][0])
+        self.assertEquals(seqs[0][1], seqs2[0][1])
