@@ -22,9 +22,7 @@
          title: {
             text: 'Gene Expressions'
          },
-         xAxis: {
-            categories: @(HighchartsFormatter.formatStrings(ratios.columns))
-         },
+          plotOptions: { line: { marker: { enabled: false } } },
          yAxis: {
             title: {
                text: 'log10'
