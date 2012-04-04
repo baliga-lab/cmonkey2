@@ -245,13 +245,16 @@ def meme_json(run_result):
         motif_annotations = {}  # map motif_num -> [annotations]
         for gene in run_result.annotations:
             for annotation in run_result.annotations[gene]:
+                # motif_num is either positive or negative, indicating forward/reverse
                 motif_num = annotation[2]
-                if motif_num not in motif_annotations:
-                    motif_annotations[motif_num] = []
+                key = abs(motif_num)
+                reverse = motif_num < 0
+                if key not in motif_annotations:
+                    motif_annotations[key] = []
 
-                motif_annotations[motif_num].append(
-                    {'gene': gene, 'position': annotation[0], 'pvalue': annotation[1]})
-
+                motif_annotations[key].append(
+                    {'gene': gene, 'position': annotation[0], 'pvalue': annotation[1],
+                     'reverse': reverse})
         for motif_info in run_result.motif_infos:
             motif_num = motif_info.motif_num()
             motif_annot = None
