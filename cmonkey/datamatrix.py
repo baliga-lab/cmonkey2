@@ -313,7 +313,7 @@ class DataMatrix:
 
 class DataMatrixCollection:
     """A collection of DataMatrix objects containing gene expression values
-    It also offers functionality to combine the comtained matrices
+    It also offers functionality to combine the contained matrices
     """
     def __init__(self, matrices):
         self.__matrices = matrices
