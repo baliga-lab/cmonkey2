@@ -253,11 +253,13 @@ def meme_json(run_result):
                     motif_annotations[key] = []
 
                 motif_annotations[key].append(
-                    {'gene': gene, 'position': annotation[0], 'pvalue': annotation[1],
+                    {'gene': gene,
+                     'position': annotation[1],
+                     'pvalue': annotation[0],
                      'reverse': reverse})
         for motif_info in run_result.motif_infos:
             motif_num = motif_info.motif_num()
-            motif_annot = None
+            motif_annot = []
             if motif_num in motif_annotations:
                 motif_annot = motif_annotations[motif_num]
             result.append({'motif_num': motif_num,

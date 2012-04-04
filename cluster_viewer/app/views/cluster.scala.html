@@ -1,6 +1,7 @@
 @(iteration: Int, cluster: Int, rows: List[String], columns: List[String],
   ratios: RatioMatrix, motifInfos: Array[MotifInfo],
-  motifs: Array[String])
+  motifs: Array[String],
+  annotations: Seq[GeneAnnotations])
 
 <div id="cluster-view">
   <script type="text/javascript">
@@ -33,6 +34,25 @@
       @for(i <- 0 until motifs.length) {
         isblogo.makeLogo('canvas@i', pssm@i, canvasOptions);
       }
+
+        var annotations = [
+            @for(i <- 0 until annotations.length) {
+
+            {
+                gene: '@(annotations(i).gene)', condition: '',
+                log10: -0.17,
+                boxColor: '#08f',
+                lineColor: '#f00',
+                matches: [
+                    @for(j <- 0 until annotations(i).annotations.length) {
+                        { motif: @(annotations(i).annotations(j).motifNum - 1), start: @(annotations(i).annotations(j).position), length: 30, reverse: @(annotations(i).annotations(j).reverse), score: 0.4 },
+                    }
+                ]
+            },
+
+            }
+        ];
+        annot.draw('annotation-graph', { width: 640, height: 400, annotations: annotations});
     });
   </script>
   <h3>Cluster @cluster at iteration @iteration</h3>
@@ -43,6 +63,8 @@
     <div id="canvas@i"></div>
     </span>
   }
+  <div style="clear: both"></div>
+  <div id="annotation-graph"></div>
   <div style="clear: both"></div>
   <div id="cluster-members">
     <span style="float: left; margin-right: 20px">

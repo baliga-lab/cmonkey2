@@ -138,15 +138,33 @@ object Application extends Controller {
     val ratios = RatiosFactory.readRatios(snapshot.get.rows(cluster).toArray)
     val rows    = snapshot.get.rows(cluster)
     val columns = snapshot.get.columns(cluster)
+    // re-group annotations by gene
+    val geneAnnotationMap = new HashMap[String, ArrayBuffer[Annotation]]
 
     if (snapshot.get.motifs.contains(cluster)) {
       val motifInfos = new java.util.ArrayList[MotifInfo]
       val motifMap = snapshot.get.motifs(cluster)
       for (seqType <- motifMap.keys) {
         val motifMapInfos = motifMap(seqType)
-        for (info <- motifMapInfos) motifInfos.add(info)
+        for (info <- motifMapInfos) {
+          motifInfos.add(info)
+          for (annotation <- info.annotations) {
+            if (!geneAnnotationMap.containsKey(annotation.gene)) {
+              geneAnnotationMap(annotation.gene) = new ArrayBuffer[Annotation]
+            }
+            geneAnnotationMap(annotation.gene) += annotation
+          }
+        }
       }
 
+      //println("GENE ANNOTATIONS: " + geneAnnotationMap.keys)
+      val geneAnnotationList = new ArrayBuffer[GeneAnnotations]
+      for (key <- geneAnnotationMap.keys) {
+        // TODO: What is acually plotted is the pvalue of the gene in this cluster
+        val geneAnnotations = GeneAnnotations(key, geneAnnotationMap(key).sortWith((a: Annotation, b: Annotation) => a.position < b.position))
+        println("GENE ANNOT:" + geneAnnotations)
+        geneAnnotationList += geneAnnotations
+      }
       // NOTE: there is no differentiation between sequence types yet !!!!
       val pssm = if (snapshot.get.motifs.size > 0) {
         toJsonPssm(snapshot.get.motifs(cluster))
@@ -154,10 +172,11 @@ object Application extends Controller {
         new Array[String](0)
       }
       Ok(views.html.cluster(iteration, cluster, rows, columns, ratios,
-                            motifInfos.toArray(new Array[MotifInfo](0)), pssm))
+                            motifInfos.toArray(new Array[MotifInfo](0)), pssm, geneAnnotationList))
     } else {
       Ok(views.html.cluster(iteration, cluster, rows, columns, ratios,
-                            new Array[MotifInfo](0), new Array[String](0)))
+                            new Array[MotifInfo](0), new Array[String](0),
+                            new ArrayBuffer[GeneAnnotations]))
     }
   }
 
