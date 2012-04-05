@@ -162,7 +162,6 @@ object Application extends Controller {
       for (key <- geneAnnotationMap.keys) {
         // TODO: What is acually plotted is the pvalue of the gene in this cluster
         val geneAnnotations = GeneAnnotations(key, geneAnnotationMap(key).sortWith((a: Annotation, b: Annotation) => a.position < b.position))
-        println("GENE ANNOT:" + geneAnnotations)
         geneAnnotationList += geneAnnotations
       }
       // NOTE: there is no differentiation between sequence types yet !!!!

@@ -40,7 +40,7 @@ class SnapshotReader(OutDirectory: File, Synonyms: SynonymsMap) {
 
       val clusterMotifs = new HashMap[Int, Map[String, Array[MotifInfo]]]
       try {
-        val motifs = motifsVal.as[JsObject]        
+        val motifs = motifsVal.as[JsObject]
         for (field <- motifs.fields) {
           val cluster = field._1
           val seqTypeObj = field._2.as[JsObject]

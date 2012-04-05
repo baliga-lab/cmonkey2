@@ -4,7 +4,7 @@ iterationStats: Map[Int, IterationStats],
 rowStats: IntHistogram, columnStats: IntHistogram,
 residualHistogram: ResidualHistogram)
 
-@main("Play 2.0 - Cluster View") {
+@main("cMonkey/Python - Cluster View") {
    <script type="text/javascript">
      $(document).ready(function() {
          $('a.clusterlink').click(function () {
@@ -102,6 +102,7 @@ residualHistogram: ResidualHistogram)
 
      });
    </script>
+   <div><img style="float: right" src="@routes.Assets.at("images/isb_logo.png")"></img></div>
    <h2>cMonkey/Python Results</h2>
    <div>Iteration <select id="select_iteration">
    @for(iter <- iterations) {@if(iter == iteration) {<option value="@iter" selected>@iter</option>} else {<option value="@iter">@iter</option>}}
