@@ -1,14 +1,21 @@
+/*
+  gene_annotations.js - Javascript visualization library for MEME scores in
+  a cMonkey cluster. This library is part of cmonkey-python. See LICENSE for
+  licensing details.
+*/
 var annot;
 if (!annot) {
     annot = {};
 }
+
 (function () {
     "use strict";
+    var base1_x = 500; // base 1 starts at this offset
 
     // draw a simple scale to see the sequence range size
     function drawScale(paper, params) {
         var tickLabels = ['-200', '-100', '-1'];
-        var x = 300, y = params.height - 30, width = 200, tickLen = 7, right = x + width, tickTop = y - tickLen, middle = x + width / 2;
+        var x = base1_x - 200, y = params.height - 30, width = 200, tickLen = 7, right = x + width, tickTop = y - tickLen, middle = x + width / 2;
 
         function drawTick(x, label) {
             var tick = paper.path('M' + x + ',' + tickTop + 'L' + x + ',' + y);
@@ -31,7 +38,7 @@ if (!annot) {
         var marginRight = 20, boxY = annotY, boxWidth = 100, boxHeight = 20, textOffsetY = boxHeight / 2,
         boxX = params.width - boxWidth - marginRight;
         var lineX = 40, lineY = boxY + boxHeight / 2;
-        var annotHeight = 15;
+        var annotHeight = 10;
 
         // box
         var box = paper.rect(boxX, boxY, boxWidth, boxHeight);
@@ -48,8 +55,10 @@ if (!annot) {
         // matches
         for (var i = 0; i < annot.matches.length; i++) {
             var match = annot.matches[i];
-            var matchX = lineX + match.start, matchY = match.reverse ? lineY : lineY - annotHeight;
+            //var matchX = lineX + match.start;
+            var matchY = match.reverse ? lineY : lineY - annotHeight;
             var matchWidth = match.length;
+            var matchX = base1_x - match.start - matchWidth;
             var matchbox = paper.rect(matchX, matchY, matchWidth, annotHeight);
             matchbox.attr('stroke', 'none');
             matchbox.attr('fill', match.motif == 0 ? '#f00' : '#0f0');
@@ -61,29 +70,30 @@ if (!annot) {
 
     function drawAnnotations(paper, params) {
         var annotations = params.annotations;
-        var annotY = 30;
+        var annotY = 20;
         for (var i = 0; i < annotations.length; i++) {
             drawAnnotation(paper, annotations[i], annotY, params);
-            annotY += 40;
+            annotY += 25;
         }
     }
 
     function drawVerticals(paper, params) {
-        var x1 = 400, x2 = 420;
+        var x1 = 400;
         var y1 = 0,  y2 = params.height;
         function drawVertical(x) {
             var vert = paper.path('M' + x + ',' + y1 + 'L' + x + ',' + y2);
             vert.attr('stroke-dasharray', '--');
             vert.attr('stroke', '#aaa');
         }
-        drawVertical(x1);
-        drawVertical(x2);
+        //drawVertical(x1);
+        drawVertical(base1_x);
     }
 
     annot.draw = function (id, params) {
         var paper = Raphael(document.getElementById(id),
                             params.width, params.height);
         var border = paper.rect(0, 0, params.width, params.height);
+        base1_x = params.width - 140;
         drawVerticals(paper, params);
         drawScale(paper, params);
         //drawCaption(paper, params);
