@@ -61,7 +61,7 @@ if (!annot) {
 
     function drawAnnotations(paper, params) {
         var annotations = params.annotations;
-        var annotY = 50;
+        var annotY = 30;
         for (var i = 0; i < annotations.length; i++) {
             drawAnnotation(paper, annotations[i], annotY, params);
             annotY += 40;

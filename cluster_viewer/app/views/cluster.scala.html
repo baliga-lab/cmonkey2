@@ -6,35 +6,34 @@
 <div id="cluster-view">
   <script type="text/javascript">
     @for(i <- 0 until motifs.length) {
-      var pssm@i = @Html(motifs(i));
+        var pssm@i = @Html(motifs(i));
     }
     var canvasOptions = {
-      width: 300,
-      height: 150,
-      glyphStyle: '20pt Helvetica'
+        width: 300,
+        height: 150,
+        glyphStyle: '20pt Helvetica'
     };
 
     $(document).ready(function() {
-      var chart1 = new Highcharts.Chart({
-         chart: {
-             renderTo: 'expression-graph',
-             type: 'line'
-         },
-         title: {
-            text: 'Gene Expressions'
-         },
-          plotOptions: { line: { marker: { enabled: false } } },
-         yAxis: {
+        var chart1 = new Highcharts.Chart({
+            chart: {
+                renderTo: 'expression-graph',
+                type: 'line'
+            },
             title: {
-               text: 'log10'
-            }
-         },
-         series: @(HighchartsFormatter.toHSSeries(ratios))
-      });
-      @for(i <- 0 until motifs.length) {
-        isblogo.makeLogo('canvas@i', pssm@i, canvasOptions);
-      }
-
+                text: 'Gene Expressions'
+            },
+            plotOptions: { line: { marker: { enabled: false } } },
+            yAxis: {
+                title: {
+                    text: 'log10'
+                }
+            },
+            series: @(HighchartsFormatter.toHSSeries(ratios))
+        });
+        @for(i <- 0 until motifs.length) {
+            isblogo.makeLogo('canvas@i', pssm@i, canvasOptions);
+        }
         var annotations = [
             @for(i <- 0 until annotations.length) {
 
@@ -45,7 +44,9 @@
                 lineColor: '#f00',
                 matches: [
                     @for(j <- 0 until annotations(i).annotations.length) {
-                        { motif: @(annotations(i).annotations(j).motifNum - 1), start: @(annotations(i).annotations(j).position), length: 30, reverse: @(annotations(i).annotations(j).reverse), score: 0.4 },
+                        @defining(annotations(i).annotations(j)) { annotation =>
+                                                                   { motif: @(annotation.motifNum - 1), start: @(annotation.position), length: @motifInfos(annotation.motifNum - 1).pssm.length, reverse: @(annotation.reverse), score: @(annotation.pvalue) },
+                                                                 }
                     }
                 ]
             },
