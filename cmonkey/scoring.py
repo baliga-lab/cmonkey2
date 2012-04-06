@@ -26,10 +26,6 @@ KEY_MULTIPROCESSING = 'multiprocessing'
 KEY_OUTPUT_DIR = 'output_dir'
 KEY_STRING_FILE = 'string_file'
 
-KEY_MOTIF_MIN_CLUSTER_ROWS_ALLOWED = 'motif.min_cluster_rows_allowed'
-KEY_MOTIF_MAX_CLUSTER_ROWS_ALLOWED = 'motif.max_cluster_rows_allowed'
-MOTIF_MIN_CLUSTER_ROWS_ALLOWED = 3
-MOTIF_MAX_CLUSTER_ROWS_ALLOWED = 70
 USE_MULTIPROCESSING = True
 
 def get_default_motif_scaling(num_iterations):

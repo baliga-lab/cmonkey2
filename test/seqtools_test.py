@@ -101,6 +101,11 @@ class SeqtoolsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         newseq = st.replace_degenerate_residues(seqs)[0]
         self.assertTrue(re.match('ACGT[GA][TC][GT][AC][GC][AT][GATC]', newseq) != None)
 
+    def test_replace_degenerate_residues_leading_trailing_whitespace(self):
+        seqs = ['  \nACGTRYKMSWN \t']
+        newseq = st.replace_degenerate_residues(seqs)[0]
+        self.assertTrue(re.match('ACGT[GA][TC][GT][AC][GC][AT][GATC]', newseq) != None)
+
     def test_replace_degenerate_residues_multi(self):
         """Test ensures that spaces in the string will be preserved"""
         seqs = ['ACGTRY KMSWN']

@@ -279,6 +279,7 @@ def replace_degenerate_residues(seqs):
     pat = re.compile('[ACGTX]*([^ACGTX])[ACGTX]*')
     result = []
     for seq in seqs:
+        seq = seq.strip()  # For some reasons, there were cases with newlines in the beginning
         for match in pat.finditer(seq):
             replace_chars = replacements[seq[match.start(1)]]
             replace_char = replace_chars[random.randint(

@@ -186,10 +186,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             return seqs
 
         cluster_pvalues = {}
-        min_cluster_rows_allowed = self.config_params[
-            scoring.KEY_MOTIF_MIN_CLUSTER_ROWS_ALLOWED]
-        max_cluster_rows_allowed = self.config_params[
-            scoring.KEY_MOTIF_MAX_CLUSTER_ROWS_ALLOWED]
+        min_cluster_rows_allowed = self.config_params['memb.min_cluster_rows_allowed']
+        max_cluster_rows_allowed = self.config_params['memb.max_cluster_rows_allowed']
         use_multiprocessing = self.config_params[
             scoring.KEY_MULTIPROCESSING]
 

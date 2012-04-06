@@ -70,9 +70,9 @@ class CMonkeyRun:
         self['scan_distances'] = {'upstream': (-30, 250)}
 
 
-        # motifing default parameters
-        self['motif.min_cluster_rows_allowed'] = 3
-        self['motif.max_cluster_rows_allowed'] = 70
+        # membership default parameters
+        self['memb.min_cluster_rows_allowed'] = 3
+        self['memb.max_cluster_rows_allowed'] = 70
 
         today = date.today()
         self.CHECKPOINT_INTERVAL = None
@@ -252,7 +252,12 @@ class CMonkeyRun:
                                               }
                 stats = {'cluster': cluster_stats, 'median_residual': np.median(residuals) }
                 with open('%s/%d-stats.json' % (output_dir, iteration), 'w') as outfile:
-                    outfile.write(json.dumps(stats))
+                    try:
+                        outfile.write(json.dumps(stats))
+                    except:
+                        logging.error("Could not write stats - probably non-serializable values found")
+                        # print stats object, likely there is something that is not serializable
+                        print stats
 
         print "Done !!!!"
 
