@@ -38,14 +38,39 @@ class PTMDataFactory:
         print('Building the network')
 
         #Load PTM factors
+        self.proteinPeptideLUT = self.proteinToPeptidesLUT()  #Requires peptides to be loaded
         ptmFactors = PTMFactors()
-        self.networks = ptmFactors.returnNetworks(score = 1)
+        self.networks = ptmFactors.returnNetworks(score = 1, protLUT=self.proteinPeptideLUT)
+        #This isn't quite right, next convert from proteins to peptides.
 
         #Load the motif regulations
         motifFactors = PTMMotifs()
+        motifFactors.returnNetworks(score = 0.5, peptides=row_names)
+        #NOTE MUST CONVERT PTMMotif protein names to Systematic.  Trouble, as this is yeast-specific
+        #  So can I avoid it and just use peptide match here?  Yes I can!  Although network names will be standard
         print('Stopped working here.  Next thing to do, build a returnNetworks for motifFactors.  Then join them')
         
-        #Build the motif network
+        #Build the motif network -- 
+    def getPeptides(self):
+        """
+        Return the list of peptides
+        """
+        return (self.peptides)
+    
+    def proteinToPeptidesLUT(self):
+        """
+        Build a LUT with proteins as key and peptide list as values
+        """
+        protPeptideLUT = {}
+        pepList = self.getPeptides()
+        for peptide in pepList.itervalues():
+            for pepprotein in peptide.getProteins():
+                if (protPeptideLUT.has_key(pepprotein)):
+                    protPeptideLUT[pepprotein].append(peptide.getSequence())
+                else:
+                    protPeptideLUT[pepprotein] = [peptide.getSequence()]
+            
+        return(protPeptideLUT)
         
     def returnDM(self):
         """
@@ -266,7 +291,7 @@ class PTMMotifs:
             weight = 0.25 if predictedFiles.count(expFile) > 0 else 0.5 #predicted weight = .25, real = .5
             for curLine in infile.lines():
                 if (len(curLine) > 4):  #Sometimes the middle line is split
-                    modLine = ''.join([str for str in curLine[2:-1]])
+                    modLine = ''.join([curstr for curstr in curLine[2:-1]])
                     curLine = curLine[0:2] + [modLine] + [curLine[-1]]  #The 0:2 irks me. starting with 0 means second num is number of elements.  BLEH
                 modifier=curLine[2]
                 
@@ -291,6 +316,34 @@ class PTMMotifs:
     def returnDict(self):
         return(self.motifDictionary)
     
+    def returnNetworks(self, peptides, score = 0.5):
+        """
+        Return the networks
+        TOO SLOW!!!  See notebook entry on page 156
+        """
+        networks = []
+        for motifKey in self.motifDictionary.keys():
+            factor=motifKey
+            peptideDict = {}
+            for peptideObj in self.motifDictionary[motifKey]:
+                for peptide in peptides:
+                    rv = PTMMotif.matchPeptides(peptide=peptide, motif=peptideObj._peptide_, peptideModLoc=-1, motifModLoc=-1, minOverlap=7)
+                    if (rv == True):
+                        peptideDict[peptide] = peptideObj._weight_
+            #Store the edges
+            edgeList = []
+            if (len(peptideDict) > 1):
+                keys = peptideDict.keys()
+                for i in range(len(keys)):
+                    weight = peptideDict[keys[i]]
+                    for j in range(i+1,len(keys)):
+                        newEdge = network.NetworkEdge(keys[i], keys[j], score=weight)
+                        edgeList.append(newEdge)
+        
+            if len(edgeList) > 0:
+                networks.append(network.Network(name=factor, edges=edgeList, weight=score))
+        return(networks)
+
 
 class PTMFactors:
     """
@@ -314,7 +367,7 @@ class PTMFactors:
     def getFactorsAndSubstrates(self, incCofactor=True):
         """
         Get the list of unique factors stored in the PTMFactor list with their substrates
-        NOTE: As of 4/4/12 ignores weights
+        NOTE: As of 4/4/12 ignores scores
         """
         factors = {}
         for curPTM in self.ptmDictionary.values():
@@ -329,20 +382,31 @@ class PTMFactors:
         
         return(factors)
     
-    def returnNetworks(self, score = 1):
+    def returnNetworks(self, protLUT, score = 1):
         """
         Convert the list of PTMFactors into a network list with one network per factor
-        NOTE: As of 4/4/12 ignores weights
+        protLUT is used to convert the substrate into the peptides
+        NOTE: As of 4/4/12 ignores scores
         """
         factorDict = self.getFactorsAndSubstrates()
         networks = []
         for factor in factorDict.keys():
             substrates = factorDict[factor]
-            edgeList = []#NetworkEdge
+            edgeList = {}#NetworkEdges, Dictionary to remove repeats
             for i in range(len(substrates)):
-                for j in range(i+1, len(substrates)):
-                    edgeList.append(network.NetworkEdge(substrates[i], substrates[j], score=1))
-            networks.append(network.Network(name=factor, edges=edgeList, weight=score))
+                substrate1 = substrates[i]
+                if (protLUT.has_key(substrate1)):
+                    for peptide1 in protLUT[substrate1]:
+                        for j in range(i+1, len(substrates)):
+                            substrate2 = substrates[j]
+                            if (protLUT.has_key(substrate2)):
+                                for peptide2 in protLUT[substrate2]:
+                                    newEdge = network.NetworkEdge(peptide1, peptide2, score=1)
+                                    edgeName = peptide1.strip() + '.' + peptide2.strip()
+                                    if (not edgeList.has_key(edgeName)):
+                                        edgeList[edgeName] = newEdge
+            if (len(edgeList) > 0):
+                networks.append(network.Network(name=factor, edges=edgeList, weight=score))
         return(networks)
 
 class PTMFactor:
