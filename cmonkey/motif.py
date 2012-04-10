@@ -83,7 +83,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                  sequence_filters=[],
                  pvalue_filter=None,
                  scaling_func=None,
-                 run_in_iteration=lambda iteration: True,
+                 update_in_iteration=lambda iteration: True,
+                 motif_in_iteration=lambda iteration: True,
                  config_params=None):
         """creates a ScoringFunction"""
         scoring.ScoringFunctionBase.__init__(self, membership,
@@ -93,10 +94,13 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.organism = organism
         self.meme_suite = meme_suite
         self.seqtype = seqtype
-        self.run_in_iteration = run_in_iteration
+        self.update_in_iteration = update_in_iteration
+        self.motif_in_iteration = motif_in_iteration
+
         self.__sequence_filters = sequence_filters
         self.__pvalue_filter = pvalue_filter
         self.__last_computed_result = None
+        self.__last_pvalues = None
 
         # precompute the sequences for all genes that are referenced in the
         # input ratios, they are used as a basis to compute the background
@@ -144,13 +148,18 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         """
         iteration = iteration_result['iteration']
 
-        if self.run_in_iteration(iteration):
-            logging.info('Scoring motifs...')
-            global_start_time = util.current_millis()
-            pvalues = self.compute_pvalues(iteration_result)
+        if self.motif_in_iteration(iteration):  # meme.iter in R
+            logging.info('Running Motifing...')
+            # running MEME and store the result for the non-motifing iterations
+            # to reuse
+            self.__last_pvalues = self.compute_pvalues(iteration_result)
+
+        if self.__last_pvalues != None and self.update_in_iteration(iteration):  # mot.iter in R
+            logging.info('Recomputing motif scores...')
+            # running the scoring itself
             remapped = {}
-            for cluster in pvalues:
-                pvalues_k = pvalues[cluster]
+            for cluster in self.__last_pvalues:
+                pvalues_k = self.__last_pvalues[cluster]
                 pvalues_genes = {}
                 for feature_id, pvalue in pvalues_k.items():
                     pvalues_genes[self.reverse_map[feature_id]] = pvalue
@@ -165,19 +174,20 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                     if (cluster in remapped.keys() and
                         row in remapped[cluster].keys()):
                         matrix[row_index][cluster - 1] = remapped[cluster][row]
-            global_elapsed = util.current_millis() - global_start_time
-            logging.info("GLOBAL MOTIF TIME: %d seconds",
-                         (global_elapsed / 1000.0))
             self.__last_computed_result = matrix
 
         return self.__last_computed_result
 
     def compute_pvalues(self, iteration_result):
-        """Compute motif scores. In order to influence the sequences
+        """Compute motif scores.
+        The result is a dictionary from cluster -> (feature_id, pvalue)
+        containing a sparse gene-to-pvalue mapping for each cluster
+
+        In order to influence the sequences
         that go into meme, the user can specify a list of sequence filter
         functions that have the signature
         (seqs, feature_ids, distance) -> seqs
-        These filters are applied in the order they appear in the list
+        These filters are applied in the order they appear in the list.
         """
         def apply_sequence_filters(seqs, feature_ids):
             """apply all filters in the filters list in order"""
@@ -311,13 +321,16 @@ class MemeScoringFunction(MotifScoringFunctionBase):
                  sequence_filters=[],
                  pvalue_filter=None,
                  scaling_func=None,
-                 run_in_iteration=scoring.default_motif_iterations,
+                 update_in_iteration=scoring.default_motif_iterations,
+                 motif_in_iteration=scoring.default_meme_iterations,
                  config_params=None):
         """creates a ScoringFunction"""
         MotifScoringFunctionBase.__init__(self, organism, membership,
                                           matrix, meme_suite, seqtype,
                                           sequence_filters, pvalue_filter,
-                                          scaling_func, run_in_iteration,
+                                          scaling_func,
+                                          update_in_iteration,
+                                          motif_in_iteration,
                                           config_params)
 
     def name(self):
@@ -336,13 +349,17 @@ class WeederScoringFunction(MotifScoringFunctionBase):
                  meme_suite, seqtype,
                  sequence_filters=[], pvalue_filter=None,
                  scaling_func=None,
-                 run_in_iteration=scoring.default_motif_iterations,
+                 update_in_iteration=scoring.default_motif_iterations,
+                 motif_in_iteration=scoring.default_meme_iterations,
                  config_params=None):
         """creates a scoring function"""
         MotifScoringFunctionBase.__init__(self, organism, membership, matrix,
                                           meme_suite, seqtype,
                                           sequence_filters, pvalue_filter,
-                                          scaling_func, run_in_iteration, config_params)
+                                          scaling_func,
+                                          update_in_iteration,
+                                          motif_in_iteration,
+                                          config_params)
 
     def name(self):
         """returns the name of this scoring function"""

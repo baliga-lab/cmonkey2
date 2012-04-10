@@ -58,7 +58,10 @@ def schedule(starts_at, every):
     return runs_in_iteration
 
 def default_motif_iterations(iteration):
-    return schedule(500, 10)
+    return schedule(601, 3)
+
+def default_meme_iterations(iteration):
+    return schedule(600, 100)
 
 def default_network_iterations(iteration):
     return schedule(1, 7)
