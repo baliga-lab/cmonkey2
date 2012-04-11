@@ -178,8 +178,21 @@ class ClusterMembershipTest(unittest.TestCase):
             config_params={'memb.clusters_per_col': 2,
                            'memb.clusters_per_row': 1})
         membership.add_cluster_to_column('C3', 1)
+        membership.add_cluster_to_column('C3', 1)
         self.assertEquals([1], membership.clusters_for_column('C3'))
         self.assertEquals(['C1', 'C3'], membership.columns_for_cluster(1))
+
+    def test_add_cluster_to_column_twice(self):
+        """tests adding a cluster to a column twice and making sure it's only in there once"""
+        membership = memb.ClusterMembership(
+            row_is_member_of={},
+            column_is_member_of={'C1': [1, 3], 'C2': [2, 3]},
+            config_params={'memb.clusters_per_col': 2,
+                           'memb.clusters_per_row': 1})
+        membership.add_cluster_to_column('C3', 1)
+        self.assertEquals([1], membership.clusters_for_column('C3'))
+        self.assertEquals(['C1', 'C3'], membership.columns_for_cluster(1))
+
 
     def test_add_cluster_to_column_exceed_limit(self):
         """tests adding a column to a cluster, hitting the limit"""

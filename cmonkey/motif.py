@@ -101,6 +101,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.__pvalue_filter = pvalue_filter
         self.__last_computed_result = None
         self.__last_pvalues = None
+        self.__last_iteration_result = {}
 
         # precompute the sequences for all genes that are referenced in the
         # input ratios, they are used as a basis to compute the background
@@ -152,7 +153,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             logging.info('Running Motifing...')
             # running MEME and store the result for the non-motifing iterations
             # to reuse
-            self.__last_pvalues = self.compute_pvalues(iteration_result)
+            # Note: currently, iteration results are only computed here
+            self.__last_iteration_result = {}
+            self.__last_pvalues = self.compute_pvalues(self.__last_iteration_result)
 
         if self.__last_pvalues != None and self.update_in_iteration(iteration):  # mot.iter in R
             logging.info('Recomputing motif scores...')
@@ -176,6 +179,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                         matrix[row_index][cluster - 1] = remapped[cluster][row]
             self.__last_computed_result = matrix
 
+        iteration_result['motifs'] = self.__last_iteration_result
         return self.__last_computed_result
 
     def compute_pvalues(self, iteration_result):
@@ -220,13 +224,11 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                                              max_cluster_rows_allowed))
 
         # create motif result map if necessary
-        if not 'motifs' in iteration_result:
-            iteration_result['motifs'] = {}
         for cluster in xrange(1, self.num_clusters() + 1):
-            if not cluster in iteration_result['motifs']:
-                iteration_result['motifs'][cluster] = { }
-            if not self.seqtype in iteration_result['motifs'][cluster]:
-                iteration_result['motifs'][cluster][self.seqtype] = { }
+            if not cluster in iteration_result:
+                iteration_result[cluster] = { }
+            if not self.seqtype in iteration_result[cluster]:
+                iteration_result[cluster][self.seqtype] = { }
 
         # compute and store motif results
         if use_multiprocessing:
@@ -236,13 +238,13 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             for cluster in xrange(1, self.num_clusters() + 1):
                 pvalues, run_result = results[cluster - 1]
                 cluster_pvalues[cluster] = pvalues
-                iteration_result['motifs'][cluster][self.seqtype] = meme_json(run_result)
+                iteration_result[cluster][self.seqtype] = meme_json(run_result)
             pool.close()
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
                 pvalues, run_result = compute_cluster_score(params[cluster - 1])
                 cluster_pvalues[cluster] = pvalues
-                iteration_result['motifs'][cluster][self.seqtype] = meme_json(run_result)
+                iteration_result[cluster][self.seqtype] = meme_json(run_result)
 
         return cluster_pvalues
 

@@ -273,7 +273,7 @@ class ClusterMembership:
             #logging.warn("cluster %s already associated with %s",
             #             str(cluster), str(column))
             pass
-        if columns not in columns:
+        if column not in columns:
             columns.append(column)
 
     def remove_cluster_from_column(self, column, cluster):
