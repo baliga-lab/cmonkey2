@@ -142,14 +142,17 @@ residualHistogram: ResidualHistogram)
    @if(snapshot == None) {
      No Snapshot
    } else {
-   <div class="item-box">
-     <ul class="item-list">
-       @for(key <- snapshot.get.clusters) {<li><a class="clusterlink" id="@key" href="#">View Cluster @key</a></li>
+     <table class="item-list">
+       <tr><td><table class="inner"><tr><th class="clusternum">Cluster</th><th class="nrows"># rows</th><th class="ncols"># columns</th><th>&nbsp;</th></tr></table></td></tr>
+       <tr><td><div style="height: 200px; overflow: auto; background-color: #fff;">
+         <table class="inner">
+       @for(key <- snapshot.get.clusters) {<tr><td class="clusternum"><a class="clusterlink" id="@key" href="#">@key</a></td><td class="nrows">@(snapshot.get.rows(key).length)</td><td class="ncols">@(snapshot.get.columns(key).length)</td><td>&nbsp;</td></tr>
        }
-     </ul>
-   </div>
+       </table></div></td></tr>
+     </table>
+   <div class="spacer">&nbsp;</div>
+   <div class="details-box">
+   <span id="cluster-view">Please select a cluster</div>
+ </div>
    }
-   <span class="details-box">
-     <div id="cluster-view">Please select a cluster</div>
-   </span>
 }

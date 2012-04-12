@@ -10,32 +10,67 @@ body {
 }
 
 .item-box {
-    display: inline-block;
     border: 1px solid black;
     border-radius: 5px;
     font-size: 8pt;
-    width: 20%;
+    height: 300px;
     overflow: auto;
     margin-right: 10px;
 }
 
 .details-box {
     vertical-align: top;
-    display: inline-block;
     border: 1px solid black;
     border-radius: 5px;
     font-size: 8pt;
-    width: 75%;
+    margin-right: 10px;
     overflow: auto;
     padding: 10px;
 }
 
-.item-list {
-    padding: 5px;
+table.item-list {
+    border-radius: 5px;
+    border: 1px black solid;
+    width: 100%;
+    font-size: 8pt;
+    background-color: #fff;
 }
 
-.item-list li {
-    list-style: none;
+table.inner {
+    border-collapse: collapse;
+    border-spacing: 0px;
+}
+
+table.item-list th, td {
+    padding-right: 5px;
+    border: 0px;
+    margin: 0px;
+    border-spacing: 0px;
+}
+table.item-list th {
+    padding-right: 5px;
+    background-color: black;
+    color: white;
+}
+
+table.item-list tr:nth-child(even) {
+    background-color: #ccc;
+}
+table.item-list tr:nth-child(odd) {
+    background-color: #fff;
+}
+
+td.clusternum, th.clusternum {
+    width: 80px;
+    text-align: right;
+}
+td.nrows, th.nrows {
+    width: 80px;
+    text-align: right;
+}
+td.ncols, th.ncols {
+    width: 80px;
+    text-align: right;
 }
 
 .inactive {
