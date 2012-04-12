@@ -73,6 +73,11 @@ td.ncols, th.ncols {
     text-align: right;
 }
 
+td.residual, th.residual {
+    width: 200px;
+    text-align: right;
+}
+
 .inactive {
     color: #aaaaaa;
 }

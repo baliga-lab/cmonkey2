@@ -207,6 +207,13 @@ class CMonkeyRun:
         self.run_iterations(row_scoring, col_scoring)
 
     def run_iterations(self, row_scoring, col_scoring):
+        def residual_for(row_names, column_names):
+            if len(column_names) <= 1 or len(row_names) <= 1:
+                return 1.0
+            else:
+                matrix = self.ratio_matrix.submatrix_by_name(row_names, column_names)
+                return matrix.residual()
+
         self.report_params()
         output_dir = self['output_dir']
 
@@ -226,9 +233,14 @@ class CMonkeyRun:
                 # Write a snapshot
                 iteration_result['columns'] = {}
                 iteration_result['rows'] = {}
+                iteration_result['residuals'] = {}
                 for cluster in range(1, self['num_clusters'] + 1):
-                    iteration_result['columns'][cluster] = self.membership().columns_for_cluster(cluster)
-                    iteration_result['rows'][cluster] = self.membership().rows_for_cluster(cluster)
+                    column_names = self.membership().columns_for_cluster(cluster)
+                    row_names = self.membership().rows_for_cluster(cluster)
+                    iteration_result['columns'][cluster] = column_names
+                    iteration_result['rows'][cluster] = row_names
+                    residual = residual_for(row_names, column_names)
+                    iteration_result['residuals'][cluster] = residual
 
                 # write results
                 with open('%s/%d-results.json' % (output_dir, iteration), 'w') as outfile:
@@ -241,11 +253,7 @@ class CMonkeyRun:
                 for cluster in range(1, self['num_clusters'] + 1):
                     row_names = iteration_result['rows'][cluster]
                     column_names = iteration_result['columns'][cluster]
-                    if len(column_names) <= 1 or len(row_names) <= 1:
-                        residual = 1.0
-                    else:
-                        matrix = self.ratio_matrix.submatrix_by_name(row_names, column_names)
-                        residual = matrix.residual()
+                    residual = residual_for(row_names, column_names)
                     residuals.append(residual)
                     cluster_stats[cluster] = {'num_rows': len(row_names),
                                               'num_columns': len(column_names),

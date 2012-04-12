@@ -9,6 +9,7 @@ case class Annotation(motifNum: Int, reverse: Boolean, position: Int, gene: Stri
 case class GeneAnnotations(gene: String, annotations: Seq[Annotation])
 case class MotifInfo(motifNum: Int, evalue: Double, pssm: Array[Array[Float]], annotations: Array[Annotation])
 case class Snapshot(rows: Map[Int, List[String]], columns: Map[Int, List[String]],
+                    residuals: Map[Int, Double],
                     motifs: Map[Int, Map[String, Array[MotifInfo]]]) {
   def clusters: Seq[Int] = {
     rows.keys.toSeq.sorted
@@ -26,6 +27,7 @@ class SnapshotReader(OutDirectory: File, Synonyms: SynonymsMap) {
     def reads(json: JsValue): Snapshot = {
       val rows = (json \ "rows").as[JsObject]
       val cols = (json \ "columns").as[JsObject]
+      val residuals = (json \ "residuals").as[JsObject]
       val motifsVal = (json \ "motifs")
       val clusterRows = new HashMap[Int, List[String]]
       for (field <- rows.fields) {
@@ -38,13 +40,17 @@ class SnapshotReader(OutDirectory: File, Synonyms: SynonymsMap) {
         clusterCols(field._1.toInt) = field._2.as[List[String]]
       }
 
+      val clusterResiduals = new HashMap[Int, Double]
+      for (field <- residuals.fields) {
+        clusterResiduals(field._1.toInt) = field._2.asInstanceOf[JsNumber].value.doubleValue
+      }
+
       val clusterMotifs = new HashMap[Int, Map[String, Array[MotifInfo]]]
       try {
         val motifs = motifsVal.as[JsObject]
         for (field <- motifs.fields) {
           val cluster = field._1
           val seqTypeObj = field._2.as[JsObject]
-
           val seqTypeMotifs = new HashMap[String, Array[MotifInfo]]
 
           // iterate over the sequence types, which are keys
@@ -86,7 +92,7 @@ class SnapshotReader(OutDirectory: File, Synonyms: SynonymsMap) {
           e.printStackTrace
           println("\nNo motifs found !!!")
       }
-      Snapshot(clusterRows.toMap, clusterCols.toMap, clusterMotifs.toMap)
+      Snapshot(clusterRows.toMap, clusterCols.toMap, clusterResiduals.toMap, clusterMotifs.toMap)
     }
 
     def writes(snapshot: Snapshot): JsValue = JsUndefined("TODO")
