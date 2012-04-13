@@ -57,14 +57,37 @@ def schedule(starts_at, every):
         return iteration >= starts_at and (iteration - starts_at) % every == 0
     return runs_in_iteration
 
+
 def default_motif_iterations(iteration):
     return schedule(601, 3)
+
 
 def default_meme_iterations(iteration):
     return schedule(600, 100)
 
+
 def default_network_iterations(iteration):
     return schedule(1, 7)
+
+
+class RunLog:
+    """This is a class that captures information about a particular
+    scoring function's behavior in a given iteration. In each iteration,
+    a scoring function should log whether it was active and which scaling
+    was applied.
+    """
+    def __init__(self, name):
+        self.name = name
+        self.active = []
+        self.scaling = []
+
+    def log(self, was_active, scaling):
+        self.active.append(was_active)
+        self.scaling.append(scaling)
+
+    def __repr__(self):
+        return "RunLog(" + self.name + ", " + str(self.active) + ", " + str(self.scaling) + ")"
+
 
 class ScoringFunctionBase:
     """Base class for scoring functions"""
@@ -133,6 +156,11 @@ class ScoringFunctionBase:
     def restore_checkpoint_data(self, shelf):
         """Default implementation does not store checkpoint data"""
         pass
+
+    def run_logs(self):
+        """returns a list of RunLog objects, giving information about
+        the last run of this function"""
+        return []
 
 class ColumnScoringFunction(ScoringFunctionBase):
     """Scoring algorithm for microarray data based on conditions.
@@ -313,3 +341,10 @@ class ScoringFunctionCombiner:
         """recursively invokes store_checkpoint_data() on the children"""
         for scoring_func in self.__scoring_functions:
             scoring_func.restore_checkpoint_data(shelf)
+
+    def run_logs(self):
+        """joins all contained function's run logs"""
+        result = []
+        for scoring_func in self.__scoring_functions:
+            result.extend(scoring_func.run_logs())
+        return result

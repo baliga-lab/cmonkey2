@@ -103,6 +103,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.__last_pvalues = None
         self.__last_iteration_result = {}
 
+        self.update_log = scoring.RunLog("motif-score-" + seqtype)
+        self.motif_log = scoring.RunLog("motif-motif-" + seqtype)
+
         # precompute the sequences for all genes that are referenced in the
         # input ratios, they are used as a basis to compute the background
         # distribution for every cluster
@@ -114,6 +117,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.reverse_map = self.__build_reverse_map(matrix)
         logging.info("reverse map built in %d ms.",
                      util.current_millis() - start_time)
+
+    def run_logs(self):
+        return [self.update_log, self.motif_log]
 
     def __build_reverse_map(self, matrix):
         """build a map that reconstructs the original row name from
@@ -178,6 +184,11 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                         row in remapped[cluster].keys()):
                         matrix[row_index][cluster - 1] = remapped[cluster][row]
             self.__last_computed_result = matrix
+
+        self.update_log.log(self.update_in_iteration(iteration),
+                            self.scaling(iteration))
+        self.motif_log.log(self.motif_in_iteration(iteration),
+                           self.scaling(iteration))
 
         iteration_result['motifs'] = self.__last_iteration_result
         return self.__last_computed_result

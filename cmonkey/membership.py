@@ -669,7 +669,7 @@ def make_kmeans_row_seeder(num_clusters):
         flat_values = [value if not np.isnan(value) else 0
                        for value in matrix.flat_values()]
         matrix_values = robjects.r.matrix(
-            robjects.FloatVector(flat_values), nrow=matrix.num_rows())
+            robjects.FloatVector(flat_values), nrow=matrix.num_rows(), byrow=True)
         kmeans = robjects.r['kmeans']
         kwargs = {'centers': num_clusters, 'iter.max': 20, 'nstart': 2}
         seeding = kmeans(matrix_values, **kwargs)[0]

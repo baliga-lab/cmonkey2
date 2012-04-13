@@ -172,10 +172,14 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         self.__run_in_iteration = run_in_iteration
         self.__networks = None
         self.__last_computed_result = None
+        self.run_log = scoring.RunLog("network")
 
     def name(self):
         """returns the name of this function"""
         return "Network"
+
+    def run_logs(self):
+        return [self.run_log]
 
     def compute(self, iteration_result, ref_matrix=None):
         """compute method
@@ -186,6 +190,8 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         if self.__run_in_iteration(iteration):
             logging.info("RUNNING A NEW NETWORK SCORING")
             self.__last_computed_result = self.__compute()
+        self.run_log.log(self.__run_in_iteration(iteration),
+                         self.scaling(iteration))
         return self.__last_computed_result
 
     def __compute(self):

@@ -268,6 +268,10 @@ class CMonkeyRun:
                         # print stats object, likely there is something that is not serializable
                         print stats
 
+            run_infos = row_scoring.run_logs()
+            logging.info("Writing run map for this iteration")
+            #print run_infos
+
         print "Done !!!!"
 
     ############################################################

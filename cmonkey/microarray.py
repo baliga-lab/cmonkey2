@@ -188,6 +188,7 @@ class RowScoringFunction(scoring.ScoringFunctionBase):
         scoring.ScoringFunctionBase.__init__(self, membership,
                                              matrix, scaling_func,
                                              config_params)
+        self.run_log = scoring.RunLog("row_scoring")
 
     def name(self):
         """returns the name of this scoring function"""
@@ -204,8 +205,12 @@ class RowScoringFunction(scoring.ScoringFunctionBase):
 
         elapsed = util.current_millis() - start_time
         logging.info("ROW SCORING TIME: %f s.", (elapsed / 1000.0))
+        self.run_log.log(True, self.scaling(iteration_result['iteration']))
         return result
 
+    def run_logs(self):
+        """return the run logs"""
+        return [self.run_log]
 
 __all__ = ['ClusterMembership', 'compute_row_scores', 'compute_column_scores',
            'seed_column_members']
