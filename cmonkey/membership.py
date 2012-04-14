@@ -14,7 +14,7 @@ import logging
 import sys
 import numpy as np
 import rpy2.robjects as robjects
-
+import pprint as pp
 
 # Default values for membership creation
 NUM_CLUSTERS = 43
@@ -104,11 +104,15 @@ class ClusterMembership:
         num_rows = data_matrix.num_rows()
         row_membership = [[0 for _ in xrange(num_clusters_per_row)]
                           for _ in xrange(num_rows)]
+
         seed_row_memberships(row_membership, data_matrix)
+        #pp.pprint(row_membership)
         column_membership = seed_column_memberships(
             data_matrix, row_membership, num_clusters, num_clusters_per_col)
         row_is_member_of = make_member_map(row_membership,
                                            data_matrix.row_names())
+        #pp.pprint(row_is_member_of)
+
         col_is_member_of = make_member_map(column_membership,
                                            data_matrix.column_names())
         return ClusterMembership(row_is_member_of, col_is_member_of,
@@ -131,7 +135,7 @@ class ClusterMembership:
         return self.__config_params[KEY_PROB_ROW_CHANGE]
 
     def __probability_seeing_col_change(self):
-        """returns the probability for seeing a row change"""
+        """returns the probability for seeing a column change"""
         return self.__config_params[KEY_PROB_COL_CHANGE]
 
     def __max_changes_per_row(self):
@@ -152,6 +156,9 @@ class ClusterMembership:
             return self.__row_is_member_of[row_name]
         else:
             return []
+
+    def get_rowassignment(self):
+        return self.__row_is_member_of
 
     def num_clusters_for_row(self, row_name):
         """returns the number of clusters for the row"""
@@ -209,8 +216,9 @@ class ClusterMembership:
         if self.num_clusters_for_row(row) >= self.num_clusters_per_row():
             raise Exception(("add_row_to_cluster() - exceeded clusters/row " +
                             "limit for row: '%s'" % str(row)))
+        """
+        """
         self.__add_cluster_to_row(row, cluster)
-
     def __add_cluster_to_row(self, row, cluster):
         """adds the specified row as a member to the cluster. Unchecked
         version, without checking limits"""
@@ -273,7 +281,7 @@ class ClusterMembership:
             #logging.warn("cluster %s already associated with %s",
             #             str(cluster), str(column))
             pass
-        if columns not in columns:
+        if column not in columns:
             columns.append(column)
 
     def remove_cluster_from_column(self, column, cluster):
@@ -310,27 +318,27 @@ class ClusterMembership:
                                                        num_iterations)
 
         rpc = map(len, self.__cluster_row_members.values())
-        logging.info('Rows per cluster: %i to %i (median %d)' \
-          %( min(rpc), max(rpc), np.median(rpc) ) )
+        #logging.info('\x1b[31mMembership:\t\x1b[0mRows per cluster: %i to %i (median %d)' \
+        #  %( min(rpc), max(rpc), np.median(rpc) ) )
 
         start = util.current_millis()
-        #logging.info("GET_DENSITY_SCORES()...")
+        #logging.info("\x1b[31mMembership:\t\x1b[0mGET_DENSITY_SCORES()...")
         rd_scores, cd_scores = get_density_scores(self, row_scores,
                                                   column_scores)
         elapsed = util.current_millis() - start
-        #logging.info("GET_DENSITY_SCORES() took %f s.", elapsed / 1000.0)
+        #logging.info("\x1b[31mMembership:\t\x1b[0mGET_DENSITY_SCORES() took %f s.", elapsed / 1000.0)
 
         start = util.current_millis()
-        #logging.info("COMPENSATE_SIZE()...")
+        #logging.info("\x1b[31mMembership:\t\x1b[0mCOMPENSATE_SIZE()...")
         compensate_size(self, matrix, rd_scores, cd_scores)
         elapsed = util.current_millis() - start
-        #logging.info("COMPENSATE_SIZE() took %f s.", elapsed / 1000.0)
+        #logging.info("\x1b[31mMembership:\t\x1b[0mCOMPENSATE_SIZE() took %f s.", elapsed / 1000.0)
         self.__update_memberships(rd_scores, cd_scores)
 
     def __fuzzify(self, row_scores, column_scores, iteration,
                   num_iterations):
         """Provide an iteration-specific fuzzification"""
-        #logging.info("__fuzzify(), setup...")
+        #logging.info("\x1b[31mMembership:\t\x1b[0m__fuzzify(), setup...")
         start_time = util.current_millis()
         fuzzy_coeff = std_fuzzy_coefficient(iteration, num_iterations)
         num_row_fuzzy_values = row_scores.num_rows() * row_scores.num_columns()
@@ -379,7 +387,7 @@ class ClusterMembership:
         col_score_values += np.array(col_rnorm).reshape(
             column_scores.num_rows(), column_scores.num_columns())
         elapsed = util.current_millis() - start_time
-        #logging.info("fuzzify() finished in %f s.", elapsed / 1000.0)
+        #logging.info("\x1b[31mMembership:\t\x1b[0mfuzzify() finished in %f s.", elapsed / 1000.0)
         return row_scores, column_scores
 
     def __update_memberships(self, rd_scores, cd_scores):
@@ -490,7 +498,7 @@ class ClusterMembership:
 
     def store_checkpoint_data(self, shelf):
         """Save memberships into checkpoint"""
-        logging.info("Saving checkpoint data for memberships in iteration %d",
+        logging.info("\x1b[31mMembership:\t\x1b[0mSaving checkpoint data for memberships in iteration %d",
                      shelf['iteration'])
         shelf[KEY_ROW_IS_MEMBER_OF] = self.__row_is_member_of
         shelf[KEY_COL_IS_MEMBER_OF] = self.__column_is_member_of
@@ -498,7 +506,7 @@ class ClusterMembership:
     @classmethod
     def restore_from_checkpoint(cls, config_params, shelf):
         """Restore memberships from checkpoint information"""
-        logging.info("Restoring cluster memberships from checkpoint data")
+        logging.info("\x1b[31mMembership:\t\x1b[0mRestoring cluster memberships from checkpoint data")
         row_is_member_of = shelf[KEY_ROW_IS_MEMBER_OF]
         col_is_member_of = shelf[KEY_COL_IS_MEMBER_OF]
         return cls(row_is_member_of, col_is_member_of, config_params)
@@ -668,12 +676,13 @@ def make_kmeans_row_seeder(num_clusters):
         """uses k-means seeding to seed row membership"""
         flat_values = [value if not np.isnan(value) else 0
                        for value in matrix.flat_values()]
+
         matrix_values = robjects.r.matrix(
-            robjects.FloatVector(flat_values), nrow=matrix.num_rows())
+            robjects.FloatVector(flat_values), nrow=matrix.num_rows(), byrow=True)
         kmeans = robjects.r['kmeans']
-        kwargs = {'centers': num_clusters, 'iter.max': 20, 'nstart': 2}
+        kwargs = {'centers': num_clusters, 'iter.max': 500, 'nstart': 2}
         seeding = kmeans(matrix_values, **kwargs)[0]
+        print "length seeding:", len(seeding)
         for row in xrange(len(seeding)):
             row_membership[row][0] = seeding[row]
-
     return seed

@@ -44,7 +44,10 @@ class DataMatrix:
                 raise ValueError("number of row names should be %d" % nrows)
             self.__row_names = np.array(row_names)
 
+        
         self.__rownames_original = self.__row_names         # Frank Schmitz
+                                                            # becomes important when the rownames are tranlated for
+                                                            # internal use
 
 
         if col_names == None:
@@ -80,33 +83,6 @@ class DataMatrix:
         Note: a NumPy array is returned, which does not have an index()
         method"""
         return self.__row_names
-    def set_row_names(self, new_row_names):
-        """
-        set the rownames new, leave self.__rownames_original untouched
-        
-        """
-        self.__row_names = new_row_names
-
-    def translateRowNames(self, thesaurus):
-        """ Frank Schmitz:
-            translate the rownames into common used IDs, for later speed improvement and compatibility
-            leave the self.___rownames_originals untouched
-        """
-        
-        logging.info("\x1b[31mmatrix:\t\x1b[0mtranslating matrix")
-        nrowL = []
-        for rowname in self.__row_names:
-            try:
-                nrowL.append(thesaurus[rowname])
-            except KeyError:
-                if rowname in thesaurus.keys():
-                    nrowL.append(rowname)
-                else:
-                    nrowL.append("".join(["unMapped_", rowname]))
-        self.set_row_names(np.array(nrowL))
-
-
-
     def column_names(self):
         """return the column names.
         Note: a NumPy array is returned, which does not have an index()
@@ -339,6 +315,56 @@ class DataMatrix:
                 row.extend([('%f' % value) for value in self.__values[row_index]])
                 outfile.write('\t'.join(row) + '\n')
             outfile.flush()
+    
+    
+    
+    
+    ### Frank Schmitz
+    # want to add addtnl functionality - translate the genes to
+    # the common nomenclature, improves performance
+    def write_tsv_file_FS(self, path, Dict):
+        """writes this matrix to tab-separated file
+        and before, translates it to the human friendly gene names using Dict as Dict"""
+        with open(path, 'w') as outfile:
+            title = ['GENE']
+            title.extend(self.__column_names)
+            titlerow = '\t'.join(title)
+            outfile.write(titlerow + '\n')
+            for row_index in range(len(self.__row_names)):
+                row = [self.__row_names[row_index]]
+                try:
+                    row = [Dict[row[0]]]
+                except KeyError:
+                    pass
+                row.extend([('%f' % value) for value in self.__values[row_index]])
+                outfile.write('\t'.join(row) + '\n')
+            outfile.flush()
+     
+    def set_row_names(self, new_row_names):
+        """
+        set the rownames new, leave self.__rownames_original untouched
+        
+        """
+        self.__row_names = new_row_names
+
+    def translateRowNames(self, thesaurus):
+        """ Frank Schmitz:
+            translate the rownames into common used IDs, for later speed improvement and compatibility
+            leave the self.___rownames_originals untouched
+        """
+        
+        logging.info("\x1b[31mmatrix:\t\x1b[0mtranslating matrix")
+        nrowL = []
+        for rowname in self.__row_names:
+            try:
+                nrowL.append(thesaurus[rowname])
+            except KeyError:
+                if rowname in thesaurus.keys():
+                    nrowL.append(rowname)
+                else:
+                    nrowL.append("".join(["unMapped_", rowname]))
+        self.set_row_names(np.array(nrowL))
+
 
 class DataMatrixCollection:
     """A collection of DataMatrix objects containing gene expression values
@@ -509,18 +535,18 @@ def quantile_normalize_scores(matrices, weights=None):
     """quantile normalize scores against each other"""
 
     flat_values = as_sorted_flat_values(matrices)
-    logging.info("COMPUTING WEIGHTED MEANS...")
+    #logging.info("COMPUTING WEIGHTED MEANS...")
     start_time = util.current_millis()
     if weights != None:
         tmp_mean = weighted_row_means(flat_values, weights)
     else:
         tmp_mean = util.row_means(flat_values)
     elapsed = util.current_millis() - start_time
-    logging.info("weighted means in %f s.", elapsed / 1000.0)
+    #logging.info("weighted means in %f s.", elapsed / 1000.0)
     start_time = util.current_millis()
     result = qm_result_matrices(matrices, tmp_mean)
     elapsed = util.current_millis() - start_time
-    logging.info("result matrices built in %f s.", elapsed / 1000.0)
+    #logging.info("result matrices built in %f s.", elapsed / 1000.0)
     return result
 
 
@@ -540,7 +566,7 @@ def weighted_row_means(matrix, weights):
     # from 125 s. to 0.125 seconds over apply_along_axis() (1000x faster)!
     scaled = weights * matrix
     elapsed = util.current_millis() - start_time
-    logging.info("APPLIED WEIGHTS TO COLUMNS in %f s.", elapsed / 1000.0)
+    #logging.info("APPLIED WEIGHTS TO COLUMNS in %f s.", elapsed / 1000.0)
     scale = np.sum(np.ma.masked_array(weights, np.isnan(weights)))
     return util.row_means(scaled) / scale
 

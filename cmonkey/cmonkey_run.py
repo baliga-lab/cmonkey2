@@ -1,12 +1,14 @@
 # vi: sw=4 ts=4 et:
+from tools.TimeTools import TimeStamp
 import logging
 import microarray
 import membership as memb
 import meme
+import meme_addon_FS
 import motif
 import util
 import rsat
-#import microbes_online        # Frank Schmitz
+import microbes_online
 import organism as org
 import scoring
 import network as nw
@@ -27,17 +29,28 @@ STATS_FREQ = 10
 RESULT_FREQ = 10
 
 class CMonkeyRun:
-    def __init__(self, organism_code, ratio_matrix, num_clusters):
-        logging.basicConfig(format=LOG_FORMAT,
-                            datefmt='%Y-%m-%d %H:%M:%S',
-                            level=logging.DEBUG)
+    def __init__(self, organism_code, ratio_matrix, num_clusters=None):
+
         self.__membership = None
         self.__organism = None
         self.config_params = {}
         self.ratio_matrix = ratio_matrix.sorted_by_row_name()
 
+        # membership update default parameters
+        # these come first, since a lot depends on clustering numbers
+        self['memb.clusters_per_row'] = 2
+        if num_clusters == None:
+            num_clusters = int(round(self.ratio_matrix.num_rows() *
+                                     self['memb.clusters_per_row'] / 20.0))
+        self['memb.clusters_per_col'] = int(round(num_clusters * 2.0 / 3.0))
+        self['memb.prob_row_change'] = 0.5
+        self['memb.prob_col_change'] = 1.0
+        self['memb.max_changes_per_row'] = 1
+        self['memb.max_changes_per_col'] = 5
+
         self['organism_code'] = organism_code
         self['num_clusters'] = num_clusters
+        #logging.info("# CLUSTERS: %d", self['num_clusters'])
 
         # defaults
         self.row_seeder = memb.make_kmeans_row_seeder(num_clusters)
@@ -52,27 +65,25 @@ class CMonkeyRun:
 
         # used to select sequences and MEME
         self['sequence_types'] = ['upstream']
-        self['search_distances'] = {'upstream': (-1500, 5000)}
+        self['search_distances'] = {'upstream': (-20, 150)}
         # used for background distribution and MAST
-        self['scan_distances'] = {'upstream': (-2000, 750)}
+        self['scan_distances'] = {'upstream': (-30, 250)}
 
-        # membership update default parameters
-        self['memb.clusters_per_row'] = 2
-        self['memb.clusters_per_col'] = int(round(num_clusters * 2.0 / 3.0))
-        self['memb.prob_row_change'] = 0.5
-        self['memb.prob_col_change'] = 1.0
-        self['memb.max_changes_per_row'] = 1
-        self['memb.max_changes_per_col'] = 5
 
-        # motifing default parameters
-        self['motif.min_cluster_rows_allowed'] = 3
-        self['motif.max_cluster_rows_allowed'] = 70
+        # membership default parameters
+        self['memb.min_cluster_rows_allowed'] = 3
+        self['memb.max_cluster_rows_allowed'] = 70
 
         today = date.today()
-        self.CHECKPOINT_INTERVAL = 100
+        self.CHECKPOINT_INTERVAL = None
         self.__checkpoint_basename = "cmonkey-checkpoint-%s-%d%d%d" % (
             organism_code, today.year, today.month, today.day)
+        print "inited the bare bones main cMonkey instance"
 
+    def report_params(self):
+        logging.info('cmonkey_run config_params:')
+        for param,value in self.config_params.items():
+            logging.info('%s=%s' %(param,str(value)))
 
     def __getitem__(self, key):
         return self.config_params[key]
@@ -116,7 +127,8 @@ class CMonkeyRun:
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
             scaling_func=motif_scaling_fun,
-            run_in_iteration=scoring.default_motif_iterations,
+            update_in_iteration=scoring.schedule(601, 3),
+            motif_in_iteration=scoring.schedule(600, 100),
             config_params=self.config_params)
 
         network_scaling_fun = scoring.get_default_network_scaling(self['num_iterations'])
@@ -124,7 +136,7 @@ class CMonkeyRun:
                                              self.membership(),
                                              self.ratio_matrix,
                                              scaling_func=network_scaling_fun,
-                                             run_in_iteration=scoring.default_network_iterations,
+                                             run_in_iteration=scoring.schedule(1, 7),
                                              config_params=self.config_params)
 
         row_scoring_functions = [row_scoring, motif_scoring, network_scoring]
@@ -183,9 +195,9 @@ class CMonkeyRun:
             self.ratio_matrix.write_tsv_file(output_dir + '/ratios.tsv')
 
     def run(self):
+        self.__make_dirs_if_needed()
         row_scoring = self.make_row_scoring()
         col_scoring = self.make_column_scoring()
-        self.__make_dirs_if_needed()
         self.run_iterations(row_scoring, col_scoring)
 
     def run_from_checkpoint(self,checkpoint_filename):
@@ -196,10 +208,13 @@ class CMonkeyRun:
         self.run_iterations(row_scoring, col_scoring)
 
     def run_iterations(self, row_scoring, col_scoring):
+        self.report_params()
         output_dir = self['output_dir']
 
         for iteration in range(self['start_iteration'],
                                self['num_iterations'] + 1):
+            print "Iteration # %d"% iteration
+            print TimeStamp()
             logging.info("Iteration # %d", iteration)
             iteration_result = {'iteration': iteration}
             self.membership().update(self.ratio_matrix,

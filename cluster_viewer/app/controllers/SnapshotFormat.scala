@@ -5,8 +5,11 @@ import java.io._
 import java.util.regex._
 import scala.collection.mutable.HashMap
 
-case class MotifInfo(motifNum: Int, evalue: Double, pssm: Array[Array[Float]])
+case class Annotation(motifNum: Int, reverse: Boolean, position: Int, gene: String, pvalue: Double)
+case class GeneAnnotations(gene: String, annotations: Seq[Annotation])
+case class MotifInfo(motifNum: Int, evalue: Double, pssm: Array[Array[Float]], annotations: Array[Annotation])
 case class Snapshot(rows: Map[Int, List[String]], columns: Map[Int, List[String]],
+                    residuals: Map[Int, Double],
                     motifs: Map[Int, Map[String, Array[MotifInfo]]]) {
   def clusters: Seq[Int] = {
     rows.keys.toSeq.sorted
@@ -24,6 +27,7 @@ class SnapshotReader(OutDirectory: File, Synonyms: SynonymsMap) {
     def reads(json: JsValue): Snapshot = {
       val rows = (json \ "rows").as[JsObject]
       val cols = (json \ "columns").as[JsObject]
+      val residuals = (json \ "residuals").as[JsObject]
       val motifsVal = (json \ "motifs")
       val clusterRows = new HashMap[Int, List[String]]
       for (field <- rows.fields) {
@@ -36,20 +40,24 @@ class SnapshotReader(OutDirectory: File, Synonyms: SynonymsMap) {
         clusterCols(field._1.toInt) = field._2.as[List[String]]
       }
 
+      val clusterResiduals = new HashMap[Int, Double]
+      for (field <- residuals.fields) {
+        clusterResiduals(field._1.toInt) = field._2.asInstanceOf[JsNumber].value.doubleValue
+      }
+
       val clusterMotifs = new HashMap[Int, Map[String, Array[MotifInfo]]]
       try {
-        val motifs = motifsVal.as[JsObject]        
+        val motifs = motifsVal.as[JsObject]
         for (field <- motifs.fields) {
           val cluster = field._1
           val seqTypeObj = field._2.as[JsObject]
-
           val seqTypeMotifs = new HashMap[String, Array[MotifInfo]]
 
           // iterate over the sequence types, which are keys
           for (stfield <- seqTypeObj.fields) {
             val seqType = stfield._1
             // an array of motif objects (motif_num, evalue, annotations, pssm)
-            // annotations are triples of (gene, position, pvalue)
+            // annotations are tuples of (gene, position, pvalue, reverse)
             val stMotifs = stfield._2.asInstanceOf[JsArray].value
             val motifInfos = new java.util.ArrayList[MotifInfo]
             for (motif <- stMotifs) {
@@ -59,16 +67,32 @@ class SnapshotReader(OutDirectory: File, Synonyms: SynonymsMap) {
                 motifObj.value("evalue").asInstanceOf[JsNumber].value.doubleValue
               } else 0.0
               val motifNum = motifObj.value("motif_num").asInstanceOf[JsNumber].value.intValue
-              motifInfos.add(MotifInfo(motifNum, evalue, pssm))
+              //println("annotations for number: " + motifNum + " seqtype: " + seqType + " cluster: " + cluster)
+              val annotations = if (motifObj.keys.contains("annotations")) {
+                val annots = motifObj.value("annotations").asInstanceOf[JsArray]
+                val annotArr = new Array[Annotation](annots.value.length)
+                for (i <- 0 until annotArr.length) {
+                  val current = annots(i).asInstanceOf[JsObject]       
+                  annotArr(i) = Annotation(motifNum,
+                                           current.value("reverse").asInstanceOf[JsBoolean].value,
+                                           current.value("position").asInstanceOf[JsNumber].value.intValue,
+                                           current.value("gene").asInstanceOf[JsString].value,
+                                           current.value("pvalue").asInstanceOf[JsNumber].value.doubleValue)
+                }
+                annotArr
+              } else Array[Annotation]()
+              motifInfos.add(MotifInfo(motifNum, evalue, pssm, annotations))
             }
             seqTypeMotifs(seqType) = motifInfos.toArray(new Array[MotifInfo](0))
           }
           clusterMotifs(field._1.toInt) = seqTypeMotifs.toMap
         }
       } catch {
-        case _ => println("\nNo motifs found !!!")
+        case e =>
+          e.printStackTrace
+          println("\nNo motifs found !!!")
       }
-      Snapshot(clusterRows.toMap, clusterCols.toMap, clusterMotifs.toMap)
+      Snapshot(clusterRows.toMap, clusterCols.toMap, clusterResiduals.toMap, clusterMotifs.toMap)
     }
 
     def writes(snapshot: Snapshot): JsValue = JsUndefined("TODO")

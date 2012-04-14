@@ -76,8 +76,6 @@ def get_network_factory2(filename, weight, sep='\t'):
     return make_network
 
 
-
-
 def get_network_factory2_FS(filename, weight, sep='\t'):
     """STRING network factory from preprocessed edge file
     (protein1, protein2, combined_score), scores are already
@@ -88,8 +86,7 @@ def get_network_factory2_FS(filename, weight, sep='\t'):
         dfile = util.DelimitedFile.read(filename, sep)
         result = []
         for line in dfile.lines():
-            result.append((line[0], line[1],
-                                              float(line[2])))
+            result.append((line[0], line[1], float(line[2])))
         return result
 
     def make_network(_):
@@ -97,9 +94,6 @@ def get_network_factory2_FS(filename, weight, sep='\t'):
         return network.FS_Network("STRING", read_edges2(filename), weight)
 
     return make_network
-
-
-
 
 
 def get_network_factory3(filename, weight):

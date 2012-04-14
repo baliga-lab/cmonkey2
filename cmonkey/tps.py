@@ -43,9 +43,9 @@ STRING_LINKS = 'tps/string_links.tps.tab'
 
 """these are the default meme iterations ("meme.iters") in the R version"""
 MOTIF_ITERS = range( 600, 1200, 100 ) + \
-             range( 1250, 1500, 50 ) + \
-             range( 1525, 1800, 25 ) + \
-             range( 1810, max( NUM_ITERATIONS, 1820 ) + 10 )
+              range( 1250, 1500, 50 ) + \
+              range( 1525, 1800, 25 ) + \
+              range( 1810, max( NUM_ITERATIONS, 1820 ), 10 )
 
 mode = 'normal'
 #mode = 'debug'
@@ -177,5 +177,5 @@ if __name__ == '__main__':
         infile = util.DelimitedFile.read(ratios, has_header=True, quote='\"')
         matrix = matrix_factory.create_from(infile)
         cmonkey_run = TpsCMonkeyRun('tps', matrix, NUM_CLUSTERS)
-        if os.path.exists(CHECKPOINT_FILE): cmonkey_run.run_from_checkpoint(CHECKPOINT_FILE)
+        if CHECKPOINT_FILE and os.path.exists(CHECKPOINT_FILE): cmonkey_run.run_from_checkpoint(CHECKPOINT_FILE)
         else: cmonkey_run.run()

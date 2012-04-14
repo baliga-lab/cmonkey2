@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """organism.py - organism-specific functionality in cMonkey
 This module captures a microbial organism that receives data
 from Microbes Online and RSAT
@@ -11,9 +12,7 @@ import logging
 import thesaurus
 import util
 import seqtools as st
-
-# import microbes_online as mo     # I cannot have this to be imported
-                                    # because of the lack of Mysqldb
+import microbes_online as mo
 
 
 def make_kegg_code_mapper(dfile):
@@ -319,6 +318,8 @@ class Microbe(OrganismBase):
             location = feature.location()
             sequences[feature.id()] = extractor(
                 contig_seqs[location.contig], location, distance)
+        if len(sequences) == 0:
+            logging.error('No sequences read for %s!' %self.code)
         return sequences
 
     def __str__(self):
@@ -370,10 +371,13 @@ class GenericOrganism(OrganismBase):
     def __sequences_for_genes(self, seqtype, gene_aliases, distance):
         """retrieves the specified sequences from the supplied genomic data"""
         if not seqtype in self.__seqs:
+            logging.info('loading %s sequences' %seqtype)
             dfile = util.DelimitedFile.read(self.__seq_filenames[seqtype], sep=',')
             self.__seqs[seqtype] = {}
             for line in dfile.lines():
-                self.__seqs[seqtype][line[0].upper()] = line[1]
+                self.__seqs[seqtype][line[0].upper()] = line[1].upper()
+            logging.info('loaded %i %s sequences' \
+                          %( len(self.__seqs[seqtype]), seqtype))
         result = {}
         for alias in gene_aliases:
             if alias in self.thesaurus():

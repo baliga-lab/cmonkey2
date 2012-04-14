@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """human.py - cMonkey human specific module
 
 This file is part of cMonkey Python. Please see README and LICENSE for
@@ -191,7 +192,7 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
 
     def make_hsa(self):
         """returns a human organism object"""
-        nw_factories = [stringdb.get_network_factory3('human_data/string.csv')]
+        nw_factories = [stringdb.get_network_factory3('human_data/string.csv', weight=1.0)]
         return organism.GenericOrganism('hsa', THESAURUS_FILE, nw_factories,
                                         seq_filenames=SEQ_FILENAMES,
                                         search_distances=SEARCH_DISTANCES,
@@ -226,7 +227,7 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             seqtype='promoter',
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
-            weight_func=lambda iteration: 0.0,
+            scaling_func=lambda iteration: 0.0,
             run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
 
@@ -241,7 +242,7 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             self.organism(), self.membership(), self.ratio_matrix,
             meme_suite_p3utr, 'p3utr',
             pvalue_filter=motif.MinPValueFilter(-20.0),
-            weight_func=lambda iteration: 0.0,
+            scaling_func=lambda iteration: 0.0,
             run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
 
@@ -259,7 +260,7 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
         motif_combiner = scoring.ScoringFunctionCombiner(
             self.membership(),
             [motif_scoring, weeder_scoring],
-            weight_func=lambda iteration: 0.5)
+            scaling_func=lambda iteration: 0.5)
 
         return scoring.ScoringFunctionCombiner(
             self.membership(),

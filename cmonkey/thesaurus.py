@@ -1,3 +1,4 @@
+# vi: sw=4 ts=4 et:
 """thesaurus.py - cMonkey thesaurus module
 
 This file is part of cMonkey Python. Please see README and LICENSE for

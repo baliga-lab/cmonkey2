@@ -43,7 +43,6 @@ def get_default_motif_scaling(num_iterations):
             return (1.0 / (steps - 1)) * (iteration - 1)
     return default_motif_scaling
 
-
 def get_default_network_scaling(num_iterations):
     """this scaling function is based on the tricky default network scaling
     sequence in the R reference"""
@@ -56,11 +55,34 @@ def get_default_network_scaling(num_iterations):
     return default_network_scaling
 
 
+def schedule(starts_at, every):
+    def runs_in_iteration(iteration):
+        return iteration >= starts_at and (iteration - starts_at) % every == 0
+    return runs_in_iteration
+
 def default_motif_iterations(iteration):
-    return iteration > 49 and iteration % 50 == 0
+    return schedule(500, 10)
+def default_meme_iterations(iteration):
+    return schedule(601, 3)
 
 def default_network_iterations(iteration):
-    return iteration > 0 and iteration % 5 == 0
+    return schedule(1, 7)
+
+class RunLog:
+    """This is a class that captures information about a particular
+    scoring function's behavior in a given iteration. In each iteration,
+    a scoring function should log whether it was active and which scaling
+    was applied.
+    """
+    def __init__(self, name):
+        self.name = name
+        self.active = []
+        self.scaling = []
+    def log(self, was_active, scaling):
+        self.active.append(was_active)
+        self.scaling.append(scaling)
+    def __repr__(self):
+        return "RunLog(" + self.name + ", " + str(self.active) + ", " + str(self.scaling) + ")"
 
 class ScoringFunctionBase:
     """Base class for scoring functions"""
@@ -130,6 +152,13 @@ class ScoringFunctionBase:
         """Default implementation does not store checkpoint data"""
         pass
 
+    def run_logs(self):
+        """returns a list of RunLog objects, giving information about
+        the last run of this function"""
+        return []
+ 
+
+
 class ColumnScoringFunction(ScoringFunctionBase):
     """Scoring algorithm for microarray data based on conditions.
     Note that the score does not correspond to the normal scoring
@@ -153,7 +182,7 @@ class ColumnScoringFunction(ScoringFunctionBase):
                                        self.matrix(),
                                        self.num_clusters())
         elapsed = util.current_millis() - start_time
-        #logging.info("COLUMN SCORING TIME: %f s.", (elapsed / 1000.0))
+        #logging.info("\x1b[31mScoring:\t\x1b[0mCOLUMN SCORING TIME: %f s.", (elapsed / 1000.0))
         return result
 
 def compute_column_scores(membership, matrix, num_clusters):
@@ -265,13 +294,13 @@ class ScoringFunctionCombiner:
 
         if len(result_matrices) > 1:
             #logging.info(
-            #    "\x1b[34mScoring:\t\x1b[0mCOMBINING THE SCORES OF %d matrices (quantile normalize)",
+            #    "\x1b[31mScoring:\t\x1b[0mCOMBINING THE SCORES OF %d matrices (quantile normalize)",
             #    len(result_matrices))
             start_time = util.current_millis()
             result_matrices = dm.quantile_normalize_scores(result_matrices,
                                                            score_scalings)
             elapsed = util.current_millis() - start_time
-            #logging.info("\x1b[34mScoring:\t\x1b[0mSCORES COMBINED IN %f s", elapsed / 1000.0)
+            #logging.info("\x1b[31mScoring:\t\x1b[0mSCORES COMBINED IN %f s", elapsed / 1000.0)
 
         if len(result_matrices) > 0:
             combined_score = (result_matrices[0] *
@@ -292,7 +321,7 @@ class ScoringFunctionCombiner:
             for row in xrange(matrix.num_rows()):
                 if matrix.row_name(row) in cluster_rows:
                     scores.append(matrix[row][cluster - 1])
-        #logging.info("function '%s', trim mean score: %f",
+        #logging.info("\x1b[31mScoring:\t\x1b[0mfunction '%s', trim mean score: %f",
         #             score_function.name(),
         #             util.trim_mean(scores, 0.05))
 
@@ -309,3 +338,11 @@ class ScoringFunctionCombiner:
         """recursively invokes store_checkpoint_data() on the children"""
         for scoring_func in self.__scoring_functions:
             scoring_func.restore_checkpoint_data(shelf)
+
+    def run_logs(self):
+        """joins all contained function's run logs"""
+        result = []
+        for scoring_func in self.__scoring_functions:
+            result.extend(scoring_func.run_logs())
+        return result
+

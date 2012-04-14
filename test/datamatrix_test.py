@@ -299,6 +299,32 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertTrue((matrix.values() == [[1.0, 2.0, 3.0],
                                              [4.0, 5.0, 6.0]]).all())
 
+    def test_residual(self):
+        """tests the residual() method"""
+        matrix = dm.DataMatrix(2, 2,
+                               values=[[4.0, 7.0],
+                                       [5.0, 8.0]])
+        self.assertEquals(0, matrix.residual())
+
+    def test_residual2(self):
+        """tests the residual() method"""
+        matrix = dm.DataMatrix(3, 3,
+                               values=[[1000, -4000, 7000],
+                                       [-2000, 5000, -8000],
+                                       [3000, -6000, 9000]])
+        self.assertAlmostEqual(4049.38271604938, matrix.residual())
+
+    def test_residual_var_normalize(self):
+        """tests the residual() method. Note that this method
+        seems to make rounding errors in the 5th place"""
+        matrix = dm.DataMatrix(3, 3,
+                               values=[[1000, -4000, 7000],
+                                       [-2000, 5000, -8000],
+                                       [3000, -6000, 9000]])
+        max_row_var = matrix.row_variance()
+        self.assertAlmostEqual(0.000105128205128205,
+                               matrix.residual(max_row_variance=max_row_var), places=4)
+
 
 class DataMatrixCollectionTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for MatrixCollection"""
@@ -484,6 +510,61 @@ class QuantileNormalizeTest(unittest.TestCase): # pylint: disable-msg=R0904
         qm2 = result[1]
         self.assertTrue((qm1.values() == [[2, 1], [3, 4]]).all())
         self.assertTrue((qm2.values() == [[4, 3], [2, 1]]).all())
+
+    def test_quantile_normalize_scores_with_all_defined_weights(self):
+        """happy path for quantile normalization"""
+        m1 = dm.DataMatrix(2, 2, values=[[1, 3], [2, 4]])
+        m2 = dm.DataMatrix(2, 2, values=[[2.3, 2.5], [2.1, 2.31]])
+        result = dm.quantile_normalize_scores([m1, m2], [6.0, 1.0])
+
+        outmatrix1 = result[0]
+        self.assertAlmostEqual(0.5785714, outmatrix1[0][0])
+        self.assertAlmostEqual(1.45071428, outmatrix1[0][1])
+        self.assertAlmostEqual(1.02142857, outmatrix1[1][0])
+        self.assertAlmostEqual(1.89285714, outmatrix1[1][1])
+
+        outmatrix2 = result[1]
+        self.assertAlmostEqual(1.02142857, outmatrix2[0][0])
+        self.assertAlmostEqual(1.89285714, outmatrix2[0][1])
+        self.assertAlmostEqual(0.5785714, outmatrix2[1][0])
+        self.assertAlmostEqual(1.45071428, outmatrix2[1][1])
+
+    def test_quantile_normalize_scores_with_no_weights(self):
+        """no weights -> fall back to row means"""
+        m1 = dm.DataMatrix(2, 2, values=[[1, 3], [2, 4]])
+        m2 = dm.DataMatrix(2, 2, values=[[2.3, 2.5], [2.1, 2.31]])
+        result = dm.quantile_normalize_scores([m1, m2], None)
+
+        outmatrix1 = result[0]
+        self.assertAlmostEqual(1.55, outmatrix1[0][0])
+        self.assertAlmostEqual(2.655, outmatrix1[0][1])
+        self.assertAlmostEqual(2.15, outmatrix1[1][0])
+        self.assertAlmostEqual(3.25, outmatrix1[1][1])
+
+        outmatrix2 = result[1]
+        self.assertAlmostEqual(2.15, outmatrix2[0][0])
+        self.assertAlmostEqual(3.25, outmatrix2[0][1])
+        self.assertAlmostEqual(1.55, outmatrix2[1][0])
+        self.assertAlmostEqual(2.655, outmatrix2[1][1])
+
+    def test_quantile_normalize_scores_with_undefined_weight(self):
+        """one undefined weight"""
+        m1 = dm.DataMatrix(2, 2, values=[[1, 3], [2, 4]])
+        m2 = dm.DataMatrix(2, 2, values=[[2.3, 2.5], [2.1, 2.31]])
+        result = dm.quantile_normalize_scores([m1, m2], [6.0, np.nan])
+
+        outmatrix1 = result[0]
+        self.assertAlmostEqual(1.0, outmatrix1[0][0])
+        self.assertAlmostEqual(3.0, outmatrix1[0][1])
+        self.assertAlmostEqual(2.0, outmatrix1[1][0])
+        self.assertAlmostEqual(4.0, outmatrix1[1][1])
+
+        outmatrix2 = result[1]
+        self.assertAlmostEqual(2.0, outmatrix2[0][0])
+        self.assertAlmostEqual(4.0, outmatrix2[0][1])
+        self.assertAlmostEqual(1.0, outmatrix2[1][0])
+        self.assertAlmostEqual(3.0, outmatrix2[1][1])
+
 
 if __name__ == '__main__':
     SUITE = []

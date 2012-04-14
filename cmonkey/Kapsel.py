@@ -43,6 +43,7 @@ class Kapsel():
         self.__scan_distances = ""
 
         self.__synonyms = {}
+        self.TRex = None
         self.__networks = None          #default for empty
         self.__operon_mappings = None  # lazy loaded
         self.__network_factories = []
@@ -96,7 +97,7 @@ class Kapsel():
 
     
     def addThesaurusFile(self, thFile, thFileType):
-        # here we add a thesaurus file, can choos from different filetypes
+        # here we add a thesaurus file, can choose from different filetypes
         # at least later
         if thFileType == "RSAT":
             infile = util.DelimitedFile.read(thFile, sep='\t', has_header=False, comment = "--")
@@ -113,7 +114,32 @@ class Kapsel():
         if not self.__synonyms:
             logging.warning("no thesaurus loaded!")
         return self.__synonyms
+    def put_thesaurus(self, Dict):
+        """
+        dominates the thesaurus - if given at all
+        """
+        self.__synonyms = Dict
+    def TRex(self):
+        """reads the thesaurus from a feature_names file. The thesaurus
+        is also cached, because it is used many times
+        """
+        if not self.__TRex:
+            logging.warning("Kapsel:\tno TRex loaded loaded!")
+        return self.__TRex
+    def put_TRex(self, Dict):
+        """
+        dominates the thesaurus - if given at all
+        """
+        self.__TRex = Dict
 
+    def put_ReSaurus(self, Dict):
+        """
+        define the ReSaurus - the Dict re-translating for reporting and plotting
+        
+        """
+        self.__ReSaurus = Dict
+    def get_ReSaurus(self):
+        return self.__ReSaurus
 
 
     def MergeDicts(self, Dictone, Dicttwo):
@@ -140,13 +166,13 @@ class Kapsel():
         this method slurps the features / cds file from RSAT into a collection of
         gene - specific sequence / subunits
          
-        the information - but no sequece YET  - is pushed into the gene instance
         """
         boundaries = Sboundaries + Bboundaries
         infile = util.DelimitedFile.read(self.__featfile, sep='\t', has_header=False, comment = "--")
         logging.info("\x1b[31mKapsel:\t\x1b[0mread features/cds File, type %s" % (grabtype))
         for line in infile.lines():
             geneID = line[9]
+            geneTransID = line[9]
             geneProduct = line[0]
             description = line[7]
             contig = line[3]
@@ -156,38 +182,41 @@ class Kapsel():
             transcript = line[8]
             # generate Gene instance
             try:
-                gene = self.__GeneDict[geneID]
+                new_geneID = self.thesaurus()[geneTransID]
             except KeyError:
-                gene = Einheit(geneProduct, description, geneID)
+                try:
+                    new_geneID = self.thesaurus()[geneProduct]
+                except KeyError:
+                    try:
+                        new_geneID = self.thesaurus()[geneID]
+                    except KeyError:
+                        new_geneID = geneID
+            try:
+                gene = self.__GeneDict[new_geneID]
+            except KeyError:
+                gene = Einheit(geneProduct, description, new_geneID)
                 # set contig
                 gene.setContig(contig)
-
-            
             subUnit = SubEinheit(transcript)
             subUnit.pushSeq(contig, Start, Stop, strand, "Promoter", boundaries)
-            
             gene.pushSubUnit(subUnit)
-
-            
-
             # put into list of contig contents
             try:
                 tempL = self.__contigDict[contig]
             except KeyError:
                 tempL = []
-            if geneID not in tempL:
-                tempL.append(geneID)
+            if new_geneID not in tempL:
+                tempL.append(new_geneID)
             self.__contigDict[contig] = tempL
 
             # save gene into Dict    
-            self.__GeneDict[geneID] = gene
+            self.__GeneDict[new_geneID] = gene
     
     def addRSAT_UTR(self, grabtype, Sboundaries, Bboundaries):
         """
         this method slurps the features / cds file from RSAT into a collection of
         gene - specific sequence / subunits
          
-        the information - but no sequece YET  - is pushed into the gene instance
 
         """
         boundaries = Sboundaries + Bboundaries
@@ -205,10 +234,19 @@ class Kapsel():
             strand = line[6]
             description = line[7]
             # generate Gene instance - only if needed!!!
+ 
             try:
-                gene = self.__GeneDict[geneID]
+                new_geneID = self.thesaurus()[transcript]
             except KeyError:
-                gene = Einheit(geneProduct, description, geneID)
+                try:
+                    new_geneID = self.thesaurus()[geneID]
+                except KeyError:
+                    new_geneID = geneID
+
+            try:
+                gene = self.__GeneDict[new_geneID]
+            except KeyError:
+                gene = Einheit(geneProduct, description, new_geneID)
                 # set contig
                 gene.setContig(contig)
 
@@ -223,12 +261,12 @@ class Kapsel():
                 tempL = self.__contigDict[contig]
             except KeyError:
                 tempL = []
-            if geneID not in tempL:
-                tempL.append(geneID)
+            if new_geneID not in tempL:
+                tempL.append(new_geneID)
             self.__contigDict[contig] = tempL
 
             # save gene into Dict    
-            self.__GeneDict[geneID] = gene
+            self.__GeneDict[new_geneID] = gene
 
     
     def CollectSequences(self, type):
@@ -263,19 +301,6 @@ class Kapsel():
             logging.debug("gene not found")
             return Einheit("NullGene", "DefaultReturn for non found Gene", "ID0000")
             
-    def dumpPickle(self, filename):
-        # this one to dump the entire class as pickle
-        picklefile = open (filename, 'w')
-        cPickle.dump(self, picklefile)
-        picklefile.close()
-    
-    def ShrinkKapsel(self, GeneList):
-        """
-        important one to shrink the Kapsel before a run - 
-        allows to reduce the overhead and increase run efficiency
-        """
-        pass
-
 
     def sequences_for_genes_scan(self, gene_aliases, seqtype):
         newAliases = []
@@ -284,15 +309,14 @@ class Kapsel():
                 gA = self.__synonyms[gene]
                 newAliases.append(gA)
             except KeyError:
-                print "%s not found in thesaurus - fuck!" % (gene)
+                #print "%s not found in thesaurus - fuck!" % (gene)
                 pass
         logging.info("working on %s genes for background model generation" % (len(newAliases)))
-        
         tempD = {}
         if seqtype == None:
             return {}
-        arbicount = 0
         for Unit in self.__GeneDict.values():
+            arbicount = 0
             if Unit.getGeneID() not in newAliases and Unit.getGeneName() not in newAliases: continue
             BSeqD = Unit.getSeqDs()[1]
             
@@ -301,7 +325,7 @@ class Kapsel():
             except KeyError:
                 SeqL = []
             for Seq in SeqL:
-                tempD[arbicount] = ("-", Seq)
+                tempD['%s_%03d' % (Unit.getGeneID(), arbicount)] = ("-", Seq)
                 arbicount += 1
         logging.info("collected %s sequences for background model generation" % (len(tempD)))
         return tempD
@@ -316,12 +340,11 @@ class Kapsel():
             except KeyError:
                 pass
         #logging.info("working on %s genes for model generation" % (len(newAliases)))
-        
         tempD = {}
         if seqtype == None:
             return {}
-        arbicount = 0
         for Unit in self.__GeneDict.values():
+            arbicount = 0
             if Unit.getGeneID() not in newAliases and Unit.getGeneName() not in newAliases: continue
             SeqD = Unit.getSeqDs()[0]
             
@@ -331,7 +354,7 @@ class Kapsel():
                 SeqL = []
             for Seq in SeqL:
                 if len(Seq) < MIN_SEQ_LENGTH: continue
-                tempD["Seq%04d" % (arbicount)] = Seq
+                tempD['%s_%03d' % (Unit.getGeneID(), arbicount)] = Seq
                 arbicount += 1
         #logging.info("collected %s sequences for motif generation" % (len(tempD)))
         return tempD

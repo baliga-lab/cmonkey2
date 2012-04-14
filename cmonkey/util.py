@@ -4,7 +4,6 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-#import BeautifulSoup as bs
 import operator
 import math
 import numpy as np
@@ -15,6 +14,14 @@ import rpy2.robjects as robjects
 import gzip
 import shelve
 import time
+import logging
+
+# RSAT organism finding is an optional feature, which we can skip in case that
+# the user imports all the features through own text files
+try:
+    import BeautifulSoup as bs
+except ImportError:
+    logging.warn("could not import BeautifulSoup, RSAT organism finding won't work")
 
 
 def make_delimited_file_from_lines(lines, sep, has_header, comment, quote):
