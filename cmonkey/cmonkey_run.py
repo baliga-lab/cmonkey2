@@ -268,9 +268,16 @@ class CMonkeyRun:
                         # print stats object, likely there is something that is not serializable
                         print stats
 
-            run_infos = row_scoring.run_logs()
-            logging.info("Writing run map for this iteration")
-            #print run_infos
+                # run infos should be written with the same frequency as stats
+                run_infos = [run_log.to_json() for run_log in row_scoring.run_logs()]
+                logging.info("Writing run map for this iteration")
+                with open('%s/%d-runlog.json' % (output_dir, iteration), 'w') as outfile:
+                    try:
+                        outfile.write(json.dumps(run_infos))
+                    except:
+                        logging.error("Could not run map - probably non-serializable values found")
+                        # print run_infos object, likely there is something that is not serializable
+                        print run_infos
 
         print "Done !!!!"
 

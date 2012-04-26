@@ -102,58 +102,63 @@ residualHistogram: ResidualHistogram)
 
      });
    </script>
-   <div><img style="float: right" src="@routes.Assets.at("images/isb_logo.png")"></img></div>
-   <h2>cMonkey/Python Results</h2>
-   <div>Iteration <select id="select_iteration">
-   @for(iter <- iterations) {@if(iter == iteration) {<option value="@iter" selected>@iter</option>} else {<option value="@iter">@iter</option>}}
-   </select>/2000: Available clusters (@snapshot.get.clusters.length)
-   </div>
+   <div id="maincontainer">
+     <div id="topsection">
+       <div><img style="float: right" src="@routes.Assets.at("images/isb_logo.png")"></img></div>
+       <h2>cMonkey/Python Results</h2>
+       <div>Iteration <select id="select_iteration">
+       @for(iter <- iterations) {@if(iter == iteration) {<option value="@iter" selected>@iter</option>} else {<option value="@iter">@iter</option>}}
+       </select>/2000: Available clusters (@snapshot.get.clusters.length)
+       </div>
 
-   <div style="height: 10px;">&nbsp;</div>
-   <div class="ui-progress-bar ui-container" id="progress_bar" style="width: 20%; height: 15px;">
-     <div class="ui-progress" style="height: 12px; width: @((iterations(iterations.length - 1) / 2000.0) * 100)%;">
-       <span class="ui-label" style="display:none;">
-         Loading Resources
-         <b class="value">7%</b>
-       </span>
+       <div style="height: 10px;">&nbsp;</div>
+       <div class="ui-progress-bar ui-container" id="progress_bar" style="width: 20%; height: 15px;">
+         <div class="ui-progress" style="height: 12px; width: @((iterations(iterations.length - 1) / 2000.0) * 100)%;">
+           <span class="ui-label" style="display:none;">
+             Loading Resources
+             <b class="value">7%</b>
+           </span>
+         </div>
+       </div>
+       <div style="font-size: smaller">Progress: @((iterations(iterations.length - 1) / 2000.0) * 100) %</div>
+       <div style="height: 10px;">&nbsp;</div>
+     </div>
+     <div id="statssection">
+
+       <div id="leftcolumn">
+         <div class="innertube">
+           <div id="cluster-row-graph"></div><div id="cluster-column-graph"></div>
+         </div>
+       </div>
+       <div id="rightcolumn">
+         <div class="innertube">
+           <div id="residual-graph"></div><div id="cluster-member-graph"></div>
+         </div>
+       </div>
+       <div id="contentcolumn">
+         <div class="innertube">
+           <div id="cluster-residual-graph"></div>
+         </div>
+       </div>
+     </div>
+     <div id="clustersection">
+       @if(snapshot == None) {
+       No Snapshot
+       } else {
+       <h3>Clusters</h3>
+       <table class="item-list">
+         <tr><td><table class="inner"><tr><th class="clusternum">Cluster</th><th class="nrows"># rows</th><th class="ncols"># columns</th><th class="residual">residual</th><th>&nbsp;</th></tr></table></td></tr>
+         <tr><td><div style="height: 200px; overflow: auto; background-color: #fff;">
+           <table class="inner">
+             @for(key <- snapshot.get.clusters) {<tr><td class="clusternum"><a class="clusterlink" id="@key" href="#">@key</a></td><td class="nrows">@(snapshot.get.rows(key).length)</td><td class="ncols">@(snapshot.get.columns(key).length)</td><td class="residual">@(snapshot.get.residuals(key))</td><td>&nbsp;</td></tr>
+             }
+         </table></div></td></tr>
+       </table>
+       <div class="spacer">&nbsp;</div>
+       <div class="details-box">
+         <span id="cluster-view">Please select a cluster</div>
+       </div>
+       }
+       }
      </div>
    </div>
-   <div style="font-size: smaller">Progress: @((iterations(iterations.length - 1) / 2000.0) * 100) %</div>
-   <div style="height: 10px;">&nbsp;</div>
-
-   <div id="stats-box" class="stats-box">
-     <span id="residual-graph" class="graph-left"></span><span id="cluster-member-graph" class="graph-center"></span>
-     <div style="clear:both"></div>
-   </div>
-
-
-   <div id="stats-box" class="stats-box">
-     <span id="cluster-row-graph" class="graph-left"></span><span id="cluster-column-graph" class="graph-center"></span>
-     <div style="clear:both"></div>
-   </div>
-
-   <div id="stats-box" class="stats-box">
-     <span id="cluster-residual-graph" class="graph-left"></span>
-     <div style="clear:both"></div>
-   </div>
-
-   <div style="height: 10px;">&nbsp;</div>
-
-   @if(snapshot == None) {
-     No Snapshot
-   } else {
-   <h3>Clusters</h3>
-     <table class="item-list">
-       <tr><td><table class="inner"><tr><th class="clusternum">Cluster</th><th class="nrows"># rows</th><th class="ncols"># columns</th><th class="residual">residual</th><th>&nbsp;</th></tr></table></td></tr>
-       <tr><td><div style="height: 200px; overflow: auto; background-color: #fff;">
-         <table class="inner">
-       @for(key <- snapshot.get.clusters) {<tr><td class="clusternum"><a class="clusterlink" id="@key" href="#">@key</a></td><td class="nrows">@(snapshot.get.rows(key).length)</td><td class="ncols">@(snapshot.get.columns(key).length)</td><td class="residual">@(snapshot.get.residuals(key))</td><td>&nbsp;</td></tr>
-       }
-       </table></div></td></tr>
-     </table>
-   <div class="spacer">&nbsp;</div>
-   <div class="details-box">
-   <span id="cluster-view">Please select a cluster</div>
- </div>
-   }
-}

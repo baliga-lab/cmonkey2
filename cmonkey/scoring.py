@@ -88,6 +88,9 @@ class RunLog:
     def __repr__(self):
         return "RunLog(" + self.name + ", " + str(self.active) + ", " + str(self.scaling) + ")"
 
+    def to_json(self):
+        return {'name': self.name, 'active': self.active, 'scaling': self.scaling}
+
 
 class ScoringFunctionBase:
     """Base class for scoring functions"""

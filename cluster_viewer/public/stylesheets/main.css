@@ -105,3 +105,23 @@ table.members tr:nth-child(odd) {
 table.members tr:nth-child(even) {
     background-color: #ffffff;
 }
+
+
+#statssection {
+    float: right;
+    width: 100%;
+    margin-left: -500px; /* -(LeftColumnWidth + RightColumnWidth) */
+}
+#contentcolumn {
+    margin-left: 500px; /* LeftColumnWidth + RightColumnWidth */
+}
+#leftcolumn {
+    float: left;
+    width: 250px;
+}
+#rightcolumn {
+    float: left;
+    width: 250px;
+}
+
+
