@@ -5,9 +5,9 @@ import java.io._
 import java.util.regex._
 import scala.collection.mutable.HashMap
 
-case class RunLog(functionName: String, active: Array[Boolean], scaling: Array[Float]) {
+case class RunLog(functionName: String, scaling: Array[Float]) {
   override def toString = {
-    "RunLog('%s', %d active, %d scaling)".format(functionName, active.length, scaling.length)
+    "RunLog('%s', %d scaling)".format(functionName, scaling.length)
   }
 }
 
@@ -24,9 +24,13 @@ class RunLogReader {
       var i = 0
       json.asInstanceOf[JsArray].value.foreach { log =>
         val logObj = log.as[JsObject]
-        result(i) = RunLog((logObj \ "name").asInstanceOf[JsString].value,
-                           (logObj \ "active").asInstanceOf[JsArray].value.map(_.asInstanceOf[JsBoolean].value).toArray,
-                           (logObj \ "scaling").asInstanceOf[JsArray].value.map(_.asInstanceOf[JsNumber].value.toFloat).toArray)
+        val active = (logObj \ "active").asInstanceOf[JsArray]
+        val scaling = (logObj \ "scaling").asInstanceOf[JsArray]
+        val finalScaling = Array.ofDim[Float](active.value.length)
+        for (j <- 0 until finalScaling.length) {
+          if (active(j).asInstanceOf[JsBoolean].value) finalScaling(j) = scaling(j).asInstanceOf[JsNumber].value.toFloat
+        }
+        result(i) = RunLog((logObj \ "name").asInstanceOf[JsString].value, finalScaling)
         i += 1
       }
       result
