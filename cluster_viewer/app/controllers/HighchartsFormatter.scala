@@ -27,7 +27,7 @@ object HighchartsFormatter {
     builder.toString
   }
 
-  private def toHSSeriesEntry(name: String, values: Array[Float]) = {
+  def toHSSeriesEntry(name: String, values: Array[Float]) = {
     "{ name: '%s', data: %s }".format(name, formatFloats(values))
   }
 

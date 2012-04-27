@@ -23,7 +23,8 @@ object Application extends Controller {
     ProjectConfig.getProperty("cmonkey.synonyms.format"),
     ProjectConfig.getProperty("cmonkey.synonyms.file"))
   val snapshotReader = new SnapshotReader(OutDirectory, Synonyms)
-  val statsReader = new StatsReader(OutDirectory)
+  val statsReader    = new StatsReader
+  val runlogReader   = new RunLogReader
 
   val ratiosFile = if (ProjectConfig.getProperty("cmonkey.ratios.file") != null) {
     new File(ProjectConfig.getProperty("cmonkey.ratios.file"))
@@ -54,9 +55,11 @@ object Application extends Controller {
   def index2(iteration: Int) = Action {
     // sort keys ascending by iteration number
     val stats = statsReader.readStats(OutDirectory).toMap
+    val runLogs = runlogReader.readLogs(OutDirectory)
+
     val statsIterations = stats.keySet.toArray
     java.util.Arrays.sort(statsIterations)
-
+    
     makeRowStats(stats)
     Ok(views.html.index(snapshotReader.readSnapshot(iteration),
                         snapshotIterations,
@@ -66,7 +69,8 @@ object Application extends Controller {
                         stats,
                         makeRowStats(stats),
                         makeColumnStats(stats),
-                        makeResidualHistogram(stats)))
+                        makeResidualHistogram(stats),
+                        runLogs.get))
   }
 
   private def makeRowStats(stats: Map[Int, IterationStats]) = {

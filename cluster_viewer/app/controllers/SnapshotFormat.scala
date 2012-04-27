@@ -64,20 +64,19 @@ class SnapshotReader(OutDirectory: File, Synonyms: SynonymsMap) {
               val motifObj = motif.asInstanceOf[JsObject]
               val pssm = motifObj.value("pssm").as[Array[Array[Float]]]
               val evalue = if (motifObj.keys.contains("evalue")) {
-                motifObj.value("evalue").asInstanceOf[JsNumber].value.doubleValue
+                (motifObj \ "evalue").asInstanceOf[JsNumber].value.doubleValue
               } else 0.0
-              val motifNum = motifObj.value("motif_num").asInstanceOf[JsNumber].value.intValue
-              //println("annotations for number: " + motifNum + " seqtype: " + seqType + " cluster: " + cluster)
+              val motifNum = (motifObj \ "motif_num").asInstanceOf[JsNumber].value.intValue
               val annotations = if (motifObj.keys.contains("annotations")) {
-                val annots = motifObj.value("annotations").asInstanceOf[JsArray]
+                val annots = (motifObj \ "annotations").asInstanceOf[JsArray]
                 val annotArr = new Array[Annotation](annots.value.length)
                 for (i <- 0 until annotArr.length) {
-                  val current = annots(i).asInstanceOf[JsObject]       
+                  val current = annots(i)
                   annotArr(i) = Annotation(motifNum,
-                                           current.value("reverse").asInstanceOf[JsBoolean].value,
-                                           current.value("position").asInstanceOf[JsNumber].value.intValue,
-                                           current.value("gene").asInstanceOf[JsString].value,
-                                           current.value("pvalue").asInstanceOf[JsNumber].value.doubleValue)
+                                           (current \ "reverse").asInstanceOf[JsBoolean].value,
+                                           (current \ "position").asInstanceOf[JsNumber].value.intValue,
+                                           (current \ "gene").asInstanceOf[JsString].value,
+                                           (current \ "pvalue").asInstanceOf[JsNumber].value.doubleValue)
                 }
                 annotArr
               } else Array[Annotation]()
