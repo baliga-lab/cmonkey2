@@ -126,8 +126,10 @@ class CMonkeyRun:
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
             scaling_func=motif_scaling_fun,
-            update_in_iteration=scoring.schedule(601, 3),
-            motif_in_iteration=scoring.schedule(600, 100),
+            #update_in_iteration=scoring.schedule(601, 3),
+            #motif_in_iteration=scoring.schedule(600, 100),
+            update_in_iteration=scoring.schedule(100, 10),
+            motif_in_iteration=scoring.schedule(100, 100),
             config_params=self.config_params)
 
         network_scaling_fun = scoring.get_default_network_scaling(self['num_iterations'])
@@ -253,11 +255,13 @@ class CMonkeyRun:
                 for cluster in range(1, self['num_clusters'] + 1):
                     row_names = iteration_result['rows'][cluster]
                     column_names = iteration_result['columns'][cluster]
+                    network_scores = iteration_result['networks']
                     residual = residual_for(row_names, column_names)
                     residuals.append(residual)
                     cluster_stats[cluster] = {'num_rows': len(row_names),
                                               'num_columns': len(column_names),
-                                              'residual': residual
+                                              'residual': residual,
+                                              'networks': network_scores
                                               }
                 stats = {'cluster': cluster_stats, 'median_residual': np.median(residuals) }
                 with open('%s/%d-stats.json' % (output_dir, iteration), 'w') as outfile:

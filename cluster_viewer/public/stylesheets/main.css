@@ -9,6 +9,13 @@ body {
     margin: 10px;
 }
 
+h2 {
+    font-family: Helvetica, Arial, sans-serif;
+    font-weight: bold;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
 .item-box {
     border: 1px solid black;
     border-radius: 5px;
