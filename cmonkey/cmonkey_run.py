@@ -15,6 +15,7 @@ import os
 from datetime import date
 import json
 import numpy as np
+from guppy import hpy
 
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
 GO_FILE_PATH = 'testdata/proteome2taxid'
@@ -78,6 +79,8 @@ class CMonkeyRun:
         self.CHECKPOINT_INTERVAL = None
         self.__checkpoint_basename = "cmonkey-checkpoint-%s-%d%d%d" % (
             organism_code, today.year, today.month, today.day)
+
+        self.hp = hpy()
 
     def report_params(self):
         logging.info('cmonkey_run config_params:')
@@ -247,6 +250,14 @@ class CMonkeyRun:
                 # write results
                 with open('%s/%d-results.json' % (output_dir, iteration), 'w') as outfile:
                     outfile.write(json.dumps(iteration_result))
+
+            ## DEBUG MEMORY
+            if iteration == 1 or (iteration % 50 == 0):
+                if iteration == 1:
+                    self.hp.setrelheap()
+                heap = self.hp.heap()
+                print "HEAP: "
+                print heap
 
             if iteration == 1 or (iteration % STATS_FREQ == 0):
                 # write stats for this iteration

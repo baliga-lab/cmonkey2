@@ -77,7 +77,7 @@ class ComputeArrayScoresTest(unittest.TestCase):
     def __compare_with_refresult(self, refresult, result):
         self.assertEquals(refresult.num_rows(), result.num_rows())
         self.assertEquals(refresult.num_columns(), result.num_columns())
-        self.assertTrue((result.row_names() == refresult.row_names()).all())
+        self.assertEquals(result.row_names(), refresult.row_names())
         for row_index in range(result.num_rows()):
             for col_index in range(result.num_columns()):
                 # note that we reduced the comparison's number of places

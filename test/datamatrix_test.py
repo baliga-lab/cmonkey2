@@ -103,7 +103,7 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                        [8, 9, 10, 11],
                                        [12, 13, 14, 15]])
         submatrix = matrix.submatrix_by_name(row_names=['R0', 'R2'])
-        self.assertTrue((submatrix.row_names() == ['R0', 'R2']).all())
+        self.assertEquals(submatrix.row_names(), ['R0', 'R2'])
         self.assertTrue((submatrix.values() == [[1, 2, 3, 4],
                                                 [8, 9, 10, 11]]).all())
 
@@ -118,7 +118,7 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                        [12, 13, 14, 15]])
         submatrix = matrix.submatrix_by_name(row_names=None,
                                              column_names=['C1', 'C3'])
-        self.assertTrue((submatrix.column_names() == ['C1', 'C3']).all())
+        self.assertEquals(submatrix.column_names(), ['C1', 'C3'])
         self.assertTrue((submatrix.values() == [[2, 4],
                                                 [5, 7],
                                                 [9, 11],
@@ -135,8 +135,8 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                        [12, 13, 14, 15]])
         submatrix = matrix.submatrix_by_name(row_names=['R0', 'R2'],
                                              column_names=['C1', 'C3'])
-        self.assertTrue((submatrix.row_names() == ['R0', 'R2']).all())
-        self.assertTrue((submatrix.column_names() == ['C1', 'C3']).all())
+        self.assertEquals(submatrix.row_names(), ['R0', 'R2'])
+        self.assertEquals(submatrix.column_names(), ['C1', 'C3'])
         self.assertTrue((submatrix.values() == [[2, 4],
                                                 [9, 11]]).all())
 
@@ -152,8 +152,8 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                        [12, 13, 14, 15]])
         submatrix = matrix.submatrix_by_name(row_names=['R0', 'R2', 'R5'],
                                              column_names=['C1', 'C3', 'C5'])
-        self.assertTrue((submatrix.row_names() == ['R0', 'R2']).all())
-        self.assertTrue((submatrix.column_names() == ['C1', 'C3']).all())
+        self.assertEquals(submatrix.row_names(), ['R0', 'R2'])
+        self.assertEquals(submatrix.column_names(), ['C1', 'C3'])
         self.assertTrue((submatrix.values() == [[2, 4],
                                                 [9, 11]]).all())
 
@@ -167,8 +167,8 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                        [5, 6],
                                        [7, 8]])
         submatrix = matrix.submatrix_by_rows([1, 3])
-        self.assertTrue((submatrix.row_names() == ['R1', 'R3']).all())
-        self.assertTrue((submatrix.column_names() == ['C0', 'C1']).all())
+        self.assertEquals(submatrix.row_names(), ['R1', 'R3'])
+        self.assertEquals(submatrix.column_names(), ['C0', 'C1'])
         self.assertTrue((submatrix.values() == [[3, 4], [7, 8]]).all())
 
     def test_sorted_by_rowname(self):
@@ -179,7 +179,7 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                        [4, 5, 6],
                                        [8, 9, 10]])
         sorted_matrix = matrix.sorted_by_row_name()
-        self.assertTrue((sorted_matrix.row_names() == ['R0', 'R1', 'R2']).all())
+        self.assertEquals(sorted_matrix.row_names(), ['R0', 'R1', 'R2'])
         self.assertTrue((sorted_matrix.values() == [[1, 2, 3],
                                                     [8, 9, 10],
                                                     [4, 5, 6]]).all())
@@ -193,7 +193,7 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                        [8, 9, 10],
                                        [11, 12, 13]])
         sorted_matrix = matrix.sorted_by_row_name()
-        self.assertTrue((sorted_matrix.row_names() == ['R0', 'R1', 'R1', 'R2']).all())
+        self.assertEquals(sorted_matrix.row_names(), ['R0', 'R1', 'R1', 'R2'])
         self.assertTrue((sorted_matrix.values() == [[1, 2, 3],
                                                     [8, 9, 10],
                                                     [11, 12, 13],
@@ -207,8 +207,8 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                values=[[1, 2],
                                        [3, 4]])
         multiplied = matrix * 2
-        self.assertTrue((multiplied.row_names() == ['R0', 'R1']).all())
-        self.assertTrue((multiplied.column_names() == ['C0', 'C1']).all())
+        self.assertEquals(multiplied.row_names(), ['R0', 'R1'])
+        self.assertEquals(multiplied.column_names(), ['C0', 'C1'])
         self.assertNotEquals(matrix, multiplied)
         self.assertTrue((multiplied.values() == [[2, 4], [6, 8]]).all())
 
@@ -220,8 +220,8 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                values=[[1, 2],
                                        [3, 4]])
         multiplied = matrix.multiply_column_by(1, 2)
-        self.assertTrue((multiplied.row_names() == ['R0', 'R1']).all())
-        self.assertTrue((multiplied.column_names() == ['C0', 'C1']).all())
+        self.assertEquals(multiplied.row_names(), ['R0', 'R1'])
+        self.assertEquals(multiplied.column_names(), ['C0', 'C1'])
         self.assertEquals(matrix, multiplied)
         self.assertTrue((multiplied.values() == [[1, 4], [3, 8]]).all())
 
@@ -238,8 +238,8 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                 values=[[2, 3],
                                         [4, 5]])
         matrix3 = matrix1 + matrix2
-        self.assertTrue((matrix3.row_names() == ['R0', 'R1']).all())
-        self.assertTrue((matrix3.column_names() == ['C0', 'C1']).all())
+        self.assertEquals(matrix3.row_names(), ['R0', 'R1'])
+        self.assertEquals(matrix3.column_names(), ['C0', 'C1'])
         self.assertNotEquals(matrix3, matrix1)
         self.assertNotEquals(matrix3, matrix2)
         self.assertTrue((matrix3.values() == [[3, 5], [7, 9]]).all())
@@ -252,8 +252,8 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                 values=[[1, 2],
                                         [3, 4]])
         matrix2 = matrix1 + 3
-        self.assertTrue((matrix2.row_names() == ['R0', 'R1']).all())
-        self.assertTrue((matrix2.column_names() == ['C0', 'C1']).all())
+        self.assertEquals(matrix2.row_names(), ['R0', 'R1'])
+        self.assertEquals(matrix2.column_names(), ['C0', 'C1'])
         self.assertNotEquals(matrix2, matrix1)
         self.assertTrue((matrix2.values() == [[4, 5], [6, 7]]).all())
 
@@ -374,8 +374,8 @@ class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         matrix = factory.create_from(self.dfile)
         self.assertEquals(2, matrix.num_rows())
         self.assertEquals(2, matrix.num_columns())
-        self.assertTrue((matrix.column_names() == ["H2", "H3"]).all())
-        self.assertTrue((matrix.row_names() == ["R1", "R2"]).all())
+        self.assertEquals(matrix.column_names(), ["H2", "H3"])
+        self.assertEquals(matrix.row_names(), ["R1", "R2"])
         self.assertTrue((matrix[0] == [1, 2]).all())
         self.assertTrue((matrix[1] == [3, 4]).all())
 
@@ -385,8 +385,8 @@ class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         matrix = factory.create_from(self.dfile_with_na)
         self.assertEquals(2, matrix.num_rows())
         self.assertEquals(2, matrix.num_columns())
-        self.assertTrue((matrix.column_names() == ["H2", "H3"]).all())
-        self.assertTrue((matrix.row_names() == ["R1", "R2"]).all())
+        self.assertEquals(matrix.column_names(), ["H2", "H3"])
+        self.assertEquals(matrix.row_names(), ["R1", "R2"])
         self.assertTrue(np.isnan(matrix[0][0]))
         self.assertEquals(2.0, matrix[0][1])
         self.assertTrue(np.isnan(matrix[1][0]))
@@ -398,8 +398,8 @@ class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         matrix = factory.create_from(self.dfile)
         self.assertEquals(2, matrix.num_rows())
         self.assertEquals(2, matrix.num_columns())
-        self.assertTrue((matrix.column_names() == ["H2", "H3"]).all())
-        self.assertTrue((matrix.row_names() == ["R1", "R2"]).all())
+        self.assertEquals(matrix.column_names(), ["H2", "H3"])
+        self.assertEquals(matrix.row_names(), ["R1", "R2"])
         self.assertTrue((matrix[0] == [2, 4]).all())
         self.assertTrue((matrix[1] == [6, 8]).all())
 

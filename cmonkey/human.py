@@ -106,7 +106,7 @@ def intensities_to_ratios(matrix, controls, column_groups):
     """turn intensities into ratios
     Warning: input matrix is modified !!!"""
     colnames = matrix.column_names()
-    control_indexes = [np.where(colnames == control)[0][0]
+    control_indexes = [colnames.index(control)
                        for control in controls
                        if control in colnames]
     for group_columns in column_groups.values():

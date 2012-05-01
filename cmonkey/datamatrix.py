@@ -37,20 +37,18 @@ class DataMatrix:
                                      % (row_index, ncols, len(inrow)))
 
         if row_names == None:
-            self.__row_names = np.array(["Row " + str(i)
-                                         for i in range(nrows)])
+            self.__row_names = ["Row " + str(i) for i in range(nrows)]
         else:
             if len(row_names) != nrows:
                 raise ValueError("number of row names should be %d" % nrows)
-            self.__row_names = np.array(row_names)
+            self.__row_names = list(row_names)
 
         if col_names == None:
-            self.__column_names = np.array(["Col " + str(i)
-                                            for i in xrange(ncols)])
+            self.__column_names = ["Col " + str(i) for i in xrange(ncols)]
         else:
             if len(col_names) != ncols:
                 raise ValueError("number of column names should be %d" % ncols)
-            self.__column_names = np.array(col_names)
+            self.__column_names = list(col_names)
 
         if values != None:
             check_values()
@@ -96,9 +94,7 @@ class DataMatrix:
         """generic finder method to search name indexes in a numpy array"""
         result = []
         for name in search_names:
-            indexes = np.where(names == name)
-            if len(indexes[0]) > 0:
-                result.append(indexes[0][0])
+            result.append(names.index(name))
         return result
 
     def values(self):
