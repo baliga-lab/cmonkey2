@@ -129,10 +129,10 @@ class CMonkeyRun:
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
             scaling_func=motif_scaling_fun,
-            #update_in_iteration=scoring.schedule(601, 3),
-            #motif_in_iteration=scoring.schedule(600, 100),
-            update_in_iteration=scoring.schedule(100, 10),
-            motif_in_iteration=scoring.schedule(100, 100),
+            update_in_iteration=scoring.schedule(601, 3),
+            motif_in_iteration=scoring.schedule(600, 100),
+            #update_in_iteration=scoring.schedule(100, 10),
+            #motif_in_iteration=scoring.schedule(100, 100),
             config_params=self.config_params)
 
         network_scaling_fun = scoring.get_default_network_scaling(self['num_iterations'])

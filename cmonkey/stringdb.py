@@ -30,7 +30,7 @@ def read_edges(filename):
         if not key in exists:
             exists[key] = True
             score = float(combined_score)
-            result.append(network.NetworkEdge(protein1, protein2, score))
+            result.append([protein1, protein2, score])
             if score > max_score:
                 max_score = score
     return normalize_edge_list(result, max_score)
@@ -65,8 +65,7 @@ def get_network_factory2(filename, weight, sep='\t'):
         dfile = util.DelimitedFile.read(filename, sep)
         result = []
         for line in dfile.lines():
-            result.append(network.NetworkEdge(line[0], line[1],
-                                              float(line[2])))
+            result.append([line[0], line[1], float(line[2])])
         return result
 
     def make_network(_):
@@ -107,8 +106,7 @@ def get_network_factory3(filename, weight):
                                         has_header=True, quote='"')
         result = []
         for line in dfile.lines():
-            result.append(network.NetworkEdge(line[1], line[2],
-                                              float(line[3])))
+            result.append([line[1], line[2], float(line[3])])
         return result
 
     def make_network(_):

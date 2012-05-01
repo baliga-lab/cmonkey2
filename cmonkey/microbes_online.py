@@ -232,7 +232,7 @@ def get_network_factory(microbes_online, max_operon_size, weight):
         for operon in operons:
             if len(operon) <= max_operon_size:
                 combs = util.kcombinations(operon, 2)
-                edges.extend([network.NetworkEdge(comb[0], comb[1], 1000.0)
+                edges.extend([[comb[0], comb[1], 1000.0]
                               for comb in combs if comb[0] != comb[1]])
             else:
                 logging.warn("dropped operon from network (max_operon_size " +

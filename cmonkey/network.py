@@ -12,51 +12,10 @@ import scoring
 import multiprocessing as mp
 
 
-class NetworkEdge:
-    """class to represent a network edge"""
-
-    def __init__(self, source, target, score):
-        """create an edge instance"""
-        self.__source = source
-        self.__target = target
-        self.__score = score
-
-    def source(self):
-        """returns the source node"""
-        return self.__source
-
-    def target(self):
-        """returns the target node"""
-        return self.__target
-
-    def score(self):
-        """returns the edge score"""
-        return self.__score
-
-    def set_score(self, score):
-        """sets a new score for this edge"""
-        self.__score = score
-
-    def source_in(self, nodes):
-        """checks whether this edge's source is in the specified nodes"""
-        return self.__source in nodes
-
-    def target_in(self, nodes):
-        """checks whether this edge's target is in the specified nodes"""
-        return self.__target in nodes
-
-    def __str__(self):
-        """returns string representation"""
-        return "%s -> %s w = %s" % (self.__source, self.__target,
-                                    str(self.__score))
-
-    def __repr__(self):
-        """returns string representation"""
-        return str(self)
-
-
 class Network:
-    """class to represent a network graph"""
+    """class to represent a network graph.
+    For efficiency reasons, edges is a list of [source, target, weight]
+    """
 
     def __init__(self, name, edges, weight):
         """creates a network from a list of edges"""
@@ -84,7 +43,7 @@ class Network:
         """returns the sum of edge scores"""
         total = 0.0
         for edge in self.__edges:
-            total += edge.score()
+            total += edge[2]
         return total
 
     def normalize_scores_to(self, score):
@@ -96,11 +55,11 @@ class Network:
             # we use this to save a division per loop iteration
             scale = float(score) / float(total)
             for edge in self.__edges:
-                edge.set_score(edge.score() * scale)
+                edge[2] = edge[2] * scale
 
     def edges_with_source_in(self, nodes):
         """Returns all edges containing any of the specified nodes"""
-        return [edge for edge in self.__edges if edge.source_in(nodes)]
+        return [edge for edge in self.__edges if edge[0] in nodes]
 
     def __repr__(self):
         return "Network: %s\n# edges: %d\n" % (self.__name,
@@ -114,18 +73,17 @@ class Network:
 
         def add_edge(edge):
             """adds an edge to network_edges"""
-            key = "%s:%s" % (edge.source(), edge.target())
+            key = "%s:%s" % (edge[0], edge[1])
             added[key] = True
             network_edges.append(edge)
 
         for edge in edges:
-            key = "%s:%s" % (edge.source(), edge.target())
-            key_rev = "%s:%s" % (edge.target(), edge.source())
+            key = "%s:%s" % (edge[0], edge[1])
+            key_rev = "%s:%s" % (edge[1], edge[0])
             if key not in added:
                 add_edge(edge)
             if key_rev not in added:
-                add_edge(NetworkEdge(edge.target(), edge.source(),
-                                     edge.score()))
+                add_edge([edge[1], edge[0], edge[2]])
         return Network(name, network_edges, weight)
 
 
@@ -140,13 +98,13 @@ def compute_network_scores(genes):
     all_genes = genes
 
     edges = network.edges_with_source_in(genes)
-    fedges = [edge for edge in edges if edge.target_in(all_genes)]
+    fedges = [edge for edge in edges if edge[1] in all_genes]
 
     gene_scores = {}
     for edge in fedges:
-        if edge.target() not in gene_scores:
-            gene_scores[edge.target()] = []
-        gene_scores[edge.target()].append(edge.score())
+        if edge[1] not in gene_scores:
+            gene_scores[edge[1]] = []
+        gene_scores[edge[1]].append(edge[2])
 
     final_gene_scores = {}
     for gene, scores in gene_scores.items():
