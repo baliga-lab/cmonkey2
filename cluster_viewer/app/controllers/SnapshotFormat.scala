@@ -11,9 +11,6 @@ case class MotifInfo(motifNum: Int, evalue: Double, pssm: Array[Array[Float]], a
 case class Snapshot(rows: Map[Int, List[String]], columns: Map[Int, List[String]],
                     residuals: Map[Int, Double],
                     motifs: Map[Int, Map[String, Array[MotifInfo]]]) {
-  def clusters: Seq[Int] = {
-    rows.keys.toSeq.sorted
-  }
 }
 
 object SnapshotReader {

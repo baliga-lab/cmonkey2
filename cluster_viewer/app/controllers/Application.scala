@@ -6,6 +6,7 @@ import java.io._
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._
+import scala.util.Sorting
 import play.api.libs.json._
 
 case class IntHistogram(xvalues: Array[Int], yvalues: Array[Int])
@@ -59,7 +60,7 @@ object Application extends Controller {
 
     val statsIterations = stats.keySet.toArray
     java.util.Arrays.sort(statsIterations)
-    
+
     makeRowStats(stats)
     val snapshotOption = snapshotReader.readSnapshot(iteration)
     val clusters = sortByResidual(snapshotOption)
@@ -77,11 +78,17 @@ object Application extends Controller {
   }
 
   private def sortByResidual(snapshotOption: Option[Snapshot]): Seq[Int] = {
+    object MyOrdering extends Ordering[(Int, Double)] {
+      def compare(a: (Int, Double), b: (Int, Double)) = {
+        if (a._2 < b._2) -1
+        else if (a._2 > b._2) 1
+        else 0
+      }
+    }
     if (snapshotOption != None) {
-      val residuals: Array[(Int, Double)] = snapshotOption.get.residuals.toArray
-      residuals.sortWith((a: (Int, Double), b: (Int, Double)) => {
-        a._2 < b._2
-      })
+      val residuals: Array[(Int, Double)] =
+        snapshotOption.get.residuals.toArray
+      Sorting.quickSort(residuals)(MyOrdering)
       residuals.map(_._1)
     } else Array[Int]()
   }

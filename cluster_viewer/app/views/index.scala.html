@@ -160,7 +160,7 @@ runLogs: Array[RunLog])
        <h2>PyMonkey Results</h2>
        <div>Iteration <select id="select_iteration">
        @for(iter <- iterations) {@if(iter == iteration) {<option value="@iter" selected>@iter</option>} else {<option value="@iter">@iter</option>}}
-       </select>/2000: Available clusters (@snapshot.get.clusters.length)
+       </select>/2000: Available clusters (@clusters.length)
        </div>
 
        <div style="height: 10px;">&nbsp;</div>
