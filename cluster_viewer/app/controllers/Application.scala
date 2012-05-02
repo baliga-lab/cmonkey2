@@ -61,7 +61,10 @@ object Application extends Controller {
     java.util.Arrays.sort(statsIterations)
     
     makeRowStats(stats)
-    Ok(views.html.index(snapshotReader.readSnapshot(iteration),
+    val snapshotOption = snapshotReader.readSnapshot(iteration)
+    val clusters = sortByResidual(snapshotOption)
+    Ok(views.html.index(snapshotOption,
+                        clusters,
                         snapshotIterations,
                         iteration,
                         statsIterations,
@@ -71,6 +74,16 @@ object Application extends Controller {
                         makeColumnStats(stats),
                         makeResidualHistogram(stats),
                         runLogs.get))
+  }
+
+  private def sortByResidual(snapshotOption: Option[Snapshot]): Seq[Int] = {
+    if (snapshotOption != None) {
+      val residuals: Array[(Int, Double)] = snapshotOption.get.residuals.toArray
+      residuals.sortWith((a: (Int, Double), b: (Int, Double)) => {
+        a._2 < b._2
+      })
+      residuals.map(_._1)
+    } else Array[Int]()
   }
 
   private def makeRowStats(stats: Map[Int, IterationStats]) = {

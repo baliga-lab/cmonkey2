@@ -1,4 +1,6 @@
-@(snapshot: Option[Snapshot], iterations: Seq[Int], iteration: Int,
+@(snapshot: Option[Snapshot],
+clusters: Seq[Int],
+iterations: Seq[Int], iteration: Int,
 statsIterations: Seq[Int], meanResiduals: Array[Double],
 iterationStats: Map[Int, IterationStats],
 rowStats: IntHistogram, columnStats: IntHistogram,
@@ -200,7 +202,7 @@ runLogs: Array[RunLog])
          <tr><td><table class="inner"><tr><th class="clusternum">Cluster</th><th class="nrows"># rows</th><th class="ncols"># columns</th><th class="residual">residual</th><th>&nbsp;</th></tr></table></td></tr>
          <tr><td><div style="height: 200px; overflow: auto; background-color: #fff;">
            <table class="inner">
-             @for(key <- snapshot.get.clusters) {<tr><td class="clusternum"><a class="clusterlink" id="@key" href="#">@key</a></td><td class="nrows">@(snapshot.get.rows(key).length)</td><td class="ncols">@(snapshot.get.columns(key).length)</td><td class="residual">@(snapshot.get.residuals(key))</td><td>&nbsp;</td></tr>
+             @for(key <- clusters) {<tr><td class="clusternum"><a class="clusterlink" id="@key" href="#">@key</a></td><td class="nrows">@(snapshot.get.rows(key).length)</td><td class="ncols">@(snapshot.get.columns(key).length)</td><td class="residual">@(snapshot.get.residuals(key))</td><td>&nbsp;</td></tr>
              }
          </table></div></td></tr>
        </table>
