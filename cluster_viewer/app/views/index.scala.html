@@ -19,6 +19,7 @@ runLogs: Array[RunLog])
          $('#select_iteration').change(function (event) {
              window.location.href = "/" + $(this).val();
          });
+         var iterations = @(HighchartsFormatter.formatInts(statsIterations));
 
          // residual graph
          var residualChart = new Highcharts.Chart({
@@ -30,7 +31,7 @@ runLogs: Array[RunLog])
              title: { text: 'Mean Residual' },
              plotOptions: { line: { marker: { enabled: false }, } },
              xAxis: {
-                 categories: @(HighchartsFormatter.formatInts(statsIterations)),
+                 categories: iterations,
                  tickInterval: 30
              },
              yAxis: { title: { text: 'mean resids' } },
@@ -46,7 +47,7 @@ runLogs: Array[RunLog])
              title: { text: 'Mean nrow, ncol/iter' },
              plotOptions: { line: { marker: { enabled: false }, } },
              xAxis: {
-                 categories: @(HighchartsFormatter.formatInts(statsIterations)),
+                 categories: iterations,
                  tickInterval: 30
              },
              yAxis: { title: { text: 'mean nrow, ncol/iter' } },
@@ -117,6 +118,38 @@ runLogs: Array[RunLog])
                  }
              ]
          });
+
+         var motifScoreChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'motif-score-graph',
+                 type: 'line',
+                 width: 300, height: 200
+             },
+             title: { text: 'Mean motif scores' },
+             plotOptions: { line: { marker: { enabled: false }, } },
+             xAxis: {
+                 categories: iterations,
+                 tickInterval: 30
+             },
+             yAxis: { title: { text: 'mean p-value' } },
+             series: @(HighchartsFormatter.toMotifPValueSeries(iterationStats))
+         });
+
+         var networkScoreChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'network-score-graph',
+                 type: 'line',
+                 width: 300, height: 200
+             },
+             title: { text: 'Mean network scores' },
+             plotOptions: { line: { marker: { enabled: false }, } },
+             xAxis: {
+                 categories: iterations,
+                 tickInterval: 30
+             },
+             yAxis: { title: { text: 'mean net score' } },
+             series: @(HighchartsFormatter.toNetworkScoreSeries(iterationStats))
+         });
      });
    </script>
    <div id="maincontainer">
@@ -144,17 +177,17 @@ runLogs: Array[RunLog])
 
        <div id="leftcolumn">
          <div class="innertube">
-           <div id="cluster-row-graph"></div><div id="cluster-column-graph"></div>
+           <div id="cluster-row-graph"></div><div id="cluster-column-graph"></div><div id="motif-score-graph"></div>
          </div>
        </div>
        <div id="rightcolumn">
          <div class="innertube">
-           <div id="residual-graph"></div><div id="cluster-member-graph"></div>
+           <div id="residual-graph"></div><div id="cluster-member-graph"></div><div id="network-score-graph"></div>
          </div>
        </div>
        <div id="contentcolumn">
          <div class="innertube">
-           <div id="cluster-residual-graph"></div><div id="runlog-graph"></div>
+           <div id="cluster-residual-graph"></div><div id="runlog-graph"></div><div></div>
          </div>
        </div>
      </div>

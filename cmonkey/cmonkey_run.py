@@ -265,25 +265,22 @@ class CMonkeyRun:
                 # write stats for this iteration
                 residuals = []
                 cluster_stats = {}
+                network_scores = iteration_result['networks']
+                if 'motif-pvalue' in iteration_result:
+                    motif_pvalue = iteration_result['motif-pvalue']
+                else:
+                    motif_pvalue = 0.0
+
                 for cluster in range(1, self['num_clusters'] + 1):
                     row_names = iteration_result['rows'][cluster]
                     column_names = iteration_result['columns'][cluster]
-                    network_scores = iteration_result['networks']
-
-                    if 'motif-pvalue' in iteration_result:
-                        motif_pvalue = iteration_result['motif-pvalue']
-                    else:
-                        motif_pvalue = 0.0
-
                     residual = residual_for(row_names, column_names)
                     residuals.append(residual)
                     cluster_stats[cluster] = {'num_rows': len(row_names),
                                               'num_columns': len(column_names),
-                                              'residual': residual,
-                                              'networks': network_scores,
-                                              'motif-pvalue': motif_pvalue
-                                              }
-                stats = {'cluster': cluster_stats, 'median_residual': np.median(residuals) }
+                                              'residual': residual }
+                stats = {'cluster': cluster_stats, 'median_residual': np.median(residuals),
+                         'motif-pvalue': motif_pvalue, 'network-scores': network_scores }
                 with open('%s/%d-stats.json' % (output_dir, iteration), 'w') as outfile:
                     try:
                         outfile.write(json.dumps(stats))

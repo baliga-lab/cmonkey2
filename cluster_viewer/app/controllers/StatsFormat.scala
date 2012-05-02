@@ -6,7 +6,8 @@ import java.util.regex._
 import scala.collection.mutable.HashMap
 
 case class ClusterStats(numRows: Int, numColumns: Int, residual: Double)
-case class IterationStats(clusters: Map[Int, ClusterStats], medianResidual: Double)
+case class IterationStats(clusters: Map[Int, ClusterStats], medianResidual: Double,
+                          motifPValue: Double, networkScores: Map[String, Double])
 
 object StatsReader {
   val FilePattern = Pattern.compile("(\\d+)-stats.json")
@@ -19,6 +20,9 @@ class StatsReader {
     def reads(json: JsValue): IterationStats = {
       val residual = (json \ "median_residual").asInstanceOf[JsNumber].value.doubleValue
       val clusters = (json \ "cluster").as[JsObject]
+      val motifPValue = (json \ "motif-pvalue").asInstanceOf[JsNumber].value.doubleValue
+      val networkScoresJson = (json \ "network-scores").as[JsObject]
+
       val clusterStats = new HashMap[Int, ClusterStats]
       for (field <- clusters.fields) {
         val cstats = field._2
@@ -26,7 +30,12 @@ class StatsReader {
                                                     (cstats \ "num_columns").asInstanceOf[JsNumber].value.intValue,
                                                     (cstats \ "residual").asInstanceOf[JsNumber].value.doubleValue)
       }
-      IterationStats(clusterStats.toMap, residual)
+      val networkScores = new HashMap[String, Double]
+      for (field <- networkScoresJson.fields) {
+        networkScores(field._1) =
+          field._2.asInstanceOf[JsNumber].value.doubleValue
+      }
+      IterationStats(clusterStats.toMap, residual, motifPValue, networkScores.toMap)
     }
     def writes(stats: IterationStats): JsValue = JsUndefined("TODO")
   }
