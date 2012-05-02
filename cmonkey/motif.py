@@ -75,6 +75,17 @@ class MinPValueFilter:
         return result
 
 
+def compute_mean_score(pvalues):
+    """cluster -> gene -> pvalue"""
+    count = 0
+    total = 0.0
+    for gene_pvalues in pvalues.values():
+        for pvalue in gene_pvalues.values():
+            total = total + pvalue
+            count = count + 1
+    return total / count
+
+
 class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
     """Base class for motif scoring functions that use MEME"""
 
@@ -184,6 +195,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                         row in remapped[cluster].keys()):
                         matrix[row_index][cluster - 1] = remapped[cluster][row]
             self.__last_computed_result = matrix
+            iteration_result['motif-pvalue'] = compute_mean_score(self.__last_pvalues)
 
         self.update_log.log(self.update_in_iteration(iteration),
                             self.scaling(iteration))

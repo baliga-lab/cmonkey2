@@ -269,12 +269,19 @@ class CMonkeyRun:
                     row_names = iteration_result['rows'][cluster]
                     column_names = iteration_result['columns'][cluster]
                     network_scores = iteration_result['networks']
+
+                    if 'motif-pvalue' in iteration_result:
+                        motif_pvalue = iteration_result['motif-pvalue']
+                    else:
+                        motif_pvalue = 0.0
+
                     residual = residual_for(row_names, column_names)
                     residuals.append(residual)
                     cluster_stats[cluster] = {'num_rows': len(row_names),
                                               'num_columns': len(column_names),
                                               'residual': residual,
-                                              'networks': network_scores
+                                              'networks': network_scores,
+                                              'motif-pvalue': motif_pvalue
                                               }
                 stats = {'cluster': cluster_stats, 'median_residual': np.median(residuals) }
                 with open('%s/%d-stats.json' % (output_dir, iteration), 'w') as outfile:

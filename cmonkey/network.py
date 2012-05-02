@@ -113,6 +113,16 @@ def compute_network_scores(genes):
     return final_gene_scores
 
 
+def compute_mean(score_means):
+    means = {}
+    for network, cluster_score_means in score_means.items():
+        total = 0.0
+        for score in cluster_score_means.values():
+            total = total + score
+            means[network] = total / len(cluster_score_means)
+    return means
+
+
 class ScoringFunction(scoring.ScoringFunctionBase):
     """Network scoring function. Note that even though there are several
     networks, scoring can't be generalized with the default ScoringCombiner,
@@ -187,7 +197,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             iteration_scores = compute_iteration_scores(
                 network_iteration_scores)
 
-        self.__last_score_means = score_means
+        self.__last_score_means = compute_mean(score_means)
         return matrix - matrix.quantile(0.99)
 
     def __compute_network_cluster_scores(self, network):
