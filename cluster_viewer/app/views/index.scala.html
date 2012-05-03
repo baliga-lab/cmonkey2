@@ -115,7 +115,7 @@ runLogs: Array[RunLog])
              series: [
                  @for(runLog <- runLogs){
                      @if(runLog.functionName != "row_scoring"){
-                         @(HighchartsFormatter.toHSSeriesEntry(runLog.functionName, runLog.scaling)),
+                         @(HighchartsFormatter.toHSSeriesEntry(runLog)),
                      }
                  }
              ]
@@ -133,8 +133,8 @@ runLogs: Array[RunLog])
                  categories: iterations,
                  tickInterval: 30
              },
-             yAxis: { title: { text: 'mean p-value' } },
-             series: @(HighchartsFormatter.toMotifPValueSeries(iterationStats))
+             yAxis: { title: { text: 'mean p-value' }, max: 0 },
+             series: @(HighchartsFormatter.toMotifPValueSeries(iterationStats, runLogs))
          });
 
          var networkScoreChart = new Highcharts.Chart({
@@ -149,8 +149,8 @@ runLogs: Array[RunLog])
                  categories: iterations,
                  tickInterval: 30
              },
-             yAxis: { title: { text: 'mean net score' } },
-             series: @(HighchartsFormatter.toNetworkScoreSeries(iterationStats))
+             yAxis: { title: { text: 'mean net score' }, max: 0 },
+             series: @(HighchartsFormatter.toNetworkScoreSeries(iterationStats, runLogs))
          });
      });
    </script>

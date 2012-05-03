@@ -5,7 +5,8 @@ import java.io._
 import java.util.regex._
 import scala.collection.mutable.HashMap
 
-case class RunLog(functionName: String, scaling: Array[Float]) {
+case class RunLog(functionName: String, scaling: Array[Float],
+                  active: Array[Boolean]) {
   override def toString = {
     "RunLog('%s', %d scaling)".format(functionName, scaling.length)
   }
@@ -27,10 +28,14 @@ class RunLogReader {
         val active = (logObj \ "active").asInstanceOf[JsArray]
         val scaling = (logObj \ "scaling").asInstanceOf[JsArray]
         val finalScaling = Array.ofDim[Float](active.value.length)
+        val activeLog = Array.ofDim[Boolean](active.value.length)
         for (j <- 0 until finalScaling.length) {
-          if (active(j).asInstanceOf[JsBoolean].value) finalScaling(j) = scaling(j).asInstanceOf[JsNumber].value.toFloat
+          //if (active(j).asInstanceOf[JsBoolean].value)
+          finalScaling(j) = scaling(j).asInstanceOf[JsNumber].value.toFloat
+          activeLog(j) = active(j).asInstanceOf[JsBoolean].value
         }
-        result(i) = RunLog((logObj \ "name").asInstanceOf[JsString].value, finalScaling)
+        result(i) = RunLog((logObj \ "name").asInstanceOf[JsString].value,
+                           finalScaling, activeLog)
         i += 1
       }
       result
