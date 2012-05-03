@@ -93,7 +93,8 @@ object HighchartsFormatter {
     val iterations = stats.keySet.toArray
     java.util.Arrays.sort(iterations)
     for (iteration <- iterations) {
-      builder.append(stats(iteration).motifPValue * scaling(iteration - 1))
+      //builder.append(stats(iteration).motifPValue * scaling(iteration - 1))
+      builder.append(stats(iteration).motifPValue)
       builder.append(", ")
     }
     builder.append("] } ]\n")
@@ -115,7 +116,8 @@ object HighchartsFormatter {
         if (!scoreMap.containsKey(network)) {
           scoreMap(network) = new java.util.ArrayList[Double]
         }
-        scoreMap(network).append(networkScores(network) * scaling(iteration - 1))
+        //scoreMap(network).append(networkScores(network) * scaling(iteration - 1))
+        scoreMap(network).append(networkScores(network))
       }
     }
     builder.append("[")
