@@ -442,5 +442,3 @@ class WeederRunner:
             return meme.MemeRunResult(pe_values, annotations, motif_infos)
         except:
             return meme.MemeRunResult([], {}, [])
-
-

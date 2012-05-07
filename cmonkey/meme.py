@@ -85,10 +85,7 @@ class MemeSuite:
         else:
             return {}
 
-    def __call__(self, input_seqs, all_seqs):
-        return self.run_meme(input_seqs, all_seqs)
-
-    def run_meme(self, input_seqs, all_seqs):
+    def __call__(self, input_seqs, all_seqs, num_motifs=1):
         """Runs the meme tool. input_seqs is a dictionary of
         (feature_id : (location, sequence)) that are to be provided as meme
         input, all_seqs is a dictionary that provides all sequences used
@@ -110,7 +107,7 @@ class MemeSuite:
         #logging.info("created background file in %s", bgfile)
         seqfile = self.make_sequence_file(input_seqs.items())
         #logging.info("created sequence file in %s", seqfile)
-        motif_infos, output = self.meme(seqfile, bgfile)
+        motif_infos, output = self.meme(seqfile, bgfile, num_motifs)
 
         # run mast
         meme_outfile = None
@@ -171,8 +168,7 @@ class MemeSuite:
         return output
 
     # pylint: disable-msg=W0613,R0201
-    def meme(self, infile_path, bgfile_path, num_motifs=2,
-             pspfile_path=None):
+    def meme(self, infile_path, bgfile_path, num_motifs, pspfile_path=None):
         """Please implement me"""
         logging.error("MemeSuite.meme() - please implement me")
 
@@ -185,8 +181,7 @@ class MemeSuite:
 class MemeSuite430(MemeSuite):
     """Version 4.3.0 of MEME"""
 
-    def meme(self, infile_path, bgfile_path, num_motifs=2,
-             pspfile_path=None):
+    def meme(self, infile_path, bgfile_path, num_motifs, pspfile_path=None):
         """runs the meme command on the specified input file, background file
         and positional priors file. Returns a tuple of
         (list of MemeMotifInfo objects, meme output)
@@ -220,8 +215,7 @@ class MemeSuite430(MemeSuite):
 class MemeSuite481(MemeSuite):
     """Version 4.8.1 of MEME"""
 
-    def meme(self, infile_path, bgfile_path, num_motifs=2,
-             pspfile_path=None):
+    def meme(self, infile_path, bgfile_path, num_motifs, pspfile_path=None):
         """runs the meme command on the specified input file, background file
         and positional priors file. Returns a tuple of
         (list of MemeMotifInfo objects, meme output)

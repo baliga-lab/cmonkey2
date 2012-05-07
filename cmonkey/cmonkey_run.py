@@ -15,7 +15,6 @@ import os
 from datetime import date
 import json
 import numpy as np
-#from guppy import hpy
 
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
 GO_FILE_PATH = 'testdata/proteome2taxid'
@@ -69,7 +68,6 @@ class CMonkeyRun:
         self['search_distances'] = {'upstream': (-20, 150)}
         # used for background distribution and MAST
         self['scan_distances'] = {'upstream': (-30, 250)}
-
 
         # membership default parameters
         self['memb.min_cluster_rows_allowed'] = 3
@@ -129,10 +127,10 @@ class CMonkeyRun:
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
             scaling_func=motif_scaling_fun,
-            update_in_iteration=scoring.schedule(601, 3),
-            motif_in_iteration=scoring.schedule(600, 100),
-            #update_in_iteration=scoring.schedule(100, 10),
-            #motif_in_iteration=scoring.schedule(100, 100),
+            #update_in_iteration=scoring.schedule(601, 3),
+            #motif_in_iteration=scoring.schedule(600, 100),
+            update_in_iteration=scoring.schedule(100, 10),
+            motif_in_iteration=scoring.schedule(100, 100),
             config_params=self.config_params)
 
         network_scaling_fun = scoring.get_default_network_scaling(self['num_iterations'])
