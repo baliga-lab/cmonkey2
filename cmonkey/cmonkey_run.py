@@ -127,6 +127,7 @@ class CMonkeyRun:
             sequence_filters=sequence_filters,
             pvalue_filter=motif.MinPValueFilter(-20.0),
             scaling_func=motif_scaling_fun,
+            num_motif_func=motif.default_nmotif_fun,
             #update_in_iteration=scoring.schedule(601, 3),
             #motif_in_iteration=scoring.schedule(600, 100),
             update_in_iteration=scoring.schedule(100, 10),

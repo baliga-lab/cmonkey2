@@ -18,6 +18,15 @@ import seqtools as st
 import util
 
 
+def default_nmotif_fun(iteration, num_iterations):
+    """default function to compute the nmotif parameter for MEME dependent on
+    the iteration"""
+    if iteration <= (num_iterations * 2 / 3):
+        return 1
+    else:
+        return 2
+
+
 # Applicable sequence filters
 def unique_filter(seqs, feature_ids):
     """returns a map that contains only the keys that are in
@@ -96,6 +105,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                  sequence_filters=[],
                  pvalue_filter=None,
                  scaling_func=None,
+                 num_motif_func=None,
                  update_in_iteration=lambda iteration: True,
                  motif_in_iteration=lambda iteration: True,
                  config_params=None):
@@ -109,6 +119,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.seqtype = seqtype
         self.update_in_iteration = update_in_iteration
         self.motif_in_iteration = motif_in_iteration
+        self.num_motif_func = num_motif_func
 
         self.__sequence_filters = sequence_filters
         self.__pvalue_filter = pvalue_filter
@@ -173,8 +184,11 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             # running MEME and store the result for the non-motifing iterations
             # to reuse
             # Note: currently, iteration results are only computed here
+            num_motifs = self.num_motif_func(iteration,
+                                             self.config_params['num_iterations'])
             self.__last_iteration_result = {}
-            self.__last_pvalues = self.compute_pvalues(self.__last_iteration_result)
+            self.__last_pvalues = self.compute_pvalues(self.__last_iteration_result,
+                                                       num_motifs)
 
         if self.__last_pvalues != None and self.update_in_iteration(iteration):  # mot.iter in R
             logging.info('Recomputing motif scores...')
@@ -207,7 +221,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         iteration_result['motif-pvalue'] = compute_mean_score(self.__last_pvalues)
         return self.__last_computed_result
 
-    def compute_pvalues(self, iteration_result):
+    def compute_pvalues(self, iteration_result, num_motifs):
         """Compute motif scores.
         The result is a dictionary from cluster -> (feature_id, pvalue)
         containing a sparse gene-to-pvalue mapping for each cluster
@@ -246,7 +260,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                                              self.meme_runner(),
                                              self.__pvalue_filter,
                                              min_cluster_rows_allowed,
-                                             max_cluster_rows_allowed))
+                                             max_cluster_rows_allowed,
+                                             num_motifs))
 
         # create motif result map if necessary
         for cluster in xrange(1, self.num_clusters() + 1):
@@ -307,7 +322,8 @@ def meme_json(run_result):
 class ComputeScoreParams:
     """representation of parameters to compute motif scores"""
     def __init__(self, cluster, genes, seqs, used_seqs, meme_runner,
-                 pvalue_filter, min_cluster_rows, max_cluster_rows):
+                 pvalue_filter, min_cluster_rows, max_cluster_rows,
+                 num_motifs):
         """constructor"""
         self.cluster = cluster
         self.genes = genes
@@ -317,6 +333,7 @@ class ComputeScoreParams:
         self.pvalue_filter = pvalue_filter
         self.min_cluster_rows = min_cluster_rows
         self.max_cluster_rows = max_cluster_rows
+        self.num_motifs = num_motifs
 
 
 def compute_cluster_score(params):
@@ -327,7 +344,8 @@ def compute_cluster_score(params):
     logging.info('computing cluster score for %s seqs...' %nseqs)
     if (nseqs >= params.min_cluster_rows
         and nseqs <= params.max_cluster_rows):
-        run_result = params.meme_runner(params.seqs, params.used_seqs)
+        run_result = params.meme_runner(params.seqs, params.used_seqs,
+                                        params.num_motifs)
         pe_values = run_result.pe_values
         for feature_id, pvalue, evalue in pe_values:
             pvalues[feature_id] = np.log(pvalue)
@@ -348,6 +366,7 @@ class MemeScoringFunction(MotifScoringFunctionBase):
                  sequence_filters=[],
                  pvalue_filter=None,
                  scaling_func=None,
+                 num_motif_func=None,
                  update_in_iteration=scoring.default_motif_iterations,
                  motif_in_iteration=scoring.default_meme_iterations,
                  config_params=None):
@@ -356,6 +375,7 @@ class MemeScoringFunction(MotifScoringFunctionBase):
                                           matrix, meme_suite, seqtype,
                                           sequence_filters, pvalue_filter,
                                           scaling_func,
+                                          num_motif_func,
                                           update_in_iteration,
                                           motif_in_iteration,
                                           config_params)

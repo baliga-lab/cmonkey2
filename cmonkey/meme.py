@@ -85,7 +85,7 @@ class MemeSuite:
         else:
             return {}
 
-    def __call__(self, input_seqs, all_seqs, num_motifs=1):
+    def __call__(self, input_seqs, all_seqs, num_motifs):
         """Runs the meme tool. input_seqs is a dictionary of
         (feature_id : (location, sequence)) that are to be provided as meme
         input, all_seqs is a dictionary that provides all sequences used
