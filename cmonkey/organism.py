@@ -241,6 +241,9 @@ class Microbe(OrganismBase):
             outseqs[gene] = unique_seqs[head]
         return outseqs
 
+    def operon_map(self):
+        return self.__operon_map()
+
     def __operon_map(self):
         """Returns the operon map for this particular organism.
         Microbes Online works on VNG names, but RSAT is working on
