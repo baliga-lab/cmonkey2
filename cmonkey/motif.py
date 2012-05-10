@@ -84,16 +84,21 @@ class MinPValueFilter:
         return result
 
 
-def compute_mean_score(pvalues):
+def compute_mean_score(pvalues, membership, organism):
     """cluster -> gene -> pvalue"""
     if pvalues == None:
         return 0.0
     count = 0
     total = 0.0
-    for gene_pvalues in pvalues.values():
-        for pvalue in gene_pvalues.values():
-            total = total + pvalue
-            count = count + 1
+    for cluster in xrange(1, membership.num_clusters() + 1):
+        rows = membership.rows_for_cluster(cluster)
+        gene_pvalues = pvalues[cluster]
+        for row in rows:
+            #print "look for cluster: %d and row: %s" % (cluster, row)
+            genes = organism.feature_ids_for([row])
+            if len(genes) > 0:
+                total = total + gene_pvalues[genes[0]]
+                count = count + 1
     return total / count
 
 
@@ -218,7 +223,10 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                            self.scaling(iteration))
 
         iteration_result['motifs'] = self.__last_iteration_result
-        iteration_result['motif-pvalue'] = compute_mean_score(self.__last_pvalues)
+        #print "LAST PVALUES: ", self.__last_pvalues
+        iteration_result['motif-pvalue'] = compute_mean_score(self.__last_pvalues,
+                                                              self.membership(),
+                                                              self.organism)
         return self.__last_computed_result
 
     def compute_pvalues(self, iteration_result, num_motifs):
