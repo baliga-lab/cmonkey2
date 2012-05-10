@@ -96,7 +96,7 @@ def compute_mean_score(pvalues, membership, organism):
         for row in rows:
             #print "look for cluster: %d and row: %s" % (cluster, row)
             genes = organism.feature_ids_for([row])
-            if len(genes) > 0:
+            if len(genes) > 0 and genes[0] in gene_pvalues.keys():
                 total = total + gene_pvalues[genes[0]]
                 count = count + 1
     return total / count
