@@ -133,7 +133,7 @@ runLogs: Array[RunLog])
                  categories: iterations,
                  tickInterval: 30
              },
-             yAxis: { title: { text: 'mean p-value' }, max: 0 },
+             yAxis: { title: { text: 'mean p-value' }, max: -1.5 },
              series: @(HighchartsFormatter.toMotifPValueSeries(iterationStats, runLogs))
          });
 

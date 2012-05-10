@@ -232,6 +232,13 @@ class CMonkeyRun:
 
             if iteration > 0 and self.CHECKPOINT_INTERVAL and iteration % self.CHECKPOINT_INTERVAL == 0:
                 self.save_checkpoint_data(iteration, row_scoring, col_scoring)
+            mean_net_score = 0.0
+            mean_mot_pvalue = 0.0
+            if 'networks' in iteration_result.keys():
+                mean_net_score = iteration_result['networks']
+            if 'motif-pvalue' in iteration_result.keys():
+                mean_mot_pvalue = iteration_result['motif-pvalue']
+            logging.info('mean net = %s | mean mot = %f', str(mean_net_score), mean_mot_pvalue)
 
             if iteration == 1 or (iteration % RESULT_FREQ == 0):
                 # Write a snapshot
@@ -249,16 +256,6 @@ class CMonkeyRun:
                 # write results
                 with open('%s/%d-results.json' % (output_dir, iteration), 'w') as outfile:
                     outfile.write(json.dumps(iteration_result))
-
-            ## DEBUG MEMORY
-            """
-            if iteration == 1 or (iteration % 50 == 0):
-                if iteration == 1:
-                    self.hp.setrelheap()
-                heap = self.hp.heap()
-                print "HEAP: "
-                print heap
-            """
 
             if iteration == 1 or (iteration % STATS_FREQ == 0):
                 # write stats for this iteration

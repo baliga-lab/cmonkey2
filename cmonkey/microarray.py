@@ -52,21 +52,21 @@ def compute_row_scores(membership, matrix, num_clusters,
     """for each cluster 1, 2, .. num_clusters compute the row scores
     for the each row name in the input name matrix"""
     #clusters = xrange(1, num_clusters + 1)
-    start_time = util.current_millis()
+    #start_time = util.current_millis()
     cluster_row_scores = __compute_row_scores_for_clusters(
         membership, matrix, num_clusters, use_multiprocessing)
-    logging.info("__compute_row_scores_for_clusters() in %f s.",
-                 (util.current_millis() - start_time) / 1000.0)
-    start_time = util.current_millis()
+    #logging.info("__compute_row_scores_for_clusters() in %f s.",
+    #             (util.current_millis() - start_time) / 1000.0)
+    #start_time = util.current_millis()
     cluster_row_scores = __replace_non_numeric_values(cluster_row_scores,
                                                       membership,
                                                       matrix, num_clusters)
-    logging.info("__replace_non_numeric_values() in %f s.",
-                 (util.current_millis() - start_time) / 1000.0)
+    #logging.info("__replace_non_numeric_values() in %f s.",
+    #             (util.current_millis() - start_time) / 1000.0)
 
     # rearrange result into a DataMatrix, where rows are indexed by gene
     # and columns represent clusters
-    start_time = util.current_millis()
+    #start_time = util.current_millis()
     values = np.zeros((matrix.num_rows(), num_clusters))
 
     # note that cluster is 0 based on a matrix
@@ -76,8 +76,8 @@ def compute_row_scores(membership, matrix, num_clusters,
     result = dm.DataMatrix(matrix.num_rows(), num_clusters,
                            row_names=matrix.row_names(),
                            values=values)
-    logging.info("made result matrix in %f s.",
-                 (util.current_millis() - start_time) / 1000.0)
+    #logging.info("made result matrix in %f s.",
+    #             (util.current_millis() - start_time) / 1000.0)
 
     return result.sorted_by_row_name()
 
@@ -196,15 +196,15 @@ class RowScoringFunction(scoring.ScoringFunctionBase):
 
     def compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
-        start_time = util.current_millis()
+        #start_time = util.current_millis()
         result = compute_row_scores(
             self.membership(),
             self.matrix(),
             self.num_clusters(),
             self.config_params[scoring.KEY_MULTIPROCESSING])
 
-        elapsed = util.current_millis() - start_time
-        logging.info("ROW SCORING TIME: %f s.", (elapsed / 1000.0))
+        #elapsed = util.current_millis() - start_time
+        #logging.info("ROW SCORING TIME: %f s.", (elapsed / 1000.0))
         self.run_log.log(True, self.scaling(iteration_result['iteration']))
         return result
 

@@ -140,8 +140,8 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         self.__run_in_iteration = run_in_iteration
         self.__networks = None
         self.__last_computed_result = None
+        self.__last_network_scores = {}
         self.run_log = scoring.RunLog("network")
-        self.__last_score_means = {}
 
     def name(self):
         """returns the name of this function"""
@@ -161,8 +161,18 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             self.__last_computed_result = self.__compute(iteration_result)
         self.run_log.log(self.__run_in_iteration(iteration),
                          self.scaling(iteration))
-        iteration_result['networks'] = self.__last_score_means
+        iteration_result['networks'] = self.__update_score_means()
         return self.__last_computed_result
+
+    def __update_score_means(self):
+        """returns the score means, adjusted to the current cluster setup"""
+        # a dictionary that holds the network score means for
+        # each cluster, separated for each network
+        score_means = {}
+        for network in self.__networks:
+            score_means[network.name()] = self.__compute_cluster_score_means(
+                self.__last_network_scores[network.name()])
+        return compute_mean(score_means)
 
     def __compute(self, iteration_result):
         """compute method, iteration is the 0-based iteration number"""
@@ -176,28 +186,21 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         # a dictionary that holds the scores of each gene in a given cluster
         network_iteration_scores = self.__create_network_iteration_scores()
 
-        # a dictionary that holds the network score means for
-        # each cluster, separated for each network
-        score_means = {}
-
         for network in self.__networks:
             logging.info("Compute scores for network '%s', WEIGHT: %f",
                          network.name(), network.weight())
-            start_time = util.current_millis()
+            #start_time = util.current_millis()
             network_score = self.__compute_network_cluster_scores(network)
+            self.__last_network_scores[network.name()] = network_score
             self.__update_score_matrix(matrix, network_score, network.weight())
-            elapsed = util.current_millis() - start_time
-            logging.info("NETWORK '%s' SCORING TIME: %f s.",
-                         network.name(), (elapsed / 1000.0))
+            #elapsed = util.current_millis() - start_time
+            #logging.info("NETWORK '%s' SCORING TIME: %f s.",
+            #             network.name(), (elapsed / 1000.0))
             # additional scoring information, not used for the actual clustering
-            score_means[network.name()] = self.__compute_cluster_score_means(
-                network_score)
             self.__update_network_iteration_scores(network_iteration_scores,
                                                    network_score, network.weight())
-            iteration_scores = compute_iteration_scores(
-                network_iteration_scores)
+            iteration_scores = compute_iteration_scores(network_iteration_scores)
 
-        self.__last_score_means = compute_mean(score_means)
         return matrix - matrix.quantile(0.99)
 
     def __compute_network_cluster_scores(self, network):

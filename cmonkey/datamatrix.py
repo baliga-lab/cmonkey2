@@ -476,18 +476,18 @@ def quantile_normalize_scores(matrices, weights=None):
     """quantile normalize scores against each other"""
 
     flat_values = as_sorted_flat_values(matrices)
-    logging.info("COMPUTING WEIGHTED MEANS...")
-    start_time = util.current_millis()
+    #logging.info("COMPUTING WEIGHTED MEANS...")
+    #start_time = util.current_millis()
     if weights != None:
         tmp_mean = weighted_row_means(flat_values, weights)
     else:
         tmp_mean = util.row_means(flat_values)
-    elapsed = util.current_millis() - start_time
-    logging.info("weighted means in %f s.", elapsed / 1000.0)
-    start_time = util.current_millis()
+    #elapsed = util.current_millis() - start_time
+    #logging.info("weighted means in %f s.", elapsed / 1000.0)
+    #start_time = util.current_millis()
     result = qm_result_matrices(matrices, tmp_mean)
-    elapsed = util.current_millis() - start_time
-    logging.info("result matrices built in %f s.", elapsed / 1000.0)
+    #elapsed = util.current_millis() - start_time
+    #logging.info("result matrices built in %f s.", elapsed / 1000.0)
     return result
 
 
@@ -501,13 +501,13 @@ def as_sorted_flat_values(matrices):
 
 def weighted_row_means(matrix, weights):
     """compute weighted row means"""
-    start_time = util.current_millis()
+    #start_time = util.current_millis()
     # multiply each column of matrix with each component of the
     # weight vector: Using matrix multiplication resulted in speedup
     # from 125 s. to 0.125 seconds over apply_along_axis() (1000x faster)!
     scaled = weights * matrix
-    elapsed = util.current_millis() - start_time
-    logging.info("APPLIED WEIGHTS TO COLUMNS in %f s.", elapsed / 1000.0)
+    #elapsed = util.current_millis() - start_time
+    #logging.info("APPLIED WEIGHTS TO COLUMNS in %f s.", elapsed / 1000.0)
     scale = np.sum(np.ma.masked_array(weights, np.isnan(weights)))
     return util.row_means(scaled) / scale
 

@@ -313,25 +313,25 @@ class ClusterMembership:
         logging.info('Rows per cluster: %i to %i (median %d)' \
           %( min(rpc), max(rpc), np.median(rpc) ) )
 
-        start = util.current_millis()
-        logging.info("GET_DENSITY_SCORES()...")
+        #start = util.current_millis()
+        #logging.info("GET_DENSITY_SCORES()...")
         rd_scores, cd_scores = get_density_scores(self, row_scores,
                                                   column_scores)
-        elapsed = util.current_millis() - start
-        logging.info("GET_DENSITY_SCORES() took %f s.", elapsed / 1000.0)
+        #elapsed = util.current_millis() - start
+        #logging.info("GET_DENSITY_SCORES() took %f s.", elapsed / 1000.0)
 
-        start = util.current_millis()
-        logging.info("COMPENSATE_SIZE()...")
+        #start = util.current_millis()
+        #logging.info("COMPENSATE_SIZE()...")
         compensate_size(self, matrix, rd_scores, cd_scores)
-        elapsed = util.current_millis() - start
-        logging.info("COMPENSATE_SIZE() took %f s.", elapsed / 1000.0)
+        #elapsed = util.current_millis() - start
+        #logging.info("COMPENSATE_SIZE() took %f s.", elapsed / 1000.0)
         self.__update_memberships(rd_scores, cd_scores)
 
     def __fuzzify(self, row_scores, column_scores, iteration,
                   num_iterations):
         """Provide an iteration-specific fuzzification"""
-        logging.info("__fuzzify(), setup...")
-        start_time = util.current_millis()
+        #logging.info("__fuzzify(), setup...")
+        #start_time = util.current_millis()
         fuzzy_coeff = std_fuzzy_coefficient(iteration, num_iterations)
         num_row_fuzzy_values = row_scores.num_rows() * row_scores.num_columns()
         num_col_fuzzy_values = (column_scores.num_rows() *
@@ -378,8 +378,8 @@ class ClusterMembership:
             row_scores.num_rows(), row_scores.num_columns())
         col_score_values += np.array(col_rnorm).reshape(
             column_scores.num_rows(), column_scores.num_columns())
-        elapsed = util.current_millis() - start_time
-        logging.info("fuzzify() finished in %f s.", elapsed / 1000.0)
+        #elapsed = util.current_millis() - start_time
+        #logging.info("fuzzify() finished in %f s.", elapsed / 1000.0)
         return row_scores, column_scores
 
     def __update_memberships(self, rd_scores, cd_scores):
