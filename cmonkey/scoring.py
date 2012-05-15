@@ -96,11 +96,13 @@ class ScoringFunctionBase:
     """Base class for scoring functions"""
 
     def __init__(self, membership, matrix, scaling_func,
-                 config_params):
+                 run_in_iteration=lambda iteration: True,
+                 config_params={}):
         """creates a function instance"""
         self.__membership = membership
         self.__matrix = matrix
         self.__scaling_func = scaling_func
+        self.run_in_iteration = run_in_iteration
         self.config_params = config_params
         if config_params == None:
             raise Exception('NO CONFIG PARAMS !!!')
@@ -172,6 +174,7 @@ class ColumnScoringFunction(ScoringFunctionBase):
     a generic way (the format is |condition x cluster|)"""
 
     def __init__(self, membership, matrix,
+                 run_in_iteration=schedule(1, 5),
                  config_params=None):
         """create scoring function instance"""
         ScoringFunctionBase.__init__(self, membership,

@@ -100,9 +100,9 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
                                              matrix, scaling_func,
+                                             run_in_iteration,
                                              config_params)
         self.__last_computed_result = None
-        self.__run_in_iteration = run_in_iteration
         self.__set_types = set_types
         # stores (min_set, pvalue) pairs for each cluster and set type
         # for the last run of the function
@@ -122,7 +122,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         global SET_MATRIX, SET_MEMBERSHIP, SET_REF_MATRIX, SET_SET_TYPE
         iteration = iteration_result['iteration']
 
-        if self.__run_in_iteration(iteration):
+        if self.run_in_iteration(iteration):
             logging.info("Compute scores for set enrichment...")
             start_time = util.current_millis()
             matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),

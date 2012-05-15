@@ -115,9 +115,12 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                  motif_in_iteration=lambda iteration: True,
                  config_params=None):
         """creates a ScoringFunction"""
+        # run_in_iteration does not apply here, since we actually have
+        # two schedules, motif_in_iteration and update_in_iteration here
         scoring.ScoringFunctionBase.__init__(self, membership,
                                              matrix, scaling_func,
-                                             config_params)
+                                             run_in_iteration=None,
+                                             config_params=config_params)
         # attributes accessible by subclasses
         self.organism = organism
         self.meme_suite = meme_suite

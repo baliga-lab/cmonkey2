@@ -135,9 +135,9 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
                                              matrix, scaling_func,
+                                             run_in_iteration,
                                              config_params)
         self.__organism = organism
-        self.__run_in_iteration = run_in_iteration
         self.__networks = None
         self.__last_computed_result = None
         self.__last_network_scores = {}
@@ -156,10 +156,10 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         scoring if the function is not supposed to actually run in this iteration
         """
         iteration = iteration_result['iteration']
-        if self.__run_in_iteration(iteration):
+        if self.run_in_iteration(iteration):
             logging.info("RUNNING A NEW NETWORK SCORING")
             self.__last_computed_result = self.__compute(iteration_result)
-        self.run_log.log(self.__run_in_iteration(iteration),
+        self.run_log.log(self.run_in_iteration(iteration),
                          self.scaling(iteration))
         iteration_result['networks'] = self.__update_score_means()
         return self.__last_computed_result
