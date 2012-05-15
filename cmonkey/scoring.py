@@ -178,7 +178,10 @@ class ColumnScoringFunction(ScoringFunctionBase):
                  config_params=None):
         """create scoring function instance"""
         ScoringFunctionBase.__init__(self, membership,
-                                     matrix, None, config_params)
+                                     matrix, scaling_func=None,
+                                     run_in_iteration=run_in_iteration,
+                                     config_params=config_params)
+        self.__last_computed_result = None
 
     def name(self):
         """returns the name of this scoring function"""
@@ -186,13 +189,15 @@ class ColumnScoringFunction(ScoringFunctionBase):
 
     def compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
-        #start_time = util.current_millis()
-        result = compute_column_scores(self.membership(),
-                                       self.matrix(),
-                                       self.num_clusters())
-        #elapsed = util.current_millis() - start_time
-        #logging.info("COLUMN SCORING TIME: %f s.", (elapsed / 1000.0))
-        return result
+        iteration = iteration_result['iteration']
+        if self.run_in_iteration(iteration):
+            #start_time = util.current_millis()
+            self.__last_computed_result = compute_column_scores(self.membership(),
+                                                                self.matrix(),
+                                                                self.num_clusters())
+            #elapsed = util.current_millis() - start_time
+            #logging.info("COLUMN SCORING TIME: %f s.", (elapsed / 1000.0))
+        return self.__last_computed_result
 
 def compute_column_scores(membership, matrix, num_clusters):
     """Computes the column scores for the specified number of clusters"""

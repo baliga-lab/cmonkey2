@@ -102,7 +102,7 @@ class CMonkeyRun:
         """returns the column scoring function"""
         return scoring.ColumnScoringFunction(
             self.membership(), self.ratio_matrix,
-                config_params=self.config_params)
+            config_params=self.config_params)
 
     def make_row_scoring(self):
         """makes a row scoring function on demand"""
