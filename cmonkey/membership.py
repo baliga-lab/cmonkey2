@@ -176,9 +176,15 @@ class ClusterMembership:
             return []
 
     def columns_for_cluster(self, cluster):
-        """determine the rows that belong to a cluster"""
+        """determine the rows that belong to a cluster.
+        Takes care of the fact that a column can be in the same
+        cluster more than once"""
         if cluster in self.__cluster_column_members:
-            return sorted(self.__cluster_column_members[cluster])
+            result = []
+            for elem in self.__cluster_column_members[cluster]:
+                if elem not in result:
+                    result.append(elem)
+            return sorted(result)
         else:
             return []
 
