@@ -95,10 +95,9 @@ def compute_network_scores(genes):
     """Generic method to compute network scores"""
     global COMPUTE_NETWORK, ALL_GENES
     network = COMPUTE_NETWORK
-    all_genes = genes
 
     edges = network.edges_with_source_in(genes)
-    fedges = [edge for edge in edges if edge[1] in all_genes]
+    fedges = [edge for edge in edges if edge[1] in ALL_GENES]
 
     gene_scores = {}
     for edge in fedges:
