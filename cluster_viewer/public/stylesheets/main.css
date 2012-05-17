@@ -117,18 +117,16 @@ table.members tr:nth-child(even) {
 #statssection {
     float: right;
     width: 100%;
-    margin-left: -500px; /* -(LeftColumnWidth + RightColumnWidth) */
+    margin-left: -600px; /* -(LeftColumnWidth + RightColumnWidth) */
 }
 #contentcolumn {
-    margin-left: 500px; /* LeftColumnWidth + RightColumnWidth */
+    margin-left: 600px; /* LeftColumnWidth + RightColumnWidth */
 }
 #leftcolumn {
     float: left;
-    width: 250px;
+    width: 300px;
 }
 #rightcolumn {
     float: left;
-    width: 250px;
+    width: 300px;
 }
-
-
