@@ -197,6 +197,10 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             self.__last_iteration_result = {}
             self.__last_pvalues = self.compute_pvalues(self.__last_iteration_result,
                                                        num_motifs)
+            #for cluster in sorted(self.__last_pvalues.keys()):
+            #    print "CLUSTER ", cluster
+            #    for gene in sorted(self.__last_pvalues[cluster].keys()):
+            #        print "%s -> %f" % (gene, self.__last_pvalues[cluster][gene])
 
         if self.__last_pvalues != None and self.update_in_iteration(iteration):  # mot.iter in R
             logging.info('Recomputing motif scores...')
@@ -266,7 +270,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             if len(seqs) == 0:
                 logging.warn('Cluster %i with %i genes: no sequences!' \
                                 %(cluster,len(seqs)) )
-            params.append(ComputeScoreParams(cluster, genes, seqs,
+            params.append(ComputeScoreParams(cluster,
+                                             feature_ids,
+                                             seqs,
                                              self.used_seqs,
                                              self.meme_runner(),
                                              self.__pvalue_filter,
@@ -295,6 +301,10 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             for cluster in xrange(1, self.num_clusters() + 1):
                 pvalues, run_result = compute_cluster_score(params[cluster - 1])
                 cluster_pvalues[cluster] = pvalues
+                if cluster == 5:  # buggy clusters
+                    print "PVALUES CLUSTER ", cluster
+                    for key in sorted(pvalues):
+                        print "%s -> %f" % (key, pvalues[key])
                 iteration_result[cluster][self.seqtype] = meme_json(run_result)
 
         return cluster_pvalues
@@ -332,12 +342,12 @@ def meme_json(run_result):
 
 class ComputeScoreParams:
     """representation of parameters to compute motif scores"""
-    def __init__(self, cluster, genes, seqs, used_seqs, meme_runner,
+    def __init__(self, cluster, feature_ids, seqs, used_seqs, meme_runner,
                  pvalue_filter, min_cluster_rows, max_cluster_rows,
                  num_motifs):
         """constructor"""
         self.cluster = cluster
-        self.genes = genes
+        self.feature_ids = feature_ids  # to preserve the order
         self.seqs = seqs
         self.used_seqs = used_seqs
         self.meme_runner = meme_runner
@@ -355,7 +365,8 @@ def compute_cluster_score(params):
     logging.info('computing cluster score for %s seqs...' %nseqs)
     if (nseqs >= params.min_cluster_rows
         and nseqs <= params.max_cluster_rows):
-        run_result = params.meme_runner(params.seqs, params.used_seqs,
+        run_result = params.meme_runner(params.feature_ids,
+                                        params.seqs, params.used_seqs,
                                         params.num_motifs)
         pe_values = run_result.pe_values
         for feature_id, pvalue, evalue in pe_values:

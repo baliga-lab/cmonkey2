@@ -85,12 +85,14 @@ class MemeSuite:
         else:
             return {}
 
-    def __call__(self, input_seqs, all_seqs, num_motifs):
+    def __call__(self, feature_ids, input_seqs, all_seqs, num_motifs):
         """Runs the meme tool. input_seqs is a dictionary of
         (feature_id : (location, sequence)) that are to be provided as meme
         input, all_seqs is a dictionary that provides all sequences used
         in the cMonkey run, which will be used to compute background
-        distribution"""
+        distribution.
+        Note: To more closely resemble the original R algorithm, we provide
+        ----- the sorted feature ids so MEME will return the same output"""
         def background_file():
             """decide whether to use global or specific background file"""
             if self.__background_file != None:
@@ -105,7 +107,9 @@ class MemeSuite:
         #logging.info("run_meme() - # seqs = %d", len(input_seqs))
         bgfile = background_file()
         #logging.info("created background file in %s", bgfile)
-        seqfile = self.make_sequence_file(input_seqs.items())
+        seqfile = self.make_sequence_file(
+            [(feature_id, input_seqs[feature_id])
+             for feature_id in feature_ids if feature_id in input_seqs])
         #logging.info("created sequence file in %s", seqfile)
         motif_infos, output = self.meme(seqfile, bgfile, num_motifs)
 
