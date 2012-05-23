@@ -325,6 +325,19 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEqual(0.000105128205128205,
                                matrix.residual(max_row_variance=max_row_var), places=4)
 
+    def test_fix_extreme_values(self):
+        """tests the adjustment function"""
+        matrix = dm.DataMatrix(3, 2,
+                               row_names=['R0', 'R1', 'R3'],
+                               col_names=['C0', 'C1'],
+                               values=[[-1.01, np.nan],
+                                       [np.inf, -22.0],
+                                       [-19.9, -25.3]])
+        matrix.fix_extreme_values()
+        self.assertTrue((matrix.values() == [[-1.01, -1.01],
+                                             [-1.01, -19.9],
+                                             [-19.9, -19.9]]).all())
+        
 
 class DataMatrixCollectionTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for MatrixCollection"""

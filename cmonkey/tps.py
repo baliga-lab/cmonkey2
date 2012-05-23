@@ -119,7 +119,6 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
             meme_suite_upstream,
             seqtype='upstream',
             sequence_filters=sequence_filters,
-            pvalue_filter=motif.MinPValueFilter(-20.0),
             scaling_func=lambda iteration: 0.0,
             run_in_iteration=motif_iterations,
             config_params=self.config_params)
@@ -131,7 +130,6 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
             meme_suite_downstream,
             seqtype='downstream',
             sequence_filters=sequence_filters,
-            pvalue_filter=motif.MinPValueFilter(-20.0),
             scaling_func=lambda iteration: 0.0,
             run_in_iteration=motif_iterations,
             config_params=self.config_params)
@@ -140,7 +138,6 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
 #        weeder_scoring = motif.WeederScoringFunction(
 #            self.organism(), self.membership(), self.ratio_matrix,
 #            meme_suite_downstream, 'downstream',
-#            pvalue_filter=motif.MinPValueFilter(-20.0),
 #            scaling_func=lambda iteration: 0.0,
 #            run_in_iteration=motif_iterations,
 #            config_params=self.config_params)

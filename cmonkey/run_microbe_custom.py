@@ -83,7 +83,6 @@ class MicrobeCustomRun(cmonkey_run.CMonkeyRun):
             self.ratio_matrix,
             meme_suite,
             sequence_filters=sequence_filters,
-            pvalue_filter=motif.MinPValueFilter(-20.0),
             scaling_func=lambda iteration: 1.0,  # TODO
             run_in_iteration=motif_iterations,
             config_params=self.config_params)

@@ -60,30 +60,6 @@ def get_remove_atgs_filter(distance):
     return remove_atgs_filter
 
 
-class MinPValueFilter:
-    """A minimum p-value filter. Implemented as a class, so multiprocessing
-    can deal with it"""
-    def __init__(self, min_value):
-        self.__min_value = min_value
-
-    def __call__(self, values):
-        """all values that are below min_value are set to the
-        minimum value above min_value"""
-        allowed_vals = [value for key, value in values.items()
-                        if value > self.__min_value]
-        result = {}
-        if len(allowed_vals) == 0:
-            logging.warn("all values are below the threshold -> no result !!")
-        else:
-            min_allowed = min(allowed_vals)
-            for key, value in values.items():
-                if value < self.__min_value:
-                    result[key] = min_allowed
-                else:
-                    result[key] = value
-        return result
-
-
 def compute_mean_score(pvalues, membership, organism):
     """cluster -> gene -> pvalue"""
     if pvalues == None:
@@ -108,7 +84,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
     def __init__(self, organism, membership, matrix,
                  meme_suite, seqtype,
                  sequence_filters=[],
-                 pvalue_filter=None,
                  scaling_func=None,
                  num_motif_func=None,
                  update_in_iteration=lambda iteration: True,
@@ -130,7 +105,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.num_motif_func = num_motif_func
 
         self.__sequence_filters = sequence_filters
-        self.__pvalue_filter = pvalue_filter
         self.__last_computed_result = None
         self.__last_pvalues = None
         self.__last_iteration_result = {}
@@ -222,6 +196,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                     if (cluster in remapped.keys() and
                         row in remapped[cluster].keys()):
                         matrix[row_index][cluster - 1] = remapped[cluster][row]
+            matrix.apply_log()
+            matrix.fix_extreme_values()
             self.__last_computed_result = matrix
 
         self.update_log.log(self.update_in_iteration(iteration),
@@ -275,7 +251,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                                              seqs,
                                              self.used_seqs,
                                              self.meme_runner(),
-                                             self.__pvalue_filter,
                                              min_cluster_rows_allowed,
                                              max_cluster_rows_allowed,
                                              num_motifs))
@@ -301,10 +276,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             for cluster in xrange(1, self.num_clusters() + 1):
                 pvalues, run_result = compute_cluster_score(params[cluster - 1])
                 cluster_pvalues[cluster] = pvalues
-                if cluster == 5:  # buggy clusters
-                    print "PVALUES CLUSTER ", cluster
-                    for key in sorted(pvalues):
-                        print "%s -> %f" % (key, pvalues[key])
                 iteration_result[cluster][self.seqtype] = meme_json(run_result)
 
         return cluster_pvalues
@@ -343,7 +314,7 @@ def meme_json(run_result):
 class ComputeScoreParams:
     """representation of parameters to compute motif scores"""
     def __init__(self, cluster, feature_ids, seqs, used_seqs, meme_runner,
-                 pvalue_filter, min_cluster_rows, max_cluster_rows,
+                 min_cluster_rows, max_cluster_rows,
                  num_motifs):
         """constructor"""
         self.cluster = cluster
@@ -351,7 +322,6 @@ class ComputeScoreParams:
         self.seqs = seqs
         self.used_seqs = used_seqs
         self.meme_runner = meme_runner
-        self.pvalue_filter = pvalue_filter
         self.min_cluster_rows = min_cluster_rows
         self.max_cluster_rows = max_cluster_rows
         self.num_motifs = num_motifs
@@ -362,7 +332,7 @@ def compute_cluster_score(params):
     pvalues = {}
     run_result = None
     nseqs = len(params.seqs)
-    logging.info('computing cluster score for %s seqs...' %nseqs)
+    logging.info('%d: computing cluster score for %s seqs...', params.cluster, nseqs)
     if (nseqs >= params.min_cluster_rows
         and nseqs <= params.max_cluster_rows):
         run_result = params.meme_runner(params.feature_ids,
@@ -370,9 +340,7 @@ def compute_cluster_score(params):
                                         params.num_motifs)
         pe_values = run_result.pe_values
         for feature_id, pvalue, evalue in pe_values:
-            pvalues[feature_id] = np.log(pvalue)
-        if params.pvalue_filter != None:
-            pvalues = params.pvalue_filter(pvalues)
+            pvalues[feature_id] = pvalue
     else:
         logging.info("# seqs (= %d) outside of defined limits, "
                      "skipping cluster %d", len(params.seqs), params.cluster)
@@ -386,7 +354,6 @@ class MemeScoringFunction(MotifScoringFunctionBase):
                  meme_suite,
                  seqtype='upstream',
                  sequence_filters=[],
-                 pvalue_filter=None,
                  scaling_func=None,
                  num_motif_func=None,
                  update_in_iteration=scoring.default_motif_iterations,
@@ -395,7 +362,7 @@ class MemeScoringFunction(MotifScoringFunctionBase):
         """creates a ScoringFunction"""
         MotifScoringFunctionBase.__init__(self, organism, membership,
                                           matrix, meme_suite, seqtype,
-                                          sequence_filters, pvalue_filter,
+                                          sequence_filters,
                                           scaling_func,
                                           num_motif_func,
                                           update_in_iteration,
@@ -416,7 +383,7 @@ class WeederScoringFunction(MotifScoringFunctionBase):
 
     def __init__(self, organism, membership, matrix,
                  meme_suite, seqtype,
-                 sequence_filters=[], pvalue_filter=None,
+                 sequence_filters=[],
                  scaling_func=None,
                  update_in_iteration=scoring.default_motif_iterations,
                  motif_in_iteration=scoring.default_meme_iterations,
@@ -424,7 +391,7 @@ class WeederScoringFunction(MotifScoringFunctionBase):
         """creates a scoring function"""
         MotifScoringFunctionBase.__init__(self, organism, membership, matrix,
                                           meme_suite, seqtype,
-                                          sequence_filters, pvalue_filter,
+                                          sequence_filters,
                                           scaling_func,
                                           update_in_iteration,
                                           motif_in_iteration,

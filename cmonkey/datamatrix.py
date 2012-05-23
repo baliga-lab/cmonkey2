@@ -226,6 +226,10 @@ class DataMatrix:
         """replaces NaN with the specified value"""
         self.__values[np.isnan(self.__values)] = value
 
+    def apply_log(self):
+        """applies np.log to all values"""
+        self.__values[self.__values != 0.0] = np.log(self.__values[self.__values != 0.0])
+
     def __neg__(self):
         """returns a new DataMatrix with the values in the matrix negated"""
         return DataMatrix(self.num_rows(), self.num_columns(),
@@ -277,6 +281,17 @@ class DataMatrix:
                 row_var = max_row_variance
             average = average / row_var
         return average
+
+    def fix_extreme_values(self, min_value=-20.0):
+        """replaces values < -20 with the smallest value that is >= -20
+        replaces all NA/Inf values with the maximum value in the matrix
+        """
+        masked = self.__values[np.isfinite(self.__values)]
+        minval = np.min(masked[masked >= min_value])
+        maxval = np.max(masked)
+        self.__values[self.__values < -20.0] = np.min(masked[masked >= -20.0])
+        self.__values[np.isinf(self.__values)] = maxval
+        self.__values[np.isnan(self.__values)] = maxval
 
     def __repr__(self):
         """returns a string representation of this matrix"""

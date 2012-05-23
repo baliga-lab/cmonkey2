@@ -210,7 +210,7 @@ class MemeSuite430(MemeSuite):
         # memory errors
         command = ['mast', meme_outfile_path, '-d', database_file_path,
                    '-bfile', bgfile_path, '-nostatus', '-stdout', '-text',
-                   '-brief', '-ev', '1500', '-mev', '99999', '-mt', '0.99',
+                   '-brief', '-ev', '99999', '-mev', '99999', '-mt', '0.99',
                    '-seqp', '-remcorr']
         output = subprocess.check_output(command)
         return output
