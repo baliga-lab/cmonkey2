@@ -127,13 +127,13 @@ runLogs: Array[RunLog])
                  type: 'line',
                  width: 300, height: 200
              },
-             title: { text: 'Mean motif scores' },
+             title: { text: 'Median motif scores' },
              plotOptions: { line: { marker: { enabled: false }, } },
              xAxis: {
                  categories: iterations,
                  tickInterval: 30
              },
-             yAxis: { title: { text: 'mean p-value' }, max: -1.0 },
+             yAxis: { title: { text: 'mean p-value' }, max: -0.5 },
              series: @(HighchartsFormatter.toMotifPValueSeries(iterationStats, runLogs))
          });
 

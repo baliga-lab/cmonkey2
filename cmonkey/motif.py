@@ -64,15 +64,13 @@ def compute_mean_score(pvalues, membership, organism):
     """cluster-specific mean scores"""
     if pvalues == None:
         return 0.0
-    count = 0
-    total = 0.0
+    values = []
     for cluster in xrange(1, membership.num_clusters() + 1):
         cluster_rows = membership.rows_for_cluster(cluster)
         row_indexes = pvalues.row_indexes(cluster_rows)
         for row in row_indexes:
-            total = total + pvalues[row][cluster - 1]
-            count = count + 1
-    return total / count
+            values.append(pvalues[row][cluster - 1])
+    return np.median(values)
 
 
 class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
