@@ -61,20 +61,17 @@ def get_remove_atgs_filter(distance):
 
 
 def compute_mean_score(pvalues, membership, organism):
-    """cluster -> gene -> pvalue"""
+    """cluster-specific mean scores"""
     if pvalues == None:
         return 0.0
     count = 0
     total = 0.0
     for cluster in xrange(1, membership.num_clusters() + 1):
-        rows = membership.rows_for_cluster(cluster)
-        gene_pvalues = pvalues[cluster]
-        for row in rows:
-            #print "look for cluster: %d and row: %s" % (cluster, row)
-            genes = organism.feature_ids_for([row])
-            if len(genes) > 0 and genes[0] in gene_pvalues.keys():
-                total = total + gene_pvalues[genes[0]]
-                count = count + 1
+        cluster_rows = membership.rows_for_cluster(cluster)
+        row_indexes = pvalues.row_indexes(cluster_rows)
+        for row in row_indexes:
+            total = total + pvalues[row][cluster - 1]
+            count = count + 1
     return total / count
 
 
@@ -206,10 +203,11 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                            self.scaling(iteration))
 
         iteration_result['motifs'] = self.__last_iteration_result
-        #print "LAST PVALUES: ", self.__last_pvalues
-        iteration_result['motif-pvalue'] = compute_mean_score(self.__last_pvalues,
-                                                              self.membership(),
-                                                              self.organism)
+        iteration_result['motif-pvalue'] = compute_mean_score(
+            self.__last_computed_result,
+            self.membership(),
+            self.organism)
+
         return self.__last_computed_result
 
     def compute_pvalues(self, iteration_result, num_motifs):

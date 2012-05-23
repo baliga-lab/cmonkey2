@@ -262,6 +262,10 @@ class DataMatrix:
                           self.row_names(), self.column_names(),
                           self.__values * factor)
 
+    def mean(self):
+        """returns the mean value"""
+        return util.mean(self.__values)
+
     def row_variance(self):
         if self.__row_variance == None:
             self.__row_variance = util.max_row_var(self.__values)
