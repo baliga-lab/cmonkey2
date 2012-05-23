@@ -55,13 +55,9 @@ def compute_row_scores(membership, matrix, num_clusters,
     #start_time = util.current_millis()
     cluster_row_scores = __compute_row_scores_for_clusters(
         membership, matrix, num_clusters, use_multiprocessing)
+    # TODO: replace the nan/inf-Values with the quantile-thingy in the R-version
+
     #logging.info("__compute_row_scores_for_clusters() in %f s.",
-    #             (util.current_millis() - start_time) / 1000.0)
-    #start_time = util.current_millis()
-    cluster_row_scores = __replace_non_numeric_values(cluster_row_scores,
-                                                      membership,
-                                                      matrix, num_clusters)
-    #logging.info("__replace_non_numeric_values() in %f s.",
     #             (util.current_millis() - start_time) / 1000.0)
 
     # rearrange result into a DataMatrix, where rows are indexed by gene
@@ -79,7 +75,9 @@ def compute_row_scores(membership, matrix, num_clusters,
     #logging.info("made result matrix in %f s.",
     #             (util.current_millis() - start_time) / 1000.0)
 
-    return result.sorted_by_row_name()
+    result = result.sorted_by_row_name()
+    result.fix_extreme_values()
+    return result
 
 ROW_SCORE_MATRIX = None
 ROW_SCORE_MEMBERSHIP = None
@@ -137,26 +135,6 @@ def __compute_row_scores_for_submatrix(matrix, submatrix):
     colmeans = submatrix.column_means()
     return np.log(
         util.row_means(scoring.subtract_and_square(matrix, colmeans)) + 1e-99)
-
-
-def __replace_non_numeric_values(cluster_row_scores, membership, matrix,
-                                 num_clusters):
-    """perform adjustments for NaN or inf values"""
-    qvalue = __quantile_normalize_scores(cluster_row_scores,
-                                         matrix.row_names(),
-                                         membership,
-                                         num_clusters)
-    result = []
-    for row_scores in cluster_row_scores:
-        if row_scores == None:
-            """no scores available, use the quantile normalized score"""
-            row_scores = np.zeros(matrix.num_rows())
-            row_scores.fill(qvalue)
-        else:
-            row_scores[np.isnan(row_scores)] = qvalue
-        result.append(row_scores)
-
-    return result
 
 
 def __quantile_normalize_scores(cluster_row_scores,

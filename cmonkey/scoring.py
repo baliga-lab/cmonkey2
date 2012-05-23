@@ -241,6 +241,7 @@ def compute_column_scores(membership, matrix, num_clusters):
                 result[row_index][cluster] = substitution
             else:
                 result[row_index][cluster] = column_scores[0][row_index]
+    result.fix_extreme_values()
     return result
 
 def compute_column_scores_submatrix(matrix):
