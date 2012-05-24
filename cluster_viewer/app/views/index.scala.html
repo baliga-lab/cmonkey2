@@ -133,7 +133,7 @@ runLogs: Array[RunLog])
                  categories: iterations,
                  tickInterval: 30
              },
-             yAxis: { title: { text: 'mean p-value' }, max: -0.5 },
+             yAxis: { title: { text: 'mean p-value' }, max: -0.5, min: -5.0 },
              series: @(HighchartsFormatter.toMotifPValueSeries(iterationStats, runLogs))
          });
 
@@ -149,7 +149,7 @@ runLogs: Array[RunLog])
                  categories: iterations,
                  tickInterval: 30
              },
-             yAxis: { title: { text: 'mean net score' }, max: 0 },
+             yAxis: { title: { text: 'mean net score' }, max: 0, min: -3 },
              series: @(HighchartsFormatter.toNetworkScoreSeries(iterationStats, runLogs))
          });
      });
