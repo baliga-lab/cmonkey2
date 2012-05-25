@@ -315,8 +315,8 @@ class ComputeScoreParams:
         """constructor"""
         self.cluster = cluster
         self.feature_ids = feature_ids  # to preserve the order
-        self.seqs = seqs
-        self.used_seqs = used_seqs
+        self.seqs = seqs                # sequences in the cluster
+        self.used_seqs = used_seqs      # all available sequences in the organism
         self.meme_runner = meme_runner
         self.min_cluster_rows = min_cluster_rows
         self.max_cluster_rows = max_cluster_rows
@@ -331,9 +331,7 @@ def compute_cluster_score(params):
     logging.info('%d: computing cluster score for %s seqs...', params.cluster, nseqs)
     if (nseqs >= params.min_cluster_rows
         and nseqs <= params.max_cluster_rows):
-        run_result = params.meme_runner(params.feature_ids,
-                                        params.seqs, params.used_seqs,
-                                        params.num_motifs)
+        run_result = params.meme_runner(params)
         pe_values = run_result.pe_values
         for feature_id, pvalue, evalue in pe_values:
             pvalues[feature_id] = pvalue
@@ -413,19 +411,19 @@ class WeederRunner:
         """create a runner object"""
         self.meme_suite = meme_suite
 
-    def __call__(self, seqs, all_seqs):
+    def __call__(self, params):
         """call the runner like a function"""
         with tempfile.NamedTemporaryFile(prefix='weeder.fasta',
                                          delete=False) as outfile:
             filename = outfile.name
             logging.info("Run Weeder on FASTA file: '%s'", filename)
-            st.write_sequences_to_fasta_file(outfile, seqs.items())
+            st.write_sequences_to_fasta_file(outfile, params.seqs.items())
 
         pssms = weeder.run_weeder(filename)
         meme_outfile = '%s.meme' % filename
         dbfile = self.meme_suite.make_sequence_file(
             [(feature_id, locseq[1])
-             for feature_id, locseq in all_seqs.items()])
+             for feature_id, locseq in params.used_seqs.items()])
         logging.info("# PSSMS created: %d", len(pssms))
         logging.info("run MAST on '%s'", meme_outfile)
 
@@ -443,7 +441,7 @@ class WeederRunner:
                 meme_outfile, dbfile,
                 self.meme_suite.global_background_file())
             pe_values, annotations = meme.read_mast_output(mast_out,
-                                                           seqs.keys())
+                                                           params.seqs.keys())
             return meme.MemeRunResult(pe_values, annotations, motif_infos)
         except:
             return meme.MemeRunResult([], {}, [])
