@@ -314,6 +314,7 @@ class ScoringFunctionCombiner:
             #start_time = util.current_millis()
             result_matrices = dm.quantile_normalize_scores(result_matrices,
                                                            score_scalings)
+            print result_matrices
             #elapsed = util.current_millis() - start_time
             #logging.info("SCORES COMBINED IN %f s", elapsed / 1000.0)
 
