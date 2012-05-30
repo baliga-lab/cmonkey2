@@ -103,10 +103,10 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                              run_in_iteration=lambda x: True,
                                              config_params=self.config_params)
         netscores = network_scoring.compute(self.iteration_result).sorted_by_row_name()
-        #print netscores
         ref_netscores = read_matrix('testdata/netscores_fixed.tsv')
         self.assertTrue(check_matrix_values(netscores, ref_netscores))
 
+    """
     def test_motif_scoring(self):
         meme_suite = meme.MemeSuite430()
         sequence_filters = [
@@ -128,59 +128,69 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         motscores = motif_scoring.compute(self.iteration_result).sorted_by_row_name()
         ref_motscores = read_matrix('testdata/motscores_fixed.tsv')
         self.assertTrue(check_matrix_values(motscores, ref_motscores))
-
-
-"""
-    def test_scoring_no_motif(self):
+    """
+    """
+    def test_scoring_all(self):
         # a row scoring function, set up like in the default R version
         row_scoring = microarray.RowScoringFunction(
-            membership, ratio_matrix,
+            self.membership, self.ratio_matrix,
             scaling_func=lambda iteration: 6.0,
-            config_params=config_params)
-        rowscores = row_scoring.compute(iteration_result)
-        rowscores.write_tsv_file("row_scores_fixed.tsv")
+            config_params=self.config_params)
 
         colscoring = scoring.ColumnScoringFunction(
-            membership, ratio_matrix, config_params=config_params)
-        colscores = colscoring.compute(iteration_result)
-        colscores.write_tsv_file("col_scores_fixed.tsv")
+            self.membership, self.ratio_matrix, config_params=self.config_params)
 
         network_scaling_fun = scoring.get_default_network_scaling(2000)
-        network_scoring = nw.ScoringFunction(organism,
-                                             membership,
-                                             ratio_matrix,
+        network_scoring = nw.ScoringFunction(self.organism,
+                                             self.membership,
+                                             self.ratio_matrix,
                                              scaling_func=network_scaling_fun,
                                              run_in_iteration=lambda x: True,
-                                             config_params=config_params)
-        netscores = network_scoring.compute(iteration_result)
-        netscores.write_tsv_file("net_scores_fixed.tsv")
+                                             config_params=self.config_params)
 
-        meme_suite = meme.MemeSuite430(remove_tempfiles=False)
-        #meme_suite = meme.MemeSuite430()
+        #meme_suite = meme.MemeSuite430(remove_tempfiles=False)
+        meme_suite = meme.MemeSuite430()
         sequence_filters = [
             motif.unique_filter,
             motif.get_remove_low_complexity_filter(meme_suite),
             motif.get_remove_atgs_filter(self.search_distances['upstream'])]
         motif_scaling_fun = scoring.get_default_motif_scaling(2000)
         motif_scoring = motif.MemeScoringFunction(
-            organism,
-            membership,
-            ratio_matrix,
+            self.organism,
+            self.membership,
+            self.ratio_matrix,
             meme_suite,
             sequence_filters=sequence_filters,
             scaling_func=motif_scaling_fun,
             num_motif_func=motif.default_nmotif_fun,
             update_in_iteration=lambda x: True,
             motif_in_iteration=lambda x: True,
-            config_params=config_params)
-        motscores = motif_scoring.compute(iteration_result)
-        motscores.write_tsv_file('motif_scores_fixed.tsv')
-        #row_scoring_functions = [row_scoring, motif_scoring, network_scoring]
-        #combiner = scoring.ScoringFunctionCombiner(membership, row_scoring_functions,
-        #                                           log_subresults=False)
-        #scores = combiner.compute(iteration_result)
+            config_params=self.config_params)
+        row_scoring_functions = [row_scoring, motif_scoring, network_scoring]
+        combiner = scoring.ScoringFunctionCombiner(self.membership,
+                                                   row_scoring_functions,
+                                                   log_subresults=False)
+        scores = combiner.compute(self.iteration_result)
         #print scores
-"""
+    """
+
+    def test_quantile_normalize(self):
+        row_scores = read_matrix('testdata/rowscores_fixed.tsv')
+        mot_scores = read_matrix('testdata/motscores_fixed.tsv')
+        net_scores = read_matrix('testdata/netscores_fixed.tsv')
+
+        ref_rowscores = read_matrix('testdata/rowscores_qnorm.tsv')
+        ref_motscores = read_matrix('testdata/motscores_qnorm.tsv')
+        ref_netscores = read_matrix('testdata/netscores_qnorm.tsv')
+
+        in_matrices = [row_scores, mot_scores, net_scores]
+        # scaling for cluster 49
+        scalings = [6.0, 0.033355570380253496, 0.016677785190126748]
+        result = dm.quantile_normalize_scores(in_matrices, scalings)
+        self.assertTrue(check_matrix_values(result[0], ref_rowscores))
+        self.assertTrue(check_matrix_values(result[1], ref_motscores))
+        self.assertTrue(check_matrix_values(result[2], ref_netscores))
+
 
 def read_matrix(filename):
     """reads a matrix file"""

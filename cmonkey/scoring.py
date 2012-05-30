@@ -312,9 +312,12 @@ class ScoringFunctionCombiner:
             #    "COMBINING THE SCORES OF %d matrices (quantile normalize)",
             #    len(result_matrices))
             #start_time = util.current_millis()
+            print "QUANTILE NORMALIZE SCORES, SCALINGS: ", score_scalings
             result_matrices = dm.quantile_normalize_scores(result_matrices,
                                                            score_scalings)
-            print result_matrices
+            #print result_matrices
+            for i in range(len(result_matrices)):
+                result_matrices[i].write_tsv_file('matrix_qnorm_%d.tsv' % i)
             #elapsed = util.current_millis() - start_time
             #logging.info("SCORES COMBINED IN %f s", elapsed / 1000.0)
 
