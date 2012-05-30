@@ -382,6 +382,13 @@ def phyper(q, m, n, k, lower_tail=False):
                     robjects.FloatVector(k), **kwargs)
 
 
+def rrank(values):
+    """invokes the R function rank"""
+    r_rank = robjects.r['rank']
+    kwargs = {'ties': 'min', 'na': 'keep'}
+    return r_rank(robjects.FloatVector(values), **kwargs)
+
+
 def sd_rnorm(values, num_rnorm_values, fuzzy_coeff):
     """computes standard deviation on values and then calls rnorm to
     generate the num_rnorm_values. This combines stddev and rnorm

@@ -9,6 +9,7 @@ import numpy as np
 import operator
 import util
 import logging
+import rpy2.robjects as robj
 
 
 class DataMatrix:
@@ -544,9 +545,14 @@ def qm_result_matrices(matrices, tmp_mean):
     """builds the resulting matrices by looking at the rank of their
     original values and retrieving the means at the specified position"""
     result = []
-    for matrix in matrices:
-        vranks = ranks(np.array(matrix.flat_values()))
-        values = np.reshape(tmp_mean[vranks], (matrix.num_rows(),
+    for i in range(len(matrices)):
+        matrix = matrices[i]
+        values = matrix.values()
+        num_rows, num_cols = values.shape
+        xvec = robj.FloatVector(values.reshape(values.size))
+        xr = robj.r.t(robj.r.matrix(xvec, nrow=num_rows, ncol=num_cols, byrow=True))
+        rankvals = [value - 1 for value in util.rrank(xr)]  # adjust to be 0-based
+        values = np.reshape(tmp_mean[rankvals], (matrix.num_rows(),
                                                  matrix.num_columns()))
         outmatrix = DataMatrix(matrix.num_rows(),
                                matrix.num_columns(),
