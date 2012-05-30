@@ -129,7 +129,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         ref_motscores = read_matrix('testdata/motscores_fixed.tsv')
         self.assertTrue(check_matrix_values(motscores, ref_motscores))
     """
-    """
+
     def test_scoring_all(self):
         # a row scoring function, set up like in the default R version
         row_scoring = microarray.RowScoringFunction(
@@ -171,8 +171,9 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                                    row_scoring_functions,
                                                    log_subresults=False)
         scores = combiner.compute(self.iteration_result)
-        #print scores
-    """
+        ref_scores = read_matrix('testdata/combined_scores.tsv')
+        # note that the rounding error get pretty large here !!!
+        self.assertTrue(check_matrix_values(scores, ref_scores, 0.15))
 
     def test_quantile_normalize(self):
         row_scores = read_matrix('testdata/rowscores_fixed.tsv')
@@ -198,15 +199,15 @@ def read_matrix(filename):
     return dm.DataMatrixFactory([]).create_from(infile).sorted_by_row_name()
 
 
-EPS = 1.0e10
+EPS = 1.0e-5
 
-def check_matrix_values(matrix1, matrix2):
+def check_matrix_values(matrix1, matrix2, eps=EPS):
     result = True
     for row in range(matrix1.num_rows()):
         for col in range(matrix1.num_columns()):
             diff = abs(matrix1[row][col] - matrix2[row][col])
             #print diff
-            if diff > 1.0e-5:
+            if diff > eps:
                 print "Value mismatch at (%s, cluster %d): %f != %f (diff = %f)" % (
                     matrix1.row_name(row), col + 1, matrix1[row][col], matrix2[row][col], diff)
                 result = False
