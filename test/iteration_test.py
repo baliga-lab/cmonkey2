@@ -128,7 +128,6 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         motscores = motif_scoring.compute(self.iteration_result).sorted_by_row_name()
         ref_motscores = read_matrix('testdata/motscores_fixed.tsv')
         self.assertTrue(check_matrix_values(motscores, ref_motscores))
-    """
 
     def test_scoring_all(self):
         # a row scoring function, set up like in the default R version
@@ -174,6 +173,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         ref_scores = read_matrix('testdata/combined_scores.tsv')
         # note that the rounding error get pretty large here !!!
         self.assertTrue(check_matrix_values(scores, ref_scores, 0.15))
+    """
 
     def test_quantile_normalize(self):
         row_scores = read_matrix('testdata/rowscores_fixed.tsv')
@@ -191,6 +191,16 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertTrue(check_matrix_values(result[0], ref_rowscores))
         self.assertTrue(check_matrix_values(result[1], ref_motscores))
         self.assertTrue(check_matrix_values(result[2], ref_netscores))
+
+    def test_density_scores(self):
+        """tests density score computation"""
+        row_scores = read_matrix('testdata/combined_scores.tsv')
+        col_scores = read_matrix('testdata/combined_colscores.tsv')
+        ref_rowscores = read_matrix('testdata/density_rowscores.tsv')
+        ref_colscores = read_matrix('testdata/density_colscores.tsv')
+        rds, cds = memb.get_density_scores(self.membership, row_scores, col_scores)
+        self.assertTrue(check_matrix_values(rds, ref_rowscores, eps=1e-11))
+        self.assertTrue(check_matrix_values(cds, ref_colscores, eps=1e-11))
 
 
 def read_matrix(filename):
