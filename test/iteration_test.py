@@ -55,7 +55,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                 column_members[cond].append(int(row[col]))
 
         return memb.ClusterMembership(row_members, column_members,
-                                      {'num_clusters': 43})
+                                      self.config_params)
 
     def setUp(self):  # pylint; disable-msg=C0103
         """test fixture"""
@@ -66,12 +66,14 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         infile = util.DelimitedFile.read('halo_ratios5.tsv', has_header=True, quote='\"')
         self.ratio_matrix = matrix_factory.create_from(infile)
         self.organism = make_halo(self.ratio_matrix, self.search_distances, self.scan_distances)
-        self.membership = self.__read_members()
         self.config_params = {'memb.min_cluster_rows_allowed': 3,
                               'memb.max_cluster_rows_allowed': 70,
                               'multiprocessing': False,
+                              'memb.clusters_per_row': 2,
+                              'memb.clusters_per_col': int(round(43 * 2.0 / 3.0)),
                               'num_clusters': 43,
                               'num_iterations': 2000}
+        self.membership = self.__read_members()  # relies on config_params
         self.iteration_result = { 'iteration': 51 }
 
     def test_row_scoring(self):
@@ -201,6 +203,17 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         rds, cds = memb.get_density_scores(self.membership, row_scores, col_scores)
         self.assertTrue(check_matrix_values(rds, ref_rowscores, eps=1e-11))
         self.assertTrue(check_matrix_values(cds, ref_colscores, eps=1e-11))
+
+    def test_size_compensation(self):
+        """tests the size compensation"""
+        row_scores = read_matrix('testdata/density_rowscores.tsv')
+        col_scores = read_matrix('testdata/density_colscores.tsv')
+        ref_rowscores = read_matrix('testdata/sizecomp_rowscores.tsv')
+        ref_colscores = read_matrix('testdata/sizecomp_colscores.tsv')
+        memb.compensate_size(self.membership, self.ratio_matrix,
+                             row_scores, col_scores)
+        self.assertTrue(check_matrix_values(row_scores, ref_rowscores, eps=1e-11))
+        self.assertTrue(check_matrix_values(col_scores, ref_colscores, eps=1e-11))   
 
 
 def read_matrix(filename):
