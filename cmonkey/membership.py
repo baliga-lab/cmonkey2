@@ -25,6 +25,7 @@ PROB_SEEING_COL_CHANGE = 1.0
 MAX_CHANGES_PER_ROW = 1
 MAX_CHANGES_PER_COL = 5
 MIN_CLUSTER_ROWS_ALLOWED = 3
+MAX_ADJUST_TRIES = 50
 
 KEY_NUM_CLUSTERS = 'num_clusters'
 KEY_CLUSTERS_PER_ROW = 'memb.clusters_per_row'
@@ -493,6 +494,64 @@ class ClusterMembership:
                    add_cluster_to_col)
         #elapsed = util.current_millis() - start_time
         #logging.info("update_for cdscores finished in %f s.", elapsed / 1000.0)
+
+    def postadjust(self, rowscores, cutoff=0.33, limit=100):
+        """adjusting the cluster memberships after the main iterations have been done"""
+        for cluster in range(1, self.num_clusters() + 1):
+            assign = self.adjust_cluster(cluster, rowscores, cutoff, limit)
+            print "ASSIGN IN CLUSTER ", cluster, " = ", assign
+
+    def adjust_cluster(self, cluster, rowscores, cutoff, limit):
+        """adjust a single cluster"""
+        def max_row_in_column(matrix, column):
+            """returns a pair of the maximum row index and score in the given matrix and column"""
+            sm = matrix.submatrix_by_name(wh, [matrix.column_name(column)])
+            max_row = 0
+            max_score = sys.float_info.min
+            for row in range(sm.num_rows()):
+                if sm[row][0] > max_score:
+                    max_score = sm[row][0]
+                    max_row = row
+            return sm.row_name(max_row)
+
+        old_rows = self.rows_for_cluster(cluster)
+        not_in = []
+        for row in range(rowscores.num_rows()):
+            row_name = rowscores.row_name(row)
+            if row_name not in old_rows:
+                not_in.append((row, rowscores.row_name(row)))
+        #print old_rows
+        threshold = rowscores.submatrix_by_name(old_rows,
+                                                [rowscores.column_name(cluster - 1)]).quantile(cutoff)
+        wh = []
+        for row, row_name in not_in:
+            if rowscores[row][cluster - 1] < threshold:
+                #print "Appending %s with score: %f" % (row_name, rowscores[row][cluster - 1])
+                wh.append(row_name)
+        #print "THRESHOLD: ", threshold
+        #print "WH: ", wh
+        if len(wh) == 0:
+            return {} # return unmodified row membership
+        elif len(wh) > limit:
+            return {} # return unmodified row membership
+ 
+        tries = 0
+        result = {}
+        while len(wh) > 0 and tries < MAX_ADJUST_TRIES:
+            wh2 = max_row_in_column(rowscores, cluster - 1)
+            wh2_index = rowscores.row_names().index(wh2)
+            clusters = self.clusters_for_row(wh2)
+            wh2_scores = []
+            for c in clusters:
+                wh2_scores.append(rowscores[wh2_index][c - 1])
+            #print "WH2: ", wh2, " CLUSTERS: ", clusters, " WH2_SCORES: ", wh2_scores
+            result[wh2] = cluster
+            wh.remove(wh2)
+            tries += 1
+        old_num = len(self.rows_for_cluster(cluster))
+        logging.info("CLUSTER %d, # ROWS BEFORE: %d, AFTER: %d",
+                     cluster, old_num, old_num + len(result))
+        return result
 
     def store_checkpoint_data(self, shelf):
         """Save memberships into checkpoint"""
