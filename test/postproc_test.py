@@ -76,7 +76,7 @@ class PostprocTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.membership = self.__read_members()  # relies on config_params
         self.iteration_result = { 'iteration': 51 }
 
-    def test_row_scoring(self):
+    def test_adjust_cluster(self):
         """tests the row scoring by itself, which combines scoring and fixing
         extreme values"""
         rowscores = read_matrix('testdata/rowscores-43-before-postproc.tsv')
@@ -90,6 +90,12 @@ class PostprocTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals(5, assign5['VNG1182H'])
         self.assertEquals(5, assign5['VNG2259C'])
         self.assertEquals(5, assign5['VNG0719G'])
+
+    def test_post_adjust(self):
+        """tests the row scoring by itself, which combines scoring and fixing
+        extreme values"""
+        rowscores = read_matrix('testdata/rowscores-43-before-postproc.tsv')
+        self.membership.postadjust(rowscores)
 
 
 def read_matrix(filename):

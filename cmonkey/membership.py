@@ -497,9 +497,14 @@ class ClusterMembership:
 
     def postadjust(self, rowscores, cutoff=0.33, limit=100):
         """adjusting the cluster memberships after the main iterations have been done"""
+        assign_list = []
         for cluster in range(1, self.num_clusters() + 1):
             assign = self.adjust_cluster(cluster, rowscores, cutoff, limit)
-            print "ASSIGN IN CLUSTER ", cluster, " = ", assign
+            assign_list.append(assign)
+
+        for assign in assign_list:
+            for row, cluster in assign.items():
+                self.__add_cluster_to_row(row, cluster)
 
     def adjust_cluster(self, cluster, rowscores, cutoff, limit):
         """adjust a single cluster"""
