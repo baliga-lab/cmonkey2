@@ -76,6 +76,7 @@ class ClusterMembership:
             self.__row_is_member_of)
         self.__cluster_column_members = create_cluster_to_names_map(
             self.__column_is_member_of)
+        self.__last_row_scores = None
 
     # pylint: disable-msg=R0913
     @classmethod
@@ -315,6 +316,7 @@ class ClusterMembership:
                                                        column_scores,
                                                        iteration,
                                                        num_iterations)
+        self.__last_row_scores = row_scores
 
         rpc = map(len, self.__cluster_row_members.values())
         logging.info('Rows per cluster: %i to %i (median %d)' \
@@ -495,16 +497,23 @@ class ClusterMembership:
         #elapsed = util.current_millis() - start_time
         #logging.info("update_for cdscores finished in %f s.", elapsed / 1000.0)
 
-    def postadjust(self, rowscores, cutoff=0.33, limit=100):
-        """adjusting the cluster memberships after the main iterations have been done"""
+    def postadjust(self, rowscores=None, cutoff=0.33, limit=100):
+        """adjusting the cluster memberships after the main iterations have been done
+        Returns true if the function changed the membership, false if not"""
+        if rowscores == None:
+            rowscores = self.__last_row_scores
+        has_changed = False
         assign_list = []
         for cluster in range(1, self.num_clusters() + 1):
             assign = self.adjust_cluster(cluster, rowscores, cutoff, limit)
             assign_list.append(assign)
 
         for assign in assign_list:
+            if len(assign) > 0:
+                has_changed = True
             for row, cluster in assign.items():
                 self.__add_cluster_to_row(row, cluster)
+        return has_changed
 
     def adjust_cluster(self, cluster, rowscores, cutoff, limit):
         """adjust a single cluster"""

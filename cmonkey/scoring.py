@@ -107,6 +107,9 @@ class ScoringFunctionBase:
         if config_params == None:
             raise Exception('NO CONFIG PARAMS !!!')
 
+        # returned in the iterations when the scoring algorithm is not run
+        self.last_computed_result = None
+
     def name(self):
         """returns the name of this function"""
         raise Exception("please implement me")
@@ -128,7 +131,27 @@ class ScoringFunctionBase:
         function to normalize its scores to the range of a reference
         score matrix. In the normal case, those would be the gene expression
         row scores"""
-        raise Exception("please implement me")
+        iteration = iteration_result['iteration']
+        if self.run_in_iteration(iteration):
+            self.last_computed_result = self.do_compute(iteration_result,
+                                                        reference_matrix)
+
+        self.run_log.log(self.run_in_iteration(iteration),
+                         self.scaling(iteration_result['iteration']))
+        return self.last_computed_result
+
+    def compute_force(self, iteration_result, reference_matrix=None):
+        """enforce computation, regardless of the iteration function"""
+        iteration = iteration_result['iteration']
+        self.last_computed_result = self.do_compute(iteration_result,
+                                                    reference_matrix)
+
+        self.run_log.log(self.run_in_iteration(iteration),
+                         self.scaling(iteration_result['iteration']))
+        return self.last_computed_result        
+
+    def do_compute(self, iteration_result, ref_matrix=None):
+        raise Execption("implement me")
 
     def num_clusters(self):
         """returns the number of clusters"""
@@ -152,7 +175,10 @@ class ScoringFunctionBase:
 
     def scaling(self, iteration):
         """returns the quantile normalization scaling for the specified iteration"""
-        return self.__scaling_func(iteration)
+        if self.__scaling_func != None:
+            return self.__scaling_func(iteration)
+        else:
+            return 0.0
 
     def store_checkpoint_data(self, shelf):
         """Default implementation does not store checkpoint data"""
@@ -182,22 +208,16 @@ class ColumnScoringFunction(ScoringFunctionBase):
                                      run_in_iteration=run_in_iteration,
                                      config_params=config_params)
         self.__last_computed_result = None
+        self.run_log = RunLog("column_scoring")
 
     def name(self):
         """returns the name of this scoring function"""
         return "Column"
 
-    def compute(self, iteration_result, ref_matrix=None):
+    def do_compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
-        iteration = iteration_result['iteration']
-        if self.run_in_iteration(iteration):
-            #start_time = util.current_millis()
-            self.__last_computed_result = compute_column_scores(self.membership(),
-                                                                self.matrix(),
-                                                                self.num_clusters())
-            #elapsed = util.current_millis() - start_time
-            #logging.info("COLUMN SCORING TIME: %f s.", (elapsed / 1000.0))
-        return self.__last_computed_result
+        return compute_column_scores(self.membership(), self.matrix(),
+                                     self.num_clusters())
 
 def compute_column_scores(membership, matrix, num_clusters):
     """Computes the column scores for the specified number of clusters"""
@@ -286,6 +306,25 @@ class ScoringFunctionCombiner:
         self.__log_subresults = log_subresults
         self.__scaling_func = scaling_func
 
+    def compute_force(self, iteration_result, ref_matrix=None):
+        """compute scores for one iteration, recursive force"""
+        result_matrices = []
+        score_scalings = []
+        reference_matrix = ref_matrix
+        iteration = iteration_result['iteration']
+        for scoring_function in self.__scoring_functions:
+            if reference_matrix == None and len(result_matrices) > 0:
+                reference_matrix = result_matrices[0]
+
+            matrix = scoring_function.compute_force(iteration_result, reference_matrix)
+            if matrix != None:
+                result_matrices.append(matrix)
+                score_scalings.append(scoring_function.scaling(iteration))
+
+                if self.__log_subresults:
+                    self.__log_subresult(scoring_function, matrix)
+        return self.__combine(result_matrices, score_scalings, iteration)
+
     def compute(self, iteration_result, ref_matrix=None):
         """compute scores for one iteration"""
         result_matrices = []
@@ -307,15 +346,12 @@ class ScoringFunctionCombiner:
                 if self.__log_subresults:
                     self.__log_subresult(scoring_function, matrix)
 
+        return self.__combine(result_matrices, score_scalings, iteration)
+
+    def __combine(self, result_matrices, score_scalings, iteration):
         if len(result_matrices) > 1:
-            #logging.info(
-            #    "COMBINING THE SCORES OF %d matrices (quantile normalize)",
-            #    len(result_matrices))
-            #start_time = util.current_millis()
             result_matrices = dm.quantile_normalize_scores(result_matrices,
                                                            score_scalings)
-            #elapsed = util.current_millis() - start_time
-            #logging.info("SCORES COMBINED IN %f s", elapsed / 1000.0)
 
         if len(result_matrices) > 0:
             combined_score = (result_matrices[0] *

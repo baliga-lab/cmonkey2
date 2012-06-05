@@ -108,7 +108,6 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         ref_netscores = read_matrix('testdata/netscores_fixed.tsv')
         self.assertTrue(check_matrix_values(netscores, ref_netscores))
 
-    """
     def test_motif_scoring(self):
         meme_suite = meme.MemeSuite430()
         sequence_filters = [
@@ -175,7 +174,6 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         ref_scores = read_matrix('testdata/combined_scores.tsv')
         # note that the rounding error get pretty large here !!!
         self.assertTrue(check_matrix_values(scores, ref_scores, 0.15))
-    """
 
     def test_quantile_normalize(self):
         row_scores = read_matrix('testdata/rowscores_fixed.tsv')

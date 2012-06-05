@@ -209,14 +209,76 @@ class CMonkeyRun:
         self.init_from_checkpoint(checkpoint_filename, row_scoring, col_scoring)
         self.run_iterations(row_scoring, col_scoring)
 
-    def run_iterations(self, row_scoring, col_scoring):
-        def residual_for(row_names, column_names):
-            if len(column_names) <= 1 or len(row_names) <= 1:
-                return 1.0
-            else:
-                matrix = self.ratio_matrix.submatrix_by_name(row_names, column_names)
-                return matrix.residual()
+    def residual_for(self, row_names, column_names):
+        if len(column_names) <= 1 or len(row_names) <= 1:
+            return 1.0
+        else:
+            matrix = self.ratio_matrix.submatrix_by_name(row_names, column_names)
+            return matrix.residual()
 
+
+    def write_results(self, iteration_result):
+        # Write a snapshot
+        output_dir = self['output_dir']
+        iteration = iteration_result['iteration']
+        iteration_result['columns'] = {}
+        iteration_result['rows'] = {}
+        iteration_result['residuals'] = {}
+        for cluster in range(1, self['num_clusters'] + 1):
+            column_names = self.membership().columns_for_cluster(cluster)
+            row_names = self.membership().rows_for_cluster(cluster)
+            iteration_result['columns'][cluster] = column_names
+            iteration_result['rows'][cluster] = row_names
+            residual = self.residual_for(row_names, column_names)
+            iteration_result['residuals'][cluster] = residual
+
+        # write results
+        with open('%s/%d-results.json' % (output_dir, iteration), 'w') as outfile:
+            outfile.write(json.dumps(iteration_result))
+
+    def write_stats(self, iteration_result):
+        # write stats for this iteration
+        output_dir = self['output_dir']
+        iteration = iteration_result['iteration']
+        residuals = []
+        cluster_stats = {}
+        network_scores = iteration_result['networks']
+        if 'motif-pvalue' in iteration_result:
+            motif_pvalue = iteration_result['motif-pvalue']
+        else:
+            motif_pvalue = 0.0
+
+        for cluster in range(1, self['num_clusters'] + 1):
+            row_names = iteration_result['rows'][cluster]
+            column_names = iteration_result['columns'][cluster]
+            residual = self.residual_for(row_names, column_names)
+            residuals.append(residual)
+            cluster_stats[cluster] = {'num_rows': len(row_names),
+                                      'num_columns': len(column_names),
+                                      'residual': residual }
+        stats = {'cluster': cluster_stats, 'median_residual': np.median(residuals),
+                 'motif-pvalue': motif_pvalue, 'network-scores': network_scores }
+        with open('%s/%d-stats.json' % (output_dir, iteration), 'w') as outfile:
+            try:
+                outfile.write(json.dumps(stats))
+            except:
+                logging.error("Could not write stats - probably non-serializable values found")
+                # print stats object, likely there is something that is not serializable
+                print stats
+
+    def write_runlog(self, row_scoring, iteration):
+        logging.info("Writing run map for this iteration")
+        output_dir = self['output_dir']
+        run_infos = [run_log.to_json() for run_log in row_scoring.run_logs()]
+        with open('%s/%d-runlog.json' % (output_dir, iteration), 'w') as outfile:
+            try:
+                outfile.write(json.dumps(run_infos))
+            except:
+                logging.error("Could not run map - probably non-serializable values found")
+                # print run_infos object, likely there is something that is not serializable
+                print run_infos
+
+    def run_iterations(self, row_scoring, col_scoring):
         self.report_params()
         output_dir = self['output_dir']
 
@@ -240,61 +302,21 @@ class CMonkeyRun:
             logging.info('mean net = %s | mean mot = %f', str(mean_net_score), mean_mot_pvalue)
 
             if iteration == 1 or (iteration % RESULT_FREQ == 0):
-                # Write a snapshot
-                iteration_result['columns'] = {}
-                iteration_result['rows'] = {}
-                iteration_result['residuals'] = {}
-                for cluster in range(1, self['num_clusters'] + 1):
-                    column_names = self.membership().columns_for_cluster(cluster)
-                    row_names = self.membership().rows_for_cluster(cluster)
-                    iteration_result['columns'][cluster] = column_names
-                    iteration_result['rows'][cluster] = row_names
-                    residual = residual_for(row_names, column_names)
-                    iteration_result['residuals'][cluster] = residual
-
-                # write results
-                with open('%s/%d-results.json' % (output_dir, iteration), 'w') as outfile:
-                    outfile.write(json.dumps(iteration_result))
+                self.write_results(iteration_result)
 
             if iteration == 1 or (iteration % STATS_FREQ == 0):
-                # write stats for this iteration
-                residuals = []
-                cluster_stats = {}
-                network_scores = iteration_result['networks']
-                if 'motif-pvalue' in iteration_result:
-                    motif_pvalue = iteration_result['motif-pvalue']
-                else:
-                    motif_pvalue = 0.0
-
-                for cluster in range(1, self['num_clusters'] + 1):
-                    row_names = iteration_result['rows'][cluster]
-                    column_names = iteration_result['columns'][cluster]
-                    residual = residual_for(row_names, column_names)
-                    residuals.append(residual)
-                    cluster_stats[cluster] = {'num_rows': len(row_names),
-                                              'num_columns': len(column_names),
-                                              'residual': residual }
-                stats = {'cluster': cluster_stats, 'median_residual': np.median(residuals),
-                         'motif-pvalue': motif_pvalue, 'network-scores': network_scores }
-                with open('%s/%d-stats.json' % (output_dir, iteration), 'w') as outfile:
-                    try:
-                        outfile.write(json.dumps(stats))
-                    except:
-                        logging.error("Could not write stats - probably non-serializable values found")
-                        # print stats object, likely there is something that is not serializable
-                        print stats
-
+                self.write_stats(iteration_result)
                 # run infos should be written with the same frequency as stats
-                run_infos = [run_log.to_json() for run_log in row_scoring.run_logs()]
-                logging.info("Writing run map for this iteration")
-                with open('%s/%d-runlog.json' % (output_dir, iteration), 'w') as outfile:
-                    try:
-                        outfile.write(json.dumps(run_infos))
-                    except:
-                        logging.error("Could not run map - probably non-serializable values found")
-                        # print run_infos object, likely there is something that is not serializable
-                        print run_infos
+                self.write_runlog(row_scoring, iteration)
 
+        logging.info("Postprocessing: Adjusting the clusters....")
+        self.membership().postadjust()
+        iteration = self['num_iterations'] + 1
+        iteration_result = {'iteration': iteration }
+        logging.info("Adjusted. Now re-run scoring (iteration: %d)", iteration_result['iteration'])
+        row_scoring.compute_force(iteration_result)
+        self.write_results(iteration_result)
+        self.write_stats(iteration_result)
         print "Done !!!!"
 
     ############################################################

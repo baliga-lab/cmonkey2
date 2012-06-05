@@ -150,13 +150,23 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         return "Motif"""
 
     def compute(self, iteration_result, ref_matrix=None):
+        """override base class compute() method, behavior is more complicated,
+        since it nests Motif and MEME runs"""
+        return self.__compute(iteration_result, False, ref_matrix)
+
+    def compute_force(self, iteration_result, ref_matrix=None):
+        """override base class compute() method, behavior is more complicated,
+        since it nests Motif and MEME runs"""
+        return self.__compute(iteration_result, True, ref_matrix)
+
+    def __compute(self, iteration_result, force, ref_matrix=None):
         """compute method for the specified iteration
         Note: will return None if not computed yet and the result of a previous
         scoring if the function is not supposed to actually run in this iteration
         """
         iteration = iteration_result['iteration']
 
-        if self.motif_in_iteration(iteration):  # meme.iter in R
+        if force or self.motif_in_iteration(iteration):  # meme.iter in R
             logging.info('Running Motifing...')
             # running MEME and store the result for the non-motifing iterations
             # to reuse
@@ -171,7 +181,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             #    for gene in sorted(self.__last_pvalues[cluster].keys()):
             #        print "%s -> %f" % (gene, self.__last_pvalues[cluster][gene])
 
-        if self.__last_pvalues != None and self.update_in_iteration(iteration):  # mot.iter in R
+        if self.__last_pvalues != None and (
+            force or self.update_in_iteration(iteration)):  # mot.iter in R
             logging.info('Recomputing motif scores...')
             # running the scoring itself
             remapped = {}

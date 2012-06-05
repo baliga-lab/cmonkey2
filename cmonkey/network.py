@@ -150,18 +150,16 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         return [self.run_log]
 
     def compute(self, iteration_result, ref_matrix=None):
-        """compute method
-        Note: will return None if not computed yet and the result of a previous
-        scoring if the function is not supposed to actually run in this iteration
-        """
-        iteration = iteration_result['iteration']
-        if self.run_in_iteration(iteration):
-            logging.info("RUNNING A NEW NETWORK SCORING")
-            self.__last_computed_result = self.__compute(iteration_result)
-        self.run_log.log(self.run_in_iteration(iteration),
-                         self.scaling(iteration))
+        """overridden compute for storing additional information"""
+        result = scoring.ScoringFunctionBase.compute(self, iteration_result, ref_matrix)
         iteration_result['networks'] = self.__update_score_means()
-        return self.__last_computed_result
+        return result
+
+    def compute_force(self, iteration_result, ref_matrix=None):
+        """overridden compute for storing additional information"""
+        result = scoring.ScoringFunctionBase.compute_force(self, iteration_result, ref_matrix)
+        iteration_result['networks'] = self.__update_score_means()
+        return result
 
     def __update_score_means(self):
         """returns the score means, adjusted to the current cluster setup"""
@@ -173,7 +171,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                 self.__last_network_scores[network.name()])
         return compute_mean(score_means)
 
-    def __compute(self, iteration_result):
+    def do_compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
         # networks are cached
         if self.__networks == None:
