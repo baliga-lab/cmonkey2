@@ -12,7 +12,7 @@ import scoring
 import network as nw
 import stringdb
 import os
-from datetime import date
+from datetime import date, datetime
 import json
 import numpy as np
 
@@ -219,7 +219,6 @@ class CMonkeyRun:
 
     def write_results(self, iteration_result):
         # Write a snapshot
-        output_dir = self['output_dir']
         iteration = iteration_result['iteration']
         iteration_result['columns'] = {}
         iteration_result['rows'] = {}
@@ -233,12 +232,11 @@ class CMonkeyRun:
             iteration_result['residuals'][cluster] = residual
 
         # write results
-        with open('%s/%d-results.json' % (output_dir, iteration), 'w') as outfile:
+        with open('%s/%d-results.json' % (self['output_dir'], iteration), 'w') as outfile:
             outfile.write(json.dumps(iteration_result))
 
     def write_stats(self, iteration_result):
         # write stats for this iteration
-        output_dir = self['output_dir']
         iteration = iteration_result['iteration']
         residuals = []
         cluster_stats = {}
@@ -258,7 +256,7 @@ class CMonkeyRun:
                                       'residual': residual }
         stats = {'cluster': cluster_stats, 'median_residual': np.median(residuals),
                  'motif-pvalue': motif_pvalue, 'network-scores': network_scores }
-        with open('%s/%d-stats.json' % (output_dir, iteration), 'w') as outfile:
+        with open('%s/%d-stats.json' % (self['output_dir'], iteration), 'w') as outfile:
             try:
                 outfile.write(json.dumps(stats))
             except:
@@ -268,9 +266,8 @@ class CMonkeyRun:
 
     def write_runlog(self, row_scoring, iteration):
         logging.info("Writing run map for this iteration")
-        output_dir = self['output_dir']
         run_infos = [run_log.to_json() for run_log in row_scoring.run_logs()]
-        with open('%s/%d-runlog.json' % (output_dir, iteration), 'w') as outfile:
+        with open('%s/%d-runlog.json' % (self['output_dir'], iteration), 'w') as outfile:
             try:
                 outfile.write(json.dumps(run_infos))
             except:
@@ -278,9 +275,20 @@ class CMonkeyRun:
                 # print run_infos object, likely there is something that is not serializable
                 print run_infos
 
+    def write_start_info(self):
+        start_info = { 'start_time': str(datetime.now()), 'num_iterations': self['num_iterations'] }
+        with open('%s/start.json' % self['output_dir'], 'w') as outfile:
+            outfile.write(json.dumps(start_info))
+
+    def write_finish_info(self):
+        finish_info = { 'finish_time': str(datetime.now()) }
+        with open('%s/finish.json' % self['output_dir'], 'w') as outfile:
+            outfile.write(json.dumps(finish_info))
+
+
     def run_iterations(self, row_scoring, col_scoring):
         self.report_params()
-        output_dir = self['output_dir']
+        self.write_start_info()
 
         for iteration in range(self['start_iteration'],
                                self['num_iterations'] + 1):
@@ -317,6 +325,7 @@ class CMonkeyRun:
         row_scoring.compute_force(iteration_result)
         self.write_results(iteration_result)
         self.write_stats(iteration_result)
+        self.write_finish_info()
         print "Done !!!!"
 
     ############################################################

@@ -1,4 +1,5 @@
-@(snapshot: Option[Snapshot],
+@(startInfo: StartInfo,
+snapshot: Option[Snapshot],
 clusters: Seq[Int],
 iterations: Seq[Int], iteration: Int,
 statsIterations: Seq[Int], meanResiduals: Array[Double],
@@ -160,12 +161,12 @@ runLogs: Array[RunLog])
        <h2>PyMonkey</h2>
        <div>Iteration <select id="select_iteration">
        @for(iter <- iterations) {@if(iter == iteration) {<option value="@iter" selected>@iter</option>} else {<option value="@iter">@iter</option>}}
-       </select>/2000: Available clusters (@clusters.length)
+       </select>/@startInfo.numIterations: Available clusters (@clusters.length)
        </div>
 
        <div style="height: 10px;">&nbsp;</div>
        <div class="ui-progress-bar ui-container" id="progress_bar" style="width: 20%; height: 15px;">
-         <div class="ui-progress" style="height: 12px; width: @((iterations(iterations.length - 1) / 2000.0) * 100)%;">
+         <div class="ui-progress" style="height: 12px; width: @("%.2f".format(iterations(iterations.length - 1) / 2000.0) * 100)%;">
            <span class="ui-label" style="display:none;">
              Loading Resources
              <b class="value">7%</b>
@@ -173,6 +174,7 @@ runLogs: Array[RunLog])
          </div>
        </div>
        <div style="font-size: smaller">Progress: @((iterations(iterations.length - 1) / 2000.0) * 100) %</div>
+       <div class="start-info">Run started at @startInfo.startTime</div>
        <div style="height: 10px;">&nbsp;</div>
      </div>
      <h3>Statistics</h3>

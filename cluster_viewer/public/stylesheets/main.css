@@ -130,3 +130,8 @@ table.members tr:nth-child(even) {
     float: left;
     width: 300px;
 }
+
+.start-info {
+    font-size: 8pt;
+    color: green;
+}

@@ -26,6 +26,7 @@ object Application extends Controller {
   val snapshotReader = new SnapshotReader(OutDirectory, Synonyms)
   val statsReader    = new StatsReader
   val runlogReader   = new RunLogReader
+  val startInfoReader = new StartInfoReader
 
   val ratiosFile = if (ProjectConfig.getProperty("cmonkey.ratios.file") != null) {
     new File(ProjectConfig.getProperty("cmonkey.ratios.file"))
@@ -55,6 +56,7 @@ object Application extends Controller {
 
   def index2(iteration: Int) = Action {
     // sort keys ascending by iteration number
+    val startInfo = startInfoReader.readStartInfo(OutDirectory)
     val stats = statsReader.readStats(OutDirectory).toMap
     val runLogs = runlogReader.readLogs(OutDirectory)
 
@@ -64,7 +66,8 @@ object Application extends Controller {
     makeRowStats(stats)
     val snapshotOption = snapshotReader.readSnapshot(iteration)
     val clusters = sortByResidual(snapshotOption)
-    Ok(views.html.index(snapshotOption,
+    Ok(views.html.index(startInfo.get,
+                        snapshotOption,
                         clusters,
                         snapshotIterations,
                         iteration,
