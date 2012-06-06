@@ -101,6 +101,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
         self.__sequence_filters = sequence_filters
         self.__last_computed_result = None
+        self.__last_run_results = None
         self.__last_pvalues = None
         self.__last_iteration_result = {}
 
@@ -253,6 +254,14 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             if len(seqs) == 0:
                 logging.warn('Cluster %i with %i genes: no sequences!' \
                                 %(cluster,len(seqs)) )
+
+            # Pass the previous run's seed if possible
+            if (self.__last_run_results != None and
+                cluster in self.__last_run_results.keys()):
+                previous_motif_infos = self.__last_run_results[cluster].motif_infos
+            else:
+                previous_motif_infos = None
+
             params.append(ComputeScoreParams(cluster,
                                              feature_ids,
                                              seqs,
@@ -260,7 +269,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                                              self.meme_runner(),
                                              min_cluster_rows_allowed,
                                              max_cluster_rows_allowed,
-                                             num_motifs))
+                                             num_motifs,
+                                             previous_motif_infos))
 
         # create motif result map if necessary
         for cluster in xrange(1, self.num_clusters() + 1):
@@ -270,6 +280,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                 iteration_result[cluster][self.seqtype] = { }
 
         # compute and store motif results
+        self.__last_run_results = {}
         if use_multiprocessing:
             pool = mp.Pool()
             results = pool.map(compute_cluster_score, params)
@@ -277,12 +288,14 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             for cluster in xrange(1, self.num_clusters() + 1):
                 pvalues, run_result = results[cluster - 1]
                 cluster_pvalues[cluster] = pvalues
+                self.__last_run_results[cluster] = run_result
                 iteration_result[cluster][self.seqtype] = meme_json(run_result)
             pool.close()
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
                 pvalues, run_result = compute_cluster_score(params[cluster - 1])
                 cluster_pvalues[cluster] = pvalues
+                self.__last_run_results[cluster] = run_result
                 iteration_result[cluster][self.seqtype] = meme_json(run_result)
 
         return cluster_pvalues
@@ -307,13 +320,13 @@ def meme_json(run_result):
                      'pvalue': annotation[0],
                      'reverse': reverse})
         for motif_info in run_result.motif_infos:
-            motif_num = motif_info.motif_num()
+            motif_num = motif_info.motif_num
             motif_annot = []
             if motif_num in motif_annotations:
                 motif_annot = motif_annotations[motif_num]
             result.append({'motif_num': motif_num,
-                           'pssm': motif_info.pssm(),
-                           'evalue': motif_info.evalue(),
+                           'pssm': motif_info.pssm,
+                           'evalue': motif_info.evalue,
                            'annotations': motif_annot})
     return result
 
@@ -322,7 +335,7 @@ class ComputeScoreParams:
     """representation of parameters to compute motif scores"""
     def __init__(self, cluster, feature_ids, seqs, used_seqs, meme_runner,
                  min_cluster_rows, max_cluster_rows,
-                 num_motifs):
+                 num_motifs, previous_motif_infos=None):
         """constructor"""
         self.cluster = cluster
         self.feature_ids = feature_ids  # to preserve the order
@@ -332,6 +345,7 @@ class ComputeScoreParams:
         self.min_cluster_rows = min_cluster_rows
         self.max_cluster_rows = max_cluster_rows
         self.num_motifs = num_motifs
+        self.previous_motif_infos = previous_motif_infos
 
 
 def compute_cluster_score(params):

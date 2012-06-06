@@ -114,7 +114,8 @@ class MemeSuite:
             [(feature_id, input_seqs[feature_id])
              for feature_id in params.feature_ids if feature_id in input_seqs])
         #logging.info("created sequence file in %s", seqfile)
-        motif_infos, output = self.meme(seqfile, bgfile, params.num_motifs)
+        motif_infos, output = self.meme(seqfile, bgfile, params.num_motifs,
+                                        params.previous_motif_infos)
 
         # run mast
         meme_outfile = None
@@ -188,7 +189,8 @@ class MemeSuite:
 class MemeSuite430(MemeSuite):
     """Version 4.3.0 of MEME"""
 
-    def meme(self, infile_path, bgfile_path, num_motifs, pspfile_path=None):
+    def meme(self, infile_path, bgfile_path, num_motifs,
+             previous_motif_infos=None, pspfile_path=None):
         """runs the meme command on the specified input file, background file
         and positional priors file. Returns a tuple of
         (list of MemeMotifInfo objects, meme output)
@@ -198,9 +200,24 @@ class MemeSuite430(MemeSuite):
                    '-maxsize', '9999999', '-nmotifs', str(num_motifs),
                    '-evt', '1e9', '-minw', '6', '-maxw', str(self.max_width()),
                    '-mod',  'zoops', '-nostatus', '-text']
+        # if determine the seed sequence (-cons parameter) for this MEME run
+        # uses the PSSM with the smallest score that has an e-value lower
+        # than 0.1
+        if previous_motif_infos != None:
+            max_evalue = 0.1
+            min_evalue = 10000000.0
+            min_motif_info = None
+            for motif_info in previous_motif_infos:
+                if motif_info.evalue < min_evalue:
+                    min_evalue = motif_info.evalue
+                    min_motif_info = motif_info
+            if min_motif_info != None and min_motif_info.evalue < max_evalue:
+                cons = min_motif_info.consensus_string().upper()
+                logging.info("seeding MEME with good motif %s", cons)
+                command.extend(['-cons', cons])
 
         if pspfile_path:
-            command.append(['-psp', pspfile_path])
+            command.extend(['-psp', pspfile_path])
 
         #logging.info("running: %s", " ".join(command))
         output = subprocess.check_output(command)
@@ -260,49 +277,21 @@ class MemeMotifInfo:
     # pylint: disable-msg=R0913
     def __init__(self, pssm, motif_num, width, num_sites, llr, evalue, sites):
         """Creates a MemeMotifInfo instance"""
-        self.__pssm = pssm
-        self.__motif_num = motif_num
-        self.__width = width
-        self.__num_sites = num_sites
-        self.__llr = llr
-        self.__evalue = evalue
-        self.__sites = sites
-
-    def motif_num(self):
-        """returns the motif number"""
-        return self.__motif_num
-
-    def pssm(self):
-        """return the PSSM rows"""
-        return self.__pssm
-
-    def width(self):
-        """Returns the width"""
-        return self.__width
-
-    def num_sites(self):
-        """returns the number of sites"""
-        return self.__num_sites
-
-    def llr(self):
-        """returns the log-likelihood ratio"""
-        return self.__llr
-
-    def evalue(self):
-        """returns the e value"""
-        return self.__evalue
-
-    def sites(self):
-        """returns the sites"""
-        return self.__sites
+        self.pssm = pssm
+        self.motif_num = motif_num
+        self.width = width
+        self.num_sites = num_sites
+        self.llr = llr
+        self.evalue = evalue
+        self.sites = sites
 
     def consensus_string(self, cutoff1=0.7, cutoff2=0.4):
         """returns the consensus string from the pssm table
         remember: letter order is ACGT"""
         alphabet = 'ACGT'
         result = ""
-        for row in xrange(len(self.__pssm)):
-            rowvals = self.__pssm[row]
+        for row in xrange(len(self.pssm)):
+            rowvals = self.pssm[row]
             max_index = rowvals.index(max(rowvals))
             score = rowvals[max_index]
             if score < cutoff2:
@@ -316,8 +305,8 @@ class MemeMotifInfo:
     def __repr__(self):
         """returns the string representation"""
         return ("Motif width: %d sites: %d llr: %d e-value: %f" %
-         (self.width(), self.num_sites(), self.llr(),
-          self.evalue()))
+         (self.width, self.num_sites, self.llr,
+          self.evalue))
 
 
 def read_meme_output(output_text, num_motifs):

@@ -41,10 +41,10 @@ class Meme430Test(unittest.TestCase):  # pylint: disable-msg=R0904
                                            'testdata/meme1.bg',
                                            num_motifs=1)
         self.assertEquals(1, len(motif_infos))
-        self.assertEquals(24, motif_infos[0].width())
-        self.assertEquals(3, motif_infos[0].num_sites())
-        self.assertEquals(79, motif_infos[0].llr())
-        self.assertAlmostEquals(1700, motif_infos[0].evalue())
+        self.assertEquals(24, motif_infos[0].width)
+        self.assertEquals(3, motif_infos[0].num_sites)
+        self.assertEquals(79, motif_infos[0].llr)
+        self.assertAlmostEquals(1700, motif_infos[0].evalue)
 
     def test_motif_scoring(self):
         """tests the motif scoring in integration"""

@@ -16,12 +16,12 @@ class MemeTest(unittest.TestCase):  # pylint: disable-msg=R0904
             motif_infos = meme.read_meme_output(inputfile.read(), 2)
 
         self.assertEquals(2, len(motif_infos))
-        self.assertEquals(24, motif_infos[0].width())
-        self.assertEquals(5, motif_infos[0].num_sites())
-        self.assertEquals(95, motif_infos[0].llr())
-        self.assertAlmostEquals(1.9e+3, motif_infos[0].evalue())
-        self.assertEquals(5, len(motif_infos[0].sites()))
-        sites0 = motif_infos[0].sites()
+        self.assertEquals(24, motif_infos[0].width)
+        self.assertEquals(5, motif_infos[0].num_sites)
+        self.assertEquals(95, motif_infos[0].llr)
+        self.assertAlmostEquals(1.9e+3, motif_infos[0].evalue)
+        self.assertEquals(5, len(motif_infos[0].sites))
+        sites0 = motif_infos[0].sites
         self.assertEquals('NP_395673.1', sites0[0][0])
         self.assertEquals('NP_395728.1', sites0[1][0])
         self.assertEquals('NP_279261.1', sites0[2][0])
