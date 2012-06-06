@@ -133,5 +133,14 @@ table.members tr:nth-child(even) {
 
 .start-info {
     font-size: 8pt;
+    color: blue;
+}
+.finish-info {
+    font-size: 8pt;
     color: green;
+}
+
+.inprogress-info {
+    font-size: 8pt;
+    color: red;
 }

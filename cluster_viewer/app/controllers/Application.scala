@@ -23,10 +23,11 @@ object Application extends Controller {
   val Synonyms = SynonymsFactory.getSynonyms(
     ProjectConfig.getProperty("cmonkey.synonyms.format"),
     ProjectConfig.getProperty("cmonkey.synonyms.file"))
-  val snapshotReader = new SnapshotReader(OutDirectory, Synonyms)
-  val statsReader    = new StatsReader
-  val runlogReader   = new RunLogReader
-  val startInfoReader = new StartInfoReader
+  val snapshotReader   = new SnapshotReader(OutDirectory, Synonyms)
+  val statsReader      = new StatsReader
+  val runlogReader     = new RunLogReader
+  val startInfoReader  = new StartInfoReader
+  val finishInfoReader = new FinishInfoReader
 
   val ratiosFile = if (ProjectConfig.getProperty("cmonkey.ratios.file") != null) {
     new File(ProjectConfig.getProperty("cmonkey.ratios.file"))
@@ -57,6 +58,7 @@ object Application extends Controller {
   def index2(iteration: Int) = Action {
     // sort keys ascending by iteration number
     val startInfo = startInfoReader.readStartInfo(OutDirectory)
+    val finishInfo = finishInfoReader.readFinishInfo(OutDirectory)
     val stats = statsReader.readStats(OutDirectory).toMap
     val runLogs = runlogReader.readLogs(OutDirectory)
 
@@ -67,6 +69,7 @@ object Application extends Controller {
     val snapshotOption = snapshotReader.readSnapshot(iteration)
     val clusters = sortByResidual(snapshotOption)
     Ok(views.html.index(startInfo.get,
+                        finishInfo,
                         snapshotOption,
                         clusters,
                         snapshotIterations,

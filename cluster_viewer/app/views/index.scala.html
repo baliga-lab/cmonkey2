@@ -1,4 +1,5 @@
 @(startInfo: StartInfo,
+finishInfo: Option[FinishInfo],
 snapshot: Option[Snapshot],
 clusters: Seq[Int],
 iterations: Seq[Int], iteration: Int,
@@ -134,7 +135,7 @@ runLogs: Array[RunLog])
                  categories: iterations,
                  tickInterval: 30
              },
-             yAxis: { title: { text: 'mean p-value' }, max: -0.5, min: -5.0 },
+             yAxis: { title: { text: 'mean p-value' }, max: -0.5, min: -6 },
              series: @(HighchartsFormatter.toMotifPValueSeries(iterationStats, runLogs))
          });
 
@@ -175,6 +176,10 @@ runLogs: Array[RunLog])
        </div>
        <div style="font-size: smaller">Progress: @((iterations(iterations.length - 1) / 2000.0) * 100) %</div>
        <div class="start-info">Run started at @startInfo.startTime</div>
+       @if(finishInfo == None) {<div class="inprogress-info">Run in progress...</div>}
+       @finishInfo.map { info =>
+         <div class="finish-info">Run finished at @info.finishTime</div>
+       }
        <div style="height: 10px;">&nbsp;</div>
      </div>
      <h3>Statistics</h3>
