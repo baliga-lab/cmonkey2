@@ -258,6 +258,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             # Pass the previous run's seed if possible
             if (self.__last_run_results != None and
                 cluster in self.__last_run_results.keys() and
+                self.__last_run_results[cluster] != None and
                 self.__last_run_results[cluster].motif_infos != None):
                 previous_motif_infos = self.__last_run_results[cluster].motif_infos
             else:
