@@ -11,6 +11,15 @@ import play.api.libs.json._
 
 case class IntHistogram(xvalues: Array[Int], yvalues: Array[Int])
 case class ResidualHistogram(xvalues: Array[String], yvalues: Array[Int])
+case class RunInfo(startTime: String,
+                   numIterations: Int,
+                   finished: Boolean,
+                   finishTime: String,
+                   currentIteration: Int,
+                   clusters: Seq[Int],
+                   iterations: Seq[Int],
+                   statsIterations: Seq[Int],
+                   progress: Double)
 
 object Application extends Controller {
 
@@ -68,13 +77,15 @@ object Application extends Controller {
     makeRowStats(stats)
     val snapshotOption = snapshotReader.readSnapshot(iteration)
     val clusters = sortByResidual(snapshotOption)
-    Ok(views.html.index(startInfo.get,
-                        finishInfo,
+    val progress = math.min((snapshotIterations(snapshotIterations.length - 1) /
+                             startInfo.get.numIterations.toDouble * 100.0), 100.0)
+    val runInfo = RunInfo(startInfo.get.startTime, startInfo.get.numIterations,
+                          finishInfo != None,
+                          if (finishInfo != None) finishInfo.get.finishTime else "",
+                          iteration, clusters, snapshotIterations, statsIterations,
+                          progress)
+    Ok(views.html.index(runInfo,
                         snapshotOption,
-                        clusters,
-                        snapshotIterations,
-                        iteration,
-                        statsIterations,
                         makeMeanResiduals(statsIterations, stats),
                         stats,
                         makeRowStats(stats),

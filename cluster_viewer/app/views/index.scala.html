@@ -1,9 +1,6 @@
-@(startInfo: StartInfo,
-finishInfo: Option[FinishInfo],
+@(runInfo: RunInfo,
 snapshot: Option[Snapshot],
-clusters: Seq[Int],
-iterations: Seq[Int], iteration: Int,
-statsIterations: Seq[Int], meanResiduals: Array[Double],
+meanResiduals: Array[Double],
 iterationStats: Map[Int, IterationStats],
 rowStats: IntHistogram, columnStats: IntHistogram,
 residualHistogram: ResidualHistogram,
@@ -14,7 +11,7 @@ runLogs: Array[RunLog])
      $(document).ready(function() {
          $('a.clusterlink').click(function () {
              var cluster = $(this).attr('id');
-             $.get('/cluster/@iteration/' + cluster,
+             $.get('/cluster/@runInfo.currentIteration/' + cluster,
                    function(html) {
                        console.debug(html);
                        $(html).replaceAll('#cluster-view');
@@ -23,7 +20,7 @@ runLogs: Array[RunLog])
          $('#select_iteration').change(function (event) {
              window.location.href = "/" + $(this).val();
          });
-         var iterations = @(HighchartsFormatter.formatInts(statsIterations));
+         var iterations = @(HighchartsFormatter.formatInts(runInfo.statsIterations));
 
          // residual graph
          var residualChart = new Highcharts.Chart({
@@ -161,25 +158,22 @@ runLogs: Array[RunLog])
        <div><img style="float: right" src="@routes.Assets.at("images/isb_logo.png")"></img></div>
        <h2>cMonkey/Python</h2>
        <div>Iteration <select id="select_iteration">
-       @for(iter <- iterations) {@if(iter == iteration) {<option value="@iter" selected>@iter</option>} else {<option value="@iter">@iter</option>}}
-       </select>/@startInfo.numIterations: Available clusters (@clusters.length)
+       @for(iter <- runInfo.iterations) {@if(iter == runInfo.currentIteration) {<option value="@iter" selected>@iter</option>} else {<option value="@iter">@iter</option>}}
+       </select>/@runInfo.numIterations: Available clusters (@runInfo.clusters.length)
        </div>
 
        <div style="height: 10px;">&nbsp;</div>
        <div class="ui-progress-bar ui-container" id="progress_bar" style="width: 20%; height: 15px;">
-         <div class="ui-progress" style="height: 12px; width: @("%.2f".format(iterations(iterations.length - 1) / 2000.0) * 100)%;">
+         <div class="ui-progress" style="height: 12px; width: @runInfo.progress%;">
            <span class="ui-label" style="display:none;">
              Loading Resources
              <b class="value">7%</b>
            </span>
          </div>
        </div>
-       <div style="font-size: smaller">Progress: @((iterations(iterations.length - 1) / 2000.0) * 100) %</div>
-       <div class="start-info">Run started at @startInfo.startTime</div>
-       @if(finishInfo == None) {<div class="inprogress-info">Run in progress...</div>}
-       @finishInfo.map { info =>
-         <div class="finish-info">Run finished at @info.finishTime</div>
-       }
+       <div style="font-size: smaller">Progress: @runInfo.progress %</div>
+       <div class="start-info">Run started at @runInfo.startTime</div>
+       @if(!runInfo.finished) {<div class="inprogress-info">Run in progress...</div>} else { <div class="finish-info">Run finished at @runInfo.finishTime</div> }
        <div style="height: 10px;">&nbsp;</div>
      </div>
      <h3>Statistics</h3>
@@ -211,7 +205,7 @@ runLogs: Array[RunLog])
          <tr><td><table class="inner"><tr><th class="position">#</th><th class="clusternum">Cluster</th><th class="nrows"># rows</th><th class="ncols"># columns</th><th class="residual">residual</th><th>&nbsp;</th></tr></table></td></tr>
          <tr><td><div style="height: 200px; overflow: auto; background-color: #fff;">
            <table class="inner">
-             @for(i <- 0 until clusters.length) {<tr><td class="position">@(i + 1)</td><td class="clusternum"><a class="clusterlink" id="@(clusters(i))" href="#">@(clusters(i))</a></td><td class="nrows">@(snapshot.get.rows(clusters(i)).length)</td><td class="ncols">@(snapshot.get.columns(clusters(i)).length)</td><td class="residual">@(snapshot.get.residuals(clusters(i)))</td><td>&nbsp;</td></tr>
+             @for(i <- 0 until runInfo.clusters.length) {<tr><td class="position">@(i + 1)</td><td class="clusternum"><a class="clusterlink" id="@(runInfo.clusters(i))" href="#">@(runInfo.clusters(i))</a></td><td class="nrows">@(snapshot.get.rows(runInfo.clusters(i)).length)</td><td class="ncols">@(snapshot.get.columns(runInfo.clusters(i)).length)</td><td class="residual">@(snapshot.get.residuals(runInfo.clusters(i)))</td><td>&nbsp;</td></tr>
              }
          </table></div></td></tr>
        </table>
