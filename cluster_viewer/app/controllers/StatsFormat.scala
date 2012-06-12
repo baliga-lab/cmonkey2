@@ -7,7 +7,8 @@ import scala.collection.mutable.HashMap
 
 case class ClusterStats(numRows: Int, numColumns: Int, residual: Double)
 case class IterationStats(clusters: Map[Int, ClusterStats], medianResidual: Double,
-                          motifPValue: Double, networkScores: Map[String, Double])
+                          motifPValue: Double, networkScores: Map[String, Double],
+                          fuzzyCoeff: Double)
 
 object StatsReader {
   val FilePattern = Pattern.compile("(\\d+)-stats.json")
@@ -22,6 +23,7 @@ class StatsReader {
       val clusters = (json \ "cluster").as[JsObject]
       val motifPValue = (json \ "motif-pvalue").asInstanceOf[JsNumber].value.doubleValue
       val networkScoresJson = (json \ "network-scores").as[JsObject]
+      val fuzzyCoeff = (json \ "fuzzy-coeff").asInstanceOf[JsNumber].value.doubleValue
 
       val clusterStats = new HashMap[Int, ClusterStats]
       for (field <- clusters.fields) {
@@ -35,7 +37,8 @@ class StatsReader {
         networkScores(field._1) =
           field._2.asInstanceOf[JsNumber].value.doubleValue
       }
-      IterationStats(clusterStats.toMap, residual, motifPValue, networkScores.toMap)
+      IterationStats(clusterStats.toMap, residual, motifPValue, networkScores.toMap,
+                     fuzzyCoeff)
     }
     def writes(stats: IterationStats): JsValue = JsUndefined("TODO")
   }

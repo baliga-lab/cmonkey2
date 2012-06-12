@@ -133,6 +133,19 @@ object HighchartsFormatter {
     builder.toString
   }
 
+  def toFuzzyCoeffSeries(stats: Map[Int, IterationStats]) = {
+    val builder = new StringBuilder
+    builder.append("[ { name: 'fuzzy coeff', data: [")
+    val iterations = stats.keySet.toArray
+    java.util.Arrays.sort(iterations)
+    for (iteration <- iterations) {
+      builder.append(stats(iteration).fuzzyCoeff)
+      builder.append(", ")
+    }
+    builder.append("] } ]\n")
+    builder.toString
+  }
+
   def toHSSeriesEntry(runLog: RunLog): String = {
     val finalScaling = Array.ofDim[Float](runLog.active.length)
     for (i <- 0 until finalScaling.length) {

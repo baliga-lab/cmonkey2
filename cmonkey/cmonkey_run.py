@@ -246,6 +246,11 @@ class CMonkeyRun:
         else:
             motif_pvalue = 0.0
 
+        if 'fuzzy-coeff' in iteration_result:
+            fuzzy_coeff = iteration_result['fuzzy-coeff']
+        else:
+            fuzzy_coeff = 0.0
+
         for cluster in range(1, self['num_clusters'] + 1):
             row_names = iteration_result['rows'][cluster]
             column_names = iteration_result['columns'][cluster]
@@ -255,7 +260,8 @@ class CMonkeyRun:
                                       'num_columns': len(column_names),
                                       'residual': residual }
         stats = {'cluster': cluster_stats, 'median_residual': np.median(residuals),
-                 'motif-pvalue': motif_pvalue, 'network-scores': network_scores }
+                 'motif-pvalue': motif_pvalue, 'network-scores': network_scores,
+                 'fuzzy-coeff': fuzzy_coeff}
         with open('%s/%d-stats.json' % (self['output_dir'], iteration), 'w') as outfile:
             try:
                 outfile.write(json.dumps(stats))
@@ -297,7 +303,7 @@ class CMonkeyRun:
             self.membership().update(self.ratio_matrix,
                                      row_scoring.compute(iteration_result),
                                      col_scoring.compute(iteration_result),
-                                     iteration, self['num_iterations'])
+                                     self['num_iterations'], iteration_result)
 
             if iteration > 0 and self.CHECKPOINT_INTERVAL and iteration % self.CHECKPOINT_INTERVAL == 0:
                 self.save_checkpoint_data(iteration, row_scoring, col_scoring)

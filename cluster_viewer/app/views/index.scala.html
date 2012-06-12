@@ -151,6 +151,22 @@ runLogs: Array[RunLog])
              yAxis: { title: { text: 'mean net score' }, max: 0, min: -3 },
              series: @(HighchartsFormatter.toNetworkScoreSeries(iterationStats, runLogs))
          });
+
+         var fuzzyCoeffChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'fuzzy-graph',
+                 type: 'line',
+                 width: 300, height: 200
+             },
+             title: { text: 'Fuzzy coefficient' },
+             plotOptions: { line: { marker: { enabled: false }, } },
+             xAxis: {
+                 categories: iterations,
+                 tickInterval: 30
+             },
+             yAxis: { title: { text: 'fuzzy coeff' } },
+             series: @(HighchartsFormatter.toFuzzyCoeffSeries(iterationStats))
+         });
      });
    </script>
    <div id="maincontainer">
@@ -191,7 +207,7 @@ runLogs: Array[RunLog])
        </div>
        <div id="contentcolumn">
          <div class="innertube">
-           <div id="cluster-residual-graph"></div><div id="runlog-graph"></div><div></div>
+           <div id="cluster-residual-graph"></div><div id="runlog-graph"></div><div id="fuzzy-graph"></div>
          </div>
        </div>
      </div>

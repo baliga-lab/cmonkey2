@@ -308,14 +308,14 @@ class ClusterMembership:
         result += repr(self.__cluster_column_members)
         return result
 
-    def update(self, matrix, row_scores, column_scores, iteration,
-               num_iterations, add_fuzz=True):
+    def update(self, matrix, row_scores, column_scores,
+               num_iterations, iteration_result, add_fuzz=True):
         """top-level update method"""
         if add_fuzz:
             row_scores, column_scores = self.__fuzzify(row_scores,
                                                        column_scores,
-                                                       iteration,
-                                                       num_iterations)
+                                                       num_iterations,
+                                                       iteration_result)
         self.__last_row_scores = row_scores
 
         rpc = map(len, self.__cluster_row_members.values())
@@ -336,13 +336,14 @@ class ClusterMembership:
         #logging.info("COMPENSATE_SIZE() took %f s.", elapsed / 1000.0)
         self.__update_memberships(rd_scores, cd_scores)
 
-    def __fuzzify(self, row_scores, column_scores, iteration,
-                  num_iterations):
+    def __fuzzify(self, row_scores, column_scores, num_iterations, iteration_result):
         """Provide an iteration-specific fuzzification"""
+        iteration = iteration_result['iteration']
         #logging.info("__fuzzify(), setup...")
         #start_time = util.current_millis()
         #fuzzy_coeff = std_fuzzy_coefficient(iteration, num_iterations)
         fuzzy_coeff = old_fuzzy_coefficient(iteration, num_iterations)
+        iteration_result['fuzzy-coeff'] = fuzzy_coeff
         num_row_fuzzy_values = row_scores.num_rows() * row_scores.num_columns()
         num_col_fuzzy_values = (column_scores.num_rows() *
                                 column_scores.num_columns())
