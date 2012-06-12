@@ -341,7 +341,8 @@ class ClusterMembership:
         """Provide an iteration-specific fuzzification"""
         #logging.info("__fuzzify(), setup...")
         #start_time = util.current_millis()
-        fuzzy_coeff = std_fuzzy_coefficient(iteration, num_iterations)
+        #fuzzy_coeff = std_fuzzy_coefficient(iteration, num_iterations)
+        fuzzy_coeff = old_fuzzy_coefficient(iteration, num_iterations)
         num_row_fuzzy_values = row_scores.num_rows() * row_scores.num_columns()
         num_col_fuzzy_values = (column_scores.num_rows() *
                                 column_scores.num_columns())
@@ -738,6 +739,11 @@ def std_fuzzy_coefficient(iteration, num_iterations):
     """standard fuzzy coefficient as defined in cMonkey"""
     return 0.7 * math.exp(-(float(iteration) /
                             (float(num_iterations) / 3.0))) + 0.05
+
+
+def old_fuzzy_coefficient(iteration, num_iterations):
+    """standard fuzzy coefficient as defined in cMonkey"""
+    return 0.75 * math.exp(-iteration/(num_iterations/4.0))
 
 
 def make_kmeans_row_seeder(num_clusters):

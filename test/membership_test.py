@@ -249,6 +249,11 @@ class ClusterMembershipTest(unittest.TestCase):
                            0.13571949977708733, 0.11350256730258876,
                            0.09704385891782485, 0.08485094785750477], result)
 
+    def test_old_fuzzy_coefficient(self):
+        result = [memb.old_fuzzy_coefficient(value, 2) for value in range(1, 3)]
+        self.assertEquals([0.10150146242745953, 0.013736729166550634], result)
+
+
     def test_get_best_clusters(self):
         matrix = dm.DataMatrix(3, 4, values=[[1.0, 2.0, 3.0, 4.0],
                                           [4.0, 5.0, 6.0, 7.0],
