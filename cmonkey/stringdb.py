@@ -13,17 +13,17 @@ STRING_FILE2 = 'string_links_64091.tab'
 PROTEIN_PREFIX = re.compile('^string:\d+[.]')
 
 
-def read_edges(filename):
+def read_edges(filename, sep='\t', prefix=PROTEIN_PREFIX):
     """read the edges from a tab separated file. This is the original
     STRING format"""
     logging.info("stringdb.read_edges()")
-    dfile = util.DelimitedFile.read(filename)
+    dfile = util.DelimitedFile.read(filename, sep)
     result = []
     exists = {}
     max_score = 0.0
     for line in dfile.lines():
-        protein1 = re.sub(PROTEIN_PREFIX, '', line[0])
-        protein2 = re.sub(PROTEIN_PREFIX, '', line[1])
+        protein1 = re.sub(prefix, '', line[0])
+        protein2 = re.sub(prefix, '', line[1])
         combined_score = line[14].split('|')[0].split(':')[1]
 
         key = ':'.join([protein1, protein2, combined_score])

@@ -173,9 +173,13 @@ runLogs: Array[RunLog])
      <div id="topsection">
        <div><img style="float: right" src="@routes.Assets.at("images/isb_logo.png")"></img></div>
        <h2>cMonkey/Python</h2>
+       <div class="start-info">
+         @runInfo.startInfo.species (@runInfo.startInfo.organismCode): @runInfo.startInfo.numRows genes, @runInfo.startInfo.numConditions conditions, @runInfo.clusters.length clusters
+       </div>
+       <div>&nbsp;</div>
        <div>Iteration <select id="select_iteration">
        @for(iter <- runInfo.iterations) {@if(iter == runInfo.currentIteration) {<option value="@iter" selected>@iter</option>} else {<option value="@iter">@iter</option>}}
-       </select>/@runInfo.numIterations: Available clusters (@runInfo.clusters.length)
+       </select>/@runInfo.startInfo.numIterations
        </div>
 
        <div style="height: 10px;">&nbsp;</div>
@@ -187,8 +191,8 @@ runLogs: Array[RunLog])
            </span>
          </div>
        </div>
-       <div style="font-size: smaller">Progress: @runInfo.progress %</div>
-       <div class="start-info">Run started at @runInfo.startTime</div>
+       <div style="font-size: smaller">Progress: @("%.2f".format(runInfo.progress)) %</div>
+       <div class="start-info">Run started at @runInfo.startInfo.startTime</div>
        @if(!runInfo.finished) {<div class="inprogress-info">Run in progress...</div>} else { <div class="finish-info">Run finished at @runInfo.finishTime</div> }
        <div style="height: 10px;">&nbsp;</div>
      </div>

@@ -21,6 +21,34 @@ class SnapshotReader(OutDirectory: File, Synonyms: SynonymsMap) {
   import SnapshotReader._
 
   implicit object SnapshotFormat extends Format[Snapshot] {
+
+    private def readMotifInfos(stMotifs: Seq[JsValue]) = {
+      val motifInfos = new java.util.ArrayList[MotifInfo]
+      for (motif <- stMotifs) {
+        val motifObj = motif.asInstanceOf[JsObject]
+        val pssm = motifObj.value("pssm").as[Array[Array[Float]]]
+        val evalue = if (motifObj.keys.contains("evalue")) {
+          (motifObj \ "evalue").asInstanceOf[JsNumber].value.doubleValue
+        } else 0.0
+        val motifNum = (motifObj \ "motif_num").asInstanceOf[JsNumber].value.intValue
+        val annotations = if (motifObj.keys.contains("annotations")) {
+          val annots = (motifObj \ "annotations").asInstanceOf[JsArray]
+          val annotArr = new Array[Annotation](annots.value.length)
+          for (i <- 0 until annotArr.length) {
+            val current = annots(i)
+            annotArr(i) = Annotation(motifNum,
+                                     (current \ "reverse").asInstanceOf[JsBoolean].value,
+                                     (current \ "position").asInstanceOf[JsNumber].value.intValue,
+                                     (current \ "gene").asInstanceOf[JsString].value,
+                                     (current \ "pvalue").asInstanceOf[JsNumber].value.doubleValue)
+          }
+          annotArr
+        } else Array[Annotation]()
+        motifInfos.add(MotifInfo(motifNum, evalue, pssm, annotations))
+      }
+      motifInfos.toArray(new Array[MotifInfo](0))
+    }
+
     def reads(json: JsValue): Snapshot = {
       val rows = (json \ "rows").as[JsObject]
       val cols = (json \ "columns").as[JsObject]
@@ -51,35 +79,16 @@ class SnapshotReader(OutDirectory: File, Synonyms: SynonymsMap) {
           val seqTypeMotifs = new HashMap[String, Array[MotifInfo]]
 
           // iterate over the sequence types, which are keys
-          for (stfield <- seqTypeObj.fields) {
-            val seqType = stfield._1
+          for (seqType <- seqTypeObj.keys) {
             // an array of motif objects (motif_num, evalue, annotations, pssm)
             // annotations are tuples of (gene, position, pvalue, reverse)
-            val stMotifs = stfield._2.asInstanceOf[JsArray].value
-            val motifInfos = new java.util.ArrayList[MotifInfo]
-            for (motif <- stMotifs) {
-              val motifObj = motif.asInstanceOf[JsObject]
-              val pssm = motifObj.value("pssm").as[Array[Array[Float]]]
-              val evalue = if (motifObj.keys.contains("evalue")) {
-                (motifObj \ "evalue").asInstanceOf[JsNumber].value.doubleValue
-              } else 0.0
-              val motifNum = (motifObj \ "motif_num").asInstanceOf[JsNumber].value.intValue
-              val annotations = if (motifObj.keys.contains("annotations")) {
-                val annots = (motifObj \ "annotations").asInstanceOf[JsArray]
-                val annotArr = new Array[Annotation](annots.value.length)
-                for (i <- 0 until annotArr.length) {
-                  val current = annots(i)
-                  annotArr(i) = Annotation(motifNum,
-                                           (current \ "reverse").asInstanceOf[JsBoolean].value,
-                                           (current \ "position").asInstanceOf[JsNumber].value.intValue,
-                                           (current \ "gene").asInstanceOf[JsString].value,
-                                           (current \ "pvalue").asInstanceOf[JsNumber].value.doubleValue)
-                }
-                annotArr
-              } else Array[Annotation]()
-              motifInfos.add(MotifInfo(motifNum, evalue, pssm, annotations))
+            val stResult = seqTypeObj \ seqType
+            val motifInfos = (stResult \ "motif-info")
+            seqTypeMotifs(seqType) = if (motifInfos.isInstanceOf[JsArray]) {
+              readMotifInfos(motifInfos.asInstanceOf[JsArray].value)
+            } else {
+              Array.ofDim[MotifInfo](0)
             }
-            seqTypeMotifs(seqType) = motifInfos.toArray(new Array[MotifInfo](0))
           }
           clusterMotifs(field._1.toInt) = seqTypeMotifs.toMap
         }

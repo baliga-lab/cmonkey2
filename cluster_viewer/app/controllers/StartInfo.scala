@@ -3,7 +3,8 @@ package controllers
 import play.api.libs.json._
 import java.io._
 
-case class StartInfo(startTime: String, numIterations: Int)
+case class StartInfo(startTime: String, numIterations: Int, organismCode: String,
+                     species: String, numRows: Int, numConditions: Int)
 
 
 class StartInfoReader {
@@ -13,7 +14,11 @@ class StartInfoReader {
       val jsonObj = json.as[JsObject]
       val startTime = (jsonObj \ "start_time").as[String]
       val numIterations = (jsonObj \ "num_iterations").as[Int]
-      StartInfo(startTime, numIterations)
+      val organismCode = (jsonObj \ "organism-code").as[String]
+      val species = (jsonObj \ "species").as[String]
+      StartInfo(startTime, numIterations, organismCode, species,
+                (jsonObj \ "num_rows").as[Int],
+                (jsonObj \ "num_columns").as[Int])
     }
     def writes(log: StartInfo): JsValue = JsUndefined("TODO")
   }

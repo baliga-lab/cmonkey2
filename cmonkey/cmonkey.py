@@ -32,6 +32,6 @@ if __name__ == '__main__':
         matrix_factory = dm.DataMatrixFactory([dm.nochange_filter, dm.center_scale_filter])
         infile = util.DelimitedFile.read(sys.argv[2], has_header=True, quote='\"')
         matrix = matrix_factory.create_from(infile)
-        cmonkey_run = cmonkey_run.CMonkeyRun(sys.argv[1], matrix)
+        cmonkey_run = cmonkey_run.CMonkeyRun(sys.argv[1], matrix, num_clusters=75)
         cmonkey_run['string_file'] = sys.argv[3]
         cmonkey_run.run()

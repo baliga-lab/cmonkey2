@@ -291,14 +291,17 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                 pvalues, run_result = results[cluster - 1]
                 cluster_pvalues[cluster] = pvalues
                 self.__last_run_results[cluster] = run_result
-                iteration_result[cluster][self.seqtype] = meme_json(run_result)
+                #iteration_result[cluster][self.seqtype] = meme_json(run_result)
+                iteration_result[cluster][self.seqtype]['motif-info'] = meme_json(run_result)
+                iteration_result[cluster][self.seqtype]['pvalues'] = pvalues
             pool.close()
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
                 pvalues, run_result = compute_cluster_score(params[cluster - 1])
                 cluster_pvalues[cluster] = pvalues
                 self.__last_run_results[cluster] = run_result
-                iteration_result[cluster][self.seqtype] = meme_json(run_result)
+                iteration_result[cluster][self.seqtype]['motif-info'] = meme_json(run_result)
+                iteration_result[cluster][self.seqtype]['pvalues'] = pvalues
 
         return cluster_pvalues
 
