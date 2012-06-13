@@ -19,23 +19,22 @@ class StatsReader {
 
   implicit object StatsFormat extends Format[IterationStats] {
     def reads(json: JsValue): IterationStats = {
-      val residual = (json \ "median_residual").asInstanceOf[JsNumber].value.doubleValue
+      val residual = (json \ "median_residual").as[Double]
       val clusters = (json \ "cluster").as[JsObject]
-      val motifPValue = (json \ "motif-pvalue").asInstanceOf[JsNumber].value.doubleValue
+      val motifPValue = (json \ "motif-pvalue").as[Double]
       val networkScoresJson = (json \ "network-scores").as[JsObject]
-      val fuzzyCoeff = (json \ "fuzzy-coeff").asInstanceOf[JsNumber].value.doubleValue
+      val fuzzyCoeff = (json \ "fuzzy-coeff").as[Double]
 
       val clusterStats = new HashMap[Int, ClusterStats]
       for (field <- clusters.fields) {
         val cstats = field._2
-        clusterStats(field._1.toInt) = ClusterStats((cstats \ "num_rows").asInstanceOf[JsNumber].value.intValue,
-                                                    (cstats \ "num_columns").asInstanceOf[JsNumber].value.intValue,
-                                                    (cstats \ "residual").asInstanceOf[JsNumber].value.doubleValue)
+        clusterStats(field._1.toInt) = ClusterStats((cstats \ "num_rows").as[Int],
+                                                    (cstats \ "num_columns").as[Int],
+                                                    (cstats \ "residual").as[Double])
       }
       val networkScores = new HashMap[String, Double]
       for (field <- networkScoresJson.fields) {
-        networkScores(field._1) =
-          field._2.asInstanceOf[JsNumber].value.doubleValue
+        networkScores(field._1) = field._2.as[Double]
       }
       IterationStats(clusterStats.toMap, residual, motifPValue, networkScores.toMap,
                      fuzzyCoeff)

@@ -27,20 +27,19 @@ class SnapshotReader(OutDirectory: File, Synonyms: SynonymsMap) {
       for (motif <- stMotifs) {
         val motifObj = motif.asInstanceOf[JsObject]
         val pssm = motifObj.value("pssm").as[Array[Array[Float]]]
-        val evalue = if (motifObj.keys.contains("evalue")) {
-          (motifObj \ "evalue").asInstanceOf[JsNumber].value.doubleValue
-        } else 0.0
-        val motifNum = (motifObj \ "motif_num").asInstanceOf[JsNumber].value.intValue
+        val evalue = if (motifObj.keys.contains("evalue")) (motifObj \ "evalue").as[Double]
+                     else 0.0
+        val motifNum = (motifObj \ "motif_num").as[Int]
         val annotations = if (motifObj.keys.contains("annotations")) {
           val annots = (motifObj \ "annotations").asInstanceOf[JsArray]
           val annotArr = new Array[Annotation](annots.value.length)
           for (i <- 0 until annotArr.length) {
             val current = annots(i)
             annotArr(i) = Annotation(motifNum,
-                                     (current \ "reverse").asInstanceOf[JsBoolean].value,
-                                     (current \ "position").asInstanceOf[JsNumber].value.intValue,
-                                     (current \ "gene").asInstanceOf[JsString].value,
-                                     (current \ "pvalue").asInstanceOf[JsNumber].value.doubleValue)
+                                     (current \ "reverse").as[Boolean],
+                                     (current \ "position").as[Int],
+                                     (current \ "gene").as[String],
+                                     (current \ "pvalue").as[Double])
           }
           annotArr
         } else Array[Annotation]()
@@ -57,7 +56,6 @@ class SnapshotReader(OutDirectory: File, Synonyms: SynonymsMap) {
       val clusterRows = new HashMap[Int, List[String]]
       for (field <- rows.fields) {
         clusterRows(field._1.toInt) = field._2.as[List[String]].map(str => Synonyms(str))
-        //println(clusterRows(field._1.toInt))
       }
 
       val clusterCols = new HashMap[Int, List[String]]

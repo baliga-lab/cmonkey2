@@ -31,11 +31,10 @@ class RunLogReader {
         val activeLog = Array.ofDim[Boolean](active.value.length)
         for (j <- 0 until finalScaling.length) {
           //if (active(j).asInstanceOf[JsBoolean].value)
-          finalScaling(j) = scaling(j).asInstanceOf[JsNumber].value.toFloat
-          activeLog(j) = active(j).asInstanceOf[JsBoolean].value
+          finalScaling(j) = scaling(j).as[Float]
+          activeLog(j) = active(j).as[Boolean]
         }
-        result(i) = RunLog((logObj \ "name").asInstanceOf[JsString].value,
-                           finalScaling, activeLog)
+        result(i) = RunLog((logObj \ "name").as[String], finalScaling, activeLog)
         i += 1
       }
       result
