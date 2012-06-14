@@ -130,50 +130,44 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         ref_motscores = read_matrix('testdata/motscores_fixed.tsv')
         self.assertTrue(check_matrix_values(motscores, ref_motscores))
 
-    def test_scoring_all(self):
-        # a row scoring function, set up like in the default R version
-        row_scoring = microarray.RowScoringFunction(
-            self.membership, self.ratio_matrix,
-            scaling_func=lambda iteration: 6.0,
-            config_params=self.config_params)
+    def test_scoring_combine(self):
+        # tests the scoring combiner
+        ref_netscores = read_matrix('testdata/netscores_fixed.tsv')
+        ref_motscores = read_matrix('testdata/motscores_fixed.tsv')
+        ref_rowscores = read_matrix('testdata/rowscores_fixed.tsv')
 
-        colscoring = scoring.ColumnScoringFunction(
-            self.membership, self.ratio_matrix, config_params=self.config_params)
+        class DummyNetworkScoring(scoring.ScoringFunctionBase):
+            def __init__(self):
+                scaling_fun = scoring.get_default_network_scaling(2000)
+                scoring.ScoringFunctionBase.__init__(self, None, None, scaling_fun)
 
-        network_scaling_fun = scoring.get_default_network_scaling(2000)
-        network_scoring = nw.ScoringFunction(self.organism,
-                                             self.membership,
-                                             self.ratio_matrix,
-                                             scaling_func=network_scaling_fun,
-                                             run_in_iteration=lambda x: True,
-                                             config_params=self.config_params)
+            def compute(self, iteration_result, ref_matrix=None):
+                return ref_netscores
 
-        #meme_suite = meme.MemeSuite430(remove_tempfiles=False)
-        meme_suite = meme.MemeSuite430()
-        sequence_filters = [
-            motif.unique_filter,
-            motif.get_remove_low_complexity_filter(meme_suite),
-            motif.get_remove_atgs_filter(self.search_distances['upstream'])]
-        motif_scaling_fun = scoring.get_default_motif_scaling(2000)
-        motif_scoring = motif.MemeScoringFunction(
-            self.organism,
-            self.membership,
-            self.ratio_matrix,
-            meme_suite,
-            sequence_filters=sequence_filters,
-            scaling_func=motif_scaling_fun,
-            num_motif_func=motif.default_nmotif_fun,
-            update_in_iteration=lambda x: True,
-            motif_in_iteration=lambda x: True,
-            config_params=self.config_params)
-        row_scoring_functions = [row_scoring, motif_scoring, network_scoring]
+        class DummyMotifScoring(scoring.ScoringFunctionBase):
+            def __init__(self):
+                scaling_fun = scoring.get_default_motif_scaling(2000)
+                scoring.ScoringFunctionBase.__init__(self, None, None, scaling_fun)
+
+            def compute(self, iteration_result, ref_matrix=None):
+                return ref_motscores
+
+        class DummyRowScoring(scoring.ScoringFunctionBase):
+            def __init__(self):
+                scoring.ScoringFunctionBase.__init__(self, None, None,
+                                                     lambda iteration: 6.0)
+
+            def compute(self, iteration_result, ref_matrix=None):
+                return ref_rowscores
+
+        row_scoring_functions = [DummyRowScoring(), DummyMotifScoring(), DummyNetworkScoring()]
         combiner = scoring.ScoringFunctionCombiner(self.membership,
                                                    row_scoring_functions,
                                                    log_subresults=False)
         scores = combiner.compute(self.iteration_result)
         ref_scores = read_matrix('testdata/combined_scores.tsv')
         # note that the rounding error get pretty large here !!!
-        self.assertTrue(check_matrix_values(scores, ref_scores, 0.15))
+        self.assertTrue(check_matrix_values(scores, ref_scores))
 
     def test_quantile_normalize(self):
         row_scores = read_matrix('testdata/rowscores_fixed.tsv')
