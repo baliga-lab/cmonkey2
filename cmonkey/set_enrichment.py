@@ -93,7 +93,8 @@ SET_SET_TYPE = None
 class ScoringFunction(scoring.ScoringFunctionBase):
     """Network scoring function"""
 
-    def __init__(self, membership, matrix, set_types,
+    def __init__(self, membership, matrix,
+                 set_types,
                  scaling_func=None,
                  run_in_iteration=lambda iteration: True,
                  config_params=None):

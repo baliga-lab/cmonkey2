@@ -256,7 +256,8 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             self.membership(),
             self.ratio_matrix,
             set_types,
-            lambda iteration: 0.0, 7,
+            lambda iteration: 0.0,
+            scoring.schedule(1, 7),
             config_params=self.config_params)
 
         motif_combiner = scoring.ScoringFunctionCombiner(
