@@ -409,14 +409,16 @@ class WeederScoringFunction(MotifScoringFunctionBase):
                  meme_suite, seqtype,
                  sequence_filters=[],
                  scaling_func=None,
-                 update_in_iteration=scoring.default_motif_iterations,
-                 motif_in_iteration=scoring.default_meme_iterations,
+                 num_motif_func=None,
+                 update_in_iteration=None,
+                 motif_in_iteration=None,
                  config_params=None):
         """creates a scoring function"""
         MotifScoringFunctionBase.__init__(self, organism, membership, matrix,
                                           meme_suite, seqtype,
                                           sequence_filters,
                                           scaling_func,
+                                          num_motif_func,
                                           update_in_iteration,
                                           motif_in_iteration,
                                           config_params)

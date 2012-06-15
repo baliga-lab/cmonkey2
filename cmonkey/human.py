@@ -227,7 +227,9 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             seqtype='promoter',
             sequence_filters=sequence_filters,
             scaling_func=lambda iteration: 0.0,
-            run_in_iteration=scoring.default_motif_iterations,
+            num_motif_func=motif.default_nmotif_fun,
+            update_in_iteration=scoring.schedule(600, 10),
+            motif_in_iteration=scoring.schedule(600, 100),
             config_params=self.config_params)
 
         network_scoring = nw.ScoringFunction(self.organism(),
@@ -241,7 +243,9 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             self.organism(), self.membership(), self.ratio_matrix,
             meme_suite_p3utr, 'p3utr',
             scaling_func=lambda iteration: 0.0,
-            run_in_iteration=scoring.default_motif_iterations,
+            num_motif_func=motif.default_nmotif_fun,
+            update_in_iteration=scoring.schedule(600, 10),
+            motif_in_iteration=scoring.schedule(600, 100),
             config_params=self.config_params)
 
         pita = se.SetType.read_csv('pita', 'human_data/pita_miRNA_sets.csv')

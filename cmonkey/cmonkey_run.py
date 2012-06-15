@@ -284,8 +284,8 @@ class CMonkeyRun:
     def write_start_info(self):
         start_info = { 'start_time': str(datetime.now()),
                        'num_iterations': self['num_iterations'],
-                       'organism-code': self.__organism.code,
-                       'species': self.__organism.species(),
+                       'organism-code': self.organism().code,
+                       'species': self.organism().species(),
                        'num_rows': self.ratio_matrix.num_rows(),
                        'num_columns': self.ratio_matrix.num_columns()
                        }
