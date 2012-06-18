@@ -110,6 +110,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         self.__last_min_enriched_set = {}
         for set_type in set_types:
             self.__last_min_enriched_set[set_type] = {}
+        self.run_log = scoring.RunLog('set_enrichment')
 
     def bonferroni_cutoff(self):
         """Bonferroni cutoff value"""
@@ -171,6 +172,10 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             self.__last_computed_result = matrix
 
         return self.__last_computed_result
+
+    def run_logs(self):
+        """return the run logs"""
+        return [self.run_log]
 
 
 def compute_cluster_score(args):

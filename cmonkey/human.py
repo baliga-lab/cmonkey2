@@ -29,7 +29,7 @@ RUG_FILE = 'human_data/rug.csv'
 THESAURUS_FILE = 'human_data/synonymThesaurus.csv.gz'
 
 RUG_PROPS = ['MIXED', 'ASTROCYTOMA', 'GBM', 'OLIGODENDROGLIOMA']
-NUM_CLUSTERS = 720  # 133
+NUM_CLUSTERS = 133 # 720  # 133
 ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 2000
 
@@ -170,8 +170,8 @@ def read_matrix(filename):
     matrix = matrix_factory.create_from(infile)
 
     column_groups = {1: range(matrix.num_columns())}
-    #select_rows = select_probes(matrix, 2000, column_groups)
-    #matrix = matrix.submatrix_by_rows(select_rows)
+    select_rows = select_probes(matrix, 2000, column_groups)
+    matrix = matrix.submatrix_by_rows(select_rows)
     return intensities_to_ratios(matrix, controls, column_groups)
 
 
@@ -219,6 +219,7 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             max_width=MAX_MOTIF_WIDTH,
             background_file=background_file_p3utr)
 
+        motif_scaling_fun = scoring.get_default_motif_scaling(self['num_iterations'])
         motif_scoring = motif.MemeScoringFunction(
             self.organism(),
             self.membership(),
@@ -226,23 +227,24 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             meme_suite_prom,
             seqtype='promoter',
             sequence_filters=sequence_filters,
-            scaling_func=lambda iteration: 0.0,
+            scaling_func=motif_scaling_fun,
             num_motif_func=motif.default_nmotif_fun,
             update_in_iteration=scoring.schedule(600, 10),
             motif_in_iteration=scoring.schedule(600, 100),
             config_params=self.config_params)
 
+        network_scaling_fun = scoring.get_default_network_scaling(self['num_iterations'])
         network_scoring = nw.ScoringFunction(self.organism(),
                                              self.membership(),
                                              self.ratio_matrix,
-                                             lambda iteration: 0.0,
-                                             scoring.default_network_iterations,
+                                             scaling_func=network_scaling_fun,
+                                             run_in_iteration=scoring.schedule(1, 7),
                                              config_params=self.config_params)
 
         weeder_scoring = motif.WeederScoringFunction(
             self.organism(), self.membership(), self.ratio_matrix,
             meme_suite_p3utr, 'p3utr',
-            scaling_func=lambda iteration: 0.0,
+            scaling_func=motif_scaling_fun,
             num_motif_func=motif.default_nmotif_fun,
             update_in_iteration=scoring.schedule(600, 10),
             motif_in_iteration=scoring.schedule(600, 100),
@@ -256,7 +258,7 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             self.membership(),
             self.ratio_matrix,
             set_types,
-            lambda iteration: 0.0,
+            lambda iteration: 3.0,
             scoring.schedule(1, 7),
             config_params=self.config_params)
 
