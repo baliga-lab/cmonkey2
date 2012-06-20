@@ -116,62 +116,57 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """Bonferroni cutoff value"""
         return float(self.num_clusters()) / 0.05
 
-    def compute(self, iteration_result, ref_matrix):
+    def do_compute(self, iteration_result, ref_matrix):
         """compute method
         Note: will return None if not computed yet and the result of a previous
         scoring if the function is not supposed to actually run in this iteration
         """
         global SET_MATRIX, SET_MEMBERSHIP, SET_REF_MATRIX, SET_SET_TYPE
-        iteration = iteration_result['iteration']
+        logging.info("Compute scores for set enrichment...")
+        start_time = util.current_millis()
+        matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
+                               self.gene_names())
+        use_multiprocessing = self.config_params[
+            scoring.KEY_MULTIPROCESSING]
+        SET_MATRIX = self.matrix()
+        SET_MEMBERSHIP = self.membership()
+        SET_REF_MATRIX = ref_matrix
 
-        if self.run_in_iteration(iteration):
-            logging.info("Compute scores for set enrichment...")
-            start_time = util.current_millis()
-            matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
-                                   self.gene_names())
-            use_multiprocessing = self.config_params[
-                scoring.KEY_MULTIPROCESSING]
-            SET_MATRIX = self.matrix()
-            SET_MEMBERSHIP = self.membership()
-            SET_REF_MATRIX = ref_matrix
-
-            for set_type in self.__set_types:
-                SET_SET_TYPE = set_type
-                #logging.info("PROCESSING SET TYPE [%s]", repr(set_type))
-                logging.info("PROCESSING SET TYPE '%s'", set_type.name)
-                start1 = util.current_millis()
-                if use_multiprocessing:
-                    pool = mp.Pool()
-                    results = pool.map(compute_cluster_score,
-                            [(cluster, self.bonferroni_cutoff())
-                             for cluster in xrange(1,
-                                                   self.num_clusters() + 1)])
-                    pool.close()
-                    pass
-                else:
-                    results = []
-                    for cluster in xrange(1, self.num_clusters() + 1):
-                        results.append(compute_cluster_score(
-                                (cluster, self.bonferroni_cutoff())))
-
-                elapsed1 = util.current_millis() - start1
-                logging.info("ENRICHMENT SCORES COMPUTED in %f s, STORING...",
-                             elapsed1 / 1000.0)
-
+        for set_type in self.__set_types:
+            SET_SET_TYPE = set_type
+            #logging.info("PROCESSING SET TYPE [%s]", repr(set_type))
+            logging.info("PROCESSING SET TYPE '%s'", set_type.name)
+            start1 = util.current_millis()
+            if use_multiprocessing:
+                pool = mp.Pool()
+                results = pool.map(compute_cluster_score,
+                        [(cluster, self.bonferroni_cutoff())
+                         for cluster in xrange(1,
+                                               self.num_clusters() + 1)])
+                pool.close()
+                pass
+            else:
+                results = []
                 for cluster in xrange(1, self.num_clusters() + 1):
-                    # store the best enriched set determined
-                    scores, min_set, min_pvalue = results[cluster - 1]
-                    self.__last_min_enriched_set[set_type][cluster] = (
-                        min_set, min_pvalue)
+                    results.append(compute_cluster_score(
+                            (cluster, self.bonferroni_cutoff())))
 
-                    for row in xrange(len(self.gene_names())):
-                        matrix[row][cluster - 1] = scores[row]
+            elapsed1 = util.current_millis() - start1
+            logging.info("ENRICHMENT SCORES COMPUTED in %f s, STORING...",
+                         elapsed1 / 1000.0)
 
-            logging.info("SET ENRICHMENT FINISHED IN %f s.\n",
-                         (util.current_millis() - start_time) / 1000.0)
-            self.__last_computed_result = matrix
+            for cluster in xrange(1, self.num_clusters() + 1):
+                # store the best enriched set determined
+                scores, min_set, min_pvalue = results[cluster - 1]
+                self.__last_min_enriched_set[set_type][cluster] = (
+                    min_set, min_pvalue)
 
-        return self.__last_computed_result
+                for row in xrange(len(self.gene_names())):
+                    matrix[row][cluster - 1] = scores[row]
+
+        logging.info("SET ENRICHMENT FINISHED IN %f s.\n",
+                     (util.current_millis() - start_time) / 1000.0)
+        return matrix
 
     def run_logs(self):
         """return the run logs"""
