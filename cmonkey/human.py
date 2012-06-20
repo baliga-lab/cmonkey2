@@ -29,7 +29,7 @@ RUG_FILE = 'human_data/rug.csv'
 THESAURUS_FILE = 'human_data/synonymThesaurus.csv.gz'
 
 RUG_PROPS = ['MIXED', 'ASTROCYTOMA', 'GBM', 'OLIGODENDROGLIOMA']
-NUM_CLUSTERS = 133 # 720  # 133
+NUM_CLUSTERS = 43  # 133 # 720
 ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 2000
 
@@ -229,8 +229,8 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             sequence_filters=sequence_filters,
             scaling_func=motif_scaling_fun,
             num_motif_func=motif.default_nmotif_fun,
-            update_in_iteration=scoring.schedule(600, 10),
-            motif_in_iteration=scoring.schedule(600, 100),
+            update_in_iteration=scoring.schedule(100, 10),  # 600, 10
+            motif_in_iteration=scoring.schedule(100, 100),  # 600, 100
             config_params=self.config_params)
 
         network_scaling_fun = scoring.get_default_network_scaling(self['num_iterations'])
@@ -246,8 +246,8 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             meme_suite_p3utr, 'p3utr',
             scaling_func=motif_scaling_fun,
             num_motif_func=motif.default_nmotif_fun,
-            update_in_iteration=scoring.schedule(600, 10),
-            motif_in_iteration=scoring.schedule(600, 100),
+            update_in_iteration=scoring.schedule(100, 10),  # 600, 10
+            motif_in_iteration=scoring.schedule(100, 100),  # 600, 100
             config_params=self.config_params)
 
         pita = se.SetType.read_csv('pita', 'human_data/pita_miRNA_sets.csv')
@@ -258,7 +258,8 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             self.membership(),
             self.ratio_matrix,
             set_types,
-            lambda iteration: 3.0,
+            network_scaling_fun,
+            #lambda iteration: 3.0,
             scoring.schedule(1, 7),
             config_params=self.config_params)
 
