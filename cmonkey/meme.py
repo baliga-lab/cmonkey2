@@ -123,11 +123,11 @@ class MemeSuite:
                                          delete=False) as outfile:
             meme_outfile = outfile.name
             outfile.write(output)
-        #logging.info('wrote meme output to %s', meme_outfile)
+        logging.info('wrote meme output to %s', meme_outfile)
         dbfile = self.make_sequence_file(
             [(feature_id, locseq[1])
              for feature_id, locseq in all_seqs.items()])
-        #logging.info('created mast database in %s', dbfile)
+        logging.info('created mast database in %s', dbfile)
         try:
             mast_output = self.mast(meme_outfile, dbfile, bgfile)
             pe_values, annotations = read_mast_output(mast_output,
@@ -304,9 +304,9 @@ class MemeMotifInfo:
 
     def __repr__(self):
         """returns the string representation"""
-        return ("Motif width: %d sites: %d llr: %d e-value: %f" %
-         (self.width, self.num_sites, self.llr,
-          self.evalue))
+        return ("Motif width: %s sites: %s llr: %s e-value: %s" %
+                (str(self.width), str(self.num_sites), str(self.llr),
+                 str(self.evalue)))
 
 
 def read_meme_output(output_text, num_motifs):
