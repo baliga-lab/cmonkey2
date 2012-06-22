@@ -68,20 +68,24 @@ table.item-list tr:nth-child(odd) {
 }
 
 td.clusternum, th.clusternum {
-    width: 80px;
+    width: 60px;
     text-align: right;
 }
 td.nrows, th.nrows {
-    width: 80px;
+    width: 60px;
     text-align: right;
 }
 td.ncols, th.ncols {
-    width: 80px;
+    width: 60px;
     text-align: right;
 }
 
 td.residual, th.residual {
-    width: 200px;
+    width: 180px;
+    text-align: right;
+}
+td.evalue, th.evalue {
+    width: 180px;
     text-align: right;
 }
 
