@@ -317,9 +317,15 @@ class CMonkeyRun:
             mean_mot_pvalue = 0.0
             if 'networks' in iteration_result.keys():
                 mean_net_score = iteration_result['networks']
+            mean_mot_pvalue = "NA"
             if 'motif-pvalue' in iteration_result.keys():
-                mean_mot_pvalue = iteration_result['motif-pvalue']
-            logging.info('mean net = %s | mean mot = %f', str(mean_net_score), mean_mot_pvalue)
+                mean_mot_pvalue = ""
+                mean_mot_pvalues = iteration_result['motif-pvalue']
+                mean_mot_pvalue = ""
+                for seqtype in mean_mot_pvalues.keys():
+                    mean_mot_pvalue = mean_mot_pvalue + (" '%s' = %f" % (seqtype, mean_mot_pvalues[seqtype]))
+                    
+            logging.info('mean net = %s | mean mot = %s', str(mean_net_score), mean_mot_pvalue)
 
             if iteration == 1 or (iteration % RESULT_FREQ == 0):
                 self.write_results(iteration_result)
