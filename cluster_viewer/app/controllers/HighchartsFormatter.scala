@@ -82,18 +82,25 @@ object HighchartsFormatter {
     builder.toString
   }
 
-  // motif-score-upstream
+  // motif-score-upstream, tricky: multiple sequence types
   def toMotifPValueSeries(stats: Map[Int, IterationStats],
                           runLogs: Array[RunLog]) = {
-    val builder = new StringBuilder
-    builder.append("[ { name: 'motif pvalue', data: [")
     val iterations = stats.keySet.toArray
     java.util.Arrays.sort(iterations)
-    for (iteration <- iterations) {
-      builder.append(stats(iteration).motifPValue)
-      builder.append(", ")
+    val seqTypes = stats(iterations(0)).motifPValues.keys.toArray
+    val builder = new StringBuilder
+
+    builder.append("[")
+    for (i <- 0 until seqTypes.length) {
+      if (i > 0) builder.append(",")
+      builder.append("{ name: '%s', data: [".format(seqTypes(i)))
+      for (iteration <- iterations) {
+        builder.append(stats(iteration).motifPValues(seqTypes(i)))
+        builder.append(", ")
+      }
+      builder.append("] }")
     }
-    builder.append("] } ]\n")
+    builder.append("]\n")
     builder.toString
   }
 
