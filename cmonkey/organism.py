@@ -386,7 +386,9 @@ class GenericOrganism(OrganismBase):
             if alias in self.thesaurus():
                 gene = self.thesaurus()[alias]
                 if gene in self.__seqs[seqtype]:
-                    result[gene] = self.__seqs[seqtype][gene]
+                    # note that we have to return the sequence as a (location, sequence)
+                    # pair even if we do not actually use the Location
+                    result[gene] = (st.Location(gene, 0, 0, False), self.__seqs[seqtype][gene])
                 else:
                     #logging.warn("Gene '%s' not found in 3' UTRs", gene)
                     pass

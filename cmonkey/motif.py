@@ -213,7 +213,11 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                            self.scaling(iteration))
 
         iteration_result['motifs'] = self.__last_iteration_result
-        iteration_result['motif-pvalue'] = compute_mean_score(
+
+        # for stats, support multiple sequence types
+        if 'motif-pvalue' not in iteration_result:
+            iteration_result['motif-pvalue'] = {}
+        iteration_result['motif-pvalue'][self.seqtype] = compute_mean_score(
             self.__last_computed_result,
             self.membership(),
             self.organism)

@@ -29,9 +29,9 @@ RUG_FILE = 'human_data/rug.csv'
 THESAURUS_FILE = 'human_data/synonymThesaurus.csv.gz'
 
 RUG_PROPS = ['MIXED', 'ASTROCYTOMA', 'GBM', 'OLIGODENDROGLIOMA']
-NUM_CLUSTERS = 43  # 133 # 720
+NUM_CLUSTERS = 133 # 720
 ROW_WEIGHT = 6.0
-NUM_ITERATIONS = 2000
+NUM_ITERATIONS = 3000
 
 SEQUENCE_TYPES = ['promoter', 'p3utr']
 SEARCH_DISTANCES = {'promoter': (0, 700), 'p3utr': (0, 831)}
@@ -184,6 +184,7 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
         self['sequence_types'] = SEQUENCE_TYPES
         self['search_distances'] = SEARCH_DISTANCES
         self['scan_distances'] = SCAN_DISTANCES
+        self['num_iterations'] = NUM_ITERATIONS
 
     def organism(self):
         if self.__organism == None:
@@ -205,7 +206,9 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             lambda iteration: ROW_WEIGHT,
             config_params=self.config_params)
 
-        sequence_filters = []
+        # we need to remove the location from the sequence when selecting for
+        # individual clusters
+        sequence_filters = [lambda seqs, feature_ids: {key: seqs[key][1] for key in seqs.keys()}]
         background_file_prom = meme.global_background_file(
             self.organism(), self.ratio_matrix.row_names(), 'promoter',
             use_revcomp=True)
@@ -229,8 +232,8 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             sequence_filters=sequence_filters,
             scaling_func=motif_scaling_fun,
             num_motif_func=motif.default_nmotif_fun,
-            update_in_iteration=scoring.schedule(100, 10),  # 600, 10
-            motif_in_iteration=scoring.schedule(100, 100),  # 600, 100
+            update_in_iteration=scoring.schedule(600, 10),  # 600, 10
+            motif_in_iteration=scoring.schedule(600, 100),  # 600, 100
             config_params=self.config_params)
 
         network_scaling_fun = scoring.get_default_network_scaling(self['num_iterations'])
@@ -243,11 +246,13 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
 
         weeder_scoring = motif.WeederScoringFunction(
             self.organism(), self.membership(), self.ratio_matrix,
-            meme_suite_p3utr, 'p3utr',
+            meme_suite_p3utr,
+            seqtype='p3utr',
+            sequence_filters=sequence_filters,
             scaling_func=motif_scaling_fun,
             num_motif_func=motif.default_nmotif_fun,
-            update_in_iteration=scoring.schedule(100, 10),  # 600, 10
-            motif_in_iteration=scoring.schedule(100, 100),  # 600, 100
+            update_in_iteration=scoring.schedule(600, 10),  # 600, 10
+            motif_in_iteration=scoring.schedule(600, 100),  # 600, 100
             config_params=self.config_params)
 
         pita = se.SetType.read_csv('pita', 'human_data/pita_miRNA_sets.csv')
@@ -270,7 +275,11 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
 
         return scoring.ScoringFunctionCombiner(
             self.membership(),
-            [row_scoring, motif_combiner, network_scoring,
+            [row_scoring,
+             #motif_scoring,
+             #weeder_scoring,
+             motif_combiner,
+             network_scoring,
              set_enrichment_scoring])
 
 
