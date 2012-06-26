@@ -62,8 +62,11 @@
         annot.draw('annotation-graph', { width: 500, height: 400, annotations: annotations});
     });
   </script>
-  <h3>Cluster @cluster at iteration @iteration</h3>
+  <h2>Cluster @cluster at iteration @iteration</h2>
+  <h3>Gene expressions</h3>
   <div id="expression-graph"></div>
+  <div>&nbsp;</div>
+  <h3>Motifs</h3>
   @defining(motifInfoMap.keys.toSeq(0)) { seqType =>
   @for(i <- 0 until pssmMap(seqType).length) {
     <span style="display: inline; float: left; margin-right: 10px;">
@@ -75,6 +78,8 @@
   <div style="clear: both"></div>
   <div id="annotation-graph"></div>
   <div style="clear: both"></div>
+  <div>&nbsp;</div>
+  <h3>Cluster memberships</h3>
   <div id="cluster-members">
     <span style="float: left; margin-right: 20px">
       <span>Row members</span>
@@ -84,7 +89,7 @@
         }
       </table>
     </span>
-    <span >
+    <span>
       <span>Column members</span>
       <table class="members">
         <tr><th>Condition</th></th>
