@@ -10,7 +10,7 @@ case class GeneAnnotations(gene: String, annotations: Seq[Annotation])
 case class MotifInfo(motifNum: Int, evalue: Double, pssm: Array[Array[Float]], annotations: Array[Annotation])
 case class Snapshot(rows: Map[Int, List[String]], columns: Map[Int, List[String]],
                     residuals: Map[Int, Double],
-                    motifs: Map[Int, Map[String, Array[MotifInfo]]]) {
+                    motifs: Map[String, Map[Int, Array[MotifInfo]]]) {
 }
 
 object SnapshotReader {
@@ -68,34 +68,40 @@ class SnapshotReader(OutDirectory: File, Synonyms: SynonymsMap) {
         clusterResiduals(field._1.toInt) = field._2.asInstanceOf[JsNumber].value.doubleValue
       }
 
-      val clusterMotifs = new HashMap[Int, Map[String, Array[MotifInfo]]]
+      //val clusterMotifs = new HashMap[Int, Map[String, Array[MotifInfo]]]
+      val seqTypeMotifs = new HashMap[String, Map[Int, Array[MotifInfo]]]
       try {
         val motifs = motifsVal.as[JsObject]
         for (field <- motifs.fields) {
-          val cluster = field._1
-          val seqTypeObj = field._2.as[JsObject]
-          val seqTypeMotifs = new HashMap[String, Array[MotifInfo]]
+          val seqType = field._1
+          val clusterObj = field._2.as[JsObject] // Map[Int, Array[MotifInfo]]
+          //val seqTypeObj = field._2.as[JsObject]
+          //val seqTypeMotifs = new HashMap[String, Array[MotifInfo]]
+          val clusterMotifs = new HashMap[Int, Array[MotifInfo]]
 
-          // iterate over the sequence types, which are keys
-          for (seqType <- seqTypeObj.keys) {
+          // iterate over the clusters, which are the keys
+          for (cluster <- clusterObj.keys) {
             // an array of motif objects (motif_num, evalue, annotations, pssm)
             // annotations are tuples of (gene, position, pvalue, reverse)
-            val stResult = seqTypeObj \ seqType
+            val stResult = clusterObj \ cluster
             val motifInfos = (stResult \ "motif-info")
-            seqTypeMotifs(seqType) = if (motifInfos.isInstanceOf[JsArray]) {
+            //seqTypeMotifs(seqType) = if (motifInfos.isInstanceOf[JsArray]) {
+            //  readMotifInfos(motifInfos.asInstanceOf[JsArray].value)
+            clusterMotifs(cluster.toInt) = if (motifInfos.isInstanceOf[JsArray]) {
               readMotifInfos(motifInfos.asInstanceOf[JsArray].value)
             } else {
               Array.ofDim[MotifInfo](0)
             }
           }
-          clusterMotifs(field._1.toInt) = seqTypeMotifs.toMap
+          //clusterMotifs(field._1.toInt) = seqTypeMotifs.toMap
+          seqTypeMotifs(seqType) = clusterMotifs.toMap
         }
       } catch {
         case e =>
           e.printStackTrace
           println("\nNo motifs found !!!")
       }
-      Snapshot(clusterRows.toMap, clusterCols.toMap, clusterResiduals.toMap, clusterMotifs.toMap)
+      Snapshot(clusterRows.toMap, clusterCols.toMap, clusterResiduals.toMap, seqTypeMotifs.toMap)
     }
 
     def writes(snapshot: Snapshot): JsValue = JsUndefined("TODO")

@@ -212,7 +212,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.motif_log.log(self.motif_in_iteration(iteration),
                            self.scaling(iteration))
 
-        iteration_result['motifs'] = self.__last_iteration_result
+        if 'motifs' not in iteration_result:
+            iteration_result['motifs'] = {}
+        iteration_result['motifs'][self.seqtype] = self.__last_iteration_result
 
         # for stats, support multiple sequence types
         if 'motif-pvalue' not in iteration_result:
@@ -282,8 +284,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         for cluster in xrange(1, self.num_clusters() + 1):
             if not cluster in iteration_result:
                 iteration_result[cluster] = { }
-            if not self.seqtype in iteration_result[cluster]:
-                iteration_result[cluster][self.seqtype] = { }
 
         # compute and store motif results
         self.__last_run_results = {}
@@ -295,17 +295,16 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                 pvalues, run_result = results[cluster - 1]
                 cluster_pvalues[cluster] = pvalues
                 self.__last_run_results[cluster] = run_result
-                #iteration_result[cluster][self.seqtype] = meme_json(run_result)
-                iteration_result[cluster][self.seqtype]['motif-info'] = meme_json(run_result)
-                iteration_result[cluster][self.seqtype]['pvalues'] = pvalues
+                iteration_result[cluster]['motif-info'] = meme_json(run_result)
+                iteration_result[cluster]['pvalues'] = pvalues
             pool.close()
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
                 pvalues, run_result = compute_cluster_score(params[cluster - 1])
                 cluster_pvalues[cluster] = pvalues
                 self.__last_run_results[cluster] = run_result
-                iteration_result[cluster][self.seqtype]['motif-info'] = meme_json(run_result)
-                iteration_result[cluster][self.seqtype]['pvalues'] = pvalues
+                iteration_result[cluster]['motif-info'] = meme_json(run_result)
+                iteration_result[cluster]['pvalues'] = pvalues
 
         return cluster_pvalues
 

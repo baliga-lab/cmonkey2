@@ -232,8 +232,8 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             sequence_filters=sequence_filters,
             scaling_func=motif_scaling_fun,
             num_motif_func=motif.default_nmotif_fun,
-            update_in_iteration=scoring.schedule(600, 10),  # 600, 10
-            motif_in_iteration=scoring.schedule(600, 100),  # 600, 100
+            update_in_iteration=scoring.schedule(10, 10),  # 600, 10
+            motif_in_iteration=scoring.schedule(10, 100),  # 600, 100
             config_params=self.config_params)
 
         network_scaling_fun = scoring.get_default_network_scaling(self['num_iterations'])
@@ -251,8 +251,8 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             sequence_filters=sequence_filters,
             scaling_func=motif_scaling_fun,
             num_motif_func=motif.default_nmotif_fun,
-            update_in_iteration=scoring.schedule(600, 10),  # 600, 10
-            motif_in_iteration=scoring.schedule(600, 100),  # 600, 100
+            update_in_iteration=scoring.schedule(10, 10),  # 600, 10
+            motif_in_iteration=scoring.schedule(10, 100),  # 600, 100
             config_params=self.config_params)
 
         pita = se.SetType.read_csv('pita', 'human_data/pita_miRNA_sets.csv')

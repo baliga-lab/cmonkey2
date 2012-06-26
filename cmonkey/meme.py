@@ -499,8 +499,12 @@ def read_mast_output(output_text, genes):
         to retrieve the position"""
         # offset +2 for compatibility with cMonkey R, don't really
         # know why we need this
-        return [(m.start() + 2)
-                for m in re.finditer('\[', motifnum_line)]
+        try:
+            return [(m.start() + 2)
+                    for m in re.finditer('\[', motifnum_line)]
+        except:
+            logging.error("ERROR in read_positions(), motifnum_line: '%s'",
+                          str(motifnum_line))
 
     def read_annotations(lines, genes):
         """extract annotations, genes are given as refseq ids"""
@@ -551,8 +555,12 @@ def read_mast_output(output_text, genes):
 # extraction helpers
 def __extract_regex(pattern, infoline):
     """generic info line field extraction based on regex"""
-    match = re.search(pattern, infoline)
-    return infoline[match.start():match.end()].split('=')[1].strip()
+    try:
+        match = re.search(pattern, infoline)
+        return infoline[match.start():match.end()].split('=')[1].strip()
+    except:
+        logging.error("ERROR in __extract_regex(), pattern: '%s', infoline: '%s'",
+                      str(pattern), str(infoline))
 
 
 def __next_regex_index(pat, start_index, lines):

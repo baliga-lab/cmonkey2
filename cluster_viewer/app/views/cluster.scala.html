@@ -1,12 +1,14 @@
 @(iteration: Int, cluster: Int, rows: List[String], columns: List[String],
-  ratios: RatioMatrix, motifInfos: Array[MotifInfo],
-  motifs: Array[String],
-  annotations: Seq[GeneAnnotations])
+  ratios: RatioMatrix, motifInfoMap: Map[String, Array[MotifInfo]],
+  pssmMap: Map[String, Array[String]],
+  annotationMap: Map[String, Seq[GeneAnnotations]])
 
 <div id="cluster-view">
   <script type="text/javascript">
-    @for(i <- 0 until motifs.length) {
-        var pssm@i = @Html(motifs(i));
+    @defining(motifInfoMap.keys.toSeq(0)) { seqType =>
+      @for(i <- 0 until pssmMap(seqType).length) {
+        var pssm@i = @Html(pssmMap(seqType)(i));
+      }
     }
     var canvasOptions = {
         width: 300,
@@ -31,38 +33,44 @@
             },
             series: @(HighchartsFormatter.toHSSeries(ratios))
         });
-        @for(i <- 0 until motifs.length) {
+        @defining(motifInfoMap.keys.toSeq(0)) { seqType =>
+          @for(i <- 0 until pssmMap(seqType).length) {
             isblogo.makeLogo('canvas@i', pssm@i, canvasOptions);
+          }
         }
         var annotations = [
-            @for(i <- 0 until annotations.length) {
+          @defining(motifInfoMap.keys.toSeq(0)) { seqType =>
+            @for(i <- 0 until annotationMap(seqType).length) {
 
             {
-                gene: '@(annotations(i).gene)', condition: '',
+                gene: '@(annotationMap(seqType)(i).gene)', condition: '',
                 log10: -0.17,
                 boxColor: '#08f',
                 lineColor: '#000',
                 matches: [
-                    @for(j <- 0 until annotations(i).annotations.length) {
-                        @defining(annotations(i).annotations(j)) { annotation =>
-                                                                   { motif: @(annotation.motifNum - 1), start: @(annotation.position), length: @motifInfos(annotation.motifNum - 1).pssm.length, reverse: @(annotation.reverse), score: @(annotation.pvalue) },
+                    @for(j <- 0 until annotationMap(seqType)(i).annotations.length) {
+                        @defining(annotationMap(seqType)(i).annotations(j)) { annotation =>
+                                                                   { motif: @(annotation.motifNum - 1), start: @(annotation.position), length: @motifInfoMap(seqType)(annotation.motifNum - 1).pssm.length, reverse: @(annotation.reverse), score: @(annotation.pvalue) },
                                                                  }
                     }
                 ]
             },
 
             }
+          }
         ];
         annot.draw('annotation-graph', { width: 500, height: 400, annotations: annotations});
     });
   </script>
   <h3>Cluster @cluster at iteration @iteration</h3>
   <div id="expression-graph"></div>
-  @for(i <- 0 until motifs.length) {
+  @defining(motifInfoMap.keys.toSeq(0)) { seqType =>
+  @for(i <- 0 until pssmMap(seqType).length) {
     <span style="display: inline; float: left; margin-right: 10px;">
-    <div>Motif @i, evalue: @(motifInfos(i).evalue)</div>
+    <div>Motif @i, evalue: @(motifInfoMap(seqType)(i).evalue)</div>
     <div id="canvas@i"></div>
     </span>
+  }
   }
   <div style="clear: both"></div>
   <div id="annotation-graph"></div>

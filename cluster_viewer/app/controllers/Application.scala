@@ -178,14 +178,18 @@ object Application extends Controller {
     val ratios = RatiosFactory.readRatios(snapshot.get.rows(cluster).toArray)
     val rows    = snapshot.get.rows(cluster)
     val columns = snapshot.get.columns(cluster)
-    // re-group annotations by gene
-    val geneAnnotationMap = new HashMap[String, ArrayBuffer[Annotation]]
+    val motifInfoMap = new HashMap[String, Array[MotifInfo]]
+    val pssmMap = new HashMap[String, Array[String]]
+    val annotationMap = new HashMap[String, Seq[GeneAnnotations]]
 
-    if (snapshot.get.motifs.contains(cluster)) {
-      val motifInfos = new java.util.ArrayList[MotifInfo]
-      val motifMap = snapshot.get.motifs(cluster)
-      for (seqType <- motifMap.keys) {
-        val motifMapInfos = motifMap(seqType)
+    // motif extraction
+    for (seqType <- snapshot.get.motifs.keys) {
+      val motifObj = snapshot.get.motifs(seqType) 
+      if (motifObj.contains(cluster)) {
+        // re-group annotations by gene
+        val geneAnnotationMap = new HashMap[String, ArrayBuffer[Annotation]]
+        val motifInfos = new java.util.ArrayList[MotifInfo]
+        val motifMapInfos = motifObj(cluster)
         for (info <- motifMapInfos) {
           motifInfos.add(info)
           for (annotation <- info.annotations) {
@@ -195,39 +199,33 @@ object Application extends Controller {
             geneAnnotationMap(annotation.gene) += annotation
           }
         }
-      }
+        //println("GENE ANNOTATIONS: " + geneAnnotationMap.keys)
+        val geneAnnotationList = new ArrayBuffer[GeneAnnotations]
+        for (key <- geneAnnotationMap.keys) {
+          // TODO: What is acually plotted is the pvalue of the gene in this cluster
+          val geneAnnotations = GeneAnnotations(key, geneAnnotationMap(key).sortWith((a: Annotation, b: Annotation) => a.position < b.position))
+          geneAnnotationList += geneAnnotations
+        }
+        motifInfoMap(seqType) = motifInfos.toArray(Array.ofDim[MotifInfo](0))
+        annotationMap(seqType) = geneAnnotationList
 
-      //println("GENE ANNOTATIONS: " + geneAnnotationMap.keys)
-      val geneAnnotationList = new ArrayBuffer[GeneAnnotations]
-      for (key <- geneAnnotationMap.keys) {
-        // TODO: What is acually plotted is the pvalue of the gene in this cluster
-        val geneAnnotations = GeneAnnotations(key, geneAnnotationMap(key).sortWith((a: Annotation, b: Annotation) => a.position < b.position))
-        geneAnnotationList += geneAnnotations
+        pssmMap(seqType) = if (motifObj(cluster).size > 0) {
+          toJsonPssm(motifObj(cluster))
+        } else {
+          new Array[String](0)
+        }
       }
-      // NOTE: there is no differentiation between sequence types yet !!!!
-      val pssm = if (snapshot.get.motifs.size > 0) {
-        toJsonPssm(snapshot.get.motifs(cluster))
-      } else {
-        new Array[String](0)
-      }
-      Ok(views.html.cluster(iteration, cluster, rows, columns, ratios,
-                            motifInfos.toArray(new Array[MotifInfo](0)), pssm, geneAnnotationList))
-    } else {
-      Ok(views.html.cluster(iteration, cluster, rows, columns, ratios,
-                            new Array[MotifInfo](0), new Array[String](0),
-                            new ArrayBuffer[GeneAnnotations]))
     }
+    Ok(views.html.cluster(iteration, cluster, rows, columns, ratios,
+                          motifInfoMap.toMap, pssmMap.toMap,
+                          annotationMap.toMap))
   }
 
-  private def toJsonPssm(motifMap: Map[String, Array[MotifInfo]]): Array[String] = {
+  private def toJsonPssm(motifInfos: Array[MotifInfo]): Array[String] = {
     val result = new java.util.ArrayList[String]
-    for (seqType <- motifMap.keys) {
-      val motifInfos = motifMap(seqType)
-      printf("SEQ TYPE: %s, # PSSMs: %d\n", seqType, motifInfos.length)
-      for (i <- 0 until motifInfos.length) {
-        result.add(Json.stringify(JsObject(List("alphabet" -> Json.toJson(Array("A", "C", "G", "T")),
-                                                "values" -> Json.toJson(motifInfos(i).pssm)))))
-      }
+    for (i <- 0 until motifInfos.length) {
+      result.add(Json.stringify(JsObject(List("alphabet" -> Json.toJson(Array("A", "C", "G", "T")),
+                                              "values" -> Json.toJson(motifInfos(i).pssm)))))
     }
     println("# PSSMS: " + result.length)
     result.toArray(new Array[String](0))
