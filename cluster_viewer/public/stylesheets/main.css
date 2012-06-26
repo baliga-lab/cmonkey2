@@ -86,7 +86,6 @@ td.residual, th.residual {
 }
 td.evalue, th.evalue {
     width: 180px;
-    text-align: right;
 }
 
 .inactive {

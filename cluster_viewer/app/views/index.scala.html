@@ -225,7 +225,7 @@ runLogs: Array[RunLog])
          <tr><td><table class="inner"><tr><th class="position">#</th><th class="clusternum">Cluster</th><th class="nrows"># rows</th><th class="ncols"># columns</th><th class="residual">residual</th><th class="evalue">e-value</th><th>&nbsp;</th></tr></table></td></tr>
          <tr><td><div style="height: 200px; overflow: auto; background-color: #fff;">
            <table class="inner">
-             @for(i <- 0 until runInfo.clusters.length) {<tr><td class="position">@(i + 1)</td><td class="clusternum"><a class="clusterlink" id="@(runInfo.clusters(i))" href="#">@(runInfo.clusters(i))</a></td><td class="nrows">@(snapshot.get.rows(runInfo.clusters(i)).length)</td><td class="ncols">@(snapshot.get.columns(runInfo.clusters(i)).length)</td><td class="residual">@(snapshot.get.residuals(runInfo.clusters(i)))</td><td class="evalue">@(Formatter.formatEvalues(snapshot.get.motifs, runInfo.clusters(i)))</td><td>&nbsp;</td></tr>
+             @for(i <- 0 until runInfo.clusters.length) {<tr><td class="position">@(i + 1)</td><td class="clusternum"><a class="clusterlink" id="@(runInfo.clusters(i))" href="#">@(runInfo.clusters(i))</a></td><td class="nrows">@(snapshot.get.rows(runInfo.clusters(i)).length)</td><td class="ncols">@(snapshot.get.columns(runInfo.clusters(i)).length)</td><td class="residual">@(snapshot.get.residuals(runInfo.clusters(i)))</td><td class="evalue">@Html(Formatter.formatEvalues(snapshot.get.motifs, runInfo.clusters(i)))</td><td>&nbsp;</td></tr>
              }
          </table></div></td></tr>
        </table>
