@@ -299,12 +299,14 @@ class ScoringFunctionCombiner:
     scoring
     """
     def __init__(self, membership, scoring_functions, scaling_func=None,
+                 config_params=None,
                  log_subresults=False):
         """creates a combiner instance"""
         self.__membership = membership
         self.__scoring_functions = scoring_functions
         self.__log_subresults = log_subresults
         self.__scaling_func = scaling_func
+        self.__config_params = config_params
 
     def compute_force(self, iteration_result, ref_matrix=None):
         """compute scores for one iteration, recursive force"""
@@ -349,7 +351,7 @@ class ScoringFunctionCombiner:
         return self.__combine(result_matrices, score_scalings, iteration)
 
     def __combine(self, result_matrices, score_scalings, iteration):
-        if len(result_matrices) > 1:
+        if len(result_matrices) > 1 and self.__config_params['quantile_normalize']:
             result_matrices = dm.quantile_normalize_scores(result_matrices,
                                                            score_scalings)
 

@@ -185,6 +185,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         if self.__last_pvalues != None and (
             force or self.update_in_iteration(iteration)):  # mot.iter in R
             logging.info('Recomputing motif scores...')
+            start_time = util.current_millis()
             # running the scoring itself
             remapped = {}
             for cluster in self.__last_pvalues:
@@ -193,6 +194,10 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                 for feature_id, pvalue in pvalues_k.items():
                     pvalues_genes[self.reverse_map[feature_id]] = pvalue
                 remapped[cluster] = pvalues_genes
+
+            current = util.current_millis()
+            logging.info("built remapped in %f s.", (current - start_time) / 1000.0)
+            start_time = current
 
             # convert remapped to an actual scoring matrix
             matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
@@ -204,7 +209,15 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                         row in remapped[cluster].keys()):
                         matrix[row_index][cluster - 1] = remapped[cluster][row]
             matrix.apply_log()
+
+            current = util.current_millis()
+            logging.info("built scoring matrix in %f s.", (current - start_time) / 1000.0)
+            start_time = current
+
             matrix.fix_extreme_values()
+            current = util.current_millis()
+            logging.info("fixed extreme values in %f s.", (current - start_time) / 1000.0)
+
             self.__last_computed_result = matrix
 
         self.update_log.log(self.update_in_iteration(iteration),

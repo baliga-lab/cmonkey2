@@ -163,6 +163,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         row_scoring_functions = [DummyRowScoring(), DummyMotifScoring(), DummyNetworkScoring()]
         combiner = scoring.ScoringFunctionCombiner(self.membership,
                                                    row_scoring_functions,
+                                                   config_params={'quantile_normalize': True},
                                                    log_subresults=False)
         scores = combiner.compute(self.iteration_result)
         ref_scores = read_matrix('testdata/combined_scores.tsv')

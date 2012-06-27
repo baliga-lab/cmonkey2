@@ -103,7 +103,8 @@ class LeishmaniaCMonkeyRun(cmonkey_run.CMonkeyRun):
 
         motif_combiner = scoring.ScoringFunctionCombiner(
             self.membership(), [motif_scoring, weeder_scoring],
-            scaling_func=lambda iteration: 0.5)
+            scaling_func=lambda iteration: 0.5,
+            config_params=self.config_params)
 
         network_scoring = nw.ScoringFunction(self.organism(),
                                              self.membership(),
@@ -113,7 +114,8 @@ class LeishmaniaCMonkeyRun(cmonkey_run.CMonkeyRun):
                                              config_params=self.config_params)
 
         return scoring.ScoringFunctionCombiner(
-            self.membership(), [row_scoring, network_scoring, motif_combiner])
+            self.membership(), [row_scoring, network_scoring, motif_combiner],
+            config_params=self.config_params)
 
 
 if __name__ == '__main__':

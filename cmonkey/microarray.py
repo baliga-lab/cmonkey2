@@ -51,18 +51,17 @@ def compute_row_scores(membership, matrix, num_clusters,
                        use_multiprocessing):
     """for each cluster 1, 2, .. num_clusters compute the row scores
     for the each row name in the input name matrix"""
-    #clusters = xrange(1, num_clusters + 1)
-    #start_time = util.current_millis()
+    start_time = util.current_millis()
     cluster_row_scores = __compute_row_scores_for_clusters(
         membership, matrix, num_clusters, use_multiprocessing)
     # TODO: replace the nan/inf-Values with the quantile-thingy in the R-version
 
-    #logging.info("__compute_row_scores_for_clusters() in %f s.",
-    #             (util.current_millis() - start_time) / 1000.0)
+    logging.info("__compute_row_scores_for_clusters() in %f s.",
+                 (util.current_millis() - start_time) / 1000.0)
 
     # rearrange result into a DataMatrix, where rows are indexed by gene
     # and columns represent clusters
-    #start_time = util.current_millis()
+    start_time = util.current_millis()
     values = np.zeros((matrix.num_rows(), num_clusters))
 
     # note that cluster is 0 based on a matrix
@@ -72,8 +71,8 @@ def compute_row_scores(membership, matrix, num_clusters,
     result = dm.DataMatrix(matrix.num_rows(), num_clusters,
                            row_names=matrix.row_names(),
                            values=values)
-    #logging.info("made result matrix in %f s.",
-    #             (util.current_millis() - start_time) / 1000.0)
+    logging.info("made result matrix in %f s.",
+                 (util.current_millis() - start_time) / 1000.0)
 
     result = result.sorted_by_row_name()
     result.fix_extreme_values()
@@ -137,13 +136,13 @@ def __compute_row_scores_for_submatrix(matrix, submatrix):
         util.row_means(scoring.subtract_and_square(matrix, colmeans)) + 1e-99)
 
 
+"""
 def __quantile_normalize_scores(cluster_row_scores,
                                 row_names,
                                 membership,
                                 num_clusters):
-    """quantile normalize the row scores in cluster_row_scores
-    that are not NaN or +/-Inf and are in a row cluster membership
-    """
+    #quantile normalize the row scores in cluster_row_scores
+    #that are not NaN or +/-Inf and are in a row cluster membership
     values_for_quantile = []
     for cluster in xrange(1, num_clusters + 1):
         row_scores_for_cluster = cluster_row_scores[cluster - 1]
@@ -155,7 +154,7 @@ def __quantile_normalize_scores(cluster_row_scores,
                 if np.isfinite(score) and (gene_name in cluster_rows):
                     values_for_quantile.append(score)
     return util.quantile(values_for_quantile, 0.95)
-
+"""
 
 class RowScoringFunction(scoring.ScoringFunctionBase):
     """Scoring algorithm for microarray data based on genes"""

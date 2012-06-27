@@ -108,7 +108,8 @@ class ParkinsonCMonkeyRun(cmonkey_run.CMonkeyRun):
             config_params=self.config_params)
 
         return scoring.ScoringFunctionCombiner(
-            self.membership(), [row_scoring, network_scoring, motif_scoring, weeder_scoring])
+            self.membership(), [row_scoring, network_scoring, motif_scoring, weeder_scoring],
+            config_params=self.config_params)
 
 
 if __name__ == '__main__':

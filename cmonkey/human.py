@@ -271,7 +271,8 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
         motif_combiner = scoring.ScoringFunctionCombiner(
             self.membership(),
             [motif_scoring, weeder_scoring],
-            scaling_func=lambda iteration: 0.5)
+            scaling_func=lambda iteration: 0.5,
+            config_params=self.config_params)
 
         return scoring.ScoringFunctionCombiner(
             self.membership(),
@@ -280,7 +281,8 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
              #weeder_scoring,
              motif_combiner,
              network_scoring,
-             set_enrichment_scoring])
+             set_enrichment_scoring],
+            config_params=self.config_params)
 
 
 if __name__ == '__main__':

@@ -152,11 +152,13 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
         motif_combiner = scoring.ScoringFunctionCombiner(
             self.membership(),
             [upstream_motif_scoring, downstream_motif_scoring],
-            scaling_func=lambda iteration: 0.5)
+            scaling_func=lambda iteration: 0.5,
+            config_params=self.config_params)
 
         return scoring.ScoringFunctionCombiner(
             self.membership(),
-            [row_scoring, motif_combiner, network_scoring])
+            [row_scoring, motif_combiner, network_scoring],
+            config_params=self.config_params)
 
 
 if __name__ == '__main__':

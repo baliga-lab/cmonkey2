@@ -97,6 +97,7 @@ class MicrobeCustomRun(cmonkey_run.CMonkeyRun):
         row_scoring_functions = [row_scoring, motif_scoring, network_scoring]
         return scoring.ScoringFunctionCombiner(self.membership(),
                                                row_scoring_functions,
+                                               config_params=self.config_params,
                                                log_subresults=True)
 
 

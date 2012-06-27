@@ -55,13 +55,15 @@ class CMonkeyRun:
         # defaults
         self.row_seeder = memb.make_kmeans_row_seeder(num_clusters)
         self.column_seeder = microarray.seed_column_members
-        self['row_scaling'] = 6.0
+        self['row_scaling'] =  1.0  # 6.0 in cMonkey 4.8.7
         self['string_file'] = None
         self['cache_dir'] = CACHE_DIR
         self['output_dir'] = 'out'
         self['start_iteration'] = 1
         self['num_iterations'] = 2000
         self['multiprocessing'] = True
+        # Quantile normalization is false by default in cMonkey-R
+        self['quantile_normalize'] = False
 
         # used to select sequences and MEME
         self['sequence_types'] = ['upstream']
@@ -144,6 +146,7 @@ class CMonkeyRun:
         row_scoring_functions = [row_scoring, motif_scoring, network_scoring]
         return scoring.ScoringFunctionCombiner(self.membership(),
                                                row_scoring_functions,
+                                               config_params=self.config_params,
                                                log_subresults=True)
 
     def membership(self):
