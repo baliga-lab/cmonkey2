@@ -349,6 +349,8 @@ def read_meme_output(output_text, num_motifs):
         sites = []
         while not line.startswith('----------------------'):
             match = pattern.match(line)
+            if match == None:
+                logging.error("ERROR in read_sites(), line(#%d) is: '%s'", current_index, line)
             sites.append((match.group(1), match.group(2), int(match.group(3)),
                           float(match.group(4)), match.group(5)))
             current_index += 1
@@ -365,6 +367,8 @@ def read_meme_output(output_text, num_motifs):
         rows = []
         while not line.startswith('----------------------'):
             match = pattern.match(line)
+            if match == None:
+                logging.error("ERROR in read_pssm(), line(#%d) is: '%s'", current_index, line)
             rows.append([float(match.group(1)), float(match.group(2)),
                          float(match.group(3)), float(match.group(4))])
             current_index += 1
