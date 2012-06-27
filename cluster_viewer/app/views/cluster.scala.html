@@ -5,9 +5,9 @@
 
 <div id="cluster-view">
   <script type="text/javascript">
-    @defining(motifInfoMap.keys.toSeq(0)) { seqType =>
+    @motifInfoMap.keys.map { seqType =>
       @for(i <- 0 until pssmMap(seqType).length) {
-        var pssm@i = @Html(pssmMap(seqType)(i));
+        var pssm@(seqType)_@i = @Html(pssmMap(seqType)(i));
       }
     }
     var canvasOptions = {
@@ -33,13 +33,13 @@
             },
             series: @(HighchartsFormatter.toHSSeries(ratios))
         });
-        @defining(motifInfoMap.keys.toSeq(0)) { seqType =>
+        @motifInfoMap.keys.map { seqType =>
           @for(i <- 0 until pssmMap(seqType).length) {
-            isblogo.makeLogo('canvas@i', pssm@i, canvasOptions);
+            isblogo.makeLogo('canvas@(seqType)_@i', pssm@(seqType)_@i, canvasOptions);
           }
         }
-        var annotations = [
-          @defining(motifInfoMap.keys.toSeq(0)) { seqType =>
+        @motifInfoMap.keys.map { seqType =>
+        var annotations_@seqType = [
             @for(i <- 0 until annotationMap(seqType).length) {
 
             {
@@ -57,9 +57,9 @@
             },
 
             }
-          }
         ];
-        annot.draw('annotation-graph', { width: 500, height: 400, annotations: annotations});
+        annot.draw('annotation-graph_@seqType', { width: 500, height: 400, annotations: annotations_@seqType});
+        }
     });
   </script>
   <h2>Cluster @cluster at iteration @iteration</h2>
@@ -67,16 +67,19 @@
   <div id="expression-graph"></div>
   <div>&nbsp;</div>
   <h3>Motifs</h3>
-  @defining(motifInfoMap.keys.toSeq(0)) { seqType =>
+  @motifInfoMap.keys.map { seqType =>
   @for(i <- 0 until pssmMap(seqType).length) {
     <span style="display: inline; float: left; margin-right: 10px;">
-    <div>Motif @i, evalue: @(motifInfoMap(seqType)(i).evalue)</div>
-    <div id="canvas@i"></div>
+    <div>Sequence type: @seqType, motif @i, evalue: @(motifInfoMap(seqType)(i).evalue)</div>
+    <div id="canvas@(seqType)_@i"></div>
     </span>
   }
   }
   <div style="clear: both"></div>
-  <div id="annotation-graph"></div>
+  @motifInfoMap.keys.map { seqType =>
+  <h3>Annotations for @seqType</h3>
+  <div id="annotation-graph_@seqType"></div>
+  }
   <div style="clear: both"></div>
   <div>&nbsp;</div>
   <h3>Cluster memberships</h3>
