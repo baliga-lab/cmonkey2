@@ -279,17 +279,11 @@ def compute_column_scores_submatrix(matrix):
     for details
     """
     colmeans = matrix.column_means()
-    matrix_minus_colmeans_squared = subtract_and_square(matrix, colmeans)
+    matrix_minus_colmeans_squared = np.square(matrix.values() - colmeans)
     var_norm = np.abs(colmeans) + 0.01
     result = util.column_means(matrix_minus_colmeans_squared) / var_norm
     return dm.DataMatrix(1, matrix.num_columns(), ['Col. Scores'],
                          matrix.column_names(), [result])
-
-
-def subtract_and_square(matrix, vector):
-    """reusable function to subtract a vector from each row of
-    the input matrix and square the values in the result matrix"""
-    return np.square(matrix.values() - vector)
 
 
 class ScoringFunctionCombiner:

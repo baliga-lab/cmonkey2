@@ -133,7 +133,7 @@ def __compute_row_scores_for_submatrix(matrix, submatrix):
     The result is a DataMatrix with one row containing all the row scores"""
     colmeans = submatrix.column_means()
     return np.log(
-        util.row_means(scoring.subtract_and_square(matrix, colmeans)) + 1e-99)
+        util.row_means(np.square(matrix.values() - colmeans)) + 1e-99)
 
 
 """
