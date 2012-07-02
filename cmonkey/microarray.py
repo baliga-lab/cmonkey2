@@ -135,7 +135,7 @@ def __compute_row_scores_for_submatrix(matrix, submatrix):
     order for the column means to be applied properly.
     The result is a DataMatrix with one row containing all the row scores"""
     return np.log(
-        util.row_means(np.square(matrix.values() - submatrix.column_means())) + 1e-99)
+        util.row_means(np.square(matrix.values - submatrix.column_means())) + 1e-99)
 
 
 """

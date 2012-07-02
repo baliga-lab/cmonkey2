@@ -53,11 +53,11 @@ class DataMatrix:
 
         if values != None:
             check_values()
-            self.__values = np.array(values, dtype=np.float64)
+            self.values = np.array(values, dtype=np.float64)
         else:
-            self.__values = np.zeros((nrows, ncols))
+            self.values = np.zeros((nrows, ncols))
             if init_value != None:
-                self.__values.fill(init_value)
+                self.values.fill(init_value)
         self.__row_variance = None
 
     def num_rows(self):
@@ -98,25 +98,21 @@ class DataMatrix:
             result.append(names.index(name))
         return result
 
-    def values(self):
-        """returns this matrix's values"""
-        return self.__values
-
     def flat_values(self):
         """returns all values as a single sequence"""
-        return self.__values.flatten()
+        return self.values.flatten()
 
     def row_values(self, row):
         """returns the values in the specified row"""
-        return self.__values[[row]][0]
+        return self.values[[row]][0]
 
     def column_values(self, column):
         """returns the values in the specified column"""
-        return self.__values[:, [column]].flatten()
+        return self.values[:, [column]].flatten()
 
     def __getitem__(self, row_index):
         """return the row at the specified position"""
-        return self.__values[row_index]
+        return self.values[row_index]
 
     def row_name(self, row):
         """retrieve the name for the specified row"""
@@ -129,7 +125,7 @@ class DataMatrix:
     def submatrix_by_rows(self, row_indexes):
         """extract a submatrix with the specified rows.
         row_indexes needs to be sorted"""
-        new_values = self.__values[[row_indexes]]
+        new_values = self.values[[row_indexes]]
         return DataMatrix(len(row_indexes), self.num_columns(),
                           row_names=[self.__row_names[index]
                                      for index in row_indexes],
@@ -150,13 +146,13 @@ class DataMatrix:
         def make_values(row_indexes, column_indexes):
             """creates an array from the selected rows and columns"""
             if row_indexes == None and column_indexes == None:
-                return self.__values
+                return self.values
             elif row_indexes == None:
-                return self.__values[:, column_indexes]
+                return self.values[:, column_indexes]
             elif column_indexes == None:
-                return self.__values[row_indexes]
+                return self.values[row_indexes]
             else:
-                return self.__values[row_indexes][:, column_indexes]
+                return self.values[row_indexes][:, column_indexes]
 
         if row_names == None:
             row_names = self.row_names()
@@ -188,18 +184,18 @@ class DataMatrix:
         new_row_names = []
         for row_pair in row_pairs:
             new_row_names.append(row_pair[0])
-            new_rows.append(self.__values[row_pair[1]])
+            new_rows.append(self.values[row_pair[1]])
         return DataMatrix(self.num_rows(), self.num_columns(),
                           new_row_names, self.column_names(),
                           values=new_rows)
 
     def column_means(self):
         """Returns a numpy array, containing the column means"""
-        return util.column_means(self.__values)
+        return util.column_means(self.values)
 
     def row_means(self):
         """Returns a numpy array, containing the column means"""
-        return util.row_means(self.__values)
+        return util.row_means(self.values)
 
     ######################################################################
     #### Operations on the matrix values
@@ -207,53 +203,53 @@ class DataMatrix:
 
     def multiply_column_by(self, column, factor):
         """Mulitplies the specified column by a certain factor"""
-        self.__values[:, column] *= factor
+        self.values[:, column] *= factor
         return self
 
     def max(self):
         """return the maximum value in this matrix"""
-        return np.amax(self.__values[np.isfinite(self.__values)])
+        return np.amax(self.values[np.isfinite(self.values)])
 
     def quantile(self, probability):
         """returns the result of the quantile function over all contained
         values"""
-        return util.quantile(self.__values.ravel(), probability)
+        return util.quantile(self.values.ravel(), probability)
 
     def min(self):
         """return the minimum value in this matrix"""
-        return np.amin(self.__values[np.isfinite(self.__values)])
+        return np.amin(self.values[np.isfinite(self.values)])
 
     def replace_nan_with(self, value):
         """replaces NaN with the specified value"""
-        self.__values[np.isnan(self.__values)] = value
+        self.values[np.isnan(self.values)] = value
 
     def apply_log(self):
         """applies np.log to all values"""
-        self.__values[self.__values != 0.0] = np.log(self.__values[self.__values != 0.0])
+        self.values[self.values != 0.0] = np.log(self.values[self.values != 0.0])
 
     def __neg__(self):
         """returns a new DataMatrix with the values in the matrix negated"""
         return DataMatrix(self.num_rows(), self.num_columns(),
                           self.row_names(), self.column_names(),
-                          -self.__values)
+                          -self.values)
 
     def __add__(self, value):
         """adding a value to this matrix can be either a scalar or a matrix"""
         if isinstance(value, DataMatrix):
             return DataMatrix(self.num_rows(), self.num_columns(),
                               self.row_names(), self.column_names(),
-                              self.__values + value.values())
+                              self.values + value.values)
         else:
             return DataMatrix(self.num_rows(), self.num_columns(),
                               self.row_names(), self.column_names(),
-                              self.__values + value)
+                              self.values + value)
 
     def __sub__(self, value):
         """subtract a value from the matrix"""
         if value != 0.0:
             return DataMatrix(self.num_rows(), self.num_columns(),
                               self.row_names(), self.column_names(),
-                              self.__values - value)
+                              self.values - value)
         else:
             return self
 
@@ -261,15 +257,15 @@ class DataMatrix:
         """returns a new DataMatrix with the values in the matrix negated"""
         return DataMatrix(self.num_rows(), self.num_columns(),
                           self.row_names(), self.column_names(),
-                          self.__values * factor)
+                          self.values * factor)
 
     def mean(self):
         """returns the mean value"""
-        return util.mean(self.__values)
+        return util.mean(self.values)
 
     def row_variance(self):
         if self.__row_variance == None:
-            self.__row_variance = util.max_row_var(self.__values)
+            self.__row_variance = util.max_row_var(self.values)
         return self.__row_variance
 
     def residual(self, max_row_variance=None):
@@ -278,7 +274,7 @@ class DataMatrix:
         d_rows = self.row_means()
         d_cols = self.column_means()
         d_all = util.mean(d_rows)
-        tmp = self.__values + d_all - util.r_outer(d_rows, d_cols, operator.add)
+        tmp = self.values + d_all - util.r_outer(d_rows, d_cols, operator.add)
         average = util.mean(np.abs(tmp))
         if max_row_variance != None:
             row_var = self.row_variance()
@@ -291,12 +287,12 @@ class DataMatrix:
         """replaces values < -20 with the smallest value that is >= -20
         replaces all NA/Inf values with the maximum value in the matrix
         """
-        masked = self.__values[np.isfinite(self.__values)]
+        masked = self.values[np.isfinite(self.values)]
         minval = np.min(masked[masked >= min_value])
         maxval = np.max(masked)
-        self.__values[self.__values < -20.0] = np.min(masked[masked >= -20.0])
-        self.__values[np.isinf(self.__values)] = maxval
-        self.__values[np.isnan(self.__values)] = maxval
+        self.values[self.values < -20.0] = np.min(masked[masked >= -20.0])
+        self.values[np.isinf(self.values)] = maxval
+        self.values[np.isnan(self.values)] = maxval
 
     def __repr__(self):
         """returns a string representation of this matrix"""
@@ -310,7 +306,7 @@ class DataMatrix:
         for row_index in xrange(self.num_rows()):
             result += ("%10s" % self.__row_names[row_index]) + ' '
             result += ' '.join([("%10f" % value)
-                                 for value in self.__values[row_index]])
+                                 for value in self.values[row_index]])
             result += '\n'
         return result
 
@@ -323,7 +319,7 @@ class DataMatrix:
             outfile.write(titlerow + '\n')
             for row_index in range(len(self.__row_names)):
                 row = [self.__row_names[row_index]]
-                row.extend([('%f' % value) for value in self.__values[row_index]])
+                row.extend([('%f' % value) for value in self.values[row_index]])
                 outfile.write('\t'.join(row) + '\n')
             outfile.flush()
 
@@ -547,7 +543,7 @@ def qm_result_matrices(matrices, tmp_mean):
     result = []
     for i in range(len(matrices)):
         matrix = matrices[i]
-        values = matrix.values()
+        values = matrix.values
         num_rows, num_cols = values.shape
         xvec = robj.FloatVector(values.reshape(values.size))
         xr = robj.r.t(robj.r.matrix(xvec, nrow=num_rows, ncol=num_cols, byrow=True))

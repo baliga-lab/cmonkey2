@@ -350,8 +350,8 @@ class ClusterMembership:
         row_sd_values = []
 
         # optimization: unwrap the numpy arrays to access them directly
-        row_score_values = row_scores.values()
-        col_score_values = column_scores.values()
+        row_score_values = row_scores.values
+        col_score_values = column_scores.values
 
         # iterate the row names directly
         row_names = row_scores.row_names()
