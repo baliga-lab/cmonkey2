@@ -34,17 +34,20 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
         column_scores.append(scores)
 
     column_members = []
+    start_time = util.current_millis()
     for column_index in xrange(num_cols):
         scores_to_order = []
         for row_index in xrange(num_clusters):
             scores_to_order.append(column_scores[row_index][column_index])
         column_members.append(order(scores_to_order)[:num_clusters_per_column])
+    elapsed = util.current_millis() - start_time
+    logging.info("seed column members in %f s.", elapsed % 1000.0)
     return column_members
 
 def order(alist):
     """a weird R function that gives each item's position in the original list
     if you enumerate each item in a sorted list"""
-    return [(alist.index(item)) + 1 for item in sorted(alist, reverse=True)]
+    return map(lambda x: alist.index(x) + 1, sorted(alist, reverse=True))
 
 
 def compute_row_scores(membership, matrix, num_clusters,
@@ -185,5 +188,4 @@ class RowScoringFunction(scoring.ScoringFunctionBase):
         """return the run logs"""
         return [self.run_log]
 
-__all__ = ['ClusterMembership', 'compute_row_scores', 'compute_column_scores',
-           'seed_column_members']
+__all__ = ['compute_row_scores', 'seed_column_members']
