@@ -105,7 +105,7 @@ def select_probes(matrix, num_genes_total, column_groups, proportional=True):
 def intensities_to_ratios(matrix, controls, column_groups):
     """turn intensities into ratios
     Warning: input matrix is modified !!!"""
-    colnames = matrix.column_names()
+    colnames = matrix.column_names
     control_indexes = [colnames.index(control)
                        for control in controls
                        if control in colnames]

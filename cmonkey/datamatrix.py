@@ -38,18 +38,18 @@ class DataMatrix:
                                      % (row_index, ncols, len(inrow)))
 
         if row_names == None:
-            self.__row_names = ["Row " + str(i) for i in range(nrows)]
+            self.row_names = ["Row " + str(i) for i in range(nrows)]
         else:
             if len(row_names) != nrows:
                 raise ValueError("number of row names should be %d" % nrows)
-            self.__row_names = list(row_names)
+            self.row_names = list(row_names)
 
         if col_names == None:
-            self.__column_names = ["Col " + str(i) for i in xrange(ncols)]
+            self.column_names = ["Col " + str(i) for i in xrange(ncols)]
         else:
             if len(col_names) != ncols:
                 raise ValueError("number of column names should be %d" % ncols)
-            self.__column_names = list(col_names)
+            self.column_names = list(col_names)
 
         if values != None:
             check_values()
@@ -62,34 +62,22 @@ class DataMatrix:
 
     def num_rows(self):
         """returns the number of rows"""
-        return len(self.__row_names)
+        return len(self.row_names)
 
     def num_columns(self):
         """returns the number of columns"""
         if self.num_rows() == 0:
             return 0
         else:
-            return len(self.__column_names)
-
-    def row_names(self):
-        """return the row names.
-        Note: a NumPy array is returned, which does not have an index()
-        method"""
-        return self.__row_names
-
-    def column_names(self):
-        """return the column names.
-        Note: a NumPy array is returned, which does not have an index()
-        method"""
-        return self.__column_names
+            return len(self.column_names)
 
     def row_indexes(self, row_names):
         """returns the row indexes with the matching names"""
-        return self.__find_indexes(self.__row_names, row_names)
+        return self.__find_indexes(self.row_names, row_names)
 
     def column_indexes(self, column_names):
         """returns the column indexes with the matching names"""
-        return self.__find_indexes(self.__column_names, column_names)
+        return self.__find_indexes(self.column_names, column_names)
 
     def __find_indexes(self, names, search_names):
         """generic finder method to search name indexes in a numpy array"""
@@ -116,20 +104,20 @@ class DataMatrix:
 
     def row_name(self, row):
         """retrieve the name for the specified row"""
-        return self.__row_names[row]
+        return self.row_names[row]
 
     def column_name(self, row):
         """retrieve the name for the specified column"""
-        return self.__column_names[row]
+        return self.column_names[row]
 
     def submatrix_by_rows(self, row_indexes):
         """extract a submatrix with the specified rows.
         row_indexes needs to be sorted"""
         new_values = self.values[[row_indexes]]
         return DataMatrix(len(row_indexes), self.num_columns(),
-                          row_names=[self.__row_names[index]
+                          row_names=[self.row_names[index]
                                      for index in row_indexes],
-                          col_names=self.__column_names,
+                          col_names=self.column_names,
                           values=new_values)
 
     def submatrix_by_name(self, row_names=None, column_names=None):
@@ -155,19 +143,19 @@ class DataMatrix:
                 return self.values[row_indexes][:, column_indexes]
 
         if row_names == None:
-            row_names = self.row_names()
+            row_names = self.row_names
             row_indexes = None
         else:
             row_names = [name for name in row_names
-                         if name in self.__row_names]
+                         if name in self.row_names]
             row_indexes = self.row_indexes(row_names)
 
         if column_names == None:
-            column_names = self.column_names()
+            column_names = self.column_names
             col_indexes = None
         else:
             column_names = [name for name in column_names
-                            if name in self.__column_names]
+                            if name in self.column_names]
             col_indexes = self.column_indexes(column_names)
 
         new_values = make_values(row_indexes, col_indexes)
@@ -177,8 +165,8 @@ class DataMatrix:
     def sorted_by_row_name(self):
         """returns a version of this table, sorted by row name"""
         row_pairs = []
-        for row_index in xrange(len(self.__row_names)):
-            row_pairs.append((self.__row_names[row_index], row_index))
+        for row_index in xrange(len(self.row_names)):
+            row_pairs.append((self.row_names[row_index], row_index))
         row_pairs.sort()
         new_rows = []
         new_row_names = []
@@ -186,7 +174,7 @@ class DataMatrix:
             new_row_names.append(row_pair[0])
             new_rows.append(self.values[row_pair[1]])
         return DataMatrix(self.num_rows(), self.num_columns(),
-                          new_row_names, self.column_names(),
+                          new_row_names, self.column_names,
                           values=new_rows)
 
     def column_means(self):
@@ -230,25 +218,25 @@ class DataMatrix:
     def __neg__(self):
         """returns a new DataMatrix with the values in the matrix negated"""
         return DataMatrix(self.num_rows(), self.num_columns(),
-                          self.row_names(), self.column_names(),
+                          self.row_names, self.column_names,
                           -self.values)
 
     def __add__(self, value):
         """adding a value to this matrix can be either a scalar or a matrix"""
         if isinstance(value, DataMatrix):
             return DataMatrix(self.num_rows(), self.num_columns(),
-                              self.row_names(), self.column_names(),
+                              self.row_names, self.column_names,
                               self.values + value.values)
         else:
             return DataMatrix(self.num_rows(), self.num_columns(),
-                              self.row_names(), self.column_names(),
+                              self.row_names, self.column_names,
                               self.values + value)
 
     def __sub__(self, value):
         """subtract a value from the matrix"""
         if value != 0.0:
             return DataMatrix(self.num_rows(), self.num_columns(),
-                              self.row_names(), self.column_names(),
+                              self.row_names, self.column_names,
                               self.values - value)
         else:
             return self
@@ -256,7 +244,7 @@ class DataMatrix:
     def __mul__(self, factor):
         """returns a new DataMatrix with the values in the matrix negated"""
         return DataMatrix(self.num_rows(), self.num_columns(),
-                          self.row_names(), self.column_names(),
+                          self.row_names, self.column_names,
                           self.values * factor)
 
     def mean(self):
@@ -302,9 +290,9 @@ class DataMatrix:
         """returns a string representation of this matrix"""
         result = "%10s" % 'Row'
         result += ' '.join([("%10s" % name)
-                            for name in self.__column_names]) + '\n'
+                            for name in self.column_names]) + '\n'
         for row_index in xrange(self.num_rows()):
-            result += ("%10s" % self.__row_names[row_index]) + ' '
+            result += ("%10s" % self.row_names[row_index]) + ' '
             result += ' '.join([("%10f" % value)
                                  for value in self.values[row_index]])
             result += '\n'
@@ -314,11 +302,11 @@ class DataMatrix:
         """writes this matrix to tab-separated file"""
         with open(path, 'w') as outfile:
             title = ['GENE']
-            title.extend(self.__column_names)
+            title.extend(self.column_names)
             titlerow = '\t'.join(title)
             outfile.write(titlerow + '\n')
-            for row_index in range(len(self.__row_names)):
-                row = [self.__row_names[row_index]]
+            for row_index in range(len(self.row_names)):
+                row = [self.row_names[row_index]]
                 row.extend([('%f' % value) for value in self.values[row_index]])
                 outfile.write('\t'.join(row) + '\n')
             outfile.flush()
@@ -330,9 +318,9 @@ class DataMatrixCollection:
     def __init__(self, matrices):
         self.__matrices = matrices
         self.__unique_row_names = self.__make_unique_names(
-            lambda matrix: matrix.row_names())
+            lambda matrix: matrix.row_names)
         self.__unique_column_names = self.__make_unique_names(
-            lambda matrix: matrix.column_names())
+            lambda matrix: matrix.column_names)
 
     def __make_unique_names(self, name_extract_fun):
         """helper method to create a unique name list
@@ -467,7 +455,7 @@ def row_filter(matrix, fun):
     for row_index in xrange(matrix.num_rows()):
         values.append(fun(matrix[row_index]))
     result = DataMatrix(matrix.num_rows(), matrix.num_columns(),
-                        matrix.row_names(), matrix.column_names(),
+                        matrix.row_names, matrix.column_names,
                         values=values)
     return result
 
@@ -552,8 +540,8 @@ def qm_result_matrices(matrices, tmp_mean):
                                                  matrix.num_columns()))
         outmatrix = DataMatrix(matrix.num_rows(),
                                matrix.num_columns(),
-                               matrix.row_names(),
-                               matrix.column_names(),
+                               matrix.row_names,
+                               matrix.column_names,
                                values=values)
         result.append(outmatrix)
     return result

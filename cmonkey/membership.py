@@ -110,9 +110,9 @@ class ClusterMembership:
         column_membership = seed_column_memberships(
             data_matrix, row_membership, num_clusters, num_clusters_per_col)
         row_is_member_of = make_member_map(row_membership,
-                                           data_matrix.row_names())
+                                           data_matrix.row_names)
         col_is_member_of = make_member_map(column_membership,
-                                           data_matrix.column_names())
+                                           data_matrix.column_names)
         return ClusterMembership(row_is_member_of, col_is_member_of,
                                  config_params)
 
@@ -354,7 +354,7 @@ class ClusterMembership:
         col_score_values = column_scores.values
 
         # iterate the row names directly
-        row_names = row_scores.row_names()
+        row_names = row_scores.row_names
         for col in xrange(row_scores.num_columns()):
             cluster_rows = self.rows_for_cluster(col + 1)
             for row in xrange(row_scores.num_rows()):
@@ -367,7 +367,7 @@ class ClusterMembership:
                                   fuzzy_coeff)
 
         col_sd_values = []
-        row_names = column_scores.row_names()
+        row_names = column_scores.row_names
         for col in xrange(column_scores.num_columns()):
             cluster_cols = self.columns_for_cluster(col + 1)
             for row in xrange(column_scores.num_rows()):
@@ -457,7 +457,7 @@ class ClusterMembership:
             rd_scores/cd_scores"""
             best_clusters = get_best_clusters(scores, num_clusters)
             for row in xrange(scores.num_rows()):
-                rowname = scores.row_names()[row]
+                rowname = scores.row_names[row]
                 best_members = best_clusters[rowname]
                 if (not is_in_all_clusters(rowname, best_members) and
                     seeing_change(probability_seeing_change)):
@@ -555,7 +555,7 @@ class ClusterMembership:
         result = {}
         while len(wh) > 0 and tries < MAX_ADJUST_TRIES:
             wh2 = max_row_in_column(rowscores, cluster - 1)
-            wh2_index = rowscores.row_names().index(wh2)
+            wh2_index = rowscores.row_names.index(wh2)
             clusters = self.clusters_for_row(wh2)
             wh2_scores = []
             for c in clusters:
@@ -593,7 +593,7 @@ def get_best_clusters(scores, num_per_cluster):
         row_values = scores.row_values(row)
         row_values = [value for value in row_values]  # compatibility hack
         ranked_scores = sorted(row_values, reverse=True)
-        rowname = scores.row_names()[row]
+        rowname = scores.row_names[row]
         result[rowname] = []
         for index in xrange(num_per_cluster):
             result[rowname].append(row_values.index(
@@ -608,8 +608,8 @@ def get_density_scores(membership, row_scores, col_scores):
     rowscore_bandwidth = max(rscore_range / 100.0, 0.001)
     rd_scores = dm.DataMatrix(row_scores.num_rows(),
                               row_scores.num_columns(),
-                              row_scores.row_names(),
-                              row_scores.column_names())
+                              row_scores.row_names,
+                              row_scores.column_names)
 
     #start_time = util.current_millis()
     for cluster in xrange(1, num_clusters + 1):
@@ -624,8 +624,8 @@ def get_density_scores(membership, row_scores, col_scores):
     colscore_bandwidth = max(cscore_range / 100.0, 0.001)
     cd_scores = dm.DataMatrix(col_scores.num_rows(),
                               col_scores.num_columns(),
-                              col_scores.row_names(),
-                              col_scores.column_names())
+                              col_scores.row_names,
+                              col_scores.column_names)
 
     #start_time = util.current_millis()
     for cluster in xrange(1, num_clusters + 1):

@@ -159,7 +159,7 @@ class ScoringFunctionBase:
 
     def gene_names(self):
         """returns the gene names"""
-        return self.__matrix.row_names()
+        return self.__matrix.row_names
 
     def num_genes(self):
         """returns the number of rows"""
@@ -253,7 +253,7 @@ def compute_column_scores(membership, matrix, num_clusters):
     # Convert scores into a matrix that have the clusters as columns
     # and conditions in the rows
     result = dm.DataMatrix(matrix.num_columns(), num_clusters,
-                           row_names=matrix.column_names())
+                           row_names=matrix.column_names)
     for cluster in xrange(num_clusters):
         column_scores = cluster_column_scores[cluster]
         for row_index in xrange(matrix.num_columns()):
@@ -283,7 +283,7 @@ def compute_column_scores_submatrix(matrix):
     var_norm = np.abs(colmeans) + 0.01
     result = util.column_means(matrix_minus_colmeans_squared) / var_norm
     return dm.DataMatrix(1, matrix.num_columns(), ['Col. Scores'],
-                         matrix.column_names(), [result])
+                         matrix.column_names, [result])
 
 
 class ScoringFunctionCombiner:

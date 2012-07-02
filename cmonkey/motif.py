@@ -112,7 +112,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         # input ratios, they are used as a basis to compute the background
         # distribution for every cluster
         self.used_seqs = organism.sequences_for_genes_scan(
-            sorted(matrix.row_names()), seqtype=self.seqtype)
+            sorted(matrix.row_names), seqtype=self.seqtype)
         logging.info("used sequences for motifing retrieved")
         logging.info("building reverse map...")
         start_time = util.current_millis()
@@ -136,7 +136,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
         result = {}
         num_not_found = 0
-        for row_name in matrix.row_names():
+        for row_name in matrix.row_names:
             feature_id = feature_id_for(row_name)
             if feature_id != None:
                 result[feature_id] = row_name

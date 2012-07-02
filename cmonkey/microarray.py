@@ -72,7 +72,7 @@ def compute_row_scores(membership, matrix, num_clusters,
         row_scores = cluster_row_scores[cluster]
         values[:, cluster] = row_scores
     result = dm.DataMatrix(matrix.num_rows(), num_clusters,
-                           row_names=matrix.row_names(),
+                           row_names=matrix.row_names,
                            values=values)
     logging.info("made result matrix in %f s.",
                  (util.current_millis() - start_time) / 1000.0)
