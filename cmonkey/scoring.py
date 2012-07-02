@@ -346,16 +346,22 @@ class ScoringFunctionCombiner:
 
     def __combine(self, result_matrices, score_scalings, iteration):
         if len(result_matrices) > 1 and self.__config_params['quantile_normalize']:
+            start_time = util.current_millis()
             result_matrices = dm.quantile_normalize_scores(result_matrices,
                                                            score_scalings)
+            elapsed = util.current_millis() - start_time
+            logging.info("quantile normalize in %f s.", elapsed / 1000.0)
 
         if len(result_matrices) > 0:
+            start_time = util.current_millis()
             combined_score = (result_matrices[0] *
                               self.__scoring_functions[0].scaling(iteration))
             for index in xrange(1, len(result_matrices)):
                 combined_score += (
                     result_matrices[index] *
                     self.__scoring_functions[index].scaling(iteration))
+            elapsed = util.current_millis() - start_time
+            logging.info("combined score in %f s.", elapsed / 1000.0)
             return combined_score
         else:
             return None

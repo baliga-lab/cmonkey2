@@ -15,6 +15,7 @@ import os
 from datetime import date, datetime
 import json
 import numpy as np
+from guppy import hpy
 
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
 GO_FILE_PATH = 'testdata/proteome2taxid'
@@ -55,7 +56,7 @@ class CMonkeyRun:
         # defaults
         self.row_seeder = memb.make_kmeans_row_seeder(num_clusters)
         self.column_seeder = microarray.seed_column_members
-        self['row_scaling'] =  1.0  # 6.0 in cMonkey 4.8.7
+        self['row_scaling'] =  6.0
         self['string_file'] = None
         self['cache_dir'] = CACHE_DIR
         self['output_dir'] = 'out'
@@ -63,7 +64,7 @@ class CMonkeyRun:
         self['num_iterations'] = 2000
         self['multiprocessing'] = True
         # Quantile normalization is false by default in cMonkey-R
-        self['quantile_normalize'] = False
+        self['quantile_normalize'] = True
 
         # used to select sequences and MEME
         self['sequence_types'] = ['upstream']
@@ -309,9 +310,14 @@ class CMonkeyRun:
                                self['num_iterations'] + 1):
             logging.info("Iteration # %d", iteration)
             iteration_result = {'iteration': iteration}
-            self.membership().update(self.ratio_matrix,
-                                     row_scoring.compute(iteration_result),
-                                     col_scoring.compute(iteration_result),
+
+            rscores = row_scoring.compute(iteration_result)
+            start_time = util.current_millis()
+            cscores = col_scoring.compute(iteration_result)
+            elapsed = util.current_millis() - start_time
+            logging.info("computed column_scores in %f s.", elapsed / 1000.0)
+
+            self.membership().update(self.ratio_matrix, rscores, cscores,
                                      self['num_iterations'], iteration_result)
 
             if iteration > 0 and self.CHECKPOINT_INTERVAL and iteration % self.CHECKPOINT_INTERVAL == 0:
@@ -337,6 +343,9 @@ class CMonkeyRun:
                 self.write_stats(iteration_result)
                 # run infos should be written with the same frequency as stats
                 self.write_runlog(row_scoring, iteration)
+
+            #if iteration == 10:
+            #    print self.hp.heap()
 
         logging.info("Postprocessing: Adjusting the clusters....")
         self.membership().postadjust()
