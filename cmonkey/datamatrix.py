@@ -102,14 +102,6 @@ class DataMatrix:
         """return the row at the specified position"""
         return self.values[row_index]
 
-    def row_name(self, row):
-        """retrieve the name for the specified row"""
-        return self.row_names[row]
-
-    def column_name(self, row):
-        """retrieve the name for the specified column"""
-        return self.column_names[row]
-
     def submatrix_by_rows(self, row_indexes):
         """extract a submatrix with the specified rows.
         row_indexes needs to be sorted"""
@@ -436,8 +428,8 @@ def nochange_filter(matrix):
 
     rows_to_keep = nochange_filter_rows(matrix)
     cols_to_keep = nochange_filter_columns(matrix)
-    colnames = [matrix.column_name(col) for col in cols_to_keep]
-    rownames = [matrix.row_name(row) for row in rows_to_keep]
+    colnames = map(lambda col: matrix.column_names[col], cols_to_keep)
+    rownames = map(lambda row: matrix.row_names[row], rows_to_keep)
     numrows = len(rows_to_keep)
     numcols = len(cols_to_keep)
 

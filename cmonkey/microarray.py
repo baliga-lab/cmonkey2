@@ -27,7 +27,7 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
         current_cluster_rows = []
         for row_index in xrange(num_rows):
             if row_membership[row_index][0] == cluster_num:
-                current_cluster_rows.append(data_matrix.row_name(row_index))
+                current_cluster_rows.append(data_matrix.row_names[row_index])
         submatrix = data_matrix.submatrix_by_name(
             row_names=current_cluster_rows)
         scores = (-scoring.compute_column_scores_submatrix(submatrix))[0]

@@ -167,7 +167,7 @@ class ScoringFunctionBase:
 
     def gene_at(self, index):
         """returns the gene at the specified index"""
-        return self.__matrix.row_name(index)
+        return self.__matrix.row_names[index]
 
     def rows_for_cluster(self, cluster):
         """returns the rows for the specified cluster"""
@@ -372,7 +372,7 @@ class ScoringFunctionCombiner:
         for cluster in xrange(1, matrix.num_columns() + 1):
             cluster_rows = self.__membership.rows_for_cluster(cluster)
             for row in xrange(matrix.num_rows()):
-                if matrix.row_name(row) in cluster_rows:
+                if matrix.row_names[row] in cluster_rows:
                     scores.append(matrix[row][cluster - 1])
         logging.info("function '%s', trim mean score: %f",
                      score_function.name(),

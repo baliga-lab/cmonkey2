@@ -45,21 +45,15 @@ class MockDataMatrix:
 
     def __init__(self, num_rows):
         self.__num_rows = num_rows
+        self.row_names = [('GENE%d' % index) for index in range(self.__num_rows)]
+        self.column_names = [('COND%d' % index) for index in range(self.num_columns())]
+        self.values = MATRIX1
 
     def num_rows(self):
         return self.__num_rows
 
     def num_columns(self):
         return 5
-
-    def row_names(self):
-        return [('GENE%d' % index) for index in range(self.__num_rows)]
-
-    def column_names(self):
-        return [('COND%d' % index) for index in range(self.num_columns())]
-
-    def values(self):
-        return MATRIX1
 
     def submatrix(self, rows, cols):
         return self

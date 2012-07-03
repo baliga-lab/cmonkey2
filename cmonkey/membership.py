@@ -521,24 +521,24 @@ class ClusterMembership:
         """adjust a single cluster"""
         def max_row_in_column(matrix, column):
             """returns a pair of the maximum row index and score in the given matrix and column"""
-            sm = matrix.submatrix_by_name(wh, [matrix.column_name(column)])
+            sm = matrix.submatrix_by_name(wh, [matrix.column_names[column]])
             max_row = 0
             max_score = sys.float_info.min
             for row in range(sm.num_rows()):
                 if sm[row][0] > max_score:
                     max_score = sm[row][0]
                     max_row = row
-            return sm.row_name(max_row)
+            return sm.row_names[max_row]
 
         old_rows = self.rows_for_cluster(cluster)
         not_in = []
         for row in range(rowscores.num_rows()):
-            row_name = rowscores.row_name(row)
+            row_name = rowscores.row_names[row]
             if row_name not in old_rows:
-                not_in.append((row, rowscores.row_name(row)))
+                not_in.append((row, rowscores.row_names[row]))
         #print old_rows
         threshold = rowscores.submatrix_by_name(old_rows,
-                                                [rowscores.column_name(cluster - 1)]).quantile(cutoff)
+                                                [rowscores.column_names[cluster - 1]]).quantile(cutoff)
         wh = []
         for row, row_name in not_in:
             if rowscores[row][cluster - 1] < threshold:

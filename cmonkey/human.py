@@ -210,10 +210,10 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
         # individual clusters
         sequence_filters = [lambda seqs, feature_ids: {key: seqs[key][1] for key in seqs.keys()}]
         background_file_prom = meme.global_background_file(
-            self.organism(), self.ratio_matrix.row_names(), 'promoter',
+            self.organism(), self.ratio_matrix.row_names, 'promoter',
             use_revcomp=True)
         background_file_p3utr = meme.global_background_file(
-            self.organism(), self.ratio_matrix.row_names(), 'p3utr',
+            self.organism(), self.ratio_matrix.row_names, 'p3utr',
             use_revcomp=True)
         meme_suite_prom = meme.MemeSuite430(
             max_width=MAX_MOTIF_WIDTH,

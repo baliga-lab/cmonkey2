@@ -207,7 +207,7 @@ def compute_cluster_score(args):
         scores = [0.0 for _ in xrange(matrix.num_rows())]
         min_genes = set_type.sets[min_set].genes
         min_genes = [gene for gene in min_genes
-                     if gene in matrix.row_names()]
+                     if gene in matrix.row_names]
         min_indexes = matrix.row_indexes(min_genes)
 
         if set_type.sets[min_set].cutoff == 'discrete':
