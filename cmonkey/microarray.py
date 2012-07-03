@@ -97,8 +97,7 @@ def __compute_row_scores_for_clusters(membership, matrix, num_clusters,
 
     if use_multiprocessing:
         pool = mp.Pool()
-        result = pool.map(compute_row_scores_for_cluster,
-                          [cluster for cluster in xrange(1, num_clusters + 1)])
+        result = pool.map(compute_row_scores_for_cluster, xrange(1, num_clusters + 1))
         pool.close()
     else:
         result = []

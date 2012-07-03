@@ -156,15 +156,11 @@ class DataMatrix:
 
     def sorted_by_row_name(self):
         """returns a version of this table, sorted by row name"""
-        row_pairs = []
-        for row_index in xrange(len(self.row_names)):
-            row_pairs.append((self.row_names[row_index], row_index))
+        row_names = self.row_names
+        row_pairs = map(lambda row: (row_names[row], row), xrange(len(self.row_names)))
         row_pairs.sort()
-        new_rows = []
-        new_row_names = []
-        for row_pair in row_pairs:
-            new_row_names.append(row_pair[0])
-            new_rows.append(self.values[row_pair[1]])
+        new_row_names = map(lambda row_pair: row_pair[0], row_pairs)
+        new_rows = map(lambda row_pair: self.values[row_pair[1]], row_pairs)
         return DataMatrix(self.num_rows(), self.num_columns(),
                           new_row_names, self.column_names,
                           values=new_rows)
