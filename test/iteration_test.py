@@ -221,11 +221,13 @@ def check_matrix_values(matrix1, matrix2, eps=EPS):
     result = True
     for row in range(matrix1.num_rows()):
         for col in range(matrix1.num_columns()):
-            diff = abs(matrix1[row][col] - matrix2[row][col])
+            diff = abs(matrix1.values[row][col] - matrix2.values[row][col])
             #print diff
             if diff > eps:
                 print "Value mismatch at (%s, cluster %d): %f != %f (diff = %f)" % (
-                    matrix1.row_name(row), col + 1, matrix1[row][col], matrix2[row][col], diff)
+                    matrix1.row_name(row), col + 1,
+                    matrix1.values[row][col],
+                    matrix2.values[row][col], diff)
                 result = False
     return result
 

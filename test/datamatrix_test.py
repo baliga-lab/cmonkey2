@@ -23,7 +23,7 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         matrix = dm.DataMatrix(3, 4)
         self.assertEquals(3, matrix.num_rows())
         self.assertEquals(4, matrix.num_columns())
-        self.assertEquals(0.0, matrix[0][0])
+        self.assertEquals(0.0, matrix.values[0][0])
         self.assertEquals("Row 0", matrix.row_names[0])
         self.assertEquals("Row 1", matrix.row_names[1])
         self.assertEquals("Col 0", matrix.column_names[0])
@@ -35,7 +35,7 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                ["MyCol1", "MyCol2"])
         self.assertEquals(3, matrix.num_rows())
         self.assertEquals(2, matrix.num_columns())
-        self.assertEquals(0.0, matrix[0][0])
+        self.assertEquals(0.0, matrix.values[0][0])
         self.assertEquals("MyRow1", matrix.row_names[0])
         self.assertEquals("MyRow2", matrix.row_names[1])
         self.assertEquals("MyCol1", matrix.column_names[0])
@@ -56,20 +56,6 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """create DataMatrix with an initialization value"""
         matrix = dm.DataMatrix(2, 2, init_value=42.0)
         self.assertTrue((matrix.values == [[42.0, 42.0], [42.0, 42.0]]).all())
-
-    def test_set_value(self):
-        """set a value in the matrix"""
-        matrix = dm.DataMatrix(3, 4)
-        matrix[0][1] = 42.0
-        self.assertEquals(42.0, matrix[0][1])
-
-    def test_set_value_on_np_array(self):
-        """set a value in the matrix by directly manipulating the underlying NumPy array"""
-        matrix = dm.DataMatrix(3, 4)
-        matrix.values[0][1] = 4711.0
-        self.assertEquals(4711.0, matrix[0][1])
-        matrix.values[0][1] += 2.0
-        self.assertEquals(4713.0, matrix[0][1])
 
     def test_init_with_values_none(self):
         """invoke set_values() with None should result in ValueError"""
@@ -389,8 +375,8 @@ class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals(2, matrix.num_columns())
         self.assertEquals(matrix.column_names, ["H2", "H3"])
         self.assertEquals(matrix.row_names, ["R1", "R2"])
-        self.assertTrue((matrix[0] == [1, 2]).all())
-        self.assertTrue((matrix[1] == [3, 4]).all())
+        self.assertTrue((matrix.values[0] == [1, 2]).all())
+        self.assertTrue((matrix.values[1] == [3, 4]).all())
 
     def test_with_na_values(self):
         """test a factory with a DelimitedFile containing NA values"""
@@ -400,10 +386,10 @@ class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals(2, matrix.num_columns())
         self.assertEquals(matrix.column_names, ["H2", "H3"])
         self.assertEquals(matrix.row_names, ["R1", "R2"])
-        self.assertTrue(np.isnan(matrix[0][0]))
-        self.assertEquals(2.0, matrix[0][1])
-        self.assertTrue(np.isnan(matrix[1][0]))
-        self.assertEquals(4.0, matrix[1][1])
+        self.assertTrue(np.isnan(matrix.values[0][0]))
+        self.assertEquals(2.0, matrix.values[0][1])
+        self.assertTrue(np.isnan(matrix.values[1][0]))
+        self.assertEquals(4.0, matrix.values[1][1])
 
     def test_simple_filter(self):
         """test a factory using a single filter"""
@@ -413,8 +399,8 @@ class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals(2, matrix.num_columns())
         self.assertEquals(matrix.column_names, ["H2", "H3"])
         self.assertEquals(matrix.row_names, ["R1", "R2"])
-        self.assertTrue((matrix[0] == [2, 4]).all())
-        self.assertTrue((matrix[1] == [6, 8]).all())
+        self.assertTrue((matrix.values[0] == [2, 4]).all())
+        self.assertTrue((matrix.values[1] == [6, 8]).all())
 
 
 def times2(matrix):
@@ -422,7 +408,7 @@ def times2(matrix):
     result = copy.deepcopy(matrix)
     for row in range(matrix.num_rows()):
         for col in range(matrix.num_columns()):
-            result[row][col] = matrix[row][col] * 2
+            result.values[row][col] = matrix.values[row][col] * 2
     return result
 
 
@@ -465,7 +451,7 @@ class CenterScaleFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """test the centering"""
         matrix = dm.DataMatrix(2, 2, ['R1', 'R2'], ['C1', 'C2'],
                                values=[[2, 3], [3, 4]])
-        filtered = dm.center_scale_filter(matrix)
+        filtered = dm.center_scale_filter(matrix).values
         self.assertAlmostEqual(-0.70710678237309499, filtered[0][0])
         self.assertAlmostEqual(0.70710678237309499, filtered[0][1])
         self.assertAlmostEqual(-0.70710678237309499, filtered[1][0])
@@ -530,13 +516,13 @@ class QuantileNormalizeTest(unittest.TestCase): # pylint: disable-msg=R0904
         m2 = dm.DataMatrix(2, 2, values=[[2.3, 2.5], [2.1, 2.31]])
         result = dm.quantile_normalize_scores([m1, m2], [6.0, 1.0])
 
-        outmatrix1 = result[0]
+        outmatrix1 = result[0].values
         self.assertAlmostEqual(0.5785714, outmatrix1[0][0])
         self.assertAlmostEqual(1.45071428, outmatrix1[0][1])
         self.assertAlmostEqual(1.02142857, outmatrix1[1][0])
         self.assertAlmostEqual(1.89285714, outmatrix1[1][1])
 
-        outmatrix2 = result[1]
+        outmatrix2 = result[1].values
         self.assertAlmostEqual(1.02142857, outmatrix2[0][0])
         self.assertAlmostEqual(1.89285714, outmatrix2[0][1])
         self.assertAlmostEqual(0.5785714, outmatrix2[1][0])
@@ -548,13 +534,13 @@ class QuantileNormalizeTest(unittest.TestCase): # pylint: disable-msg=R0904
         m2 = dm.DataMatrix(2, 2, values=[[2.3, 2.5], [2.1, 2.31]])
         result = dm.quantile_normalize_scores([m1, m2], None)
 
-        outmatrix1 = result[0]
+        outmatrix1 = result[0].values
         self.assertAlmostEqual(1.55, outmatrix1[0][0])
         self.assertAlmostEqual(2.655, outmatrix1[0][1])
         self.assertAlmostEqual(2.15, outmatrix1[1][0])
         self.assertAlmostEqual(3.25, outmatrix1[1][1])
 
-        outmatrix2 = result[1]
+        outmatrix2 = result[1].values
         self.assertAlmostEqual(2.15, outmatrix2[0][0])
         self.assertAlmostEqual(3.25, outmatrix2[0][1])
         self.assertAlmostEqual(1.55, outmatrix2[1][0])
@@ -566,13 +552,13 @@ class QuantileNormalizeTest(unittest.TestCase): # pylint: disable-msg=R0904
         m2 = dm.DataMatrix(2, 2, values=[[2.3, 2.5], [2.1, 2.31]])
         result = dm.quantile_normalize_scores([m1, m2], [6.0, np.nan])
 
-        outmatrix1 = result[0]
+        outmatrix1 = result[0].values
         self.assertAlmostEqual(1.0, outmatrix1[0][0])
         self.assertAlmostEqual(3.0, outmatrix1[0][1])
         self.assertAlmostEqual(2.0, outmatrix1[1][0])
         self.assertAlmostEqual(4.0, outmatrix1[1][1])
 
-        outmatrix2 = result[1]
+        outmatrix2 = result[1].values
         self.assertAlmostEqual(2.0, outmatrix2[0][0])
         self.assertAlmostEqual(4.0, outmatrix2[0][1])
         self.assertAlmostEqual(1.0, outmatrix2[1][0])

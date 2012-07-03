@@ -91,10 +91,6 @@ class DataMatrix:
         """returns the values in the specified column"""
         return self.values[:, [column]].flatten()
 
-    def __getitem__(self, row_index):
-        """return the row at the specified position"""
-        return self.values[row_index]
-
     def submatrix_by_rows(self, row_indexes):
         """extract a submatrix with the specified rows.
         row_indexes needs to be sorted"""
@@ -389,10 +385,11 @@ def nochange_filter(matrix):
     def nochange_filter_rows(data_matrix):
         """subfunction of nochange_filter to filter row-wise"""
         keep = []
+        dmvalues = data_matrix.values
         for row_index in xrange(data_matrix.num_rows()):
             count = 0
             for col_index in xrange(data_matrix.num_columns()):
-                value = data_matrix[row_index][col_index]
+                value = dmvalues[row_index][col_index]
                 if np.isnan(value) or abs(value) <= ROW_THRESHOLD:
                     count += 1
             mean = float(count) / data_matrix.num_columns()
@@ -403,10 +400,11 @@ def nochange_filter(matrix):
     def nochange_filter_columns(data_matrix):
         """subfunction of nochange_filter to filter column-wise"""
         keep = []
+        dmvalues = data_matrix.values
         for col_index in xrange(data_matrix.num_columns()):
             count = 0
             for row_index in xrange(data_matrix.num_rows()):
-                value = data_matrix[row_index][col_index]
+                value = dmvalues[row_index][col_index]
                 if np.isnan(value) or abs(value) <= COLUMN_THRESHOLD:
                     count += 1
             mean = float(count) / data_matrix.num_rows()
@@ -422,10 +420,12 @@ def nochange_filter(matrix):
     numcols = len(cols_to_keep)
 
     result = DataMatrix(numrows, numcols, rownames, colnames)
+    rvalues = result.values
+    mvalues = matrix.values
     for row_index in xrange(numrows):
         for col_index in xrange(numcols):
-            value = matrix[rows_to_keep[row_index]][cols_to_keep[col_index]]
-            result[row_index][col_index] = value
+            value = mvalues[rows_to_keep[row_index]][cols_to_keep[col_index]]
+            rvalues[row_index][col_index] = value
     return result
 
 
@@ -433,7 +433,7 @@ def row_filter(matrix, fun):
     """generalize a matrix filter that is applying a function for each row"""
     values = []
     for row_index in xrange(matrix.num_rows()):
-        values.append(fun(matrix[row_index]))
+        values.append(fun(matrix.values[row_index]))
     result = DataMatrix(matrix.num_rows(), matrix.num_columns(),
                         matrix.row_names, matrix.column_names,
                         values=values)

@@ -60,14 +60,15 @@ def get_remove_atgs_filter(distance):
     return remove_atgs_filter
 
 
-def compute_mean_score(pvalues, membership, organism):
+def compute_mean_score(pvalue_matrix, membership, organism):
     """cluster-specific mean scores"""
-    if pvalues == None:
+    if pvalue_matrix == None:
         return 0.0
     values = []
+    pvalues = pvalue_matrix.values
     for cluster in xrange(1, membership.num_clusters() + 1):
         cluster_rows = membership.rows_for_cluster(cluster)
-        row_indexes = pvalues.row_indexes(cluster_rows)
+        row_indexes = pvalue_matrix.row_indexes(cluster_rows)
         for row in row_indexes:
             values.append(pvalues[row][cluster - 1])
     return np.median(values)
@@ -202,12 +203,13 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             # convert remapped to an actual scoring matrix
             matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
                                    self.gene_names())
+            mvalues = matrix.values
             for row_index in xrange(matrix.num_rows()):
                 row = matrix.row_names[row_index]
                 for cluster in xrange(1, self.num_clusters() + 1):
                     if (cluster in remapped.keys() and
                         row in remapped[cluster].keys()):
-                        matrix[row_index][cluster - 1] = remapped[cluster][row]
+                        mvalues[row_index][cluster - 1] = remapped[cluster][row]
             matrix.apply_log()
 
             current = util.current_millis()

@@ -30,7 +30,7 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
                 current_cluster_rows.append(data_matrix.row_names[row_index])
         submatrix = data_matrix.submatrix_by_name(
             row_names=current_cluster_rows)
-        scores = (-scoring.compute_column_scores_submatrix(submatrix))[0]
+        scores = (-scoring.compute_column_scores_submatrix(submatrix)).values[0]
         column_scores.append(scores)
 
     column_members = []

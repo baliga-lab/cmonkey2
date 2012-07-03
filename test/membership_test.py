@@ -125,7 +125,7 @@ class ClusterMembershipTest(unittest.TestCase):
                                ['C1', 'C2', 'C3', 'C4', 'C5'],
                                MATRIX1)
         result = scoring.compute_column_scores_submatrix(matrix)
-        scores = result[0]
+        scores = result.values[0]
         self.assertEqual(5, len(scores))
         self.assertAlmostEqual(0.03085775, scores[0])
         self.assertAlmostEqual(0.05290099, scores[1])

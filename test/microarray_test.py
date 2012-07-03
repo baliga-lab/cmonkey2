@@ -83,5 +83,5 @@ class ComputeArrayScoresTest(unittest.TestCase):
                 # note that we reduced the comparison's number of places
                 # That's because the input matrix was created with some
                 # rounding, so we have a slightly higher rounding difference
-                self.assertAlmostEquals(refresult[row_index][col_index],
-                                        result[row_index][col_index], 3)
+                self.assertAlmostEquals(refresult.values[row_index][col_index],
+                                        result.values[row_index][col_index], 3)

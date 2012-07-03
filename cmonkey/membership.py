@@ -395,6 +395,8 @@ class ClusterMembership:
 
     def __update_memberships(self, rd_scores, cd_scores):
         """update memberships according to rd_scores and cd_scores"""
+        rds_values = rd_scores.values
+        cds_values = cd_scores.values
 
         def seeing_change(prob):
             """returns true if the update is seeing the change"""
@@ -419,8 +421,8 @@ class ClusterMembership:
             member_index = rd_scores.row_indexes([row])[0]
 
             for current_cluster in current_clusters:
-                if rd_scores[member_index][current_cluster - 1] < min_score:
-                    min_score = rd_scores[member_index][current_cluster - 1]
+                if rds_values[member_index][current_cluster - 1] < min_score:
+                    min_score = rds_values[member_index][current_cluster - 1]
                     min_cluster = current_cluster
             self.replace_row_cluster(row, min_cluster, cluster)
 
@@ -441,8 +443,8 @@ class ClusterMembership:
             member_index = cd_scores.row_indexes([column])[0]
 
             for current_cluster in current_clusters:
-                if cd_scores[member_index][current_cluster - 1] < min_score:
-                    min_score = cd_scores[member_index][current_cluster - 1]
+                if cds_values[member_index][current_cluster - 1] < min_score:
+                    min_score = cds_values[member_index][current_cluster - 1]
                     min_cluster = current_cluster
             self.replace_column_cluster(column, min_cluster, cluster)
 
@@ -522,10 +524,11 @@ class ClusterMembership:
         def max_row_in_column(matrix, column):
             """returns a pair of the maximum row index and score in the given matrix and column"""
             sm = matrix.submatrix_by_name(wh, [matrix.column_names[column]])
+            sm_values = sm.values
             max_row = 0
             max_score = sys.float_info.min
             for row in range(sm.num_rows()):
-                if sm[row][0] > max_score:
+                if sm_values[row][0] > max_score:
                     max_score = sm[row][0]
                     max_row = row
             return sm.row_names[max_row]
@@ -540,8 +543,9 @@ class ClusterMembership:
         threshold = rowscores.submatrix_by_name(old_rows,
                                                 [rowscores.column_names[cluster - 1]]).quantile(cutoff)
         wh = []
+        rs_values = rowscores.values
         for row, row_name in not_in:
-            if rowscores[row][cluster - 1] < threshold:
+            if rs_values[row][cluster - 1] < threshold:
                 #print "Appending %s with score: %f" % (row_name, rowscores[row][cluster - 1])
                 wh.append(row_name)
         #print "THRESHOLD: ", threshold
@@ -559,7 +563,7 @@ class ClusterMembership:
             clusters = self.clusters_for_row(wh2)
             wh2_scores = []
             for c in clusters:
-                wh2_scores.append(rowscores[wh2_index][c - 1])
+                wh2_scores.append(rs_values[wh2_index][c - 1])
             #print "WH2: ", wh2, " CLUSTERS: ", clusters, " WH2_SCORES: ", wh2_scores
             result[wh2] = cluster
             wh.remove(wh2)
@@ -610,13 +614,14 @@ def get_density_scores(membership, row_scores, col_scores):
                               row_scores.num_columns(),
                               row_scores.row_names,
                               row_scores.column_names)
+    rds_values = rd_scores.values
 
     #start_time = util.current_millis()
     for cluster in xrange(1, num_clusters + 1):
         rr_scores = __get_rr_scores(membership, row_scores, rowscore_bandwidth,
                                    cluster)
         for row in xrange(row_scores.num_rows()):
-            rd_scores[row][cluster - 1] = rr_scores[row]
+            rds_values[row][cluster - 1] = rr_scores[row]
     #elapsed = util.current_millis() - start_time
     #logging.info("RR_SCORES IN %f s.", elapsed / 1000.0)
 
@@ -626,13 +631,14 @@ def get_density_scores(membership, row_scores, col_scores):
                               col_scores.num_columns(),
                               col_scores.row_names,
                               col_scores.column_names)
+    cds_values = cd_scores.values
 
     #start_time = util.current_millis()
     for cluster in xrange(1, num_clusters + 1):
         cc_scores = __get_cc_scores(membership, col_scores, colscore_bandwidth,
                                    cluster)
         for row in xrange(col_scores.num_rows()):
-            cd_scores[row][cluster - 1] = cc_scores[row]
+            cds_values[row][cluster - 1] = cc_scores[row]
     #elapsed = util.current_millis() - start_time
     #logging.info("CC_SCORES IN %f s.", elapsed / 1000.0)
 

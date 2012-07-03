@@ -91,10 +91,12 @@ def select_probes(matrix, num_genes_total, column_groups, proportional=True):
                                                  column_groups.keys())
 
     cvrows = []
+    mvalues = matrix.values
+    nrows = matrix.num_rows()
     for group, col_indexes in column_groups.items():
         group_cvs = []
-        for row in range(matrix.num_rows()):
-            row_values = [matrix[row][col] for col in col_indexes]
+        for row in xrange(nrows):
+            row_values = [mvalues[row][col] for col in col_indexes]
             group_cvs.append(coeff_var(row_values))
         cvrows += [group_cvs.index(value)
                    for value in
@@ -109,17 +111,19 @@ def intensities_to_ratios(matrix, controls, column_groups):
     control_indexes = [colnames.index(control)
                        for control in controls
                        if control in colnames]
+    mvalues = matrix.values
+    nrows = matrix.num_rows()
     for group_columns in column_groups.values():
         group_controls = [index for index in control_indexes
                           if index in group_columns]
         means = []
-        for row in range(matrix.num_rows()):
-            values = [float(matrix[row][col]) for col in group_controls]
+        for row in xrange(nrows):
+            values = [float(mvalues[row][col]) for col in group_controls]
             means.append(sum(values) / float(len(values)))
 
         for col in group_columns:
             for row in range(matrix.num_rows()):
-                matrix[row][col] /= means[row]
+                mvalues[row][col] /= means[row]
 
         center_scale_filter(matrix, group_columns, group_controls)
     return matrix
@@ -128,16 +132,17 @@ def intensities_to_ratios(matrix, controls, column_groups):
 def center_scale_filter(matrix, group_columns, group_controls):
     """center the values of each row around their median and scale
     by their standard deviation. This is a specialized version"""
-    centers = [scipy.median([matrix[row][col]
+    mvalues = matrix.values
+    centers = [scipy.median([mvalues[row][col]
                              for col in group_controls])
                for row in range(matrix.num_rows())]
-    scale_factors = [util.r_stddev([matrix[row][col]
+    scale_factors = [util.r_stddev([mvalues[row][col]
                                     for col in group_columns])
                      for row in range(matrix.num_rows())]
     for row in range(matrix.num_rows()):
         for col in group_columns:
-            matrix[row][col] -= centers[row]
-            matrix[row][col] /= scale_factors[row]
+            mvalues[row][col] -= centers[row]
+            mvalues[row][col] /= scale_factors[row]
     return matrix
 
 

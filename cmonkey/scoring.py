@@ -254,13 +254,14 @@ def compute_column_scores(membership, matrix, num_clusters):
     # and conditions in the rows
     result = dm.DataMatrix(matrix.num_columns(), num_clusters,
                            row_names=matrix.column_names)
+    rvalues = result.values
     for cluster in xrange(num_clusters):
         column_scores = cluster_column_scores[cluster]
         for row_index in xrange(matrix.num_columns()):
             if column_scores == None:
-                result[row_index][cluster] = substitution
+                rvalues[row_index][cluster] = substitution
             else:
-                result[row_index][cluster] = column_scores[0][row_index]
+                rvalues[row_index][cluster] = column_scores.values[0][row_index]
     result.fix_extreme_values()
     return result
 
@@ -369,11 +370,12 @@ class ScoringFunctionCombiner:
     def __log_subresult(self, score_function, matrix):
         """output an accumulated subresult to the log"""
         scores = []
+        mvalues = matrix.values
         for cluster in xrange(1, matrix.num_columns() + 1):
             cluster_rows = self.__membership.rows_for_cluster(cluster)
             for row in xrange(matrix.num_rows()):
                 if matrix.row_names[row] in cluster_rows:
-                    scores.append(matrix[row][cluster - 1])
+                    scores.append(mvalues[row][cluster - 1])
         logging.info("function '%s', trim mean score: %f",
                      score_function.name(),
                      util.trim_mean(scores, 0.05))

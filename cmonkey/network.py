@@ -230,12 +230,13 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
     def __update_score_matrix(self, matrix, network_score, weight):
         """add values into the result score matrix"""
+        mvalues = matrix.values
         for cluster in xrange(1, self.num_clusters() + 1):
             for row_index in xrange(self.matrix().num_rows()):
                 gene = self.gene_at(row_index)
                 if gene in network_score[cluster].keys():
                     weighted_score = network_score[cluster][gene] * weight
-                    matrix[row_index][cluster - 1] += weighted_score
+                    mvalues[row_index][cluster - 1] += weighted_score
 
     # The functions below are computed by cMonkey for stats, we don't
     # use them right now, but keep them around for debugging and
