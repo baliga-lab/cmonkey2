@@ -73,18 +73,11 @@ class DataMatrix:
 
     def row_indexes(self, row_names):
         """returns the row indexes with the matching names"""
-        return self.__find_indexes(self.row_names, row_names)
+        return [self.row_names.index(name) for name in row_names]
 
     def column_indexes(self, column_names):
         """returns the column indexes with the matching names"""
-        return self.__find_indexes(self.column_names, column_names)
-
-    def __find_indexes(self, names, search_names):
-        """generic finder method to search name indexes in a numpy array"""
-        result = []
-        for name in search_names:
-            result.append(names.index(name))
-        return result
+        return [self.column_names.index(name) for name in column_names]
 
     def flat_values(self):
         """returns all values as a single sequence"""
@@ -107,8 +100,7 @@ class DataMatrix:
         row_indexes needs to be sorted"""
         new_values = self.values[[row_indexes]]
         return DataMatrix(len(row_indexes), self.num_columns(),
-                          row_names=[self.row_names[index]
-                                     for index in row_indexes],
+                          row_names=[self.row_names[index] for index in row_indexes],
                           col_names=self.column_names,
                           values=new_values)
 
@@ -157,10 +149,10 @@ class DataMatrix:
     def sorted_by_row_name(self):
         """returns a version of this table, sorted by row name"""
         row_names = self.row_names
-        row_pairs = map(lambda row: (row_names[row], row), xrange(len(self.row_names)))
+        row_pairs = [(row_names[row], row) for row in xrange(len(self.row_names))]
         row_pairs.sort()
-        new_row_names = map(lambda row_pair: row_pair[0], row_pairs)
-        new_rows = map(lambda row_pair: self.values[row_pair[1]], row_pairs)
+        new_row_names = [row_pair[0] for row_pair in row_pairs] 
+        new_rows = [self.values[row_pair[1]] for row_pair in row_pairs]
         return DataMatrix(self.num_rows(), self.num_columns(),
                           new_row_names, self.column_names,
                           values=new_rows)
