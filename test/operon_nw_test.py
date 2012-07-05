@@ -142,7 +142,7 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
                   }))
         self.assertEquals(6, network.num_edges())
         self.assertEquals(6000, network.total_score())
-        self.assertEquals(123, network.weight())
+        self.assertEquals(123, network.weight)
 
 
 class GetOperonPairsTest(unittest.TestCase):

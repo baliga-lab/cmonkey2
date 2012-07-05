@@ -19,30 +19,18 @@ class Network:
 
     def __init__(self, name, edges, weight):
         """creates a network from a list of edges"""
-        self.__name = name
-        self.__edges = edges
-        self.__weight = weight
-
-    def name(self):
-        """returns the name of the network"""
-        return self.__name
-
-    def edges(self):
-        """returns the list of edges"""
-        return self.__edges
-
-    def weight(self):
-        """returns the scoring weight of this network"""
-        return self.__weight
+        self.name = name
+        self.edges = edges
+        self.weight = weight
 
     def num_edges(self):
         """returns the number of edges in this graph"""
-        return len(self.__edges)
+        return len(self.edges)
 
     def total_score(self):
         """returns the sum of edge scores"""
         total = 0.0
-        for edge in self.__edges:
+        for edge in self.edges:
             total += edge[2]
         return total
 
@@ -54,16 +42,16 @@ class Network:
             # score_e / score_total * score == score_e * (score_total / score)
             # we use this to save a division per loop iteration
             scale = float(score) / float(total)
-            for edge in self.__edges:
+            for edge in self.edges:
                 edge[2] = edge[2] * scale
 
     def edges_with_source_in(self, nodes):
         """Returns all edges containing any of the specified nodes"""
-        return [edge for edge in self.__edges if edge[0] in nodes]
+        return [edge for edge in self.edges if edge[0] in nodes]
 
     def __repr__(self):
-        return "Network: %s\n# edges: %d\n" % (self.__name,
-                                               len(self.__edges))
+        return "Network: %s\n# edges: %d\n" % (self.name,
+                                               len(self.edges))
 
     @classmethod
     def create(cls, name, edges, weight):
@@ -167,8 +155,8 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         # each cluster, separated for each network
         score_means = {}
         for network in self.__networks:
-            score_means[network.name()] = self.__compute_cluster_score_means(
-                self.__last_network_scores[network.name()])
+            score_means[network.name] = self.__compute_cluster_score_means(
+                self.__last_network_scores[network.name])
         return compute_mean(score_means)
 
     def do_compute(self, iteration_result, ref_matrix=None):
@@ -185,17 +173,17 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
         for network in self.__networks:
             logging.info("Compute scores for network '%s', WEIGHT: %f",
-                         network.name(), network.weight())
+                         network.name, network.weight)
             #start_time = util.current_millis()
             network_score = self.__compute_network_cluster_scores(network)
-            self.__last_network_scores[network.name()] = network_score
-            self.__update_score_matrix(matrix, network_score, network.weight())
+            self.__last_network_scores[network.name] = network_score
+            self.__update_score_matrix(matrix, network_score, network.weight)
             #elapsed = util.current_millis() - start_time
             #logging.info("NETWORK '%s' SCORING TIME: %f s.",
             #             network.name(), (elapsed / 1000.0))
             # additional scoring information, not used for the actual clustering
             self.__update_network_iteration_scores(network_iteration_scores,
-                                                   network_score, network.weight())
+                                                   network_score, network.weight)
             iteration_scores = compute_iteration_scores(network_iteration_scores)
 
         return matrix - matrix.quantile(0.99)

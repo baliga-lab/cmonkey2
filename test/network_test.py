@@ -15,22 +15,22 @@ class NetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
         edge1 = ('n1', 'n2', 123)
         edge2 = ('n3', 'n2', 234)
         network = nw.Network('network', [edge1, edge2], 123)
-        self.assertEquals('network', network.name())
+        self.assertEquals('network', network.name)
         self.assertEquals(2, network.num_edges())
-        self.assertTrue(edge1 in network.edges())
-        self.assertTrue(edge2 in network.edges())
+        self.assertTrue(edge1 in network.edges)
+        self.assertTrue(edge2 in network.edges)
         self.assertEquals(357, network.total_score())
-        self.assertEquals(123, network.weight())
+        self.assertEquals(123, network.weight)
 
     def test_create_unique_edges(self):
         """tests creating a network using the standard factory method"""
         edge1 = ('n1', 'n2', 123)
         edge2 = ('n3', 'n2', 234)
         network = nw.Network.create('network', [edge1, edge2], 234)
-        self.assertEquals('network', network.name())
+        self.assertEquals('network', network.name)
         self.assertEquals(4, network.num_edges())
         self.assertEquals(714, network.total_score())
-        self.assertEquals(234, network.weight())
+        self.assertEquals(234, network.weight)
 
     def test_create_overlapping_edges(self):
         """tests creating a network using the standard factory method
