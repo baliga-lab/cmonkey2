@@ -231,7 +231,7 @@ def compute_column_scores(membership, matrix, num_clusters):
             if column_scores != None:
                 for row in xrange(column_scores.num_rows()):
                     for col in xrange(column_scores.num_columns()):
-                        if column_scores.column_name(col) in columns:
+                        if column_scores.column_names[col] in columns:
                             membership_values.append(column_scores[row][col])
         return util.quantile(membership_values, 0.95)
 
