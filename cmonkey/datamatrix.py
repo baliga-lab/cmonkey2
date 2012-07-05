@@ -463,7 +463,12 @@ def quantile_normalize_scores(matrices, weights=None):
     #logging.info("COMPUTING WEIGHTED MEANS...")
     #start_time = util.current_millis()
     if weights != None:
-        tmp_mean = weighted_row_means(flat_values, weights)
+        # multiply each column of matrix with each component of the
+        # weight vector: Using matrix multiplication resulted in speedup
+        # from 125 s. to 0.125 seconds over apply_along_axis() (1000x faster)!
+        scaled = weights * flat_values
+        scale = np.sum(np.ma.masked_array(weights, np.isnan(weights)))
+        tmp_mean = util.row_means(scaled) / scale
     else:
         tmp_mean = util.row_means(flat_values)
     #elapsed = util.current_millis() - start_time
@@ -481,19 +486,6 @@ def as_sorted_flat_values(matrices):
     of each matrix in sorted order"""
     return np.transpose(np.asarray([np.sort(matrix.flat_values())
                                     for matrix in matrices]))
-
-
-def weighted_row_means(matrix, weights):
-    """compute weighted row means"""
-    #start_time = util.current_millis()
-    # multiply each column of matrix with each component of the
-    # weight vector: Using matrix multiplication resulted in speedup
-    # from 125 s. to 0.125 seconds over apply_along_axis() (1000x faster)!
-    scaled = weights * matrix
-    #elapsed = util.current_millis() - start_time
-    #logging.info("APPLIED WEIGHTS TO COLUMNS in %f s.", elapsed / 1000.0)
-    scale = np.sum(np.ma.masked_array(weights, np.isnan(weights)))
-    return util.row_means(scaled) / scale
 
 
 def ranks(values):

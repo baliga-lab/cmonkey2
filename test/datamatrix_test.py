@@ -478,23 +478,6 @@ class QuantileNormalizeTest(unittest.TestCase): # pylint: disable-msg=R0904
         self.assertTrue(np.isnan(flat_values[3][0]))
         self.assertEquals(6, flat_values[3][1])
 
-    def test_unweighted_row_means(self):
-        """tests unweighted_row_means"""
-        matrix = np.array([[1.0, 2.0, 3.0],
-                           [np.nan, 2.0, 6.0]])
-        rowmeans = dm.unweighted_row_means(matrix)
-        self.assertEquals(2, len(rowmeans))
-        self.assertTrue((rowmeans == [2.0, 4.0]).all())
-
-    def test_unweighted_row_means(self):
-        """tests unweighted_row_means"""
-        matrix = np.array([[1.0, 2.0, 3.0],
-                           [np.nan, 2.0, 6.0]])
-        rowmeans = dm.weighted_row_means(matrix, [1, 2, 3])
-        self.assertEquals(2, len(rowmeans))
-        self.assertAlmostEqual(0.7777777777, rowmeans[0])
-        self.assertAlmostEqual(1.8333333333, rowmeans[1])
-
     def test_ranks(self):
         ranked = dm.ranks(np.array([3.0, 1.0, 2.0]))
         self.assertTrue((ranked ==  [2, 0, 1]).all())
@@ -568,7 +551,7 @@ class QuantileNormalizeTest(unittest.TestCase): # pylint: disable-msg=R0904
 if __name__ == '__main__':
     SUITE = []
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(QuantileNormalizeTest))
-    #SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DataMatrixTest))
-    #SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DataMatrixFactoryTest))
-    #SUITE.append(unittest.TestLoader().loadTestsFromTestCase(CenterScaleFilterTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DataMatrixTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DataMatrixFactoryTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(CenterScaleFilterTest))
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))
