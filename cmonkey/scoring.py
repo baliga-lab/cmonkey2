@@ -232,7 +232,7 @@ def compute_column_scores(membership, matrix, num_clusters):
                 for row in xrange(column_scores.num_rows()):
                     for col in xrange(column_scores.num_columns()):
                         if column_scores.column_names[col] in columns:
-                            membership_values.append(column_scores[row][col])
+                            membership_values.append(column_scores.values[row][col])
         return util.quantile(membership_values, 0.95)
 
     cluster_column_scores = []

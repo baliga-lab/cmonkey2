@@ -77,13 +77,14 @@ class Network:
 
 COMPUTE_NETWORK = None
 ALL_GENES = None
+NETWORK_SCORE_MEMBERSHIP = None
 
-
-def compute_network_scores(genes):
+def compute_network_scores(cluster):
     """Generic method to compute network scores"""
-    global COMPUTE_NETWORK, ALL_GENES
+    global COMPUTE_NETWORK, ALL_GENES, NETWORK_SCORE_MEMBERSHIP
     network = COMPUTE_NETWORK
 
+    genes = sorted(NETWORK_SCORE_MEMBERSHIP.rows_for_cluster(cluster))
     edges = network.edges_with_source_in(genes)
     fedges = [edge for edge in edges if edge[1] in ALL_GENES]
 
@@ -190,7 +191,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
     def __compute_network_cluster_scores(self, network):
         """computes the cluster scores for the given network"""
-        global COMPUTE_NETWORK, ALL_GENES
+        global COMPUTE_NETWORK, ALL_GENES, NETWORK_SCORE_MEMBERSHIP
         result = {}
         use_multiprocessing = self.config_params[
             scoring.KEY_MULTIPROCESSING]
@@ -199,20 +200,17 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         # similar brings this down to a crawl
         COMPUTE_NETWORK = network
         ALL_GENES = self.gene_names()
+        NETWORK_SCORE_MEMBERSHIP = self.membership()
 
         if use_multiprocessing:
             pool = mp.Pool()
-            args = []
-            for cluster in xrange(1, self.num_clusters() + 1):
-                args.append(sorted(self.rows_for_cluster(cluster)))
-            map_results = pool.map(compute_network_scores, args)
+            map_results = pool.map(compute_network_scores, xrange(1, self.num_clusters() + 1))
             pool.close()
             for cluster in xrange(1, self.num_clusters() + 1):
                 result[cluster] = map_results[cluster - 1]
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
-                result[cluster] = compute_network_scores(
-                    sorted(self.rows_for_cluster(cluster)))
+                result[cluster] = compute_network_scores(cluster)
 
         return result
 
