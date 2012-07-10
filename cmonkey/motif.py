@@ -73,6 +73,8 @@ def compute_mean_score(pvalue_matrix, membership, organism):
             values.append(pvalues[row][cluster - 1])
     return np.median(values)
 
+# Readonly structure to avoid passing it to the forked child processes
+MOTIF_PARAMS = None
 
 class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
     """Base class for motif scoring functions that use MEME"""
@@ -252,6 +254,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         (seqs, feature_ids, distance) -> seqs
         These filters are applied in the order they appear in the list.
         """
+        global MOTIF_PARAMS
         def apply_sequence_filters(seqs, feature_ids):
             """apply all filters in the filters list in order"""
             for sequence_filter in self.__sequence_filters:
@@ -301,10 +304,11 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                 iteration_result[cluster] = { }
 
         # compute and store motif results
+        MOTIF_PARAMS = params
         self.__last_run_results = {}
         if use_multiprocessing:
             pool = mp.Pool()
-            results = pool.map(compute_cluster_score, params)
+            results = pool.map(compute_cluster_score, xrange(1, self.num_clusters() + 1))
 
             for cluster in xrange(1, self.num_clusters() + 1):
                 pvalues, run_result = results[cluster - 1]
@@ -315,12 +319,14 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             pool.close()
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
-                pvalues, run_result = compute_cluster_score(params[cluster - 1])
+                pvalues, run_result = compute_cluster_score(cluster)
                 cluster_pvalues[cluster] = pvalues
                 self.__last_run_results[cluster] = run_result
                 iteration_result[cluster]['motif-info'] = meme_json(run_result)
                 iteration_result[cluster]['pvalues'] = pvalues
 
+        # cleanup
+        MOTIF_PARAMS = None
         return cluster_pvalues
 
 
@@ -371,8 +377,10 @@ class ComputeScoreParams:
         self.previous_motif_infos = previous_motif_infos
 
 
-def compute_cluster_score(params):
+def compute_cluster_score(cluster):
     """This function computes the MEME score for a cluster"""
+    global MOTIF_PARAMS
+    params = MOTIF_PARAMS[cluster - 1]
     pvalues = {}
     run_result = None
     nseqs = len(params.seqs)

@@ -103,6 +103,9 @@ def __compute_row_scores_for_clusters(membership, matrix, num_clusters,
         result = []
         for cluster in range(1, num_clusters + 1):
             result.append(compute_row_scores_for_cluster(cluster))
+    # cleanup
+    ROW_SCORE_MATRIX = None
+    ROW_SCORE_MEMBERSHIP = None
     return result
 
 

@@ -211,7 +211,10 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
                 result[cluster] = compute_network_scores(cluster)
-
+        # cleanup
+        COMPUTE_NETWORK = None
+        ALL_GENES = None
+        NETWORK_SCORE_MEMBERSHIP = None
         return result
 
     def __update_score_matrix(self, matrix, network_score, weight):
