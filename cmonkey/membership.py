@@ -128,19 +128,19 @@ class ClusterMembership:
         """returns the number of clusters per row"""
         return self.__config_params[KEY_CLUSTERS_PER_COL]
 
-    def __probability_seeing_row_change(self):
+    def probability_seeing_row_change(self):
         """returns the probability for seeing a row change"""
         return self.__config_params[KEY_PROB_ROW_CHANGE]
 
-    def __probability_seeing_col_change(self):
+    def probability_seeing_col_change(self):
         """returns the probability for seeing a row change"""
         return self.__config_params[KEY_PROB_COL_CHANGE]
 
-    def __max_changes_per_row(self):
+    def max_changes_per_row(self):
         """returns the maximum number of changes per row"""
         return self.__config_params[KEY_MAX_CHANGES_PER_ROW]
 
-    def __max_changes_per_col(self):
+    def max_changes_per_col(self):
         """returns the maximum number of changes per column"""
         return self.__config_params[KEY_MAX_CHANGES_PER_COL]
 
@@ -396,94 +396,45 @@ class ClusterMembership:
         #logging.info("fuzzify() finished in %f s.", elapsed / 1000.0)
         return row_scores, column_scores
 
+    def replace_lowest_scoring_row_member(self, row, cluster, rd_scores):
+        """replaces the lowest scoring cluster in row with cluster"""
+        rds_values = rd_scores.values
+        current_clusters = self.__row_is_member_of[row]
+        min_score = sys.maxint
+        min_cluster = None
+        member_index = rd_scores.row_indexes([row])[0]
+
+        for current_cluster in current_clusters:
+            if rds_values[member_index][current_cluster - 1] < min_score:
+                min_score = rds_values[member_index][current_cluster - 1]
+                min_cluster = current_cluster
+        self.replace_row_cluster(row, min_cluster, cluster)
+
+    def replace_lowest_scoring_col_member(self, column, cluster, cd_scores):
+        """replaces the lowest scoring cluster for a column with
+        another cluster"""
+        cds_values = cd_scores.values
+        current_clusters = self.__column_is_member_of[column]
+        min_score = sys.maxint
+        min_cluster = None
+        member_index = cd_scores.row_indexes([column])[0]
+
+        for current_cluster in current_clusters:
+            if cds_values[member_index][current_cluster - 1] < min_score:
+                min_score = cds_values[member_index][current_cluster - 1]
+                min_cluster = current_cluster
+        self.replace_column_cluster(column, min_cluster, cluster)
+
     def __update_memberships(self, rd_scores, cd_scores):
         """update memberships according to rd_scores and cd_scores"""
-        rds_values = rd_scores.values
-        cds_values = cd_scores.values
-
-        def add_cluster_to_row(row, cluster):
-            """ Ways to add a member to a cluster:
-            1. if the number of members is less than the allowed, simply add
-            2. if there is a conflict, replace a gene with a lower score in the
-               scores matrix
-            """
-            if self.num_clusters_for_row(row) < self.num_clusters_per_row():
-                self.add_cluster_to_row(row, cluster)
-            else:
-                replace_lowest_scoring_row_member(row, cluster)
-
-        def replace_lowest_scoring_row_member(row, cluster):
-            """replaces the lowest scoring cluster in row with cluster"""
-            current_clusters = self.__row_is_member_of[row]
-            min_score = sys.maxint
-            min_cluster = None
-            member_index = rd_scores.row_indexes([row])[0]
-
-            for current_cluster in current_clusters:
-                if rds_values[member_index][current_cluster - 1] < min_score:
-                    min_score = rds_values[member_index][current_cluster - 1]
-                    min_cluster = current_cluster
-            self.replace_row_cluster(row, min_cluster, cluster)
-
-        def add_cluster_to_col(col, cluster):
-            """adds a column to a cluster"""
-            if (self.num_clusters_for_column(col) <
-                self.num_clusters_per_column()):
-                self.add_cluster_to_column(col, cluster)
-            else:
-                replace_lowest_scoring_col_member(col, cluster)
-
-        def replace_lowest_scoring_col_member(column, cluster):
-            """replaces the lowest scoring cluster for a column with
-            another cluster"""
-            current_clusters = self.__column_is_member_of[column]
-            min_score = sys.maxint
-            min_cluster = None
-            member_index = cd_scores.row_indexes([column])[0]
-
-            for current_cluster in current_clusters:
-                if cds_values[member_index][current_cluster - 1] < min_score:
-                    min_score = cds_values[member_index][current_cluster - 1]
-                    min_cluster = current_cluster
-            self.replace_column_cluster(column, min_cluster, cluster)
-
-        def update_for_rows():
-            """generically updating row memberships according to  rd_scores"""
-            max_changes = self.__max_changes_per_row()
-            best_clusters = get_best_clusters(rd_scores, self.num_clusters_per_row())
-            for row in xrange(rd_scores.num_rows()):
-                rowname = rd_scores.row_names[row]
-                best_members = best_clusters[rowname]
-                if (not self.is_row_in_clusters(rowname, best_members) and
-                    seeing_change(self.__probability_seeing_row_change())):
-                    change_clusters = [cluster for cluster in best_members
-                                       if cluster not in self.clusters_for_row(rowname)]
-                    for change in xrange(min(max_changes,
-                                            len(change_clusters))):
-                        add_cluster_to_row(rowname, change_clusters[change])
-
-        def update_for_cols():
-            """updating column memberships according to cd_scores"""
-            max_changes = self.__max_changes_per_col()
-            best_clusters = get_best_clusters(cd_scores, self.num_clusters_per_column())
-            for row in xrange(cd_scores.num_rows()):
-                rowname = cd_scores.row_names[row]
-                best_members = best_clusters[rowname]
-                if (not self.is_column_in_clusters(rowname, best_members) and
-                    seeing_change(self.__probability_seeing_col_change())):
-                    change_clusters = [cluster for cluster in best_members
-                                       if cluster not in self.clusters_for_column(rowname)]
-                    for change in xrange(min(max_changes,
-                                            len(change_clusters))):
-                        add_cluster_to_col(rowname, change_clusters[change])
 
         start_time = util.current_millis()
-        update_for_rows()
+        update_for_rows(self, rd_scores)
         elapsed = util.current_millis() - start_time
         logging.info("update_for rdscores finished in %f s.", elapsed / 1000.0)
 
         start_time = util.current_millis()
-        update_for_cols()
+        update_for_cols(self, cd_scores)
         elapsed = util.current_millis() - start_time
         logging.info("update_for cdscores finished in %f s.", elapsed / 1000.0)
 
@@ -573,6 +524,62 @@ class ClusterMembership:
         row_is_member_of = shelf[KEY_ROW_IS_MEMBER_OF]
         col_is_member_of = shelf[KEY_COL_IS_MEMBER_OF]
         return cls(row_is_member_of, col_is_member_of, config_params)
+
+
+def update_for_rows(membership, rd_scores):
+    """generically updating row memberships according to  rd_scores"""
+
+    def add_cluster_to_row(row, cluster):
+        """ Ways to add a member to a cluster:
+        1. if the number of members is less than the allowed, simply add
+        2. if there is a conflict, replace a gene with a lower score in the
+           scores matrix
+        """
+        if membership.num_clusters_for_row(row) < membership.num_clusters_per_row():
+            membership.add_cluster_to_row(row, cluster)
+        else:
+            membership.replace_lowest_scoring_row_member(row, cluster, rd_scores)
+
+    max_changes = membership.max_changes_per_row()
+    best_clusters = get_best_clusters(rd_scores, membership.num_clusters_per_row())
+    change_probability = membership.probability_seeing_row_change()
+
+    for row in xrange(rd_scores.num_rows()):
+        rowname = rd_scores.row_names[row]
+        best_members = best_clusters[rowname]
+        if (not membership.is_row_in_clusters(rowname, best_members) and
+            seeing_change(change_probability)):
+            change_clusters = [cluster for cluster in best_members
+                               if cluster not in membership.clusters_for_row(rowname)]
+            for change in xrange(min(max_changes,
+                                    len(change_clusters))):
+                add_cluster_to_row(rowname, change_clusters[change])
+
+def update_for_cols(membership, cd_scores):
+    """updating column memberships according to cd_scores"""
+
+    def add_cluster_to_col(col, cluster):
+        """adds a column to a cluster"""
+        if (membership.num_clusters_for_column(col) <
+            membership.num_clusters_per_column()):
+            membership.add_cluster_to_column(col, cluster)
+        else:
+            membership.replace_lowest_scoring_col_member(col, cluster, cd_scores)
+
+    max_changes = membership.max_changes_per_col()
+    best_clusters = get_best_clusters(cd_scores, membership.num_clusters_per_column())
+    change_probability = membership.probability_seeing_col_change()
+
+    for row in xrange(cd_scores.num_rows()):
+        rowname = cd_scores.row_names[row]
+        best_members = best_clusters[rowname]
+        if (not membership.is_column_in_clusters(rowname, best_members) and
+            seeing_change(change_probability)):
+            change_clusters = [cluster for cluster in best_members
+                               if cluster not in membership.clusters_for_column(rowname)]
+            for change in xrange(min(max_changes,
+                                    len(change_clusters))):
+                add_cluster_to_col(rowname, change_clusters[change])
 
 
 def seeing_change(prob):
