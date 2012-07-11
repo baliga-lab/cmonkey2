@@ -322,19 +322,22 @@ class ClusterMembership:
         logging.info('Rows per cluster: %i to %i (median %d)' \
           %( min(rpc), max(rpc), np.median(rpc) ) )
 
-        #start = util.current_millis()
-        #logging.info("GET_DENSITY_SCORES()...")
+        start = util.current_millis()
+        logging.info("GET_DENSITY_SCORES()...")
         rd_scores, cd_scores = get_density_scores(self, row_scores,
                                                   column_scores)
-        #elapsed = util.current_millis() - start
-        #logging.info("GET_DENSITY_SCORES() took %f s.", elapsed / 1000.0)
+        elapsed = util.current_millis() - start
+        logging.info("GET_DENSITY_SCORES() took %f s.", elapsed / 1000.0)
 
-        #start = util.current_millis()
-        #logging.info("COMPENSATE_SIZE()...")
+        start = util.current_millis()
+        logging.info("COMPENSATE_SIZE()...")
         compensate_size(self, matrix, rd_scores, cd_scores)
-        #elapsed = util.current_millis() - start
-        #logging.info("COMPENSATE_SIZE() took %f s.", elapsed / 1000.0)
+        elapsed = util.current_millis() - start
+        logging.info("COMPENSATE_SIZE() took %f s.", elapsed / 1000.0)
+        start = util.current_millis()
         self.__update_memberships(rd_scores, cd_scores)
+        elapsed = util.current_millis() - start
+        logging.info("__update_memberships() took %f s.", elapsed / 1000.0)
 
     def __fuzzify(self, row_scores, column_scores, num_iterations, iteration_result):
         """Provide an iteration-specific fuzzification"""
@@ -475,7 +478,7 @@ class ClusterMembership:
             return [cluster for cluster in clusters
                     if cluster not in self.clusters_for_column(row_name)]
 
-        #start_time = util.current_millis()
+        start_time = util.current_millis()
         update_for(rd_scores,
                    self.num_clusters_per_row(),
                    self.__probability_seeing_row_change(),
@@ -485,10 +488,10 @@ class ClusterMembership:
                                          if cluster not in
                                          self.clusters_for_row(row)],
                    add_cluster_to_row)
-        #elapsed = util.current_millis() - start_time
-        #logging.info("update_for rdscores finished in %f s.", elapsed / 1000.0)
+        elapsed = util.current_millis() - start_time
+        logging.info("update_for rdscores finished in %f s.", elapsed / 1000.0)
 
-        #start_time = util.current_millis()
+        start_time = util.current_millis()
         update_for(cd_scores,
                    self.num_clusters_per_column(),
                    self.__probability_seeing_col_change(),
@@ -498,8 +501,8 @@ class ClusterMembership:
                                           if cluster not in
                                           self.clusters_for_column(col)],
                    add_cluster_to_col)
-        #elapsed = util.current_millis() - start_time
-        #logging.info("update_for cdscores finished in %f s.", elapsed / 1000.0)
+        elapsed = util.current_millis() - start_time
+        logging.info("update_for cdscores finished in %f s.", elapsed / 1000.0)
 
     def postadjust(self, rowscores=None, cutoff=0.33, limit=100):
         """adjusting the cluster memberships after the main iterations have been done
