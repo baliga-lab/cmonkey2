@@ -15,7 +15,6 @@ import os
 from datetime import date, datetime
 import json
 import numpy as np
-from guppy import hpy
 
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
 GO_FILE_PATH = 'testdata/proteome2taxid'
