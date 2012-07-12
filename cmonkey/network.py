@@ -22,6 +22,11 @@ class Network:
         self.name = name
         self.edges = edges
         self.weight = weight
+        self.edges_with_source = {}
+        for edge in edges:
+            if edge[0] not in self.edges_with_source:
+                self.edges_with_source[edge[0]] = []
+            self.edges_with_source[edge[0]].append(edge)
 
     def num_edges(self):
         """returns the number of edges in this graph"""
@@ -47,7 +52,12 @@ class Network:
 
     def edges_with_source_in(self, nodes):
         """Returns all edges containing any of the specified nodes"""
-        return [edge for edge in self.edges if edge[0] in nodes]
+        #return [edge for edge in self.edges if edge[0] in nodes]
+        result = []
+        for node in nodes:
+            if node in self.edges_with_source:
+                result.extend(self.edges_with_source[node])
+        return result
 
     def __repr__(self):
         return "Network: %s\n# edges: %d\n" % (self.name,
