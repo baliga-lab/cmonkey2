@@ -14,6 +14,7 @@ import logging
 import sys
 import numpy as np
 import rpy2.robjects as robjects
+import multiprocessing as mp
 
 
 # Default values for membership creation
@@ -334,10 +335,16 @@ class ClusterMembership:
         compensate_size(self, matrix, rd_scores, cd_scores)
         elapsed = util.current_millis() - start
         logging.info("COMPENSATE_SIZE() took %f s.", elapsed / 1000.0)
-        start = util.current_millis()
-        self.__update_memberships(rd_scores, cd_scores)
-        elapsed = util.current_millis() - start
-        logging.info("__update_memberships() took %f s.", elapsed / 1000.0)
+
+        start_time = util.current_millis()
+        update_for_rows(self, rd_scores, self.__config_params['multiprocessing'])
+        elapsed = util.current_millis() - start_time
+        logging.info("update_for rdscores finished in %f s.", elapsed / 1000.0)
+
+        start_time = util.current_millis()
+        update_for_cols(self, cd_scores, self.__config_params['multiprocessing'])
+        elapsed = util.current_millis() - start_time
+        logging.info("update_for cdscores finished in %f s.", elapsed / 1000.0)
 
     def __fuzzify(self, row_scores, column_scores, num_iterations, iteration_result):
         """Provide an iteration-specific fuzzification"""
@@ -424,19 +431,6 @@ class ClusterMembership:
                 min_score = cds_values[member_index][current_cluster - 1]
                 min_cluster = current_cluster
         self.replace_column_cluster(column, min_cluster, cluster)
-
-    def __update_memberships(self, rd_scores, cd_scores):
-        """update memberships according to rd_scores and cd_scores"""
-
-        start_time = util.current_millis()
-        update_for_rows(self, rd_scores)
-        elapsed = util.current_millis() - start_time
-        logging.info("update_for rdscores finished in %f s.", elapsed / 1000.0)
-
-        start_time = util.current_millis()
-        update_for_cols(self, cd_scores)
-        elapsed = util.current_millis() - start_time
-        logging.info("update_for cdscores finished in %f s.", elapsed / 1000.0)
 
     def postadjust(self, rowscores=None, cutoff=0.33, limit=100):
         """adjusting the cluster memberships after the main iterations have been done
@@ -525,9 +519,16 @@ class ClusterMembership:
         col_is_member_of = shelf[KEY_COL_IS_MEMBER_OF]
         return cls(row_is_member_of, col_is_member_of, config_params)
 
+# Parallelized updating of row and column membership changes
+UPDATE_MEMBERSHIP = None
+CD_SCORES = None
+BEST_CLUSTERS = None
+CHANGE_PROBABILITY = None
+MAX_CHANGES = None
 
-def update_for_rows(membership, rd_scores):
+def update_for_rows(membership, rd_scores, multiprocessing):
     """generically updating row memberships according to  rd_scores"""
+    global UPDATE_MEMBERSHIP, CD_SCORES, BEST_CLUSTERS, CHANGE_PROBABILITY
 
     def add_cluster_to_row(row, cluster):
         """ Ways to add a member to a cluster:
@@ -555,8 +556,9 @@ def update_for_rows(membership, rd_scores):
                                     len(change_clusters))):
                 add_cluster_to_row(rowname, change_clusters[change])
 
-def update_for_cols(membership, cd_scores):
+def update_for_cols(membership, cd_scores, multiprocessing):
     """updating column memberships according to cd_scores"""
+    global UPDATE_MEMBERSHIP, CD_SCORES, BEST_CLUSTERS, CHANGE_PROBABILITY, MAX_CHANGES
 
     def add_cluster_to_col(col, cluster):
         """adds a column to a cluster"""
@@ -566,20 +568,40 @@ def update_for_cols(membership, cd_scores):
         else:
             membership.replace_lowest_scoring_col_member(col, cluster, cd_scores)
 
-    max_changes = membership.max_changes_per_col()
-    best_clusters = get_best_clusters(cd_scores, membership.num_clusters_per_column())
-    change_probability = membership.probability_seeing_col_change()
+    MAX_CHANGES = membership.max_changes_per_col()
+    BEST_CLUSTERS = get_best_clusters(cd_scores, membership.num_clusters_per_column())
+    CHANGE_PROBABILITY = membership.probability_seeing_col_change()
+    UPDATE_MEMBERSHIP = membership
+    CD_SCORES = cd_scores
 
-    for row in xrange(cd_scores.num_rows()):
-        rowname = cd_scores.row_names[row]
-        best_members = best_clusters[rowname]
-        if (not membership.is_column_in_clusters(rowname, best_members) and
-            seeing_change(change_probability)):
-            change_clusters = [cluster for cluster in best_members
-                               if cluster not in membership.clusters_for_column(rowname)]
-            for change in xrange(min(max_changes,
-                                    len(change_clusters))):
-                add_cluster_to_col(rowname, change_clusters[change])
+    if multiprocessing:
+        pool = mp.Pool()
+        llist = pool.map(compute_update_row_cluster_pairs, xrange(cd_scores.num_rows()))
+        pool.close()
+        result = [item for sublist in llist for item in sublist]
+    else:
+        result = []
+        for row in xrange(cd_scores.num_rows()):
+            result.extend(compute_update_row_cluster_pairs(row))
+    UPDATE_MEMBERSHIP = None
+    for rowname, cluster in result:
+        add_cluster_to_col(rowname, cluster)
+
+def compute_update_row_cluster_pairs(row):
+    """Somewhat weird and ugly to make multiprocessing work"""
+    global UPDATE_MEMBERSHIP, CD_SCORES, BEST_CLUSTERS, CHANGE_PROBABILITY, MAX_CHANGES
+
+    rowname = CD_SCORES.row_names[row]
+    best_members = BEST_CLUSTERS[rowname]
+    result = []
+    if (not UPDATE_MEMBERSHIP.is_column_in_clusters(rowname, best_members) and
+        seeing_change(CHANGE_PROBABILITY)):
+        change_clusters = [cluster for cluster in best_members
+                           if cluster not in UPDATE_MEMBERSHIP.clusters_for_column(rowname)]
+        for change in xrange(min(MAX_CHANGES,
+                                len(change_clusters))):
+            result.append((rowname, change_clusters[change]))
+    return result
 
 
 def seeing_change(prob):
@@ -614,14 +636,14 @@ def get_density_scores(membership, row_scores, col_scores):
                               row_scores.column_names)
     rds_values = rd_scores.values
 
-    #start_time = util.current_millis()
+    start_time = util.current_millis()
     for cluster in xrange(1, num_clusters + 1):
         rr_scores = __get_rr_scores(membership, row_scores, rowscore_bandwidth,
                                    cluster)
         for row in xrange(row_scores.num_rows()):
             rds_values[row][cluster - 1] = rr_scores[row]
-    #elapsed = util.current_millis() - start_time
-    #logging.info("RR_SCORES IN %f s.", elapsed / 1000.0)
+    elapsed = util.current_millis() - start_time
+    logging.info("RR_SCORES IN %f s.", elapsed / 1000.0)
 
     cscore_range = abs(col_scores.max() - col_scores.min())
     colscore_bandwidth = max(cscore_range / 100.0, 0.001)
@@ -631,14 +653,14 @@ def get_density_scores(membership, row_scores, col_scores):
                               col_scores.column_names)
     cds_values = cd_scores.values
 
-    #start_time = util.current_millis()
+    start_time = util.current_millis()
     for cluster in xrange(1, num_clusters + 1):
         cc_scores = __get_cc_scores(membership, col_scores, colscore_bandwidth,
                                    cluster)
         for row in xrange(col_scores.num_rows()):
             cds_values[row][cluster - 1] = cc_scores[row]
-    #elapsed = util.current_millis() - start_time
-    #logging.info("CC_SCORES IN %f s.", elapsed / 1000.0)
+    elapsed = util.current_millis() - start_time
+    logging.info("CC_SCORES IN %f s.", elapsed / 1000.0)
 
     return (rd_scores, cd_scores)
 
