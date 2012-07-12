@@ -522,13 +522,14 @@ class ClusterMembership:
 # Parallelized updating of row and column membership changes
 UPDATE_MEMBERSHIP = None
 CD_SCORES = None
+RD_SCORES = None
 BEST_CLUSTERS = None
 CHANGE_PROBABILITY = None
 MAX_CHANGES = None
 
 def update_for_rows(membership, rd_scores, multiprocessing):
     """generically updating row memberships according to  rd_scores"""
-    global UPDATE_MEMBERSHIP, CD_SCORES, BEST_CLUSTERS, CHANGE_PROBABILITY
+    global UPDATE_MEMBERSHIP, RD_SCORES, BEST_CLUSTERS, CHANGE_PROBABILITY, MAX_CHANGES
 
     def add_cluster_to_row(row, cluster):
         """ Ways to add a member to a cluster:
@@ -541,20 +542,41 @@ def update_for_rows(membership, rd_scores, multiprocessing):
         else:
             membership.replace_lowest_scoring_row_member(row, cluster, rd_scores)
 
-    max_changes = membership.max_changes_per_row()
-    best_clusters = get_best_clusters(rd_scores, membership.num_clusters_per_row())
-    change_probability = membership.probability_seeing_row_change()
+    MAX_CHANGES = membership.max_changes_per_row()
+    BEST_CLUSTERS = get_best_clusters(rd_scores, membership.num_clusters_per_row())
+    UPDATE_MEMBERSHIP = membership
+    RD_SCORES = rd_scores
+    CHANGE_PROBABILITY = membership.probability_seeing_row_change()
 
-    for row in xrange(rd_scores.num_rows()):
-        rowname = rd_scores.row_names[row]
-        best_members = best_clusters[rowname]
-        if (not membership.is_row_in_clusters(rowname, best_members) and
-            seeing_change(change_probability)):
-            change_clusters = [cluster for cluster in best_members
-                               if cluster not in membership.clusters_for_row(rowname)]
-            for change in xrange(min(max_changes,
-                                    len(change_clusters))):
-                add_cluster_to_row(rowname, change_clusters[change])
+    if multiprocessing:
+        pool = mp.Pool()
+        llist = pool.map(compute_update_row_cluster_pairs, xrange(rd_scores.num_rows()))
+        pool.close()
+        result = [item for sublist in llist for item in sublist]
+    else:
+        result = []
+        for row in xrange(rd_scores.num_rows()):
+            result.extend(compute_update_row_cluster_pairs(row))
+    UPDATE_MEMBERSHIP = None
+    for rowname, cluster in result:
+        add_cluster_to_row(rowname, cluster)
+
+
+def compute_update_row_cluster_pairs(row):
+    """The map() part to detemine the new row-cluster pairs"""
+    global UPDATE_MEMBERSHIP, RD_SCORES, BEST_CLUSTERS, CHANGE_PROBABILITY, MAX_CHANGES
+    rowname = RD_SCORES.row_names[row]
+    best_members = BEST_CLUSTERS[rowname]
+    result = []
+    if (not UPDATE_MEMBERSHIP.is_row_in_clusters(rowname, best_members) and
+        seeing_change(CHANGE_PROBABILITY)):
+        change_clusters = [cluster for cluster in best_members
+                           if cluster not in UPDATE_MEMBERSHIP.clusters_for_row(rowname)]
+        for change in xrange(min(MAX_CHANGES,
+                                len(change_clusters))):
+            result.append((rowname, change_clusters[change]))
+    return result
+
 
 def update_for_cols(membership, cd_scores, multiprocessing):
     """updating column memberships according to cd_scores"""
@@ -576,19 +598,19 @@ def update_for_cols(membership, cd_scores, multiprocessing):
 
     if multiprocessing:
         pool = mp.Pool()
-        llist = pool.map(compute_update_row_cluster_pairs, xrange(cd_scores.num_rows()))
+        llist = pool.map(compute_update_col_cluster_pairs, xrange(cd_scores.num_rows()))
         pool.close()
         result = [item for sublist in llist for item in sublist]
     else:
         result = []
         for row in xrange(cd_scores.num_rows()):
-            result.extend(compute_update_row_cluster_pairs(row))
+            result.extend(compute_update_col_cluster_pairs(row))
     UPDATE_MEMBERSHIP = None
     for rowname, cluster in result:
         add_cluster_to_col(rowname, cluster)
 
-def compute_update_row_cluster_pairs(row):
-    """Somewhat weird and ugly to make multiprocessing work"""
+def compute_update_col_cluster_pairs(row):
+    """The map() part to detemine the new column-cluster pairs"""
     global UPDATE_MEMBERSHIP, CD_SCORES, BEST_CLUSTERS, CHANGE_PROBABILITY, MAX_CHANGES
 
     rowname = CD_SCORES.row_names[row]

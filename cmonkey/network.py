@@ -175,13 +175,13 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         for network in self.__networks:
             logging.info("Compute scores for network '%s', WEIGHT: %f",
                          network.name, network.weight)
-            #start_time = util.current_millis()
+            start_time = util.current_millis()
             network_score = self.__compute_network_cluster_scores(network)
             self.__last_network_scores[network.name] = network_score
             self.__update_score_matrix(matrix, network_score, network.weight)
-            #elapsed = util.current_millis() - start_time
-            #logging.info("NETWORK '%s' SCORING TIME: %f s.",
-            #             network.name(), (elapsed / 1000.0))
+            elapsed = util.current_millis() - start_time
+            logging.info("NETWORK '%s' SCORING TIME: %f s.",
+                         network.name, (elapsed / 1000.0))
             # additional scoring information, not used for the actual clustering
             self.__update_network_iteration_scores(network_iteration_scores,
                                                    network_score, network.weight)
