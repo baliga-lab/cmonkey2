@@ -215,7 +215,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         if use_multiprocessing:
             pool = mp.Pool()
             map_results = pool.map(compute_network_scores, xrange(1, self.num_clusters() + 1))
-            pool.close()
+            #pool.close()
             for cluster in xrange(1, self.num_clusters() + 1):
                 result[cluster] = map_results[cluster - 1]
         else:

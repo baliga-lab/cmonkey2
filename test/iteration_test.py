@@ -225,7 +225,7 @@ def check_matrix_values(matrix1, matrix2, eps=EPS):
             #print diff
             if diff > eps:
                 print "Value mismatch at (%s, cluster %d): %f != %f (diff = %f)" % (
-                    matrix1.row_name(row), col + 1,
+                    matrix1.row_names[row], col + 1,
                     matrix1.values[row][col],
                     matrix2.values[row][col], diff)
                 result = False

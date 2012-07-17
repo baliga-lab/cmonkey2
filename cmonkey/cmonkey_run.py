@@ -15,6 +15,8 @@ import os
 from datetime import date, datetime
 import json
 import numpy as np
+import gc
+import sizes
 
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
 GO_FILE_PATH = 'testdata/proteome2taxid'
@@ -80,8 +82,6 @@ class CMonkeyRun:
         self.__checkpoint_basename = "cmonkey-checkpoint-%s-%d%d%d" % (
             organism_code, today.year, today.month, today.day)
 
-        #self.hp = hpy()
-
     def report_params(self):
         logging.info('cmonkey_run config_params:')
         for param,value in self.config_params.items():
@@ -113,6 +113,7 @@ class CMonkeyRun:
             self.membership(), self.ratio_matrix,
             scaling_func=lambda iteration: self['row_scaling'],
             config_params=self.config_params)
+        self.row_scoring = row_scoring
 
         meme_suite = meme.MemeSuite430()
         sequence_filters = [
@@ -134,6 +135,7 @@ class CMonkeyRun:
             update_in_iteration=scoring.schedule(100, 10),
             motif_in_iteration=scoring.schedule(100, 100),
             config_params=self.config_params)
+        self.motif_scoring = motif_scoring
 
         network_scaling_fun = scoring.get_default_network_scaling(self['num_iterations'])
         network_scoring = nw.ScoringFunction(self.organism(),
@@ -142,6 +144,7 @@ class CMonkeyRun:
                                              scaling_func=network_scaling_fun,
                                              run_in_iteration=scoring.schedule(1, 7),
                                              config_params=self.config_params)
+        self.network_scoring = network_scoring
 
         row_scoring_functions = [row_scoring, motif_scoring, network_scoring]
         return scoring.ScoringFunctionCombiner(self.membership(),
@@ -343,8 +346,12 @@ class CMonkeyRun:
                 # run infos should be written with the same frequency as stats
                 self.write_runlog(row_scoring, iteration)
 
-            #if iteration == 10:
-            #    print self.hp.heap()
+            gc.collect()
+            print "# ROW SCORING: ", sizes.asizeof(self.row_scoring)
+            print "# MOT SCORING: ", sizes.asizeof(self.motif_scoring)
+            print "# NET SCORING: ", sizes.asizeof(self.network_scoring)
+            print "# COL SCORING: ", sizes.asizeof(col_scoring)
+            print "# MEMBERSHIP: ", sizes.asizeof(self.membership())
 
         logging.info("Postprocessing: Adjusting the clusters....")
         self.membership().postadjust()
