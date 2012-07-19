@@ -51,15 +51,6 @@ class Network:
             for edge in self.edges:
                 edge[2] = edge[2] * scale
 
-    def edges_with_source_in(self, nodes):
-        """Returns all edges containing any of the specified nodes"""
-        #return [edge for edge in self.edges if edge[0] in nodes]
-        result = []
-        for node in nodes:
-            if node in self.edges_with_source:
-                result.extend(self.edges_with_source[node])
-        return result
-
     def edges_with_node(self, node):
         """returns the edges where node is a node of"""
         if node in self.edges_with_source:

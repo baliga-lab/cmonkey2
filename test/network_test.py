@@ -65,9 +65,7 @@ class NetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
         edge3 = ['n4', 'n2', 234]
         edge4 = ['n4', 'n1', 123]
         network = nw.Network.create('network', [edge1, edge2, edge3, edge4], 42)
-        res_edges = network.edges_with_source_in(['n3', 'n4'])
-        self.assertEquals(3, len(res_edges))
+        res_edges = network.edges_with_node('n3')
+        self.assertEquals(1, len(res_edges))
         self.assertTrue(edge2 in res_edges)
-        self.assertTrue(edge3 in res_edges)
-        self.assertTrue(edge4 in res_edges)
         
