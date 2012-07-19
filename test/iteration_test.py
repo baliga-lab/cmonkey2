@@ -77,8 +77,8 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.iteration_result = { 'iteration': 51 }
 
     def test_row_scoring(self):
-        """tests the row scoring by itself, which combines scoring and fixing
-        extreme values"""
+        # tests the row scoring by itself, which combines scoring and fixing
+        # extreme values
         row_scoring = microarray.RowScoringFunction(
             self.membership, self.ratio_matrix,
             scaling_func=lambda iteration: 6.0,
@@ -88,7 +88,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertTrue(check_matrix_values(rowscores, ref_rowscores))
 
     def test_col_scoring(self):
-        """tests the column scoring by itself"""
+        # tests the column scoring by itself
         colscoring = scoring.ColumnScoringFunction(
             self.membership, self.ratio_matrix, config_params=self.config_params)
         colscores = colscoring.compute(self.iteration_result)
@@ -188,7 +188,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertTrue(check_matrix_values(result[2], ref_netscores))
 
     def test_density_scores(self):
-        """tests density score computation"""
+        # tests density score computation
         row_scores = read_matrix('testdata/combined_scores.tsv')
         col_scores = read_matrix('testdata/combined_colscores.tsv')
         ref_rowscores = read_matrix('testdata/density_rowscores.tsv')
@@ -198,7 +198,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertTrue(check_matrix_values(cds, ref_colscores, eps=1e-11))
 
     def test_size_compensation(self):
-        """tests the size compensation"""
+        # tests the size compensation
         row_scores = read_matrix('testdata/density_rowscores.tsv')
         col_scores = read_matrix('testdata/density_colscores.tsv')
         ref_rowscores = read_matrix('testdata/sizecomp_rowscores.tsv')
@@ -206,7 +206,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         memb.compensate_size(self.membership, self.ratio_matrix,
                              row_scores, col_scores)
         self.assertTrue(check_matrix_values(row_scores, ref_rowscores, eps=1e-11))
-        self.assertTrue(check_matrix_values(col_scores, ref_colscores, eps=1e-11))   
+        self.assertTrue(check_matrix_values(col_scores, ref_colscores, eps=1e-11))
 
 
 def read_matrix(filename):

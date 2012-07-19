@@ -14,10 +14,11 @@ import multiprocessing as mp
 
 class Network:
     """class to represent a network graph.
+    The graph is considered undirected
     For efficiency reasons, edges is a list of [source, target, weight]
     """
 
-    def __init__(self, name, edges, weight):
+    def __init__(self, name, edges, weight, dummy):
         """creates a network from a list of edges"""
         self.name = name
         self.edges = edges
@@ -26,7 +27,10 @@ class Network:
         for edge in edges:
             if edge[0] not in self.edges_with_source:
                 self.edges_with_source[edge[0]] = []
+            if edge[1] not in self.edges_with_source:
+                self.edges_with_source[edge[1]] = []
             self.edges_with_source[edge[0]].append(edge)
+            self.edges_with_source[edge[1]].append(edge)
 
     def num_edges(self):
         """returns the number of edges in this graph"""
@@ -34,10 +38,7 @@ class Network:
 
     def total_score(self):
         """returns the sum of edge scores"""
-        total = 0.0
-        for edge in self.edges:
-            total += edge[2]
-        return total
+        return sum(edge[2] for edge in self.edges) * 2
 
     def normalize_scores_to(self, score):
         """normalizes all edge scores so that they sum up to
@@ -59,6 +60,13 @@ class Network:
                 result.extend(self.edges_with_source[node])
         return result
 
+    def edges_with_node(self, node):
+        """returns the edges where node is a node of"""
+        if node in self.edges_with_source:
+            return self.edges_with_source[node]
+        else:
+            return []
+
     def __repr__(self):
         return "Network: %s\n# edges: %d\n" % (self.name,
                                                len(self.edges))
@@ -69,20 +77,15 @@ class Network:
         added = {}
         network_edges = []
 
-        def add_edge(edge):
-            """adds an edge to network_edges"""
-            key = "%s:%s" % (edge[0], edge[1])
-            added[key] = True
-            network_edges.append(edge)
-
         for edge in edges:
             key = "%s:%s" % (edge[0], edge[1])
             key_rev = "%s:%s" % (edge[1], edge[0])
-            if key not in added:
-                add_edge(edge)
-            if key_rev not in added:
-                add_edge([edge[1], edge[0], edge[2]])
-        return Network(name, network_edges, weight)
+            if key not in added and key_rev not in added:
+                network_edges.append(edge)
+            added[key] = True
+            added[key_rev] = True
+
+        return Network(name, network_edges, weight, 0)
 
 
 COMPUTE_NETWORK = None
@@ -95,14 +98,18 @@ def compute_network_scores(cluster):
     network = COMPUTE_NETWORK
 
     genes = sorted(NETWORK_SCORE_MEMBERSHIP.rows_for_cluster(cluster))
-    edges = network.edges_with_source_in(genes)
-    fedges = [edge for edge in edges if edge[1] in ALL_GENES]
-
     gene_scores = {}
-    for edge in fedges:
-        if edge[1] not in gene_scores:
-            gene_scores[edge[1]] = []
-        gene_scores[edge[1]].append(edge[2])
+    for gene in genes:
+        edges = network.edges_with_node(gene)
+        for edge in edges:
+            other_gene = edge[0]
+            if other_gene == gene:
+                other_gene = edge[1]
+            if other_gene in ALL_GENES:
+                if other_gene not in gene_scores:
+                    gene_scores[other_gene] = []
+                gene_scores[other_gene].append(edge[2])
+
 
     final_gene_scores = {}
     for gene, scores in gene_scores.items():
@@ -180,7 +187,8 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                                self.gene_names())
 
         # a dictionary that holds the scores of each gene in a given cluster
-        network_iteration_scores = self.__create_network_iteration_scores()
+        network_iteration_scores = {cluster: {}
+                                    for cluster in xrange(1, self.num_clusters() + 1)}
 
         for network in self.__networks:
             logging.info("Compute scores for network '%s', WEIGHT: %f",
@@ -236,16 +244,6 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                 if gene in network_score[cluster].keys():
                     weighted_score = network_score[cluster][gene] * weight
                     mvalues[row_index][cluster - 1] += weighted_score
-
-    # The functions below are computed by cMonkey for stats, we don't
-    # use them right now, but keep them around for debugging and
-    # integration of stats functionality
-    def __create_network_iteration_scores(self):
-        """creates initialized network iteration scores"""
-        result = {}
-        for cluster in xrange(1, self.num_clusters() + 1):
-            result[cluster] = {}
-        return result
 
     def __compute_cluster_score_means(self, network_score):
         """compute the score means on the given network score"""
