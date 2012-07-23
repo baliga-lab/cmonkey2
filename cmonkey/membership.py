@@ -551,7 +551,8 @@ def update_for_rows(membership, rd_scores, multiprocessing):
     if multiprocessing:
         pool = mp.Pool()
         llist = pool.map(compute_update_row_cluster_pairs, xrange(rd_scores.num_rows()))
-        #pool.close()
+        pool.close()
+        pool.join()
         result = [item for sublist in llist for item in sublist]
     else:
         result = []
@@ -599,7 +600,8 @@ def update_for_cols(membership, cd_scores, multiprocessing):
     if multiprocessing:
         pool = mp.Pool()
         llist = pool.map(compute_update_col_cluster_pairs, xrange(cd_scores.num_rows()))
-        #pool.close()
+        pool.close()
+        pool.join()
         result = [item for sublist in llist for item in sublist]
     else:
         result = []

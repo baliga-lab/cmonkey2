@@ -143,7 +143,8 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                         [(cluster, self.bonferroni_cutoff())
                          for cluster in xrange(1,
                                                self.num_clusters() + 1)])
-                #pool.close()
+                pool.close()
+                pool.join()
             else:
                 results = []
                 for cluster in xrange(1, self.num_clusters() + 1):

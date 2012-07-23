@@ -317,6 +317,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                 iteration_result[cluster]['motif-info'] = meme_json(run_result)
                 iteration_result[cluster]['pvalues'] = pvalues
             pool.close()
+            pool.join()
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
                 pvalues, run_result = compute_cluster_score(cluster)
