@@ -347,11 +347,11 @@ class CMonkeyRun:
                 self.write_runlog(row_scoring, iteration)
 
             gc.collect()
-            print "# ROW SCORING: ", sizes.asizeof(self.row_scoring)
-            print "# MOT SCORING: ", sizes.asizeof(self.motif_scoring)
-            print "# NET SCORING: ", sizes.asizeof(self.network_scoring)
-            print "# COL SCORING: ", sizes.asizeof(col_scoring)
-            print "# MEMBERSHIP: ", sizes.asizeof(self.membership())
+            #print "# ROW SCORING: ", sizes.asizeof(self.row_scoring)
+            #print "# MOT SCORING: ", sizes.asizeof(self.motif_scoring)
+            #print "# NET SCORING: ", sizes.asizeof(self.network_scoring)
+            #print "# COL SCORING: ", sizes.asizeof(col_scoring)
+            #print "# MEMBERSHIP: ", sizes.asizeof(self.membership())
 
         logging.info("Postprocessing: Adjusting the clusters....")
         self.membership().postadjust()

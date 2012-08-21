@@ -208,7 +208,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         # These are readonly anyways, but using Manager.list() or something
         # similar brings this down to a crawl
         COMPUTE_NETWORK = network
-        ALL_GENES = self.gene_names()
+        ALL_GENES = set(self.gene_names())  # optimization: O(1) lookup
         NETWORK_SCORE_MEMBERSHIP = self.membership()
 
         if use_multiprocessing:
