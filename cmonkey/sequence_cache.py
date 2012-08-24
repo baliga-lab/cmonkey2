@@ -18,26 +18,29 @@ class SequenceCache:
     sequence_type(id, name, start, stop)
     sequence(id, sequence_type_id, sequence_name, sequence)
     """
-    def __init__(self, path):
+    def __init__(self, path, create=True):
         """creates the cache from the specified path. If the database file
         exists, it will be deleted
         """
-        if os.path.exists(path):
-            os.remove(path)
+        if create:
+            if os.path.exists(path):
+                os.remove(path)
 
         self.conn = sqlite3.connect(path)
-        c = self.conn.cursor()
-        c.execute('''create table sequence_types
-                     (name text, start int, stop int)''')
-        c.execute('''create table sequences
-                     (sequence_type_id int, name text, contig text,
-                      start int, end int, is_reverse int, sequence text)''')
-        c.execute('''create index seq_nt_index
-                     on sequences (sequence_type_id, name)''')
-        c.execute('''create index seq_type_index
-                     on sequences (sequence_type_id)''')
-        self.conn.commit()
-        c.close()
+
+        if create:
+            c = self.conn.cursor()
+            c.execute('''create table sequence_types
+                         (name text, start int, stop int)''')
+            c.execute('''create table sequences
+                         (sequence_type_id int, name text, contig text,
+                          start int, end int, is_reverse int, sequence text)''')
+            c.execute('''create index seq_nt_index
+                         on sequences (sequence_type_id, name)''')
+            c.execute('''create index seq_type_index
+                         on sequences (sequence_type_id)''')
+            self.conn.commit()
+            c.close()
 
     def add_sequence_type(self, name, start, stop):
         c = self.conn.cursor()
@@ -90,6 +93,7 @@ class SequenceCache:
         c = self.conn.cursor()
         c.execute('''select ROWID from sequence_types where
                      name = ? and start = ? and stop = ?''', (seqtype_name, start, stop))
+        print "seqtype: ", seqtype_name, " start: ", start, " stop: ", stop
         rowid = c.fetchone()[0]
         params = [rowid]
         params.extend(seq_names)
@@ -98,4 +102,4 @@ class SequenceCache:
         c.execute(query, params)
         results = c.fetchall()
         c.close()
-        return results
+        return [(row[0], row[1]) for row in results]
