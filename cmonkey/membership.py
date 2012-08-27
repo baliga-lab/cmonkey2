@@ -460,7 +460,7 @@ class ClusterMembership:
             max_score = sys.float_info.min
             for row in range(sm.num_rows()):
                 if sm_values[row][0] > max_score:
-                    max_score = sm[row][0]
+                    max_score = sm_values[row][0]
                     max_row = row
             return sm.row_names[max_row]
 

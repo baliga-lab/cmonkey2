@@ -119,6 +119,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         dist = self.config_params['scan_distances'][self.seqtype]
         self.seq_cache.add_sequence_type(self.seqtype, dist[0], dist[1])
 
+        used_genes = sorted(matrix.row_names)
         self.used_seqs = organism.sequences_for_genes_scan(
             sorted(matrix.row_names), seqtype=self.seqtype)
         #print self.used_seqs

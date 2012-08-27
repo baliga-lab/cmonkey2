@@ -93,6 +93,7 @@ class MemeSuite:
         distribution.
         Note: To more closely resemble the original R algorithm, we provide
         ----- the sorted feature ids so MEME will return the same output"""
+        feature_ids = set(params.feature_ids)  # optimization: reduce lookup time
         input_seqs = params.seqs
         all_seqs = params.used_seqs
         
@@ -104,7 +105,7 @@ class MemeSuite:
             else:
                 bgseqs = {feature_id: all_seqs[feature_id]
                           for feature_id in all_seqs
-                          if feature_id not in params.feature_ids}
+                          if feature_id not in feature_ids}
                 return make_background_file(bgseqs, self.__use_revcomp)
 
         #logging.info("run_meme() - # seqs = %d", len(input_seqs))
