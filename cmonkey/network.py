@@ -135,7 +135,6 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                                              config_params)
         self.__organism = organism
         self.__networks = None
-        self.__last_computed_result = None
         self.__last_network_scores = {}
         self.run_log = scoring.RunLog("network")
 

@@ -173,7 +173,6 @@ class RowScoringFunction(scoring.ScoringFunctionBase):
                                              run_in_iteration,
                                              config_params)
         self.run_log = scoring.RunLog("row_scoring")
-        self.__last_computed_result = None
 
     def name(self):
         """returns the name of this scoring function"""

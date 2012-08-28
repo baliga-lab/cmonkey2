@@ -8,11 +8,13 @@ LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 
 import logging
 import os
+import os.path
 import datamatrix as dm
 from datetime import date
 import util
 import membership as memb
 import numpy as np
+import cPickle
 
 # Official keys to access values in the configuration map
 KEY_ORGANISM_CODE = 'organism_code'
@@ -107,11 +109,13 @@ class ScoringFunctionBase:
         if config_params == None:
             raise Exception('NO CONFIG PARAMS !!!')
 
-        # returned in the iterations when the scoring algorithm is not run
-        self.last_computed_result = None
-
     def name(self):
-        """returns the name of this function"""
+        """returns the name of this function
+        Note to function implementers: make sure the name is
+        unique for each used scoring function, since pickle paths
+        are dependend on the name, non-unique function names will
+        overwrite each other
+        """
         raise Exception("please implement me")
 
     def membership(self):
@@ -121,6 +125,11 @@ class ScoringFunctionBase:
     def matrix(self):
         """returns this function's matrix object"""
         return self.__matrix
+
+    def pickle_path(self):
+        """returns the function-specific pickle-path"""
+        return '%s_last.pkl' % self.name()
+        
 
     def compute(self, iteration_result, reference_matrix=None):
         """general compute method,
@@ -132,23 +141,35 @@ class ScoringFunctionBase:
         score matrix. In the normal case, those would be the gene expression
         row scores"""
         iteration = iteration_result['iteration']
+
         if self.run_in_iteration(iteration):
-            self.last_computed_result = self.do_compute(iteration_result,
-                                                        reference_matrix)
+            computed_result = self.do_compute(iteration_result,
+                                              reference_matrix)
+            # pickle the result for future use
+            logging.info("pickle result to %s", self.pickle_path())
+            with open(self.pickle_path(), 'w') as outfile:
+                cPickle.dump(computed_result, outfile)
+        elif os.path.exists(self.pickle_path()):
+            with open(self.pickle_path()) as infile:
+                computed_result = cPickle.load(infile)
+        else:
+            computed_result = None
 
         self.run_log.log(self.run_in_iteration(iteration),
                          self.scaling(iteration_result['iteration']))
-        return self.last_computed_result
+        return computed_result
 
     def compute_force(self, iteration_result, reference_matrix=None):
         """enforce computation, regardless of the iteration function"""
         iteration = iteration_result['iteration']
-        self.last_computed_result = self.do_compute(iteration_result,
-                                                    reference_matrix)
+        computed_result = self.do_compute(iteration_result,
+                                          reference_matrix)
+        with open(self.pickle_path(), 'w') as outfile:
+            cPickle.dump(computed_result, outfile)
 
         self.run_log.log(self.run_in_iteration(iteration),
                          self.scaling(iteration_result['iteration']))
-        return self.last_computed_result        
+        return computed_result
 
     def do_compute(self, iteration_result, ref_matrix=None):
         raise Execption("implement me")
@@ -207,7 +228,6 @@ class ColumnScoringFunction(ScoringFunctionBase):
                                      matrix, scaling_func=None,
                                      run_in_iteration=run_in_iteration,
                                      config_params=config_params)
-        self.__last_computed_result = None
         self.run_log = RunLog("column_scoring")
 
     def name(self):

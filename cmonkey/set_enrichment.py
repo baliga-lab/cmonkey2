@@ -103,7 +103,6 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                                              matrix, scaling_func,
                                              run_in_iteration,
                                              config_params)
-        self.__last_computed_result = None
         self.__set_types = set_types
         # stores (min_set, pvalue) pairs for each cluster and set type
         # for the last run of the function
