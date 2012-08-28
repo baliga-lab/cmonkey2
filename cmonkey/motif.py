@@ -112,17 +112,18 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.update_log = scoring.RunLog("motif-score-" + seqtype)
         self.motif_log = scoring.RunLog("motif-motif-" + seqtype)
 
+        used_genes = sorted(matrix.row_names)
+        self.used_seqs = organism.sequences_for_genes_scan(
+            used_genes, seqtype=self.seqtype)
+
         # precompute the sequences for all genes that are referenced in the
         # input ratios, they are used as a basis to compute the background
         # distribution for every cluster
+        """
         self.seq_cache = sequence_cache.SequenceCache('sequence_cache.db')
         dist = self.config_params['scan_distances'][self.seqtype]
         self.seq_cache.add_sequence_type(self.seqtype, dist[0], dist[1])
 
-        used_genes = sorted(matrix.row_names)
-        self.used_seqs = organism.sequences_for_genes_scan(
-            sorted(matrix.row_names), seqtype=self.seqtype)
-        #print self.used_seqs
         logging.info("used sequences retrieved, building cache...")
         start_time = util.current_millis()
         seq_data = [(gene, seq[1], seq[0].contig, seq[0].start,
@@ -131,6 +132,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.seq_cache.add_sequences(self.seqtype, dist[0], dist[1], seq_data)
         logging.info("used sequences cache built in %d ms.",
                      util.current_millis() - start_time)
+        """
 
         logging.info("building reverse map...")
         start_time = util.current_millis()
