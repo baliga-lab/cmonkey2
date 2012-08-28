@@ -106,7 +106,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.num_motif_func = num_motif_func
 
         self.__sequence_filters = sequence_filters
-        self.__last_computed_result = None
         self.__last_run_results = None
         self.__last_iteration_result = {}
 
@@ -181,6 +180,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         since it nests Motif and MEME runs"""
         return self.__compute(iteration_result, True, ref_matrix)
 
+    def matrix_pickle_path(self):
+        return "%s_matrix_last.pkl" % self.name()
+
     def __compute(self, iteration_result, force, ref_matrix=None):
         """compute method for the specified iteration
         Note: will return None if not computed yet and the result of a previous
@@ -205,6 +207,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             with open(self.pickle_path()) as infile:
                 all_pvalues = cPickle.load(infile)
 
+        matrix = None
         if all_pvalues != None and (
             force or self.update_in_iteration(iteration)):  # mot.iter in R
             logging.info('Recomputing motif scores...')
@@ -241,8 +244,12 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             matrix.fix_extreme_values()
             current = util.current_millis()
             logging.info("fixed extreme values in %f s.", (current - start_time) / 1000.0)
+            with open(self.matrix_pickle_path(), 'w') as outfile:
+                cPickle.dump(matrix, outfile)
 
-            self.__last_computed_result = matrix
+        elif os.path.exists(self.matrix_pickle_path()):
+            with open(self.matrix_pickle_path()) as infile:
+                matrix = cPickle.load(infile)
 
         self.update_log.log(self.update_in_iteration(iteration),
                             self.scaling(iteration))
@@ -256,12 +263,10 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         # for stats, support multiple sequence types
         if 'motif-pvalue' not in iteration_result:
             iteration_result['motif-pvalue'] = {}
-        iteration_result['motif-pvalue'][self.seqtype] = compute_mean_score(
-            self.__last_computed_result,
-            self.membership(),
-            self.organism)
 
-        return self.__last_computed_result
+        iteration_result['motif-pvalue'][self.seqtype] = compute_mean_score(
+            matrix, self.membership(),  self.organism)
+        return matrix
 
     def compute_pvalues(self, iteration_result, num_motifs):
         """Compute motif scores.
