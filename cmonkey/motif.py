@@ -17,6 +17,8 @@ import tempfile
 import seqtools as st
 import util
 import sequence_cache
+import os.path
+import cPickle
 
 
 def default_nmotif_fun(iteration, num_iterations):
@@ -106,7 +108,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.__sequence_filters = sequence_filters
         self.__last_computed_result = None
         self.__last_run_results = None
-        self.__last_pvalues = None
         self.__last_iteration_result = {}
 
         self.update_log = scoring.RunLog("motif-score-" + seqtype)
@@ -186,6 +187,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         scoring if the function is not supposed to actually run in this iteration
         """
         iteration = iteration_result['iteration']
+        all_pvalues = None
 
         if force or self.motif_in_iteration(iteration):  # meme.iter in R
             logging.info('Running Motifing...')
@@ -195,21 +197,22 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             num_motifs = self.num_motif_func(iteration,
                                              self.config_params['num_iterations'])
             self.__last_iteration_result = {}
-            self.__last_pvalues = self.compute_pvalues(self.__last_iteration_result,
-                                                       num_motifs)
-            #for cluster in sorted(self.__last_pvalues.keys()):
-            #    print "CLUSTER ", cluster
-            #    for gene in sorted(self.__last_pvalues[cluster].keys()):
-            #        print "%s -> %f" % (gene, self.__last_pvalues[cluster][gene])
+            all_pvalues = self.compute_pvalues(self.__last_iteration_result,
+                                               num_motifs)
+            with open(self.pickle_path(), 'w') as outfile:
+                cPickle.dump(all_pvalues, outfile)
+        elif os.path.exists(self.pickle_path()):
+            with open(self.pickle_path()) as infile:
+                all_pvalues = cPickle.load(infile)
 
-        if self.__last_pvalues != None and (
+        if all_pvalues != None and (
             force or self.update_in_iteration(iteration)):  # mot.iter in R
             logging.info('Recomputing motif scores...')
             start_time = util.current_millis()
             # running the scoring itself
             remapped = {}
-            for cluster in self.__last_pvalues:
-                pvalues_k = self.__last_pvalues[cluster]
+            for cluster in all_pvalues:
+                pvalues_k = all_pvalues[cluster]
                 pvalues_genes = {}
                 for feature_id, pvalue in pvalues_k.items():
                     pvalues_genes[self.reverse_map[feature_id]] = pvalue
