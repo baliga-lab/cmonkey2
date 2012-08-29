@@ -72,6 +72,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                               'memb.clusters_per_row': 2,
                               'memb.clusters_per_col': int(round(43 * 2.0 / 3.0)),
                               'num_clusters': 43,
+                              'output_dir': 'out',
                               'num_iterations': 2000}
         self.membership = self.__read_members()  # relies on config_params
         self.iteration_result = { 'iteration': 51 }

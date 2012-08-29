@@ -66,6 +66,7 @@ class Meme430Test(unittest.TestCase):  # pylint: disable-msg=R0904
                          'memb.max_cluster_rows_allowed': 70,
                          'multiprocessing': False,
                          'num_clusters': 1,
+                         'output_dir': 'out',
                          'num_iterations': 2000}
         func = motif.MemeScoringFunction(organism, membership, ratio_matrix,
                                          meme_suite,
