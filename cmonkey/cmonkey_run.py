@@ -96,7 +96,7 @@ class CMonkeyRun:
     def __make_membership(self):
         """returns the seeded membership on demand"""
         return memb.ClusterMembership.create(
-            self.ratio_matrix.sorted_by_row_name(),
+            self.ratio_matrix,
             self.row_seeder, self.column_seeder,
             self.config_params)
 
