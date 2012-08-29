@@ -10,6 +10,8 @@ import util
 import datamatrix as dm
 import scoring
 import multiprocessing as mp
+import cPickle
+import os.path
 
 
 class Network:
@@ -135,7 +137,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                                              config_params)
         self.__organism = organism
         self.__networks = None
-        self.__last_network_scores = {}
+        self.__last_computed_result = None
         self.run_log = scoring.RunLog("network")
 
     def name(self):
@@ -145,26 +147,41 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     def run_logs(self):
         return [self.run_log]
 
+    def network_scores_pickle_path(self):
+        return "%s_scores_last.pkl" % self.name()
+
+    def current_network_scores(self):
+        if self.network_scores != None:
+            return self.network_scores
+        else:
+            with open(self.network_scores_pickle_path()) as infile:
+                result = cPickle.load(infile)
+            return result
+
     def compute(self, iteration_result, ref_matrix=None):
         """overridden compute for storing additional information"""
         result = scoring.ScoringFunctionBase.compute(self, iteration_result, ref_matrix)
-        iteration_result['networks'] = self.__update_score_means()
+        iteration_result['networks'] = self.__update_score_means(
+            self.current_network_scores())
+        self.network_scores = None
         return result
 
     def compute_force(self, iteration_result, ref_matrix=None):
         """overridden compute for storing additional information"""
         result = scoring.ScoringFunctionBase.compute_force(self, iteration_result, ref_matrix)
-        iteration_result['networks'] = self.__update_score_means()
+        iteration_result['networks'] = self.__update_score_means(
+            self.current_network_scores())
+        self.network_scores = None
         return result
 
-    def __update_score_means(self):
+    def __update_score_means(self, network_scores):
         """returns the score means, adjusted to the current cluster setup"""
         # a dictionary that holds the network score means for
         # each cluster, separated for each network
         score_means = {}
         for network in self.__networks:
             score_means[network.name] = self.__compute_cluster_score_means(
-                self.__last_network_scores[network.name])
+                network_scores[network.name])
         return compute_mean(score_means)
 
     def do_compute(self, iteration_result, ref_matrix=None):
@@ -179,13 +196,13 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         # a dictionary that holds the scores of each gene in a given cluster
         network_iteration_scores = {cluster: {}
                                     for cluster in xrange(1, self.num_clusters() + 1)}
-
+        network_scores = {}
         for network in self.__networks:
             logging.info("Compute scores for network '%s', WEIGHT: %f",
                          network.name, network.weight)
             start_time = util.current_millis()
             network_score = self.__compute_network_cluster_scores(network)
-            self.__last_network_scores[network.name] = network_score
+            network_scores[network.name] = network_score
             self.__update_score_matrix(matrix, network_score, network.weight)
             elapsed = util.current_millis() - start_time
             logging.info("NETWORK '%s' SCORING TIME: %f s.",
@@ -194,6 +211,11 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             self.__update_network_iteration_scores(network_iteration_scores,
                                                    network_score, network.weight)
             iteration_scores = compute_iteration_scores(network_iteration_scores)
+
+        with open(self.network_scores_pickle_path(), 'w') as outfile:
+            cPickle.dump(network_scores, outfile)
+        # immediately use in means computation
+        self.network_scores = network_scores
 
         return matrix - matrix.quantile(0.99)
 

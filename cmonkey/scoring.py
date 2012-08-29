@@ -15,6 +15,7 @@ import util
 import membership as memb
 import numpy as np
 import cPickle
+import gc
 
 # Official keys to access values in the configuration map
 KEY_ORGANISM_CODE = 'organism_code'
@@ -330,6 +331,9 @@ class ScoringFunctionCombiner:
         reference_matrix = ref_matrix
         iteration = iteration_result['iteration']
         for scoring_function in self.__scoring_functions:
+            # clean up before doing something complicated
+            gc.collect()
+
             if reference_matrix == None and len(result_matrices) > 0:
                 reference_matrix = result_matrices[0]
 
@@ -349,6 +353,9 @@ class ScoringFunctionCombiner:
         reference_matrix = ref_matrix
         iteration = iteration_result['iteration']
         for scoring_function in self.__scoring_functions:
+            # clean up before doing something complicated
+            gc.collect()
+
             # This  is actually a hack in order to propagate
             # a reference matrix to the compute function
             # This could have negative impact on scalability
