@@ -148,7 +148,8 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         return [self.run_log]
 
     def network_scores_pickle_path(self):
-        return "%s_scores_last.pkl" % self.name()
+        return "%s/%s_scores_last.pkl" % (self.config_params['output_dir'],
+                                          self.name())
 
     def current_network_scores(self):
         if self.network_scores != None:

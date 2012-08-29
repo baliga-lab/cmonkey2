@@ -181,7 +181,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         return self.__compute(iteration_result, True, ref_matrix)
 
     def matrix_pickle_path(self):
-        return "%s_matrix_last.pkl" % self.name()
+        return "%s/%s_matrix_last.pkl" % (self.config_params['output_dir'],
+                                          self.name())
 
     def __compute(self, iteration_result, force, ref_matrix=None):
         """compute method for the specified iteration
