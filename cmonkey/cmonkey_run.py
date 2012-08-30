@@ -202,13 +202,21 @@ class CMonkeyRun:
         if not os.path.exists(output_dir + '/ratios.tsv'):
             self.ratio_matrix.write_tsv_file(output_dir + '/ratios.tsv')
 
+    def __clear_output_dir(self):
+        output_dir = self['output_dir']
+        if os.path.exists(output_dir):
+            outfiles = os.listdir(output_dir)
+            for filename in outfiles:
+                os.remove('/'.join([output_dir, filename]))
+
     def run(self):
         self.__make_dirs_if_needed()
+        self.__clear_output_dir()
         row_scoring = self.make_row_scoring()
         col_scoring = self.make_column_scoring()
         self.run_iterations(row_scoring, col_scoring)
 
-    def run_from_checkpoint(self,checkpoint_filename):
+    def run_from_checkpoint(self, checkpoint_filename):
         row_scoring = self.make_row_scoring()
         col_scoring = self.make_column_scoring()
         self.__make_dirs_if_needed()
