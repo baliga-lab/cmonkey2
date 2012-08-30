@@ -131,7 +131,6 @@ class ScoringFunctionBase:
         """returns the function-specific pickle-path"""
         return '%s/%s_last.pkl' % (self.config_params['output_dir'], self.name())
         
-
     def compute(self, iteration_result, reference_matrix=None):
         """general compute method,
         iteration_result is a dictionary that contains the

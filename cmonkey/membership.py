@@ -15,6 +15,7 @@ import sys
 import numpy as np
 import rpy2.robjects as robjects
 import multiprocessing as mp
+import cPickle
 
 
 # Default values for membership creation
@@ -69,7 +70,6 @@ class ClusterMembership:
                         result[cluster] = []
                     result[cluster].append(name)
             return result
-
         self.__config_params = config_params
         self.__row_is_member_of = row_is_member_of
         self.__column_is_member_of = column_is_member_of
@@ -77,7 +77,6 @@ class ClusterMembership:
             self.__row_is_member_of)
         self.__cluster_column_members = create_cluster_to_names_map(
             self.__column_is_member_of)
-        self.__last_row_scores = None
 
     # pylint: disable-msg=R0913
     @classmethod
@@ -309,6 +308,10 @@ class ClusterMembership:
         result += repr(self.__cluster_column_members)
         return result
 
+    def pickle_path(self):
+        """returns the function-specific pickle-path"""
+        return '%s/last_row_scores.pkl' % (self.__config_params['output_dir'])
+
     def update(self, matrix, row_scores, column_scores,
                num_iterations, iteration_result, add_fuzz=True):
         """top-level update method"""
@@ -317,7 +320,13 @@ class ClusterMembership:
                                                        column_scores,
                                                        num_iterations,
                                                        iteration_result)
-        self.__last_row_scores = row_scores
+        # pickle the (potentially fuzzed) row scores to use them
+        # in the post adjustment step. We only need to do that in the last
+        # iteration
+        iteration = iteration_result['iteration']
+        if iteration == num_iterations:
+            with open(self.pickle_path(), 'w') as outfile:
+                cPickle.dump(row_scores, outfile)
 
         rpc = map(len, self.__cluster_row_members.values())
         logging.info('Rows per cluster: %i to %i (median %d)' \
@@ -436,7 +445,10 @@ class ClusterMembership:
         """adjusting the cluster memberships after the main iterations have been done
         Returns true if the function changed the membership, false if not"""
         if rowscores == None:
-            rowscores = self.__last_row_scores
+            # load the row scores from the last iteration from the pickle file
+            with open(self.pickle_path()) as infile:
+                rowscores = cPickle.load(infile)
+
         has_changed = False
         assign_list = []
         for cluster in range(1, self.num_clusters() + 1):
