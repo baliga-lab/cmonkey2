@@ -120,15 +120,14 @@ class OrganismBase:
     def __init__(self, code, network_factories):
         """Initialize the base class instance"""
         self.code = code
-        self.__network_factories = network_factories
-        self.__networks = None
+        logging.info("Creating networks...")
+        self.__networks = []
+        for make_network in network_factories:
+            self.__networks.append(make_network(self))        
+        logging.info("Finished creating networks.")
 
     def networks(self):
         """returns this organism's networks"""
-        if self.__networks == None:
-            self.__networks = []
-            for make_network in self.__network_factories:
-                self.__networks.append(make_network(self))
         return self.__networks
 
     def thesaurus(self):
@@ -154,15 +153,19 @@ class Microbe(OrganismBase):
                  network_factories,
                  search_distances, scan_distances):
         """create an Organism instance"""
+        # microbe-specific network factories need access to synonyms
+        # and rsat info, so initialize them here before the base class
+        # init
+        self.__synonyms = None  # lazy loaded
+        self.__rsat_info = rsat_info
+        logging.info("RSAT taxonomy id = %s" % rsat_info.taxonomy_id)
+
         OrganismBase.__init__(self, code, network_factories)
         self.kegg_organism = kegg_organism
-        self.__rsat_info = rsat_info
         self.__microbes_online_db = microbes_online_db
         self.go_taxonomy_id = go_taxonomy_id
         self.__search_distances = search_distances
         self.__scan_distances = scan_distances
-
-        self.__synonyms = None  # lazy loaded
         self.__operon_mappings = None  # lazy loaded
 
     def species(self):

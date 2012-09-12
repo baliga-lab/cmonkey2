@@ -285,6 +285,13 @@ def read_url_cached(url, cache_filename):
         return cached_file.read()
 
 
+def get_url_cached(url, cache_filename):
+    """convenience method to read a document from a URL using the
+    CMonkeyURLopener, cached version, the file is only downloaded"""
+    if not os.path.exists(cache_filename):
+        CMonkeyURLopener().retrieve(url, cache_filename)
+
+
 class ThesaurusBasedMap:  # pylint: disable-msg=R0903
     """wrapping a thesaurus and a feature id based map for a flexible
     lookup container that can use any valid gene alias"""
