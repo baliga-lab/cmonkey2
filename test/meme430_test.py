@@ -94,7 +94,7 @@ def make_halo(ratio_matrix, search_distances, scan_distances):
     gofile = util.DelimitedFile.read(GO_FILE_PATH)
     rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, CACHE_DIR        )
     mo_db = microbes_online.MicrobesOnline()
-    stringfile = 'string_inks_64091.tab'
+    stringfile = 'string_links_64091.tab'
 
     nw_factories = []
     if stringfile != None:

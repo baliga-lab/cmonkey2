@@ -22,6 +22,7 @@ KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
 GO_FILE_PATH = 'testdata/proteome2taxid'
 RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
+STRING_URL_PATTERN = "http://como.systemsbiology.net/string9/%s.gz"
 CACHE_DIR = 'cache'
 
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
@@ -29,7 +30,9 @@ STATS_FREQ = 10
 RESULT_FREQ = 10
 
 class CMonkeyRun:
-    def __init__(self, organism_code, ratio_matrix, num_clusters=None):
+    def __init__(self, organism_code, ratio_matrix,
+                 string_file=None,
+                 num_clusters=None):
         logging.basicConfig(format=LOG_FORMAT,
                             datefmt='%Y-%m-%d %H:%M:%S',
                             level=logging.DEBUG)
@@ -76,6 +79,7 @@ class CMonkeyRun:
         # membership default parameters
         self['memb.min_cluster_rows_allowed'] = 3
         self['memb.max_cluster_rows_allowed'] = 70
+        self['string_file'] = string_file
 
         today = date.today()
         self.CHECKPOINT_INTERVAL = None
@@ -171,6 +175,19 @@ class CMonkeyRun:
         rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, self['cache_dir'])
         mo_db = microbes_online.MicrobesOnline()
         stringfile = self.config_params['string_file']
+        kegg_mapper = org.make_kegg_code_mapper(keggfile)
+        rsat_mapper = org.make_rsat_organism_mapper(rsatdb)
+
+        # automatically download STRING file
+        if stringfile == None:
+            rsat_info = rsat_mapper(kegg_mapper(self['organism_code']))
+            ncbi_code = rsat_info.taxonomy_id
+            print "NCBI CODE IS: ", ncbi_code
+            url = STRING_URL_PATTERN % ncbi_code
+            stringfile = "%s/%s.gz" % (self['cache_dir'], ncbi_code)
+            self['string_file'] = stringfile
+            logging.info("Automatically using STRING file in '%s'", stringfile)
+            util.get_url_cached(url, stringfile)
 
         nw_factories = []
         if stringfile != None:
@@ -181,8 +198,8 @@ class CMonkeyRun:
         nw_factories.append(microbes_online.get_network_factory(
                 mo_db, max_operon_size=self.ratio_matrix.num_rows() / 20, weight=0.5))
 
-        org_factory = org.MicrobeFactory(org.make_kegg_code_mapper(keggfile),
-                                         org.make_rsat_organism_mapper(rsatdb),
+        org_factory = org.MicrobeFactory(kegg_mapper,
+                                         rsat_mapper,
                                          org.make_go_taxonomy_mapper(gofile),
                                          mo_db,
                                          nw_factories)
