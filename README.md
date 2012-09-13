@@ -26,13 +26,19 @@ for the human setup, Weeder 1.4.2 is needed
     ./run_tests.sh
 
 
+### Running cMonkey
+
+In general, you should be able to run cmonkey-python on microbial gene
+expressions with
+
+    ./run_cmonkey.sh <organism-code> <tab separated file of gene expressions>
+
+The file can be either in your file system or a web URL.
+
 ### Test Run with Halobacterium Salinarum
 
 There is a startup script for cMonkey to run the current integrated
 system
 
-    ./run_cmonkey.sh hal halo_ratios5.tsv string_links_64091.tab
-
-or simply
-
     ./run_cmonkey.sh hal halo_ratios5.tsv
+
