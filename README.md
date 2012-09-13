@@ -32,3 +32,7 @@ There is a startup script for cMonkey to run the current integrated
 system
 
     ./run_cmonkey.sh hal halo_ratios5.tsv string_links_64091.tab
+
+or simply
+
+    ./run_cmonkey.sh hal halo_ratios5.tsv
