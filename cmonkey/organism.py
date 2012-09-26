@@ -310,8 +310,8 @@ class Microbe(OrganismBase):
             """extract the unique contigs from the input features"""
             result = []
             for feature in features.values():
-                if feature.location().contig not in result:
-                    result.append(feature.location().contig)
+                if feature.location.contig not in result:
+                    result.append(feature.location.contig)
             return result
 
         contig_seqs = {}
@@ -321,8 +321,8 @@ class Microbe(OrganismBase):
                 self.species(), contig)
 
         for feature in features.values():
-            location = feature.location()
-            sequences[feature.id()] = extractor(
+            location = feature.location
+            sequences[feature.id] = extractor(
                 contig_seqs[location.contig], location, distance)
         if len(sequences) == 0:
             logging.error('No sequences read for %s!' %self.code)

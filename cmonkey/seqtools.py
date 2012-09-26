@@ -9,60 +9,21 @@ import re
 import logging
 import random
 import string
+import collections
 from util import DelimitedFile
 
 logger = logging.getLogger('seqtools')
 logger.setLevel(logging.DEBUG)
 
-class Location:  # pylint: disable-msg=R0903
-    """representation of a genomic position, a simple value object"""
-    def __init__(self, contig, start, end, reverse):
-        """Creates a location instance"""
-        self.contig = contig
-        self.start = start
-        self.end = end
-        self.reverse = reverse
+# Location and Feature are implemented as named tuples to optimize
+# memory and performance
+# representation of a genomic position, a simple value object
+Location = collections.namedtuple('Location',
+                                  ['contig', 'start', 'end', 'reverse'])
 
-    def __repr__(self):
-        """String representation"""
-        return ("contig: %s s: %d e: %d rev: %s" %
-                (self.contig, self.start,
-                 self.end, str(self.reverse)))
-
-    def __eq__(self, other):
-        """implements the == operation"""
-        return (self.contig == other.contig and self.start == other.start and
-                self.end == other.end and self.reverse == other.reverse)
-
-    def __ne__(self, other):
-        """implements the != operation"""
-        return not self.__eq__(other)
-
-
-class Feature:  # pylint: disable-msg=R0902
-    """representation of a feature. Just a value object"""
-
-    def __init__(self, feature_id, feature_type, name, location):
-        """Create a Feature instance"""
-        # pylint: disable-msg=R0913
-        self.__feature_id = feature_id
-        self.__feature_type = feature_type
-        self.__name = name
-        self.__location = location
-
-    def id(self):  # pylint: disable-msg=C0103
-        """returns the feature id"""
-        return self.__feature_id
-
-    def location(self):
-        """returns this feature's location"""
-        return self.__location
-
-    def __repr__(self):
-        """returns the string representation"""
-        return ("%s[%s] - %s, %s" %
-                (self.__feature_id, self.__feature_type,
-                 self.__name, repr(self.__location)))
+# representation of a feature. Just a value object
+Feature = collections.namedtuple('Feature',
+                                 ['id', 'ftype', 'name', 'location'])
 
 
 def read_feature(line):

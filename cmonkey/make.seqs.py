@@ -44,7 +44,7 @@ def make_sequences( genome_fasta_file, gene_features_file,
 
     sequences = []
     for feature in features.values():
-        location = feature.location()
+        location = feature.location
 #        print location, location.contig, distance, feature.id()
         if from_end:
             sequences.append( ( feature.id(), st.extract_downstream(contig_dict[location.contig], location, distance)[1] ) )

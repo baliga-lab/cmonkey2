@@ -98,8 +98,8 @@ def make_operon_pairs(operon, features):
         max_gene = None
         max_end = 0
         for (gene, feature) in feature_map.items():
-            if feature.location().end > max_end:
-                max_end = feature.location().end
+            if feature.location.end > max_end:
+                max_end = feature.location.end
                 max_gene = gene
         return max_gene
 
@@ -108,8 +108,8 @@ def make_operon_pairs(operon, features):
         min_gene = None
         min_start = sys.maxint
         for (gene, feature) in feature_map.items():
-            if feature.location().start < min_start:
-                min_start = feature.location().start
+            if feature.location.start < min_start:
+                min_start = feature.location.start
                 min_gene = gene
         return min_gene
 
@@ -128,7 +128,7 @@ def make_operon_pairs(operon, features):
 
     for gene in available_operon_genes:
         feature_map[gene] = features[gene]
-        if feature_map[gene].location().reverse:
+        if feature_map[gene].location.reverse:
             num_reverse += 1
 
     num_total = len(available_operon_genes)
