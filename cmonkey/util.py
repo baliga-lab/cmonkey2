@@ -14,6 +14,7 @@ import rpy2.robjects as robjects
 import gzip
 import shelve
 import time
+import logging
 
 # RSAT organism finding is an optional feature, which we can skip in case that
 # the user imports all the features through own text files
