@@ -6,10 +6,19 @@ import java.io._
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._
+import scala.util.Sorting
 import play.api.libs.json._
 
 case class IntHistogram(xvalues: Array[Int], yvalues: Array[Int])
 case class ResidualHistogram(xvalues: Array[String], yvalues: Array[Int])
+case class RunInfo(startInfo: StartInfo,
+                   finished: Boolean,
+                   finishTime: String,
+                   currentIteration: Int,
+                   clusters: Seq[Int],
+                   iterations: Seq[Int],
+                   statsIterations: Seq[Int],
+                   progress: Double)
 
 object Application extends Controller {
 
@@ -22,8 +31,11 @@ object Application extends Controller {
   val Synonyms = SynonymsFactory.getSynonyms(
     ProjectConfig.getProperty("cmonkey.synonyms.format"),
     ProjectConfig.getProperty("cmonkey.synonyms.file"))
-  val snapshotReader = new SnapshotReader(OutDirectory, Synonyms)
-  val statsReader = new StatsReader(OutDirectory)
+  val snapshotReader   = new SnapshotReader(OutDirectory, Synonyms)
+  val statsReader      = new StatsReader
+  val runlogReader     = new RunLogReader
+  val startInfoReader  = new StartInfoReader
+  val finishInfoReader = new FinishInfoReader
 
   val ratiosFile = if (ProjectConfig.getProperty("cmonkey.ratios.file") != null) {
     new File(ProjectConfig.getProperty("cmonkey.ratios.file"))
@@ -53,20 +65,48 @@ object Application extends Controller {
 
   def index2(iteration: Int) = Action {
     // sort keys ascending by iteration number
+    val startInfo = startInfoReader.readStartInfo(OutDirectory)
+    val finishInfo = finishInfoReader.readFinishInfo(OutDirectory)
     val stats = statsReader.readStats(OutDirectory).toMap
+    val runLogs = runlogReader.readLogs(OutDirectory)
+
     val statsIterations = stats.keySet.toArray
     java.util.Arrays.sort(statsIterations)
 
     makeRowStats(stats)
-    Ok(views.html.index(snapshotReader.readSnapshot(iteration),
-                        snapshotIterations,
-                        iteration,
-                        statsIterations,
+    val snapshotOption = snapshotReader.readSnapshot(iteration)
+    val clusters = sortByResidual(snapshotOption)
+    val progress = math.min((snapshotIterations(snapshotIterations.length - 1) /
+                             startInfo.get.numIterations.toDouble * 100.0), 100.0)
+    val runInfo = RunInfo(startInfo.get,
+                          finishInfo != None,
+                          if (finishInfo != None) finishInfo.get.finishTime else "",
+                          iteration, clusters, snapshotIterations, statsIterations,
+                          progress)
+    Ok(views.html.index(runInfo,
+                        snapshotOption,
                         makeMeanResiduals(statsIterations, stats),
                         stats,
                         makeRowStats(stats),
                         makeColumnStats(stats),
-                        makeResidualHistogram(stats)))
+                        makeResidualHistogram(stats),
+                        runLogs.get))
+  }
+
+  private def sortByResidual(snapshotOption: Option[Snapshot]): Seq[Int] = {
+    object MyOrdering extends Ordering[(Int, Double)] {
+      def compare(a: (Int, Double), b: (Int, Double)) = {
+        if (a._2 < b._2) -1
+        else if (a._2 > b._2) 1
+        else 0
+      }
+    }
+    if (snapshotOption != None) {
+      val residuals: Array[(Int, Double)] =
+        snapshotOption.get.residuals.toArray
+      Sorting.quickSort(residuals)(MyOrdering)
+      residuals.map(_._1)
+    } else Array[Int]()
   }
 
   private def makeRowStats(stats: Map[Int, IterationStats]) = {
@@ -138,38 +178,54 @@ object Application extends Controller {
     val ratios = RatiosFactory.readRatios(snapshot.get.rows(cluster).toArray)
     val rows    = snapshot.get.rows(cluster)
     val columns = snapshot.get.columns(cluster)
+    val motifInfoMap = new HashMap[String, Array[MotifInfo]]
+    val pssmMap = new HashMap[String, Array[String]]
+    val annotationMap = new HashMap[String, Seq[GeneAnnotations]]
 
-    if (snapshot.get.motifs.contains(cluster)) {
-      val motifInfos = new java.util.ArrayList[MotifInfo]
-      val motifMap = snapshot.get.motifs(cluster)
-      for (seqType <- motifMap.keys) {
-        val motifMapInfos = motifMap(seqType)
-        for (info <- motifMapInfos) motifInfos.add(info)
-      }
+    // motif extraction
+    for (seqType <- snapshot.get.motifs.keys) {
+      val motifObj = snapshot.get.motifs(seqType) 
+      if (motifObj.contains(cluster)) {
+        // re-group annotations by gene
+        val geneAnnotationMap = new HashMap[String, ArrayBuffer[Annotation]]
+        val motifInfos = new java.util.ArrayList[MotifInfo]
+        val motifMapInfos = motifObj(cluster)
+        for (info <- motifMapInfos) {
+          motifInfos.add(info)
+          for (annotation <- info.annotations) {
+            if (!geneAnnotationMap.containsKey(annotation.gene)) {
+              geneAnnotationMap(annotation.gene) = new ArrayBuffer[Annotation]
+            }
+            geneAnnotationMap(annotation.gene) += annotation
+          }
+        }
+        //println("GENE ANNOTATIONS: " + geneAnnotationMap.keys)
+        val geneAnnotationList = new ArrayBuffer[GeneAnnotations]
+        for (key <- geneAnnotationMap.keys) {
+          // TODO: What is acually plotted is the pvalue of the gene in this cluster
+          val geneAnnotations = GeneAnnotations(key, geneAnnotationMap(key).sortWith((a: Annotation, b: Annotation) => a.position < b.position))
+          geneAnnotationList += geneAnnotations
+        }
+        motifInfoMap(seqType) = motifInfos.toArray(Array.ofDim[MotifInfo](0))
+        annotationMap(seqType) = geneAnnotationList
 
-      // NOTE: there is no differentiation between sequence types yet !!!!
-      val pssm = if (snapshot.get.motifs.size > 0) {
-        toJsonPssm(snapshot.get.motifs(cluster))
-      } else {
-        new Array[String](0)
+        pssmMap(seqType) = if (motifObj(cluster).size > 0) {
+          toJsonPssm(motifObj(cluster))
+        } else {
+          new Array[String](0)
+        }
       }
-      Ok(views.html.cluster(iteration, cluster, rows, columns, ratios,
-                            motifInfos.toArray(new Array[MotifInfo](0)), pssm))
-    } else {
-      Ok(views.html.cluster(iteration, cluster, rows, columns, ratios,
-                            new Array[MotifInfo](0), new Array[String](0)))
     }
+    Ok(views.html.cluster(iteration, cluster, rows, columns, ratios,
+                          motifInfoMap.toMap, pssmMap.toMap,
+                          annotationMap.toMap))
   }
 
-  private def toJsonPssm(motifMap: Map[String, Array[MotifInfo]]): Array[String] = {
+  private def toJsonPssm(motifInfos: Array[MotifInfo]): Array[String] = {
     val result = new java.util.ArrayList[String]
-    for (seqType <- motifMap.keys) {
-      val motifInfos = motifMap(seqType)
-      printf("SEQ TYPE: %s, # PSSMs: %d\n", seqType, motifInfos.length)
-      for (i <- 0 until motifInfos.length) {
-        result.add(Json.stringify(JsObject(List("alphabet" -> Json.toJson(Array("A", "C", "G", "T")),
-                                                "values" -> Json.toJson(motifInfos(i).pssm)))))
-      }
+    for (i <- 0 until motifInfos.length) {
+      result.add(Json.stringify(JsObject(List("alphabet" -> Json.toJson(Array("A", "C", "G", "T")),
+                                              "values" -> Json.toJson(motifInfos(i).pssm)))))
     }
     println("# PSSMS: " + result.length)
     result.toArray(new Array[String](0))

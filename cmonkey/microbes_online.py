@@ -13,8 +13,13 @@ import sys
 import logging
 import util
 import network
-import MySQLdb as mysql
 
+# most people won't need MicrobesOnline integration, so we'll make the
+# import optional
+try:
+    import MySQLdb as mysql
+except ImportError:
+    logging.warn("Could not import MySQLdb - Microbes Online MySQL integration will not work")
 
 MICROBES_ONLINE_BASE_URL = 'http://www.microbesonline.org'
 MYSQL_HOST = 'pub.microbesonline.org'
@@ -93,8 +98,8 @@ def make_operon_pairs(operon, features):
         max_gene = None
         max_end = 0
         for (gene, feature) in feature_map.items():
-            if feature.location().end > max_end:
-                max_end = feature.location().end
+            if feature.location.end > max_end:
+                max_end = feature.location.end
                 max_gene = gene
         return max_gene
 
@@ -103,8 +108,8 @@ def make_operon_pairs(operon, features):
         min_gene = None
         min_start = sys.maxint
         for (gene, feature) in feature_map.items():
-            if feature.location().start < min_start:
-                min_start = feature.location().start
+            if feature.location.start < min_start:
+                min_start = feature.location.start
                 min_gene = gene
         return min_gene
 
@@ -123,7 +128,7 @@ def make_operon_pairs(operon, features):
 
     for gene in available_operon_genes:
         feature_map[gene] = features[gene]
-        if feature_map[gene].location().reverse:
+        if feature_map[gene].location.reverse:
             num_reverse += 1
 
     num_total = len(available_operon_genes)
@@ -227,7 +232,7 @@ def get_network_factory(microbes_online, max_operon_size, weight):
         for operon in operons:
             if len(operon) <= max_operon_size:
                 combs = util.kcombinations(operon, 2)
-                edges.extend([network.NetworkEdge(comb[0], comb[1], 1000.0)
+                edges.extend([[comb[0], comb[1], 1000.0]
                               for comb in combs if comb[0] != comb[1]])
             else:
                 logging.warn("dropped operon from network (max_operon_size " +

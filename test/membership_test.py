@@ -45,21 +45,15 @@ class MockDataMatrix:
 
     def __init__(self, num_rows):
         self.__num_rows = num_rows
+        self.row_names = [('GENE%d' % index) for index in range(self.__num_rows)]
+        self.column_names = [('COND%d' % index) for index in range(self.num_columns())]
+        self.values = MATRIX1
 
     def num_rows(self):
         return self.__num_rows
 
     def num_columns(self):
         return 5
-
-    def row_names(self):
-        return [('GENE%d' % index) for index in range(self.__num_rows)]
-
-    def column_names(self):
-        return [('COND%d' % index) for index in range(self.num_columns())]
-
-    def values(self):
-        return MATRIX1
 
     def submatrix(self, rows, cols):
         return self
@@ -131,7 +125,7 @@ class ClusterMembershipTest(unittest.TestCase):
                                ['C1', 'C2', 'C3', 'C4', 'C5'],
                                MATRIX1)
         result = scoring.compute_column_scores_submatrix(matrix)
-        scores = result[0]
+        scores = result.values[0]
         self.assertEqual(5, len(scores))
         self.assertAlmostEqual(0.03085775, scores[0])
         self.assertAlmostEqual(0.05290099, scores[1])
@@ -178,8 +172,21 @@ class ClusterMembershipTest(unittest.TestCase):
             config_params={'memb.clusters_per_col': 2,
                            'memb.clusters_per_row': 1})
         membership.add_cluster_to_column('C3', 1)
+        membership.add_cluster_to_column('C3', 1)
         self.assertEquals([1], membership.clusters_for_column('C3'))
         self.assertEquals(['C1', 'C3'], membership.columns_for_cluster(1))
+
+    def test_add_cluster_to_column_twice(self):
+        """tests adding a cluster to a column twice and making sure it's only in there once"""
+        membership = memb.ClusterMembership(
+            row_is_member_of={},
+            column_is_member_of={'C1': [1, 3], 'C2': [2, 3]},
+            config_params={'memb.clusters_per_col': 2,
+                           'memb.clusters_per_row': 1})
+        membership.add_cluster_to_column('C3', 1)
+        self.assertEquals([1], membership.clusters_for_column('C3'))
+        self.assertEquals(['C1', 'C3'], membership.columns_for_cluster(1))
+
 
     def test_add_cluster_to_column_exceed_limit(self):
         """tests adding a column to a cluster, hitting the limit"""
@@ -235,6 +242,11 @@ class ClusterMembershipTest(unittest.TestCase):
                            0.20619111210390084, 0.1657092217551106,
                            0.13571949977708733, 0.11350256730258876,
                            0.09704385891782485, 0.08485094785750477], result)
+
+    def test_old_fuzzy_coefficient(self):
+        result = [memb.old_fuzzy_coefficient(value, 2) for value in range(1, 3)]
+        self.assertEquals([0.10150146242745953, 0.013736729166550634], result)
+
 
     def test_get_best_clusters(self):
         matrix = dm.DataMatrix(3, 4, values=[[1.0, 2.0, 3.0, 4.0],

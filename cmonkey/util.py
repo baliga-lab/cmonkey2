@@ -4,7 +4,6 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import BeautifulSoup as bs
 import operator
 import math
 import numpy as np
@@ -15,6 +14,14 @@ import rpy2.robjects as robjects
 import gzip
 import shelve
 import time
+import logging
+
+# RSAT organism finding is an optional feature, which we can skip in case that
+# the user imports all the features through own text files
+try:
+    import BeautifulSoup as bs
+except ImportError:
+    logging.warn("could not import BeautifulSoup, RSAT organism finding won't work")
 
 
 def make_delimited_file_from_lines(lines, sep, has_header, comment, quote):
@@ -279,6 +286,13 @@ def read_url_cached(url, cache_filename):
         return cached_file.read()
 
 
+def get_url_cached(url, cache_filename):
+    """convenience method to read a document from a URL using the
+    CMonkeyURLopener, cached version, the file is only downloaded"""
+    if not os.path.exists(cache_filename):
+        CMonkeyURLopener().retrieve(url, cache_filename)
+
+
 class ThesaurusBasedMap:  # pylint: disable-msg=R0903
     """wrapping a thesaurus and a feature id based map for a flexible
     lookup container that can use any valid gene alias"""
@@ -374,6 +388,13 @@ def phyper(q, m, n, k, lower_tail=False):
                     robjects.FloatVector(m),
                     robjects.FloatVector(n),
                     robjects.FloatVector(k), **kwargs)
+
+
+def rrank(values):
+    """invokes the R function rank"""
+    r_rank = robjects.r['rank']
+    kwargs = {'ties': 'min', 'na': 'keep'}
+    return r_rank(robjects.FloatVector(values), **kwargs)
 
 
 def sd_rnorm(values, num_rnorm_values, fuzzy_coeff):

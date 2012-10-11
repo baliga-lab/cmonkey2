@@ -29,9 +29,9 @@ RUG_FILE = 'human_data/rug.csv'
 THESAURUS_FILE = 'human_data/synonymThesaurus.csv.gz'
 
 RUG_PROPS = ['MIXED', 'ASTROCYTOMA', 'GBM', 'OLIGODENDROGLIOMA']
-NUM_CLUSTERS = 720  # 133
+NUM_CLUSTERS = 133 # 720
 ROW_WEIGHT = 6.0
-NUM_ITERATIONS = 2000
+NUM_ITERATIONS = 3000
 
 SEQUENCE_TYPES = ['promoter', 'p3utr']
 SEARCH_DISTANCES = {'promoter': (0, 700), 'p3utr': (0, 831)}
@@ -91,10 +91,12 @@ def select_probes(matrix, num_genes_total, column_groups, proportional=True):
                                                  column_groups.keys())
 
     cvrows = []
+    mvalues = matrix.values
+    nrows = matrix.num_rows()
     for group, col_indexes in column_groups.items():
         group_cvs = []
-        for row in range(matrix.num_rows()):
-            row_values = [matrix[row][col] for col in col_indexes]
+        for row in xrange(nrows):
+            row_values = [mvalues[row][col] for col in col_indexes]
             group_cvs.append(coeff_var(row_values))
         cvrows += [group_cvs.index(value)
                    for value in
@@ -105,21 +107,23 @@ def select_probes(matrix, num_genes_total, column_groups, proportional=True):
 def intensities_to_ratios(matrix, controls, column_groups):
     """turn intensities into ratios
     Warning: input matrix is modified !!!"""
-    colnames = matrix.column_names()
-    control_indexes = [np.where(colnames == control)[0][0]
+    colnames = matrix.column_names
+    control_indexes = [colnames.index(control)
                        for control in controls
                        if control in colnames]
+    mvalues = matrix.values
+    nrows = matrix.num_rows()
     for group_columns in column_groups.values():
         group_controls = [index for index in control_indexes
                           if index in group_columns]
         means = []
-        for row in range(matrix.num_rows()):
-            values = [float(matrix[row][col]) for col in group_controls]
+        for row in xrange(nrows):
+            values = [float(mvalues[row][col]) for col in group_controls]
             means.append(sum(values) / float(len(values)))
 
         for col in group_columns:
             for row in range(matrix.num_rows()):
-                matrix[row][col] /= means[row]
+                mvalues[row][col] /= means[row]
 
         center_scale_filter(matrix, group_columns, group_controls)
     return matrix
@@ -128,16 +132,17 @@ def intensities_to_ratios(matrix, controls, column_groups):
 def center_scale_filter(matrix, group_columns, group_controls):
     """center the values of each row around their median and scale
     by their standard deviation. This is a specialized version"""
-    centers = [scipy.median([matrix[row][col]
+    mvalues = matrix.values
+    centers = [scipy.median([mvalues[row][col]
                              for col in group_controls])
                for row in range(matrix.num_rows())]
-    scale_factors = [util.r_stddev([matrix[row][col]
+    scale_factors = [util.r_stddev([mvalues[row][col]
                                     for col in group_columns])
                      for row in range(matrix.num_rows())]
     for row in range(matrix.num_rows()):
         for col in group_columns:
-            matrix[row][col] -= centers[row]
-            matrix[row][col] /= scale_factors[row]
+            mvalues[row][col] -= centers[row]
+            mvalues[row][col] /= scale_factors[row]
     return matrix
 
 
@@ -170,8 +175,8 @@ def read_matrix(filename):
     matrix = matrix_factory.create_from(infile)
 
     column_groups = {1: range(matrix.num_columns())}
-    #select_rows = select_probes(matrix, 2000, column_groups)
-    #matrix = matrix.submatrix_by_rows(select_rows)
+    select_rows = select_probes(matrix, 2000, column_groups)
+    matrix = matrix.submatrix_by_rows(select_rows)
     return intensities_to_ratios(matrix, controls, column_groups)
 
 
@@ -184,6 +189,7 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
         self['sequence_types'] = SEQUENCE_TYPES
         self['search_distances'] = SEARCH_DISTANCES
         self['scan_distances'] = SCAN_DISTANCES
+        self['num_iterations'] = NUM_ITERATIONS
 
     def organism(self):
         if self.__organism == None:
@@ -205,12 +211,14 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             lambda iteration: ROW_WEIGHT,
             config_params=self.config_params)
 
-        sequence_filters = []
+        # we need to remove the location from the sequence when selecting for
+        # individual clusters
+        sequence_filters = [lambda seqs, feature_ids: {key: seqs[key][1] for key in seqs.keys()}]
         background_file_prom = meme.global_background_file(
-            self.organism(), self.ratio_matrix.row_names(), 'promoter',
+            self.organism(), self.ratio_matrix.row_names, 'promoter',
             use_revcomp=True)
         background_file_p3utr = meme.global_background_file(
-            self.organism(), self.ratio_matrix.row_names(), 'p3utr',
+            self.organism(), self.ratio_matrix.row_names, 'p3utr',
             use_revcomp=True)
         meme_suite_prom = meme.MemeSuite430(
             max_width=MAX_MOTIF_WIDTH,
@@ -219,6 +227,7 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             max_width=MAX_MOTIF_WIDTH,
             background_file=background_file_p3utr)
 
+        motif_scaling_fun = scoring.get_default_motif_scaling(self['num_iterations'])
         motif_scoring = motif.MemeScoringFunction(
             self.organism(),
             self.membership(),
@@ -226,24 +235,29 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             meme_suite_prom,
             seqtype='promoter',
             sequence_filters=sequence_filters,
-            pvalue_filter=motif.MinPValueFilter(-20.0),
-            scaling_func=lambda iteration: 0.0,
-            run_in_iteration=scoring.default_motif_iterations,
+            scaling_func=motif_scaling_fun,
+            num_motif_func=motif.default_nmotif_fun,
+            update_in_iteration=scoring.schedule(600, 10),  # 600, 10
+            motif_in_iteration=scoring.schedule(600, 100),  # 600, 100
             config_params=self.config_params)
 
+        network_scaling_fun = scoring.get_default_network_scaling(self['num_iterations'])
         network_scoring = nw.ScoringFunction(self.organism(),
                                              self.membership(),
                                              self.ratio_matrix,
-                                             lambda iteration: 0.0,
-                                             scoring.default_network_iterations,
+                                             scaling_func=network_scaling_fun,
+                                             run_in_iteration=scoring.schedule(1, 7),
                                              config_params=self.config_params)
 
         weeder_scoring = motif.WeederScoringFunction(
             self.organism(), self.membership(), self.ratio_matrix,
-            meme_suite_p3utr, 'p3utr',
-            pvalue_filter=motif.MinPValueFilter(-20.0),
-            scaling_func=lambda iteration: 0.0,
-            run_in_iteration=scoring.default_motif_iterations,
+            meme_suite_p3utr,
+            seqtype='p3utr',
+            sequence_filters=sequence_filters,
+            scaling_func=motif_scaling_fun,
+            num_motif_func=motif.default_nmotif_fun,
+            update_in_iteration=scoring.schedule(600, 10),  # 600, 10
+            motif_in_iteration=scoring.schedule(600, 100),  # 600, 100
             config_params=self.config_params)
 
         pita = se.SetType.read_csv('pita', 'human_data/pita_miRNA_sets.csv')
@@ -254,18 +268,26 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
             self.membership(),
             self.ratio_matrix,
             set_types,
-            lambda iteration: 0.0, 7,
+            network_scaling_fun,
+            #lambda iteration: 3.0,
+            scoring.schedule(1, 7),
             config_params=self.config_params)
 
         motif_combiner = scoring.ScoringFunctionCombiner(
             self.membership(),
             [motif_scoring, weeder_scoring],
-            scaling_func=lambda iteration: 0.5)
+            scaling_func=lambda iteration: 0.5,
+            config_params=self.config_params)
 
         return scoring.ScoringFunctionCombiner(
             self.membership(),
-            [row_scoring, motif_combiner, network_scoring,
-             set_enrichment_scoring])
+            [row_scoring,
+             #motif_scoring,
+             #weeder_scoring,
+             motif_combiner,
+             network_scoring,
+             set_enrichment_scoring],
+            config_params=self.config_params)
 
 
 if __name__ == '__main__':

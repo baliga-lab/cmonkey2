@@ -8,11 +8,14 @@ LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 
 import logging
 import os
+import os.path
 import datamatrix as dm
 from datetime import date
 import util
 import membership as memb
 import numpy as np
+import cPickle
+import gc
 
 # Official keys to access values in the configuration map
 KEY_ORGANISM_CODE = 'organism_code'
@@ -26,10 +29,6 @@ KEY_MULTIPROCESSING = 'multiprocessing'
 KEY_OUTPUT_DIR = 'output_dir'
 KEY_STRING_FILE = 'string_file'
 
-KEY_MOTIF_MIN_CLUSTER_ROWS_ALLOWED = 'motif.min_cluster_rows_allowed'
-KEY_MOTIF_MAX_CLUSTER_ROWS_ALLOWED = 'motif.max_cluster_rows_allowed'
-MOTIF_MIN_CLUSTER_ROWS_ALLOWED = 3
-MOTIF_MAX_CLUSTER_ROWS_ALLOWED = 70
 USE_MULTIPROCESSING = True
 
 def get_default_motif_scaling(num_iterations):
@@ -61,27 +60,63 @@ def schedule(starts_at, every):
         return iteration >= starts_at and (iteration - starts_at) % every == 0
     return runs_in_iteration
 
+
 def default_motif_iterations(iteration):
-    return schedule(500, 10)
+    return schedule(601, 3)
+
+
+def default_meme_iterations(iteration):
+    return schedule(600, 100)
+
 
 def default_network_iterations(iteration):
     return schedule(1, 7)
+
+
+class RunLog:
+    """This is a class that captures information about a particular
+    scoring function's behavior in a given iteration. In each iteration,
+    a scoring function should log whether it was active and which scaling
+    was applied.
+    """
+    def __init__(self, name):
+        self.name = name
+        self.active = []
+        self.scaling = []
+
+    def log(self, was_active, scaling):
+        self.active.append(was_active)
+        self.scaling.append(scaling)
+
+    def __repr__(self):
+        return "RunLog(" + self.name + ", " + str(self.active) + ", " + str(self.scaling) + ")"
+
+    def to_json(self):
+        return {'name': self.name, 'active': self.active, 'scaling': self.scaling}
+
 
 class ScoringFunctionBase:
     """Base class for scoring functions"""
 
     def __init__(self, membership, matrix, scaling_func,
-                 config_params):
+                 run_in_iteration=lambda iteration: True,
+                 config_params={}):
         """creates a function instance"""
         self.__membership = membership
         self.__matrix = matrix
         self.__scaling_func = scaling_func
+        self.run_in_iteration = run_in_iteration
         self.config_params = config_params
         if config_params == None:
             raise Exception('NO CONFIG PARAMS !!!')
 
     def name(self):
-        """returns the name of this function"""
+        """returns the name of this function
+        Note to function implementers: make sure the name is
+        unique for each used scoring function, since pickle paths
+        are dependend on the name, non-unique function names will
+        overwrite each other
+        """
         raise Exception("please implement me")
 
     def membership(self):
@@ -92,6 +127,10 @@ class ScoringFunctionBase:
         """returns this function's matrix object"""
         return self.__matrix
 
+    def pickle_path(self):
+        """returns the function-specific pickle-path"""
+        return '%s/%s_last.pkl' % (self.config_params['output_dir'], self.name())
+        
     def compute(self, iteration_result, reference_matrix=None):
         """general compute method,
         iteration_result is a dictionary that contains the
@@ -101,7 +140,39 @@ class ScoringFunctionBase:
         function to normalize its scores to the range of a reference
         score matrix. In the normal case, those would be the gene expression
         row scores"""
-        raise Exception("please implement me")
+        iteration = iteration_result['iteration']
+
+        if self.run_in_iteration(iteration):
+            computed_result = self.do_compute(iteration_result,
+                                              reference_matrix)
+            # pickle the result for future use
+            logging.info("pickle result to %s", self.pickle_path())
+            with open(self.pickle_path(), 'w') as outfile:
+                cPickle.dump(computed_result, outfile)
+        elif os.path.exists(self.pickle_path()):
+            with open(self.pickle_path()) as infile:
+                computed_result = cPickle.load(infile)
+        else:
+            computed_result = None
+
+        self.run_log.log(self.run_in_iteration(iteration),
+                         self.scaling(iteration_result['iteration']))
+        return computed_result
+
+    def compute_force(self, iteration_result, reference_matrix=None):
+        """enforce computation, regardless of the iteration function"""
+        iteration = iteration_result['iteration']
+        computed_result = self.do_compute(iteration_result,
+                                          reference_matrix)
+        with open(self.pickle_path(), 'w') as outfile:
+            cPickle.dump(computed_result, outfile)
+
+        self.run_log.log(self.run_in_iteration(iteration),
+                         self.scaling(iteration_result['iteration']))
+        return computed_result
+
+    def do_compute(self, iteration_result, ref_matrix=None):
+        raise Execption("implement me")
 
     def num_clusters(self):
         """returns the number of clusters"""
@@ -109,7 +180,7 @@ class ScoringFunctionBase:
 
     def gene_names(self):
         """returns the gene names"""
-        return self.__matrix.row_names()
+        return self.__matrix.row_names
 
     def num_genes(self):
         """returns the number of rows"""
@@ -117,7 +188,7 @@ class ScoringFunctionBase:
 
     def gene_at(self, index):
         """returns the gene at the specified index"""
-        return self.__matrix.row_name(index)
+        return self.__matrix.row_names[index]
 
     def rows_for_cluster(self, cluster):
         """returns the rows for the specified cluster"""
@@ -125,7 +196,10 @@ class ScoringFunctionBase:
 
     def scaling(self, iteration):
         """returns the quantile normalization scaling for the specified iteration"""
-        return self.__scaling_func(iteration)
+        if self.__scaling_func != None:
+            return self.__scaling_func(iteration)
+        else:
+            return 0.0
 
     def store_checkpoint_data(self, shelf):
         """Default implementation does not store checkpoint data"""
@@ -135,6 +209,11 @@ class ScoringFunctionBase:
         """Default implementation does not store checkpoint data"""
         pass
 
+    def run_logs(self):
+        """returns a list of RunLog objects, giving information about
+        the last run of this function"""
+        return []
+
 class ColumnScoringFunction(ScoringFunctionBase):
     """Scoring algorithm for microarray data based on conditions.
     Note that the score does not correspond to the normal scoring
@@ -142,24 +221,23 @@ class ColumnScoringFunction(ScoringFunctionBase):
     a generic way (the format is |condition x cluster|)"""
 
     def __init__(self, membership, matrix,
+                 run_in_iteration=schedule(1, 5),
                  config_params=None):
         """create scoring function instance"""
         ScoringFunctionBase.__init__(self, membership,
-                                     matrix, None, config_params)
+                                     matrix, scaling_func=None,
+                                     run_in_iteration=run_in_iteration,
+                                     config_params=config_params)
+        self.run_log = RunLog("column_scoring")
 
     def name(self):
         """returns the name of this scoring function"""
         return "Column"
 
-    def compute(self, iteration_result, ref_matrix=None):
+    def do_compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
-        start_time = util.current_millis()
-        result = compute_column_scores(self.membership(),
-                                       self.matrix(),
-                                       self.num_clusters())
-        elapsed = util.current_millis() - start_time
-        logging.info("COLUMN SCORING TIME: %f s.", (elapsed / 1000.0))
-        return result
+        return compute_column_scores(self.membership(), self.matrix(),
+                                     self.num_clusters())
 
 def compute_column_scores(membership, matrix, num_clusters):
     """Computes the column scores for the specified number of clusters"""
@@ -173,8 +251,8 @@ def compute_column_scores(membership, matrix, num_clusters):
             if column_scores != None:
                 for row in xrange(column_scores.num_rows()):
                     for col in xrange(column_scores.num_columns()):
-                        if column_scores.column_name(col) in columns:
-                            membership_values.append(column_scores[row][col])
+                        if column_scores.column_names[col] in columns:
+                            membership_values.append(column_scores.values[row][col])
         return util.quantile(membership_values, 0.95)
 
     cluster_column_scores = []
@@ -195,14 +273,16 @@ def compute_column_scores(membership, matrix, num_clusters):
     # Convert scores into a matrix that have the clusters as columns
     # and conditions in the rows
     result = dm.DataMatrix(matrix.num_columns(), num_clusters,
-                           row_names=matrix.column_names())
+                           row_names=matrix.column_names)
+    rvalues = result.values
     for cluster in xrange(num_clusters):
         column_scores = cluster_column_scores[cluster]
         for row_index in xrange(matrix.num_columns()):
             if column_scores == None:
-                result[row_index][cluster] = substitution
+                rvalues[row_index][cluster] = substitution
             else:
-                result[row_index][cluster] = column_scores[0][row_index]
+                rvalues[row_index][cluster] = column_scores.values[0][row_index]
+    result.fix_extreme_values()
     return result
 
 def compute_column_scores_submatrix(matrix):
@@ -220,17 +300,11 @@ def compute_column_scores_submatrix(matrix):
     for details
     """
     colmeans = matrix.column_means()
-    matrix_minus_colmeans_squared = subtract_and_square(matrix, colmeans)
+    matrix_minus_colmeans_squared = np.square(matrix.values - colmeans)
     var_norm = np.abs(colmeans) + 0.01
     result = util.column_means(matrix_minus_colmeans_squared) / var_norm
     return dm.DataMatrix(1, matrix.num_columns(), ['Col. Scores'],
-                         matrix.column_names(), [result])
-
-
-def subtract_and_square(matrix, vector):
-    """reusable function to subtract a vector from each row of
-    the input matrix and square the values in the result matrix"""
-    return np.square(matrix.values() - vector)
+                         matrix.column_names, [result])
 
 
 class ScoringFunctionCombiner:
@@ -240,12 +314,36 @@ class ScoringFunctionCombiner:
     scoring
     """
     def __init__(self, membership, scoring_functions, scaling_func=None,
+                 config_params=None,
                  log_subresults=False):
         """creates a combiner instance"""
         self.__membership = membership
         self.__scoring_functions = scoring_functions
         self.__log_subresults = log_subresults
         self.__scaling_func = scaling_func
+        self.__config_params = config_params
+
+    def compute_force(self, iteration_result, ref_matrix=None):
+        """compute scores for one iteration, recursive force"""
+        result_matrices = []
+        score_scalings = []
+        reference_matrix = ref_matrix
+        iteration = iteration_result['iteration']
+        for scoring_function in self.__scoring_functions:
+            # clean up before doing something complicated
+            gc.collect()
+
+            if reference_matrix == None and len(result_matrices) > 0:
+                reference_matrix = result_matrices[0]
+
+            matrix = scoring_function.compute_force(iteration_result, reference_matrix)
+            if matrix != None:
+                result_matrices.append(matrix)
+                score_scalings.append(scoring_function.scaling(iteration))
+
+                if self.__log_subresults:
+                    self.__log_subresult(scoring_function, matrix)
+        return self.__combine(result_matrices, score_scalings, iteration)
 
     def compute(self, iteration_result, ref_matrix=None):
         """compute scores for one iteration"""
@@ -254,6 +352,9 @@ class ScoringFunctionCombiner:
         reference_matrix = ref_matrix
         iteration = iteration_result['iteration']
         for scoring_function in self.__scoring_functions:
+            # clean up before doing something complicated
+            gc.collect()
+
             # This  is actually a hack in order to propagate
             # a reference matrix to the compute function
             # This could have negative impact on scalability
@@ -268,23 +369,26 @@ class ScoringFunctionCombiner:
                 if self.__log_subresults:
                     self.__log_subresult(scoring_function, matrix)
 
-        if len(result_matrices) > 1:
-            logging.info(
-                "COMBINING THE SCORES OF %d matrices (quantile normalize)",
-                len(result_matrices))
+        return self.__combine(result_matrices, score_scalings, iteration)
+
+    def __combine(self, result_matrices, score_scalings, iteration):
+        if len(result_matrices) > 1 and self.__config_params['quantile_normalize']:
             start_time = util.current_millis()
             result_matrices = dm.quantile_normalize_scores(result_matrices,
                                                            score_scalings)
             elapsed = util.current_millis() - start_time
-            logging.info("SCORES COMBINED IN %f s", elapsed / 1000.0)
+            logging.info("quantile normalize in %f s.", elapsed / 1000.0)
 
         if len(result_matrices) > 0:
+            start_time = util.current_millis()
             combined_score = (result_matrices[0] *
                               self.__scoring_functions[0].scaling(iteration))
             for index in xrange(1, len(result_matrices)):
                 combined_score += (
                     result_matrices[index] *
                     self.__scoring_functions[index].scaling(iteration))
+            elapsed = util.current_millis() - start_time
+            logging.info("combined score in %f s.", elapsed / 1000.0)
             return combined_score
         else:
             return None
@@ -292,11 +396,12 @@ class ScoringFunctionCombiner:
     def __log_subresult(self, score_function, matrix):
         """output an accumulated subresult to the log"""
         scores = []
+        mvalues = matrix.values
         for cluster in xrange(1, matrix.num_columns() + 1):
             cluster_rows = self.__membership.rows_for_cluster(cluster)
             for row in xrange(matrix.num_rows()):
-                if matrix.row_name(row) in cluster_rows:
-                    scores.append(matrix[row][cluster - 1])
+                if matrix.row_names[row] in cluster_rows:
+                    scores.append(mvalues[row][cluster - 1])
         logging.info("function '%s', trim mean score: %f",
                      score_function.name(),
                      util.trim_mean(scores, 0.05))
@@ -314,3 +419,10 @@ class ScoringFunctionCombiner:
         """recursively invokes store_checkpoint_data() on the children"""
         for scoring_func in self.__scoring_functions:
             scoring_func.restore_checkpoint_data(shelf)
+
+    def run_logs(self):
+        """joins all contained function's run logs"""
+        result = []
+        for scoring_func in self.__scoring_functions:
+            result.extend(scoring_func.run_logs())
+        return result

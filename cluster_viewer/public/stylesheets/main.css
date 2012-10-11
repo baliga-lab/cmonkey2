@@ -9,33 +9,83 @@ body {
     margin: 10px;
 }
 
+h2 {
+    font-family: Helvetica, Arial, sans-serif;
+    font-weight: bold;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
 .item-box {
-    display: inline-block;
     border: 1px solid black;
     border-radius: 5px;
     font-size: 8pt;
-    width: 20%;
+    height: 300px;
     overflow: auto;
     margin-right: 10px;
 }
 
 .details-box {
     vertical-align: top;
-    display: inline-block;
     border: 1px solid black;
     border-radius: 5px;
     font-size: 8pt;
-    width: 75%;
+    margin-right: 10px;
     overflow: auto;
     padding: 10px;
 }
 
-.item-list {
-    padding: 5px;
+table.item-list {
+    border-radius: 5px;
+    border: 1px black solid;
+    width: 100%;
+    font-size: 8pt;
+    background-color: #fff;
 }
 
-.item-list li {
-    list-style: none;
+table.inner {
+    border-collapse: collapse;
+    border-spacing: 0px;
+}
+
+table.item-list th, td {
+    padding-right: 5px;
+    border: 0px;
+    margin: 0px;
+    border-spacing: 0px;
+}
+table.item-list th {
+    padding-right: 5px;
+    background-color: black;
+    color: white;
+}
+
+table.item-list tr:nth-child(even) {
+    background-color: #ccc;
+}
+table.item-list tr:nth-child(odd) {
+    background-color: #fff;
+}
+
+td.clusternum, th.clusternum {
+    width: 60px;
+    text-align: right;
+}
+td.nrows, th.nrows {
+    width: 60px;
+    text-align: right;
+}
+td.ncols, th.ncols {
+    width: 60px;
+    text-align: right;
+}
+
+td.residual, th.residual {
+    width: 180px;
+    text-align: right;
+}
+td.evalue, th.evalue {
+    width: 180px;
 }
 
 .inactive {
@@ -64,4 +114,36 @@ table.members tr:nth-child(odd) {
 
 table.members tr:nth-child(even) {
     background-color: #ffffff;
+}
+
+
+#statssection {
+    float: right;
+    width: 100%;
+    margin-left: -600px; /* -(LeftColumnWidth + RightColumnWidth) */
+}
+#contentcolumn {
+    margin-left: 600px; /* LeftColumnWidth + RightColumnWidth */
+}
+#leftcolumn {
+    float: left;
+    width: 300px;
+}
+#rightcolumn {
+    float: left;
+    width: 300px;
+}
+
+.start-info {
+    font-size: 8pt;
+    color: blue;
+}
+.finish-info {
+    font-size: 8pt;
+    color: green;
+}
+
+.inprogress-info {
+    font-size: 8pt;
+    color: red;
 }

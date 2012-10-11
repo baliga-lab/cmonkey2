@@ -27,41 +27,39 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
         current_cluster_rows = []
         for row_index in xrange(num_rows):
             if row_membership[row_index][0] == cluster_num:
-                current_cluster_rows.append(data_matrix.row_name(row_index))
+                current_cluster_rows.append(data_matrix.row_names[row_index])
         submatrix = data_matrix.submatrix_by_name(
             row_names=current_cluster_rows)
-        scores = (-scoring.compute_column_scores_submatrix(submatrix))[0]
+        scores = (-scoring.compute_column_scores_submatrix(submatrix)).values[0]
         column_scores.append(scores)
 
     column_members = []
+    start_time = util.current_millis()
     for column_index in xrange(num_cols):
         scores_to_order = []
         for row_index in xrange(num_clusters):
             scores_to_order.append(column_scores[row_index][column_index])
         column_members.append(order(scores_to_order)[:num_clusters_per_column])
+    elapsed = util.current_millis() - start_time
+    logging.info("seed column members in %f s.", elapsed % 1000.0)
     return column_members
 
 def order(alist):
     """a weird R function that gives each item's position in the original list
     if you enumerate each item in a sorted list"""
-    return [(alist.index(item)) + 1 for item in sorted(alist, reverse=True)]
+    return map(lambda x: alist.index(x) + 1, sorted(alist, reverse=True))
 
 
 def compute_row_scores(membership, matrix, num_clusters,
                        use_multiprocessing):
     """for each cluster 1, 2, .. num_clusters compute the row scores
     for the each row name in the input name matrix"""
-    #clusters = xrange(1, num_clusters + 1)
     start_time = util.current_millis()
     cluster_row_scores = __compute_row_scores_for_clusters(
         membership, matrix, num_clusters, use_multiprocessing)
+    # TODO: replace the nan/inf-Values with the quantile-thingy in the R-version
+
     logging.info("__compute_row_scores_for_clusters() in %f s.",
-                 (util.current_millis() - start_time) / 1000.0)
-    start_time = util.current_millis()
-    cluster_row_scores = __replace_non_numeric_values(cluster_row_scores,
-                                                      membership,
-                                                      matrix, num_clusters)
-    logging.info("__replace_non_numeric_values() in %f s.",
                  (util.current_millis() - start_time) / 1000.0)
 
     # rearrange result into a DataMatrix, where rows are indexed by gene
@@ -74,12 +72,14 @@ def compute_row_scores(membership, matrix, num_clusters,
         row_scores = cluster_row_scores[cluster]
         values[:, cluster] = row_scores
     result = dm.DataMatrix(matrix.num_rows(), num_clusters,
-                           row_names=matrix.row_names(),
+                           row_names=matrix.row_names,
                            values=values)
     logging.info("made result matrix in %f s.",
                  (util.current_millis() - start_time) / 1000.0)
 
-    return result.sorted_by_row_name()
+    result = result.sorted_by_row_name()
+    result.fix_extreme_values()
+    return result
 
 ROW_SCORE_MATRIX = None
 ROW_SCORE_MEMBERSHIP = None
@@ -97,13 +97,16 @@ def __compute_row_scores_for_clusters(membership, matrix, num_clusters,
 
     if use_multiprocessing:
         pool = mp.Pool()
-        result = pool.map(compute_row_scores_for_cluster,
-                          [cluster for cluster in xrange(1, num_clusters + 1)])
+        result = pool.map(compute_row_scores_for_cluster, xrange(1, num_clusters + 1))
         pool.close()
+        pool.join()
     else:
         result = []
         for cluster in range(1, num_clusters + 1):
             result.append(compute_row_scores_for_cluster(cluster))
+    # cleanup
+    ROW_SCORE_MATRIX = None
+    ROW_SCORE_MEMBERSHIP = None
     return result
 
 
@@ -134,38 +137,17 @@ def __compute_row_scores_for_submatrix(matrix, submatrix):
     matrix should be filtered by the columns of a specific cluster in
     order for the column means to be applied properly.
     The result is a DataMatrix with one row containing all the row scores"""
-    colmeans = submatrix.column_means()
     return np.log(
-        util.row_means(scoring.subtract_and_square(matrix, colmeans)) + 1e-99)
+        util.row_means(np.square(matrix.values - submatrix.column_means())) + 1e-99)
 
 
-def __replace_non_numeric_values(cluster_row_scores, membership, matrix,
-                                 num_clusters):
-    """perform adjustments for NaN or inf values"""
-    qvalue = __quantile_normalize_scores(cluster_row_scores,
-                                         matrix.row_names(),
-                                         membership,
-                                         num_clusters)
-    result = []
-    for row_scores in cluster_row_scores:
-        if row_scores == None:
-            """no scores available, use the quantile normalized score"""
-            row_scores = np.zeros(matrix.num_rows())
-            row_scores.fill(qvalue)
-        else:
-            row_scores[np.isnan(row_scores)] = qvalue
-        result.append(row_scores)
-
-    return result
-
-
+"""
 def __quantile_normalize_scores(cluster_row_scores,
                                 row_names,
                                 membership,
                                 num_clusters):
-    """quantile normalize the row scores in cluster_row_scores
-    that are not NaN or +/-Inf and are in a row cluster membership
-    """
+    #quantile normalize the row scores in cluster_row_scores
+    #that are not NaN or +/-Inf and are in a row cluster membership
     values_for_quantile = []
     for cluster in xrange(1, num_clusters + 1):
         row_scores_for_cluster = cluster_row_scores[cluster - 1]
@@ -177,35 +159,34 @@ def __quantile_normalize_scores(cluster_row_scores,
                 if np.isfinite(score) and (gene_name in cluster_rows):
                     values_for_quantile.append(score)
     return util.quantile(values_for_quantile, 0.95)
-
+"""
 
 class RowScoringFunction(scoring.ScoringFunctionBase):
     """Scoring algorithm for microarray data based on genes"""
 
     def __init__(self, membership, matrix, scaling_func=None,
+                 run_in_iteration=scoring.schedule(1, 2),
                  config_params=None):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
                                              matrix, scaling_func,
+                                             run_in_iteration,
                                              config_params)
+        self.run_log = scoring.RunLog("row_scoring")
 
     def name(self):
         """returns the name of this scoring function"""
         return "Row"
 
-    def compute(self, iteration_result, ref_matrix=None):
-        """compute method, iteration is the 0-based iteration number"""
-        start_time = util.current_millis()
-        result = compute_row_scores(
-            self.membership(),
-            self.matrix(),
-            self.num_clusters(),
-            self.config_params[scoring.KEY_MULTIPROCESSING])
+    def do_compute(self, iteration_result, ref_matrix=None):
+        """the row scoring function"""
+        return compute_row_scores(self.membership(),
+                                  self.matrix(),
+                                  self.num_clusters(),
+                                  self.config_params[scoring.KEY_MULTIPROCESSING])
 
-        elapsed = util.current_millis() - start_time
-        logging.info("ROW SCORING TIME: %f s.", (elapsed / 1000.0))
-        return result
+    def run_logs(self):
+        """return the run logs"""
+        return [self.run_log]
 
-
-__all__ = ['ClusterMembership', 'compute_row_scores', 'compute_column_scores',
-           'seed_column_members']
+__all__ = ['compute_row_scores', 'seed_column_members']

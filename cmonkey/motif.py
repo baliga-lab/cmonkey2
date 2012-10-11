@@ -16,6 +16,18 @@ import meme
 import tempfile
 import seqtools as st
 import util
+import sequence_cache
+import os.path
+import cPickle
+
+
+def default_nmotif_fun(iteration, num_iterations):
+    """default function to compute the nmotif parameter for MEME dependent on
+    the iteration"""
+    if iteration <= (num_iterations * 2 / 3):
+        return 1
+    else:
+        return 2
 
 
 # Applicable sequence filters
@@ -51,29 +63,21 @@ def get_remove_atgs_filter(distance):
     return remove_atgs_filter
 
 
-class MinPValueFilter:
-    """A minimum p-value filter. Implemented as a class, so multiprocessing
-    can deal with it"""
-    def __init__(self, min_value):
-        self.__min_value = min_value
+def compute_mean_score(pvalue_matrix, membership, organism):
+    """cluster-specific mean scores"""
+    if pvalue_matrix == None:
+        return 0.0
+    values = []
+    pvalues = pvalue_matrix.values
+    for cluster in xrange(1, membership.num_clusters() + 1):
+        cluster_rows = membership.rows_for_cluster(cluster)
+        row_indexes = pvalue_matrix.row_indexes(cluster_rows)
+        for row in row_indexes:
+            values.append(pvalues[row][cluster - 1])
+    return np.median(values)
 
-    def __call__(self, values):
-        """all values that are below min_value are set to the
-        minimum value above min_value"""
-        allowed_vals = [value for key, value in values.items()
-                        if value > self.__min_value]
-        result = {}
-        if len(allowed_vals) == 0:
-            logging.warn("all values are below the threshold -> no result !!")
-        else:
-            min_allowed = min(allowed_vals)
-            for key, value in values.items():
-                if value < self.__min_value:
-                    result[key] = min_allowed
-                else:
-                    result[key] = value
-        return result
-
+# Readonly structure to avoid passing it to the forked child processes
+MOTIF_PARAMS = None
 
 class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
     """Base class for motif scoring functions that use MEME"""
@@ -81,34 +85,63 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
     def __init__(self, organism, membership, matrix,
                  meme_suite, seqtype,
                  sequence_filters=[],
-                 pvalue_filter=None,
                  scaling_func=None,
-                 run_in_iteration=lambda iteration: True,
+                 num_motif_func=None,
+                 update_in_iteration=lambda iteration: True,
+                 motif_in_iteration=lambda iteration: True,
                  config_params=None):
         """creates a ScoringFunction"""
+        # run_in_iteration does not apply here, since we actually have
+        # two schedules, motif_in_iteration and update_in_iteration here
         scoring.ScoringFunctionBase.__init__(self, membership,
                                              matrix, scaling_func,
-                                             config_params)
+                                             run_in_iteration=None,
+                                             config_params=config_params)
         # attributes accessible by subclasses
         self.organism = organism
         self.meme_suite = meme_suite
         self.seqtype = seqtype
-        self.run_in_iteration = run_in_iteration
+        self.update_in_iteration = update_in_iteration
+        self.motif_in_iteration = motif_in_iteration
+        self.num_motif_func = num_motif_func
+
         self.__sequence_filters = sequence_filters
-        self.__pvalue_filter = pvalue_filter
-        self.__last_computed_result = None
+        self.__last_run_results = None
+        self.__last_iteration_result = {}
+
+        self.update_log = scoring.RunLog("motif-score-" + seqtype)
+        self.motif_log = scoring.RunLog("motif-motif-" + seqtype)
+
+        used_genes = sorted(matrix.row_names)
+        self.used_seqs = organism.sequences_for_genes_scan(
+            used_genes, seqtype=self.seqtype)
 
         # precompute the sequences for all genes that are referenced in the
         # input ratios, they are used as a basis to compute the background
         # distribution for every cluster
-        self.used_seqs = organism.sequences_for_genes_scan(
-            sorted(matrix.row_names()), seqtype=self.seqtype)
-        logging.info("used sequences for motifing retrieved")
+        """
+        self.seq_cache = sequence_cache.SequenceCache('sequence_cache.db')
+        dist = self.config_params['scan_distances'][self.seqtype]
+        self.seq_cache.add_sequence_type(self.seqtype, dist[0], dist[1])
+
+        logging.info("used sequences retrieved, building cache...")
+        start_time = util.current_millis()
+        seq_data = [(gene, seq[1], seq[0].contig, seq[0].start,
+                     seq[0].end, seq[0].reverse)
+                    for gene, seq in self.used_seqs.items()]
+        self.seq_cache.add_sequences(self.seqtype, dist[0], dist[1], seq_data)
+        logging.info("used sequences cache built in %d ms.",
+                     util.current_millis() - start_time)
+        """
+
         logging.info("building reverse map...")
         start_time = util.current_millis()
         self.reverse_map = self.__build_reverse_map(matrix)
         logging.info("reverse map built in %d ms.",
                      util.current_millis() - start_time)
+
+    def run_logs(self):
+        return [self.update_log, self.motif_log]
 
     def __build_reverse_map(self, matrix):
         """build a map that reconstructs the original row name from
@@ -123,7 +156,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
         result = {}
         num_not_found = 0
-        for row_name in matrix.row_names():
+        for row_name in matrix.row_names:
             feature_id = feature_id_for(row_name)
             if feature_id != None:
                 result[feature_id] = row_name
@@ -138,46 +171,116 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         return "Motif"""
 
     def compute(self, iteration_result, ref_matrix=None):
+        """override base class compute() method, behavior is more complicated,
+        since it nests Motif and MEME runs"""
+        return self.__compute(iteration_result, False, ref_matrix)
+
+    def compute_force(self, iteration_result, ref_matrix=None):
+        """override base class compute() method, behavior is more complicated,
+        since it nests Motif and MEME runs"""
+        return self.__compute(iteration_result, True, ref_matrix)
+
+    def matrix_pickle_path(self):
+        return "%s/%s_matrix_last.pkl" % (self.config_params['output_dir'],
+                                          self.name())
+
+    def __compute(self, iteration_result, force, ref_matrix=None):
         """compute method for the specified iteration
         Note: will return None if not computed yet and the result of a previous
         scoring if the function is not supposed to actually run in this iteration
         """
         iteration = iteration_result['iteration']
+        all_pvalues = None
 
-        if self.run_in_iteration(iteration):
-            global_start_time = util.current_millis()
-            pvalues = self.compute_pvalues(iteration_result)
+        if force or self.motif_in_iteration(iteration):  # meme.iter in R
+            logging.info('Running Motifing...')
+            # running MEME and store the result for the non-motifing iterations
+            # to reuse
+            # Note: currently, iteration results are only computed here
+            num_motifs = self.num_motif_func(iteration,
+                                             self.config_params['num_iterations'])
+            self.__last_iteration_result = {}
+            all_pvalues = self.compute_pvalues(self.__last_iteration_result,
+                                               num_motifs)
+            with open(self.pickle_path(), 'w') as outfile:
+                cPickle.dump(all_pvalues, outfile)
+        elif os.path.exists(self.pickle_path()):
+            with open(self.pickle_path()) as infile:
+                all_pvalues = cPickle.load(infile)
+
+        matrix = None
+        if all_pvalues != None and (
+            force or self.update_in_iteration(iteration)):  # mot.iter in R
+            logging.info('Recomputing motif scores...')
+            start_time = util.current_millis()
+            # running the scoring itself
             remapped = {}
-            for cluster in pvalues:
-                pvalues_k = pvalues[cluster]
+            for cluster in all_pvalues:
+                pvalues_k = all_pvalues[cluster]
                 pvalues_genes = {}
                 for feature_id, pvalue in pvalues_k.items():
                     pvalues_genes[self.reverse_map[feature_id]] = pvalue
                 remapped[cluster] = pvalues_genes
 
+            current = util.current_millis()
+            logging.info("built remapped in %f s.", (current - start_time) / 1000.0)
+            start_time = current
+
             # convert remapped to an actual scoring matrix
             matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
                                    self.gene_names())
+            mvalues = matrix.values
             for row_index in xrange(matrix.num_rows()):
-                row = matrix.row_name(row_index)
+                row = matrix.row_names[row_index]
                 for cluster in xrange(1, self.num_clusters() + 1):
                     if (cluster in remapped.keys() and
                         row in remapped[cluster].keys()):
-                        matrix[row_index][cluster - 1] = remapped[cluster][row]
-            global_elapsed = util.current_millis() - global_start_time
-            logging.info("GLOBAL MOTIF TIME: %d seconds",
-                         (global_elapsed / 1000.0))
-            self.__last_computed_result = matrix
+                        mvalues[row_index][cluster - 1] = remapped[cluster][row]
+            matrix.apply_log()
 
-        return self.__last_computed_result
+            current = util.current_millis()
+            logging.info("built scoring matrix in %f s.", (current - start_time) / 1000.0)
+            start_time = current
 
-    def compute_pvalues(self, iteration_result):
-        """Compute motif scores. In order to influence the sequences
+            matrix.fix_extreme_values()
+            current = util.current_millis()
+            logging.info("fixed extreme values in %f s.", (current - start_time) / 1000.0)
+            with open(self.matrix_pickle_path(), 'w') as outfile:
+                cPickle.dump(matrix, outfile)
+
+        elif os.path.exists(self.matrix_pickle_path()):
+            with open(self.matrix_pickle_path()) as infile:
+                matrix = cPickle.load(infile)
+
+        self.update_log.log(self.update_in_iteration(iteration),
+                            self.scaling(iteration))
+        self.motif_log.log(self.motif_in_iteration(iteration),
+                           self.scaling(iteration))
+
+        if 'motifs' not in iteration_result:
+            iteration_result['motifs'] = {}
+        iteration_result['motifs'][self.seqtype] = self.__last_iteration_result
+
+        # for stats, support multiple sequence types
+        if 'motif-pvalue' not in iteration_result:
+            iteration_result['motif-pvalue'] = {}
+
+        iteration_result['motif-pvalue'][self.seqtype] = compute_mean_score(
+            matrix, self.membership(),  self.organism)
+        return matrix
+
+    def compute_pvalues(self, iteration_result, num_motifs):
+        """Compute motif scores.
+        The result is a dictionary from cluster -> (feature_id, pvalue)
+        containing a sparse gene-to-pvalue mapping for each cluster
+
+        In order to influence the sequences
         that go into meme, the user can specify a list of sequence filter
         functions that have the signature
         (seqs, feature_ids, distance) -> seqs
-        These filters are applied in the order they appear in the list
+        These filters are applied in the order they appear in the list.
         """
+        global MOTIF_PARAMS
         def apply_sequence_filters(seqs, feature_ids):
             """apply all filters in the filters list in order"""
             for sequence_filter in self.__sequence_filters:
@@ -185,10 +288,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             return seqs
 
         cluster_pvalues = {}
-        min_cluster_rows_allowed = self.config_params[
-            scoring.KEY_MOTIF_MIN_CLUSTER_ROWS_ALLOWED]
-        max_cluster_rows_allowed = self.config_params[
-            scoring.KEY_MOTIF_MAX_CLUSTER_ROWS_ALLOWED]
+        min_cluster_rows_allowed = self.config_params['memb.min_cluster_rows_allowed']
+        max_cluster_rows_allowed = self.config_params['memb.max_cluster_rows_allowed']
         use_multiprocessing = self.config_params[
             scoring.KEY_MULTIPROCESSING]
 
@@ -200,38 +301,59 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             seqs = self.organism.sequences_for_genes_search(
                 genes, seqtype=self.seqtype)
             seqs = apply_sequence_filters(seqs, feature_ids)
-            params.append(ComputeScoreParams(cluster, genes, seqs,
+            if len(seqs) == 0:
+                logging.warn('Cluster %i with %i genes: no sequences!' \
+                                %(cluster,len(seqs)) )
+
+            # Pass the previous run's seed if possible
+            if (self.__last_run_results != None and
+                cluster in self.__last_run_results.keys() and
+                self.__last_run_results[cluster] != None and
+                self.__last_run_results[cluster].motif_infos != None):
+                previous_motif_infos = self.__last_run_results[cluster].motif_infos
+            else:
+                previous_motif_infos = None
+
+            params.append(ComputeScoreParams(cluster,
+                                             feature_ids,
+                                             seqs,
                                              self.used_seqs,
                                              self.meme_runner(),
-                                             self.__pvalue_filter,
                                              min_cluster_rows_allowed,
-                                             max_cluster_rows_allowed))
+                                             max_cluster_rows_allowed,
+                                             num_motifs,
+                                             previous_motif_infos))
 
         # create motif result map if necessary
-        if not 'motifs' in iteration_result:
-            iteration_result['motifs'] = {}
         for cluster in xrange(1, self.num_clusters() + 1):
-            if not cluster in iteration_result['motifs']:
-                iteration_result['motifs'][cluster] = { }
-            if not self.seqtype in iteration_result['motifs'][cluster]:
-                iteration_result['motifs'][cluster][self.seqtype] = { }
+            if not cluster in iteration_result:
+                iteration_result[cluster] = { }
 
         # compute and store motif results
+        MOTIF_PARAMS = params
+        self.__last_run_results = {}
         if use_multiprocessing:
             pool = mp.Pool()
-            results = pool.map(compute_cluster_score, params)
+            results = pool.map(compute_cluster_score, xrange(1, self.num_clusters() + 1))
 
             for cluster in xrange(1, self.num_clusters() + 1):
                 pvalues, run_result = results[cluster - 1]
                 cluster_pvalues[cluster] = pvalues
-                iteration_result['motifs'][cluster][self.seqtype] = meme_json(run_result)
+                self.__last_run_results[cluster] = run_result
+                iteration_result[cluster]['motif-info'] = meme_json(run_result)
+                iteration_result[cluster]['pvalues'] = pvalues
             pool.close()
+            pool.join()
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
-                pvalues, run_result = compute_cluster_score(params[cluster - 1])
+                pvalues, run_result = compute_cluster_score(cluster)
                 cluster_pvalues[cluster] = pvalues
-                iteration_result['motifs'][cluster][self.seqtype] = meme_json(run_result)
+                self.__last_run_results[cluster] = run_result
+                iteration_result[cluster]['motif-info'] = meme_json(run_result)
+                iteration_result[cluster]['pvalues'] = pvalues
 
+        # cleanup
+        MOTIF_PARAMS = None
         return cluster_pvalues
 
 
@@ -241,54 +363,61 @@ def meme_json(run_result):
         motif_annotations = {}  # map motif_num -> [annotations]
         for gene in run_result.annotations:
             for annotation in run_result.annotations[gene]:
+                # motif_num is either positive or negative, indicating forward/reverse
                 motif_num = annotation[2]
-                if motif_num not in motif_annotations:
-                    motif_annotations[motif_num] = []
+                key = abs(motif_num)
+                reverse = motif_num < 0
+                if key not in motif_annotations:
+                    motif_annotations[key] = []
 
-                motif_annotations[motif_num].append(
-                    {'gene': gene, 'position': annotation[0], 'pvalue': annotation[1]})
-
+                motif_annotations[key].append(
+                    {'gene': gene,
+                     'position': annotation[1],
+                     'pvalue': annotation[0],
+                     'reverse': reverse})
         for motif_info in run_result.motif_infos:
-            motif_num = motif_info.motif_num()
-            motif_annot = None
+            motif_num = motif_info.motif_num
+            motif_annot = []
             if motif_num in motif_annotations:
                 motif_annot = motif_annotations[motif_num]
             result.append({'motif_num': motif_num,
-                           'pssm': motif_info.pssm(),
-                           'evalue': motif_info.evalue(),
+                           'pssm': motif_info.pssm,
+                           'evalue': motif_info.evalue,
                            'annotations': motif_annot})
     return result
 
 
 class ComputeScoreParams:
     """representation of parameters to compute motif scores"""
-    def __init__(self, cluster, genes, seqs, used_seqs, meme_runner,
-                 pvalue_filter, min_cluster_rows, max_cluster_rows):
+    def __init__(self, cluster, feature_ids, seqs, used_seqs, meme_runner,
+                 min_cluster_rows, max_cluster_rows,
+                 num_motifs, previous_motif_infos=None):
         """constructor"""
         self.cluster = cluster
-        self.genes = genes
-        self.seqs = seqs
-        self.used_seqs = used_seqs
+        self.feature_ids = feature_ids  # to preserve the order
+        self.seqs = seqs                # sequences in the cluster
+        self.used_seqs = used_seqs      # all available sequences in the organism
         self.meme_runner = meme_runner
-        self.pvalue_filter = pvalue_filter
         self.min_cluster_rows = min_cluster_rows
         self.max_cluster_rows = max_cluster_rows
+        self.num_motifs = num_motifs
+        self.previous_motif_infos = previous_motif_infos
 
 
-def compute_cluster_score(params):
+def compute_cluster_score(cluster):
     """This function computes the MEME score for a cluster"""
+    global MOTIF_PARAMS
+    params = MOTIF_PARAMS[cluster - 1]
     pvalues = {}
     run_result = None
     nseqs = len(params.seqs)
-    logging.info('computing cluster score for %s seqs...' %nseqs)
+    logging.info('%d: computing cluster score for %s seqs...', params.cluster, nseqs)
     if (nseqs >= params.min_cluster_rows
         and nseqs <= params.max_cluster_rows):
-        run_result = params.meme_runner(params.seqs, params.used_seqs)
+        run_result = params.meme_runner(params)
         pe_values = run_result.pe_values
         for feature_id, pvalue, evalue in pe_values:
-            pvalues[feature_id] = np.log(pvalue)
-        if params.pvalue_filter != None:
-            pvalues = params.pvalue_filter(pvalues)
+            pvalues[feature_id] = pvalue
     else:
         logging.info("# seqs (= %d) outside of defined limits, "
                      "skipping cluster %d", len(params.seqs), params.cluster)
@@ -302,15 +431,19 @@ class MemeScoringFunction(MotifScoringFunctionBase):
                  meme_suite,
                  seqtype='upstream',
                  sequence_filters=[],
-                 pvalue_filter=None,
                  scaling_func=None,
-                 run_in_iteration=scoring.default_motif_iterations,
+                 num_motif_func=None,
+                 update_in_iteration=scoring.default_motif_iterations,
+                 motif_in_iteration=scoring.default_meme_iterations,
                  config_params=None):
         """creates a ScoringFunction"""
         MotifScoringFunctionBase.__init__(self, organism, membership,
                                           matrix, meme_suite, seqtype,
-                                          sequence_filters, pvalue_filter,
-                                          scaling_func, run_in_iteration,
+                                          sequence_filters,
+                                          scaling_func,
+                                          num_motif_func,
+                                          update_in_iteration,
+                                          motif_in_iteration,
                                           config_params)
 
     def name(self):
@@ -327,15 +460,21 @@ class WeederScoringFunction(MotifScoringFunctionBase):
 
     def __init__(self, organism, membership, matrix,
                  meme_suite, seqtype,
-                 sequence_filters=[], pvalue_filter=None,
+                 sequence_filters=[],
                  scaling_func=None,
-                 run_in_iteration=scoring.default_motif_iterations,
+                 num_motif_func=None,
+                 update_in_iteration=None,
+                 motif_in_iteration=None,
                  config_params=None):
         """creates a scoring function"""
         MotifScoringFunctionBase.__init__(self, organism, membership, matrix,
                                           meme_suite, seqtype,
-                                          sequence_filters, pvalue_filter,
-                                          scaling_func, run_in_iteration, config_params)
+                                          sequence_filters,
+                                          scaling_func,
+                                          num_motif_func,
+                                          update_in_iteration,
+                                          motif_in_iteration,
+                                          config_params)
 
     def name(self):
         """returns the name of this scoring function"""
@@ -357,19 +496,19 @@ class WeederRunner:
         """create a runner object"""
         self.meme_suite = meme_suite
 
-    def __call__(self, seqs, all_seqs):
+    def __call__(self, params):
         """call the runner like a function"""
         with tempfile.NamedTemporaryFile(prefix='weeder.fasta',
                                          delete=False) as outfile:
             filename = outfile.name
             logging.info("Run Weeder on FASTA file: '%s'", filename)
-            st.write_sequences_to_fasta_file(outfile, seqs.items())
+            st.write_sequences_to_fasta_file(outfile, params.seqs.items())
 
         pssms = weeder.run_weeder(filename)
         meme_outfile = '%s.meme' % filename
         dbfile = self.meme_suite.make_sequence_file(
             [(feature_id, locseq[1])
-             for feature_id, locseq in all_seqs.items()])
+             for feature_id, locseq in params.used_seqs.items()])
         logging.info("# PSSMS created: %d", len(pssms))
         logging.info("run MAST on '%s'", meme_outfile)
 
@@ -387,9 +526,7 @@ class WeederRunner:
                 meme_outfile, dbfile,
                 self.meme_suite.global_background_file())
             pe_values, annotations = meme.read_mast_output(mast_out,
-                                                           seqs.keys())
+                                                           params.seqs.keys())
             return meme.MemeRunResult(pe_values, annotations, motif_infos)
         except:
             return meme.MemeRunResult([], {}, [])
-
-

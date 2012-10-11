@@ -89,7 +89,6 @@ class ParkinsonCMonkeyRun(cmonkey_run.CMonkeyRun):
             meme_suite_prom,
             seqtype='upstream',
             sequence_filters=sequence_filters,
-            pvalue_filter=motif.MinPValueFilter(-20.0),
             scaling_func=lambda iteration: 0.0,
             run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
@@ -104,13 +103,13 @@ class ParkinsonCMonkeyRun(cmonkey_run.CMonkeyRun):
         weeder_scoring = motif.WeederScoringFunction(
             self.organism(), self.membership(), self.ratio_matrix,
             meme_suite_p3utr, 'p3utr',
-            pvalue_filter=motif.MinPValueFilter(-20.0),
             scaling_func=lambda iteration: 0.0,
             run_in_iteration=scoring.default_motif_iterations,
             config_params=self.config_params)
 
         return scoring.ScoringFunctionCombiner(
-            self.membership(), [row_scoring, network_scoring, motif_scoring, weeder_scoring])
+            self.membership(), [row_scoring, network_scoring, motif_scoring, weeder_scoring],
+            config_params=self.config_params)
 
 
 if __name__ == '__main__':

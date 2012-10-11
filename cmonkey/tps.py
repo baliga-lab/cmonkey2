@@ -43,9 +43,9 @@ STRING_LINKS = 'tps/string_links.tps.tab'
 
 """these are the default meme iterations ("meme.iters") in the R version"""
 MOTIF_ITERS = range( 600, 1200, 100 ) + \
-             range( 1250, 1500, 50 ) + \
-             range( 1525, 1800, 25 ) + \
-             range( 1810, max( NUM_ITERATIONS, 1820 ) + 10 )
+              range( 1250, 1500, 50 ) + \
+              range( 1525, 1800, 25 ) + \
+              range( 1810, max( NUM_ITERATIONS, 1820 ), 10 )
 
 mode = 'normal'
 #mode = 'debug'
@@ -119,7 +119,6 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
             meme_suite_upstream,
             seqtype='upstream',
             sequence_filters=sequence_filters,
-            pvalue_filter=motif.MinPValueFilter(-20.0),
             scaling_func=lambda iteration: 0.0,
             run_in_iteration=motif_iterations,
             config_params=self.config_params)
@@ -131,7 +130,6 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
             meme_suite_downstream,
             seqtype='downstream',
             sequence_filters=sequence_filters,
-            pvalue_filter=motif.MinPValueFilter(-20.0),
             scaling_func=lambda iteration: 0.0,
             run_in_iteration=motif_iterations,
             config_params=self.config_params)
@@ -140,7 +138,6 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
 #        weeder_scoring = motif.WeederScoringFunction(
 #            self.organism(), self.membership(), self.ratio_matrix,
 #            meme_suite_downstream, 'downstream',
-#            pvalue_filter=motif.MinPValueFilter(-20.0),
 #            scaling_func=lambda iteration: 0.0,
 #            run_in_iteration=motif_iterations,
 #            config_params=self.config_params)
@@ -155,11 +152,13 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
         motif_combiner = scoring.ScoringFunctionCombiner(
             self.membership(),
             [upstream_motif_scoring, downstream_motif_scoring],
-            scaling_func=lambda iteration: 0.5)
+            scaling_func=lambda iteration: 0.5,
+            config_params=self.config_params)
 
         return scoring.ScoringFunctionCombiner(
             self.membership(),
-            [row_scoring, motif_combiner, network_scoring])
+            [row_scoring, motif_combiner, network_scoring],
+            config_params=self.config_params)
 
 
 if __name__ == '__main__':
@@ -177,5 +176,5 @@ if __name__ == '__main__':
         infile = util.DelimitedFile.read(ratios, has_header=True, quote='\"')
         matrix = matrix_factory.create_from(infile)
         cmonkey_run = TpsCMonkeyRun('tps', matrix, NUM_CLUSTERS)
-        if os.path.exists(CHECKPOINT_FILE): cmonkey_run.run_from_checkpoint(CHECKPOINT_FILE)
+        if CHECKPOINT_FILE and os.path.exists(CHECKPOINT_FILE): cmonkey_run.run_from_checkpoint(CHECKPOINT_FILE)
         else: cmonkey_run.run()

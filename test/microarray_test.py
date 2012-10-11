@@ -77,18 +77,11 @@ class ComputeArrayScoresTest(unittest.TestCase):
     def __compare_with_refresult(self, refresult, result):
         self.assertEquals(refresult.num_rows(), result.num_rows())
         self.assertEquals(refresult.num_columns(), result.num_columns())
-        self.assertTrue((result.row_names() == refresult.row_names()).all())
+        self.assertEquals(result.row_names, refresult.row_names)
         for row_index in range(result.num_rows()):
             for col_index in range(result.num_columns()):
                 # note that we reduced the comparison's number of places
                 # That's because the input matrix was created with some
                 # rounding, so we have a slightly higher rounding difference
-                self.assertAlmostEquals(refresult[row_index][col_index],
-                                        result[row_index][col_index], 3)
-
-    def test_subtract_and_square(self):
-        matrix = dm.DataMatrix(2, 3, values=[[11.0, 12.0, 13.0],
-                                             [14.0, 15.0, 16.0]])
-        result = scoring.subtract_and_square(matrix, [5.0, 6.0, 3.0])
-        self.assertTrue(([[36.0, 36.0, 100.0],
-                          [81.0, 81.0, 169.0]] == result).all())
+                self.assertAlmostEquals(refresult.values[row_index][col_index],
+                                        result.values[row_index][col_index], 3)

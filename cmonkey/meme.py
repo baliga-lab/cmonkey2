@@ -36,11 +36,13 @@ class MemeSuite:
     meme - discover motifs in a set of sequences
     mast - search for a group of motifs in a set of sequences
     """
-    def __init__(self, max_width=24, use_revcomp=True, background_file=None):
+    def __init__(self, max_width=24, use_revcomp=True, background_file=None,
+            remove_tempfiles=True):
         """Create MemeSuite instance"""
         self.__max_width = max_width
         self.__use_revcomp = use_revcomp
         self.__background_file = background_file
+        self.__remove_tempfiles = remove_tempfiles
 
     def global_background_file(self):
         """returns the global background file used with this meme suite
@@ -83,15 +85,18 @@ class MemeSuite:
         else:
             return {}
 
-    def __call__(self, input_seqs, all_seqs):
-        return self.run_meme(input_seqs, all_seqs)
-
-    def run_meme(self, input_seqs, all_seqs):
+    def __call__(self, params):
         """Runs the meme tool. input_seqs is a dictionary of
         (feature_id : (location, sequence)) that are to be provided as meme
         input, all_seqs is a dictionary that provides all sequences used
         in the cMonkey run, which will be used to compute background
-        distribution"""
+        distribution.
+        Note: To more closely resemble the original R algorithm, we provide
+        ----- the sorted feature ids so MEME will return the same output"""
+        feature_ids = set(params.feature_ids)  # optimization: reduce lookup time
+        input_seqs = params.seqs
+        all_seqs = params.used_seqs
+        
         def background_file():
             """decide whether to use global or specific background file"""
             if self.__background_file != None:
@@ -100,15 +105,18 @@ class MemeSuite:
             else:
                 bgseqs = {feature_id: all_seqs[feature_id]
                           for feature_id in all_seqs
-                          if feature_id not in input_seqs}
+                          if feature_id not in feature_ids}
                 return make_background_file(bgseqs, self.__use_revcomp)
 
         #logging.info("run_meme() - # seqs = %d", len(input_seqs))
         bgfile = background_file()
         #logging.info("created background file in %s", bgfile)
-        seqfile = self.make_sequence_file(input_seqs.items())
+        seqfile = self.make_sequence_file(
+            [(feature_id, input_seqs[feature_id])
+             for feature_id in params.feature_ids if feature_id in input_seqs])
         #logging.info("created sequence file in %s", seqfile)
-        motif_infos, output = self.meme(seqfile, bgfile)
+        motif_infos, output = self.meme(seqfile, bgfile, params.num_motifs,
+                                        params.previous_motif_infos)
 
         # run mast
         meme_outfile = None
@@ -116,11 +124,11 @@ class MemeSuite:
                                          delete=False) as outfile:
             meme_outfile = outfile.name
             outfile.write(output)
-        #logging.info('wrote meme output to %s', meme_outfile)
+        logging.info('wrote meme output to %s', meme_outfile)
         dbfile = self.make_sequence_file(
             [(feature_id, locseq[1])
              for feature_id, locseq in all_seqs.items()])
-        #logging.info('created mast database in %s', dbfile)
+        logging.info('created mast database in %s', dbfile)
         try:
             mast_output = self.mast(meme_outfile, dbfile, bgfile)
             pe_values, annotations = read_mast_output(mast_output,
@@ -129,25 +137,26 @@ class MemeSuite:
         except:
             return MemeRunResult([], {}, [])
         finally:
-            #logging.info("DELETING ALL TMP FILES...")
-            try:
-                os.remove(seqfile)
-            except:
-                logging.warn("could not remove tmp file: '%s'", seqfile)
-            try:
-                os.remove(meme_outfile)
-            except:
-                logging.warn("could not remove tmp file: '%s'", meme_outfile)
-            try:
-                os.remove(dbfile)
-            except:
-                logging.warn("could not remove tmp file: '%s'", dbfile)
-
-            if self.__background_file == None:
+            if self.__remove_tempfiles:
+                #logging.info("DELETING ALL TMP FILES...")
                 try:
-                    os.remove(bgfile)
+                    os.remove(seqfile)
                 except:
-                    logging.warn("could not remove tmp file: '%s'", bgfile)
+                    logging.warn("could not remove tmp file: '%s'", seqfile)
+                try:
+                    os.remove(meme_outfile)
+                except:
+                    logging.warn("could not remove tmp file: '%s'", meme_outfile)
+                try:
+                    os.remove(dbfile)
+                except:
+                    logging.warn("could not remove tmp file: '%s'", dbfile)
+
+                if self.__background_file == None:
+                    try:
+                        os.remove(bgfile)
+                    except:
+                        logging.warn("could not remove tmp file: '%s'", bgfile)
 
 
     def make_sequence_file(self, seqs):
@@ -168,8 +177,7 @@ class MemeSuite:
         return output
 
     # pylint: disable-msg=W0613,R0201
-    def meme(self, infile_path, bgfile_path, num_motifs=2,
-             pspfile_path=None):
+    def meme(self, infile_path, bgfile_path, num_motifs, pspfile_path=None):
         """Please implement me"""
         logging.error("MemeSuite.meme() - please implement me")
 
@@ -182,8 +190,57 @@ class MemeSuite:
 class MemeSuite430(MemeSuite):
     """Version 4.3.0 of MEME"""
 
-    def meme(self, infile_path, bgfile_path, num_motifs=2,
-             pspfile_path=None):
+    def meme(self, infile_path, bgfile_path, num_motifs,
+             previous_motif_infos=None, pspfile_path=None):
+        """runs the meme command on the specified input file, background file
+        and positional priors file. Returns a tuple of
+        (list of MemeMotifInfo objects, meme output)
+        """
+        command = ['meme', infile_path, '-bfile', bgfile_path,
+                   '-time', '600', '-dna', '-revcomp',
+                   '-maxsize', '9999999', '-nmotifs', str(num_motifs),
+                   '-evt', '1e9', '-minw', '6', '-maxw', str(self.max_width()),
+                   '-mod',  'zoops', '-nostatus', '-text']
+        # if determine the seed sequence (-cons parameter) for this MEME run
+        # uses the PSSM with the smallest score that has an e-value lower
+        # than 0.1
+        if previous_motif_infos != None:
+            max_evalue = 0.1
+            min_evalue = 10000000.0
+            min_motif_info = None
+            for motif_info in previous_motif_infos:
+                if motif_info.evalue < min_evalue:
+                    min_evalue = motif_info.evalue
+                    min_motif_info = motif_info
+            if min_motif_info != None and min_motif_info.evalue < max_evalue:
+                cons = min_motif_info.consensus_string().upper()
+                logging.info("seeding MEME with good motif %s", cons)
+                command.extend(['-cons', cons])
+
+        if pspfile_path:
+            command.extend(['-psp', pspfile_path])
+
+        #logging.info("running: %s", " ".join(command))
+        output = subprocess.check_output(command)
+        return (read_meme_output(output, num_motifs), output)
+
+    def mast(self, meme_outfile_path, database_file_path,
+             bgfile_path):
+        """runs the mast command"""
+        # note: originally run with -ev 99999, but MAST will crash with
+        # memory errors
+        command = ['mast', meme_outfile_path, '-d', database_file_path,
+                   '-bfile', bgfile_path, '-nostatus', '-stdout', '-text',
+                   '-brief', '-ev', '99999', '-mev', '99999', '-mt', '0.99',
+                   '-seqp', '-remcorr']
+        output = subprocess.check_output(command)
+        return output
+
+
+class MemeSuite481(MemeSuite):
+    """Version 4.8.1 of MEME"""
+
+    def meme(self, infile_path, bgfile_path, num_motifs, pspfile_path=None):
         """runs the meme command on the specified input file, background file
         and positional priors file. Returns a tuple of
         (list of MemeMotifInfo objects, meme output)
@@ -206,10 +263,11 @@ class MemeSuite430(MemeSuite):
         """runs the mast command"""
         # note: originally run with -ev 99999, but MAST will crash with
         # memory errors
-        command = ['mast', meme_outfile_path, '-d', database_file_path,
-                   '-bfile', bgfile_path, '-nostatus', '-stdout', '-text',
-                   '-brief', '-ev', '1500', '-mev', '99999', '-mt', '0.99',
+        command = ['mast', meme_outfile_path, database_file_path,
+                   '-bfile', bgfile_path, '-nostatus', '-hit_list',
+                   '-ev', '1500', '-mev', '99999', '-mt', '0.99',
                    '-seqp', '-remcorr']
+        #logging.info("running: %s", " ".join(command))
         output = subprocess.check_output(command)
         return output
 
@@ -220,49 +278,21 @@ class MemeMotifInfo:
     # pylint: disable-msg=R0913
     def __init__(self, pssm, motif_num, width, num_sites, llr, evalue, sites):
         """Creates a MemeMotifInfo instance"""
-        self.__pssm = pssm
-        self.__motif_num = motif_num
-        self.__width = width
-        self.__num_sites = num_sites
-        self.__llr = llr
-        self.__evalue = evalue
-        self.__sites = sites
-
-    def motif_num(self):
-        """returns the motif number"""
-        return self.__motif_num
-
-    def pssm(self):
-        """return the PSSM rows"""
-        return self.__pssm
-
-    def width(self):
-        """Returns the width"""
-        return self.__width
-
-    def num_sites(self):
-        """returns the number of sites"""
-        return self.__num_sites
-
-    def llr(self):
-        """returns the log-likelihood ratio"""
-        return self.__llr
-
-    def evalue(self):
-        """returns the e value"""
-        return self.__evalue
-
-    def sites(self):
-        """returns the sites"""
-        return self.__sites
+        self.pssm = pssm
+        self.motif_num = motif_num
+        self.width = width
+        self.num_sites = num_sites
+        self.llr = llr
+        self.evalue = evalue
+        self.sites = sites
 
     def consensus_string(self, cutoff1=0.7, cutoff2=0.4):
         """returns the consensus string from the pssm table
         remember: letter order is ACGT"""
         alphabet = 'ACGT'
         result = ""
-        for row in xrange(len(self.__pssm)):
-            rowvals = self.__pssm[row]
+        for row in xrange(len(self.pssm)):
+            rowvals = self.pssm[row]
             max_index = rowvals.index(max(rowvals))
             score = rowvals[max_index]
             if score < cutoff2:
@@ -275,9 +305,9 @@ class MemeMotifInfo:
 
     def __repr__(self):
         """returns the string representation"""
-        return ("Motif width: %d sites: %d llr: %d e-value: %f" %
-         (self.width(), self.num_sites(), self.llr(),
-          self.evalue()))
+        return ("Motif width: %s sites: %s llr: %s e-value: %s" %
+                (str(self.width), str(self.num_sites), str(self.llr),
+                 str(self.evalue)))
 
 
 def read_meme_output(output_text, num_motifs):
@@ -320,6 +350,8 @@ def read_meme_output(output_text, num_motifs):
         sites = []
         while not line.startswith('----------------------'):
             match = pattern.match(line)
+            if match == None:
+                logging.error("ERROR in read_sites(), line(#%d) is: '%s'", current_index, line)
             sites.append((match.group(1), match.group(2), int(match.group(3)),
                           float(match.group(4)), match.group(5)))
             current_index += 1
@@ -336,6 +368,8 @@ def read_meme_output(output_text, num_motifs):
         rows = []
         while not line.startswith('----------------------'):
             match = pattern.match(line)
+            if match == None:
+                logging.error("ERROR in read_pssm(), line(#%d) is: '%s'", current_index, line)
             rows.append([float(match.group(1)), float(match.group(2)),
                          float(match.group(3)), float(match.group(4))])
             current_index += 1
@@ -470,8 +504,12 @@ def read_mast_output(output_text, genes):
         to retrieve the position"""
         # offset +2 for compatibility with cMonkey R, don't really
         # know why we need this
-        return [(m.start() + 2)
-                for m in re.finditer('\[', motifnum_line)]
+        try:
+            return [(m.start() + 2)
+                    for m in re.finditer('\[', motifnum_line)]
+        except:
+            logging.error("ERROR in read_positions(), motifnum_line: '%s'",
+                          str(motifnum_line))
 
     def read_annotations(lines, genes):
         """extract annotations, genes are given as refseq ids"""
@@ -522,8 +560,12 @@ def read_mast_output(output_text, genes):
 # extraction helpers
 def __extract_regex(pattern, infoline):
     """generic info line field extraction based on regex"""
-    match = re.search(pattern, infoline)
-    return infoline[match.start():match.end()].split('=')[1].strip()
+    try:
+        match = re.search(pattern, infoline)
+        return infoline[match.start():match.end()].split('=')[1].strip()
+    except:
+        logging.error("ERROR in __extract_regex(), pattern: '%s', infoline: '%s'",
+                      str(pattern), str(infoline))
 
 
 def __next_regex_index(pat, start_index, lines):

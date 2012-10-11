@@ -120,15 +120,14 @@ class OrganismBase:
     def __init__(self, code, network_factories):
         """Initialize the base class instance"""
         self.code = code
-        self.__network_factories = network_factories
-        self.__networks = None
+        logging.info("Creating networks...")
+        self.__networks = []
+        for make_network in network_factories:
+            self.__networks.append(make_network(self))        
+        logging.info("Finished creating networks.")
 
     def networks(self):
         """returns this organism's networks"""
-        if self.__networks == None:
-            self.__networks = []
-            for make_network in self.__network_factories:
-                self.__networks.append(make_network(self))
         return self.__networks
 
     def thesaurus(self):
@@ -154,15 +153,19 @@ class Microbe(OrganismBase):
                  network_factories,
                  search_distances, scan_distances):
         """create an Organism instance"""
+        # microbe-specific network factories need access to synonyms
+        # and rsat info, so initialize them here before the base class
+        # init
+        self.__synonyms = None  # lazy loaded
+        self.__rsat_info = rsat_info
+        logging.info("RSAT taxonomy id = %s" % rsat_info.taxonomy_id)
+
         OrganismBase.__init__(self, code, network_factories)
         self.kegg_organism = kegg_organism
-        self.__rsat_info = rsat_info
         self.__microbes_online_db = microbes_online_db
         self.go_taxonomy_id = go_taxonomy_id
         self.__search_distances = search_distances
         self.__scan_distances = scan_distances
-
-        self.__synonyms = None  # lazy loaded
         self.__operon_mappings = None  # lazy loaded
 
     def species(self):
@@ -241,6 +244,9 @@ class Microbe(OrganismBase):
             outseqs[gene] = unique_seqs[head]
         return outseqs
 
+    def operon_map(self):
+        return self.__operon_map()
+
     def __operon_map(self):
         """Returns the operon map for this particular organism.
         Microbes Online works on VNG names, but RSAT is working on
@@ -304,8 +310,8 @@ class Microbe(OrganismBase):
             """extract the unique contigs from the input features"""
             result = []
             for feature in features.values():
-                if feature.location().contig not in result:
-                    result.append(feature.location().contig)
+                if feature.location.contig not in result:
+                    result.append(feature.location.contig)
             return result
 
         contig_seqs = {}
@@ -315,9 +321,11 @@ class Microbe(OrganismBase):
                 self.species(), contig)
 
         for feature in features.values():
-            location = feature.location()
-            sequences[feature.id()] = extractor(
+            location = feature.location
+            sequences[feature.id] = extractor(
                 contig_seqs[location.contig], location, distance)
+        if len(sequences) == 0:
+            logging.error('No sequences read for %s!' %self.code)
         return sequences
 
     def __str__(self):
@@ -381,7 +389,9 @@ class GenericOrganism(OrganismBase):
             if alias in self.thesaurus():
                 gene = self.thesaurus()[alias]
                 if gene in self.__seqs[seqtype]:
-                    result[gene] = self.__seqs[seqtype][gene]
+                    # note that we have to return the sequence as a (location, sequence)
+                    # pair even if we do not actually use the Location
+                    result[gene] = (st.Location(gene, 0, 0, False), self.__seqs[seqtype][gene])
                 else:
                     #logging.warn("Gene '%s' not found in 3' UTRs", gene)
                     pass
