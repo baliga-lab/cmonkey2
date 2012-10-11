@@ -22,7 +22,7 @@ KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
 GO_FILE_PATH = 'testdata/proteome2taxid'
 RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
-STRING_URL_PATTERN = "http://como.systemsbiology.net/string9/%s.gz"
+STRING_URL_PATTERN = "http://networks.systemsbiology.net/string9/%s.gz"
 CACHE_DIR = 'cache'
 
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
