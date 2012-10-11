@@ -230,11 +230,8 @@ class CMonkeyRun:
         if not os.path.exists(output_dir + '/ratios.tsv'):
             self.ratio_matrix.write_tsv_file(output_dir + '/ratios.tsv')
 
-<<<<<<< HEAD
     def run(self):
         self.__make_dirs_if_needed()
-=======
->>>>>>> 17850a063808b4f6cca059a935af7597eb250777
         row_scoring = self.make_row_scoring()
         col_scoring = self.make_column_scoring()
         self.run_iterations(row_scoring, col_scoring)
