@@ -32,7 +32,7 @@ P3UTR_SEQFILE = 'human_data/p3utrSeqs_set3pUTR_Final.csv.gz'
 
 
 RUG_PROPS = ['MIXED', 'ASTROCYTOMA', 'GBM', 'OLIGODENDROGLIOMA']
-NUM_CLUSTERS = 133 # 720 # 133
+NUM_CLUSTERS = 720 # 133
 ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 3000
 
@@ -46,16 +46,17 @@ SCAN_DISTANCES = {'upstream': (0, 700), 'p3utr': (0, 831)}
 SEQ_FILENAMES = {'upstream': PROM_SEQFILE, 'p3utr': P3UTR_SEQFILE}
 
 MAX_MOTIF_WIDTH = 12
+SELECT_ROWS = False
 
 # configure the function setup here
-ADD_SET_ENRICHMENT = False
+ADD_SET_ENRICHMENT = True
 ADD_MEME = False
-ADD_WEEDER = True
+ADD_WEEDER = False
 
 # scoring-specific
 USE_SET_TYPES = ['pita'] # ['target_scan']
 WEEDER_SEQ_TYPE = 'upstream'
-MOTIF_START_ITERATION = 10  # 600
+MOTIF_START_ITERATION = 600
 MOTIF_UPDATE_INTERVAL = 10
 MOTIF_COMPUTE_INTERVAL = 100
 
@@ -192,8 +193,9 @@ def read_matrix(filename):
     matrix = matrix_factory.create_from(infile)
 
     column_groups = {1: range(matrix.num_columns())}
-    select_rows = select_probes(matrix, 2000, column_groups)
-    matrix = matrix.submatrix_by_rows(select_rows)
+    if SELECT_ROWS:
+        select_rows = select_probes(matrix, 2000, column_groups)
+        matrix = matrix.submatrix_by_rows(select_rows)
     return intensities_to_ratios(matrix, controls, column_groups)
 
 
