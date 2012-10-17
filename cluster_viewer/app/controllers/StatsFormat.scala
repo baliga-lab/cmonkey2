@@ -25,9 +25,14 @@ class StatsReader {
       val fuzzyCoeff = (json \ "fuzzy-coeff").as[Double]
 
       val motifPValues = new HashMap[String, Double]
-      val medianMotifPValues = (json \ "motif-pvalue").as[JsObject]
-      for (field <- medianMotifPValues.fields) {
-        motifPValues(field._1) = field._2.as[Double]
+      val motifpvalue =  (json \ "motif-pvalue")
+      motifpvalue match {
+        case medianMotifPValues:JsObject =>
+          for (field <- medianMotifPValues.fields) {
+            motifPValues(field._1) = field._2.as[Double]
+          }
+        case _ =>
+          println("no median mofif pvalues found")
       }
 
       val clusterStats = new HashMap[Int, ClusterStats]

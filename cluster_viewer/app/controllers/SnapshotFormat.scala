@@ -71,30 +71,34 @@ class SnapshotReader(OutDirectory: File, Synonyms: SynonymsMap) {
       //val clusterMotifs = new HashMap[Int, Map[String, Array[MotifInfo]]]
       val seqTypeMotifs = new HashMap[String, Map[Int, Array[MotifInfo]]]
       try {
-        val motifs = motifsVal.as[JsObject]
-        for (field <- motifs.fields) {
-          val seqType = field._1
-          val clusterObj = field._2.as[JsObject] // Map[Int, Array[MotifInfo]]
-          //val seqTypeObj = field._2.as[JsObject]
-          //val seqTypeMotifs = new HashMap[String, Array[MotifInfo]]
-          val clusterMotifs = new HashMap[Int, Array[MotifInfo]]
+        motifsVal match {
+          case motifs:JsObject =>
+            for (field <- motifs.fields) {
+              val seqType = field._1
+              val clusterObj = field._2.as[JsObject] // Map[Int, Array[MotifInfo]]
+              //val seqTypeObj = field._2.as[JsObject]
+              //val seqTypeMotifs = new HashMap[String, Array[MotifInfo]]
+              val clusterMotifs = new HashMap[Int, Array[MotifInfo]]
 
-          // iterate over the clusters, which are the keys
-          for (cluster <- clusterObj.keys) {
-            // an array of motif objects (motif_num, evalue, annotations, pssm)
-            // annotations are tuples of (gene, position, pvalue, reverse)
-            val stResult = clusterObj \ cluster
-            val motifInfos = (stResult \ "motif-info")
-            //seqTypeMotifs(seqType) = if (motifInfos.isInstanceOf[JsArray]) {
-            //  readMotifInfos(motifInfos.asInstanceOf[JsArray].value)
-            clusterMotifs(cluster.toInt) = if (motifInfos.isInstanceOf[JsArray]) {
-              readMotifInfos(motifInfos.asInstanceOf[JsArray].value)
-            } else {
-              Array.ofDim[MotifInfo](0)
+              // iterate over the clusters, which are the keys
+              for (cluster <- clusterObj.keys) {
+                // an array of motif objects (motif_num, evalue, annotations, pssm)
+                // annotations are tuples of (gene, position, pvalue, reverse)
+                val stResult = clusterObj \ cluster
+                val motifInfos = (stResult \ "motif-info")
+                  //seqTypeMotifs(seqType) = if (motifInfos.isInstanceOf[JsArray]) {
+                  //  readMotifInfos(motifInfos.asInstanceOf[JsArray].value)
+                  clusterMotifs(cluster.toInt) = if (motifInfos.isInstanceOf[JsArray]) {
+                    readMotifInfos(motifInfos.asInstanceOf[JsArray].value)
+                  } else {
+                    Array.ofDim[MotifInfo](0)
+                  }
+              }
+              //clusterMotifs(field._1.toInt) = seqTypeMotifs.toMap
+              seqTypeMotifs(seqType) = clusterMotifs.toMap
             }
-          }
-          //clusterMotifs(field._1.toInt) = seqTypeMotifs.toMap
-          seqTypeMotifs(seqType) = clusterMotifs.toMap
+          case _ =>
+            println("no motif values found")
         }
       } catch {
         case e =>
