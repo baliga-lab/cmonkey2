@@ -111,6 +111,10 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             self.__last_min_enriched_set[set_type] = {}
         self.run_log = scoring.RunLog('set_enrichment')
 
+    def name(self):
+        """name of the function"""
+        return "Set Enrichment"
+
     def bonferroni_cutoff(self):
         """Bonferroni cutoff value"""
         return float(self.num_clusters()) / 0.05
@@ -161,7 +165,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                     min_set, min_pvalue)
 
                 for row in xrange(len(self.gene_names())):
-                    matrix[row][cluster - 1] = scores[row]
+                    matrix.values[row][cluster - 1] = scores[row]
 
         logging.info("SET ENRICHMENT FINISHED IN %f s.\n",
                      (util.current_millis() - start_time) / 1000.0)

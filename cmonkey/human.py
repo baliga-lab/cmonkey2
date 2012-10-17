@@ -146,7 +146,6 @@ def center_scale_filter(matrix, group_columns, group_controls):
     return matrix
 
 
-
 def read_controls():
     """reads the controls file"""
     with open(CONTROLS_FILE) as infile:
@@ -291,7 +290,7 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
 
 
 if __name__ == '__main__':
-    print('cMonkey (Python port) (c) 2011, Institute for Systems Biology')
+    print('cMonkey (Python port) (c) 2011-2012, Institute for Systems Biology')
     print('This program is licensed under the General Public License V3.')
     print('See README and LICENSE for details.\n')
     if len(sys.argv) < 2:
