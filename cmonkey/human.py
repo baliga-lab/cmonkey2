@@ -27,19 +27,37 @@ CONTROLS_FILE = 'human_data/controls.csv'
 RUG_FILE = 'human_data/rug.csv'
 
 THESAURUS_FILE = 'human_data/synonymThesaurus.csv.gz'
+PROM_SEQFILE = 'human_data/promoterSeqs_set3pUTR_Final.csv.gz'
+P3UTR_SEQFILE = 'human_data/p3utrSeqs_set3pUTR_Final.csv.gz'
+
 
 RUG_PROPS = ['MIXED', 'ASTROCYTOMA', 'GBM', 'OLIGODENDROGLIOMA']
-NUM_CLUSTERS = 133 # 720
+NUM_CLUSTERS = 133 # 720 # 133
 ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 3000
 
-SEQUENCE_TYPES = ['promoter', 'p3utr']
-SEARCH_DISTANCES = {'promoter': (0, 700), 'p3utr': (0, 831)}
-SCAN_DISTANCES = {'promoter': (0, 700), 'p3utr': (0, 831)}
-PROM_SEQFILE = 'human_data/promoterSeqs_set3pUTR_Final.csv.gz'
-P3UTR_SEQFILE = 'human_data/p3utrSeqs_set3pUTR_Final.csv.gz'
-SEQ_FILENAMES = {'promoter': PROM_SEQFILE, 'p3utr': P3UTR_SEQFILE}
+#SEQUENCE_TYPES = ['promoter', 'p3utr']
+#SEARCH_DISTANCES = {'promoter': (0, 700), 'p3utr': (0, 831)}
+#SCAN_DISTANCES = {'promoter': (0, 700), 'p3utr': (0, 831)}
+#SEQ_FILENAMES = {'promoter': PROM_SEQFILE, 'p3utr': P3UTR_SEQFILE}
+SEQUENCE_TYPES = ['upstream', 'p3utr']
+SEARCH_DISTANCES = {'upstream': (0, 700), 'p3utr': (0, 831)}
+SCAN_DISTANCES = {'upstream': (0, 700), 'p3utr': (0, 831)}
+SEQ_FILENAMES = {'upstream': PROM_SEQFILE, 'p3utr': P3UTR_SEQFILE}
+
 MAX_MOTIF_WIDTH = 12
+
+# configure the function setup here
+ADD_SET_ENRICHMENT = False
+ADD_MEME = False
+ADD_WEEDER = True
+
+# scoring-specific
+USE_SET_TYPES = ['pita'] # ['target_scan']
+WEEDER_SEQ_TYPE = 'upstream'
+MOTIF_START_ITERATION = 10  # 600
+MOTIF_UPDATE_INTERVAL = 10
+MOTIF_COMPUTE_INTERVAL = 100
 
 
 def genes_per_group_proportional(num_genes_total, num_per_group):
@@ -182,7 +200,8 @@ def read_matrix(filename):
 class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
 
     def __init__(self, organism_code, ratio_matrix, num_clusters):
-        cmonkey_run.CMonkeyRun.__init__(self, organism_code, ratio_matrix, num_clusters)
+        cmonkey_run.CMonkeyRun.__init__(self, organism_code, ratio_matrix,
+                                        num_clusters=num_clusters)
         self.__organism = None
         self['cache_dir'] = CACHE_DIR
         self['sequence_types'] = SEQUENCE_TYPES
@@ -203,90 +222,102 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
                                         search_distances=SEARCH_DISTANCES,
                                         scan_distances=SCAN_DISTANCES)
 
+    def meme_suite(self, seqtype):
+        """upstream meme suite"""
+        background_file = meme.global_background_file(
+            self.organism(), self.ratio_matrix.row_names, seqtype, use_revcomp=True)
+        return meme.MemeSuite430(max_width=MAX_MOTIF_WIDTH,
+                                 background_file=background_file)
+
+    def make_meme_scoring(self, seqtype, meme_suite, sequence_filters):
+        motif_scaling_fun = scoring.get_default_motif_scaling(self['num_iterations'])
+        return motif.MemeScoringFunction(
+            self.organism(), self.membership(),
+            self.ratio_matrix, meme_suite,
+            seqtype=seqtype,
+            sequence_filters=sequence_filters,
+            scaling_func=motif_scaling_fun,
+            num_motif_func=motif.default_nmotif_fun,
+            update_in_iteration=scoring.schedule(MOTIF_START_ITERATION, MOTIF_UPDATE_INTERVAL),
+            motif_in_iteration=scoring.schedule(MOTIF_START_ITERATION, MOTIF_COMPUTE_INTERVAL),
+            config_params=self.config_params)
+
+    def make_weeder_scoring(self, seqtype, meme_suite, sequence_filters):
+        motif_scaling_fun = scoring.get_default_motif_scaling(self['num_iterations'])
+        return motif.WeederScoringFunction(
+            self.organism(), self.membership(), self.ratio_matrix,
+            meme_suite,
+            seqtype=seqtype,
+            sequence_filters=sequence_filters,
+            scaling_func=motif_scaling_fun,
+            num_motif_func=motif.default_nmotif_fun,
+            update_in_iteration=scoring.schedule(MOTIF_START_ITERATION, MOTIF_UPDATE_INTERVAL),
+            motif_in_iteration=scoring.schedule(MOTIF_START_ITERATION, MOTIF_COMPUTE_INTERVAL),
+            config_params=self.config_params)
+
+    def make_network_scoring(self, scaling_fun):
+        return nw.ScoringFunction(self.organism(),
+                                  self.membership(),
+                                  self.ratio_matrix,
+                                  scaling_func=scaling_fun,
+                                  run_in_iteration=scoring.schedule(1, 7),
+                                  config_params=self.config_params)
+
+    def make_set_scoring(self, scaling_fun, use_set_types):
+        set_types = []
+        if 'pita' in use_set_types:
+            set_types.append(se.SetType.read_csv('pita', 'human_data/pita_miRNA_sets.csv'))
+        if 'target_scan' in use_set_types:
+            set_types.append(se.SetType.read_csv('target_scan',
+                                                 'human_data/targetScan_miRNA_sets.csv'))
+        return se.ScoringFunction(self.membership(), self.ratio_matrix,
+                                  set_types, scaling_fun,
+                                  scoring.schedule(1, 7),
+                                  config_params=self.config_params)
+
     def make_row_scoring(self):
         """returns the row scoring function"""
+        # we need to remove the location from the sequence when selecting for
+        # individual clusters
+        sequence_filters = [lambda seqs, feature_ids: {key: seqs[key][1] for key in seqs.keys()}]
+        network_scaling_fun = scoring.get_default_network_scaling(self['num_iterations'])
+        meme_scoring = None
+        weeder_scoring = None
+
         row_scoring = microarray.RowScoringFunction(
             self.membership(), self.ratio_matrix,
             lambda iteration: ROW_WEIGHT,
             config_params=self.config_params)
+        scoring_funcs = [row_scoring,
+                         self.make_network_scoring(network_scaling_fun)]
 
-        # we need to remove the location from the sequence when selecting for
-        # individual clusters
-        sequence_filters = [lambda seqs, feature_ids: {key: seqs[key][1] for key in seqs.keys()}]
-        background_file_prom = meme.global_background_file(
-            self.organism(), self.ratio_matrix.row_names, 'promoter',
-            use_revcomp=True)
-        background_file_p3utr = meme.global_background_file(
-            self.organism(), self.ratio_matrix.row_names, 'p3utr',
-            use_revcomp=True)
-        meme_suite_prom = meme.MemeSuite430(
-            max_width=MAX_MOTIF_WIDTH,
-            background_file=background_file_prom)
-        meme_suite_p3utr = meme.MemeSuite430(
-            max_width=MAX_MOTIF_WIDTH,
-            background_file=background_file_p3utr)
+        if ADD_SET_ENRICHMENT:
+            scoring_funcs.append(self.make_set_scoring(network_scaling_fun,
+                                                       USE_SET_TYPES))
+        
+        if ADD_MEME:
+            meme_scoring = self.make_meme_scoring('upstream',
+                                                  self.meme_suite('upstream'),
+                                                  sequence_filters)
 
-        motif_scaling_fun = scoring.get_default_motif_scaling(self['num_iterations'])
-        motif_scoring = motif.MemeScoringFunction(
-            self.organism(),
-            self.membership(),
-            self.ratio_matrix,
-            meme_suite_prom,
-            seqtype='promoter',
-            sequence_filters=sequence_filters,
-            scaling_func=motif_scaling_fun,
-            num_motif_func=motif.default_nmotif_fun,
-            update_in_iteration=scoring.schedule(600, 10),  # 600, 10
-            motif_in_iteration=scoring.schedule(600, 100),  # 600, 100
-            config_params=self.config_params)
+        if ADD_WEEDER:
+            weeder_scoring = self.make_weeder_scoring(WEEDER_SEQ_TYPE,
+                                                      self.meme_suite(WEEDER_SEQ_TYPE),
+                                                      sequence_filters)
+        if ADD_MEME and ADD_WEEDER:            
+            scoring_funcs.append(scoring.ScoringFunctionCombiner(
+                    self.membership(),
+                    [meme_scoring, weeder_scoring],
+                    scaling_func=lambda iteration: 0.5,
+                    config_params=self.config_params))
+        else:
+            if ADD_MEME:
+                scoring_funcs.append(meme_scoring)
+            if ADD_WEEDER:
+                scoring_funcs.append(weeder_scoring)
 
-        network_scaling_fun = scoring.get_default_network_scaling(self['num_iterations'])
-        network_scoring = nw.ScoringFunction(self.organism(),
-                                             self.membership(),
-                                             self.ratio_matrix,
-                                             scaling_func=network_scaling_fun,
-                                             run_in_iteration=scoring.schedule(1, 7),
-                                             config_params=self.config_params)
-
-        weeder_scoring = motif.WeederScoringFunction(
-            self.organism(), self.membership(), self.ratio_matrix,
-            meme_suite_p3utr,
-            seqtype='p3utr',
-            sequence_filters=sequence_filters,
-            scaling_func=motif_scaling_fun,
-            num_motif_func=motif.default_nmotif_fun,
-            update_in_iteration=scoring.schedule(600, 10),  # 600, 10
-            motif_in_iteration=scoring.schedule(600, 100),  # 600, 100
-            config_params=self.config_params)
-
-        pita = se.SetType.read_csv('pita', 'human_data/pita_miRNA_sets.csv')
-        target_scan = se.SetType.read_csv(
-            'target_scan', 'human_data/targetScan_miRNA_sets.csv')
-        set_types = [pita, target_scan]
-        set_enrichment_scoring = se.ScoringFunction(
-            self.membership(),
-            self.ratio_matrix,
-            set_types,
-            network_scaling_fun,
-            #lambda iteration: 3.0,
-            scoring.schedule(1, 7),
-            config_params=self.config_params)
-
-        motif_combiner = scoring.ScoringFunctionCombiner(
-            self.membership(),
-            [motif_scoring, weeder_scoring],
-            scaling_func=lambda iteration: 0.5,
-            config_params=self.config_params)
-
-        return scoring.ScoringFunctionCombiner(
-            self.membership(),
-            [row_scoring,
-             #motif_scoring,
-             #weeder_scoring,
-             motif_combiner,
-             network_scoring,
-             set_enrichment_scoring],
-            config_params=self.config_params)
+        return scoring.ScoringFunctionCombiner(self.membership(), scoring_funcs,
+                                               config_params=self.config_params)
 
 
 if __name__ == '__main__':
