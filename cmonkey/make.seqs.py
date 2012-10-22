@@ -45,12 +45,12 @@ def make_sequences( genome_fasta_file, gene_features_file,
     sequences = []
     for feature in features.values():
         location = feature.location
-#        print location, location.contig, distance, feature.id()
+#        print location, location.contig, distance, feature.id
         if from_end:
-            sequences.append( ( feature.id(), st.extract_downstream(contig_dict[location.contig], location, distance)[1] ) )
+            sequences.append( ( feature.id, st.extract_downstream(contig_dict[location.contig], location, distance)[1] ) )
         else:
-            sequences.append( ( feature.id(), st.extract_upstream(contig_dict[location.contig], location, distance)[1] ) )
-#        print sequences[feature.id()]
+            sequences.append( ( feature.id, st.extract_upstream(contig_dict[location.contig], location, distance)[1] ) )
+#        print sequences[feature.id]
 
     outf = open(outfile,'w')
     if fasta: st.write_sequences_to_fasta_file(outf,sequences)
