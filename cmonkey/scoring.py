@@ -106,6 +106,13 @@ class ScoringFunctionBase:
         self.__matrix = matrix
         self.__scaling_func = scaling_func
         self.run_in_iteration = run_in_iteration
+
+        # the cache_result parameter can be used by scoring functions
+        # or users to fine-tune the behavior during non-compute operations
+        # either recall a previous result from RAM or from a pickled
+        # state. For very large results, pickling can be better, while
+        # for smaller results, recalling from RAM can be faster
+        self.cache_result = False
         self.config_params = config_params
         if config_params == None:
             raise Exception('NO CONFIG PARAMS !!!')
@@ -145,10 +152,17 @@ class ScoringFunctionBase:
         if self.run_in_iteration(iteration):
             computed_result = self.do_compute(iteration_result,
                                               reference_matrix)
-            # pickle the result for future use
-            logging.info("pickle result to %s", self.pickle_path())
-            with open(self.pickle_path(), 'w') as outfile:
-                cPickle.dump(computed_result, outfile)
+            # store the result for later, either by pickling them
+            # or caching them
+            if self.cache_result:
+                self.cached_result = computed_result
+            else:
+                # pickle the result for future use
+                logging.info("pickle result to %s", self.pickle_path())
+                with open(self.pickle_path(), 'w') as outfile:
+                    cPickle.dump(computed_result, outfile)
+        elif self.cache_result:
+            computed_result = self.cached_result
         elif os.path.exists(self.pickle_path()):
             with open(self.pickle_path()) as infile:
                 computed_result = cPickle.load(infile)
@@ -228,6 +242,7 @@ class ColumnScoringFunction(ScoringFunctionBase):
                                      matrix, scaling_func=None,
                                      run_in_iteration=run_in_iteration,
                                      config_params=config_params)
+        self.cache_result = True
         self.run_log = RunLog("column_scoring")
 
     def name(self):
