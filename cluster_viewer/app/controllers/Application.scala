@@ -38,9 +38,16 @@ object Application extends Controller {
   val finishInfoReader = new FinishInfoReader
 
   val ratiosFile = if (ProjectConfig.getProperty("cmonkey.ratios.file") != null) {
+    // explicit naming of ratios file
     new File(ProjectConfig.getProperty("cmonkey.ratios.file"))
   } else {
-    new File(OutDirectory, "ratios.tsv")
+    // finding the ratios file in the output directory, looks for compressed file
+    // first, then falls back to plain tsv
+    val gzipfile = new File(OutDirectory, "ratios.tsv.gz")
+    val tsvfile = new File(OutDirectory, "ratios.tsv")
+    if (gzipfile.exists) gzipfile
+    else if (tsvfile.exists) tsvfile
+    else throw new FileNotFoundException("could not find ratios file !")
   }
   val RatiosFactory = new RatioMatrixFactory(ratiosFile, Synonyms)
 

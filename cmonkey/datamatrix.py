@@ -10,7 +10,7 @@ import operator
 import util
 import logging
 import rpy2.robjects as robj
-
+import gzip
 
 class DataMatrix:
     """
@@ -274,9 +274,9 @@ class DataMatrix:
             result += '\n'
         return result
 
-    def write_tsv_file(self, path):
+    def write_tsv_file(self, path, compressed=True):
         """writes this matrix to tab-separated file"""
-        with open(path, 'w') as outfile:
+        def write_data(outfile):
             title = ['GENE']
             title.extend(self.column_names)
             titlerow = '\t'.join(title)
@@ -285,7 +285,15 @@ class DataMatrix:
                 row = [self.row_names[row_index]]
                 row.extend([('%f' % value) for value in self.values[row_index]])
                 outfile.write('\t'.join(row) + '\n')
-            outfile.flush()
+        if compressed:
+            if not path.endswith('.gz'):
+                path = path + '.gz'
+            with gzip.open(path, 'wb') as zipfile:
+                write_data(zipfile)
+        else:
+            with open(path, 'w') as outfile:
+                write_data(outfile)
+                outfile.flush()
 
 class DataMatrixCollection:
     """A collection of DataMatrix objects containing gene expression values
