@@ -347,6 +347,8 @@ class CMonkeyRun:
 
             self.membership().update(self.ratio_matrix, rscores, cscores,
                                      self['num_iterations'], iteration_result)
+            self.membership().reseed_empty_row_clusters(ratio_matrix.row_names)
+            self.membership().reseed_empty_column_clusters(ratio_matrix.column_names)
 
             if iteration > 0 and self.CHECKPOINT_INTERVAL and iteration % self.CHECKPOINT_INTERVAL == 0:
                 self.save_checkpoint_data(iteration, row_scoring, col_scoring)

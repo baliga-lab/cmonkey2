@@ -516,6 +516,38 @@ class ClusterMembership:
                      cluster, old_num, old_num + len(result))
         return result
 
+    def reseed_empty_row_clusters(self, row_names):
+        """prevent empty clusters by taking a random row and adding
+        it to an empty cluster"""
+        for cluster in xrange(1, self.num_clusters() + 1):
+            if self.num_row_members(cluster) == 0:
+                logging.warning("# of row clusters reached 0 -> reseeding cluster %d",
+                                cluster)
+                # We only have a chance to successfully pick a replacement
+                # if we have enough row names to distribute
+                pick_row_names = [row_name for row_name in row_names
+                                  if self.num_clusters_for_row(row_name) <
+                                  self.num_clusters_per_row()]
+                if len(pick_row_names) > 0:
+                    row_name = pick_row_names[random.randint(0, len(pick_row_names) - 1)]
+                    self.add_cluster_to_row(row_name, cluster)
+
+    def reseed_empty_column_clusters(self, column_names):
+        """prevent empty clusters by taking a random row and adding
+        it to an empty cluster"""        
+        for cluster in xrange(1, self.num_clusters() + 1):
+            if self.num_column_members(cluster) == 0:
+                logging.warning("# of column clusters reached 0 -> reseeding cluster %d",
+                                cluster)
+                # We only have a chance to successfully pick a replacement
+                # if we have enough column names to distribute
+                pick_col_names = [col_name for col_name in column_names
+                                  if self.num_clusters_for_column(col_name) <
+                                  self.num_clusters_per_column()]
+                if len(pick_col_names) > 0:
+                    col_name = pick_col_names[random.randint(0, len(pick_col_names) - 1)]
+                    self.add_cluster_to_column(col_name, cluster)
+
     def store_checkpoint_data(self, shelf):
         """Save memberships into checkpoint"""
         logging.info("Saving checkpoint data for memberships in iteration %d",
@@ -573,7 +605,10 @@ def update_for_rows(membership, rd_scores, multiprocessing):
     UPDATE_MEMBERSHIP = None
     for rowname, cluster in result:
         add_cluster_to_row(rowname, cluster)
-
+        # Check and report
+        num_rowmembers = membership.num_row_members(cluster)
+        if num_rowmembers == 0:
+            raise Exception("CLUSTER ", cluster, " HAS 0 ROWS !!!!")
 
 def compute_update_row_cluster_pairs(row):
     """The map() part to detemine the new row-cluster pairs"""
@@ -622,6 +657,10 @@ def update_for_cols(membership, cd_scores, multiprocessing):
     UPDATE_MEMBERSHIP = None
     for rowname, cluster in result:
         add_cluster_to_col(rowname, cluster)
+        # Check and report
+        num_colmembers = membership.num_column_members(cluster)
+        if num_colmembers == 0:
+            raise Exception("CLUSTER ", cluster, " HAS 0 COLS !!!!")
 
 def compute_update_col_cluster_pairs(row):
     """The map() part to detemine the new column-cluster pairs"""
@@ -777,9 +816,10 @@ def compensate_size(membership, matrix, rd_scores, cd_scores):
             rd_scores.multiply_column_by(
                 cluster - 1, compensate_row_size(num_rowmembers))
         else:
+            logging.warn("CLUSTER %d has 0 members now ! Compensating...", cluster)
             rd_scores.multiply_column_by(
                 cluster - 1,
-                compensate_row_size(membership.min_cluster_rows_allowed()))
+                compensate_row_size(membership.min_cluster_rows_allowed()))            
 
     def compensate_columns(cluster):
         """compensate density scores for column dimension"""

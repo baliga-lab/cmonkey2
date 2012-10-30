@@ -253,4 +253,31 @@ class ClusterMembershipTest(unittest.TestCase):
                                           [4.0, 5.0, 6.0, 7.0],
                                           [7.0, 8.0, 9.0, 10.0]])
         result = memb.get_best_clusters(matrix, 2)
-        print result
+        self.assertEquals([4, 3], result['Row 0'])
+        self.assertEquals([4, 3], result['Row 1'])
+        self.assertEquals([4, 3], result['Row 2'])
+        #print result
+
+    def test_reseed_empty_row_clusters(self):
+        row_names = ['R1', 'R2', 'R3', 'R4', 'R5']
+        membership = memb.ClusterMembership(
+            row_is_member_of={'R1': [1, 3], 'R2': [2, 3]},
+            column_is_member_of={},
+            config_params={'memb.clusters_per_row': 2,
+                           'num_clusters': 4})
+        membership.reseed_empty_row_clusters(row_names)
+        for cluster in xrange(1, 5):
+            self.assertTrue(membership.num_row_members(cluster) > 0)
+
+    def test_reseed_empty_column_clusters(self):
+        col_names = ['C1', 'C2', 'C3']
+        membership = memb.ClusterMembership(
+            row_is_member_of={'R1': [1, 3], 'R2': [2, 3]},
+            column_is_member_of={'C1': [1], 'C3': [2]},
+            config_params={'memb.clusters_per_row': 2,
+                           'memb.clusters_per_col': 2,
+                           'num_clusters': 4})
+        membership.reseed_empty_column_clusters(col_names)
+        for cluster in xrange(1, 5):
+            self.assertTrue(membership.num_column_members(cluster) > 0)
+        
