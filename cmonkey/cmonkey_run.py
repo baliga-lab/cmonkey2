@@ -17,6 +17,7 @@ import json
 import numpy as np
 import gc
 import sizes
+import gzip
 
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
 GO_FILE_PATH = 'testdata/proteome2taxid'
@@ -249,7 +250,7 @@ class CMonkeyRun:
             return matrix.residual()
 
 
-    def write_results(self, iteration_result):
+    def write_results(self, iteration_result, compressed=True):
         # Write a snapshot
         iteration = iteration_result['iteration']
         iteration_result['columns'] = {}
@@ -264,8 +265,13 @@ class CMonkeyRun:
             iteration_result['residuals'][cluster] = residual
 
         # write results
-        with open('%s/%d-results.json' % (self['output_dir'], iteration), 'w') as outfile:
-            outfile.write(json.dumps(iteration_result))
+        if compressed:
+            with gzip.open('%s/%d-results.json.gz' % (self['output_dir'], iteration),
+                           'w') as outfile:
+                outfile.write(json.dumps(iteration_result))
+        else:
+            with open('%s/%d-results.json' % (self['output_dir'], iteration), 'w') as outfile:
+                outfile.write(json.dumps(iteration_result))
 
     def write_stats(self, iteration_result):
         # write stats for this iteration

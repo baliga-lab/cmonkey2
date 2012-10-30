@@ -2,6 +2,7 @@ package controllers
 
 import play.api.libs.json._
 import java.io._
+import java.util.zip._
 import java.util.regex._
 import scala.collection.mutable.HashMap
 
@@ -15,7 +16,8 @@ case class Snapshot(rows: Map[Int, List[String]], columns: Map[Int, List[String]
 
 object SnapshotReader {
   val BaseResultsFileName = "%d-results.json"
-  val JsonFilePattern = Pattern.compile("(\\d+)-results.json")
+  val BaseResultsGZIPFileName = "%d-results.json.gz"
+  val JsonFilePattern = Pattern.compile("(\\d+)-results.json(\\.gz)?")
 }
 class SnapshotReader(OutDirectory: File, Synonyms: SynonymsMap) {
   import SnapshotReader._
@@ -111,20 +113,39 @@ class SnapshotReader(OutDirectory: File, Synonyms: SynonymsMap) {
     def writes(snapshot: Snapshot): JsValue = JsUndefined("TODO")
   }
 
+  private def readSnapshot(in: BufferedReader): Snapshot = {
+    val buffer = new StringBuilder
+    var line = in.readLine
+    while (line != null) {
+      buffer.append(line)
+      line = in.readLine
+    }
+    play.api.libs.json.Json.parse(buffer.toString).as[Snapshot]
+  }
   def readSnapshot(iteration: Int) : Option[Snapshot] = {
     val pathname = (OutDirectory + "/" + BaseResultsFileName).format(iteration)
-    printf("Reading snapshot: %s\n", pathname)
+    val gzpathname = (OutDirectory + "/" + BaseResultsGZIPFileName).format(iteration)
     val infile = new File(pathname)
+    val gzinfile = new File(gzpathname)
+
     if (infile.exists) {
-      val in = new BufferedReader(new FileReader(infile))
-      val buffer = new StringBuilder
-      var line = in.readLine
-      while (line != null) {
-        buffer.append(line)
-        line = in.readLine
+      printf("Reading snapshot: %s\n", pathname)
+      var in: BufferedReader = null
+      try {
+        in = new BufferedReader(new FileReader(infile))
+        Some(readSnapshot(in))
+      } finally {
+        if (in != null) in.close
       }
-      in.close
-      Some(play.api.libs.json.Json.parse(buffer.toString).as[Snapshot])
+    } else if (gzinfile.exists) {
+      printf("Reading compressed snapshot: %s\n", gzpathname)
+      var in: BufferedReader = null
+      try {
+        in = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(gzinfile))))
+        Some(readSnapshot(in))
+      } finally {
+        if (in != null) in.close
+      }
     } else {
       printf("File '%s' does not exist !\n", infile.getName)
       None
