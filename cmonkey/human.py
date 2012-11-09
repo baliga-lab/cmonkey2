@@ -49,9 +49,9 @@ MAX_MOTIF_WIDTH = 12
 SELECT_ROWS = False
 
 # configure the function setup here
-ADD_SET_ENRICHMENT = True
+ADD_SET_ENRICHMENT = False
 ADD_MEME = False
-ADD_WEEDER = False
+ADD_WEEDER = True
 
 # scoring-specific
 USE_SET_TYPES = ['pita'] # ['target_scan']
