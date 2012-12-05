@@ -173,7 +173,7 @@ class RowScoringFunction(scoring.ScoringFunctionBase):
                                              run_in_iteration,
                                              config_params)
         self.cache_result = True
-        self.run_log = scoring.RunLog("row_scoring")
+        self.run_log = scoring.RunLog("row_scoring", config_params)
 
     def name(self):
         """returns the name of this scoring function"""

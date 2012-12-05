@@ -18,6 +18,7 @@ import numpy as np
 import gc
 import sizes
 import gzip
+import sqlite3
 
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
 GO_FILE_PATH = 'testdata/proteome2taxid'
@@ -81,11 +82,24 @@ class CMonkeyRun:
         self['memb.min_cluster_rows_allowed'] = 3
         self['memb.max_cluster_rows_allowed'] = 70
         self['string_file'] = string_file
+        
+        self['out_database'] = self['output_dir'] + '/cmonkey_run.db'
 
         today = date.today()
         self.CHECKPOINT_INTERVAL = None
         self.__checkpoint_basename = "cmonkey-checkpoint-%s-%d%d%d" % (
             organism_code, today.year, today.month, today.day)
+
+    def __create_output_database(self):
+        print "create the database: ", self['out_database']
+        conn = sqlite3.connect(self['out_database'])
+        c = conn.cursor()
+        c.execute('create table run_logs (name text)')
+        c.execute('''create table log_entries (log_id int, iteration int, was_active boolean,
+                     scaling decimal)''')
+        conn.commit()
+        c.close()
+        print "done creating"
 
     def report_params(self):
         logging.info('cmonkey_run config_params:')
@@ -226,6 +240,7 @@ class CMonkeyRun:
     def run(self):
         self.__make_dirs_if_needed()
         self.__clear_output_dir()
+        self.__create_output_database()
         # write the normalized ratio matrix for stats and visualization
         output_dir = self['output_dir']
         if not os.path.exists(output_dir + '/ratios.tsv'):
@@ -308,17 +323,6 @@ class CMonkeyRun:
                 # print stats object, likely there is something that is not serializable
                 print stats
 
-    def write_runlog(self, row_scoring, iteration):
-        logging.info("Writing run map for this iteration")
-        run_infos = [run_log.to_json() for run_log in row_scoring.run_logs()]
-        with open('%s/%d-runlog.json' % (self['output_dir'], iteration), 'w') as outfile:
-            try:
-                outfile.write(json.dumps(run_infos))
-            except:
-                logging.error("Could not run map - probably non-serializable values found")
-                # print run_infos object, likely there is something that is not serializable
-                print run_infos
-
     def write_start_info(self):
         start_info = { 'start_time': str(datetime.now()),
                        'num_iterations': self['num_iterations'],
@@ -377,8 +381,6 @@ class CMonkeyRun:
 
             if iteration == 1 or (iteration % STATS_FREQ == 0):
                 self.write_stats(iteration_result)
-                # run infos should be written with the same frequency as stats
-                self.write_runlog(row_scoring, iteration)
 
             gc.collect()
             #print "# ROW SCORING: ", sizes.asizeof(self.row_scoring)

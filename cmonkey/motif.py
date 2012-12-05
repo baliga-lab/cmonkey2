@@ -109,8 +109,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.__last_run_results = None
         self.__last_iteration_result = {}
 
-        self.update_log = scoring.RunLog("motif-score-" + seqtype)
-        self.motif_log = scoring.RunLog("motif-motif-" + seqtype)
+        self.update_log = scoring.RunLog("motif-score-" + seqtype, config_params)
+        self.motif_log = scoring.RunLog("motif-motif-" + seqtype, config_params)
 
         used_genes = sorted(matrix.row_names)
         self.used_seqs = organism.sequences_for_genes_scan(
@@ -252,9 +252,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             with open(self.matrix_pickle_path()) as infile:
                 matrix = cPickle.load(infile)
 
-        self.update_log.log(self.update_in_iteration(iteration),
+        self.update_log.log(iteration, self.update_in_iteration(iteration),
                             self.scaling(iteration))
-        self.motif_log.log(self.motif_in_iteration(iteration),
+        self.motif_log.log(iteration, self.motif_in_iteration(iteration),
                            self.scaling(iteration))
 
         if 'motifs' not in iteration_result:

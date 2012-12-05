@@ -16,6 +16,7 @@ import membership as memb
 import numpy as np
 import cPickle
 import gc
+import sqlite3
 
 # Official keys to access values in the configuration map
 KEY_ORGANISM_CODE = 'organism_code'
@@ -79,20 +80,20 @@ class RunLog:
     a scoring function should log whether it was active and which scaling
     was applied.
     """
-    def __init__(self, name):
+    def __init__(self, name, config_params):
         self.name = name
-        self.active = []
-        self.scaling = []
+        self.dbpath = config_params['out_database']
+        self.conn = sqlite3.connect(self.dbpath)
+        c = self.conn.cursor()
+        c.execute('insert into run_logs (name) values (?)', (name,))
+        self.log_id = c.lastrowid
+        self.conn.commit()
 
-    def log(self, was_active, scaling):
-        self.active.append(was_active)
-        self.scaling.append(scaling)
-
-    def __repr__(self):
-        return "RunLog(" + self.name + ", " + str(self.active) + ", " + str(self.scaling) + ")"
-
-    def to_json(self):
-        return {'name': self.name, 'active': self.active, 'scaling': self.scaling}
+    def log(self, iteration, was_active, scaling):
+        c = self.conn.cursor()
+        c.execute('''insert into log_entries (log_id, iteration, was_active,
+                  scaling) values (?,?,?,?)''', (self.log_id, iteration, was_active, scaling))
+        self.conn.commit()
 
 
 class ScoringFunctionBase:
@@ -169,7 +170,8 @@ class ScoringFunctionBase:
         else:
             computed_result = None
 
-        self.run_log.log(self.run_in_iteration(iteration),
+        self.run_log.log(iteration,
+                         self.run_in_iteration(iteration),
                          self.scaling(iteration_result['iteration']))
         return computed_result
 
@@ -181,7 +183,8 @@ class ScoringFunctionBase:
         with open(self.pickle_path(), 'w') as outfile:
             cPickle.dump(computed_result, outfile)
 
-        self.run_log.log(self.run_in_iteration(iteration),
+        self.run_log.log(iteration,
+                         self.run_in_iteration(iteration),
                          self.scaling(iteration_result['iteration']))
         return computed_result
 
@@ -243,7 +246,7 @@ class ColumnScoringFunction(ScoringFunctionBase):
                                      run_in_iteration=run_in_iteration,
                                      config_params=config_params)
         self.cache_result = True
-        self.run_log = RunLog("column_scoring")
+        self.run_log = RunLog("column_scoring", config_params)
 
     def name(self):
         """returns the name of this scoring function"""

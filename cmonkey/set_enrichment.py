@@ -109,7 +109,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         self.__last_min_enriched_set = {}
         for set_type in set_types:
             self.__last_min_enriched_set[set_type] = {}
-        self.run_log = scoring.RunLog('set_enrichment')
+        self.run_log = scoring.RunLog('set_enrichment', config_params)
 
     def name(self):
         """name of the function"""

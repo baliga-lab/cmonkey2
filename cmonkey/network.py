@@ -138,7 +138,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         self.__organism = organism
         self.__networks = None
         self.__last_computed_result = None
-        self.run_log = scoring.RunLog("network")
+        self.run_log = scoring.RunLog("network", config_params)
 
     def name(self):
         """returns the name of this function"""
