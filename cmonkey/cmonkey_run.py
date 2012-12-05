@@ -19,6 +19,7 @@ import gc
 import sizes
 import gzip
 import sqlite3
+from decimal import Decimal
 
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
 GO_FILE_PATH = 'testdata/proteome2taxid'
@@ -97,8 +98,17 @@ class CMonkeyRun:
         c.execute('create table run_logs (name text)')
         c.execute('''create table log_entries (log_id int, iteration int, was_active boolean,
                      scaling decimal)''')
+
+        # stats tables
+        c.execute('''create table iteration_stats (iteration int, median_residual decimal,
+                     fuzzy_coeff decimal)''')
+        c.execute('''create table cluster_stats (iteration int, cluster int, num_rows int,
+                     num_cols int, residual decimal)''')
+        c.execute('''create table network_stats (iteration int, network text, score decimal)''')
+        c.execute('''create table motif_stats (iteration int, seqtype text, pval decimal)''')
         conn.commit()
         c.close()
+        conn.close()
         print "done creating"
 
     def report_params(self):
@@ -291,37 +301,46 @@ class CMonkeyRun:
     def write_stats(self, iteration_result):
         # write stats for this iteration
         iteration = iteration_result['iteration']
-        residuals = []
-        cluster_stats = {}
+
         network_scores = iteration_result['networks']
         if 'motif-pvalue' in iteration_result:
-            motif_pvalue = iteration_result['motif-pvalue']
+            motif_pvalues = iteration_result['motif-pvalue']
         else:
-            motif_pvalue = 0.0
+            motif_pvalues = {}
 
         if 'fuzzy-coeff' in iteration_result:
             fuzzy_coeff = iteration_result['fuzzy-coeff']
         else:
             fuzzy_coeff = 0.0
 
+        conn = sqlite3.connect(self['out_database'])
+        c = conn.cursor()
+
+        residuals = []
         for cluster in range(1, self['num_clusters'] + 1):
             row_names = iteration_result['rows'][cluster]
             column_names = iteration_result['columns'][cluster]
             residual = self.residual_for(row_names, column_names)
             residuals.append(residual)
-            cluster_stats[cluster] = {'num_rows': len(row_names),
-                                      'num_columns': len(column_names),
-                                      'residual': residual }
-        stats = {'cluster': cluster_stats, 'median_residual': np.median(residuals),
-                 'motif-pvalue': motif_pvalue, 'network-scores': network_scores,
-                 'fuzzy-coeff': fuzzy_coeff}
-        with open('%s/%d-stats.json' % (self['output_dir'], iteration), 'w') as outfile:
-            try:
-                outfile.write(json.dumps(stats))
-            except:
-                logging.error("Could not write stats - probably non-serializable values found")
-                # print stats object, likely there is something that is not serializable
-                print stats
+            c.execute('''insert into cluster_stats (iteration, cluster, num_rows,
+                         num_cols, residual) values (?,?,?,?,?)''',
+                      (iteration, cluster, len(row_names), len(column_names),
+                       residual))
+
+        median_residual = np.median(residuals)
+        c.execute('''insert into iteration_stats (iteration, median_residual,
+                     fuzzy_coeff) values (?,?,?)''',
+                  (iteration, median_residual, fuzzy_coeff))
+        for network, score in network_scores.items():
+            c.execute('''insert into network_stats (iteration, network, score)
+                         values (?,?,?)''', (iteration, network, score))
+        for seqtype, pval in motif_pvalues.items():
+            c.execute('''insert into motif_stats (iteration, seqtype, pval)
+                         values (?,?,?)''', (iteration, seqtype, pval))
+
+        conn.commit()
+        c.close()
+        conn.close()
 
     def write_start_info(self):
         start_info = { 'start_time': str(datetime.now()),
