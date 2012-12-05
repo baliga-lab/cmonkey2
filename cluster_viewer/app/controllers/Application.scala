@@ -74,8 +74,8 @@ object Application extends Controller {
     // sort keys ascending by iteration number
     val startInfo = startInfoReader.readStartInfo(OutDirectory)
     val finishInfo = finishInfoReader.readFinishInfo(OutDirectory)
-    val stats = statsReader.readStats(OutDirectory).toMap
-    val runLogs = runlogReader.readLogs(OutDirectory)
+    val stats = statsReader.readStats.toMap
+    val runLogs = runlogReader.readLogs
 
     val statsIterations = stats.keySet.toArray
     java.util.Arrays.sort(statsIterations)
@@ -116,61 +116,69 @@ object Application extends Controller {
     } else Array[Int]()
   }
 
-  private def makeRowStats(stats: Map[Int, IterationStats]) = {
-    makeIntHistogram(stats, (cs: ClusterStats) => cs.numRows)
+  private def makeRowStats(stats: Map[Int, IterationStat]) = {
+    makeIntHistogram(stats, (cs: ClusterStat) => cs.numRows)
   }
-  private def makeColumnStats(stats: Map[Int, IterationStats]) = {
-    makeIntHistogram(stats, (cs: ClusterStats) => cs.numColumns)
+  private def makeColumnStats(stats: Map[Int, IterationStat]) = {
+    makeIntHistogram(stats, (cs: ClusterStat) => cs.numColumns)
   }
 
-  private def makeIntHistogram(stats: Map[Int, IterationStats], getKey: ClusterStats => Int) = {
+  private def makeIntHistogram(stats: Map[Int, IterationStat], getKey: ClusterStat => Int) = {
     val histogram = new HashMap[Int, Int]   // # rows -> # clusters
-    val maxIteration = stats.keys.max
-    for (cluster <- stats(maxIteration).clusters.keys) {
-      val key = getKey(stats(maxIteration).clusters(cluster))
-      if (!histogram.contains(key)) histogram(key) = 0
-      histogram(key) += 1
-    }
+    if (!stats.isEmpty) {
+      val maxIteration = stats.keys.max
+      for (cluster <- stats(maxIteration).clusters.keys) {
+        val key = getKey(stats(maxIteration).clusters(cluster))
+        if (!histogram.contains(key)) histogram(key) = 0
+        histogram(key) += 1
+      }
 
-    val sortedKeys = histogram.keySet.toArray
-    java.util.Arrays.sort(sortedKeys)
-    val values = new Array[Int](sortedKeys.length)
-    var i = 0
-    for (key <- sortedKeys) {
-      values(i) = histogram(key)
-      i += 1
+      val sortedKeys = histogram.keySet.toArray
+      java.util.Arrays.sort(sortedKeys)
+      val values = new Array[Int](sortedKeys.length)
+      var i = 0
+      for (key <- sortedKeys) {
+        values(i) = histogram(key)
+        i += 1
+      }
+      IntHistogram(sortedKeys, values)
+    } else {
+      IntHistogram(Array(), Array())
     }
-    IntHistogram(sortedKeys, values)
   }
 
-  private def makeResidualHistogram(stats: Map[Int, IterationStats]): ResidualHistogram = {
-    val numBuckets = 20
-    val maxIteration = stats.keys.max
-    var minResidual = 10000000.0f
-    var maxResidual = -10000000.0f
-    for (cluster <- stats(maxIteration).clusters.keys) {
-      val residual = stats(maxIteration).clusters(cluster).residual.asInstanceOf[Float]
-      if (residual < minResidual) minResidual = residual
-      if (residual > maxResidual) maxResidual = residual
-    }
+  private def makeResidualHistogram(stats: Map[Int, IterationStat]): ResidualHistogram = {
+    if (!stats.isEmpty) {
+      val numBuckets = 20
+      val maxIteration = stats.keys.max
+      var minResidual = 10000000.0f
+      var maxResidual = -10000000.0f
+      for (cluster <- stats(maxIteration).clusters.keys) {
+        val residual = stats(maxIteration).clusters(cluster).residual.asInstanceOf[Float]
+        if (residual < minResidual) minResidual = residual
+        if (residual > maxResidual) maxResidual = residual
+      }
 
-    val xvalues = new Array[String](numBuckets)
-    val yvalues = new Array[Int](numBuckets)
-    val interval = (maxResidual - minResidual) / numBuckets
-    // making labels
-    for (i <- 0 until numBuckets) {
-      xvalues(i) = "%.2f".format(minResidual + interval * i)
+      val xvalues = new Array[String](numBuckets)
+      val yvalues = new Array[Int](numBuckets)
+      val interval = (maxResidual - minResidual) / numBuckets
+      // making labels
+      for (i <- 0 until numBuckets) {
+        xvalues(i) = "%.2f".format(minResidual + interval * i)
+      }
+      // dump residuals in the right buckets
+      for (cluster <- stats(maxIteration).clusters.keys) {
+        val residual = stats(maxIteration).clusters(cluster).residual.asInstanceOf[Float]
+        val bucketnum = math.min(numBuckets - 1, ((residual - minResidual) / interval).asInstanceOf[Int])
+        yvalues(bucketnum) += 1
+      }
+      ResidualHistogram(xvalues, yvalues)
+    } else {
+      ResidualHistogram(Array(), Array())
     }
-    // dump residuals in the right buckets
-    for (cluster <- stats(maxIteration).clusters.keys) {
-      val residual = stats(maxIteration).clusters(cluster).residual.asInstanceOf[Float]
-      val bucketnum = math.min(numBuckets - 1, ((residual - minResidual) / interval).asInstanceOf[Int])
-      yvalues(bucketnum) += 1
-    }
-    ResidualHistogram(xvalues, yvalues)
   }
 
-  private def makeMeanResiduals(statsIterations: Array[Int], stats: Map[Int, IterationStats]) = {
+  private def makeMeanResiduals(statsIterations: Array[Int], stats: Map[Int, IterationStat]) = {
     val meanResiduals = new Array[Double](stats.size)
     var i = 0
     for (key <- statsIterations) {

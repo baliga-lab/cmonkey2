@@ -43,7 +43,7 @@ object HighchartsFormatter {
     builder.toString
   }
 
-  def toNRowNColHSSeries(stats: Map[Int, IterationStats]) = {
+  def toNRowNColHSSeries(stats: Map[Int, IterationStat]) = {
     val iterations = stats.keySet.toArray
     java.util.Arrays.sort(iterations)
 
@@ -83,28 +83,30 @@ object HighchartsFormatter {
   }
 
   // motif-score-upstream, tricky: multiple sequence types
-  def toMotifPValueSeries(stats: Map[Int, IterationStats],
+  def toMotifPValueSeries(stats: Map[Int, IterationStat],
                           runLogs: Array[RunLog]) = {
-    val iterations = stats.keySet.toArray
-    java.util.Arrays.sort(iterations)
-    val seqTypes = stats(iterations(0)).motifPValues.keys.toArray
-    val builder = new StringBuilder
+    if (!stats.isEmpty) {
+      val iterations = stats.keySet.toArray
+      java.util.Arrays.sort(iterations)
+      val seqTypes = stats(iterations(0)).motifPValues.keys.toArray
+      val builder = new StringBuilder
 
-    builder.append("[")
-    for (i <- 0 until seqTypes.length) {
-      if (i > 0) builder.append(",")
-      builder.append("{ name: '%s', data: [".format(seqTypes(i)))
-      for (iteration <- iterations) {
-        builder.append(stats(iteration).motifPValues(seqTypes(i)))
-        builder.append(", ")
+      builder.append("[")
+      for (i <- 0 until seqTypes.length) {
+        if (i > 0) builder.append(",")
+        builder.append("{ name: '%s', data: [".format(seqTypes(i)))
+        for (iteration <- iterations) {
+          builder.append(stats(iteration).motifPValues(seqTypes(i)))
+          builder.append(", ")
+        }
+        builder.append("] }")
       }
-      builder.append("] }")
-    }
-    builder.append("]\n")
-    builder.toString
+      builder.append("]\n")
+      builder.toString
+    } else "[]"
   }
 
-  def toNetworkScoreSeries(stats: Map[Int, IterationStats],
+  def toNetworkScoreSeries(stats: Map[Int, IterationStat],
                            runLogs: Array[RunLog]) = {
     val builder = new StringBuilder
     val scoreMap = new java.util.HashMap[String, java.util.ArrayList[Double]]    
@@ -132,7 +134,7 @@ object HighchartsFormatter {
     builder.toString
   }
 
-  def toFuzzyCoeffSeries(stats: Map[Int, IterationStats]) = {
+  def toFuzzyCoeffSeries(stats: Map[Int, IterationStat]) = {
     val builder = new StringBuilder
     builder.append("[ { name: 'fuzzy coeff', data: [")
     val iterations = stats.keySet.toArray

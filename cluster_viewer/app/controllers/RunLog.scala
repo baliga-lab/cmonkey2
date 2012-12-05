@@ -58,7 +58,7 @@ case class RunLog(functionName: String, scaling: Array[Float],
 }
 
 class RunLogReader {
-  def readLogs(OutDirectory: File): Option[Array[RunLog]] = {
+  def readLogs: Option[Array[RunLog]] = {
     val result = RunLogs.findAll.map { runLog =>
       val entries = LogEntries.entriesFor(runLog._1).unzip
       val active = entries._1.toArray

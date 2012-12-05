@@ -1,81 +1,109 @@
 package controllers
 
-import play.api.libs.json._
+import play.api.Play.current
+
 import java.io._
 import java.util.regex._
 import scala.collection.mutable.HashMap
 
-case class ClusterStats(numRows: Int, numColumns: Int, residual: Double)
-case class IterationStats(clusters: Map[Int, ClusterStats], medianResidual: Double,
-                          motifPValues: Map[String, Double], networkScores: Map[String, Double],
-                          fuzzyCoeff: Double)
+import play.api.db._
+import org.scalaquery.ql._
+import org.scalaquery.ql.TypeMapper._
+import org.scalaquery.ql.extended.{ExtendedTable => Table}
+import org.scalaquery.ql.extended.SQLiteDriver.Implicit._
+import org.scalaquery.session.{Database, Session}
 
-object StatsReader {
-  val FilePattern = Pattern.compile("(\\d+)-stats.json")
+object IterationStats extends Table[(Int, Double, Double)]("iteration_stats") {
+
+  lazy val database = Database.forDataSource(DB.getDataSource())
+  def iteration = column[Int]("iteration", O NotNull)
+  def medianResidual = column[Double]("median_residual", O NotNull)
+  def fuzzyCoeff = column[Double]("fuzzy_coeff", O NotNull)
+
+  def * = iteration ~ medianResidual ~ fuzzyCoeff
+  def findAll = database.withSession { implicit db: Session =>
+    (for {
+      t <- this
+      _ <- Query orderBy(t.iteration)
+     } yield t.iteration ~ t.medianResidual ~ fuzzyCoeff).list
+  }
 }
 
-class StatsReader {
-  import StatsReader._
+object ClusterStats extends Table[(Int, Int, Int, Int, Double)]("cluster_stats") {
 
-  implicit object StatsFormat extends Format[IterationStats] {
-    def reads(json: JsValue): IterationStats = {
-      val residual = (json \ "median_residual").as[Double]
-      val clusters = (json \ "cluster").as[JsObject]
-      val networkScoresJson = (json \ "network-scores").as[JsObject]
-      val fuzzyCoeff = (json \ "fuzzy-coeff").as[Double]
+  lazy val database = Database.forDataSource(DB.getDataSource())
+  def iteration = column[Int]("iteration", O NotNull)
+  def cluster = column[Int]("cluster", O NotNull)
+  def numRows = column[Int]("num_rows", O NotNull)
+  def numColumns = column[Int]("num_cols", O NotNull)
+  def residual = column[Double]("residual", O NotNull)
 
-      val motifPValues = new HashMap[String, Double]
-      val motifpvalue =  (json \ "motif-pvalue")
-      motifpvalue match {
-        case medianMotifPValues:JsObject =>
-          for (field <- medianMotifPValues.fields) {
-            motifPValues(field._1) = field._2.as[Double]
-          }
-        case _ =>
-          println("no median mofif pvalues found")
-      }
-
-      val clusterStats = new HashMap[Int, ClusterStats]
-      for (field <- clusters.fields) {
-        val cstats = field._2
-        clusterStats(field._1.toInt) = ClusterStats((cstats \ "num_rows").as[Int],
-                                                    (cstats \ "num_columns").as[Int],
-                                                    (cstats \ "residual").as[Double])
-      }
-      val networkScores = new HashMap[String, Double]
-      for (field <- networkScoresJson.fields) {
-        networkScores(field._1) = field._2.as[Double]
-      }
-      IterationStats(clusterStats.toMap, residual, motifPValues.toMap, networkScores.toMap,
-                     fuzzyCoeff)
-    }
-    def writes(stats: IterationStats): JsValue = JsUndefined("TODO")
+  def * = iteration ~ cluster ~ numRows ~ numColumns ~ residual
+  def findForIteration(iter: Int) = database.withSession { implicit db: Session =>
+    (for {
+      t <- this if t.iteration === iter
+      _ <- Query orderBy(t.cluster)
+     } yield t.cluster ~ t.numRows ~ t.numColumns ~ t.residual).list
   }
+}
 
-  def readStats(OutDirectory: File) = {
-    val files = OutDirectory.listFiles(new FilenameFilter {
-      def accept(dir: File, name: String) = FilePattern.matcher(name).matches
-    })
-    val stats = new HashMap[Int, IterationStats]
+object NetworkStats extends Table[(Int, String, Double)]("network_stats") {
 
-    for (i <- 0 until files.length) {
-      val file = files(i)
-      val in = new BufferedReader(new FileReader(file))
-      val buffer = new StringBuilder
-      var line = in.readLine
-      while (line != null) {
-        buffer.append(line)
-        line = in.readLine
+  lazy val database = Database.forDataSource(DB.getDataSource())
+  def iteration = column[Int]("iteration", O NotNull)
+  def network = column[String]("network", O NotNull)
+  def score = column[Double]("score", O NotNull)
+
+  def * = iteration ~ network ~ score
+  def findForIteration(iter: Int) = database.withSession { implicit db: Session =>
+    (for {
+      t <- this if t.iteration === iter
+      _ <- Query orderBy(t.network)
+     } yield t.network ~ t.score).list
+  }
+}
+
+object MotifStats extends Table[(Int, String, Double)]("motif_stats") {
+
+  lazy val database = Database.forDataSource(DB.getDataSource())
+  def iteration = column[Int]("iteration", O NotNull)
+  def seqtype = column[String]("seqtype", O NotNull)
+  def pval = column[Double]("pval", O NotNull)
+
+  def * = iteration ~ seqtype ~ pval
+  def findForIteration(iter: Int) = database.withSession { implicit db: Session =>
+    (for {
+      t <- this if t.iteration === iter
+      _ <- Query orderBy(t.seqtype)
+     } yield t.seqtype ~ t.pval).list
+  }
+}
+
+case class ClusterStat(numRows: Int, numColumns: Int, residual: Double)
+case class IterationStat(clusters: Map[Int, ClusterStat], medianResidual: Double,
+                         motifPValues: Map[String, Double],
+                         networkScores: Map[String, Double],
+                         fuzzyCoeff: Double)
+
+class StatsReader {
+  def readStats: HashMap[Int, IterationStat] = {
+    val stats = new HashMap[Int, IterationStat]
+    IterationStats.findAll.foreach { stat =>
+      val iteration = stat._1
+      val clusterMap = new HashMap[Int, ClusterStat]()
+      val networkMap = new HashMap[String, Double]()
+      val motifMap = new HashMap[String, Double]()
+      ClusterStats.findForIteration(iteration).foreach { cstat =>
+        clusterMap(cstat._1) = ClusterStat(cstat._2, cstat._3, cstat._4)
       }
-      in.close
-
-      val statsOption = Some(play.api.libs.json.Json.parse(buffer.toString).as[IterationStats])      
-      if (statsOption != None) {
-        val matcher = FilePattern.matcher(file.getName)
-        matcher.matches
-        val iteration = matcher.group(1).toInt
-        stats(iteration) = statsOption.get
+      MotifStats.findForIteration(iteration).foreach { mstat =>
+        motifMap(mstat._1) = mstat._2
       }
+      NetworkStats.findForIteration(iteration).foreach { nstat =>
+        networkMap(nstat._1) = nstat._2
+      }
+      stats(iteration) = IterationStat(clusterMap.toMap, stat._2, motifMap.toMap,
+                                       networkMap.toMap, stat._3)
     }
     stats
   }
