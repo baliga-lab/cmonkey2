@@ -11,14 +11,21 @@ import play.api.libs.json._
 
 case class IntHistogram(xvalues: Array[Int], yvalues: Array[Int])
 case class ResidualHistogram(xvalues: Array[String], yvalues: Array[Int])
-case class RunInfo(startInfo: StartInfo,
-                   finished: Boolean,
-                   finishTime: String,
+case class RunInfo(runStatus: RunStatus,
                    currentIteration: Int,
                    clusters: Seq[Int],
                    iterations: Seq[Int],
                    statsIterations: Seq[Int],
-                   progress: Double)
+                   progress: Double) {
+  def organismCode = runStatus.organismCode
+  def species = runStatus.species
+  def finished = runStatus.finished
+  def startTime = runStatus.startTime
+  def finishTime = runStatus.finishTime
+  def numRows = runStatus.numRows
+  def numColumns = runStatus.numColumns
+  def numIterations = runStatus.numIterations
+}
 
 object Application extends Controller {
 
@@ -34,8 +41,7 @@ object Application extends Controller {
   val snapshotReader   = new SnapshotReader(OutDirectory, Synonyms)
   val statsReader      = new StatsReader
   val runlogReader     = new RunLogReader
-  val startInfoReader  = new StartInfoReader
-  val finishInfoReader = new FinishInfoReader
+  val runStatusReader  = new RunStatusReader
 
   val ratiosFile = if (ProjectConfig.getProperty("cmonkey.ratios.file") != null) {
     // explicit naming of ratios file
@@ -72,8 +78,7 @@ object Application extends Controller {
 
   def index2(iteration: Int) = Action {
     // sort keys ascending by iteration number
-    val startInfo = startInfoReader.readStartInfo(OutDirectory)
-    val finishInfo = finishInfoReader.readFinishInfo(OutDirectory)
+    val runStatus = runStatusReader.readRunStatus.get
     val stats = statsReader.readStats.toMap
     val runLogs = runlogReader.readLogs
 
@@ -84,10 +89,9 @@ object Application extends Controller {
     val snapshotOption = snapshotReader.readSnapshot(iteration)
     val clusters = sortByResidual(snapshotOption)
     val progress = math.min((snapshotIterations(snapshotIterations.length - 1) /
-                             startInfo.get.numIterations.toDouble * 100.0), 100.0)
-    val runInfo = RunInfo(startInfo.get,
-                          finishInfo != None,
-                          if (finishInfo != None) finishInfo.get.finishTime else "",
+                             runStatus.numIterations.toDouble * 100.0), 100.0)
+    
+    val runInfo = RunInfo(runStatus,
                           iteration, clusters, snapshotIterations, statsIterations,
                           progress)
     Ok(views.html.index(runInfo,

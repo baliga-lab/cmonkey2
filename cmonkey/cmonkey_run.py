@@ -95,6 +95,13 @@ class CMonkeyRun:
         print "create the database: ", self['out_database']
         conn = sqlite3.connect(self['out_database'])
         c = conn.cursor()
+
+        # run information
+        c.execute('''create table run_infos (start_time timestamp, finish_time timestamp,
+                     num_iterations int,
+                     organism text, species text, num_rows int, num_columns int)''')
+
+        # run log tables
         c.execute('create table run_logs (name text)')
         c.execute('''create table log_entries (log_id int, iteration int, was_active boolean,
                      scaling decimal)''')
@@ -343,21 +350,24 @@ class CMonkeyRun:
         conn.close()
 
     def write_start_info(self):
-        start_info = { 'start_time': str(datetime.now()),
-                       'num_iterations': self['num_iterations'],
-                       'organism-code': self.organism().code,
-                       'species': self.organism().species(),
-                       'num_rows': self.ratio_matrix.num_rows(),
-                       'num_columns': self.ratio_matrix.num_columns()
-                       }
-        with open('%s/start.json' % self['output_dir'], 'w') as outfile:
-            outfile.write(json.dumps(start_info))
+        conn = sqlite3.connect(self['out_database'])
+        c = conn.cursor()
+        c.execute('''insert into run_infos (start_time, num_iterations, organism,
+                     species, num_rows, num_columns) values (?,?,?,?,?,?)''',
+                  (datetime.now(), self['num_iterations'], self.organism().code,
+                   self.organism().species(), self.ratio_matrix.num_rows(),
+                   self.ratio_matrix.num_columns()))
+        conn.commit()
+        c.close()
+        conn.close()
 
     def write_finish_info(self):
-        finish_info = { 'finish_time': str(datetime.now()) }
-        with open('%s/finish.json' % self['output_dir'], 'w') as outfile:
-            outfile.write(json.dumps(finish_info))
-
+        conn = sqlite3.connect(self['out_database'])
+        c = conn.cursor()
+        c.execute('''update run_infos set finish_time = ?''', (datetime.now(),))
+        conn.commit()
+        c.close()
+        conn.close()
 
     def run_iterations(self, row_scoring, col_scoring):
         self.report_params()

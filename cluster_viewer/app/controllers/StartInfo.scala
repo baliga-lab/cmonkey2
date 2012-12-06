@@ -1,40 +1,50 @@
 package controllers
 
-import play.api.libs.json._
+import play.api.Play.current
 import java.io._
+import java.sql.Timestamp
 
-case class StartInfo(startTime: String, numIterations: Int, organismCode: String,
-                     species: String, numRows: Int, numConditions: Int)
+import play.api.db._
+import org.scalaquery.ql._
+import org.scalaquery.ql.TypeMapper._
+import org.scalaquery.ql.extended.{ExtendedTable => Table}
+import org.scalaquery.ql.extended.SQLiteDriver.Implicit._
+import org.scalaquery.session.{Database, Session}
 
+object RunInfos
+extends Table[(Timestamp, Timestamp, Int, String, String, Int, Int)]("run_infos") {
 
-class StartInfoReader {
+  lazy val database = Database.forDataSource(DB.getDataSource())
+  def startTime = column[Timestamp]("start_time", O NotNull)
+  def finishTime = column[Timestamp]("finish_time")
+  def numIterations = column[Int]("num_iterations", O NotNull)
+  def organism = column[String]("organism", O NotNull)
+  def species = column[String]("species", O NotNull)
+  def numRows = column[Int]("num_rows", O NotNull)
+  def numColumns = column[Int]("num_columns", O NotNull)
 
-  implicit object StartInfoFormat extends Format[StartInfo] {
-    def reads(json: JsValue): StartInfo = {
-      val jsonObj = json.as[JsObject]
-      val startTime = (jsonObj \ "start_time").as[String]
-      val numIterations = (jsonObj \ "num_iterations").as[Int]
-      val organismCode = (jsonObj \ "organism-code").as[String]
-      val species = (jsonObj \ "species").as[String]
-      StartInfo(startTime, numIterations, organismCode, species,
-                (jsonObj \ "num_rows").as[Int],
-                (jsonObj \ "num_columns").as[Int])
-    }
-    def writes(log: StartInfo): JsValue = JsUndefined("TODO")
+  def * = startTime ~ finishTime ~ numIterations ~ organism ~ species ~ numRows ~ numColumns
+  def findAll = database.withSession { implicit db: Session =>
+    (for {
+      t <- this
+     } yield t.startTime ~ t.finishTime ~ t.numIterations ~ t.organism ~ t.species ~
+       t.numRows ~ t.numColumns).list
   }
+}
 
-  def readStartInfo(OutDirectory: File): Option[StartInfo] = {
-    val file = new File(OutDirectory, "start.json")
-    if (file.exists) {
-      val in = new BufferedReader(new FileReader(file))
-      val buffer = new StringBuilder
-      var line = in.readLine
-      while (line != null) {
-        buffer.append(line)
-        line = in.readLine
-      }
-      in.close
-      Some(play.api.libs.json.Json.parse(buffer.toString).as[StartInfo])
+case class RunStatus(startTime: Timestamp, finishTime: Timestamp,
+                     numIterations: Int, organismCode: String,
+                     species: String, numRows: Int, numColumns: Int) {
+  def finished = finishTime != null
+}
+
+class RunStatusReader {
+
+  def readRunStatus: Option[RunStatus] = {
+    val runInfos = RunInfos.findAll
+    if (runInfos.length > 0) {
+      val info = runInfos(0)
+      Some(RunStatus(info._1, info._2, info._3, info._4, info._5, info._6, info._7))
     } else None
   }
 }
