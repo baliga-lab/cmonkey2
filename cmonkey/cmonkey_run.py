@@ -92,10 +92,9 @@ class CMonkeyRun:
             organism_code, today.year, today.month, today.day)
 
     def __create_output_database(self):
-        print "create the database: ", self['out_database']
         conn = sqlite3.connect(self['out_database'])
         c = conn.cursor()
-
+        # these are the tables for storing cmonkey run information.
         # run information
         c.execute('''create table run_infos (start_time timestamp, finish_time timestamp,
                      num_iterations int,
@@ -113,10 +112,40 @@ class CMonkeyRun:
                      num_cols int, residual decimal)''')
         c.execute('''create table network_stats (iteration int, network text, score decimal)''')
         c.execute('''create table motif_stats (iteration int, seqtype text, pval decimal)''')
+        c.execute('''create table row_names (order_num int, name text)''')
+        c.execute('''create table column_names (order_num int, name text)''')
+
+        # result tables
+        # NOTE: these tables make the cluster_stats table obsolete
+        # ----- iteration_stats could also possibly removed
+        c.execute('''create table row_members (iteration int, cluster int, order_num int)''')
+        c.execute('''create table column_members (iteration int, cluster int,
+                     order_num int)''')
+        c.execute('''create table cluster_residuals (iteration int, cluster int,
+                     residual decimal)''')
+
+        # motif results: TODO: we might want to have the motif scoring function
+        # ------------- write it
+        c.execute('''create table motif_infos (iteration int, cluster int,
+                     seqtype text, motif_num int, evalue decimal)''')
+        c.execute('''create table motif_pssm_rows (motif_info_id,
+                     row int, a decimal, c decimal, g decimal, t decimal)''')
+
+        c.execute('''create table motif_annotations (motif_info_id int, gene_num int,
+                     position int, reverse boolean, pvalue decimal)''')
+        c.execute('''create table motif_pvalues (iteration int, cluster int,
+                     gene_num int, pvalue decimal)''')
+
+        # all cluster members are stored relative to the base ratio matrix
+        for index in xrange(len(self.ratio_matrix.row_names)):
+            c.execute('''insert into row_names (order_num, name) values (?,?)''',
+                      (index, self.ratio_matrix.row_names[index]))
+        for index in xrange(len(self.ratio_matrix.column_names)):
+            c.execute('''insert into column_names (order_num, name) values (?,?)''',
+                      (index, self.ratio_matrix.column_names[index]))
         conn.commit()
         c.close()
         conn.close()
-        print "done creating"
 
     def report_params(self):
         logging.info('cmonkey_run config_params:')
@@ -304,6 +333,61 @@ class CMonkeyRun:
         else:
             with open('%s/%d-results.json' % (self['output_dir'], iteration), 'w') as outfile:
                 outfile.write(json.dumps(iteration_result))
+
+        #################################################################
+        conn = sqlite3.connect(self['out_database'])
+        c = conn.cursor()
+        ## TODO: write results
+        for cluster in range(1, self['num_clusters'] + 1):
+            column_names = self.membership().columns_for_cluster(cluster)
+            for order_num in self.ratio_matrix.column_indexes(column_names):
+                c.execute('''insert into column_members (iteration,cluster,order_num)
+                              values (?,?,?)''', (iteration, cluster, order_num))
+
+            row_names = self.membership().rows_for_cluster(cluster)
+            for order_num in self.ratio_matrix.row_indexes(row_names):
+                c.execute('''insert into row_members (iteration,cluster,order_num)
+                              values (?,?,?)''', (iteration, cluster, order_num))
+            residual = self.residual_for(row_names, column_names)
+            c.execute('''insert into cluster_residuals (iteration,cluster,residual)
+                          values (?,?,?)''', (iteration, cluster, residual))
+
+        # write motif infos: TODO: we might want the motif scoring function writing
+        # this part
+        motifs = iteration_result['motifs']
+        for seqtype in motifs:
+            for cluster in motifs[seqtype]:
+                motif_infos = motifs[seqtype][cluster]['motif-info']
+                for motif_info in motif_infos:
+                    c.execute('''insert into motif_infos (iteration,cluster,motif_num,evalue)
+                                 values (?,?,?,?)''', (iteration, cluster,
+                                                       motif_info['motif_num'],
+                                                       motif_info['evalue']))
+                    motif_info_id = c.lastrowid
+                    pssm_rows = motif_info['pssm']
+                    for row in xrange(len(pssm_rows)):
+                        pssm_row = pssm_rows[row]
+                        c.execute('''insert into motif_pssm_rows (motif_info_id,row,a,c,g,t)
+                                     values (?,?,?,?,?,?)''', (motif_info_id, row,
+                                                               pssm_row[0], pssm_row[1],
+                                                               pssm_row[2], pssm_row[2]))
+                    annotations = motif_info['annotations']
+                    for annotation in annotations:
+                        c.execute('''insert into motif_annotations (motif_info_id,gene_num,
+                                     position,reverse,pvalue) values (?,?,?,?,?)''',
+                                  (motif_info_id, 4711, annotation['position'],
+                                   annotation['reverse'], annotation['pvalue']))
+
+                pvalues = motifs[seqtype][cluster]['pvalues']
+                for gene in pvalues:
+                    c.execute('''insert into motif_pvalues (iteration,cluster,gene_num,pvalue)
+                                 values (?,?,?,?)''', (iteration, cluster, 4711,
+                                                       pvalues[gene]))
+        conn.commit()
+        c.close()
+        conn.close()
+        #################################################################
+
 
     def write_stats(self, iteration_result):
         # write stats for this iteration
