@@ -58,7 +58,10 @@ class DataMatrix:
             self.values = np.zeros((nrows, ncols))
             if init_value != None:
                 self.values.fill(init_value)
+
         self.__row_variance = None
+        self.__row_indexes = None
+        self.__col_indexes = None
 
     def num_rows(self):
         """returns the number of rows"""
@@ -73,11 +76,19 @@ class DataMatrix:
 
     def row_indexes(self, row_names):
         """returns the row indexes with the matching names"""
-        return [self.row_names.index(name) for name in row_names]
+        if self.__row_indexes == None:
+            self.__row_indexes = { self.row_names[index]: index
+                                   for index in xrange(len(self.row_names)) }
+        return [self.__row_indexes[name] if name in self.__row_indexes else -1
+                for name in row_names]
 
     def column_indexes(self, column_names):
         """returns the column indexes with the matching names"""
-        return [self.column_names.index(name) for name in column_names]
+        if self.__col_indexes == None:
+            self.__col_indexes = { self.column_names[index]: index
+                                   for index in xrange(len(self.column_names)) }
+        return [self.__col_indexes[name] if name in self.__col_indexes else -1
+                for name in column_names]
 
     def flat_values(self):
         """returns all values as a single sequence"""

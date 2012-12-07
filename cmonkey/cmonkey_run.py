@@ -91,13 +91,19 @@ class CMonkeyRun:
         self.__checkpoint_basename = "cmonkey-checkpoint-%s-%d%d%d" % (
             organism_code, today.year, today.month, today.day)
 
-    def __create_output_database(self):
+    def __dbconn(self, isolation_level='DEFERRED'):
+        """returns an autocommit database connection"""
         conn = sqlite3.connect(self['out_database'])
+        conn.isolation_level = isolation_level
+        return conn
+
+    def __create_output_database(self):
+        conn = self.__dbconn()
         c = conn.cursor()
         # these are the tables for storing cmonkey run information.
         # run information
         c.execute('''create table run_infos (start_time timestamp, finish_time timestamp,
-                     num_iterations int,
+                     num_iterations int, last_iteration int,
                      organism text, species text, num_rows int, num_columns int)''')
 
         # run log tables
@@ -135,6 +141,7 @@ class CMonkeyRun:
                      position int, reverse boolean, pvalue decimal)''')
         c.execute('''create table motif_pvalues (iteration int, cluster int,
                      gene_num int, pvalue decimal)''')
+        logging.info("created output database schema")
 
         # all cluster members are stored relative to the base ratio matrix
         for index in xrange(len(self.ratio_matrix.row_names)):
@@ -143,6 +150,7 @@ class CMonkeyRun:
         for index in xrange(len(self.ratio_matrix.column_names)):
             c.execute('''insert into column_names (order_num, name) values (?,?)''',
                       (index, self.ratio_matrix.column_names[index]))
+        logging.info("added row and column names to output database")
         conn.commit()
         c.close()
         conn.close()
@@ -312,150 +320,130 @@ class CMonkeyRun:
 
 
     def write_results(self, iteration_result, compressed=True):
-        # Write a snapshot
+        """write iteration results to database"""
         iteration = iteration_result['iteration']
-        iteration_result['columns'] = {}
-        iteration_result['rows'] = {}
-        iteration_result['residuals'] = {}
-        for cluster in range(1, self['num_clusters'] + 1):
-            column_names = self.membership().columns_for_cluster(cluster)
-            row_names = self.membership().rows_for_cluster(cluster)
-            iteration_result['columns'][cluster] = column_names
-            iteration_result['rows'][cluster] = row_names
-            residual = self.residual_for(row_names, column_names)
-            iteration_result['residuals'][cluster] = residual
+        conn = self.__dbconn()
+        with conn:
+            for cluster in range(1, self['num_clusters'] + 1):
+                column_names = self.membership().columns_for_cluster(cluster)
+                for order_num in self.ratio_matrix.column_indexes(column_names):
+                    conn.execute('''insert into column_members (iteration,cluster,order_num)
+                                    values (?,?,?)''', (iteration, cluster, order_num))
 
-        # write results
-        if compressed:
-            with gzip.open('%s/%d-results.json.gz' % (self['output_dir'], iteration),
-                           'w') as outfile:
-                outfile.write(json.dumps(iteration_result))
-        else:
-            with open('%s/%d-results.json' % (self['output_dir'], iteration), 'w') as outfile:
-                outfile.write(json.dumps(iteration_result))
-
-        #################################################################
-        conn = sqlite3.connect(self['out_database'])
-        c = conn.cursor()
-        ## TODO: write results
-        for cluster in range(1, self['num_clusters'] + 1):
-            column_names = self.membership().columns_for_cluster(cluster)
-            for order_num in self.ratio_matrix.column_indexes(column_names):
-                c.execute('''insert into column_members (iteration,cluster,order_num)
-                              values (?,?,?)''', (iteration, cluster, order_num))
-
-            row_names = self.membership().rows_for_cluster(cluster)
-            for order_num in self.ratio_matrix.row_indexes(row_names):
-                c.execute('''insert into row_members (iteration,cluster,order_num)
-                              values (?,?,?)''', (iteration, cluster, order_num))
-            residual = self.residual_for(row_names, column_names)
-            c.execute('''insert into cluster_residuals (iteration,cluster,residual)
-                          values (?,?,?)''', (iteration, cluster, residual))
+                row_names = self.membership().rows_for_cluster(cluster)
+                for order_num in self.ratio_matrix.row_indexes(row_names):
+                    conn.execute('''insert into row_members (iteration,cluster,order_num)
+                                    values (?,?,?)''', (iteration, cluster, order_num))
+                residual = self.residual_for(row_names, column_names)
+                conn.execute('''insert into cluster_residuals (iteration,cluster,residual)
+                               values (?,?,?)''', (iteration, cluster, residual))
 
         # write motif infos: TODO: we might want the motif scoring function writing
         # this part
         motifs = iteration_result['motifs']
-        for seqtype in motifs:
-            for cluster in motifs[seqtype]:
-                motif_infos = motifs[seqtype][cluster]['motif-info']
-                for motif_info in motif_infos:
-                    c.execute('''insert into motif_infos (iteration,cluster,motif_num,evalue)
-                                 values (?,?,?,?)''', (iteration, cluster,
-                                                       motif_info['motif_num'],
-                                                       motif_info['evalue']))
-                    motif_info_id = c.lastrowid
-                    pssm_rows = motif_info['pssm']
-                    for row in xrange(len(pssm_rows)):
-                        pssm_row = pssm_rows[row]
-                        c.execute('''insert into motif_pssm_rows (motif_info_id,row,a,c,g,t)
-                                     values (?,?,?,?,?,?)''', (motif_info_id, row,
-                                                               pssm_row[0], pssm_row[1],
-                                                               pssm_row[2], pssm_row[2]))
-                    annotations = motif_info['annotations']
-                    for annotation in annotations:
-                        c.execute('''insert into motif_annotations (motif_info_id,gene_num,
-                                     position,reverse,pvalue) values (?,?,?,?,?)''',
-                                  (motif_info_id, 4711, annotation['position'],
-                                   annotation['reverse'], annotation['pvalue']))
+        with conn:
+            c = conn.cursor()
+            for seqtype in motifs:
+                for cluster in motifs[seqtype]:
+                    motif_infos = motifs[seqtype][cluster]['motif-info']
+                    for motif_info in motif_infos:
+                        c.execute('''insert into motif_infos (iteration,cluster,motif_num,evalue)
+                                     values (?,?,?,?)''',
+                                     (iteration, cluster, motif_info['motif_num'],
+                                      motif_info['evalue']))
+                        motif_info_id = c.lastrowid
+                        pssm_rows = motif_info['pssm']
+                        for row in xrange(len(pssm_rows)):
+                            pssm_row = pssm_rows[row]
+                            conn.execute('''insert into motif_pssm_rows (motif_info_id,row,a,c,g,t)
+                                            values (?,?,?,?,?,?)''',
+                                         (motif_info_id, row, pssm_row[0], pssm_row[1],
+                                          pssm_row[2], pssm_row[2]))
+                        annotations = motif_info['annotations']
+                        for annotation in annotations:
+                            gene_num = self.gene_indexes[annotation['gene']]
+                            conn.execute('''insert into motif_annotations (motif_info_id,gene_num,
+                                         position,reverse,pvalue) values (?,?,?,?,?)''',
+                                      (motif_info_id, gene_num, annotation['position'],
+                                       annotation['reverse'], annotation['pvalue']))
 
-                pvalues = motifs[seqtype][cluster]['pvalues']
-                for gene in pvalues:
-                    c.execute('''insert into motif_pvalues (iteration,cluster,gene_num,pvalue)
-                                 values (?,?,?,?)''', (iteration, cluster, 4711,
-                                                       pvalues[gene]))
-        conn.commit()
-        c.close()
+                    pvalues = motifs[seqtype][cluster]['pvalues']
+                    for gene in pvalues:
+                        gene_num = self.gene_indexes[gene]
+                        conn.execute('''insert into motif_pvalues (iteration,cluster,gene_num,pvalue)
+                                        values (?,?,?,?)''',
+                                     (iteration, cluster, 4711, pvalues[gene]))
+            c.close()
         conn.close()
-        #################################################################
-
 
     def write_stats(self, iteration_result):
         # write stats for this iteration
         iteration = iteration_result['iteration']
 
         network_scores = iteration_result['networks']
-        if 'motif-pvalue' in iteration_result:
-            motif_pvalues = iteration_result['motif-pvalue']
-        else:
-            motif_pvalues = {}
-
-        if 'fuzzy-coeff' in iteration_result:
-            fuzzy_coeff = iteration_result['fuzzy-coeff']
-        else:
-            fuzzy_coeff = 0.0
-
-        conn = sqlite3.connect(self['out_database'])
-        c = conn.cursor()
+        motif_pvalues = iteration_result['motif-pvalue'] if 'motif-pvalue' in iteration_result else {}
+        fuzzy_coeff = iteration_result['fuzzy-coeff'] if 'fuzzy-coeff' in iteration_result else 0.0
 
         residuals = []
-        for cluster in range(1, self['num_clusters'] + 1):
-            row_names = iteration_result['rows'][cluster]
-            column_names = iteration_result['columns'][cluster]
-            residual = self.residual_for(row_names, column_names)
-            residuals.append(residual)
-            c.execute('''insert into cluster_stats (iteration, cluster, num_rows,
-                         num_cols, residual) values (?,?,?,?,?)''',
-                      (iteration, cluster, len(row_names), len(column_names),
-                       residual))
+        conn = self.__dbconn()
+        with conn:
+            for cluster in range(1, self['num_clusters'] + 1):
+                row_names = self.membership().rows_for_cluster(cluster)
+                column_names = self.membership().columns_for_cluster(cluster)
+                residual = self.residual_for(row_names, column_names)
+                residuals.append(residual)
+                conn.execute('''insert into cluster_stats (iteration, cluster, num_rows,
+                                num_cols, residual) values (?,?,?,?,?)''',
+                             (iteration, cluster, len(row_names), len(column_names),
+                              residual))
 
-        median_residual = np.median(residuals)
-        c.execute('''insert into iteration_stats (iteration, median_residual,
-                     fuzzy_coeff) values (?,?,?)''',
-                  (iteration, median_residual, fuzzy_coeff))
-        for network, score in network_scores.items():
-            c.execute('''insert into network_stats (iteration, network, score)
-                         values (?,?,?)''', (iteration, network, score))
-        for seqtype, pval in motif_pvalues.items():
-            c.execute('''insert into motif_stats (iteration, seqtype, pval)
-                         values (?,?,?)''', (iteration, seqtype, pval))
+            median_residual = np.median(residuals)
+            conn.execute('''insert into iteration_stats (iteration, median_residual,
+                            fuzzy_coeff) values (?,?,?)''',
+                         (iteration, median_residual, fuzzy_coeff))
 
-        conn.commit()
-        c.close()
+        with conn:
+            for network, score in network_scores.items():
+                conn.execute('''insert into network_stats (iteration, network, score)
+                                values (?,?,?)''', (iteration, network, score))
+
+        with conn:
+            for seqtype, pval in motif_pvalues.items():
+                conn.execute('''insert into motif_stats (iteration, seqtype, pval)
+                                values (?,?,?)''', (iteration, seqtype, pval))
         conn.close()
 
     def write_start_info(self):
-        conn = sqlite3.connect(self['out_database'])
+        conn = self.__dbconn()
         c = conn.cursor()
-        c.execute('''insert into run_infos (start_time, num_iterations, organism,
-                     species, num_rows, num_columns) values (?,?,?,?,?,?)''',
-                  (datetime.now(), self['num_iterations'], self.organism().code,
-                   self.organism().species(), self.ratio_matrix.num_rows(),
-                   self.ratio_matrix.num_columns()))
-        conn.commit()
-        c.close()
+        with conn:
+            conn.execute('''insert into run_infos (start_time, num_iterations, organism,
+                            species, num_rows, num_columns) values (?,?,?,?,?,?)''',
+                         (datetime.now(), self['num_iterations'], self.organism().code,
+                          self.organism().species(), self.ratio_matrix.num_rows(),
+                          self.ratio_matrix.num_columns()))
+        conn.close()
+
+    def update_iteration(self, iteration):
+        conn = self.__dbconn()
+        with conn:
+            conn.execute('''update run_infos set last_iteration = ?''', (iteration,))
         conn.close()
 
     def write_finish_info(self):
-        conn = sqlite3.connect(self['out_database'])
-        c = conn.cursor()
-        c.execute('''update run_infos set finish_time = ?''', (datetime.now(),))
-        conn.commit()
-        c.close()
+        conn = self.__dbconn()
+        with conn:
+            conn.execute('''update run_infos set finish_time = ?''', (datetime.now(),))
         conn.close()
 
     def run_iterations(self, row_scoring, col_scoring):
         self.report_params()
         self.write_start_info()
+        thesaurus = self.organism().thesaurus()
+
+        genes = [thesaurus[row_name] if row_name in thesaurus else row_name
+                 for row_name in self.ratio_matrix.row_names]
+        self.gene_indexes = { genes[index]: index for index in xrange(len(genes)) }
 
         for iteration in range(self['start_iteration'],
                                self['num_iterations'] + 1):
@@ -494,6 +482,7 @@ class CMonkeyRun:
 
             if iteration == 1 or (iteration % STATS_FREQ == 0):
                 self.write_stats(iteration_result)
+                self.update_iteration(iteration)
 
             gc.collect()
             #print "# ROW SCORING: ", sizes.asizeof(self.row_scoring)

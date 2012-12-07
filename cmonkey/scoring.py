@@ -83,17 +83,24 @@ class RunLog:
     def __init__(self, name, config_params):
         self.name = name
         self.dbpath = config_params['out_database']
-        self.conn = sqlite3.connect(self.dbpath)
-        c = self.conn.cursor()
-        c.execute('insert into run_logs (name) values (?)', (name,))
-        self.log_id = c.lastrowid
-        self.conn.commit()
+
+        conn = self.dbconn()
+        with conn:
+            c = conn.cursor()
+            c.execute('insert into run_logs (name) values (?)', (name,))
+            self.log_id = c.lastrowid
+        conn.close()
+
+    def dbconn(self):
+        return sqlite3.connect(self.dbpath)
 
     def log(self, iteration, was_active, scaling):
-        c = self.conn.cursor()
-        c.execute('''insert into log_entries (log_id, iteration, was_active,
-                  scaling) values (?,?,?,?)''', (self.log_id, iteration, was_active, scaling))
-        self.conn.commit()
+        conn = self.dbconn()
+        with conn:
+            conn.execute('''insert into log_entries (log_id, iteration, was_active,
+                            scaling) values (?,?,?,?)''',
+                      (self.log_id, iteration, was_active, scaling))
+        conn.close()
 
 
 class ScoringFunctionBase:
