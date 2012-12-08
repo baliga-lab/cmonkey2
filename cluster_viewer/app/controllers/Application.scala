@@ -37,7 +37,7 @@ object Application extends Controller {
   val Synonyms = SynonymsFactory.getSynonyms(
     ProjectConfig.getProperty("cmonkey.synonyms.format"),
     ProjectConfig.getProperty("cmonkey.synonyms.file"))
-  val snapshotReader   = new SnapshotReader(OutDirectory, Synonyms)
+  val snapshotReader   = new SnapshotReader(Synonyms)
   val statsReader      = new StatsReader
   val runlogReader     = new RunLogReader
   val runStatusReader  = new RunStatusReader
@@ -87,7 +87,7 @@ object Application extends Controller {
     java.util.Arrays.sort(statsIterations)
 
     makeRowStats(stats)
-    val snapshotOption =  None // snapshotReader.readSnapshot(iteration)
+    val snapshotOption =  snapshotReader.readSnapshot(iteration)
     val clusters = sortByResidual(snapshotOption)
     val progress = math.min((lastIteration / runStatus.numIterations.toDouble * 100.0), 100.0)
     
