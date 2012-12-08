@@ -499,6 +499,7 @@ class CMonkeyRun:
         row_scoring.compute_force(iteration_result)
         self.write_results(iteration_result)
         self.write_stats(iteration_result)
+        self.update_iteration(self['num_iterations'] + 1)
         self.write_finish_info()
         print "Done !!!!"
 

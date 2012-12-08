@@ -20,7 +20,7 @@ runLogs: Array[RunLog])
          $('#select_iteration').change(function (event) {
              window.location.href = "/" + $(this).val();
          });
-         var iterations = @(HighchartsFormatter.formatInts(runInfo.statsIterations));
+         var iterations = @(HighchartsFormatter.formatInts(runInfo.iterations));
 
          // residual graph
          var residualChart = new Highcharts.Chart({

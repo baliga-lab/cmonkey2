@@ -39,11 +39,11 @@ object ClusterStats extends Table[(Int, Int, Int, Int, Double)]("cluster_stats")
   def residual = column[Double]("residual", O NotNull)
 
   def * = iteration ~ cluster ~ numRows ~ numColumns ~ residual
-  def findForIteration(iter: Int) = database.withSession { implicit db: Session =>
+  def findAll = database.withSession { implicit db: Session =>
     (for {
-      t <- this if t.iteration === iter
+      t <- this
       _ <- Query orderBy(t.cluster)
-     } yield t.cluster ~ t.numRows ~ t.numColumns ~ t.residual).list
+     } yield t.iteration ~ t.cluster ~ t.numRows ~ t.numColumns ~ t.residual).list
   }
 }
 
@@ -55,11 +55,11 @@ object NetworkStats extends Table[(Int, String, Double)]("network_stats") {
   def score = column[Double]("score", O NotNull)
 
   def * = iteration ~ network ~ score
-  def findForIteration(iter: Int) = database.withSession { implicit db: Session =>
+  def findAll = database.withSession { implicit db: Session =>
     (for {
-      t <- this if t.iteration === iter
+      t <- this
       _ <- Query orderBy(t.network)
-     } yield t.network ~ t.score).list
+     } yield t.iteration ~ t.network ~ t.score).list
   }
 }
 
@@ -71,11 +71,12 @@ object MotifStats extends Table[(Int, String, Double)]("motif_stats") {
   def pval = column[Double]("pval", O NotNull)
 
   def * = iteration ~ seqtype ~ pval
-  def findForIteration(iter: Int) = database.withSession { implicit db: Session =>
+
+  def findAll = database.withSession { implicit db: Session =>
     (for {
-      t <- this if t.iteration === iter
+      t <- this
       _ <- Query orderBy(t.seqtype)
-     } yield t.seqtype ~ t.pval).list
+     } yield t.iteration ~ t.seqtype ~ t.pval).list
   }
 }
 
@@ -87,21 +88,44 @@ case class IterationStat(clusters: Map[Int, ClusterStat], medianResidual: Double
 
 class StatsReader {
   def readStats: HashMap[Int, IterationStat] = {
+
+    // for I/O performance reasons, we use the findAll method to build up our stats
     val stats = new HashMap[Int, IterationStat]
-    IterationStats.findAll.foreach { stat =>
+    val iterationStats = IterationStats.findAll
+
+    val clusterStats = ClusterStats.findAll
+    val clusterIterationMap = new HashMap[Int, HashMap[Int, ClusterStat]]
+    clusterStats.foreach { cstat =>
+      if (!clusterIterationMap.contains(cstat._1)) {
+        clusterIterationMap(cstat._1) = new HashMap[Int, ClusterStat]
+      }
+      clusterIterationMap(cstat._1)(cstat._2) = ClusterStat(cstat._3, cstat._4, cstat._5)
+    }
+
+    val motifStats = MotifStats.findAll
+    val motifIterationMap = new HashMap[Int, HashMap[String, Double]]
+    motifStats.foreach { mstat =>
+      if (!motifIterationMap.contains(mstat._1)) {
+        motifIterationMap(mstat._1) = new HashMap[String, Double]
+      }
+      motifIterationMap(mstat._1)(mstat._2) = mstat._3
+    }
+
+    val networkStats = NetworkStats.findAll
+    val networkIterationMap = new HashMap[Int, HashMap[String, Double]]
+    networkStats.foreach { nstat =>
+      if (!networkIterationMap.contains(nstat._1)) {
+        networkIterationMap(nstat._1) = new HashMap[String, Double]
+      }
+      networkIterationMap(nstat._1)(nstat._2) = nstat._3
+    }
+
+
+    iterationStats.foreach { stat =>
       val iteration = stat._1
-      val clusterMap = new HashMap[Int, ClusterStat]()
-      val networkMap = new HashMap[String, Double]()
-      val motifMap = new HashMap[String, Double]()
-      ClusterStats.findForIteration(iteration).foreach { cstat =>
-        clusterMap(cstat._1) = ClusterStat(cstat._2, cstat._3, cstat._4)
-      }
-      MotifStats.findForIteration(iteration).foreach { mstat =>
-        motifMap(mstat._1) = mstat._2
-      }
-      NetworkStats.findForIteration(iteration).foreach { nstat =>
-        networkMap(nstat._1) = nstat._2
-      }
+      val networkMap = networkIterationMap(iteration)
+      val motifMap = motifIterationMap(iteration)
+      val clusterMap = clusterIterationMap(iteration)
       stats(iteration) = IterationStat(clusterMap.toMap, stat._2, motifMap.toMap,
                                        networkMap.toMap, stat._3)
     }

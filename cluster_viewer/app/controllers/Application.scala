@@ -15,7 +15,6 @@ case class RunInfo(runStatus: RunStatus,
                    currentIteration: Int,
                    clusters: Seq[Int],
                    iterations: Seq[Int],
-                   statsIterations: Seq[Int],
                    progress: Double) {
   def organismCode = runStatus.organismCode
   def species = runStatus.species
@@ -57,19 +56,6 @@ object Application extends Controller {
   }
   val RatiosFactory = new RatioMatrixFactory(ratiosFile, Synonyms)
 
-  private def snapshotIterations = {
-    val fileNames = OutDirectory.list(new FilenameFilter {
-      def accept(dir: File, name: String) = SnapshotReader.JsonFilePattern.matcher(name).matches
-    })
-    val result = new ArrayBuffer[Int]
-    for (name <- fileNames) {
-      val matcher = SnapshotReader.JsonFilePattern.matcher(name)
-      matcher.matches
-      result += matcher.group(1).toInt
-    }
-    result.sortWith((v1: Int, v2: Int) => v1 < v2)
-  }
-
   // **********************************************************************
   // ****** VIEWS
   // **********************************************************************
@@ -78,22 +64,34 @@ object Application extends Controller {
 
   def index2(iteration: Int) = Action {
     // sort keys ascending by iteration number
+    var start = System.currentTimeMillis
     val runStatus = runStatusReader.readRunStatus.get
+
+    var elapsed = System.currentTimeMillis - start
+    System.out.println("read run status in " + elapsed + " ms.")
+    start = System.currentTimeMillis
+
     val stats = statsReader.readStats.toMap
+
+    elapsed = System.currentTimeMillis - start
+    System.out.println("read stats in " + elapsed + " ms.")
+    start = System.currentTimeMillis
+
     val runLogs = runlogReader.readLogs
 
+    elapsed = System.currentTimeMillis - start
+    System.out.println("read run logs in " + elapsed + " ms.")
+
     val statsIterations = stats.keySet.toArray
+    val lastIteration = runStatus.lastIteration.getOrElse(1)
     java.util.Arrays.sort(statsIterations)
 
     makeRowStats(stats)
-    val snapshotOption = snapshotReader.readSnapshot(iteration)
+    val snapshotOption =  None // snapshotReader.readSnapshot(iteration)
     val clusters = sortByResidual(snapshotOption)
-    val progress = math.min((snapshotIterations(snapshotIterations.length - 1) /
-                             runStatus.numIterations.toDouble * 100.0), 100.0)
+    val progress = math.min((lastIteration / runStatus.numIterations.toDouble * 100.0), 100.0)
     
-    val runInfo = RunInfo(runStatus,
-                          iteration, clusters, snapshotIterations, statsIterations,
-                          progress)
+    val runInfo = RunInfo(runStatus, iteration, clusters, statsIterations, progress)
     Ok(views.html.index(runInfo,
                         snapshotOption,
                         makeMeanResiduals(statsIterations, stats),
