@@ -79,28 +79,16 @@ class RunLog:
     scoring function's behavior in a given iteration. In each iteration,
     a scoring function should log whether it was active and which scaling
     was applied.
+    It simply appends log entries to a file to keep I/O and database load
+    low.
     """
     def __init__(self, name, config_params):
         self.name = name
-        self.dbpath = config_params['out_database']
-
-        conn = self.dbconn()
-        with conn:
-            c = conn.cursor()
-            c.execute('insert into run_logs (name) values (?)', (name,))
-            self.log_id = c.lastrowid
-        conn.close()
-
-    def dbconn(self):
-        return sqlite3.connect(self.dbpath)
+        self.output_file = '%s/%s.runlog' % (config_params['output_dir'], name)
 
     def log(self, iteration, was_active, scaling):
-        conn = self.dbconn()
-        with conn:
-            conn.execute('''insert into log_entries (log_id, iteration, was_active,
-                            scaling) values (?,?,?,?)''',
-                      (self.log_id, iteration, was_active, scaling))
-        conn.close()
+        with open(self.output_file, 'a') as logfile:
+            logfile.write('%d:%d:%f\n' % (iteration, 1 if was_active else 0, scaling))
 
 
 class ScoringFunctionBase:

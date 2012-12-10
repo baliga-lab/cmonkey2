@@ -68,7 +68,7 @@ object Application extends Controller {
     val runStatus = runStatusReader.readRunStatus.get
 
     var elapsed = System.currentTimeMillis - start
-    System.out.println("read run status in " + elapsed + " ms.")
+    println("read run status in " + elapsed + " ms.")
     start = System.currentTimeMillis
 
     val stats = statsReader.readStats.toMap
@@ -77,10 +77,10 @@ object Application extends Controller {
     System.out.println("read stats in " + elapsed + " ms.")
     start = System.currentTimeMillis
 
-    val runLogs = runlogReader.readLogs
+    val runLogs = runlogReader.readLogs(OutDirectory)
 
     elapsed = System.currentTimeMillis - start
-    System.out.println("read run logs in " + elapsed + " ms.")
+    println("read run logs in " + elapsed + " ms.")
 
     val statsIterations = stats.keySet.toArray
     val lastIteration = runStatus.lastIteration.getOrElse(1)
@@ -92,6 +92,7 @@ object Application extends Controller {
     val progress = math.min((lastIteration / runStatus.numIterations.toDouble * 100.0), 100.0)
     
     val runInfo = RunInfo(runStatus, iteration, clusters, statsIterations, progress)
+    println("Rendering the web page now")
     Ok(views.html.index(runInfo,
                         snapshotOption,
                         makeMeanResiduals(statsIterations, stats),
@@ -99,7 +100,7 @@ object Application extends Controller {
                         makeRowStats(stats),
                         makeColumnStats(stats),
                         makeResidualHistogram(stats),
-                        runLogs.get))
+                        runLogs))
   }
 
   private def sortByResidual(snapshotOption: Option[Snapshot]): Seq[Int] = {
