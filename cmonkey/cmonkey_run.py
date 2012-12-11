@@ -106,11 +106,6 @@ class CMonkeyRun:
                      num_iterations int, last_iteration int,
                      organism text, species text, num_rows int, num_columns int)''')
 
-        # run log tables
-        c.execute('create table run_logs (name text)')
-        c.execute('''create table log_entries (log_id int, iteration int, was_active boolean,
-                     scaling decimal)''')
-
         # stats tables
         c.execute('''create table iteration_stats (iteration int, median_residual decimal,
                      fuzzy_coeff decimal)''')
@@ -132,12 +127,15 @@ class CMonkeyRun:
 
         # motif results: TODO: we might want to have the motif scoring function
         # ------------- write it
+        # in case you are wondering about the redundant iteration field here -
+        # it allows for much faster database access when selecting by iteration
         c.execute('''create table motif_infos (iteration int, cluster int,
                      seqtype text, motif_num int, evalue decimal)''')
-        c.execute('''create table motif_pssm_rows (motif_info_id,
+        c.execute('''create table motif_pssm_rows (motif_info_id int, iteration int,
                      row int, a decimal, c decimal, g decimal, t decimal)''')
 
-        c.execute('''create table motif_annotations (motif_info_id int, gene_num int,
+        c.execute('''create table motif_annotations (motif_info_id int,
+                     iteration int, gene_num int,
                      position int, reverse boolean, pvalue decimal)''')
         c.execute('''create table motif_pvalues (iteration int, cluster int,
                      gene_num int, pvalue decimal)''')
@@ -347,24 +345,26 @@ class CMonkeyRun:
                 for cluster in motifs[seqtype]:
                     motif_infos = motifs[seqtype][cluster]['motif-info']
                     for motif_info in motif_infos:
-                        c.execute('''insert into motif_infos (iteration,cluster,motif_num,evalue)
-                                     values (?,?,?,?)''',
-                                     (iteration, cluster, motif_info['motif_num'],
+                        c.execute('''insert into motif_infos (iteration,cluster,seqtype,motif_num,evalue)
+                                     values (?,?,?,?,?)''',
+                                     (iteration, cluster, seqtype, motif_info['motif_num'],
                                       motif_info['evalue']))
                         motif_info_id = c.lastrowid
                         pssm_rows = motif_info['pssm']
                         for row in xrange(len(pssm_rows)):
                             pssm_row = pssm_rows[row]
-                            conn.execute('''insert into motif_pssm_rows (motif_info_id,row,a,c,g,t)
-                                            values (?,?,?,?,?,?)''',
-                                         (motif_info_id, row, pssm_row[0], pssm_row[1],
+                            conn.execute('''insert into motif_pssm_rows (motif_info_id,iteration,row,a,c,g,t)
+                                            values (?,?,?,?,?,?,?)''',
+                                         (motif_info_id, iteration, row, pssm_row[0], pssm_row[1],
                                           pssm_row[2], pssm_row[2]))
                         annotations = motif_info['annotations']
                         for annotation in annotations:
                             gene_num = self.gene_indexes[annotation['gene']]
-                            conn.execute('''insert into motif_annotations (motif_info_id,gene_num,
-                                         position,reverse,pvalue) values (?,?,?,?,?)''',
-                                      (motif_info_id, gene_num, annotation['position'],
+                            conn.execute('''insert into motif_annotations (motif_info_id,
+                                            iteration,gene_num,
+                                            position,reverse,pvalue) values (?,?,?,?,?,?)''',
+                                      (motif_info_id, iteration, gene_num,
+                                       annotation['position'],
                                        annotation['reverse'], annotation['pvalue']))
 
                     pvalues = motifs[seqtype][cluster]['pvalues']

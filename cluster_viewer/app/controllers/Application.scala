@@ -239,7 +239,7 @@ object Application extends Controller {
                           annotationMap.toMap))
   }
 
-  private def toJsonPssm(motifInfos: Array[MotifInfo]): Array[String] = {
+  private def toJsonPssm(motifInfos: Seq[MotifInfo]): Array[String] = {
     val result = new java.util.ArrayList[String]
     for (i <- 0 until motifInfos.length) {
       result.add(Json.stringify(JsObject(List("alphabet" -> Json.toJson(Array("A", "C", "G", "T")),
