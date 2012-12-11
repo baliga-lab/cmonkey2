@@ -356,7 +356,7 @@ class CMonkeyRun:
                             conn.execute('''insert into motif_pssm_rows (motif_info_id,iteration,row,a,c,g,t)
                                             values (?,?,?,?,?,?,?)''',
                                          (motif_info_id, iteration, row, pssm_row[0], pssm_row[1],
-                                          pssm_row[2], pssm_row[2]))
+                                          pssm_row[2], pssm_row[3]))
                         annotations = motif_info['annotations']
                         for annotation in annotations:
                             gene_num = self.gene_indexes[annotation['gene']]
