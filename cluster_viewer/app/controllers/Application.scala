@@ -37,7 +37,7 @@ object Application extends Controller {
   val Synonyms = SynonymsFactory.getSynonyms(
     ProjectConfig.getProperty("cmonkey.synonyms.format"),
     ProjectConfig.getProperty("cmonkey.synonyms.file"))
-  val snapshotReader   = new SnapshotReader(Synonyms)
+  val snapshotReader   = new IterationResultReader(Synonyms)
   val statsReader      = new StatsReader
   val runlogReader     = new RunLogReader
   val runStatusReader  = new RunStatusReader
@@ -87,14 +87,13 @@ object Application extends Controller {
     java.util.Arrays.sort(statsIterations)
 
     makeRowStats(stats)
-    val snapshotOption =  snapshotReader.readSnapshot(iteration)
-    val clusters = sortByResidual(snapshotOption)
+    val resultOption =  snapshotReader.readIterationResult(iteration)
+    val clusters = sortByResidual(resultOption)
     val progress = math.min((lastIteration / runStatus.numIterations.toDouble * 100.0), 100.0)
     
     val runInfo = RunInfo(runStatus, iteration, clusters, statsIterations, progress)
-    println("Rendering the web page now")
     Ok(views.html.index(runInfo,
-                        snapshotOption,
+                        resultOption,
                         makeMeanResiduals(statsIterations, stats),
                         stats,
                         makeRowStats(stats),
@@ -102,8 +101,9 @@ object Application extends Controller {
                         makeResidualHistogram(stats),
                         runLogs))
   }
-
-  private def sortByResidual(snapshotOption: Option[Snapshot]): Seq[Int] = {
+  // TODO: left over from the time data was stored in JSON, we can let the
+  // database sort now
+  private def sortByResidual(resultOption: Option[IterationResult]): Seq[Int] = {
     object MyOrdering extends Ordering[(Int, Double)] {
       def compare(a: (Int, Double), b: (Int, Double)) = {
         if (a._2 < b._2) -1
@@ -111,9 +111,8 @@ object Application extends Controller {
         else 0
       }
     }
-    if (snapshotOption != None) {
-      val residuals: Array[(Int, Double)] =
-        snapshotOption.get.residuals.toArray
+    if (resultOption != None) {
+      val residuals: Array[(Int, Double)] = resultOption.get.residuals.toArray
       Sorting.quickSort(residuals)(MyOrdering)
       residuals.map(_._1)
     } else Array[Int]()
@@ -192,17 +191,17 @@ object Application extends Controller {
   }
 
   def cluster(iteration: Int, cluster: Int) = Action {
-    val snapshot = snapshotReader.readSnapshot(iteration)
-    val ratios = RatiosFactory.readRatios(snapshot.get.rows(cluster).toArray)
-    val rows    = snapshot.get.rows(cluster)
-    val columns = snapshot.get.columns(cluster)
+    val result = snapshotReader.readIterationResult(iteration)
+    val ratios = RatiosFactory.readRatios(result.get.rows(cluster).toArray)
+    val rows    = result.get.rows(cluster)
+    val columns = result.get.columns(cluster)
     val motifInfoMap = new HashMap[String, Array[MotifInfo]]
     val pssmMap = new HashMap[String, Array[String]]
     val annotationMap = new HashMap[String, Seq[GeneAnnotations]]
 
     // motif extraction
-    for (seqType <- snapshot.get.motifs.keys) {
-      val motifObj = snapshot.get.motifs(seqType) 
+    for (seqType <- result.get.motifs.keys) {
+      val motifObj = result.get.motifs(seqType) 
       if (motifObj.contains(cluster)) {
         // re-group annotations by gene
         val geneAnnotationMap = new HashMap[String, ArrayBuffer[Annotation]]
@@ -217,7 +216,6 @@ object Application extends Controller {
             geneAnnotationMap(annotation.gene) += annotation
           }
         }
-        //println("GENE ANNOTATIONS: " + geneAnnotationMap.keys)
         val geneAnnotationList = new ArrayBuffer[GeneAnnotations]
         for (key <- geneAnnotationMap.keys) {
           // TODO: What is acually plotted is the pvalue of the gene in this cluster

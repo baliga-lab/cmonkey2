@@ -345,18 +345,18 @@ object MotifStats extends Table[(Int, String, Double)]("motif_stats") {
 case class Annotation(motifNum: Int, reverse: Boolean, position: Int, gene: String, pvalue: Double)
 case class GeneAnnotations(gene: String, annotations: Seq[Annotation])
 case class MotifInfo(motifNum: Int, evalue: Double, pssm: Array[Array[Float]], annotations: Array[Annotation])
-case class Snapshot(rows: Map[Int, List[String]], columns: Map[Int, List[String]],
-                    residuals: Map[Int, Double],
-                    motifs: Map[String, Map[Int, Seq[MotifInfo]]]) {
+case class IterationResult(rows: Map[Int, List[String]], columns: Map[Int, List[String]],
+                           residuals: Map[Int, Double],
+                           motifs: Map[String, Map[Int, Seq[MotifInfo]]]) {
 }
 
 // **********************************************************************
 // **** Result data reader
 // **********************************************************************
 
-class SnapshotReader(Synonyms: SynonymsMap) {
+class IterationResultReader(Synonyms: SynonymsMap) {
 
-  def readSnapshot(iteration: Int) : Option[Snapshot] = {
+  def readIterationResult(iteration: Int) : Option[IterationResult] = {
     val rowNames: Array[String] = RowNames.findAll
     val columnNames: Array[String] = ColumnNames.findAll
     printf("# row names: %d, # col names: %d\n", rowNames.length, columnNames.length)
@@ -391,8 +391,8 @@ class SnapshotReader(Synonyms: SynonymsMap) {
 
     printf("# row members: %d, # col members: %d, # residuals: %d\n",
            rowMembers.length, colMembers.length, clusterResiduals.length)
-    Some(Snapshot(rows.toMap, columns.toMap, residuals.toMap,
-                  motifInfos.toMap))
+    Some(IterationResult(rows.toMap, columns.toMap, residuals.toMap,
+                         motifInfos.toMap))
   }
 }
 
