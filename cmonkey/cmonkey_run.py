@@ -104,9 +104,12 @@ class CMonkeyRun:
         # run information
         c.execute('''create table run_infos (start_time timestamp, finish_time timestamp,
                      num_iterations int, last_iteration int,
-                     organism text, species text, num_rows int, num_columns int)''')
+                     organism text, species text, num_rows int, num_columns int, num_clusters int)''')
 
         # stats tables
+        # Note: there is some redundancy with the result tables here. I measured
+        # ----- the cost for creating those on the fly and it is more expensive
+        #       than I expected, so I left the tables in-place
         c.execute('''create table iteration_stats (iteration int, median_residual decimal,
                      fuzzy_coeff decimal)''')
         c.execute('''create table cluster_stats (iteration int, cluster int, num_rows int,
@@ -117,8 +120,6 @@ class CMonkeyRun:
         c.execute('''create table column_names (order_num int, name text)''')
 
         # result tables
-        # NOTE: these tables make the cluster_stats table obsolete
-        # ----- iteration_stats could also possibly removed
         c.execute('''create table row_members (iteration int, cluster int, order_num int)''')
         c.execute('''create table column_members (iteration int, cluster int,
                      order_num int)''')
@@ -418,10 +419,10 @@ class CMonkeyRun:
         c = conn.cursor()
         with conn:
             conn.execute('''insert into run_infos (start_time, num_iterations, organism,
-                            species, num_rows, num_columns) values (?,?,?,?,?,?)''',
+                            species, num_rows, num_columns, num_clusters) values (?,?,?,?,?,?,?)''',
                          (datetime.now(), self['num_iterations'], self.organism().code,
                           self.organism().species(), self.ratio_matrix.num_rows(),
-                          self.ratio_matrix.num_columns()))
+                          self.ratio_matrix.num_columns(), self['num_clusters']))
         conn.close()
 
     def update_iteration(self, iteration):
