@@ -140,6 +140,12 @@ class CMonkeyRun:
                      position int, reverse boolean, pvalue decimal)''')
         c.execute('''create table motif_pvalues (iteration int, cluster int,
                      gene_num int, pvalue decimal)''')
+        c.execute('''create index if not exists colmemb_iter_index
+                     on column_members (iteration)''')
+        c.execute('''create index if not exists rowmemb_iter_index
+                     on row_members (iteration)''')
+        c.execute('''create index if not exists clustresid_iter_index
+                     on cluster_residuals (iteration)''')
         logging.info("created output database schema")
 
         # all cluster members are stored relative to the base ratio matrix
