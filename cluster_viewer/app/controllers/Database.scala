@@ -178,7 +178,8 @@ object MotifQueries {
       // motif id -> pssm row
       val pssmMap = new HashMap[Int, ArrayBuffer[Array[Float]]]
       // motif id -> annotation
-      val annotMap = new HashMap[Int, ArrayBuffer[(Int, Int, Boolean, Double)]]
+      val annotMap =(new HashMap[Int, ArrayBuffer[(Int, Int, Boolean, Double)]]).
+                          withDefaultValue(new ArrayBuffer[(Int, Int, Boolean, Double)])
       // sequence type -> list((motif id, motif num, evalue))
       val seqtypeMap = new HashMap[String, ArrayBuffer[(Int, Int, Double)]]
       // motif id -> cluster
