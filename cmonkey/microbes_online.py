@@ -123,7 +123,7 @@ def make_operon_pairs(operon, features):
         if gene in features.keys():
             available_operon_genes.append(gene)
         else:
-            logging.warn("Microbles Online operon gene '%s' not found in " +
+            logging.warn("Microbes Online operon gene '%s' not found in " +
                          "RSAT features", gene)
 
     for gene in available_operon_genes:
