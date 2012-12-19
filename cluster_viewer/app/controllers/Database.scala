@@ -392,7 +392,9 @@ class IterationResultReader(Synonyms: SynonymsMap) {
 
     printf("# row members: %d, # col members: %d, # residuals: %d\n",
            rowMembers.length, colMembers.length, clusterResiduals.length)
-    Some(IterationResult(rows.toMap, columns.toMap, residuals.toMap,
+    Some(IterationResult(rows.toMap.withDefaultValue(List()),
+                         columns.toMap.withDefaultValue(List()),
+                         residuals.toMap.withDefaultValue(0.0),
                          motifInfos.toMap))
   }
 }
