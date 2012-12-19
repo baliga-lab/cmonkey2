@@ -252,10 +252,12 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     def __update_score_matrix(self, matrix, network_score, weight):
         """add values into the result score matrix"""
         mvalues = matrix.values
+        gene_names = self.gene_names()
         for cluster in xrange(1, self.num_clusters() + 1):
+            cluster_genes = set(network_score[cluster].keys())
             for row_index in xrange(self.matrix().num_rows()):
-                gene = self.gene_at(row_index)
-                if gene in network_score[cluster].keys():
+                gene = gene_names[row_index]
+                if gene in cluster_genes:
                     weighted_score = network_score[cluster][gene] * weight
                     mvalues[row_index][cluster - 1] += weighted_score
 
@@ -263,6 +265,8 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """compute the score means on the given network score"""
         result = {}
         for cluster in xrange(1, self.num_clusters() + 1):
+            ## TODO: we can rewrite this as a list comprehension. Check whether that
+            ## will be faster
             cluster_scores = []
             for gene in sorted(self.rows_for_cluster(cluster)):
                 if gene in network_score[cluster].keys():
