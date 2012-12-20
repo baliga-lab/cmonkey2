@@ -261,11 +261,7 @@ class ClusterMembership:
             self.num_clusters_per_column()):
             raise Exception(("add_col_to_cluster() - exceeded clusters/col " +
                             "limit for col: '%s'" % str(column)))
-        self.__add_cluster_to_column(column, cluster)
 
-    def __add_cluster_to_column(self, column, cluster):
-        """adds the specified column as a member to the cluster. Unchecked
-        version, without checking limits"""
         if not column in self.__column_is_member_of:
             self.__column_is_member_of[column] = []
         if not cluster in self.__cluster_column_members:
@@ -273,14 +269,8 @@ class ClusterMembership:
 
         clusters = self.__column_is_member_of[column]
         columns = self.__cluster_column_members[cluster]
-
         if cluster not in clusters:
-            #logging.info("COL %s -> CLUSTER %d", column, cluster)
             clusters.append(cluster)
-        else:
-            #logging.warn("cluster %s already associated with %s",
-            #             str(cluster), str(column))
-            pass
         if column not in columns:
             columns.append(column)
 
@@ -565,15 +555,15 @@ class ClusterMembership:
 
 # Parallelized updating of row and column membership changes
 UPDATE_MEMBERSHIP = None
-CD_SCORES = None
-RD_SCORES = None
+COLNAMES = None
+ROWNAMES = None
 BEST_CLUSTERS = None
 CHANGE_PROBABILITY = None
 MAX_CHANGES = None
 
 def update_for_rows(membership, rd_scores, multiprocessing):
     """generically updating row memberships according to  rd_scores"""
-    global UPDATE_MEMBERSHIP, RD_SCORES, BEST_CLUSTERS, CHANGE_PROBABILITY, MAX_CHANGES
+    global UPDATE_MEMBERSHIP, ROWNAMES, BEST_CLUSTERS, CHANGE_PROBABILITY, MAX_CHANGES
 
     def add_cluster_to_row(row, cluster):
         """ Ways to add a member to a cluster:
@@ -589,7 +579,7 @@ def update_for_rows(membership, rd_scores, multiprocessing):
     MAX_CHANGES = membership.max_changes_per_row()
     BEST_CLUSTERS = get_best_clusters(rd_scores, membership.num_clusters_per_row())
     UPDATE_MEMBERSHIP = membership
-    RD_SCORES = rd_scores
+    ROWNAMES = rd_scores.row_names
     CHANGE_PROBABILITY = membership.probability_seeing_row_change()
 
     if multiprocessing:
@@ -612,23 +602,23 @@ def update_for_rows(membership, rd_scores, multiprocessing):
 
 def compute_update_row_cluster_pairs(row):
     """The map() part to detemine the new row-cluster pairs"""
-    global UPDATE_MEMBERSHIP, RD_SCORES, BEST_CLUSTERS, CHANGE_PROBABILITY, MAX_CHANGES
-    rowname = RD_SCORES.row_names[row]
+    global UPDATE_MEMBERSHIP, ROWNAMES, BEST_CLUSTERS, CHANGE_PROBABILITY, MAX_CHANGES
+    rowname = ROWNAMES[row]
     best_members = BEST_CLUSTERS[rowname]
-    result = []
     if (not UPDATE_MEMBERSHIP.is_row_in_clusters(rowname, best_members) and
         seeing_change(CHANGE_PROBABILITY)):
+        cluster_rows = set(UPDATE_MEMBERSHIP.clusters_for_row(rowname))
         change_clusters = [cluster for cluster in best_members
-                           if cluster not in UPDATE_MEMBERSHIP.clusters_for_row(rowname)]
-        for change in xrange(min(MAX_CHANGES,
-                                len(change_clusters))):
-            result.append((rowname, change_clusters[change]))
-    return result
+                           if cluster not in cluster_rows]
+        return [(rowname, change_clusters[change])
+                for change in xrange(min(MAX_CHANGES, len(change_clusters)))]
+    else:
+        return []
 
 
 def update_for_cols(membership, cd_scores, multiprocessing):
     """updating column memberships according to cd_scores"""
-    global UPDATE_MEMBERSHIP, CD_SCORES, BEST_CLUSTERS, CHANGE_PROBABILITY, MAX_CHANGES
+    global UPDATE_MEMBERSHIP, COLNAMES, BEST_CLUSTERS, CHANGE_PROBABILITY, MAX_CHANGES
 
     def add_cluster_to_col(col, cluster):
         """adds a column to a cluster"""
@@ -642,18 +632,26 @@ def update_for_cols(membership, cd_scores, multiprocessing):
     BEST_CLUSTERS = get_best_clusters(cd_scores, membership.num_clusters_per_column())
     CHANGE_PROBABILITY = membership.probability_seeing_col_change()
     UPDATE_MEMBERSHIP = membership
-    CD_SCORES = cd_scores
+    COLNAMES = cd_scores.row_names
+
+    start_time = util.current_millis()
 
     if multiprocessing:
         pool = mp.Pool()
         llist = pool.map(compute_update_col_cluster_pairs, xrange(cd_scores.num_rows()))
+        result = [item for sublist in llist for item in sublist]
         pool.close()
         pool.join()
-        result = [item for sublist in llist for item in sublist]
     else:
         result = []
         for row in xrange(cd_scores.num_rows()):
             result.extend(compute_update_col_cluster_pairs(row))
+
+    elapsed = util.current_millis() - start_time
+    logging.info("computed update_for cdscores in %f s. Result size = %d",
+                 elapsed / 1000.0, len(result))
+    start_time = util.current_millis()
+
     UPDATE_MEMBERSHIP = None
     for rowname, cluster in result:
         add_cluster_to_col(rowname, cluster)
@@ -661,22 +659,25 @@ def update_for_cols(membership, cd_scores, multiprocessing):
         num_colmembers = membership.num_column_members(cluster)
         if num_colmembers == 0:
             raise Exception("CLUSTER ", cluster, " HAS 0 COLS !!!!")
+    elapsed = util.current_millis() - start_time
+    logging.info("updated column clusters in update_for in %f s.", elapsed / 1000.0)
 
 def compute_update_col_cluster_pairs(row):
     """The map() part to detemine the new column-cluster pairs"""
-    global UPDATE_MEMBERSHIP, CD_SCORES, BEST_CLUSTERS, CHANGE_PROBABILITY, MAX_CHANGES
+    global UPDATE_MEMBERSHIP, COLNAMES, BEST_CLUSTERS, CHANGE_PROBABILITY, MAX_CHANGES
 
-    rowname = CD_SCORES.row_names[row]
+    #rowname = CD_SCORES.row_names[row]
+    rowname = COLNAMES[row]
     best_members = BEST_CLUSTERS[rowname]
-    result = []
     if (not UPDATE_MEMBERSHIP.is_column_in_clusters(rowname, best_members) and
         seeing_change(CHANGE_PROBABILITY)):
+        cluster_columns = set(UPDATE_MEMBERSHIP.clusters_for_column(rowname))
         change_clusters = [cluster for cluster in best_members
-                           if cluster not in UPDATE_MEMBERSHIP.clusters_for_column(rowname)]
-        for change in xrange(min(MAX_CHANGES,
-                                len(change_clusters))):
-            result.append((rowname, change_clusters[change]))
-    return result
+                           if cluster not in cluster_columns]
+        return [(rowname, change_clusters[change])
+                for change in xrange(min(MAX_CHANGES, len(change_clusters)))]
+    else:
+        return []
 
 
 def seeing_change(prob):
