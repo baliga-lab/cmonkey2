@@ -29,8 +29,11 @@ STRING_URL_PATTERN = "http://networks.systemsbiology.net/string9/%s.gz"
 CACHE_DIR = 'cache'
 
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
-STATS_FREQ = 10
-RESULT_FREQ = 10
+
+# these parameters have a strong impact on the size of the result file
+# Please set it to something >= 10 (which can be in the 10s of gigabytes)
+STATS_FREQ = 50  
+RESULT_FREQ = 50
 
 class CMonkeyRun:
     def __init__(self, organism_code, ratio_matrix,
