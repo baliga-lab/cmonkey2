@@ -853,7 +853,7 @@ def make_kmeans_row_seeder(num_clusters):
     def seed(row_membership, matrix):
         """uses k-means seeding to seed row membership"""
         flat_values = [value if not np.isnan(value) else 0
-                       for value in matrix.flat_values()]
+                       for value in matrix.values.flatten()]
         matrix_values = robjects.r.matrix(
             robjects.FloatVector(flat_values), nrow=matrix.num_rows(), byrow=True)
         kmeans = robjects.r['kmeans']

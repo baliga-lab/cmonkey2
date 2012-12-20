@@ -90,10 +90,6 @@ class DataMatrix:
         return [self.__col_indexes[name] if name in self.__col_indexes else -1
                 for name in column_names]
 
-    def flat_values(self):
-        """returns all values as a single sequence"""
-        return self.values.flatten()
-
     def row_values(self, row):
         """returns the values in the specified row"""
         return self.values[[row]][0]
@@ -478,9 +474,19 @@ def center_scale_filter(matrix):
 def quantile_normalize_scores(matrices, weights=None):
     """quantile normalize scores against each other"""
 
-    flat_values = as_sorted_flat_values(matrices)
-    #logging.info("COMPUTING WEIGHTED MEANS...")
-    #start_time = util.current_millis()
+    logging.info("COMPUTING WEIGHTED MEANS...")
+    start_time = util.current_millis()
+
+    # rearranges the scores in the input matrices into a matrix
+    # with |matrices| columns where the columns contain the values
+    # of each matrix in sorted order
+    flat_values = np.transpose(np.asarray([np.sort(matrix.values.flatten())
+                                           for matrix in matrices]))
+
+    elapsed = util.current_millis() - start_time
+    logging.info("flattened/sorted score matrices in %f s.", elapsed / 1000.0)
+
+    start_time = util.current_millis()
     if weights != None:
         # multiply each column of matrix with each component of the
         # weight vector: Using matrix multiplication resulted in speedup
@@ -490,21 +496,15 @@ def quantile_normalize_scores(matrices, weights=None):
         tmp_mean = util.row_means(scaled) / scale
     else:
         tmp_mean = util.row_means(flat_values)
-    #elapsed = util.current_millis() - start_time
-    #logging.info("weighted means in %f s.", elapsed / 1000.0)
-    #start_time = util.current_millis()
+    elapsed = util.current_millis() - start_time
+    logging.info("weighted means in %f s.", elapsed / 1000.0)
+    start_time = util.current_millis()
+
     result = qm_result_matrices(matrices, tmp_mean)
-    #elapsed = util.current_millis() - start_time
-    #logging.info("result matrices built in %f s.", elapsed / 1000.0)
+
+    elapsed = util.current_millis() - start_time
+    logging.info("result matrices built in %f s.", elapsed / 1000.0)
     return result
-
-
-def as_sorted_flat_values(matrices):
-    """rearranges the scores in the input matrices into a matrix
-    with |matrices| columns where the columns contain the values
-    of each matrix in sorted order"""
-    return np.transpose(np.asarray([np.sort(matrix.flat_values())
-                                    for matrix in matrices]))
 
 
 def ranks(values):

@@ -457,20 +457,29 @@ class CenterScaleFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEqual(-0.70710678237309499, filtered[1][0])
         self.assertAlmostEqual(0.70710678237309499, filtered[1][1])
 
+
+def as_sorted_flat_values(matrices):
+    """this method is now inlined into quantile_normalize_scores
+    we keep it here with its tests to demonstrate how it works
+    """
+    return np.transpose(np.asarray([np.sort(matrix.values.flatten())
+                                    for matrix in matrices]))
+
+
 class QuantileNormalizeTest(unittest.TestCase): # pylint: disable-msg=R0904
     """Test cases for quantile normalization. This is the
     central algorithm for combining lists of scoring matrices"""
 
     def test_as_flat_values_empty_input(self):
         """tests as_sorted_flat_values() with no input"""
-        self.assertTrue((dm.as_sorted_flat_values([]) == []).all())
+        self.assertTrue((as_sorted_flat_values([]) == []).all())
 
     def test_as_sorted_flat_values(self):
         """tests that the flat values of the input matrices are
         all put in one big numpy array"""
         m1 = dm.DataMatrix(2, 2, values=[[2, np.nan], [3, 4]])
         m2 = dm.DataMatrix(2, 2, values=[[6, 5], [4, 3]])
-        flat_values = dm.as_sorted_flat_values([m1, m2])
+        flat_values = as_sorted_flat_values([m1, m2])
         self.assertEquals(4, len(flat_values))
         self.assertTrue((flat_values[0] == [2, 3]).all())
         self.assertTrue((flat_values[1] == [3, 4]).all())
