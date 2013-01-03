@@ -103,7 +103,7 @@ class ClusterMembership:
         num_clusters = config_params[KEY_NUM_CLUSTERS]
         num_clusters_per_col = config_params[KEY_CLUSTERS_PER_COL]
 
-        num_rows = data_matrix.num_rows()
+        num_rows = data_matrix.num_rows
         row_membership = [[0 for _ in xrange(num_clusters_per_row)]
                           for _ in xrange(num_rows)]
         seed_row_memberships(row_membership, data_matrix)
@@ -353,9 +353,9 @@ class ClusterMembership:
         #fuzzy_coeff = std_fuzzy_coefficient(iteration, num_iterations)
         fuzzy_coeff = old_fuzzy_coefficient(iteration, num_iterations)
         iteration_result['fuzzy-coeff'] = fuzzy_coeff
-        num_row_fuzzy_values = row_scores.num_rows() * row_scores.num_columns()
-        num_col_fuzzy_values = (column_scores.num_rows() *
-                                column_scores.num_columns())
+        num_row_fuzzy_values = row_scores.num_rows * row_scores.num_columns
+        num_col_fuzzy_values = (column_scores.num_rows *
+                                column_scores.num_columns)
         row_sd_values = []
 
         # optimization: unwrap the numpy arrays to access them directly
@@ -364,9 +364,9 @@ class ClusterMembership:
 
         # iterate the row names directly
         row_names = row_scores.row_names
-        for col in xrange(row_scores.num_columns()):
+        for col in xrange(row_scores.num_columns):
             cluster_rows = self.rows_for_cluster(col + 1)
-            for row in xrange(row_scores.num_rows()):
+            for row in xrange(row_scores.num_rows):
                 if row_names[row] in cluster_rows:
                     row_sd_values.append(row_score_values[row][col])
 
@@ -377,9 +377,9 @@ class ClusterMembership:
 
         col_sd_values = []
         row_names = column_scores.row_names
-        for col in xrange(column_scores.num_columns()):
+        for col in xrange(column_scores.num_columns):
             cluster_cols = self.columns_for_cluster(col + 1)
-            for row in xrange(column_scores.num_rows()):
+            for row in xrange(column_scores.num_rows):
                 if row_names[row] in cluster_cols:
                     col_sd_values.append(col_score_values[row][col])
 
@@ -395,9 +395,9 @@ class ClusterMembership:
 
         # add fuzzy values to the row/column scores
         row_score_values += np.array(row_rnorm).reshape(
-            row_scores.num_rows(), row_scores.num_columns())
+            row_scores.num_rows, row_scores.num_columns)
         col_score_values += np.array(col_rnorm).reshape(
-            column_scores.num_rows(), column_scores.num_columns())
+            column_scores.num_rows, column_scores.num_columns)
         #elapsed = util.current_millis() - start_time
         #logging.info("fuzzify() finished in %f s.", elapsed / 1000.0)
         return row_scores, column_scores
@@ -473,7 +473,7 @@ class ClusterMembership:
             sm_values = sm.values
             max_row = 0
             max_score = sys.float_info.min
-            for row in range(sm.num_rows()):
+            for row in range(sm.num_rows):
                 if sm_values[row][0] > max_score:
                     max_score = sm_values[row][0]
                     max_row = row
@@ -481,7 +481,7 @@ class ClusterMembership:
 
         old_rows = self.rows_for_cluster(cluster)
         not_in = []
-        for row in range(rowscores.num_rows()):
+        for row in range(rowscores.num_rows):
             row_name = rowscores.row_names[row]
             if row_name not in old_rows:
                 not_in.append((row, rowscores.row_names[row]))
@@ -586,13 +586,13 @@ def update_for_rows(membership, rd_scores, multiprocessing):
 
     if multiprocessing:
         pool = mp.Pool()
-        llist = pool.map(compute_update_row_cluster_pairs, xrange(rd_scores.num_rows()))
+        llist = pool.map(compute_update_row_cluster_pairs, xrange(rd_scores.num_rows))
         pool.close()
         pool.join()
         result = [item for sublist in llist for item in sublist]
     else:
         result = []
-        for row in xrange(rd_scores.num_rows()):
+        for row in xrange(rd_scores.num_rows):
             result.extend(compute_update_row_cluster_pairs(row))
     UPDATE_MEMBERSHIP = None
     for row, cluster in result:
@@ -635,13 +635,13 @@ def update_for_cols(membership, cd_scores, multiprocessing):
 
     if multiprocessing:
         pool = mp.Pool()
-        llist = pool.map(compute_update_col_cluster_pairs, xrange(cd_scores.num_rows()))
+        llist = pool.map(compute_update_col_cluster_pairs, xrange(cd_scores.num_rows))
         result = [item for sublist in llist for item in sublist]
         pool.close()
         pool.join()
     else:
         result = []
-        for row in xrange(cd_scores.num_rows()):
+        for row in xrange(cd_scores.num_rows):
             result.extend(compute_update_col_cluster_pairs(row))
 
     elapsed = util.current_millis() - start_time
@@ -686,7 +686,7 @@ def get_best_clusters(scores, num_per_cluster):
     """retrieve the best scored gene clusters from the given
     row/column score matrix"""
     result = {}
-    for row in xrange(scores.num_rows()):
+    for row in xrange(scores.num_rows):
         row_values = scores.row_values(row)
         row_values = [value for value in row_values]  # compatibility hack
         ranked_scores = sorted(row_values, reverse=True)
@@ -703,8 +703,8 @@ def get_density_scores(membership, row_scores, col_scores):
     num_clusters = membership.num_clusters()
     rscore_range = abs(row_scores.max() - row_scores.min())
     rowscore_bandwidth = max(rscore_range / 100.0, 0.001)
-    rd_scores = dm.DataMatrix(row_scores.num_rows(),
-                              row_scores.num_columns(),
+    rd_scores = dm.DataMatrix(row_scores.num_rows,
+                              row_scores.num_columns,
                               row_scores.row_names,
                               row_scores.column_names)
     rds_values = rd_scores.values
@@ -713,15 +713,15 @@ def get_density_scores(membership, row_scores, col_scores):
     for cluster in xrange(1, num_clusters + 1):
         rr_scores = __get_rr_scores(membership, row_scores, rowscore_bandwidth,
                                    cluster)
-        for row in xrange(row_scores.num_rows()):
+        for row in xrange(row_scores.num_rows):
             rds_values[row][cluster - 1] = rr_scores[row]
     elapsed = util.current_millis() - start_time
     logging.info("RR_SCORES IN %f s.", elapsed / 1000.0)
 
     cscore_range = abs(col_scores.max() - col_scores.min())
     colscore_bandwidth = max(cscore_range / 100.0, 0.001)
-    cd_scores = dm.DataMatrix(col_scores.num_rows(),
-                              col_scores.num_columns(),
+    cd_scores = dm.DataMatrix(col_scores.num_rows,
+                              col_scores.num_columns,
                               col_scores.row_names,
                               col_scores.column_names)
     cds_values = cd_scores.values
@@ -730,7 +730,7 @@ def get_density_scores(membership, row_scores, col_scores):
     for cluster in xrange(1, num_clusters + 1):
         cc_scores = __get_cc_scores(membership, col_scores, colscore_bandwidth,
                                    cluster)
-        for row in xrange(col_scores.num_rows()):
+        for row in xrange(col_scores.num_rows):
             cds_values[row][cluster - 1] = cc_scores[row]
     elapsed = util.current_millis() - start_time
     logging.info("CC_SCORES IN %f s.", elapsed / 1000.0)
@@ -752,7 +752,7 @@ def __get_rr_scores(membership, rowscores, bandwidth, cluster):
 
     if (len(cluster_rows) == 0 or len(kscores_finite) == 0 or
         len(cluster_columns) == 0):
-        num_rows = rowscores.num_rows()
+        num_rows = rowscores.num_rows
         return [(1.0 / num_rows) for _ in xrange(num_rows)]
     else:
         score_indexes = rowscores.row_indexes(cluster_rows)
@@ -775,7 +775,7 @@ def __get_cc_scores(membership, scores, bandwidth, cluster):
         len(cluster_columns) <= 1):
         # This is a little weird, but is here to at least attempt to simulate
         # what the original cMonkey is doing
-        num_rows = scores.num_rows()
+        num_rows = scores.num_rows
         return [(1.0 / num_rows) for _ in xrange(num_rows)]
     else:
         score_indexes = scores.row_indexes(cluster_columns)
@@ -796,14 +796,14 @@ def compensate_size(membership, matrix, rd_scores, cd_scores):
     def compensate_row_size(size):
         """compensation function for row dimension"""
         return compensate_dim_size(size,
-                                   matrix.num_rows(),
+                                   matrix.num_rows,
                                    membership.num_clusters_per_row(),
                                    membership.num_clusters())
 
     def compensate_column_size(size):
         """compensation function for column dimension"""
         return compensate_dim_size(size,
-                                   matrix.num_columns(),
+                                   matrix.num_columns,
                                    membership.num_clusters_per_column(),
                                    membership.num_clusters())
 
@@ -828,7 +828,7 @@ def compensate_size(membership, matrix, rd_scores, cd_scores):
         else:
             cd_scores.multiply_column_by(
                 cluster - 1,
-                compensate_column_size(matrix.num_columns() / 10.0))
+                compensate_column_size(matrix.num_columns / 10.0))
 
     num_clusters = membership.num_clusters()
     for cluster in xrange(1, num_clusters + 1):
@@ -855,7 +855,7 @@ def make_kmeans_row_seeder(num_clusters):
         flat_values = [value if not np.isnan(value) else 0
                        for value in matrix.values.flatten()]
         matrix_values = robjects.r.matrix(
-            robjects.FloatVector(flat_values), nrow=matrix.num_rows(), byrow=True)
+            robjects.FloatVector(flat_values), nrow=matrix.num_rows, byrow=True)
         kmeans = robjects.r['kmeans']
         kwargs = {'centers': num_clusters, 'iter.max': 20, 'nstart': 2}
         seeding = kmeans(matrix_values, **kwargs)[0]

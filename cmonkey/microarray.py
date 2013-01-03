@@ -19,8 +19,8 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
     """Default column membership seeder ('best')
     In case of multiple input ratio matrices, we assume that these
     matrices have been combined into data_matrix"""
-    num_rows = data_matrix.num_rows()
-    num_cols = data_matrix.num_columns()
+    num_rows = data_matrix.num_rows
+    num_cols = data_matrix.num_columns
     # create a submatrix for each cluster
     column_scores = []
     for cluster_num in xrange(1, num_clusters + 1):
@@ -65,13 +65,13 @@ def compute_row_scores(membership, matrix, num_clusters,
     # rearrange result into a DataMatrix, where rows are indexed by gene
     # and columns represent clusters
     start_time = util.current_millis()
-    values = np.zeros((matrix.num_rows(), num_clusters))
+    values = np.zeros((matrix.num_rows, num_clusters))
 
     # note that cluster is 0 based on a matrix
     for cluster in xrange(num_clusters):
         row_scores = cluster_row_scores[cluster]
         values[:, cluster] = row_scores
-    result = dm.DataMatrix(matrix.num_rows(), num_clusters,
+    result = dm.DataMatrix(matrix.num_rows, num_clusters,
                            row_names=matrix.row_names,
                            values=values)
     logging.info("made result matrix in %f s.",
@@ -120,7 +120,7 @@ def compute_row_scores_for_cluster(cluster):
     cnames = membership.columns_for_cluster(cluster)
     sm1 = matrix.submatrix_by_name(row_names=rnames, column_names=cnames)
 
-    if sm1.num_columns() > 1:
+    if sm1.num_columns > 1:
         matrix_filtered = matrix.submatrix_by_name(column_names=cnames)
         row_scores_for_cluster = __compute_row_scores_for_submatrix(
             matrix_filtered, sm1)

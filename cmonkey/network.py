@@ -255,7 +255,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         gene_names = self.gene_names()
         for cluster in xrange(1, self.num_clusters() + 1):
             cluster_genes = set(network_score[cluster].keys())
-            for row_index in xrange(self.matrix().num_rows()):
+            for row_index in xrange(self.matrix().num_rows):
                 gene = gene_names[row_index]
                 if gene in cluster_genes:
                     weighted_score = network_score[cluster][gene] * weight

@@ -63,16 +63,10 @@ class DataMatrix:
         self.__row_indexes = None
         self.__col_indexes = None
 
-    def num_rows(self):
-        """returns the number of rows"""
-        return len(self.row_names)
-
-    def num_columns(self):
-        """returns the number of columns"""
-        if self.num_rows() == 0:
-            return 0
-        else:
-            return len(self.column_names)
+        # store the number of rows/columns as an attribute, so we do not have
+        # to recalculate them
+        self.num_rows = nrows
+        self.num_columns = 0 if nrows == 0 else ncols
 
     def row_indexes(self, row_names):
         """returns the row indexes with the matching names"""
@@ -102,7 +96,7 @@ class DataMatrix:
         """extract a submatrix with the specified rows.
         row_indexes needs to be sorted"""
         new_values = self.values[[row_indexes]]
-        return DataMatrix(len(row_indexes), self.num_columns(),
+        return DataMatrix(len(row_indexes), self.num_columns,
                           row_names=[self.row_names[index] for index in row_indexes],
                           col_names=self.column_names,
                           values=new_values)
@@ -156,7 +150,7 @@ class DataMatrix:
         row_pairs.sort()
         new_row_names = [row_pair[0] for row_pair in row_pairs] 
         new_rows = [self.values[row_pair[1]] for row_pair in row_pairs]
-        return DataMatrix(self.num_rows(), self.num_columns(),
+        return DataMatrix(self.num_rows, self.num_columns,
                           new_row_names, self.column_names,
                           values=new_rows)
 
@@ -200,25 +194,25 @@ class DataMatrix:
 
     def __neg__(self):
         """returns a new DataMatrix with the values in the matrix negated"""
-        return DataMatrix(self.num_rows(), self.num_columns(),
+        return DataMatrix(self.num_rows, self.num_columns,
                           self.row_names, self.column_names,
                           -self.values)
 
     def __add__(self, value):
         """adding a value to this matrix can be either a scalar or a matrix"""
         if isinstance(value, DataMatrix):
-            return DataMatrix(self.num_rows(), self.num_columns(),
+            return DataMatrix(self.num_rows, self.num_columns,
                               self.row_names, self.column_names,
                               self.values + value.values)
         else:
-            return DataMatrix(self.num_rows(), self.num_columns(),
+            return DataMatrix(self.num_rows, self.num_columns,
                               self.row_names, self.column_names,
                               self.values + value)
 
     def __sub__(self, value):
         """subtract a value from the matrix"""
         if value != 0.0:
-            return DataMatrix(self.num_rows(), self.num_columns(),
+            return DataMatrix(self.num_rows, self.num_columns,
                               self.row_names, self.column_names,
                               self.values - value)
         else:
@@ -226,7 +220,7 @@ class DataMatrix:
 
     def __mul__(self, factor):
         """returns a new DataMatrix with the values in the matrix negated"""
-        return DataMatrix(self.num_rows(), self.num_columns(),
+        return DataMatrix(self.num_rows, self.num_columns,
                           self.row_names, self.column_names,
                           self.values * factor)
 
@@ -274,7 +268,7 @@ class DataMatrix:
         result = "%10s" % 'Row'
         result += ' '.join([("%10s" % name)
                             for name in self.column_names]) + '\n'
-        for row_index in xrange(self.num_rows()):
+        for row_index in xrange(self.num_rows):
             result += ("%10s" % self.row_names[row_index]) + ' '
             result += ' '.join([("%10f" % value)
                                  for value in self.values[row_index]])
@@ -401,13 +395,13 @@ def nochange_filter(matrix):
         """subfunction of nochange_filter to filter row-wise"""
         keep = []
         dmvalues = data_matrix.values
-        for row_index in xrange(data_matrix.num_rows()):
+        for row_index in xrange(data_matrix.num_rows):
             count = 0
-            for col_index in xrange(data_matrix.num_columns()):
+            for col_index in xrange(data_matrix.num_columns):
                 value = dmvalues[row_index][col_index]
                 if np.isnan(value) or abs(value) <= ROW_THRESHOLD:
                     count += 1
-            mean = float(count) / data_matrix.num_columns()
+            mean = float(count) / data_matrix.num_columns
             if mean < FILTER_THRESHOLD:
                 keep.append(row_index)
         return keep
@@ -416,13 +410,13 @@ def nochange_filter(matrix):
         """subfunction of nochange_filter to filter column-wise"""
         keep = []
         dmvalues = data_matrix.values
-        for col_index in xrange(data_matrix.num_columns()):
+        for col_index in xrange(data_matrix.num_columns):
             count = 0
-            for row_index in xrange(data_matrix.num_rows()):
+            for row_index in xrange(data_matrix.num_rows):
                 value = dmvalues[row_index][col_index]
                 if np.isnan(value) or abs(value) <= COLUMN_THRESHOLD:
                     count += 1
-            mean = float(count) / data_matrix.num_rows()
+            mean = float(count) / data_matrix.num_rows
             if mean < FILTER_THRESHOLD:
                 keep.append(col_index)
         return keep
@@ -447,9 +441,9 @@ def nochange_filter(matrix):
 def row_filter(matrix, fun):
     """generalize a matrix filter that is applying a function for each row"""
     values = []
-    for row_index in xrange(matrix.num_rows()):
+    for row_index in xrange(matrix.num_rows):
         values.append(fun(matrix.values[row_index]))
-    result = DataMatrix(matrix.num_rows(), matrix.num_columns(),
+    result = DataMatrix(matrix.num_rows, matrix.num_columns,
                         matrix.row_names, matrix.column_names,
                         values=values)
     return result
@@ -527,10 +521,10 @@ def qm_result_matrices(matrices, tmp_mean):
         xvec = robj.FloatVector(values.reshape(values.size))
         xr = robj.r.t(robj.r.matrix(xvec, nrow=num_rows, ncol=num_cols, byrow=True))
         rankvals = [value - 1 for value in util.rrank(xr)]  # adjust to be 0-based
-        values = np.reshape(tmp_mean[rankvals], (matrix.num_rows(),
-                                                 matrix.num_columns()))
-        outmatrix = DataMatrix(matrix.num_rows(),
-                               matrix.num_columns(),
+        values = np.reshape(tmp_mean[rankvals], (matrix.num_rows,
+                                                 matrix.num_columns))
+        outmatrix = DataMatrix(matrix.num_rows,
+                               matrix.num_columns,
                                matrix.row_names,
                                matrix.column_names,
                                values=values)

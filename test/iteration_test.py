@@ -220,8 +220,8 @@ EPS = 1.0e-5
 
 def check_matrix_values(matrix1, matrix2, eps=EPS):
     result = True
-    for row in range(matrix1.num_rows()):
-        for col in range(matrix1.num_columns()):
+    for row in range(matrix1.num_rows):
+        for col in range(matrix1.num_columns):
             diff = abs(matrix1.values[row][col] - matrix2.values[row][col])
             #print diff
             if diff > eps:
@@ -248,7 +248,7 @@ def make_halo(ratio_matrix, search_distances, scan_distances):
         logging.warn("no STRING file specified !")
 
     nw_factories.append(microbes_online.get_network_factory(
-            mo_db, max_operon_size=ratio_matrix.num_rows() / 20, weight=0.5))
+            mo_db, max_operon_size=ratio_matrix.num_rows / 20, weight=0.5))
 
     org_factory = org.MicrobeFactory(org.make_kegg_code_mapper(keggfile),
                                      org.make_rsat_organism_mapper(rsatdb),

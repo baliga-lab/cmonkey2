@@ -196,7 +196,7 @@ class ScoringFunctionBase:
 
     def num_genes(self):
         """returns the number of rows"""
-        return self.__matrix.num_rows()
+        return self.__matrix.num_rows
 
     def gene_at(self, index):
         """returns the gene at the specified index"""
@@ -262,8 +262,8 @@ def compute_column_scores(membership, matrix, num_clusters):
             columns = membership.columns_for_cluster(cluster)
             column_scores = cluster_column_scores[cluster - 1]
             if column_scores != None:
-                for row in xrange(column_scores.num_rows()):
-                    for col in xrange(column_scores.num_columns()):
+                for row in xrange(column_scores.num_rows):
+                    for col in xrange(column_scores.num_columns):
                         if column_scores.column_names[col] in columns:
                             membership_values.append(column_scores.values[row][col])
         return util.quantile(membership_values, 0.95)
@@ -273,7 +273,7 @@ def compute_column_scores(membership, matrix, num_clusters):
     for cluster in xrange(1, num_clusters + 1):
         submatrix = matrix.submatrix_by_name(
             row_names=membership.rows_for_cluster(cluster))
-        if submatrix.num_rows() > 1:
+        if submatrix.num_rows > 1:
             cluster_column_scores.append(compute_column_scores_submatrix(
                     submatrix))
         else:
@@ -285,12 +285,12 @@ def compute_column_scores(membership, matrix, num_clusters):
 
     # Convert scores into a matrix that have the clusters as columns
     # and conditions in the rows
-    result = dm.DataMatrix(matrix.num_columns(), num_clusters,
+    result = dm.DataMatrix(matrix.num_columns, num_clusters,
                            row_names=matrix.column_names)
     rvalues = result.values
     for cluster in xrange(num_clusters):
         column_scores = cluster_column_scores[cluster]
-        for row_index in xrange(matrix.num_columns()):
+        for row_index in xrange(matrix.num_columns):
             if column_scores == None:
                 rvalues[row_index][cluster] = substitution
             else:
@@ -316,7 +316,7 @@ def compute_column_scores_submatrix(matrix):
     matrix_minus_colmeans_squared = np.square(matrix.values - colmeans)
     var_norm = np.abs(colmeans) + 0.01
     result = util.column_means(matrix_minus_colmeans_squared) / var_norm
-    return dm.DataMatrix(1, matrix.num_columns(), ['Col. Scores'],
+    return dm.DataMatrix(1, matrix.num_columns, ['Col. Scores'],
                          matrix.column_names, [result])
 
 
@@ -410,9 +410,9 @@ class ScoringFunctionCombiner:
         """output an accumulated subresult to the log"""
         scores = []
         mvalues = matrix.values
-        for cluster in xrange(1, matrix.num_columns() + 1):
+        for cluster in xrange(1, matrix.num_columns + 1):
             cluster_rows = self.__membership.rows_for_cluster(cluster)
-            for row in xrange(matrix.num_rows()):
+            for row in xrange(matrix.num_rows):
                 if matrix.row_names[row] in cluster_rows:
                     scores.append(mvalues[row][cluster - 1])
         logging.info("function '%s', trim mean score: %f",

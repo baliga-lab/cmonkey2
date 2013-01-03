@@ -51,7 +51,7 @@ class CMonkeyRun:
         # these come first, since a lot depends on clustering numbers
         self['memb.clusters_per_row'] = 2
         if num_clusters == None:
-            num_clusters = int(round(self.ratio_matrix.num_rows() *
+            num_clusters = int(round(self.ratio_matrix.num_rows *
                                      self['memb.clusters_per_row'] / 20.0))
         self['memb.clusters_per_col'] = int(round(num_clusters * 2.0 / 3.0))
         self['memb.prob_row_change'] = 0.5
@@ -273,7 +273,7 @@ class CMonkeyRun:
             logging.warn("no STRING file specified !")
 
         nw_factories.append(microbes_online.get_network_factory(
-                mo_db, max_operon_size=self.ratio_matrix.num_rows() / 20, weight=0.5))
+                mo_db, max_operon_size=self.ratio_matrix.num_rows / 20, weight=0.5))
 
         org_factory = org.MicrobeFactory(kegg_mapper,
                                          rsat_mapper,
@@ -430,8 +430,8 @@ class CMonkeyRun:
             conn.execute('''insert into run_infos (start_time, num_iterations, organism,
                             species, num_rows, num_columns, num_clusters) values (?,?,?,?,?,?,?)''',
                          (datetime.now(), self['num_iterations'], self.organism().code,
-                          self.organism().species(), self.ratio_matrix.num_rows(),
-                          self.ratio_matrix.num_columns(), self['num_clusters']))
+                          self.organism().species(), self.ratio_matrix.num_rows,
+                          self.ratio_matrix.num_columns, self['num_clusters']))
         conn.close()
 
     def update_iteration(self, iteration):

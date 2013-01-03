@@ -15,14 +15,14 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_create_with_0_row_size(self):
         """create DataMatrix with a 0 row size"""
         matrix = dm.DataMatrix(0, 3)
-        self.assertEquals(0, matrix.num_rows())
-        self.assertEquals(0, matrix.num_columns())
+        self.assertEquals(0, matrix.num_rows)
+        self.assertEquals(0, matrix.num_columns)
 
     def test_create_without_names(self):
         """create DataMatrix without row and column names"""
         matrix = dm.DataMatrix(3, 4)
-        self.assertEquals(3, matrix.num_rows())
-        self.assertEquals(4, matrix.num_columns())
+        self.assertEquals(3, matrix.num_rows)
+        self.assertEquals(4, matrix.num_columns)
         self.assertEquals(0.0, matrix.values[0][0])
         self.assertEquals("Row 0", matrix.row_names[0])
         self.assertEquals("Row 1", matrix.row_names[1])
@@ -33,8 +33,8 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """create DataMatrix with row and column names"""
         matrix = dm.DataMatrix(3, 2, ["MyRow1", "MyRow2", "MyRow3"],
                                ["MyCol1", "MyCol2"])
-        self.assertEquals(3, matrix.num_rows())
-        self.assertEquals(2, matrix.num_columns())
+        self.assertEquals(3, matrix.num_rows)
+        self.assertEquals(2, matrix.num_columns)
         self.assertEquals(0.0, matrix.values[0][0])
         self.assertEquals("MyRow1", matrix.row_names[0])
         self.assertEquals("MyRow2", matrix.row_names[1])
@@ -371,8 +371,8 @@ class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """test a factory without filters"""
         factory = dm.DataMatrixFactory([])
         matrix = factory.create_from(self.dfile)
-        self.assertEquals(2, matrix.num_rows())
-        self.assertEquals(2, matrix.num_columns())
+        self.assertEquals(2, matrix.num_rows)
+        self.assertEquals(2, matrix.num_columns)
         self.assertEquals(matrix.column_names, ["H2", "H3"])
         self.assertEquals(matrix.row_names, ["R1", "R2"])
         self.assertTrue((matrix.values[0] == [1, 2]).all())
@@ -382,8 +382,8 @@ class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """test a factory with a DelimitedFile containing NA values"""
         factory = dm.DataMatrixFactory([])
         matrix = factory.create_from(self.dfile_with_na)
-        self.assertEquals(2, matrix.num_rows())
-        self.assertEquals(2, matrix.num_columns())
+        self.assertEquals(2, matrix.num_rows)
+        self.assertEquals(2, matrix.num_columns)
         self.assertEquals(matrix.column_names, ["H2", "H3"])
         self.assertEquals(matrix.row_names, ["R1", "R2"])
         self.assertTrue(np.isnan(matrix.values[0][0]))
@@ -395,8 +395,8 @@ class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """test a factory using a single filter"""
         factory = dm.DataMatrixFactory([times2])
         matrix = factory.create_from(self.dfile)
-        self.assertEquals(2, matrix.num_rows())
-        self.assertEquals(2, matrix.num_columns())
+        self.assertEquals(2, matrix.num_rows)
+        self.assertEquals(2, matrix.num_columns)
         self.assertEquals(matrix.column_names, ["H2", "H3"])
         self.assertEquals(matrix.row_names, ["R1", "R2"])
         self.assertTrue((matrix.values[0] == [2, 4]).all())
@@ -406,8 +406,8 @@ class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
 def times2(matrix):
     """a simple filter that multiplies all values in the matrix by 2"""
     result = copy.deepcopy(matrix)
-    for row in range(matrix.num_rows()):
-        for col in range(matrix.num_columns()):
+    for row in range(matrix.num_rows):
+        for col in range(matrix.num_columns):
             result.values[row][col] = matrix.values[row][col] * 2
     return result
 
@@ -420,8 +420,8 @@ class NoChangeFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
         matrix = dm.DataMatrix(2, 2, ['R1', 'R2'], ['C1', 'C2'],
                                values=[[0.24, -0.35], [-0.42, 0.42]])
         filtered = dm.nochange_filter(matrix)
-        self.assertEquals(2, filtered.num_rows())
-        self.assertEquals(2, filtered.num_columns())
+        self.assertEquals(2, filtered.num_rows)
+        self.assertEquals(2, filtered.num_columns)
         self.assertTrue((filtered.values == [[0.24, -0.35],
                                                [-0.42, 0.42]]).all())
 
@@ -430,8 +430,8 @@ class NoChangeFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
         matrix = dm.DataMatrix(2, 2, ['R1', 'R2'], ['C1', 'C2'],
                                values=[[0.24, -0.35], [-0.001, np.nan]])
         filtered = dm.nochange_filter(matrix)
-        self.assertEquals(1, filtered.num_rows())
-        self.assertEquals(2, filtered.num_columns())
+        self.assertEquals(1, filtered.num_rows)
+        self.assertEquals(2, filtered.num_columns)
         self.assertTrue((filtered.values == [[0.24, -0.35]]).all())
 
     def test_remove_column(self):
@@ -439,8 +439,8 @@ class NoChangeFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
         matrix = dm.DataMatrix(2, 2, ['R1', 'R2'], ['C1', 'C2'],
                                values=[[0.001, -0.35], [np.nan, 0.42]])
         filtered = dm.nochange_filter(matrix)
-        self.assertEquals(2, filtered.num_rows())
-        self.assertEquals(1, filtered.num_columns())
+        self.assertEquals(2, filtered.num_rows)
+        self.assertEquals(1, filtered.num_columns)
         self.assertTrue((filtered.values == [[-0.35], [0.42]]).all())
 
 

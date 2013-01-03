@@ -111,7 +111,7 @@ def select_probes(matrix, num_genes_total, column_groups, proportional=True):
 
     cvrows = []
     mvalues = matrix.values
-    nrows = matrix.num_rows()
+    nrows = matrix.num_rows
     for group, col_indexes in column_groups.items():
         group_cvs = []
         for row in xrange(nrows):
@@ -131,7 +131,7 @@ def intensities_to_ratios(matrix, controls, column_groups):
                        for control in controls
                        if control in colnames]
     mvalues = matrix.values
-    nrows = matrix.num_rows()
+    nrows = matrix.num_rows
     for group_columns in column_groups.values():
         group_controls = [index for index in control_indexes
                           if index in group_columns]
@@ -141,7 +141,7 @@ def intensities_to_ratios(matrix, controls, column_groups):
             means.append(sum(values) / float(len(values)))
 
         for col in group_columns:
-            for row in range(matrix.num_rows()):
+            for row in range(matrix.num_rows):
                 mvalues[row][col] /= means[row]
 
         center_scale_filter(matrix, group_columns, group_controls)
@@ -154,11 +154,11 @@ def center_scale_filter(matrix, group_columns, group_controls):
     mvalues = matrix.values
     centers = [scipy.median([mvalues[row][col]
                              for col in group_controls])
-               for row in range(matrix.num_rows())]
+               for row in range(matrix.num_rows)]
     scale_factors = [util.r_stddev([mvalues[row][col]
                                     for col in group_columns])
-                     for row in range(matrix.num_rows())]
-    for row in range(matrix.num_rows()):
+                     for row in range(matrix.num_rows)]
+    for row in range(matrix.num_rows):
         for col in group_columns:
             mvalues[row][col] -= centers[row]
             mvalues[row][col] /= scale_factors[row]
@@ -192,7 +192,7 @@ def read_matrix(filename):
                                      quote="\"")
     matrix = matrix_factory.create_from(infile)
 
-    column_groups = {1: range(matrix.num_columns())}
+    column_groups = {1: range(matrix.num_columns)}
     if SELECT_ROWS:
         select_rows = select_probes(matrix, 2000, column_groups)
         matrix = matrix.submatrix_by_rows(select_rows)

@@ -207,7 +207,7 @@ def compute_cluster_score(args):
     min_set = set_type.sets.keys()[min_index]
     min_set_overlap = overlap_sizes[min_index]
     if min_set_overlap > 0:
-        scores = [0.0 for _ in xrange(matrix.num_rows())]
+        scores = [0.0 for _ in xrange(matrix.num_rows)]
         min_genes = set_type.sets[min_set].genes
         min_genes = [gene for gene in min_genes
                      if gene in matrix.row_names]
@@ -242,5 +242,5 @@ def compute_cluster_score(args):
         min_ref_score = ref_matrix.min()
         scores = [score * min_ref_score for score in scores]
     else:
-        scores = [0.0 for _ in xrange(matrix.num_rows())]
+        scores = [0.0 for _ in xrange(matrix.num_rows)]
     return scores, min_set, min_pvalue

@@ -44,16 +44,11 @@ MATRIX1 = [[-0.8682966, 0.0, -0.34731863, 1.786210, 0.0],
 class MockDataMatrix:
 
     def __init__(self, num_rows):
-        self.__num_rows = num_rows
-        self.row_names = [('GENE%d' % index) for index in range(self.__num_rows)]
-        self.column_names = [('COND%d' % index) for index in range(self.num_columns())]
+        self.num_rows = num_rows
+        self.num_columns = 5
+        self.row_names = [('GENE%d' % index) for index in range(self.num_rows)]
+        self.column_names = [('COND%d' % index) for index in range(self.num_columns)]
         self.values = MATRIX1
-
-    def num_rows(self):
-        return self.__num_rows
-
-    def num_columns(self):
-        return 5
 
     def submatrix(self, rows, cols):
         return self

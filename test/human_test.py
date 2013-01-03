@@ -91,7 +91,7 @@ class HumanTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                 [10, 20, 30, 40]])
         ratios = human.intensities_to_ratios(matrix, ['C2', 'C4'], {1:range(4)})
         rvalues = ratios.values
-        for row in range(ratios.num_rows()):
+        for row in range(ratios.num_rows):
             self.assertAlmostEquals(-1.549193, rvalues[row][0], places=5)
             self.assertAlmostEquals(-0.774597, rvalues[row][1], places=5)
             self.assertAlmostEquals(0.0, rvalues[row][2], places=5)
