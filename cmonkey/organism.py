@@ -13,6 +13,7 @@ import thesaurus
 import util
 import seqtools as st
 import microbes_online as mo
+import collections
 
 
 def make_kegg_code_mapper(dfile):
@@ -27,16 +28,9 @@ def make_go_taxonomy_mapper(dfile):
     return util.DelimitedFileMapper(dfile, 0, 1).__getitem__
 
 
-class RsatSpeciesInfo:  # pylint: disable-msg=R0903
-    """A class to store species information retrieved from an RSAT database
-    mirror. This is a mere value object"""
-
-    def __init__(self, rsatdb, species, is_eukaryote, taxonomy_id):
-        """create an instance of RsatSpeciesInfo"""
-        self.rsatdb = rsatdb
-        self.species = species
-        self.is_eukaryote = is_eukaryote
-        self.taxonomy_id = taxonomy_id
+RsatSpeciesInfo = collections.namedtuple('RsatSpeciesInfo',
+                                         ['rsatdb', 'species', 'is_eukaryote',
+                                          'taxonomy_id'])
 
 
 def make_rsat_organism_mapper(rsatdb):

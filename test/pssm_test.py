@@ -16,9 +16,9 @@ class PssmTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_create_empty(self):
         """Test creation with no data"""
         pssm = p.Pssm('pssm')
-        self.assertEquals('pssm', pssm.name())
-        self.assertIsNone(pssm.sites())
-        self.assertIsNone(pssm.e_value())
+        self.assertEquals('pssm', pssm.name)
+        self.assertIsNone(pssm.sites)
+        self.assertIsNone(pssm.e_value)
 
     def test_read_fasta(self):
         """tests reading Pssm's from a FASTA file"""
@@ -26,9 +26,9 @@ class PssmTest(unittest.TestCase):  # pylint: disable-msg=R0904
         with open('testdata/three_miRNAs.fasta') as infile:
             pssms = p.read_fasta(infile)
         self.assertEquals(3, len(pssms))
-        self.assertEquals('hsa-miR-1', pssms[0].name())
-        self.assertEquals('hsa-miR-7', pssms[1].name())
-        self.assertEquals('hsa-miR-124', pssms[2].name())
+        self.assertEquals('hsa-miR-1', pssms[0].name)
+        self.assertEquals('hsa-miR-7', pssms[1].name)
+        self.assertEquals('hsa-miR-124', pssms[2].name)
 
         self.assertAlmostEquals(0.80, pssms[0][0][0])
         self.assertAlmostEquals(0.04, pssms[0][0][1])

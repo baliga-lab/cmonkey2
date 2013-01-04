@@ -20,10 +20,10 @@ class ReadWeeTest(unittest.TestCase):  # pylint: disable-msg=R0904
             self.assertEquals('perm' + str(num), seqnames[num])
         self.assertEquals(2, len(reader.pssms()))
 
-        self.assertEquals('base_GGGGGC', reader.pssms()[0].name())
-        self.assertEquals(1.7, reader.pssms()[0].e_value())
-        self.assertEquals(137, len(reader.pssms()[0].sites()))
+        self.assertEquals('base_GGGGGC', reader.pssms()[0].name)
+        self.assertEquals(1.7, reader.pssms()[0].e_value)
+        self.assertEquals(137, len(reader.pssms()[0].sites))
 
-        self.assertEquals('base_CTGGGGGG', reader.pssms()[1].name())
-        self.assertEquals(1.89, reader.pssms()[1].e_value())
-        self.assertEquals(25, len(reader.pssms()[1].sites()))
+        self.assertEquals('base_CTGGGGGG', reader.pssms()[1].name)
+        self.assertEquals(1.89, reader.pssms()[1].e_value)
+        self.assertEquals(25, len(reader.pssms()[1].sites))

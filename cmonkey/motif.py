@@ -19,6 +19,13 @@ import util
 import sequence_cache
 import os.path
 import cPickle
+import collections
+
+ComputeScoreParams = collections.namedtuple('ComputeScoreParams',
+                                            ['cluster', 'feature_ids', 'seqs', 'used_seqs',
+                                             'meme_runner', 'min_cluster_rows',
+                                             'max_cluster_rows', 'num_motifs',
+                                             'previous_motif_infos'])
 
 
 def default_nmotif_fun(iteration, num_iterations):
@@ -385,23 +392,6 @@ def meme_json(run_result):
                            'evalue': motif_info.evalue,
                            'annotations': motif_annot})
     return result
-
-
-class ComputeScoreParams:
-    """representation of parameters to compute motif scores"""
-    def __init__(self, cluster, feature_ids, seqs, used_seqs, meme_runner,
-                 min_cluster_rows, max_cluster_rows,
-                 num_motifs, previous_motif_infos=None):
-        """constructor"""
-        self.cluster = cluster
-        self.feature_ids = feature_ids  # to preserve the order
-        self.seqs = seqs                # sequences in the cluster
-        self.used_seqs = used_seqs      # all available sequences in the organism
-        self.meme_runner = meme_runner
-        self.min_cluster_rows = min_cluster_rows
-        self.max_cluster_rows = max_cluster_rows
-        self.num_motifs = num_motifs
-        self.previous_motif_infos = previous_motif_infos
 
 
 def compute_cluster_score(cluster):

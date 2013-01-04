@@ -13,15 +13,11 @@ import seqtools as st
 import os
 import util
 import re
+import collections
 
 
-class MemeRunResult:
-    """Result data for a single MEME run"""
-    def __init__(self, pe_values, annotations, motif_infos):
-        """constructor"""
-        self.pe_values = pe_values
-        self.annotations = annotations
-        self.motif_infos = motif_infos
+MemeRunResult = collections.namedtuple('MemeRunResult',
+                                       ['pe_values', 'annotations', 'motif_infos'])
 
 
 class MemeSuite:
