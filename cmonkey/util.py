@@ -410,6 +410,20 @@ def sd_rnorm(values, num_rnorm_values, fuzzy_coeff):
     return func(robjects.FloatVector(values), num_rnorm_values,
                 fuzzy_coeff)
 
+
+def rrank_matrix(npmatrix):    
+    func = robjects.r("""
+      rank_mat <- function(values, nrow, ncol) {
+        xr <- t(matrix(values, nrow=nrow, ncol=ncol, byrow=T))
+        return (rank(xr, ties='min', na='keep') - 1)
+      }
+    """)
+    num_rows, num_cols = npmatrix.shape
+    xvec = robjects.FloatVector(npmatrix.ravel())
+    res = func(xvec, num_rows, num_cols)
+    return [value for value in res]
+
+
 ######################################################################
 ### Misc functionality
 ######################################################################

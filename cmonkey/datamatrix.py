@@ -518,13 +518,10 @@ def qm_result_matrices(matrices, tmp_mean):
         matrix = matrices[i]
         values = matrix.values
         num_rows, num_cols = values.shape
-        xvec = robj.FloatVector(values.reshape(values.size))
-        xr = robj.r.t(robj.r.matrix(xvec, nrow=num_rows, ncol=num_cols, byrow=True))
-        rankvals = [value - 1 for value in util.rrank(xr)]  # adjust to be 0-based
-        values = np.reshape(tmp_mean[rankvals], (matrix.num_rows,
-                                                 matrix.num_columns))
-        outmatrix = DataMatrix(matrix.num_rows,
-                               matrix.num_columns,
+        rankvals = util.rrank_matrix(values)
+        values = np.reshape(tmp_mean[rankvals], (num_rows, num_cols))
+        outmatrix = DataMatrix(num_rows,
+                               num_cols,
                                matrix.row_names,
                                matrix.column_names,
                                values=values)
