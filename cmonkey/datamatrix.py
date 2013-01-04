@@ -11,6 +11,7 @@ import util
 import logging
 import rpy2.robjects as robj
 import gzip
+import multiprocessing as mp
 
 class DataMatrix:
     """
@@ -503,30 +504,55 @@ def quantile_normalize_scores(matrices, weights=None):
 
 def ranks(values):
     """optimization: write a map from value to first index in
-    sorted_values"""
+    sorted_values
+    This used to be the original ranking, unfortunately, it is not close enough
+    to the behaviour of the R function, but we keep it around here as a reference
+    and base for potentially faster ranking.
+    """
     values = values.argsort()
     ranks = np.empty(len(values), int)
     ranks[values] = np.arange(len(values))
     return ranks
 
 
-def qm_result_matrices(matrices, tmp_mean):
+def rank_fun(mat_mean):
+    """ranking function that is run within Pool.map()"""
+    values, row_names, column_names, tmp_mean = mat_mean
+    num_rows, num_cols = values.shape
+    rankvals = util.rrank_matrix(values)
+    values = np.reshape(tmp_mean[rankvals], (num_rows, num_cols))
+    return DataMatrix(num_rows, num_cols, row_names, column_names,
+                      values=values)
+
+
+def qm_result_matrices(matrices, tmp_mean, multiprocessing=True):
     """builds the resulting matrices by looking at the rank of their
     original values and retrieving the means at the specified position"""
-    result = []
-    for i in range(len(matrices)):
-        matrix = matrices[i]
-        values = matrix.values
-        num_rows, num_cols = values.shape
-        rankvals = util.rrank_matrix(values)
-        values = np.reshape(tmp_mean[rankvals], (num_rows, num_cols))
-        outmatrix = DataMatrix(num_rows,
-                               num_cols,
-                               matrix.row_names,
-                               matrix.column_names,
-                               values=values)
-        result.append(outmatrix)
-    return result
+    if multiprocessing:
+        # parallelized ranking
+        pool = mp.Pool()
+        results = pool.map(rank_fun,
+                           [(matrix.values, matrix.row_names, matrix.column_names, tmp_mean)
+                            for matrix in matrices])
+        pool.close()
+        pool.join()
+        return results
+    else:
+        # non-parallelized
+        result = []
+        for i in range(len(matrices)):
+            matrix = matrices[i]
+            values = matrix.values
+            num_rows, num_cols = values.shape
+            rankvals = util.rrank_matrix(values)
+            values = np.reshape(tmp_mean[rankvals], (num_rows, num_cols))
+            outmatrix = DataMatrix(num_rows,
+                                   num_cols,
+                                   matrix.row_names,
+                                   matrix.column_names,
+                                   values=values)
+            result.append(outmatrix)
+        return result
 
 
 __all__ = ['DataMatrix', 'DataMatrixCollection', 'DataMatrixFactory',

@@ -421,7 +421,9 @@ def rrank_matrix(npmatrix):
     num_rows, num_cols = npmatrix.shape
     xvec = robjects.FloatVector(npmatrix.ravel())
     res = func(xvec, num_rows, num_cols)
-    return [value for value in res]
+    # Converting the result to an NumPy in array results in a
+    # surprisingly nice speedup
+    return np.array(res, dtype=np.int32)
 
 
 ######################################################################
