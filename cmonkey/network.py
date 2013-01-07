@@ -217,8 +217,8 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             cPickle.dump(network_scores, outfile)
         # immediately use in means computation
         self.network_scores = network_scores
-
-        return matrix - matrix.quantile(0.99)
+        matrix.subtract_with_quantile(0.99)
+        return matrix
 
     def __compute_network_cluster_scores(self, network):
         """computes the cluster scores for the given network"""

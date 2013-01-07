@@ -393,16 +393,19 @@ class ScoringFunctionCombiner:
             logging.info("quantile normalize in %f s.", elapsed / 1000.0)
 
         if len(result_matrices) > 0:
+            matrix0 = result_matrices[0]
             start_time = util.current_millis()
-            combined_score = (result_matrices[0] *
-                              self.__scoring_functions[0].scaling(iteration))
-            for index in xrange(1, len(result_matrices)):
-                combined_score += (
-                    result_matrices[index] *
-                    self.__scoring_functions[index].scaling(iteration))
+            # assuming same format of all matrices
+            combined_score = np.zeros(matrix0.values.shape)
+            for i in xrange(len(result_matrices)):
+                combined_score += (result_matrices[i].values *
+                                   self.__scoring_functions[i].scaling(iteration))
+
             elapsed = util.current_millis() - start_time
             logging.info("combined score in %f s.", elapsed / 1000.0)
-            return combined_score
+            return dm.DataMatrix(matrix0.num_rows, matrix0.num_columns,
+                              matrix0.row_names, matrix0.column_names,
+                              values=combined_score)
         else:
             return None
 

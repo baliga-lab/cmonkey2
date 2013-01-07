@@ -185,19 +185,6 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                                   [11, 12, 13],
                                                   [4, 5, 6]]).all())
 
-    def test_multiply_by(self):
-        """tests the multiply_by method"""
-        matrix = dm.DataMatrix(2, 2,
-                               row_names=['R0', 'R1'],
-                               col_names=['C0', 'C1'],
-                               values=[[1, 2],
-                                       [3, 4]])
-        multiplied = matrix * 2
-        self.assertEquals(multiplied.row_names, ['R0', 'R1'])
-        self.assertEquals(multiplied.column_names, ['C0', 'C1'])
-        self.assertNotEquals(matrix, multiplied)
-        self.assertTrue((multiplied.values == [[2, 4], [6, 8]]).all())
-
     def test_multiply_column_by(self):
         """tests the multiply_column_by method"""
         matrix = dm.DataMatrix(2, 2,
@@ -211,37 +198,6 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals(matrix, multiplied)
         self.assertTrue((multiplied.values == [[1, 4], [3, 8]]).all())
 
-    def test_add_matrix(self):
-        """tests the + operator"""
-        matrix1 = dm.DataMatrix(2, 2,
-                                row_names=['R0', 'R1'],
-                                col_names=['C0', 'C1'],
-                                values=[[1, 2],
-                                        [3, 4]])
-        matrix2 = dm.DataMatrix(2, 2,
-                                row_names=['R0', 'R1'],
-                                col_names=['C0', 'C1'],
-                                values=[[2, 3],
-                                        [4, 5]])
-        matrix3 = matrix1 + matrix2
-        self.assertEquals(matrix3.row_names, ['R0', 'R1'])
-        self.assertEquals(matrix3.column_names, ['C0', 'C1'])
-        self.assertNotEquals(matrix3, matrix1)
-        self.assertNotEquals(matrix3, matrix2)
-        self.assertTrue((matrix3.values == [[3, 5], [7, 9]]).all())
-
-    def test_add_scalar(self):
-        """tests the + operator"""
-        matrix1 = dm.DataMatrix(2, 2,
-                                row_names=['R0', 'R1'],
-                                col_names=['C0', 'C1'],
-                                values=[[1, 2],
-                                        [3, 4]])
-        matrix2 = matrix1 + 3
-        self.assertEquals(matrix2.row_names, ['R0', 'R1'])
-        self.assertEquals(matrix2.column_names, ['C0', 'C1'])
-        self.assertNotEquals(matrix2, matrix1)
-        self.assertTrue((matrix2.values == [[4, 5], [6, 7]]).all())
 
     def test_max(self):
         """tests the max() method"""

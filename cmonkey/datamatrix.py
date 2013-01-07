@@ -172,6 +172,10 @@ class DataMatrix:
         self.values[:, column] *= factor
         return self
 
+    def subtract_with_quantile(self, quantile):
+        """subtracts this matrix's values with the specified quantile of its values"""
+        self.values - self.quantile(quantile)
+
     def max(self):
         """return the maximum value in this matrix"""
         return np.amax(self.values[np.isfinite(self.values)])
@@ -192,38 +196,6 @@ class DataMatrix:
     def apply_log(self):
         """applies np.log to all values"""
         self.values[self.values != 0.0] = np.log(self.values[self.values != 0.0])
-
-    def __neg__(self):
-        """returns a new DataMatrix with the values in the matrix negated"""
-        return DataMatrix(self.num_rows, self.num_columns,
-                          self.row_names, self.column_names,
-                          -self.values)
-
-    def __add__(self, value):
-        """adding a value to this matrix can be either a scalar or a matrix"""
-        if isinstance(value, DataMatrix):
-            return DataMatrix(self.num_rows, self.num_columns,
-                              self.row_names, self.column_names,
-                              self.values + value.values)
-        else:
-            return DataMatrix(self.num_rows, self.num_columns,
-                              self.row_names, self.column_names,
-                              self.values + value)
-
-    def __sub__(self, value):
-        """subtract a value from the matrix"""
-        if value != 0.0:
-            return DataMatrix(self.num_rows, self.num_columns,
-                              self.row_names, self.column_names,
-                              self.values - value)
-        else:
-            return self
-
-    def __mul__(self, factor):
-        """returns a new DataMatrix with the values in the matrix negated"""
-        return DataMatrix(self.num_rows, self.num_columns,
-                          self.row_names, self.column_names,
-                          self.values * factor)
 
     def mean(self):
         """returns the mean value"""

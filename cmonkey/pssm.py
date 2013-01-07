@@ -11,7 +11,7 @@ TWO_BASE_LETTERS = ['Y', 'R', 'W', 'S', 'K', 'M']
 THREE_BASE_LETTERS = ['V', 'H', 'D', 'B']
 
 
-class Pssm:
+class Pssm(object):
     """A PSSM class to interface with Weeder"""
     __slots__ = ('name', 'values', 'sites', 'e_value')
 
