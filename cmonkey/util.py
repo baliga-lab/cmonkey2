@@ -5,6 +5,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import operator
+import collections
 import math
 import numpy as np
 import scipy.stats
@@ -159,19 +160,8 @@ def levenshtein_distance(str1, str2):
     return dist[strlen1][strlen2]
 
 
-class RankedAnchor:  # pylint: disable-msg=R0903
-    """A hyperlink with a Levenshtein score"""
-    def __init__(self, score, anchor):
-        """Creates a GenomeListEntry with a given Levenshtein distance
-        and a BeautifulSoup anchor tag"""
-        self.score = score
-        self.anchor = anchor
-
-    def __str__(self):
-        return "(score: %d, %s)" % (self.score, str(self.anchor))
-
-    def __repr__(self):
-        return str(self)
+# A hyperlink with a Levenshtein score and BeautifulSoup anchor tag
+RankedAnchor = collections.namedtuple('RankedAnchor', ['score', 'anchor'])
 
 
 def best_matching_links(search_string, html):
