@@ -123,7 +123,7 @@ if __name__ == '__main__':
             CHECKPOINT_FILE = sys.argv[2]
         
         matrix_factory = dm.DataMatrixFactory([dm.nochange_filter, dm.center_scale_filter])
-        infile = util.DelimitedFile.read(sys.argv[1], has_header=True, quote='\"')
+        infile = util.read_dfile(sys.argv[1], has_header=True, quote='\"')
         matrix = matrix_factory.create_from(infile)
         cmonkey_run = ParkinsonCMonkeyRun('hsa', matrix, NUM_CLUSTERS)
         cmonkey_run.run()

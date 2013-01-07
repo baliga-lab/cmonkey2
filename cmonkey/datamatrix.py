@@ -330,8 +330,8 @@ class DataMatrixFactory:
 
     def create_from(self, delimited_file):
         """creates and returns an initialized, filtered DataMatrix instance"""
-        lines = delimited_file.lines()
-        header = delimited_file.header()
+        lines = delimited_file.lines
+        header = delimited_file.header
         nrows = len(lines)
         ncols = len(header) - 1
         colnames = header[1:len(header)]

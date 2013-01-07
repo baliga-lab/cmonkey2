@@ -62,9 +62,9 @@ def get_network_factory2(filename, weight, sep='\t'):
     def read_edges2(filename):
         """just read a preprocessed file, much faster to debug"""
         logging.info("stringdb.read_edges2()")
-        dfile = util.DelimitedFile.read(filename, sep)
+        dfile = util.read_dfile(filename, sep)
         result = []
-        for line in dfile.lines():
+        for line in dfile.lines:
             result.append([line[0], line[1], float(line[2])])
         return result
 
@@ -82,9 +82,9 @@ def get_network_factory2_FS(filename, weight, sep='\t'):
     def read_edges2(filename):
         """just read a preprocessed file, much faster to debug"""
         logging.info("\x1b[31mstringdb:\t\x1b[0mreading interaction network - stringdb.read_edges2()")
-        dfile = util.DelimitedFile.read(filename, sep)
+        dfile = util.read_dfile(filename, sep)
         result = []
-        for line in dfile.lines():
+        for line in dfile.lines:
             result.append((line[0], line[1], float(line[2])))
         return result
 
@@ -102,10 +102,9 @@ def get_network_factory3(filename, weight):
     def read_edges3(filename):
         """just read a preprocessed file, much faster to debug"""
         logging.info("stringdb.read_edges3()")
-        dfile = util.DelimitedFile.read(filename, sep=",",
-                                        has_header=True, quote='"')
+        dfile = util.read_dfile(filename, sep=",", has_header=True, quote='"')
         result = []
-        for line in dfile.lines():
+        for line in dfile.lines:
             result.append([line[1], line[2], float(line[3])])
         return result
 

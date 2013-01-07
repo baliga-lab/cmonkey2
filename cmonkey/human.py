@@ -173,7 +173,7 @@ def read_controls():
 
 def read_rug(pred):
     """reads the rug file"""
-    infile = util.DelimitedFile.read(RUG_FILE, sep=',', has_header=False)
+    infile = util.read_dfile(RUG_FILE, sep=',', has_header=False)
     return list(set([row[0] for row in infile.lines() if pred(row)]))
 
 
@@ -188,8 +188,7 @@ def read_matrix(filename):
     matrix_factory = dm.DataMatrixFactory([
             lambda matrix: matrix.submatrix_by_name(
                 column_names=columns_to_use)])
-    infile = util.DelimitedFile.read(filename, sep=',', has_header=True,
-                                     quote="\"")
+    infile = util.read_dfile(filename, sep=',', has_header=True, quote="\"")
     matrix = matrix_factory.create_from(infile)
 
     column_groups = {1: range(matrix.num_columns)}

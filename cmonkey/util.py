@@ -25,6 +25,10 @@ except ImportError:
     logging.warn("could not import BeautifulSoup, RSAT organism finding won't work")
 
 
+# this tuple structure holds data of a delimited file
+DelimitedFile = collections.namedtuple('DelimitedFile', ['lines', 'header'])
+
+
 def make_delimited_file_from_lines(lines, sep, has_header, comment, quote):
     """Creates a delimited file from a list of lines"""
 
@@ -71,44 +75,25 @@ def make_delimited_file_from_lines(lines, sep, has_header, comment, quote):
     return DelimitedFile(file_lines, file_header)
 
 
-class DelimitedFile:  # pylint: disable-msg=R0913
-    """A file class to read text files that are delimited with certain
-    separators. This class offers some flexibility over regular csv
-    reading mechanisms by allowing for comments and storing optional
-    headers.
-    Create a DelimitedFile instance by calling DelimitedFile.read()."""
-    def __init__(self, lines, header):
-        self.__lines = lines
-        self.__header = header
+def dfile_from_text(text, sep='\t', has_header=False,
+                     comment=None, quote=None):
+    """creates a DelimitedFile instance from a text"""
+    return make_delimited_file_from_lines(text.split('\n'), sep,
+                                          has_header, comment, quote)
 
-    @classmethod
-    def create_from_text(cls, text, sep='\t', has_header=False,
-                         comment=None, quote=None):
-        """creates a DelimitedFile instance from a text"""
-        return make_delimited_file_from_lines(text.split('\n'), sep,
-                                              has_header, comment, quote)
 
-    @classmethod
-    def read(cls, filepath, sep='\t', has_header=False, comment=None,
-             quote=None):
-        """Creates the reader object"""
-        lines = None
-        if filepath.endswith('.gz'):
-            with gzip.open(filepath) as inputfile:
-                lines = inputfile.readlines()
-        else:
-            with open(filepath) as inputfile:
-                lines = inputfile.readlines()
-        return make_delimited_file_from_lines(lines, sep, has_header,
-                                              comment, quote)
-
-    def lines(self):
-        """returns the lines in the file"""
-        return self.__lines
-
-    def header(self):
-        """returns the header in the file"""
-        return self.__header
+def read_dfile(filepath, sep='\t', has_header=False, comment=None,
+               quote=None):
+    """Creates the reader object"""
+    lines = None
+    if filepath.endswith('.gz'):
+        with gzip.open(filepath) as inputfile:
+            lines = inputfile.readlines()
+    else:
+        with open(filepath) as inputfile:
+            lines = inputfile.readlines()
+    return make_delimited_file_from_lines(lines, sep, has_header,
+                                          comment, quote)
 
 
 class DelimitedFileMapper:
@@ -118,7 +103,7 @@ class DelimitedFileMapper:
     def __init__(self, delimited_file, key_column, value_column):
         """Creates an instance of the mapper class using a DelimitedFile"""
         self.__values = {}
-        for line in delimited_file.lines():
+        for line in delimited_file.lines:
             self.__values[line[key_column]] = line[value_column]
 
     def __getitem__(self, key):

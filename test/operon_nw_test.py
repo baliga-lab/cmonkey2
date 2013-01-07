@@ -151,25 +151,25 @@ class GetOperonPairsTest(unittest.TestCase):
     def __make_organism(self):
         """makes a mock organism with almost real data"""
         features = {}
-        dfile = util.DelimitedFile.read('testdata/Halobacterium_sp_features',
-                                        comment='--')
-        for line in dfile.lines():
+        dfile = util.read_dfile('testdata/Halobacterium_sp_features',
+                                comment='--')
+        for line in dfile.lines:
             features[line[0]] = st.Feature(line[0], line[1], line[2],
                                            st.Location(line[3],
                                                        int(line[4]),
                                                        int(line[5]),
                                                        line[6] == 'R'))
-        tfile = util.DelimitedFile.read(
+        tfile = util.read_dfile(
             'testdata/Halobacterium_sp_feature_names', comment='--')
         synonyms = th.create_from_rsat_feature_names(tfile)
         return MockOrganismWithSynonyms('64091', features, synonyms)
 
     def __make_ref_operon_pairs(self):
         """returns reference operon pairs for comparison"""
-        reffile = util.DelimitedFile.read(
-            'testdata/operon_reftable.tsv', has_header=True, quote='"')
+        reffile = util.read_dfile('testdata/operon_reftable.tsv',
+                                  has_header=True, quote='"')
         refpairs = []
-        for line in reffile.lines():
+        for line in reffile.lines:
             refpairs.append((line[1], line[2]))
         return refpairs
 

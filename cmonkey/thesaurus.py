@@ -13,7 +13,7 @@ def create_from_delimited_file1(dfile):
     <alternative>SEPARATOR<original>
     ..."""
     result = {}
-    for line in dfile.lines():
+    for line in dfile.lines:
         result[line[0]] = line[1]
     return result
 
@@ -25,7 +25,7 @@ def create_from_delimited_file2(dfile):
     if isinstance(dfile, str):
         dfile = util.DelimitedFile.read(dfile, sep=',', has_header=False)
     result = {}
-    for line in dfile.lines():
+    for line in dfile.lines:
         original = line[0].upper()  # original should map to itself
         result[original] = original
         for alternative in line[1].split(';'):
@@ -44,7 +44,7 @@ def create_from_rsat_feature_names(dfile, key_transforms=None):
     suffix that can be removed
     """
     result = {}
-    for line in dfile.lines():
+    for line in dfile.lines:
         key = line[1]
         if key_transforms:
             for transform in key_transforms:

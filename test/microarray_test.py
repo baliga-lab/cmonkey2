@@ -33,18 +33,18 @@ class ComputeArrayScoresTest(unittest.TestCase):
                                       {'memb.num_clusters': 43})
 
     def __read_ratios(self):
-        dfile = util.DelimitedFile.read('testdata/row_scores_testratios.tsv',
-                                        has_header=True)
+        dfile = util.read_dfile('testdata/row_scores_testratios.tsv',
+                                has_header=True)
         return dm.DataMatrixFactory([]).create_from(dfile)
 
     def __read_rowscores_refresult(self):
-        dfile = util.DelimitedFile.read('testdata/row_scores_refresult.tsv',
-                                        has_header=True, quote='"')
+        dfile = util.read_dfile('testdata/row_scores_refresult.tsv',
+                                has_header=True, quote='"')
         return dm.DataMatrixFactory([]).create_from(dfile)
 
     def __read_colscores_refresult(self):
-        dfile = util.DelimitedFile.read('testdata/column_scores_refresult.tsv',
-                                        has_header=True, quote='"')
+        dfile = util.read_dfile('testdata/column_scores_refresult.tsv',
+                                has_header=True, quote='"')
         return dm.DataMatrixFactory([]).create_from(dfile)
 
     def test_compute_row_scores_multiprocessing(self):

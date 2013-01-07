@@ -36,9 +36,9 @@ if __name__ == '__main__':
         matrix_filename = sys.argv[2]
         if matrix_filename.startswith('http://'):
             indata = util.read_url(matrix_filename)
-            infile = util.DelimitedFile.create_from_text(indata, has_header=True, quote='\"')
+            infile = util.dfile_from_text(indata, has_header=True, quote='\"')
         else:
-            infile = util.DelimitedFile.read(matrix_filename, has_header=True, quote='\"')
+            infile = util.read_dfile(matrix_filename, has_header=True, quote='\"')
 
         matrix = matrix_factory.create_from(infile)
         cmonkey_run = cmonkey_run.CMonkeyRun(sys.argv[1], matrix,

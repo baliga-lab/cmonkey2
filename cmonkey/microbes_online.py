@@ -213,10 +213,8 @@ def __get_predictions(microbes_online, organism):
     """reads the operon predictions for a given organism from MicrobesOnline"""
     preds_text = microbes_online.get_operon_predictions_for(
         organism.taxonomy_id())
-    dfile = util.DelimitedFile.create_from_text(preds_text,
-                                                has_header=True)
-    preds = [(line[2], line[3]) for line in dfile.lines()
-             if line[6] == 'TRUE']
+    dfile = util.dfile_from_text(preds_text, has_header=True)
+    preds = [(line[2], line[3]) for line in dfile.lines if line[6] == 'TRUE']
     logging.info("%d prediction pairs read", len(preds))
     return preds
 

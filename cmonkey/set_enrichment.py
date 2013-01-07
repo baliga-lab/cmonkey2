@@ -72,9 +72,9 @@ class SetType:
     @classmethod
     def read_csv(cls, name, infile, cutoff=None, sep=','):
         """reads a set from a CSV file"""
-        dfile = util.DelimitedFile.read(infile, sep)
+        dfile = util.read_dfile(infile, sep)
         sets = {}
-        for line in dfile.lines():
+        for line in dfile.lines:
             if line[0] not in sets:
                 sets[line[0]] = EnrichmentSet('discrete')
             sets[line[0]].add(line[1].upper(), 1)

@@ -10,26 +10,26 @@ import thesaurus
 class MockDelimitedFile1:
     """just a mocked DelimitedFile"""
 
-    def lines(self):
+    def __init__(self):
         """mocked lines() method"""
-        return [['alt1', 'gene1'], ['alt2', 'gene1'], ['alt3', 'gene2']]
+        self.lines = [['alt1', 'gene1'], ['alt2', 'gene1'], ['alt3', 'gene2']]
 
 
 class MockDelimitedFile2:
     """just a mocked DelimitedFile"""
 
-    def lines(self):
+    def __init__(self):
         """mocked lines() method"""
-        return [['gene1', 'alt1;alt2'], ['gene2', 'alt3']]
+        self.lines = [['gene1', 'alt1;alt2'], ['gene2', 'alt3']]
 
 
 class MockRsatFeatureNameFile:
     """a mocked RSAT feature names delimited file"""
 
-    def lines(self):
+    def __init__(self):
         """mocked lines() method"""
-        return [['NAME1', 'PRIME1', 'primary'], ['NAME1', 'ALT1', 'alternate'],
-                ['NAME2', 'PRIME2', 'primary'], ['NAME2', 'VNG2664Gm']]
+        self.lines = [['NAME1', 'PRIME1', 'primary'], ['NAME1', 'ALT1', 'alternate'],
+                      ['NAME2', 'PRIME2', 'primary'], ['NAME2', 'VNG2664Gm']]
 
 
 class DelimitedFileFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904

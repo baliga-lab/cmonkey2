@@ -44,9 +44,9 @@ def make_rsat_organism_mapper(rsatdb):
 
     def get_taxonomy_id(rsat_organism):
         """Determine the taxonomy data from the RSAT database"""
-        organism_names_dfile = util.DelimitedFile.create_from_text(
+        organism_names_dfile = util.dfile_from_text(
             rsatdb.get_organism_names(rsat_organism), comment='--')
-        return organism_names_dfile.lines()[0][0]
+        return organism_names_dfile.lines[0][0]
 
     def mapper_fun(kegg_organism):
         """Mapper function to return basic information about an organism
@@ -258,7 +258,7 @@ class Microbe(OrganismBase):
         is also cached, because it is used many times
         """
         if not self.__synonyms:
-            feature_names_dfile = util.DelimitedFile.create_from_text(
+            feature_names_dfile = util.dfile_from_text(
                 self.__rsatdb().get_feature_names(self.species()),
                 comment='--')
             self.__synonyms = thesaurus.create_from_rsat_feature_names(
@@ -286,9 +286,9 @@ class Microbe(OrganismBase):
                                           is_reverse))
 
         features = {}
-        dfile = util.DelimitedFile.create_from_text(
+        dfile = util.dfile_from_text(
             self.__rsatdb().get_features(self.species()), comment='--')
-        for line in dfile.lines():
+        for line in dfile.lines:
             feature_id = line[0]
             if feature_id in feature_ids:
                 features[feature_id] = read_feature(line)

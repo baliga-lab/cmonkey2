@@ -247,8 +247,8 @@ class CMonkeyRun:
 
     def make_microbe(self):
         """returns the organism object to work on"""
-        keggfile = util.DelimitedFile.read(KEGG_FILE_PATH, comment='#')
-        gofile = util.DelimitedFile.read(GO_FILE_PATH)
+        keggfile = util.read_dfile(KEGG_FILE_PATH, comment='#')
+        gofile = util.read_dfile(GO_FILE_PATH)
         rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, self['cache_dir'])
         mo_db = microbes_online.MicrobesOnline()
         stringfile = self.config_params['string_file']
