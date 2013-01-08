@@ -280,20 +280,6 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertTrue((matrix.values == [[-1.01, -1.01],
                                            [-1.01, -19.9],
                                            [-19.9, -19.9]]).all())
-        
-
-class DataMatrixCollectionTest(unittest.TestCase):  # pylint: disable-msg=R0904
-    """Test class for MatrixCollection"""
-
-    def test_create_with_one(self):
-        """creates a DataMatrixCollection with one matrix"""
-        matrix = dm.DataMatrix(2, 3, ["row0", "row1"], ["col0", "col1", "col2"])
-        coll = dm.DataMatrixCollection([matrix])
-        self.assertEquals(["row0", "row1"], coll.unique_row_names())
-        self.assertEquals(["col0", "col1", "col2"],
-                          coll.unique_column_names())
-        self.assertEquals(2, coll.num_unique_rows())
-        self.assertEquals(3, coll.num_unique_columns())
 
 
 class MockDelimitedFile:  # pylint: disable-msg=R0903

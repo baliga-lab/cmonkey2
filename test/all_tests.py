@@ -24,7 +24,6 @@ import scoring_test as st
 if __name__ == '__main__':
     SUITE = []
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(dmtest.DataMatrixTest))
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(dmtest.DataMatrixCollectionTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(dmtest.DataMatrixFactoryTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(dmtest.NoChangeFilterTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(dmtest.CenterScaleFilterTest))

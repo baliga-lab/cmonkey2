@@ -269,48 +269,6 @@ class DataMatrix:
                 write_data(outfile)
                 outfile.flush()
 
-class DataMatrixCollection:
-    """A collection of DataMatrix objects containing gene expression values
-    It also offers functionality to combine the contained matrices
-    """
-    def __init__(self, matrices):
-        self.__matrices = matrices
-        self.__unique_row_names = self.__make_unique_names(
-            lambda matrix: matrix.row_names)
-        self.__unique_column_names = self.__make_unique_names(
-            lambda matrix: matrix.column_names)
-
-    def __make_unique_names(self, name_extract_fun):
-        """helper method to create a unique name list
-        name_extract_fun is a function to return a list of names from
-        a matrix"""
-        result = []
-        for matrix in self.__matrices:
-            names = name_extract_fun(matrix)
-            for name in names:
-                result.append(name)
-        result.sort()
-        return result
-
-    def __getitem__(self, index):
-        return self.__matrices[index]
-
-    def num_unique_rows(self):
-        """returns the number of unique rows"""
-        return len(self.__unique_row_names)
-
-    def num_unique_columns(self):
-        """returns the number of unique columns"""
-        return len(self.__unique_column_names)
-
-    def unique_row_names(self):
-        """returns the unique row names"""
-        return self.__unique_row_names
-
-    def unique_column_names(self):
-        """returns the unique column names"""
-        return self.__unique_column_names
-
 
 class DataMatrixFactory:
     """Reader class for creating a DataMatrix from a delimited file,
@@ -527,5 +485,4 @@ def qm_result_matrices(matrices, tmp_mean, multiprocessing=True):
         return result
 
 
-__all__ = ['DataMatrix', 'DataMatrixCollection', 'DataMatrixFactory',
-           'nochange_filter', 'center_scale_filter']
+__all__ = ['DataMatrix', 'DataMatrixFactory', 'nochange_filter', 'center_scale_filter']
