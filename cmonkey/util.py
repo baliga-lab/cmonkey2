@@ -57,7 +57,7 @@ def make_delimited_file_from_lines(lines, sep, has_header, comment, quote):
     file_lines = []
     line_index = next_non_comment_index(lines, comment, 0)
     if has_header:
-        file_header = lines[line_index].rstrip().split(sep)
+        file_header = lines[line_index].rstrip('\r\n').split(sep)
         file_header = [remove_quotes(elem, quote) for elem in file_header]
         line_index += 1
 
@@ -65,7 +65,7 @@ def make_delimited_file_from_lines(lines, sep, has_header, comment, quote):
     while line_index < num_lines:
         line_index = next_non_comment_index(lines, comment, line_index)
         if line_index < num_lines:
-            stripped_line = lines[line_index].rstrip()
+            stripped_line = lines[line_index].rstrip('\r\n')
             if len(stripped_line) > 0:  # to catch newline at the end of file
                 line = stripped_line.split(sep)
                 line = [remove_quotes(elem, quote) for elem in line]

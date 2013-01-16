@@ -300,11 +300,9 @@ class DataMatrixFactory:
         for row in xrange(nrows):
             for col in xrange(ncols):
                 strval = lines[row][col + 1]
-                if strval == 'NA':
-                    value = np.nan
-                else:
-                    value = float(strval)
+                value = np.nan if len(strval) == 0 or strval == 'NA' else float(strval)
                 values[row][col] = value
+
         data_matrix = DataMatrix(nrows, ncols, rownames, colnames,
                                  values=values)
 
