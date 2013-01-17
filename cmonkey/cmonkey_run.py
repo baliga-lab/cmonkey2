@@ -86,7 +86,6 @@ class CMonkeyRun:
         self['memb.min_cluster_rows_allowed'] = 3
         self['memb.max_cluster_rows_allowed'] = 70
         self['string_file'] = string_file
-        
         self['out_database'] = self['output_dir'] + '/cmonkey_run.db'
 
         today = date.today()
