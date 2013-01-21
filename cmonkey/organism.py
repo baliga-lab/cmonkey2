@@ -32,6 +32,9 @@ RsatSpeciesInfo = collections.namedtuple('RsatSpeciesInfo',
                                          ['rsatdb', 'species', 'is_eukaryote',
                                           'taxonomy_id'])
 
+KEGGExceptions = { 'Pseudomonas aeruginosa PAO1': 'Pseudomonas aeruginosa',
+                   'Campylobacter jejuni NCTC11168': 'Campylobacter jejuni' }
+
 
 def make_rsat_organism_mapper(rsatdb):
     """return a function that maps from a KEGG organism name to
@@ -54,8 +57,8 @@ def make_rsat_organism_mapper(rsatdb):
         be considered in the construction"""
         # in many cases, the fuzzy match delivers the correct RSAT organism
         # name, but there are exceptions
-        if kegg_organism == 'Pseudomonas aeruginosa PAO1':
-            kegg_organism = 'Pseudomonas aeruginosa'
+        if kegg_organism in KEGGExceptions:
+            kegg_organism = KEGGExceptions[kegg_organism]
         rsat_organism = util.best_matching_links(
             kegg_organism,
             rsatdb.get_directory())[0].rstrip('/')
