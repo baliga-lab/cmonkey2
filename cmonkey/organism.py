@@ -52,9 +52,14 @@ def make_rsat_organism_mapper(rsatdb):
         """Mapper function to return basic information about an organism
         stored in the RSAT database. Only the genes in gene_names will
         be considered in the construction"""
+        # in many cases, the fuzzy match delivers the correct RSAT organism
+        # name, but there are exceptions
+        if kegg_organism == 'Pseudomonas aeruginosa PAO1':
+            kegg_organism = 'Pseudomonas aeruginosa'
         rsat_organism = util.best_matching_links(
             kegg_organism,
             rsatdb.get_directory())[0].rstrip('/')
+        print "mapper_fun(), kegg org = '%s', rsat org = '%s'" % (kegg_organism, rsat_organism)
         return RsatSpeciesInfo(rsatdb, rsat_organism,
                                is_eukaryote(rsat_organism),
                                get_taxonomy_id(rsat_organism))
