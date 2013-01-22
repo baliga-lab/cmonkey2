@@ -39,9 +39,9 @@ def read_edges(filename, sep='\t', prefix=PROTEIN_PREFIX):
 def normalize_edge_list(edges, max_score):
     """normalize scores to 1000, for combined scores"""
     for edge in edges:
-        score = edge.score() / max_score * 1000.0
+        score = edge[2] / max_score * 1000.0
         score = 1000 * math.exp(score / 1000.0) / math.exp(1.0)
-        edge.set_score(score)
+        edge[2] = score
     return edges
 
 
