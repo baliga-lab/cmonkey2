@@ -14,6 +14,7 @@ import util
 import seqtools as st
 import microbes_online as mo
 import collections
+import patches
 
 
 def make_kegg_code_mapper(dfile):
@@ -57,8 +58,8 @@ def make_rsat_organism_mapper(rsatdb):
         be considered in the construction"""
         # in many cases, the fuzzy match delivers the correct RSAT organism
         # name, but there are exceptions
-        if kegg_organism in KEGGExceptions:
-            kegg_organism = KEGGExceptions[kegg_organism]
+        if kegg_organism in patches.KEGG_EXCEPTIONS:
+            kegg_organism = patches.KEGG_EXCEPTIONS[kegg_organism]
         rsat_organism = util.best_matching_links(
             kegg_organism,
             rsatdb.get_directory())[0].rstrip('/')
@@ -271,6 +272,7 @@ class Microbe(OrganismBase):
                 comment='--')
             self.__synonyms = thesaurus.create_from_rsat_feature_names(
                 feature_names_dfile, [thesaurus.strip_vng_modification])
+            self.__synonyms = patches.patch_synonyms(self.__synonyms, self.code)
         return self.__synonyms
 
     def __read_features(self, feature_ids):
