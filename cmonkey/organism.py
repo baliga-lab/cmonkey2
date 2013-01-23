@@ -272,7 +272,6 @@ class Microbe(OrganismBase):
                 comment='--')
             self.__synonyms = thesaurus.create_from_rsat_feature_names(
                 feature_names_dfile, [thesaurus.strip_vng_modification])
-            self.__synonyms = patches.patch_synonyms(self.__synonyms, self.code)
         return self.__synonyms
 
     def __read_features(self, feature_ids):

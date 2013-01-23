@@ -13,6 +13,7 @@ import sys
 import logging
 import util
 import network
+import patches
 
 # most people won't need MicrobesOnline integration, so we'll make the
 # import optional
@@ -214,7 +215,9 @@ def __get_predictions(microbes_online, organism):
     preds_text = microbes_online.get_operon_predictions_for(
         organism.taxonomy_id())
     dfile = util.dfile_from_text(preds_text, has_header=True)
-    preds = [(line[2], line[3]) for line in dfile.lines if line[6] == 'TRUE']
+    code = organism.code
+    preds = [(patches.patch_gene(code, line[2]), patches.patch_gene(code, line[3]))
+             for line in dfile.lines if line[6] == 'TRUE']
     logging.info("%d prediction pairs read", len(preds))
     return preds
 
