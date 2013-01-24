@@ -9,9 +9,13 @@ def read_regulondb(regulondb_filename, tfs, strong_evidence):
     with open(regulondb_filename) as csvfile:
         reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
         regulondb_rows = [(row[0], row[4], row[7]) for row in reader]
+
     regulondb_rows = regulondb_rows[1:]
     num_before = len(regulondb_rows)
     regulondb_rows = [row for row in regulondb_rows if row[0] in tfs]
+    if strong_evidence:
+        regulondb_rows = [row for row in regulondb_rows if row[2] == 'TRUE']
+
     num_after = len(regulondb_rows)
     print "# before: %d # after: %d" % (num_before, num_after)
     return regulondb_rows
@@ -95,9 +99,13 @@ if __name__ == '__main__':
 
     #print regulondb_tfs2genes
     tfs2genes = make_tfs2genes(tfs2motifs, args.cmonkeyout)
+    size_before = sum([len(tfs2genes[tf]) for tf in tfs2genes])
     tfs2genes = {tf:tfs2genes[tf] for tf in tfs2genes if tf in regulondb_tfs2genes}
+    size_after = sum([len(tfs2genes[tf]) for tf in tfs2genes])
+    print "# tfs before: %d after: %d" % (size_before, size_after)
 
-    total_predictions = sum([len(tfs2genes[tf]) for tf in tfs2genes])
+    total_regulondb = sum([len(regulondb_tfs2genes[tf])
+                           for tf in regulondb_tfs2genes])
     true_positives = 0
     false_positives = 0
 
@@ -108,10 +116,12 @@ if __name__ == '__main__':
                 true_positives += 1
             else:
                 false_positives += 1
+
+    total_predictions = true_positives + false_positives
     print "TP = %d FP = %d, total predictions = %d" % (true_positives, false_positives,
                                                        total_predictions)
-    precision = float(true_positives) / (float(true_positives) + float(false_positives))
-    recall = float(true_positives) / float(total_predictions)
+    precision = float(true_positives) / float(total_predictions)
+    recall = float(true_positives) / float(total_regulondb)
     print "Precision: %f, Recall: %f" % (precision, recall)
         
 
