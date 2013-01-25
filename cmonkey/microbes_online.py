@@ -216,7 +216,8 @@ def __get_predictions(microbes_online, organism):
         organism.taxonomy_id())
     dfile = util.dfile_from_text(preds_text, has_header=True)
     code = organism.code
-    preds = [(patches.patch_gene(code, line[2]), patches.patch_gene(code, line[3]))
+    preds = [(patches.patch_mo_gene(code, line[2]),
+              patches.patch_mo_gene(code, line[3]))
              for line in dfile.lines if line[6] == 'TRUE']
     logging.info("%d prediction pairs read", len(preds))
     return preds

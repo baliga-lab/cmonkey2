@@ -85,7 +85,7 @@ class TpsCMonkeyRun(cmonkey_run.CMonkeyRun):
 
     def make_tps(self):
         """returns a tps organism object"""
-        nw_factories = [stringdb.get_network_factory2(STRING_LINKS, 1.0)]
+        nw_factories = [stringdb.get_network_factory2('tps', STRING_LINKS, 1.0)]
         return organism.GenericOrganism('tps', THESAURUS_FILE, nw_factories,
                                         seq_filenames=SEQ_FILENAMES,
                                         search_distances=SEARCH_DISTANCES,

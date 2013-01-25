@@ -268,7 +268,8 @@ class CMonkeyRun:
 
         nw_factories = []
         if stringfile != None:
-            nw_factories.append(stringdb.get_network_factory2(stringfile, 0.5))
+            nw_factories.append(stringdb.get_network_factory2(self['organism_code'],
+                                                              stringfile, 0.5))
         else:
             logging.warn("no STRING file specified !")
 

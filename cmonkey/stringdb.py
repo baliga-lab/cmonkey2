@@ -8,6 +8,8 @@ import re
 import math
 import util
 import network
+import patches
+
 
 STRING_FILE2 = 'string_links_64091.tab'
 PROTEIN_PREFIX = re.compile('^string:\d+[.]')
@@ -15,7 +17,8 @@ PROTEIN_PREFIX = re.compile('^string:\d+[.]')
 
 def read_edges(filename, sep='\t', prefix=PROTEIN_PREFIX):
     """read the edges from a tab separated file. This is the original
-    STRING format"""
+    STRING format used in R cMonkey
+    """
     logging.info("stringdb.read_edges()")
     dfile = util.DelimitedFile.read(filename, sep)
     result = []
@@ -46,7 +49,10 @@ def normalize_edge_list(edges, max_score):
 
 
 def get_network_factory(filename, weight):
-    """temporary STRING network factory using the default STRING format"""
+    """temporary STRING network factory using the default STRING format
+    This is the legacy factory method from R/cMonkey which supports
+    the old STRING database format
+    """
     def make_network(_):
         """make network"""
         return network.Network.create("STRING",
@@ -55,17 +61,21 @@ def get_network_factory(filename, weight):
     return make_network
 
 
-def get_network_factory2(filename, weight, sep='\t'):
+def get_network_factory2(organism_code, filename, weight, sep='\t'):
     """STRING network factory from preprocessed edge file
     (protein1, protein2, combined_score), scores are already
-    normalized to 1000"""
+    normalized to 1000.
+    This is the standard factory method used for Microbes
+    """
     def read_edges2(filename):
         """just read a preprocessed file, much faster to debug"""
         logging.info("stringdb.read_edges2()")
         dfile = util.read_dfile(filename, sep)
         result = []
         for line in dfile.lines:
-            result.append([line[0], line[1], float(line[2])])
+            result.append([patches.patch_string_gene(organism_code, line[0]),
+                           patches.patch_string_gene(organism_code, line[1]),
+                           float(line[2])])
         return result
 
     def make_network(_):
@@ -98,7 +108,9 @@ def get_network_factory2_FS(filename, weight, sep='\t'):
 def get_network_factory3(filename, weight):
     """STRING network factory from preprocessed edge file
     (row, protein1, protein2, combined_score), scores are not yet
-    normalized to 1000"""
+    normalized to 1000.
+    This is a customized factory method used for certain human setups.
+    """
     def read_edges3(filename):
         """just read a preprocessed file, much faster to debug"""
         logging.info("stringdb.read_edges3()")
