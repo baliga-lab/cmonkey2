@@ -17,18 +17,21 @@ def read_regulondb(regulondb_filename, tfs, strong_evidence):
         regulondb_rows = [row for row in regulondb_rows if row[2] == 'TRUE']
 
     num_after = len(regulondb_rows)
-    print "# before: %d # after: %d" % (num_before, num_after)
+    print "# RegulonDB rows before: %d # after: %d" % (num_before, num_after)
     return regulondb_rows
 
 def read_tomtom(tomtom_filename, pval_threshold):
     with open(tomtom_filename) as csvfile:
         reader = csv.reader(csvfile, delimiter='\t', quotechar='\"')
         tomtom_rows = [(row[0], row[1], row[3], row[4]) for row in reader]
+    num_before = len(tomtom_rows) - 1    
     tomtom_rows = [(row[0], row[1], float(row[2]), float(row[3]))
                    for row in tomtom_rows[1:] if float(row[2]) < pval_threshold]
+    num_after = len(tomtom_rows)
+    print "# TOMTOM results before: %d # after: %d" % (num_before, num_after)
     return tomtom_rows
 
-def make_gene2motifs(tomtom_rows):
+def make_tfs2motifs(tomtom_rows):
     gene2motifs = {}
     for row in tomtom_rows:
         motif = row[0]
@@ -85,7 +88,7 @@ if __name__ == '__main__':
 
     # real work starts here
     tomtom_rows = read_tomtom(tomtom_filename, pval_threshold)
-    tfs2motifs = make_gene2motifs(tomtom_rows)
+    tfs2motifs = make_tfs2motifs(tomtom_rows)
     tfs = list(tfs2motifs.keys())
 
     regulondb_rows = read_regulondb(regulondb_filename, tfs, args.strongevidence)
