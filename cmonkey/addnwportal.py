@@ -20,6 +20,7 @@ UCSC_MAP = {'gsu': 'geobSulf', 'cac': '', 'bce': '', 'bsu': 'baciSubt2',
             'bth': 'bactThet_VPI_5482', 'ttj': 'therTher_HB8',
             'pae': 'pseuAeru'
              }
+PSQL = "dbname='network_portal' user='dj_ango' host='localhost' password='django'"
 
 MicrobeDB = collections.namedtuple('MicrobeDB', ['keggfile', 'rsatdb', 'rsat_info'])
 
@@ -290,7 +291,6 @@ def add_expressions(pgconn, ratios, thesaurus, gene_map, cond_map):
     cur.execute(query, gene_ids)
     num_expr = cur.fetchone()[0]
     if num_expr == 0:
-        """
         print "no expressions exist, copy..."
         for row in range(ratios.num_rows):
             gene = ratios.row_names[row]
@@ -304,8 +304,6 @@ def add_expressions(pgconn, ratios, thesaurus, gene_map, cond_map):
                 value = ratios.values[row][col]
                 cur.execute('insert into expression (gene_id, condition_id, value) values (%s,%s,%s)', [gene_id, cond_id, value])
                 print "gene: %d cond: %d val: %f" % (gene_id, cond_id, value)
-        """
-        pass
     else:
         print "expressions already saved"
 
@@ -335,8 +333,9 @@ if __name__ == '__main__':
     ncbi_code = microbedb.rsat_info.taxonomy_id
     ucsc_code = UCSC_MAP[orgcode]
 
-    pgconn = psycopg2.connect("dbname='network_portal' user='dj_ango' host='localhost' password='django'")
+    pgconn = psycopg2.connect(PSQL)
     pgconn.set_isolation_level(0)  # set auto commit
+    """
     species_id = add_species(pgconn, orgcode, species, ncbi_code, ucsc_code)
     network_id = add_network(pgconn, species_id, species)
     biclusters = add_biclusters(pgconn, conn, network_id, num_iterations)
@@ -360,5 +359,5 @@ if __name__ == '__main__':
     add_motifs(pgconn, conn, bicl_map, num_iterations)
 
     add_expressions(pgconn, ratios, thesaurus, gene_map, cond_map)
-
+    """
     print 'done.'
