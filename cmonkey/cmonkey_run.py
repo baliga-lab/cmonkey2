@@ -409,15 +409,29 @@ class CMonkeyRun:
                 column_names = self.membership().columns_for_cluster(cluster)
                 residual = self.residual_for(row_names, column_names)
                 residuals.append(residual)
-                conn.execute('''insert into cluster_stats (iteration, cluster, num_rows,
-                                num_cols, residual) values (?,?,?,?,?)''',
-                             (iteration, cluster, len(row_names), len(column_names),
-                              residual))
+                try:
+                    conn.execute('''insert into cluster_stats (iteration, cluster, num_rows,
+                                    num_cols, residual) values (?,?,?,?,?)''',
+                                 (iteration, cluster, len(row_names), len(column_names),
+                                  residual))
+                except:                    
+                    # residual is messed up, insert with 1.0
+                    logging.warn('STATS: residual was messed up, insert with 1.0')
+                    conn.execute('''insert into cluster_stats (iteration, cluster, num_rows,
+                                    num_cols, residual) values (?,?,?,?,?)''',
+                                 (iteration, cluster, len(row_names), len(column_names),
+                                  1.0))                    
 
             median_residual = np.median(residuals)
-            conn.execute('''insert into iteration_stats (iteration, median_residual,
-                            fuzzy_coeff) values (?,?,?)''',
-                         (iteration, median_residual, fuzzy_coeff))
+            try:
+                conn.execute('''insert into iteration_stats (iteration, median_residual,
+                                fuzzy_coeff) values (?,?,?)''',
+                             (iteration, median_residual, fuzzy_coeff))
+            except:
+                logging.warn('STATS: median was messed up, insert with 1.0')
+                conn.execute('''insert into iteration_stats (iteration, median_residual,
+                                fuzzy_coeff) values (?,?,?)''',
+                             (iteration, 1.0, fuzzy_coeff))
 
         with conn:
             for network, score in network_scores.items():
