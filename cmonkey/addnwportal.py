@@ -274,7 +274,40 @@ def add_motifs(pgconn, sqliteconn, bicl_map, iteration):
                 #print "MOTIF: ", (motif_id, num, evalue)
                 #print pssm
                 add_motif(pgconn, bicl_map[cluster], num, num_sites, evalue, pssm)
-        
+
+
+def add_expressions(pgconn, ratios, thesaurus, gene_map, cond_map):
+    cur = pgconn.cursor()
+    # select some items to determine whether we have any gene expressions
+    genes = ratios.row_names[:5]
+    gene_ids = []
+    for gene in genes:
+        if gene in thesaurus:
+            gene_ids.append(gene_map[thesaurus[gene]])
+        else:
+            gene_ids.append(gene_map[gene])
+    query = 'select count(*) from expression where gene_id in (%s)'  % (','.join(['%s'] * len(gene_ids)))
+    cur.execute(query, gene_ids)
+    num_expr = cur.fetchone()[0]
+    if num_expr == 0:
+        """
+        print "no expressions exist, copy..."
+        for row in range(ratios.num_rows):
+            gene = ratios.row_names[row]
+            if gene in thesaurus:
+                gene_id = gene_map[thesaurus[gene]]
+            else:
+                gene_id = gene_map[gene]
+
+            for col in range(ratios.num_columns):
+                cond_id = cond_map[ratios.column_names[col]]
+                value = ratios.values[row][col]
+                cur.execute('insert into expression (gene_id, condition_id, value) values (%s,%s,%s)', [gene_id, cond_id, value])
+                print "gene: %d cond: %d val: %f" % (gene_id, cond_id, value)
+        """
+        pass
+    else:
+        print "expressions already saved"
 
 if __name__ == '__main__':
     description = 'addnwportal.py - adding a cMonkey/python run to the database'
@@ -325,5 +358,7 @@ if __name__ == '__main__':
     add_bicluster_genes(pgconn, conn, thesaurus, bicl_map, gene_map, num_iterations)
     add_bicluster_conditions(pgconn, conn, bicl_map, cond_map, num_iterations)
     add_motifs(pgconn, conn, bicl_map, num_iterations)
+
+    add_expressions(pgconn, ratios, thesaurus, gene_map, cond_map)
 
     print 'done.'
