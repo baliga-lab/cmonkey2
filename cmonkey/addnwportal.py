@@ -335,7 +335,7 @@ if __name__ == '__main__':
 
     pgconn = psycopg2.connect(PSQL)
     pgconn.set_isolation_level(0)  # set auto commit
-    """
+
     species_id = add_species(pgconn, orgcode, species, ncbi_code, ucsc_code)
     network_id = add_network(pgconn, species_id, species)
     biclusters = add_biclusters(pgconn, conn, network_id, num_iterations)
@@ -359,5 +359,4 @@ if __name__ == '__main__':
     add_motifs(pgconn, conn, bicl_map, num_iterations)
 
     add_expressions(pgconn, ratios, thesaurus, gene_map, cond_map)
-    """
     print 'done.'
