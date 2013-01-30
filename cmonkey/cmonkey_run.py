@@ -343,9 +343,15 @@ class CMonkeyRun:
                 for order_num in self.ratio_matrix.row_indexes(row_names):
                     conn.execute('''insert into row_members (iteration,cluster,order_num)
                                     values (?,?,?)''', (iteration, cluster, order_num))
-                residual = self.residual_for(row_names, column_names)
-                conn.execute('''insert into cluster_residuals (iteration,cluster,residual)
+                try:
+                    residual = self.residual_for(row_names, column_names)
+                    conn.execute('''insert into cluster_residuals (iteration,cluster,residual)
                                values (?,?,?)''', (iteration, cluster, residual))
+                except:
+                    # apparently computing the mean residual led to a numpy masked
+                    # value. We set it to 1.0 to avoid crashing out
+                    conn.execute('''insert into cluster_residuals (iteration,cluster,residual)
+                               values (?,?,?)''', (iteration, cluster, 1.0))
 
         # write motif infos: TODO: we might want the motif scoring function writing
         # this part
