@@ -191,9 +191,10 @@ def add_bicluster_gene(pgconn, cluster_id, gene_id):
     else:
         return False
 
-def add_bicluster_genes(pgconn, sqliteconn, thesaurus, bicl_map, gene_map, iteration):
+def add_bicluster_genes(pgconn, sqliteconn, species_id, chr_map, thesaurus, bicl_map, gene_map, iteration):
     """copy biclusters from sqlite to postgres if not there"""
     print "copying bicluster-gene memberships..."
+    chr_id = chr_map.items()[0][1]
     clusters = sorted(bicl_map.keys())
     sqlcur = sqliteconn.cursor()
     for cluster in clusters:
@@ -204,14 +205,25 @@ def add_bicluster_genes(pgconn, sqliteconn, thesaurus, bicl_map, gene_map, itera
         # use the thesaurus to get to the normalized genes
         for gene in genes:
             if gene in thesaurus:
-                mgenes.append(thesaurus[gene])
+                primary_name = thesaurus[gene]
+                #print "%s in thesaurus -> %s" % (gene, primary_name)
+                mgenes.append(primary_name)
+                # handle the weird case that a gene is in the thesaurus
+                # but does not have a feature entry: in this case,
+                # we need to add a dummy gene and add the entry to the gene map
+                if primary_name not in gene_map:
+                    print "weird RSAT error, need to add a dummy gene %s" % primary_name
+                    gene_pair = add_gene(pgconn, species_id, chr_id, primary_name, primary_name,
+                                       'DUMMY', 0, 0, '+')
+                    gene_map[primary_name] = gene_pair[0]
             else:
                 mgenes.append(gene)
         gene_ids = [gene_map[gene] for gene in mgenes]
         added = 0
         for gene_id in gene_ids:
             added += 1 if add_bicluster_gene(pgconn, cluster_id, gene_id) else 0
-        print "genes added to cluster ", cluster, ": ", added
+        if added > 0:
+            print "genes added to cluster ", cluster, ": ", added
 
 
 def add_bicluster_condition(pgconn, cluster_id, cond_id):
@@ -238,7 +250,8 @@ def add_bicluster_conditions(pgconn, sqliteconn, bicl_map, cond_map, iteration):
         added = 0
         for cond_id in cond_ids:
             added += 1 if add_bicluster_condition(pgconn, cluster_id, cond_id) else 0
-        print "conditions added for cluster ", cluster, ": ", added
+        if added > 0:
+            print "conditions added for cluster ", cluster, ": ", added
 
 
 def add_motif(pgconn, cluster_id, motifnum, num_sites, evalue, pssm):
@@ -277,7 +290,12 @@ def add_motifs(pgconn, sqliteconn, bicl_map, iteration):
                 add_motif(pgconn, bicl_map[cluster], num, num_sites, evalue, pssm)
 
 
-def add_expressions(pgconn, ratios, thesaurus, gene_map, cond_map):
+def add_expressions(pgconn, ratios, thesaurus, gene_map, cond_map, exptable):
+    """generate the gene expression table. Gene expressions are huge and
+    inserting them separately is very slow. Since we use Postgres, the
+    fastest way is to write out a tab-separated file and use the copy
+    command to add everything
+    """
     cur = pgconn.cursor()
     # select some items to determine whether we have any gene expressions
     genes = ratios.row_names[:5]
@@ -287,11 +305,8 @@ def add_expressions(pgconn, ratios, thesaurus, gene_map, cond_map):
             gene_ids.append(gene_map[thesaurus[gene]])
         else:
             gene_ids.append(gene_map[gene])
-    query = 'select count(*) from expression where gene_id in (%s)'  % (','.join(['%s'] * len(gene_ids)))
-    cur.execute(query, gene_ids)
-    num_expr = cur.fetchone()[0]
-    if num_expr == 0:
-        print "no expressions exist, copy..."
+    
+    with open(exptable, 'w') as outfile:        
         for row in range(ratios.num_rows):
             gene = ratios.row_names[row]
             if gene in thesaurus:
@@ -302,16 +317,15 @@ def add_expressions(pgconn, ratios, thesaurus, gene_map, cond_map):
             for col in range(ratios.num_columns):
                 cond_id = cond_map[ratios.column_names[col]]
                 value = ratios.values[row][col]
-                cur.execute('insert into expression (gene_id, condition_id, value) values (%s,%s,%s)', [gene_id, cond_id, value])
-                print "gene: %d cond: %d val: %f" % (gene_id, cond_id, value)
-    else:
-        print "expressions already saved"
+                outfile.write("%d\t%d\t%f\n" % (gene_id, cond_id, value))
 
 if __name__ == '__main__':
     description = 'addnwportal.py - adding a cMonkey/python run to the database'
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--rundb', required=True, help='cMonkey output db file')
     parser.add_argument('--ratios', required=True, help='cMonkey ratios file')
+    parser.add_argument('--exptable', help='filename of expression table to generate',
+                        default=None)
     args = parser.parse_args()
 
     # read the matrix
@@ -354,9 +368,11 @@ if __name__ == '__main__':
     cond_map = {cond[1]: cond[0] for cond in conditions}
 
     # now we have everything to build bicluster memberships
-    add_bicluster_genes(pgconn, conn, thesaurus, bicl_map, gene_map, num_iterations)
+    add_bicluster_genes(pgconn, conn, species_id, chr_map, thesaurus, bicl_map, gene_map, num_iterations)
     add_bicluster_conditions(pgconn, conn, bicl_map, cond_map, num_iterations)
     add_motifs(pgconn, conn, bicl_map, num_iterations)
 
-    add_expressions(pgconn, ratios, thesaurus, gene_map, cond_map)
+    if args.exptable != None:
+        print "writing expression table..."
+        add_expressions(pgconn, ratios, thesaurus, gene_map, cond_map, args.exptable)
     print 'done.'
