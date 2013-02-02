@@ -6,6 +6,7 @@ import util, rsat, microbes_online
 import psycopg2
 import collections
 import datamatrix as dm
+import os.path
 
 # Script to add a cMonkey python run to the network portal database
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
@@ -290,6 +291,39 @@ def add_motifs(pgconn, sqliteconn, bicl_map, iteration):
                 add_motif(pgconn, bicl_map[cluster], num, num_sites, evalue, pssm)
 
 
+def add_motif_annotations(pgconn, sqliteconn, bicl_map, gene_map, thesaurus, iteration):
+    """copy motif annotations"""
+    print "copying motif annotations"
+    sqlcur = sqliteconn.cursor()
+    sqlcur.execute('select name from row_names order by order_num')
+    src_genes = [row[0] for row in sqlcur.fetchall()]
+    clusters = sorted(bicl_map.keys())
+    cur = pgconn.cursor()
+    for cluster in clusters:
+        sqlcur.execute('select rowid, motif_num from motif_infos where cluster = ? and iteration = ?',
+                       [cluster, iteration])
+        motif_infos = [row for row in sqlcur.fetchall()]
+        for src_motif_id, motif_num in motif_infos:
+            cur.execute('select id from networks_motif where bicluster_id = %s and position = %s', [bicl_map[cluster], motif_num])
+            dest_motif_id = cur.fetchone()[0]
+
+            cur.execute('select count(*) from networks_motifannotation where motif_id = %s',
+                        [dest_motif_id])
+            num_dest_annots = cur.fetchone()[0]
+
+            sqlcur.execute('select gene_num, position, reverse, pvalue from motif_annotations where motif_info_id = ?', [src_motif_id])
+            annots = [row for row in sqlcur.fetchall()]
+            if num_dest_annots == 0 and len(annots) > 0:
+                print "add annotations, cluster ", cluster, " motif num: ", motif_num, " src id = ", src_motif_id, " dest id = ", dest_motif_id, " # annotations: ", len(annots)
+                for gene_num, position, reverse, pvalue in annots:
+                    gene = src_genes[gene_num]
+                    if gene in thesaurus:
+                        gene = thesaurus[gene]
+                    gene_id = gene_map[gene]
+                    cur.execute('insert into networks_annotation (motif_id, gene_id, position, reverse, pvalue) values (%s,%s,%s,%s,%s)', [dest_motif_id, gene_id, position, reverse, pvalue])
+                    pass
+            
+
 def add_expressions(pgconn, ratios, thesaurus, gene_map, cond_map, exptable):
     """generate the gene expression table. Gene expressions are huge and
     inserting them separately is very slow. Since we use Postgres, the
@@ -322,19 +356,20 @@ def add_expressions(pgconn, ratios, thesaurus, gene_map, cond_map, exptable):
 if __name__ == '__main__':
     description = 'addnwportal.py - adding a cMonkey/python run to the database'
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--rundb', required=True, help='cMonkey output db file')
-    parser.add_argument('--ratios', required=True, help='cMonkey ratios file')
+    parser.add_argument('--resultdir', required=True, help='cMonkey result directory')
     parser.add_argument('--exptable', help='filename of expression table to generate',
                         default=None)
     args = parser.parse_args()
+    resultdb = os.path.join(args.resultdir, 'cmonkey_run.db')
+    ratiofile = os.path.join(args.resultdir, 'ratios.tsv.gz')
 
     # read the matrix
     matrix_factory = dm.DataMatrixFactory([dm.nochange_filter, dm.center_scale_filter])
-    infile = util.read_dfile(args.ratios, has_header=True, quote='\"')
+    infile = util.read_dfile(ratiofile, has_header=True, quote='\"')
     ratios = matrix_factory.create_from(infile)
 
     # access the run information
-    conn = sqlite3.connect(args.rundb)
+    conn = sqlite3.connect(resultdb)
     cursor = conn.cursor()
     cursor.execute('select organism, species, num_iterations, num_clusters from run_infos')
     orgcode, species, num_iterations, num_clusters = cursor.fetchone()
@@ -375,4 +410,8 @@ if __name__ == '__main__':
     if args.exptable != None:
         print "writing expression table..."
         add_expressions(pgconn, ratios, thesaurus, gene_map, cond_map, args.exptable)
+
+    add_motif_annotations(pgconn, conn, bicl_map, gene_map,
+                          thesaurus, num_iterations)
+
     print 'done.'
