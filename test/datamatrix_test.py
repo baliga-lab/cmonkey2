@@ -305,10 +305,10 @@ class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def setUp(self):  # pylint: disable-msg=C0103
         """text fixture"""
         self.dfile = util.DelimitedFile(header=["H1", "H2", "H3"],
-                                        lines=[["R1", 1, 2], ["R2", 3, 4]])
+                                        lines=[["R1", '1', '2'], ["R2", '3', '4']])
         self.dfile_with_na = util.DelimitedFile(header=["H1", "H2", "H3"],
-                                                lines=[["R1", 'NA', 2],
-                                                 ["R2", 'NA', 4]])
+                                                lines=[["R1", 'NA', '2'],
+                                                 ["R2", 'NA', '4']])
 
     def test_no_filters(self):
         """test a factory without filters"""

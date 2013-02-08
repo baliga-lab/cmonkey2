@@ -30,6 +30,7 @@ class MockOrganism:
         self.__taxonomy_id = taxonomy_id
         self.__feature_map = feature_map
         self.__synonyms = synonyms
+        self.code = 'hal'
 
     def taxonomy_id(self):
         return self.__taxonomy_id
@@ -47,6 +48,7 @@ class MockOrganismWithSynonyms:
         self.__taxonomy_id = taxonomy_id
         self.__feature_map = feature_map
         self.__synonyms = synonyms
+        self.code = 'hal'
 
     def taxonomy_id(self):
         return self.__taxonomy_id

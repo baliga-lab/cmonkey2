@@ -19,7 +19,7 @@ CACHE_DIR = 'cache'
 UCSC_MAP = {'gsu': 'geobSulf', 'cac': '', 'bce': '', 'bsu': 'baciSubt2',
             'rsp': 'rhodSpha', 'cje': 'campJeju', 'ype': 'yersPest_CO92',
             'bth': 'bactThet_VPI_5482', 'ttj': 'therTher_HB8',
-            'pae': 'pseuAeru'
+            'pae': 'pseuAeru', 'eco': 'eschColi_K12'
              }
 PSQL = "dbname='network_portal' user='dj_ango' host='localhost' password='django'"
 
@@ -213,11 +213,16 @@ def add_bicluster_genes(pgconn, sqliteconn, species_id, chr_map, thesaurus, bicl
                 # but does not have a feature entry: in this case,
                 # we need to add a dummy gene and add the entry to the gene map
                 if primary_name not in gene_map:
-                    print "weird RSAT error, need to add a dummy gene %s" % primary_name
+                    print "WARNING: weird RSAT error, need to add a dummy gene %s" % primary_name
                     gene_pair = add_gene(pgconn, species_id, chr_id, primary_name, primary_name,
                                        'DUMMY', 0, 0, '+')
                     gene_map[primary_name] = gene_pair[0]
             else:
+                if gene not in gene_map:
+                    print "WARNING: weird gene-RSAT inconsistency, need to add a dummy gene %s" % gene
+                    gene_pair = add_gene(pgconn, species_id, chr_id, gene, gene,
+                                         'DUMMY', 0, 0, '+')
+                    gene_map[gene] = gene_pair[0]
                 mgenes.append(gene)
         gene_ids = [gene_map[gene] for gene in mgenes]
         added = 0
@@ -320,7 +325,8 @@ def add_motif_annotations(pgconn, sqliteconn, bicl_map, gene_map, thesaurus, ite
                     if gene in thesaurus:
                         gene = thesaurus[gene]
                     gene_id = gene_map[gene]
-                    cur.execute('insert into networks_annotation (motif_id, gene_id, position, reverse, pvalue) values (%s,%s,%s,%s,%s)', [dest_motif_id, gene_id, position, reverse, pvalue])
+                    reverse = True if reverse == 1 else False
+                    cur.execute('insert into networks_motifannotation (motif_id, gene_id, position, reverse, pvalue) values (%s,%s,%s,%s,%s)', [dest_motif_id, gene_id, position, reverse, pvalue])
                     pass
             
 

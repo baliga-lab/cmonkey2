@@ -32,8 +32,9 @@ LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 
 # these parameters have a strong impact on the size of the result file
 # Please set it to something >= 10 (which can be in the 10s of gigabytes)
-STATS_FREQ = 50  
+STATS_FREQ = 50
 RESULT_FREQ = 50
+
 
 class CMonkeyRun:
     def __init__(self, organism_code, ratio_matrix,
@@ -67,7 +68,7 @@ class CMonkeyRun:
         # defaults
         self.row_seeder = memb.make_kmeans_row_seeder(num_clusters)
         self.column_seeder = microarray.seed_column_members
-        self['row_scaling'] =  6.0
+        self['row_scaling'] = 6.0
         self['string_file'] = None
         self['cache_dir'] = CACHE_DIR
         self['output_dir'] = 'out'
@@ -105,29 +106,36 @@ class CMonkeyRun:
         c = conn.cursor()
         # these are the tables for storing cmonkey run information.
         # run information
-        c.execute('''create table run_infos (start_time timestamp, finish_time timestamp,
+        c.execute('''create table run_infos (start_time timestamp,
+                     finish_time timestamp,
                      num_iterations int, last_iteration int,
-                     organism text, species text, num_rows int, num_columns int, num_clusters int)''')
+                     organism text, species text, num_rows int,
+                     num_columns int, num_clusters int)''')
 
         # stats tables
-        # Note: there is some redundancy with the result tables here. I measured
-        # ----- the cost for creating those on the fly and it is more expensive
+        # Note: there is some redundancy with the result tables here.
+        # ----- I measured the cost for creating those on the fly and
+        #       it is more expensive
         #       than I expected, so I left the tables in-place
-        c.execute('''create table iteration_stats (iteration int, median_residual decimal,
+        c.execute('''create table iteration_stats (iteration int,
+                     median_residual decimal,
                      fuzzy_coeff decimal)''')
-        c.execute('''create table cluster_stats (iteration int, cluster int, num_rows int,
-                     num_cols int, residual decimal)''')
-        c.execute('''create table network_stats (iteration int, network text, score decimal)''')
-        c.execute('''create table motif_stats (iteration int, seqtype text, pval decimal)''')
+        c.execute('''create table cluster_stats (iteration int, cluster int,
+                     num_rows int, num_cols int, residual decimal)''')
+        c.execute('''create table network_stats (iteration int, network text,
+                     score decimal)''')
+        c.execute('''create table motif_stats (iteration int, seqtype text,
+                     pval decimal)''')
         c.execute('''create table row_names (order_num int, name text)''')
         c.execute('''create table column_names (order_num int, name text)''')
 
         # result tables
-        c.execute('''create table row_members (iteration int, cluster int, order_num int)''')
+        c.execute('''create table row_members (iteration int, cluster int,
+                     order_num int)''')
         c.execute('''create table column_members (iteration int, cluster int,
                      order_num int)''')
-        c.execute('''create table cluster_residuals (iteration int, cluster int,
-                     residual decimal)''')
+        c.execute('''create table cluster_residuals (iteration int,
+                     cluster int, residual decimal)''')
 
         # motif results: TODO: we might want to have the motif scoring function
         # ------------- write it
@@ -135,8 +143,9 @@ class CMonkeyRun:
         # it allows for much faster database access when selecting by iteration
         c.execute('''create table motif_infos (iteration int, cluster int,
                      seqtype text, motif_num int, evalue decimal)''')
-        c.execute('''create table motif_pssm_rows (motif_info_id int, iteration int,
-                     row int, a decimal, c decimal, g decimal, t decimal)''')
+        c.execute('''create table motif_pssm_rows (motif_info_id int,
+                     iteration int, row int, a decimal, c decimal, g decimal,
+                     t decimal)''')
 
         c.execute('''create table motif_annotations (motif_info_id int,
                      iteration int, gene_num int,
@@ -153,10 +162,12 @@ class CMonkeyRun:
 
         # all cluster members are stored relative to the base ratio matrix
         for index in xrange(len(self.ratio_matrix.row_names)):
-            c.execute('''insert into row_names (order_num, name) values (?,?)''',
+            c.execute('''insert into row_names (order_num, name) values
+                         (?,?)''',
                       (index, self.ratio_matrix.row_names[index]))
         for index in xrange(len(self.ratio_matrix.column_names)):
-            c.execute('''insert into column_names (order_num, name) values (?,?)''',
+            c.execute('''insert into column_names (order_num, name) values
+                         (?,?)''',
                       (index, self.ratio_matrix.column_names[index]))
         logging.info("added row and column names to output database")
         conn.commit()
@@ -165,8 +176,8 @@ class CMonkeyRun:
 
     def report_params(self):
         logging.info('cmonkey_run config_params:')
-        for param,value in self.config_params.items():
-            logging.info('%s=%s' %(param,str(value)))
+        for param, value in self.config_params.items():
+            logging.info('%s=%s' % (param, str(value)))
 
     def __getitem__(self, key):
         return self.config_params[key]
@@ -202,7 +213,8 @@ class CMonkeyRun:
             motif.get_remove_low_complexity_filter(meme_suite),
             motif.get_remove_atgs_filter(self['search_distances']['upstream'])]
 
-        motif_scaling_fun = scoring.get_default_motif_scaling(self['num_iterations'])
+        motif_scaling_fun = scoring.get_default_motif_scaling(
+            self['num_iterations'])
         motif_scoring = motif.MemeScoringFunction(
             self.organism(),
             self.membership(),
@@ -218,20 +230,23 @@ class CMonkeyRun:
             config_params=self.config_params)
         self.motif_scoring = motif_scoring
 
-        network_scaling_fun = scoring.get_default_network_scaling(self['num_iterations'])
-        network_scoring = nw.ScoringFunction(self.organism(),
-                                             self.membership(),
-                                             self.ratio_matrix,
-                                             scaling_func=network_scaling_fun,
-                                             run_in_iteration=scoring.schedule(1, 7),
-                                             config_params=self.config_params)
+        network_scaling_fun = scoring.get_default_network_scaling(
+            self['num_iterations'])
+        network_scoring = nw.ScoringFunction(
+            self.organism(),
+            self.membership(),
+            self.ratio_matrix,
+            scaling_func=network_scaling_fun,
+            run_in_iteration=scoring.schedule(1, 7),
+            config_params=self.config_params)
         self.network_scoring = network_scoring
 
         row_scoring_functions = [row_scoring, motif_scoring, network_scoring]
-        return scoring.ScoringFunctionCombiner(self.membership(),
-                                               row_scoring_functions,
-                                               config_params=self.config_params,
-                                               log_subresults=True)
+        return scoring.ScoringFunctionCombiner(
+            self.membership(),
+            row_scoring_functions,
+            config_params=self.config_params,
+            log_subresults=True)
 
     def membership(self):
         if self.__membership == None:
@@ -268,20 +283,22 @@ class CMonkeyRun:
 
         nw_factories = []
         if stringfile != None:
-            nw_factories.append(stringdb.get_network_factory2(self['organism_code'],
-                                                              stringfile, 0.5))
+            nw_factories.append(stringdb.get_network_factory2(
+                    self['organism_code'], stringfile, 0.5))
         else:
             logging.warn("no STRING file specified !")
 
         nw_factories.append(microbes_online.get_network_factory(
-                mo_db, max_operon_size=self.ratio_matrix.num_rows / 20, weight=0.5))
+                mo_db, max_operon_size=self.ratio_matrix.num_rows / 20,
+                weight=0.5))
 
         org_factory = org.MicrobeFactory(kegg_mapper,
                                          rsat_mapper,
                                          org.make_go_taxonomy_mapper(gofile),
                                          mo_db,
                                          nw_factories)
-        return org_factory.create(self['organism_code'], self['search_distances'],
+        return org_factory.create(self['organism_code'],
+                                  self['search_distances'],
                                   self['scan_distances'])
 
     def __make_dirs_if_needed(self):
@@ -317,16 +334,17 @@ class CMonkeyRun:
         row_scoring = self.make_row_scoring()
         col_scoring = self.make_column_scoring()
         self.__make_dirs_if_needed()
-        self.init_from_checkpoint(checkpoint_filename, row_scoring, col_scoring)
+        self.init_from_checkpoint(checkpoint_filename, row_scoring,
+                                  col_scoring)
         self.run_iterations(row_scoring, col_scoring)
 
     def residual_for(self, row_names, column_names):
         if len(column_names) <= 1 or len(row_names) <= 1:
             return 1.0
         else:
-            matrix = self.ratio_matrix.submatrix_by_name(row_names, column_names)
+            matrix = self.ratio_matrix.submatrix_by_name(row_names,
+                                                         column_names)
             return matrix.residual()
-
 
     def write_results(self, iteration_result, compressed=True):
         """write iteration results to database"""
@@ -414,13 +432,13 @@ class CMonkeyRun:
                                     num_cols, residual) values (?,?,?,?,?)''',
                                  (iteration, cluster, len(row_names), len(column_names),
                                   residual))
-                except:                    
+                except:
                     # residual is messed up, insert with 1.0
                     logging.warn('STATS: residual was messed up, insert with 1.0')
                     conn.execute('''insert into cluster_stats (iteration, cluster, num_rows,
                                     num_cols, residual) values (?,?,?,?,?)''',
                                  (iteration, cluster, len(row_names), len(column_names),
-                                  1.0))                    
+                                  1.0))
 
             median_residual = np.median(residuals)
             try:
@@ -474,7 +492,8 @@ class CMonkeyRun:
 
         genes = [thesaurus[row_name] if row_name in thesaurus else row_name
                  for row_name in self.ratio_matrix.row_names]
-        self.gene_indexes = { genes[index]: index for index in xrange(len(genes)) }
+        self.gene_indexes = {genes[index]: index
+                             for index in xrange(len(genes))}
 
         for iteration in range(self['start_iteration'],
                                self['num_iterations'] + 1):
@@ -505,7 +524,7 @@ class CMonkeyRun:
                 mean_mot_pvalue = ""
                 for seqtype in mean_mot_pvalues.keys():
                     mean_mot_pvalue = mean_mot_pvalue + (" '%s' = %f" % (seqtype, mean_mot_pvalues[seqtype]))
-                    
+
             logging.info('mean net = %s | mean mot = %s', str(mean_net_score), mean_mot_pvalue)
 
             if iteration == 1 or (iteration % RESULT_FREQ == 0):
@@ -525,7 +544,7 @@ class CMonkeyRun:
         logging.info("Postprocessing: Adjusting the clusters....")
         self.membership().postadjust()
         iteration = self['num_iterations'] + 1
-        iteration_result = {'iteration': iteration }
+        iteration_result = {'iteration': iteration}
         logging.info("Adjusted. Now re-run scoring (iteration: %d)", iteration_result['iteration'])
         row_scoring.compute_force(iteration_result)
         self.write_results(iteration_result)

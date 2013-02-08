@@ -71,11 +71,11 @@ if (length(args) > 0) {
   result.filename <- args[2]
   
   ratios <- read.table(gzfile(ratio.filename), header=T, as.is=T, row.names=1)
-  clusterStack <- read.cmonkey.sqlite(result.filename, 960)
-  #print("Writing objects to R file...")
-  #save(ratios, clusterStack, file='output.RData')
-  #print("Done.")
+  clusterStack <- read.cmonkey.sqlite(result.filename, 2001)
+  print("Writing objects to R file...")
+  save(ratios, clusterStack, file='output.RData')
+  print("Done.")
 } else {
-  print("Usage: convert <ratio-file>")
+  print("Usage: convert <ratio-file> <result-file>")
   print(args)
 }
