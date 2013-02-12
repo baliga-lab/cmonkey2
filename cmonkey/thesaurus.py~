@@ -23,7 +23,7 @@ def create_from_delimited_file2(dfile):
     <original>SEPARATOR<alt1>;<alt2>;...
     ..."""
     if isinstance(dfile, str):
-        dfile = util.read_dfile(dfile, sep=',', has_header=False)
+        dfile = util.DelimitedFile.read(dfile, sep=',', has_header=False)
     result = {}
     for line in dfile.lines:
         original = line[0].upper()  # original should map to itself
