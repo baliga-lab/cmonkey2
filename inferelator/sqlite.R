@@ -67,15 +67,18 @@ read.cmonkey.sqlite <- function(db.filename, iteration=0) {
 
 args <- commandArgs(trailingOnly=TRUE)
 if (length(args) > 0) {
-  ratio.filename <- args[1]
-  result.filename <- args[2]
-  
+  result.dir <- args[1]
+  #ratio.filename <- args[1]
+  #result.filename <- args[2]
+  ratio.filename <- paste(result.dir, 'ratios.tsv.gz', sep='/')
+  result.filename <- paste(result.dir, 'cmonkey_run.db', sep='/')
+
   ratios <- read.table(gzfile(ratio.filename), header=T, as.is=T, row.names=1)
   clusterStack <- read.cmonkey.sqlite(result.filename, 2001)
   print("Writing objects to R file...")
   save(ratios, clusterStack, file='output.RData')
   print("Done.")
 } else {
-  print("Usage: convert <ratio-file> <result-file>")
+  print("Usage: convert <output-dir>")
   print(args)
 }
