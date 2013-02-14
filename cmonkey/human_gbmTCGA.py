@@ -32,7 +32,7 @@ P3UTR_SEQFILE = 'human_data/gbmTCGA/p3utrSeqs_Homo_sapiens_gs.csv.gz'
 
 
 RUG_PROPS = ['GBM','CONTROL']
-NUM_CLUSTERS = 133
+NUM_CLUSTERS = 134
 ROW_WEIGHT = 6.0
 NUM_ITERATIONS = 3000
 
@@ -195,7 +195,7 @@ def read_matrix(filename):
     if SELECT_ROWS:
         #select_rows = select_probes(matrix, 2000, column_groups)
         #matrix = matrix.submatrix_by_rows(select_rows)
-        matrix = matrix.submatrix_by_rows(range(2000))
+        matrix = matrix.submatrix_by_rows(range(2010))
     return intensities_to_ratios(matrix, controls, column_groups)
 
 
@@ -296,17 +296,19 @@ class RembrandtCMonkeyRun(cmonkey_run.CMonkeyRun):
         if ADD_SET_ENRICHMENT:
             scoring_funcs.append(self.make_set_scoring(network_scaling_fun,
                                                        USE_SET_TYPES))
-        
+
         if ADD_MEME:
+            meme_suite_meme = self.meme_suite('upstream')
             meme_scoring = self.make_meme_scoring('upstream',
-                                                  self.meme_suite('upstream'),
-                                                  sequence_filters)
+                                                  meme_suite_meme,
+                                                  sequence_filters + [motif.get_remove_low_complexity_filter(meme_suite_meme)])
 
         if ADD_WEEDER:
+            meme_suite_weeder = self.meme_suite(WEEDER_SEQ_TYPE)
             weeder_scoring = self.make_weeder_scoring(WEEDER_SEQ_TYPE,
-                                                      self.meme_suite(WEEDER_SEQ_TYPE),
-                                                      sequence_filters)
-        if ADD_MEME and ADD_WEEDER:            
+                                                      meme_suite_weeder,
+                                                      sequence_filters + [motif.get_remove_low_complexity_filter(meme_suite_weeder)])
+        if ADD_MEME and ADD_WEEDER:
             scoring_funcs.append(scoring.ScoringFunctionCombiner(
                     self.membership(),
                     [meme_scoring, weeder_scoring],
@@ -332,4 +334,6 @@ if __name__ == '__main__':
         if len(sys.argv) > 2:
             CHECKPOINT_FILE = sys.argv[2]
         cmonkey_run = RembrandtCMonkeyRun('hsa', read_matrix(sys.argv[1]), NUM_CLUSTERS)
+        # Turns of multiprocessing for debugging purposes
+        #cmonkey_run['multiprocessing'] = False
         cmonkey_run.run()
