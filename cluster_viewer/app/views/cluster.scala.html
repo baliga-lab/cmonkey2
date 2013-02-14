@@ -1,7 +1,8 @@
 @(iteration: Int, cluster: Int, rows: List[String], columns: List[String],
   ratios: RatioMatrix, motifInfoMap: Map[String, Array[MotifInfo]],
   pssmMap: Map[String, Array[String]],
-  annotationMap: Map[String, Seq[GeneAnnotations]])
+  annotationMap: Map[String, Seq[GeneAnnotations]],
+  gagglePSSMs: Map[String, Array[String]])
 
 <div id="cluster-view">
   <script type="text/javascript">
@@ -102,3 +103,11 @@
     </span>
   </div>
 </div>
+
+@motifInfoMap.keys.map { seqType =>
+  @for(i <- 0 until gagglePSSMs(seqType).length) {
+    <div class="gaggle-matrix-tsv">
+      @(gagglePSSMs(seqType)(i))
+    </div>
+  }
+}

@@ -198,6 +198,7 @@ object Application extends Controller {
     val motifInfoMap = new HashMap[String, Array[MotifInfo]]
     val pssmMap = new HashMap[String, Array[String]]
     val annotationMap = new HashMap[String, Seq[GeneAnnotations]]
+    val gagglePSSMs = new HashMap[String, Array[String]]
 
     // motif extraction
     for (seqType <- result.get.motifs.keys) {
@@ -230,11 +231,17 @@ object Application extends Controller {
         } else {
           new Array[String](0)
         }
+        gagglePSSMs(seqType) = if (motifObj(cluster).size > 0) {
+          gagglePSSM(motifObj(cluster))
+        } else {
+          new Array[String](0)
+        }
       }
     }
     Ok(views.html.cluster(iteration, cluster, rows, columns, ratios,
                           motifInfoMap.toMap, pssmMap.toMap,
-                          annotationMap.toMap))
+                          annotationMap.toMap,
+                          gagglePSSMs.toMap))
   }
 
   private def toJsonPssm(motifInfos: Seq[MotifInfo]): Array[String] = {
@@ -244,6 +251,21 @@ object Application extends Controller {
                                               "values" -> Json.toJson(motifInfos(i).pssm)))))
     }
     println("# PSSMS: " + result.length)
+    result.toArray(new Array[String](0))
+  }
+
+  def gagglePSSM(motifInfos: Seq[MotifInfo]): Array[String] = {
+    val result = new java.util.ArrayList[String]
+    for (i <- 0 until motifInfos.length) {
+      val pssm = motifInfos(i).pssm
+      val buffer = new StringBuilder("POSITION\tA\tC\tG\tT\n")
+      for (j <- 0 until pssm.length) {
+        buffer.append("%d\t".format(j + 1))
+        buffer.append(pssm(j).mkString("\t"))
+        buffer.append("\n")
+      }
+      result.add(buffer.toString)
+    }
     result.toArray(new Array[String](0))
   }
 }
