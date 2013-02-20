@@ -1,11 +1,13 @@
 #!/usr/bin/python
 import argparse
 import sqlite3
-import organism as org
-import util, rsat, microbes_online
+import cmonkey.organism as org
+import cmonkey.util
+import cmonkey.rsat
+import cmonkey.microbes_online
 import psycopg2
 import collections
-import datamatrix as dm
+import cmonkey.datamatrix as dm
 import os.path
 
 # Script to add a cMonkey python run to the network portal database
@@ -79,6 +81,48 @@ def add_network(pgconn, species_id, species):
         cur.execute("insert into networks_network (species_id, name, data_source, description, created_at) values (%s, %s, %s, %s, now()) returning id", [species_id, name, datasource, description])
         return cur.fetchone()[0]
 
+CHROMOSOME_LENGTHS = {
+    'NC_002939.4': 3814139,
+    'NC_002516.2': 6264404,
+    'NC_004722.1': 5411809,
+    'NC_004721.2': 15274,
+    'NC_000964.2': 4214630,
+    'NC_004663.1': 6260361,
+    'NC_004703.1': 33038,
+    'NC_003030.1': 3940880,
+    'NC_001988.2': 192000,
+    'NC_002163.1': 1641481,
+    'NC_007493.1': 3188609,
+    'NC_009007.1': 114045,
+    'NC_007488.1': 114178,
+    'NC_007490.1': 100828,
+    'NC_009008.1': 37100,
+    'NC_007489.1': 105284,
+    'NC_007494.1': 943016,
+    'NC_000913.2': 4639675
+}
+
+CHROMOSOME_NAMES = {
+    'NC_002939.4': 'chromosome',
+    'NC_002516.2': 'chromosome',
+    'NC_004722.1': 'chromosome',
+    'NC_004721.2': 'plasmid',
+    'NC_000964.2': 'chromosome',
+    'NC_004663.1': 'chromosome',
+    'NC_004703.1': 'plasmid',
+    'NC_003030.1': 'chromosome',
+    'NC_001988.2': 'plasmid',
+    'NC_002163.1': 'chromosome',
+    'NC_007493.1': 'chromosome 1',
+    'NC_009007.1': 'plasmid A',
+    'NC_007488.1': 'plasmid B',
+    'NC_009008.1': 'plasmid E',
+    'NC_007490.1': 'plasmid D',
+    'NC_007489.1': 'plasmid C',
+    'NC_007494.1': 'chromosome 2',
+    'NC_000913.2': 'chromosome'
+}
+
 def add_biclusters(pgconn, sqliteconn, network_id, iteration):
     """add or retrieve the biclusters specified in the cmonkey run"""
     cur = pgconn.cursor()
@@ -101,7 +145,9 @@ def add_biclusters(pgconn, sqliteconn, network_id, iteration):
         return result
 
 def add_chromosome(pgconn, species_id, contig):
-    """add the specified chromosome to the database or return its entry"""
+    """add the specified chromosome to the database or return its entry
+    Note: this does not try to retrieve the chromosome length at the moment,
+    we have to do it by hand"""
     cur = pgconn.cursor()
     cur.execute('select id from networks_chromosome where refseq = %s', [contig])
     result = cur.fetchall()
