@@ -9,6 +9,7 @@ import psycopg2
 import collections
 import cmonkey.datamatrix as dm
 import os.path
+import re
 
 # Script to add a cMonkey python run to the network portal database
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
@@ -18,7 +19,7 @@ COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 STRING_URL_PATTERN = "http://networks.systemsbiology.net/string9/%s.gz"
 CACHE_DIR = 'cache'
 # Map for UCSC genome browser
-UCSC_MAP = {'gsu': 'geobSulf', 'cac': '', 'bce': '', 'bsu': 'baciSubt2',
+UCSC_MAP = {'gsu': 'geobSulf', 'cac': '', 'bce': '', 'bsu': 'baicSubt2',
             'rsp': 'rhodSpha', 'cje': 'campJeju', 'ype': 'yersPest_CO92',
             'bth': 'bactThet_VPI_5482', 'ttj': 'therTher_HB8',
             'pae': 'pseuAeru', 'eco': 'eschColi_K12'
@@ -48,14 +49,31 @@ def make_microbe(code):
     organism = org_factory.create(code, search_distances, scan_distances)
     return microbedb, organism
 
+
+def replace_underscores(input):
+    """a way to get those underscores out of the RSAT name and make them
+    compatible to the scheme in NCBI: attempt to match a version numbered
+    name, and replace the underscores in the version number with dots,
+    otherwise, simply, replace all underscores with spaces"""
+    regex = re.compile('([^0-9]+)\d(_\d)*')
+    if regex.match(input):
+        prefix = regex.group(1)
+        return prefix.replace('_', ' ') + input.replace(prefix, '').replace('_', '.')
+    else:
+        return input.replace('_', ' ')
+    
+
 def add_species(pgconn, orgcode, species, ncbi_code, ucsc_code):
     """add a species entry for the specified organism"""
     cur = pgconn.cursor()
     cur.execute('select id from networks_species where short_name = %s', [orgcode])
     result = cur.fetchall()
     if len(result) == 0:
+        # TODO: the name should not have underscores, currently, what comes
+        # out of the organism mapper has underscores
         print "adding species: ", orgcode
-        cur.execute('insert into networks_species (name, short_name, ncbi_taxonomy_id, ucsc_id, created_at) values (%s, %s, %s, %s, now()) returning id', [species, orgcode, ncbi_code, ucsc_code])
+        cur.execute('insert into networks_species (name, short_name, ncbi_taxonomy_id, ucsc_id, created_at) values (%s, %s, %s, %s, now()) returning id',
+                    [replace_underscores(species), orgcode, ncbi_code, ucsc_code])
         species_id = cur.fetchone()[0]
     else:
         print "retrieving species: ", orgcode

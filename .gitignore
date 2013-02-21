@@ -14,3 +14,7 @@ diff
 log
 out
 precisionrecall
+tmp
+pipeline_organisms
+*.txt
+checktools
