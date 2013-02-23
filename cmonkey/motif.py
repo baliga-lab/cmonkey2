@@ -17,7 +17,7 @@ import tempfile
 import seqtools as st
 import util
 import sequence_cache
-import os.path
+import os
 import cPickle
 import collections
 
@@ -482,9 +482,11 @@ class WeederRunner:
     to generate a MEME run result.
     """
 
-    def __init__(self, meme_suite):
+    def __init__(self, meme_suite, background_file=None, remove_tempfiles=True):
         """create a runner object"""
         self.meme_suite = meme_suite
+        self.__background_file = background_file
+        self.__remove_tempfiles = remove_tempfiles
 
     def __call__(self, params):
         """call the runner like a function"""
@@ -499,17 +501,17 @@ class WeederRunner:
         dbfile = self.meme_suite.make_sequence_file(
             [(feature_id, locseq[1])
              for feature_id, locseq in params.used_seqs.items()])
-        logging.info("# PSSMS created: %d", len(pssms))
+        logging.info("# PSSMS created: %d %s", len(pssms),str([i.consensus_motif() for i in pssms]))
         logging.info("run MAST on '%s'", meme_outfile)
 
         motif_infos = []
         for i in xrange(len(pssms)):
             pssm = pssms[i]
-            motif_infos.append(meme.MemeMotifInfo(pssm.values(), i + 1,
+            motif_infos.append(meme.MemeMotifInfo(pssm.values, i + 1,
                                                   pssm.sequence_length(),
-                                                  len(pssm.sites()),
-                                                  None, pssm.evalue(),
-                                                  pssm.sites()))
+                                                  len(pssm.sites),
+                                                  None, pssm.e_value,
+                                                  pssm.sites))
 
         try:
             mast_out = self.meme_suite.mast(
@@ -520,3 +522,21 @@ class WeederRunner:
             return meme.MemeRunResult(pe_values, annotations, motif_infos)
         except:
             return meme.MemeRunResult([], {}, [])
+        finally:
+            if self.__remove_tempfiles:
+                for fileExtension in ['','.wee','.mix','.html','.meme','.1.f1','.1.f2','.2.f1','.2.f2']:
+                    tmpName = filename+fileExtension
+                    if os.path.exists(tmpName):
+                        try:
+                            os.remove(tmpName)
+                        except:
+                            logging.warn("could not remove tmp file:'%s'", tmpName)
+            try:
+                os.remove(dbfile)
+            except:
+                logging.warn("could not remove tmp file:'%s'", dbfile)
+            #if self.__background_file==None:
+            #    try:
+            #        os.remove(bgFile)
+            #    except:
+            #        logging.warn("could not remove tmp file: '%s'", bgfile)
