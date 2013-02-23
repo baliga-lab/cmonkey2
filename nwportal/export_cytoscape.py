@@ -6,6 +6,22 @@ import argparse
 import os.path
 import psycopg2
 
+
+###############################################################################
+##### Helpers
+###############################################################################
+
+def write_graph(org, graph):
+    """dumps a NetworkX graph into a GraphML file"""
+    writer = nx.readwrite.graphml.GraphMLWriter(encoding='utf-8',prettyprint=True)
+    writer.add_graph_element(graph)
+    with open('%s-network.xml' % org, 'w') as outfile:
+        writer.dump(outfile)
+
+###############################################################################
+##### cMonkey/Python export
+###############################################################################
+
 def export_cmonkey_results(resultdir, org):
     """exports a network from a cMonkey/Python result file"""
     resultdb = os.path.join(resultdir, 'cmonkey_run.db')
@@ -67,20 +83,31 @@ def export_cmonkey_results(resultdir, org):
 
     write_graph(org, graph)
 
+###############################################################################
+##### Network portal export
+###############################################################################
 
-def export_nwportal_network(org):
+def nwportal_networkid(conn, org):
+    cursor = conn.cursor()
+    cursor.execute('select nw.id from networks_species sp join networks_network nw on sp.id = nw.species_id where sp.short_name = %s', [org])
+    return cursor.fetchone()[0]
+
+def nwportal_clusters(conn, nwid):
+    cursor = conn.cursor()
+    cursor.execute('select k, residual from networks_bicluster where network_id = %s', [nwid])
+    return [(k, residual) for k, residual in cursor.fetchall()]
+    
+
+def export_nwportal_network(conn, org):
     """exports a network from the Network Portal database"""
-    conn = psycopg2.connect("dbname=network_portal user=dj_ango password=django")
     cursor = conn.cursor()
 
     graph = nx.Graph()
     used_genes = set()
     cluster_genes = {}
 
-    cursor.execute('select nw.id from networks_species sp join networks_network nw on sp.id = nw.species_id where sp.short_name = %s', [org])
-    nwid = cursor.fetchone()[0]
-    cursor.execute('select k, residual from networks_bicluster where network_id = %s', [nwid])
-    clusters = [(k, residual) for k, residual in cursor.fetchall()]
+    nwid = nwportal_networkid(conn, org)
+    clusters = nwportal_clusters(conn, nwid)
 
     for cluster, residual in clusters:
         graph.add_node("bicluster:%d" % cluster,
@@ -118,12 +145,45 @@ def export_nwportal_network(org):
     write_graph(org, graph)
 
 
-def write_graph(org, graph):
-    """dumps a NetworkX graph into a GraphML file"""
-    writer = nx.readwrite.graphml.GraphMLWriter(encoding='utf-8',prettyprint=True)
-    writer.add_graph_element(graph)
-    with open('%s-network.xml' % org, 'w') as outfile:
-        writer.dump(outfile)
+def export_nwportal_expression(conn, org):
+    nwid = nwportal_networkid(conn, org)
+    cursor = conn.cursor()
+    gene_query = 'select distinct bg.gene_id from networks_bicluster bc join networks_bicluster_genes bg on bc.id = bg.bicluster_id where network_id = %d' % nwid
+    cond_query = 'select distinct bcc.condition_id from networks_bicluster bc join networks_bicluster_conditions bcc on bc.id = bcc.bicluster_id where network_id = %d' % nwid
+    expr_query = ('select gene_id, condition_id, value from expression where gene_id in (%s) or condition_id in (%s)' % (gene_query, cond_query))
+
+    gene_name_query = 'select distinct g.id, g.name from networks_bicluster bc join networks_bicluster_genes bg on bc.id = bg.bicluster_id join networks_gene g on g.id = bg.gene_id where network_id = %d' % nwid
+    cond_name_query = 'select distinct c.id, c.name from networks_bicluster bc join networks_bicluster_conditions bcc on bc.id = bcc.bicluster_id join networks_condition c on c.id = bcc.condition_id where bc.network_id = %d' % nwid
+
+    cursor.execute(gene_query)
+    gene_ids = sorted([row[0] for row in cursor.fetchall()])
+    cursor.execute(gene_name_query)
+    gene_names = {gene_id: name for gene_id, name in cursor.fetchall()}
+
+    cursor.execute(cond_query)
+    cond_ids = sorted([row[0] for row in cursor.fetchall()])
+    cursor.execute(cond_name_query)
+    cond_names = {cond_id: name for cond_id, name in cursor.fetchall()}
+    condition_names = [cond_names[cond_id] for cond_id in cond_ids]
+
+    print "# genes: ", len(gene_ids)
+    print "# conds: ", len(cond_ids)
+
+    cursor.execute(expr_query)
+    expr_values = {(gene_id, cond_id): value for gene_id, cond_id, value in cursor.fetchall()}
+    print "# values: ", len(expr_values), " - should ideally be: ", (len(gene_ids) * len(cond_ids))
+    with open('%s-ratios.tsv' % org, 'w') as outfile:
+        outfile.write("Locus\t")
+        outfile.write("\t".join(condition_names))
+        outfile.write("\n")
+        for gene_id in gene_ids:
+            outfile.write(gene_names[gene_id] + "\t")
+            values = []
+            for cond_id in cond_ids:
+                key = (gene_id, cond_id)
+                values.append(str(expr_values.get(key, 'NA')))
+            outfile.write('\t'.join(values))
+            outfile.write('\n')
 
 
 if __name__ == '__main__':
@@ -138,4 +198,7 @@ if __name__ == '__main__':
             export_cmonkey_results(resultdir, org)
     else:
         print "export from network portal"
-        export_nwportal_network('dvu')
+        conn = psycopg2.connect("dbname=network_portal user=dj_ango password=django")
+        for org in ['dvu', 'hal', 'mmp', 'syf']:
+            export_nwportal_network(conn, org)
+            export_nwportal_expression(conn, org)
