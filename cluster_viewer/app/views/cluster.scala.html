@@ -68,6 +68,9 @@
   <div id="expression-graph"></div>
   <div>&nbsp;</div>
   <h3>Motifs</h3>
+  @if(motifInfoMap.size == 0) {
+    No motifs
+  }
   @motifInfoMap.keys.map { seqType =>
   @for(i <- 0 until pssmMap(seqType).length) {
     <span style="display: inline; float: left; margin-right: 10px;">
@@ -84,26 +87,15 @@
   <div style="clear: both"></div>
   <div>&nbsp;</div>
   <h3>Cluster memberships</h3>
-  <div id="cluster-members">
-    <span style="float: left; margin-right: 20px">
-      <span>Row members</span>
-      <table class="members">
-        <tr><th>Gene</th></th>
-        @for(row <- rows) {<tr><td>@row</td></tr>
-        }
-      </table>
-    </span>
-    <span>
-      <span>Column members</span>
-      <table class="members">
-        <tr><th>Condition</th></th>
-        @for(col <- columns) {<tr><td>@col</td></tr>
-        }
-      </table>
-    </span>
+  <div id="cluster-members" style="width: 600px">
+    <h4>Row members (@(rows.length))</h4>
+    <p>@(rows.mkString(", "))</p>
+    <h4>Column members (@(columns.length))</h4>
+    <p>@(columns.mkString(", "))</p>
   </div>
 </div>
 
+<br><br>
 @motifInfoMap.keys.map { seqType =>
   @for(i <- 0 until gagglePSSMs(seqType).length) {
     <div class="gaggle-matrix-tsv">
