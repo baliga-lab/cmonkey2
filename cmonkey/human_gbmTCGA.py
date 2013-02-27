@@ -27,7 +27,7 @@ CONTROLS_FILE = 'human_data/gbmTCGA/controls.csv'
 RUG_FILE = 'human_data/gbmTCGA/rug.csv'
 
 THESAURUS_FILE = 'human_data/gbmTCGA/synonymThesaurus.csv.gz'
-PROM_SEQFILE = 'human_data/gbmTCGA/promoterSeqs_Homo_sapiens_gs.csv.gz'
+PROM_SEQFILE = 'human_data/gbmTCGA/promoterSeqs_Homo_sapiens_gs_fp.csv.gz'
 P3UTR_SEQFILE = 'human_data/gbmTCGA/p3utrSeqs_Homo_sapiens_gs.csv.gz'
 
 
