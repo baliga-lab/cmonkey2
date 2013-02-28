@@ -59,7 +59,10 @@ class MemeSuite:
                                              delete=False) as dust_input:
                 for feature_id, seq in seqs.items():
                     dust_input.write(">%s\n" % feature_id)
-                    dust_input.write("%s\n" % seq[1])
+                    if isinstance(seq, str):
+                        dust_input.write("%s\n" % seq)
+                    else:
+                        dust_input.write("%s\n" % seq)
                 dust_tmp_file = dust_input.name
                 #logging.info("DUST input written to: %s", dust_input.name)
             seqpairs = st.read_sequences_from_fasta_string(
@@ -72,8 +75,12 @@ class MemeSuite:
 
         seqs_for_dust = {}
         for feature_id, seq in seqs.items():
-            if len(seq[1]) > self.__max_width:
-                seqs_for_dust[feature_id] = seq
+            if isinstance(seq,str):
+                if len(seq) > self.__max_width:
+                    seqs_for_dust[feature_id] = seq
+            else:
+                if len(seq[1]) > self.__max_width:
+                    seqs_for_dust[feature_id] = seq[1]
         # only non-empty-input gets into dust, dust can not
         # handle empty input
         if len(seqs_for_dust) > 0:
