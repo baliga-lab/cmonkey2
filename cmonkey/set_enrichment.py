@@ -157,16 +157,30 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             elapsed1 = util.current_millis() - start1
             logging.info("ENRICHMENT SCORES COMPUTED in %f s, STORING...",
                          elapsed1 / 1000.0)
-
+            if not os.path.exists('out/setEnrichment_set.csv'):
+                setFile = open('out/setEnrichment_set.csv','w')
+                setFile.write(','+','.join(xrange(1,self.num_clusters() + 1)))
+                pvFile = open('out/setEnrichment_pvalue.csv','w')
+                pvFile.write(','+','.join(xrange(1,self.num_clusters() + 1)))
+            else:
+                setFile = open('out/setEnrichment_set.csv','a')
+                pvFile = open('out/setEnrichment_pvalue.csv','a')
+            minSets = []
+            pValues = []
             for cluster in xrange(1, self.num_clusters() + 1):
                 # store the best enriched set determined
                 scores, min_set, min_pvalue = results[cluster - 1]
                 self.__last_min_enriched_set[set_type][cluster] = (
                     min_set, min_pvalue)
+                minSets.append(min_set)
+                pValues.append(min_pvalue)
 
                 for row in xrange(len(self.gene_names())):
                     matrix.values[row][cluster - 1] = scores[row]
-
+            setFile.write(str(iteration_result['iteration'])+','+','.join([str(i) for i in minSets]))
+            pvFile.write(str(iteration_result['iteration'])+','+','.join([str(i) for i in pValues]))
+            setFile.close()
+            pvFile.close()
         logging.info("SET ENRICHMENT FINISHED IN %f s.\n",
                      (util.current_millis() - start_time) / 1000.0)
         return matrix
