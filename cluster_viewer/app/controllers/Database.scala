@@ -487,7 +487,7 @@ class StatsReader {
     }
 
     val motifStats = MotifStats.findAll
-    val motifIterationMap = new HashMap[Int, HashMap[String, Double]]
+    val motifIterationMap = (new HashMap[Int, HashMap[String, Double]]).withDefaultValue(new HashMap[String, Double])
     motifStats.foreach { mstat =>
       if (!motifIterationMap.contains(mstat._1)) {
         motifIterationMap(mstat._1) = new HashMap[String, Double]
