@@ -7,6 +7,7 @@ import collections
 import numpy
 import sqlite3
 import sys
+import argparse
 
 REGULONDB_PSSMS = 'regulondb_pssms.txt'
 MEME_PSSMS = 'meme_pssms.txt'
@@ -100,11 +101,13 @@ def write_motifs(dbname, iteration, seqtype):
     conn.close()
 
 if __name__ == '__main__':
+    description = "tomtom_verify - TomTom verification against RegulonDB"
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('--dbfile', required=True, help='E.coli cMonkey database')
+    args = parser.parse_args()
+
     pssms = read_pssms()
     print '# RegulonDB PSSMs: ', len(pssms)
     write_pssm_file(pssms)
-    if len(sys.argv) > 1:
-        print 'writing cMonkey PSSMs'
-        write_motifs(sys.argv[1], 2001, 'upstream')
-    else:
-        print 'please provide database'
+    print 'writing cMonkey PSSMs'
+    write_motifs(args.dbfile, 2001, 'upstream')

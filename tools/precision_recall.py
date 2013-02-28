@@ -4,6 +4,7 @@ import csv
 import argparse
 import sqlite3
 
+
 def read_regulondb(regulondb_filename, tfs, strong_evidence):
     # TF name, but use common name for regulated gene, because of ratios matrix
     with open(regulondb_filename) as csvfile:
@@ -17,8 +18,9 @@ def read_regulondb(regulondb_filename, tfs, strong_evidence):
         regulondb_rows = [row for row in regulondb_rows if row[2] == 'TRUE']
 
     num_after = len(regulondb_rows)
-    print "# RegulonDB rows before: %d # after: %d" % (num_before, num_after)
+    #print "# RegulonDB rows before: %d # after: %d" % (num_before, num_after)
     return regulondb_rows
+
 
 def read_tomtom(tomtom_filename, pval_threshold):
     with open(tomtom_filename) as csvfile:
@@ -28,8 +30,9 @@ def read_tomtom(tomtom_filename, pval_threshold):
     tomtom_rows = [(row[0], row[1], float(row[2]), float(row[3]))
                    for row in tomtom_rows[1:] if float(row[2]) < pval_threshold]
     num_after = len(tomtom_rows)
-    print "# TOMTOM results before: %d # after: %d" % (num_before, num_after)
+    #print "# TOMTOM results before: %d # after: %d" % (num_before, num_after)
     return tomtom_rows
+
 
 def make_tfs2motifs(tomtom_rows):
     gene2motifs = {}
@@ -69,23 +72,7 @@ def make_tfs2genes(tfs2motifs, cmonkeyout):
     conn.close()
     return result
 
-if __name__ == '__main__':
-    description = 'Precision/Recall cMonkey/Python'
-
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--regulondb', required=True, help='RegulonDB CSV')
-    parser.add_argument('--tomtom', required=True, help='TomTom results')
-    parser.add_argument('--cmonkeyout', required=True, help='cMonkey sqlite output')
-    parser.add_argument('--threshold', help='p-value threshold', default='0.1')
-    parser.add_argument('--strongevidence', action='store_true',
-                        help='use only strong evidence',
-                        default=True)
-    args = parser.parse_args()
-
-    regulondb_filename = args.regulondb
-    tomtom_filename = args.tomtom
-    pval_threshold = float(args.threshold)
-
+def compute_precision_recall(regulondb_filename, tomtom_filename, pval_threshold):
     # real work starts here
     tomtom_rows = read_tomtom(tomtom_filename, pval_threshold)
     tfs2motifs = make_tfs2motifs(tomtom_rows)
@@ -105,7 +92,7 @@ if __name__ == '__main__':
     size_before = sum([len(tfs2genes[tf]) for tf in tfs2genes])
     tfs2genes = {tf:tfs2genes[tf] for tf in tfs2genes if tf in regulondb_tfs2genes}
     size_after = sum([len(tfs2genes[tf]) for tf in tfs2genes])
-    print "# tfs before: %d after: %d" % (size_before, size_after)
+    #print "# tfs before: %d after: %d" % (size_before, size_after)
 
     total_regulondb = sum([len(regulondb_tfs2genes[tf])
                            for tf in regulondb_tfs2genes])
@@ -121,21 +108,31 @@ if __name__ == '__main__':
                 false_positives += 1
 
     total_predictions = true_positives + false_positives
-    print "TP = %d FP = %d, total predictions = %d" % (true_positives, false_positives,
-                                                       total_predictions)
+    #print "TP = %d FP = %d, total predictions = %d" % (true_positives, false_positives,
+    #                                                   total_predictions)
     precision = float(true_positives) / float(total_predictions)
     recall = float(true_positives) / float(total_regulondb)
-    print "Precision: %f, Recall: %f" % (precision, recall)
-        
+    return (precision, recall)
 
-    #print tfs2genes
-    #print tomtom_rows
-    #print tfs2motifs
-    #print tfs
-    """
-    conn = sqlite3.connect(dbname)
-    cursor = conn.cursor()
-    cursor.execute('select rowid, cluster, motif_num from motif_infos ' +
-                   'where iteration = ? and seqtype = ?', [iteration, seqtype])
-    motifs = cursor.fetchall()
-    """
+if __name__ == '__main__':
+    description = 'Precision/Recall cMonkey/Python'
+
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('--regulondb', required=True, help='RegulonDB CSV')
+    parser.add_argument('--tomtom', required=True, help='TomTom results')
+    parser.add_argument('--cmonkeyout', required=True, help='cMonkey sqlite output')
+    parser.add_argument('--threshold', help='p-value threshold', default='0.1')
+    parser.add_argument('--strongevidence', action='store_true',
+                        help='use only strong evidence',
+                        default=True)
+    args = parser.parse_args()
+
+    thresholds = [0.1 / (step * 10) for step in range(1, 20)]
+    #threshold = float(args.threshold)
+    print "threshold\tprecision\trecall"
+    for threshold in thresholds:
+        precision, recall = compute_precision_recall(args.regulondb, args.tomtom,
+                                                     threshold)
+        #print "Precision: %f, Recall: %f" % (precision, recall)
+        print "%f\t%f\t%f" % (threshold, precision, recall)
+

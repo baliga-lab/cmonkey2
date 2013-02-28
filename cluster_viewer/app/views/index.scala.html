@@ -13,8 +13,11 @@ runLogs: Array[RunLog])
              var cluster = $(this).attr('id');
              $.get('/cluster/@runInfo.currentIteration/' + cluster,
                    function(html) {
-                       console.debug(html);
                        $(html).replaceAll('#cluster-view');
+                       // notify Firegoose to rescan the page
+                       var ev = document.createEvent("Events");
+                       ev.initEvent("gaggleDataEvent", true, false);
+                       document.dispatchEvent(ev);
                    });
          });
          $('#select_iteration').change(function (event) {

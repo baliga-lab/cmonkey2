@@ -97,9 +97,14 @@
 
 <br><br>
 @motifInfoMap.keys.map { seqType =>
+  <div class="gaggle-data">
+    <span class="gaggle-name">PSSM (@seqType)</span>
+    <span class="gaggle-species">My Species</span>
+    <span class="gaggle-description">PSSM for My Species</span>
   @for(i <- 0 until gagglePSSMs(seqType).length) {
-    <div class="gaggle-matrix-tsv">
+    <span class="gaggle-matrix-tsv">
       @(gagglePSSMs(seqType)(i))
-    </div>
+    </span>
   }
+  </div>
 }
