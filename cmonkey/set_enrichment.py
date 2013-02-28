@@ -11,6 +11,7 @@ import scoring
 import numpy as np
 import datamatrix as dm
 import multiprocessing as mp
+import os
 
 
 class EnrichmentSet:
@@ -159,9 +160,9 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                          elapsed1 / 1000.0)
             if not os.path.exists('out/setEnrichment_set.csv'):
                 setFile = open('out/setEnrichment_set.csv','w')
-                setFile.write(','+','.join(xrange(1,self.num_clusters() + 1)))
+                setFile.write(','+','.join([str(i) for i in xrange(1,self.num_clusters() + 1)]))
                 pvFile = open('out/setEnrichment_pvalue.csv','w')
-                pvFile.write(','+','.join(xrange(1,self.num_clusters() + 1)))
+                pvFile.write(','+','.join([str(i) for i in xrange(1,self.num_clusters() + 1)]))
             else:
                 setFile = open('out/setEnrichment_set.csv','a')
                 pvFile = open('out/setEnrichment_pvalue.csv','a')
@@ -177,8 +178,8 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
                 for row in xrange(len(self.gene_names())):
                     matrix.values[row][cluster - 1] = scores[row]
-            setFile.write(str(iteration_result['iteration'])+','+','.join([str(i) for i in minSets]))
-            pvFile.write(str(iteration_result['iteration'])+','+','.join([str(i) for i in pValues]))
+            setFile.write('\n'+str(iteration_result['iteration'])+','+','.join([str(i) for i in minSets]))
+            pvFile.write('\n'+str(iteration_result['iteration'])+','+','.join([str(i) for i in pValues]))
             setFile.close()
             pvFile.close()
         logging.info("SET ENRICHMENT FINISHED IN %f s.\n",

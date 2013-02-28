@@ -49,12 +49,12 @@ MAX_MOTIF_WIDTH = 12
 SELECT_ROWS = True
 
 # configure the function setup here
-ADD_SET_ENRICHMENT = False
+ADD_SET_ENRICHMENT = True
 ADD_MEME = False
-ADD_WEEDER = True
+ADD_WEEDER = False
 
 # scoring-specific
-USE_SET_TYPES = ['pita'] # ['target_scan']
+USE_SET_TYPES = ['target_scan'] #['pita'] # ['target_scan']
 WEEDER_SEQ_TYPE = 'upstream'
 MOTIF_START_ITERATION = 600
 MOTIF_UPDATE_INTERVAL = 10
