@@ -32,7 +32,7 @@
                     text: 'log10'
                 }
             },
-            series: @(HighchartsFormatter.toHSSeries(ratios))
+            series: @Html(HighchartsFormatter.toHSSeries(ratios))
         });
         @motifInfoMap.keys.map { seqType =>
           @for(i <- 0 until pssmMap(seqType).length) {

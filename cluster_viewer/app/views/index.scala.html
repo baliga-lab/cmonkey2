@@ -174,7 +174,7 @@ runLogs: Array[RunLog])
    </script>
    <div id="maincontainer">
      <div id="topsection">
-       <div><img style="float: right" src="@routes.Assets.at("images/isb_logo.png")"></img></div>
+       <div><img style="float: right" alt="Institute for Systems Biology" src="@routes.Assets.at("images/isb_logo.png")"></div>
        <h2>cMonkey/Python</h2>
        <div class="start-info">
          @runInfo.species (@runInfo.organismCode): @runInfo.numRows genes, @runInfo.numColumns conditions, @runInfo.clusters.length clusters
@@ -201,7 +201,6 @@ runLogs: Array[RunLog])
      </div>
      <h3>Statistics</h3>
      <div id="statssection">
-
        <div id="leftcolumn">
          <div class="innertube">
            <div id="cluster-row-graph"></div><div id="cluster-column-graph"></div><div id="motif-score-graph"></div>
@@ -225,18 +224,19 @@ runLogs: Array[RunLog])
        No Snapshot
        } else {
        <table class="item-list">
-         <tr><td><table class="inner"><tr><th class="position">#</th><th class="clusternum">Cluster</th><th class="nrows"># rows</th><th class="ncols"># columns</th><th class="residual">residual</th><th class="evalue">e-value</th><th>&nbsp;</th></tr></table></td></tr>
-         <tr><td><div style="height: 200px; overflow: auto; background-color: #fff;">
-           <table class="inner">
-             @for(i <- 0 until runInfo.clusters.length) {<tr><td class="position">@(i + 1)</td><td class="clusternum"><a class="clusterlink" id="@(runInfo.clusters(i))" href="#">@(runInfo.clusters(i))</a></td><td class="nrows">@(snapshot.get.rows(runInfo.clusters(i)).length)</td><td class="ncols">@(snapshot.get.columns(runInfo.clusters(i)).length)</td><td class="residual">@(snapshot.get.residuals(runInfo.clusters(i)))</td><td class="evalue">@Html(Formatter.formatEvalues(snapshot.get.motifs, runInfo.clusters(i)))</td><td>&nbsp;</td></tr>
-             }
-         </table></div></td></tr>
+         <thead>
+           <tr><th class="position">#</th><th class="clusternum">Cluster</th><th class="nrows"># rows</th><th class="ncols"># columns</th><th class="residual">residual</th><th class="evalue">motif/e-value</th><th>&nbsp;</th></tr>
+         </thead>
+         <tbody>
+           @for(i <- 0 until runInfo.clusters.length) {<tr><td class="position">@(i + 1)</td><td class="clusternum"><a class="clusterlink" id="@(runInfo.clusters(i))" href="#">@(runInfo.clusters(i))</a></td><td class="nrows">@(snapshot.get.rows(runInfo.clusters(i)).length)</td><td class="ncols">@(snapshot.get.columns(runInfo.clusters(i)).length)</td><td class="residual">@("%.2e".format(snapshot.get.residuals(runInfo.clusters(i))))</td><td class="evalue">@Html(Formatter.formatMotifInfos(snapshot.get.motifs, runInfo.clusters(i)))</td><td>&nbsp;</td></tr>
+           }
+         </tbody>
        </table>
        <div class="spacer">&nbsp;</div>
        <div class="details-box">
-         <span id="cluster-view">Please select a cluster</div>
+         <span id="cluster-view">Please select a cluster</span>
        </div>
-       }
-       }
+     }
      </div>
    </div>
+}

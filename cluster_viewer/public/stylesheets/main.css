@@ -35,36 +35,59 @@ h2 {
     padding: 10px;
 }
 
+/* Cluster list table */
 table.item-list {
     border-radius: 5px;
     border: 1px black solid;
-    width: 100%;
+    width: 800px;
+    height: 300px;
     font-size: 8pt;
     background-color: #fff;
 }
+/*
+table.item-list thead {
+    position: fixed;
+}*/
 
-table.inner {
-    border-collapse: collapse;
-    border-spacing: 0px;
+table.item-list thead td {
+    padding-right: 5px;
+    padding-left: 5px;
+    background-color: white;
 }
 
+table.item-list thead th {
+    padding-right: 5px;
+    background-color: black;
+    color: white;
+}
+/*
+tbody.item-list {
+    height: 200px;
+    position: fixed;
+    overflow: scroll;
+}*/
+
+/*
 table.item-list th, td {
     padding-right: 5px;
     border: 0px;
     margin: 0px;
     border-spacing: 0px;
 }
-table.item-list th {
-    padding-right: 5px;
-    background-color: black;
-    color: white;
-}
+*/
 
 table.item-list tr:nth-child(even) {
     background-color: #ccc;
 }
+
 table.item-list tr:nth-child(odd) {
     background-color: #fff;
+}
+
+/*
+td.position, th.position {
+    width: 60px;
+    text-align: right;
 }
 
 td.clusternum, th.clusternum {
@@ -85,37 +108,13 @@ td.residual, th.residual {
     text-align: right;
 }
 td.evalue, th.evalue {
-    width: 180px;
+    width: 500px;
 }
+*/
 
 .inactive {
     color: #aaaaaa;
 }
-
-table.members {
-    font-size: 9pt;
-    border: 1px solid black;
-    border-radius: 3px;
-}
-table.members th {
-    background-color: #666666;
-    color: white;
-    padding-top: 5px;
-    padding-bottom: 5px;
-}
-
-table.members td {
-    padding: 3px;
-}
-
-table.members tr:nth-child(odd) {
-    background-color: #00ddee;
-}
-
-table.members tr:nth-child(even) {
-    background-color: #ffffff;
-}
-
 
 #statssection {
     float: right;
