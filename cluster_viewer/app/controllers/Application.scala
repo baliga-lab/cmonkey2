@@ -40,7 +40,6 @@ object Application extends Controller {
   val snapshotReader   = new IterationResultReader(Synonyms)
   val statsReader      = new StatsReader
   val runlogReader     = new RunLogReader
-  val runStatusReader  = new RunStatusReader
 
   val ratiosFile = if (ProjectConfig.getProperty("cmonkey.ratios.file") != null) {
     // explicit naming of ratios file
@@ -65,7 +64,7 @@ object Application extends Controller {
   def index2(iteration: Int) = Action {
     // sort keys ascending by iteration number
     var start = System.currentTimeMillis
-    val runStatus = runStatusReader.readRunStatus.get
+    val runStatus = RunStatusReader.readRunStatus.get
 
     var elapsed = System.currentTimeMillis - start
     println("read run status in " + elapsed + " ms.")
@@ -191,6 +190,7 @@ object Application extends Controller {
   }
 
   def cluster(iteration: Int, cluster: Int) = Action {
+    val runStatus = RunStatusReader.readRunStatus.get
     val result = snapshotReader.readIterationResult(iteration)
     val ratios = RatiosFactory.readRatios(result.get.rows(cluster).toArray)
     val rows    = result.get.rows(cluster)
@@ -241,7 +241,7 @@ object Application extends Controller {
     Ok(views.html.cluster(iteration, cluster, rows, columns, ratios,
                           motifInfoMap.toMap, pssmMap.toMap,
                           annotationMap.toMap,
-                          gagglePSSMs.toMap))
+                          gagglePSSMs.toMap, runStatus.species))
   }
 
   private def toJsonPssm(motifInfos: Seq[MotifInfo]): Array[String] = {

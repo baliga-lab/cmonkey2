@@ -2,7 +2,7 @@
   ratios: RatioMatrix, motifInfoMap: Map[String, Array[MotifInfo]],
   pssmMap: Map[String, Array[String]],
   annotationMap: Map[String, Seq[GeneAnnotations]],
-  gagglePSSMs: Map[String, Array[String]])
+  gagglePSSMs: Map[String, Array[String]], species: String)
 
 <div id="cluster-view">
   <script type="text/javascript">
@@ -96,15 +96,40 @@
 </div>
 
 <br><br>
+<!-- Gaggle microformats embedded here -->
+
+<div class="gaggle-data" style="display:none">
+  <span class="gaggle-name">Row members cluster @cluster</span>
+  <span class="gaggle-species">@species</span>
+  <span class="gaggle-namelist">
+    <ol>
+      @for(name <- rows) {
+      <li>@name</li>
+      }
+    </ol>
+  </span>
+</div>
+<div class="gaggle-data" style="display:none">
+  <span class="gaggle-name">Column members cluster @cluster</span>
+  <span class="gaggle-species">@species</span>
+  <span class="gaggle-namelist">
+    <ol>
+      @for(name <- columns) {
+      <li>@name</li>
+      }
+    </ol>
+  </span>
+</div>
+
 @motifInfoMap.keys.map { seqType =>
-  <div class="gaggle-data">
-    <span class="gaggle-name">PSSM (@seqType)</span>
-    <span class="gaggle-species">My Species</span>
-    <span class="gaggle-description">PSSM for My Species</span>
   @for(i <- 0 until gagglePSSMs(seqType).length) {
+  <div class="gaggle-data" style="display:none">
+    <span class="gaggle-name">PSSM (@seqType) motif @(i + 1)</span>
+    <span class="gaggle-species">@species</span>
+    <span class="gaggle-description">PSSM (@seqType) motif @(i + 1) for @species</span>
     <span class="gaggle-matrix-tsv">
       @(gagglePSSMs(seqType)(i))
     </span>
-  }
   </div>
+  }
 }

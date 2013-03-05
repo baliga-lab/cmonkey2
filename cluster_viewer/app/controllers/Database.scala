@@ -397,7 +397,7 @@ case class RunStatus(startTime: Timestamp, finishTime: Option[Timestamp],
   def finished = finishTime != null
 }
 
-class RunStatusReader {
+object RunStatusReader {
 
   def readRunStatus: Option[RunStatus] = {
     val runInfos = RunInfos.findAll
