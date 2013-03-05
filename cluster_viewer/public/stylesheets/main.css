@@ -37,80 +37,18 @@ h2 {
 
 /* Cluster list table */
 table.item-list {
+    border: 1px solid black;
     border-radius: 5px;
-    border: 1px black solid;
-    width: 800px;
-    height: 300px;
+}
+
+table.item-list td, th {
     font-size: 8pt;
-    background-color: #fff;
-}
-/*
-table.item-list thead {
-    position: fixed;
-}*/
-
-table.item-list thead td {
-    padding-right: 5px;
-    padding-left: 5px;
-    background-color: white;
 }
 
-table.item-list thead th {
-    padding-right: 5px;
-    background-color: black;
+table.item-list th {
     color: white;
+    background-color: #888888;
 }
-/*
-tbody.item-list {
-    height: 200px;
-    position: fixed;
-    overflow: scroll;
-}*/
-
-/*
-table.item-list th, td {
-    padding-right: 5px;
-    border: 0px;
-    margin: 0px;
-    border-spacing: 0px;
-}
-*/
-
-table.item-list tr:nth-child(even) {
-    background-color: #ccc;
-}
-
-table.item-list tr:nth-child(odd) {
-    background-color: #fff;
-}
-
-/*
-td.position, th.position {
-    width: 60px;
-    text-align: right;
-}
-
-td.clusternum, th.clusternum {
-    width: 60px;
-    text-align: right;
-}
-td.nrows, th.nrows {
-    width: 60px;
-    text-align: right;
-}
-td.ncols, th.ncols {
-    width: 60px;
-    text-align: right;
-}
-
-td.residual, th.residual {
-    width: 180px;
-    text-align: right;
-}
-td.evalue, th.evalue {
-    width: 500px;
-}
-*/
 
 .inactive {
     color: #aaaaaa;

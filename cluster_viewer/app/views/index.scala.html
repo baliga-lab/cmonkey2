@@ -170,6 +170,13 @@ runLogs: Array[RunLog])
              yAxis: { title: { text: 'fuzzy coeff' } },
              series: @Html(HighchartsFormatter.toFuzzyCoeffSeries(iterationStats))
          });
+         $('#cluster-list').dataTable({
+           'bPaginate': false,
+           'bFilter': false,
+           'bInfo': false,
+           'sScrollY': 300,
+           'sScrollX': '100%'
+         });
      });
    </script>
    <div id="maincontainer">
@@ -223,15 +230,16 @@ runLogs: Array[RunLog])
        @if(snapshot == None) {
        No Snapshot
        } else {
-       <table class="item-list">
+       <table class="item-list" id="cluster-list">
          <thead>
-           <tr><th class="position">#</th><th class="clusternum">Cluster</th><th class="nrows"># rows</th><th class="ncols"># columns</th><th class="residual">residual</th><th class="evalue">motif/e-value</th><th>&nbsp;</th></tr>
+           <tr><th>#</th><th>Cluster</th><th># rows</th><th># columns</th><th>residual</th><th>motif/e-value</th><th>&nbsp;</th></tr>
          </thead>
          <tbody>
-           @for(i <- 0 until runInfo.clusters.length) {<tr><td class="position">@(i + 1)</td><td class="clusternum"><a class="clusterlink" id="@(runInfo.clusters(i))" href="#">@(runInfo.clusters(i))</a></td><td class="nrows">@(snapshot.get.rows(runInfo.clusters(i)).length)</td><td class="ncols">@(snapshot.get.columns(runInfo.clusters(i)).length)</td><td class="residual">@("%.2e".format(snapshot.get.residuals(runInfo.clusters(i))))</td><td class="evalue">@Html(Formatter.formatMotifInfos(snapshot.get.motifs, runInfo.clusters(i)))</td><td>&nbsp;</td></tr>
+           @for(i <- 0 until runInfo.clusters.length) {<tr><td>@(i + 1)</td><td><a class="clusterlink" id="@(runInfo.clusters(i))" href="#">@(runInfo.clusters(i))</a></td><td>@(snapshot.get.rows(runInfo.clusters(i)).length)</td><td>@(snapshot.get.columns(runInfo.clusters(i)).length)</td><td>@("%.2e".format(snapshot.get.residuals(runInfo.clusters(i))))</td><td>@Html(Formatter.formatMotifInfos(snapshot.get.motifs, runInfo.clusters(i)))</td><td>&nbsp;</td></tr>
            }
          </tbody>
        </table>
+
        <div class="spacer">&nbsp;</div>
        <div class="details-box">
          <span id="cluster-view">Please select a cluster</span>
