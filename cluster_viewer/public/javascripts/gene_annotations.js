@@ -10,6 +10,7 @@ if (!annot) {
 
 (function () {
     "use strict";
+    var pvalue_cutoff = 0.6;
     var base1_x = 500; // base 1 starts at this offset
 
     // draw a simple scale to see the sequence range size
@@ -60,9 +61,11 @@ if (!annot) {
             var matchWidth = match.length;
             var matchX = base1_x - match.start - matchWidth;
             var matchbox = paper.rect(matchX, matchY, matchWidth, annotHeight);
+            // p-values above the cutoff are transparent
+            var opacity = match.score > pvalue_cutoff ? 0.0 : 1.0 - (match.score * 1.5);
             matchbox.attr('stroke', 'none');
             matchbox.attr('fill', match.motif == 0 ? '#f00' : '#0f0');
-            matchbox.attr('fill-opacity', match.score.toString());
+            matchbox.attr('fill-opacity', opacity.toString());
         }
         // gene description, optional
         //var condCaption = paper.text(lineX + 200, lineY, annot.condition);
