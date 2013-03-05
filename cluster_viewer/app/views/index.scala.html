@@ -39,7 +39,7 @@ runLogs: Array[RunLog])
                  tickInterval: 30
              },
              yAxis: { title: { text: 'mean resids' } },
-             series: @(HighchartsFormatter.toHSSeries(meanResiduals))
+             series: @Html(HighchartsFormatter.toHSSeries(meanResiduals))
          });
          // cluster member graph
          var clusterMemberChart = new Highcharts.Chart({
@@ -55,7 +55,7 @@ runLogs: Array[RunLog])
                  tickInterval: 30
              },
              yAxis: { title: { text: 'mean nrow, ncol/iter' } },
-             series: @(HighchartsFormatter.toNRowNColHSSeries(iterationStats))
+             series: @Html(HighchartsFormatter.toNRowNColHSSeries(iterationStats))
          });
 
          // cluster nrows graph
@@ -99,11 +99,11 @@ runLogs: Array[RunLog])
              },
              title: { text: 'cluster residuals' },
              xAxis: {
-                 categories: @(HighchartsFormatter.formatStrings(residualHistogram.xvalues)),
+                 categories: @Html(HighchartsFormatter.formatStrings(residualHistogram.xvalues)),
                  tickInterval: 3
              },
              yAxis: { title: { text: '# clusters' } },
-             series: [ { name: 'residual', data: @(HighchartsFormatter.formatInts(residualHistogram.yvalues)) } ]
+             series: [ { name: 'residual', data: @Html(HighchartsFormatter.formatInts(residualHistogram.yvalues)) } ]
          });
          var runlogChart = new Highcharts.Chart({
              chart: {
@@ -117,7 +117,7 @@ runLogs: Array[RunLog])
              series: [
                  @for(runLog <- runLogs){
                      @if(runLog.functionName != "row_scoring"){
-                         @(HighchartsFormatter.toHSSeriesEntry(runLog)),
+                         @Html(HighchartsFormatter.toHSSeriesEntry(runLog)),
                      }
                  }
              ]
@@ -136,7 +136,7 @@ runLogs: Array[RunLog])
                  tickInterval: 30
              },
              yAxis: { title: { text: 'mean p-value' }, max: -0.5, min: -6 },
-             series: @(HighchartsFormatter.toMotifPValueSeries(iterationStats, runLogs))
+             series: @Html(HighchartsFormatter.toMotifPValueSeries(iterationStats, runLogs))
          });
 
          var networkScoreChart = new Highcharts.Chart({
@@ -152,7 +152,7 @@ runLogs: Array[RunLog])
                  tickInterval: 30
              },
              yAxis: { title: { text: 'mean net score' }, max: 0, min: -3 },
-             series: @(HighchartsFormatter.toNetworkScoreSeries(iterationStats, runLogs))
+             series: @Html(HighchartsFormatter.toNetworkScoreSeries(iterationStats, runLogs))
          });
 
          var fuzzyCoeffChart = new Highcharts.Chart({
@@ -168,7 +168,7 @@ runLogs: Array[RunLog])
                  tickInterval: 30
              },
              yAxis: { title: { text: 'fuzzy coeff' } },
-             series: @(HighchartsFormatter.toFuzzyCoeffSeries(iterationStats))
+             series: @Html(HighchartsFormatter.toFuzzyCoeffSeries(iterationStats))
          });
      });
    </script>

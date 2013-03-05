@@ -8,11 +8,8 @@ import scala.collection.mutable.{HashMap, ArrayBuffer}
 
 import play.api.Play.current
 import play.api.db._
-import org.scalaquery.ql._
-import org.scalaquery.ql.TypeMapper._
-import org.scalaquery.ql.extended.{ExtendedTable => Table}
-import org.scalaquery.ql.extended.SQLiteDriver.Implicit._
-import org.scalaquery.session.{Database, Session}
+import scala.slick.session.{Database, Session}
+import scala.slick.driver.SQLiteDriver.simple._
 
 // **********************************************************************
 // **** Data access functionality that is visualized is
@@ -276,7 +273,7 @@ object IterationStats extends Table[(Int, Double, Double)]("iteration_stats") {
     (for {
       t <- this
       _ <- Query orderBy(t.iteration)
-     } yield t.iteration ~ t.medianResidual ~ fuzzyCoeff).list
+     } yield t.iteration ~ t.medianResidual ~ t.fuzzyCoeff).list
   }
 }
 
