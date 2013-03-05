@@ -4,6 +4,8 @@ import java.io._
 import java.sql.Timestamp
 import scala.collection.Map
 import java.util.regex._
+
+import language.postfixOps
 import scala.collection.mutable.{HashMap, ArrayBuffer}
 
 import play.api.Play.current
@@ -35,12 +37,6 @@ object RowNames extends Table[(Int, String)]("row_names") {
   def name = column[String]("name", O NotNull)
 
   def * = orderNum ~ name
-  def findAll = database.withSession { implicit db: Session =>
-    (for {
-      t <- this
-      _ <- Query orderBy(t.name)
-     } yield t.name).list.toArray
-  }
 }
 
 object ColumnNames extends Table[(Int, String)]("column_names") {
@@ -50,12 +46,6 @@ object ColumnNames extends Table[(Int, String)]("column_names") {
   def name = column[String]("name", O NotNull)
 
   def * = orderNum ~ name
-  def findAll = database.withSession { implicit db: Session =>
-    (for {
-      t <- this
-      _ <- Query orderBy(t.name)
-     } yield t.name).list.toArray
-  }
 }
 
 object RowMembers extends Table[(Int, Int, Int)]("row_members") {
@@ -64,15 +54,9 @@ object RowMembers extends Table[(Int, Int, Int)]("row_members") {
   def iteration = column[Int]("iteration", O NotNull)
   def cluster = column[Int]("cluster", O NotNull)
   def orderNum = column[Int]("order_num", O NotNull)
-
   def * = iteration ~ cluster ~ orderNum
-  def findForIteration(iteration: Int) = database.withSession { implicit db: Session =>
-    (for {
-      t <- this if t.iteration === iteration
-      _ <- Query orderBy(t.cluster)
-     } yield t.cluster ~ t.orderNum).list
-  }
 }
+
 object ColumnMembers extends Table[(Int, Int, Int)]("column_members") {
 
   lazy val database = Database.forDataSource(DB.getDataSource())
@@ -81,12 +65,6 @@ object ColumnMembers extends Table[(Int, Int, Int)]("column_members") {
   def orderNum = column[Int]("order_num", O NotNull)
 
   def * = iteration ~ cluster ~ orderNum
-  def findForIteration(iteration: Int) = database.withSession { implicit db: Session =>
-    (for {
-      t <- this if t.iteration === iteration
-      _ <- Query orderBy(t.cluster)
-     } yield t.cluster ~ t.orderNum).list
-  }
 }
 
 object ClusterResiduals extends Table[(Int, Int, Double)]("cluster_residuals") {
@@ -97,13 +75,8 @@ object ClusterResiduals extends Table[(Int, Int, Double)]("cluster_residuals") {
   def residual = column[Double]("residual", O NotNull)
 
   def * = iteration ~ cluster ~ residual
-  def findForIteration(iteration: Int) = database.withSession { implicit db: Session =>
-    (for {
-      t <- this if t.iteration === iteration
-      _ <- Query orderBy(t.cluster)
-     } yield t.cluster ~ t.residual).list
-  }
 }
+
 
 object MotifInfos extends Table[(Int, Int, Int, String, Int, Double)]("motif_infos") {
 
@@ -116,12 +89,6 @@ object MotifInfos extends Table[(Int, Int, Int, String, Int, Double)]("motif_inf
   def evalue = column[Double]("evalue", O NotNull)
 
   def * = id ~ iteration ~ cluster ~ seqtype ~ motifNum ~ evalue
-  def findForIteration(iteration: Int) = database.withSession { implicit db: Session =>
-    (for {
-      t <- this if t.iteration === iteration
-      _ <- Query orderBy(t.cluster)
-     } yield t.id ~ t.cluster ~ t.seqtype ~ t.motifNum ~ t.evalue).list
-  }
 }
 
 object MotifPSSMRows
@@ -137,12 +104,6 @@ extends Table[(Int, Int, Int, Float, Float, Float, Float)]("motif_pssm_rows") {
   def t = column[Float]("t", O NotNull)
 
   def * = motifInfoId ~ iteration ~ row ~ a ~ c ~ g ~ t
-  def findForIteration(iteration: Int) = database.withSession { implicit db: Session =>
-    (for {
-      t <- this if t.iteration === iteration
-      _ <- Query orderBy(t.row)
-     } yield t.motifInfoId ~ t.a ~ t.c ~ t.g ~ t.t).list
-  }
 }
 
 object MotifAnnotations
@@ -157,11 +118,45 @@ extends Table[(Int, Int, Int, Int, Boolean, Double)]("motif_annotations") {
   def pvalue = column[Double]("pvalue", O NotNull)
 
   def * = motifInfoId ~ iteration ~ geneNum ~ position ~ reverse ~ pvalue
-  def findForIteration(iteration: Int) = database.withSession { implicit db: Session =>
-    (for {
-      t <- this if t.iteration === iteration
-      _ <- Query orderBy(t.geneNum)
-     } yield t.motifInfoId ~ t.geneNum ~ t.position ~ t.reverse ~ t.pvalue).list
+}
+
+object ResultQueries {
+  lazy val database = Database.forDataSource(DB.getDataSource())
+
+  def allRowNames = database.withSession { implicit db: Session =>
+    Query(RowNames).sortBy(_.name).map(_.name).list.toArray
+  }
+  def allColumnNames = database.withSession { implicit db: Session =>
+    Query(ColumnNames).sortBy(_.name).map(_.name).list.toArray
+  }
+
+  def rowMembersForIteration(iteration: Int) = database.withSession { implicit db: Session =>
+    Query(RowMembers).filter(_.iteration === iteration).
+      sortBy(_.cluster).map(m => (m.cluster, m.orderNum)).list
+  }
+  def columnMembersForIteration(iteration: Int) = database.withSession { implicit db: Session =>
+    Query(ColumnMembers).filter(_.iteration === iteration).
+      sortBy(_.cluster).map(m => (m.cluster, m.orderNum)).list
+  }
+
+  def clusterResidualsForIteration(iteration: Int) = database.withSession { implicit db: Session =>
+    Query(ClusterResiduals).filter(_.iteration === iteration).
+      sortBy(_.cluster).map(r => (r.cluster, r.residual)).list
+  }
+
+  def motifInfosForIteration(iteration: Int) = database.withSession { implicit db: Session =>
+    Query(MotifInfos).filter(_.iteration === iteration).
+      sortBy(_.cluster).map(m => (m.id, m.cluster, m.seqtype, m.motifNum, m.evalue)).list
+  }
+
+  def pssmRowsForIteration(iteration: Int) = database.withSession { implicit db: Session =>
+    Query(MotifPSSMRows).filter(_.iteration === iteration).
+      sortBy(_.row).map(r => (r.motifInfoId, r.a, r.c, r.g, r.t)).list
+  }
+
+  def motifAnnotationsForIteration(iteration: Int) = database.withSession { implicit db: Session =>
+    Query(MotifAnnotations).filter(_.iteration === iteration).
+      sortBy(_.geneNum).map(a => (a.motifInfoId, a.geneNum, a.position, a.reverse, a.pvalue)).list
   }
 }
 
@@ -182,9 +177,9 @@ object MotifQueries {
       // motif id -> cluster
       val clusterMap = new HashMap[Int, Int]
 
-      val motifInfos = MotifInfos.findForIteration(iteration)
-      val pssmRows = MotifPSSMRows.findForIteration(iteration)
-      val annotations = MotifAnnotations.findForIteration(iteration)
+      val motifInfos = ResultQueries.motifInfosForIteration(iteration)
+      val pssmRows = ResultQueries.pssmRowsForIteration(iteration)
+      val annotations = ResultQueries.motifAnnotationsForIteration(iteration)
 
       motifInfos.foreach { info =>
         if (!seqtypeMap.contains(info._3))
@@ -269,12 +264,6 @@ object IterationStats extends Table[(Int, Double, Double)]("iteration_stats") {
   def fuzzyCoeff = column[Double]("fuzzy_coeff", O NotNull)
 
   def * = iteration ~ medianResidual ~ fuzzyCoeff
-  def findAll = database.withSession { implicit db: Session =>
-    (for {
-      t <- this
-      _ <- Query orderBy(t.iteration)
-     } yield t.iteration ~ t.medianResidual ~ t.fuzzyCoeff).list
-  }
 }
 
 object ClusterStats extends Table[(Int, Int, Int, Int, Double)]("cluster_stats") {
@@ -287,12 +276,6 @@ object ClusterStats extends Table[(Int, Int, Int, Int, Double)]("cluster_stats")
   def residual = column[Double]("residual", O NotNull)
 
   def * = iteration ~ cluster ~ numRows ~ numColumns ~ residual
-  def findAll = database.withSession { implicit db: Session =>
-    (for {
-      t <- this
-      _ <- Query orderBy(t.cluster)
-     } yield t.iteration ~ t.cluster ~ t.numRows ~ t.numColumns ~ t.residual).list
-  }
 }
 
 object NetworkStats extends Table[(Int, String, Double)]("network_stats") {
@@ -303,12 +286,6 @@ object NetworkStats extends Table[(Int, String, Double)]("network_stats") {
   def score = column[Double]("score", O NotNull)
 
   def * = iteration ~ network ~ score
-  def findAll = database.withSession { implicit db: Session =>
-    (for {
-      t <- this
-      _ <- Query orderBy(t.network)
-     } yield t.iteration ~ t.network ~ t.score).list
-  }
 }
 
 object MotifStats extends Table[(Int, String, Double)]("motif_stats") {
@@ -319,14 +296,27 @@ object MotifStats extends Table[(Int, String, Double)]("motif_stats") {
   def pval = column[Double]("pval", O NotNull)
 
   def * = iteration ~ seqtype ~ pval
+}
 
-  def findAll = database.withSession { implicit db: Session =>
-    (for {
-      t <- this
-      _ <- Query orderBy(t.seqtype)
-     } yield t.iteration ~ t.seqtype ~ t.pval).list
+object StatsQueries {
+  lazy val database = Database.forDataSource(DB.getDataSource())
+  def iterationStats = database.withSession { implicit db: Session =>
+    Query(IterationStats).sortBy(_.iteration).list
+  }
+  def clusterStats = database.withSession { implicit db: Session =>
+    Query(ClusterStats).sortBy(_.cluster).list
+  }
+
+  def networkStats = database.withSession { implicit db: Session =>
+    Query(NetworkStats).sortBy(_.network).list
+  }
+
+
+  def motifStats = database.withSession { implicit db: Session =>
+    Query(MotifStats).sortBy(_.seqtype).list
   }
 }
+
 
 // **********************************************************************
 // **********************************************************************
@@ -355,12 +345,12 @@ case class IterationResult(rows: Map[Int, List[String]], columns: Map[Int, List[
 class IterationResultReader(Synonyms: SynonymsMap) {
 
   def readIterationResult(iteration: Int) : Option[IterationResult] = {
-    val rowNames: Array[String] = RowNames.findAll
-    val columnNames: Array[String] = ColumnNames.findAll
+    val rowNames: Array[String] = ResultQueries.allRowNames
+    val columnNames: Array[String] = ResultQueries.allColumnNames
     printf("# row names: %d, # col names: %d\n", rowNames.length, columnNames.length)
-    val rowMembers = RowMembers.findForIteration(iteration)
-    val colMembers = ColumnMembers.findForIteration(iteration)
-    val clusterResiduals = ClusterResiduals.findForIteration(iteration)
+    val rowMembers = ResultQueries.rowMembersForIteration(iteration)
+    val colMembers = ResultQueries.columnMembersForIteration(iteration)
+    val clusterResiduals = ResultQueries.clusterResidualsForIteration(iteration)
 
     val rows = new HashMap[Int, List[String]]
     val columns = new HashMap[Int, List[String]]
@@ -472,9 +462,9 @@ class StatsReader {
 
     // for I/O performance reasons, we use the findAll method to build up our stats
     val stats = new HashMap[Int, IterationStat]
-    val iterationStats = IterationStats.findAll
+    val iterationStats = StatsQueries.iterationStats
 
-    val clusterStats = ClusterStats.findAll
+    val clusterStats = StatsQueries.clusterStats
     val clusterIterationMap = new HashMap[Int, HashMap[Int, ClusterStat]]
     clusterStats.foreach { cstat =>
       if (!clusterIterationMap.contains(cstat._1)) {
@@ -483,7 +473,7 @@ class StatsReader {
       clusterIterationMap(cstat._1)(cstat._2) = ClusterStat(cstat._3, cstat._4, cstat._5)
     }
 
-    val motifStats = MotifStats.findAll
+    val motifStats = StatsQueries.motifStats
     val motifIterationMap = (new HashMap[Int, HashMap[String, Double]]).withDefaultValue(new HashMap[String, Double])
     motifStats.foreach { mstat =>
       if (!motifIterationMap.contains(mstat._1)) {
@@ -492,7 +482,7 @@ class StatsReader {
       motifIterationMap(mstat._1)(mstat._2) = mstat._3
     }
 
-    val networkStats = NetworkStats.findAll
+    val networkStats = StatsQueries.networkStats
     val networkIterationMap = new HashMap[Int, HashMap[String, Double]]
     networkStats.foreach { nstat =>
       if (!networkIterationMap.contains(nstat._1)) {
