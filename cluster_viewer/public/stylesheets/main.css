@@ -36,11 +36,6 @@ h2 {
 }
 
 /* Cluster list table */
-table.item-list {
-    border: 1px solid black;
-    border-radius: 5px;
-}
-
 table.item-list td, th {
     font-size: 8pt;
 }

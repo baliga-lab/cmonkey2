@@ -173,9 +173,11 @@ runLogs: Array[RunLog])
          $('#cluster-list').dataTable({
            'bPaginate': false,
            'bFilter': false,
+           'bSort': false,
            'bInfo': false,
            'sScrollY': 300,
            'sScrollX': '100%'
+           //'aaSorting': [[ 4, 'asc']]
          });
      });
    </script>
@@ -232,10 +234,10 @@ runLogs: Array[RunLog])
        } else {
        <table class="item-list" id="cluster-list">
          <thead>
-           <tr><th>#</th><th>Cluster</th><th># rows</th><th># columns</th><th>residual</th><th>motif/e-value</th><th>&nbsp;</th></tr>
+           <tr><th>#</th><th>Cluster</th><th># rows</th><th># columns</th><th>residual</th><th>motif/e-value</th></tr>
          </thead>
          <tbody>
-           @for(i <- 0 until runInfo.clusters.length) {<tr><td>@(i + 1)</td><td><a class="clusterlink" id="@(runInfo.clusters(i))" href="#">@(runInfo.clusters(i))</a></td><td>@(snapshot.get.rows(runInfo.clusters(i)).length)</td><td>@(snapshot.get.columns(runInfo.clusters(i)).length)</td><td>@("%.2e".format(snapshot.get.residuals(runInfo.clusters(i))))</td><td>@Html(Formatter.formatMotifInfos(snapshot.get.motifs, runInfo.clusters(i)))</td><td>&nbsp;</td></tr>
+           @for(i <- 0 until runInfo.clusters.length) {<tr><td>@("%03d".format(i + 1))</td><td><a class="clusterlink" id="@(runInfo.clusters(i))" href="#">@("%03d".format(runInfo.clusters(i)))</a></td><td>@(snapshot.get.rows(runInfo.clusters(i)).length)</td><td>@(snapshot.get.columns(runInfo.clusters(i)).length)</td><td>@("%.2e".format(snapshot.get.residuals(runInfo.clusters(i))))</td><td>@Html(Formatter.formatMotifInfos(snapshot.get.motifs, runInfo.clusters(i)))</td></tr>
            }
          </tbody>
        </table>
