@@ -37,6 +37,18 @@
                 }
             },
             series: @Html(HighchartsFormatter.toHSSeries(ratios))
+        }, function (chart) {
+          var point = chart.series[0].data[@(columns.length)];
+          console.debug('drawing line, p.x = ' + point.plotX);
+          var line = chart.renderer.path(['M', point.plotX, 30,
+                                          'L', point.plotX, 190 ])
+                     .attr({
+                       'stroke-width': 1,
+                       stroke: 'red',
+                       'dashstyle': 'shortdash'
+                     })
+                     .add();
+
         });
         @motifInfoMap.keys.map { seqType =>
           @for(i <- 0 until pssmMap(seqType).length) {
