@@ -13,8 +13,8 @@ object Formatter {
           maxcol = col
           maxval = values(row)(col)
         }
-        result.append(Alphabet(maxcol))
       }
+      result.append(Alphabet(maxcol))
     }
     result.toString
   }
