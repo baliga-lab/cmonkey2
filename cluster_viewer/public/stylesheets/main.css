@@ -16,6 +16,10 @@ h2 {
     margin-top: 10px;
 }
 
+.h4 {
+    font-weight: bold;
+}
+
 .item-box {
     border: 1px solid black;
     border-radius: 5px;

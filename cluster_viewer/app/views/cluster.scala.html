@@ -16,6 +16,9 @@
         height: 150,
         glyphStyle: '20pt Helvetica'
     };
+    function toggleExpandCollapse(text) {
+      return text == "(...)" ? "Hide" : "(...)";
+    }
 
     $(document).ready(function() {
         var chart1 = new Highcharts.Chart({
@@ -62,23 +65,33 @@
         ];
         annot.draw('annotation-graph_@seqType', { width: 500, height: 400, annotations: annotations_@seqType});
         }
+        $('#toggle-row-members').click(function() {
+          $('#toggle-row-members').text(toggleExpandCollapse($('#toggle-row-members').text()));
+          $('#row-members').toggle();
+          return false;
+        });
+        $('#toggle-col-members').click(function() {
+          $('#toggle-col-members').text(toggleExpandCollapse($('#toggle-col-members').text()));
+          $('#column-members').toggle();
+          return false;
+        });
     });
   </script>
   <h2>Cluster @cluster at iteration @iteration</h2>
   <h3>Cluster memberships</h3>
   <br>
   <div id="cluster-members" style="width: 600px">
-    <h4>Row members (@(rows.length))</h4>
-    <p>@(rows.mkString(", "))</p>
-    <h4>Column members (@(columns.length))</h4>
-    <p>@(columns.mkString(", "))</p>
+    <div><span class="h4">Row members (@(rows.length))</span> <a id="toggle-row-members" href="#">(...)</a></div>
+    <div id="row-members" style="display:none">@(rows.mkString(", "))</div>
+    <div><span class="h4">Column members (@(columns.length))</span> <a id="toggle-col-members" href="#">(...)</a></div>
+    <div id="column-members" style="display:none">@(columns.mkString(", "))</div>
   </div>
   <br>
   <div id="expression-graph"></div>
   <div>&nbsp;</div><br>
   <h3>Motifs</h3>
   @if(motifInfoMap.size == 0) {
-    No motifs
+    No motif information available for this cluster/iteration
   }
   @motifInfoMap.keys.map { seqType =>
   @for(i <- 0 until pssmMap(seqType).length) {
