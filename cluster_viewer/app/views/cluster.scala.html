@@ -38,10 +38,11 @@
             },
             series: @Html(HighchartsFormatter.toHSSeries(ratios))
         }, function (chart) {
-          var point = chart.series[0].data[@(columns.length)];
-          console.debug('drawing line, p.x = ' + point.plotX);
-          var line = chart.renderer.path(['M', point.plotX, 30,
-                                          'L', point.plotX, 190 ])
+          // determine the position of the separator
+          // the chart's x axis tells us where it should be
+          var px = chart.xAxis[0].left + chart.xAxis[0].translate(@(columns.length));
+          var line = chart.renderer.path(['M', px, 30,
+                                          'L', px, 190])
                      .attr({
                        'stroke-width': 1,
                        stroke: 'red',
