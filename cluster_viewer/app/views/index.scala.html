@@ -13,7 +13,9 @@ runLogs: Array[RunLog])
              var cluster = $(this).attr('id');
              $.get('/cluster/@runInfo.currentIteration/' + cluster,
                    function(html) {
-                       $(html).replaceAll('#cluster-view');
+                       // we need the trim() call in order for jQuery 1.9.x to
+                       // recognize the output as valid HTML
+                       $(html.trim()).replaceAll('#cluster-view');
                        // notify Firegoose to rescan the page
                        var ev = document.createEvent("Events");
                        ev.initEvent("gaggleDataEvent", true, false);
