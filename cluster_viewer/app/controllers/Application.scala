@@ -192,7 +192,8 @@ object Application extends Controller {
   def cluster(iteration: Int, cluster: Int) = Action {
     val runStatus = RunStatusReader.readRunStatus.get
     val result = snapshotReader.readIterationResult(iteration)
-    val ratios = RatiosFactory.readRatios(result.get.rows(cluster).toArray)
+    val ratios = RatiosFactory.readRatios(result.get.rows(cluster).toArray,
+                                          result.get.columns(cluster).toArray)
     val rows    = result.get.rows(cluster)
     val columns = result.get.columns(cluster)
     val motifInfoMap = new HashMap[String, Array[MotifInfo]]

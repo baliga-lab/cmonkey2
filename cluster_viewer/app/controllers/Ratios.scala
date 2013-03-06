@@ -44,12 +44,43 @@ class RatioMatrixFactory(ratiofile: File, synonyms: SynonymsMap) {
     rowTitles = rows.toArray(new Array[String](0))
   }
 
-  def readRatios(genes: Array[String]): RatioMatrix = {
+  /**
+   * Rearranges a row from the gene expression matrix according to
+   * the given cluster column arrangement:
+   * Columns inside the cluster go to the left, columns not in the cluster
+   * go to the right.
+   */
+  private def rearrangeRow(row: Array[Float], inIndexes: Array[Int],
+                           outIndexes: Array[Int]): Array[Float] = {
+    val result = Array.ofDim[Float](row.length)
+    var j = 0
+    for (i <- 0 until inIndexes.length) {
+      result(j) = row(inIndexes(i))
+      j += 1
+    }
+    for (i <- 0 until outIndexes.length) {
+      result(j) = row(outIndexes(i))
+      j += 1
+    }
+    result
+  }
+
+  def readRatios(genes: Array[String],
+                 conditions: Array[String]): RatioMatrix = {
     var i = 0
     val outValues = new java.util.ArrayList[Array[Float]]
+
+    // partition columns according to cluster membership
+    val columnToIndex: Map[String, Int] =
+      (for (i <- 0 until columnTitles.length) yield (columnTitles(i) -> i)).toMap
+    val inIndexes: Array[Int] = conditions.map(columnToIndex)
+    val outIndexes:Array[Int] =
+      (for (i <- 0 until columnTitles.length; if !inIndexes.contains(i)) yield i).toArray
+    
     while (i < rowTitles.length) {
       if (genes.contains(rowTitles(i))) {
-        outValues.add(values.get(i))
+        // rearrange each according to the column partitioning
+        outValues.add(rearrangeRow(values.get(i), inIndexes, outIndexes))
       }
       i += 1
     }
