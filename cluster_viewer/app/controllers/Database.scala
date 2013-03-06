@@ -229,13 +229,17 @@ object MotifQueries {
 // **** cMonkey run information
 // **********************************************************************
 
+/**
+ * Note that SQLite does not have a timestamp or date type. We only read
+ * that value anyways, so String is fine for now
+ */
 object RunInfos
-extends Table[(Timestamp, Option[Timestamp], Int, Option[Int],
+extends Table[(String, Option[String], Int, Option[Int],
                String, String, Int, Int)]("run_infos") {
 
   lazy val database = Database.forDataSource(DB.getDataSource())
-  def startTime = column[Timestamp]("start_time", O NotNull)
-  def finishTime = column[Option[Timestamp]]("finish_time")
+  def startTime = column[String]("start_time", O NotNull)
+  def finishTime = column[Option[String]]("finish_time")
   def numIterations = column[Int]("num_iterations", O NotNull)
   def lastIteration = column[Option[Int]]("last_iteration")
   def organism = column[String]("organism", O NotNull)
@@ -390,7 +394,7 @@ class IterationResultReader(Synonyms: SynonymsMap) {
 // **** cMonkey run status information
 // **********************************************************************
 
-case class RunStatus(startTime: Timestamp, finishTime: Option[Timestamp],
+case class RunStatus(startTime: String, finishTime: Option[String],
                      numIterations: Int, lastIteration: Option[Int],
                      organismCode: String,
                      species: String, numRows: Int, numColumns: Int) {

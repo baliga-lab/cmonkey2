@@ -21,7 +21,8 @@
         var chart1 = new Highcharts.Chart({
             chart: {
                 renderTo: 'expression-graph',
-                type: 'line'
+                type: 'line',
+                height: 250
             },
             title: {
                 text: 'Gene Expressions'
@@ -64,9 +65,17 @@
     });
   </script>
   <h2>Cluster @cluster at iteration @iteration</h2>
-  <h3>Gene expressions</h3>
+  <h3>Cluster memberships</h3>
+  <br>
+  <div id="cluster-members" style="width: 600px">
+    <h4>Row members (@(rows.length))</h4>
+    <p>@(rows.mkString(", "))</p>
+    <h4>Column members (@(columns.length))</h4>
+    <p>@(columns.mkString(", "))</p>
+  </div>
+  <br>
   <div id="expression-graph"></div>
-  <div>&nbsp;</div>
+  <div>&nbsp;</div><br>
   <h3>Motifs</h3>
   @if(motifInfoMap.size == 0) {
     No motifs
@@ -79,20 +88,13 @@
     </span>
   }
   }
-  <div style="clear: both"></div>
+  <div style="clear: both"></div><br>
   @motifInfoMap.keys.map { seqType =>
   <h3>Annotations for @seqType</h3>
   <div id="annotation-graph_@seqType"></div>
   }
   <div style="clear: both"></div>
   <div>&nbsp;</div>
-  <h3>Cluster memberships</h3>
-  <div id="cluster-members" style="width: 600px">
-    <h4>Row members (@(rows.length))</h4>
-    <p>@(rows.mkString(", "))</p>
-    <h4>Column members (@(columns.length))</h4>
-    <p>@(columns.mkString(", "))</p>
-  </div>
 </div>
 
 <br><br>
