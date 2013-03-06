@@ -51,6 +51,10 @@
                      .add();
 
         });
+        //console.debug('# series: ' + chart1.series.length);
+        //console.debug('legend: ' + chart1.legend);
+        //chart1.series[0].setVisible(false, true);
+
         @motifInfoMap.keys.map { seqType =>
           @for(i <- 0 until pssmMap(seqType).length) {
             isblogo.makeLogo('canvas@(seqType)_@i', pssm@(seqType)_@i, canvasOptions);
@@ -88,6 +92,18 @@
           $('#column-members').toggle();
           return false;
         });
+        $('#deselect-all-series').click(function() {
+          for (var i = 0; i < chart1.series.length; i++) {
+            chart1.series[i].setVisible(false, false);
+          }
+          return false;
+        });
+        $('#select-all-series').click(function() {
+          for (var i = 0; i < chart1.series.length; i++) {
+            chart1.series[i].setVisible(true, false);
+          }
+          return false;
+        });
     });
   </script>
   <h2>Cluster @cluster at iteration @iteration</h2>
@@ -101,6 +117,8 @@
   </div>
   <br>
   <div id="expression-graph"></div>
+  <a href="#" id="deselect-all-series">Deselect All</a>
+  <a href="#" id="select-all-series">Select All</a>
   <div>&nbsp;</div><br>
   <h3>Motifs</h3>
   @if(motifInfoMap.size == 0) {

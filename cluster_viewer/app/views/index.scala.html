@@ -21,6 +21,7 @@ runLogs: Array[RunLog])
                        ev.initEvent("gaggleDataEvent", true, false);
                        document.dispatchEvent(ev);
                    });
+             return false;
          });
          $('#select_iteration').change(function (event) {
              window.location.href = "/" + $(this).val();
