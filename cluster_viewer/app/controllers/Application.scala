@@ -245,6 +245,25 @@ object Application extends Controller {
                           gagglePSSMs.toMap, runStatus.species))
   }
 
+  def clusters(iteration: Int) = Action {
+    val resultOption =  snapshotReader.readIterationResult(iteration)
+    val result = resultOption.get
+    val clusters = sortByResidual(resultOption)
+    val outlist = Array.ofDim[Array[String]](clusters.length)
+
+    for (i <- 0 until clusters.length) {
+      val cluster = clusters(i)
+      outlist(i) = Array("%d".format(i + 1),
+                         "<a class=\"clusterlink\" id=\"%d\"  href=\"#\">%d</a>".format(cluster, cluster),
+                         "%d".format(result.rows(cluster).length),
+                         "%d".format(result.columns(cluster).length),
+                         "%.2e".format(result.residuals(cluster)),
+                         Formatter.formatMotifInfos(result.motifs, cluster))
+    }
+    Ok(Json.toJson(Map("aaData" -> outlist)))
+  }
+
+
   private def toJsonPssm(motifInfos: Seq[MotifInfo]): Array[String] = {
     val result = new java.util.ArrayList[String]
     for (i <- 0 until motifInfos.length) {

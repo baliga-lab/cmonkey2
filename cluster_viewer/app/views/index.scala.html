@@ -9,20 +9,6 @@ runLogs: Array[RunLog])
 @main("cMonkey/Python - Cluster View") {
    <script type="text/javascript">
      $(document).ready(function() {
-         $('a.clusterlink').click(function () {
-             var cluster = $(this).attr('id');
-             $.get('/cluster/@runInfo.currentIteration/' + cluster,
-                   function(html) {
-                       // we need the trim() call in order for jQuery 1.9.x to
-                       // recognize the output as valid HTML
-                       $(html.trim()).replaceAll('#cluster-view');
-                       // notify Firegoose to rescan the page
-                       var ev = document.createEvent("Events");
-                       ev.initEvent("gaggleDataEvent", true, false);
-                       document.dispatchEvent(ev);
-                   });
-             return false;
-         });
          $('#select_iteration').change(function (event) {
              window.location.href = "/" + $(this).val();
          });
@@ -179,8 +165,34 @@ runLogs: Array[RunLog])
            'bSort': false,
            'bInfo': false,
            'sScrollY': 300,
-           'sScrollX': '100%'
-           //'aaSorting': [[ 4, 'asc']]
+           'sScrollX': '100%',
+           'bProcessing': true,
+           'aoColumns': [
+             { 'sWidth': '30px' },
+             { 'sWidth': '60px' },
+             { 'sWidth': '60px' },
+             { 'sWidth': '60px' },
+             { 'sWidth': '70px' },
+             null
+           ],
+           'sAjaxSource': '/clusters/@runInfo.currentIteration',
+           'fnInitComplete': function() {
+              $('a.clusterlink').click(function () {
+                var cluster = $(this).attr('id');
+                $.get('/cluster/@runInfo.currentIteration/' + cluster,
+                   function(html) {
+                       // we need the trim() call in order for jQuery 1.9.x to
+                       // recognize the output as valid HTML
+                       $(html.trim()).replaceAll('#cluster-view');
+                       // notify Firegoose to rescan the page
+                       var ev = document.createEvent("Events");
+                       ev.initEvent("gaggleDataEvent", true, false);
+                       document.dispatchEvent(ev);
+                   });
+                return false;
+              });
+
+            }
          });
      });
    </script>
@@ -240,8 +252,6 @@ runLogs: Array[RunLog])
            <tr><th>#</th><th>Cluster</th><th># rows</th><th># columns</th><th>residual</th><th>motif/e-value</th></tr>
          </thead>
          <tbody>
-           @for(i <- 0 until runInfo.clusters.length) {<tr><td>@("%03d".format(i + 1))</td><td><a class="clusterlink" id="@(runInfo.clusters(i))" href="#">@("%03d".format(runInfo.clusters(i)))</a></td><td>@(snapshot.get.rows(runInfo.clusters(i)).length)</td><td>@(snapshot.get.columns(runInfo.clusters(i)).length)</td><td>@("%.2e".format(snapshot.get.residuals(runInfo.clusters(i))))</td><td>@Html(Formatter.formatMotifInfos(snapshot.get.motifs, runInfo.clusters(i)))</td></tr>
-           }
          </tbody>
        </table>
 
