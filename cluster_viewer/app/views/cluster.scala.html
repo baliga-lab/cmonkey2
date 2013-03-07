@@ -31,25 +31,25 @@
                 text: 'Gene Expressions'
             },
             plotOptions: { line: { marker: { enabled: false } } },
+            xAxis: {
+              plotLines: [{
+                value: @(columns.length),
+                color: 'red',
+                dashStyle: 'shortdash',
+                width: 1,
+                zIndex: 3,
+                label: {
+                  text: 'columns in/out (@(columns.length))',
+                  style: { color: 'gray', fontSize: '8pt' }
+                }
+              }]
+            },
             yAxis: {
                 title: {
                     text: 'log10'
                 }
             },
             series: @Html(HighchartsFormatter.toHSSeries(ratios))
-        }, function (chart) {
-          // determine the position of the separator
-          // the chart's x axis tells us where it should be
-          var px = chart.xAxis[0].left + chart.xAxis[0].translate(@(columns.length));
-          var line = chart.renderer.path(['M', px, 30,
-                                          'L', px, 190])
-                     .attr({
-                       'stroke-width': 1,
-                       stroke: 'red',
-                       'dashstyle': 'shortdash'
-                     })
-                     .add();
-
         });
         //console.debug('# series: ' + chart1.series.length);
         //console.debug('legend: ' + chart1.legend);
