@@ -235,7 +235,7 @@ object MotifQueries {
  */
 object RunInfos
 extends Table[(String, Option[String], Int, Option[Int],
-               String, String, Int, Int)]("run_infos") {
+               String, String, Int, Int, Int)]("run_infos") {
 
   lazy val database = Database.forDataSource(DB.getDataSource())
   def startTime = column[String]("start_time", O NotNull)
@@ -246,13 +246,14 @@ extends Table[(String, Option[String], Int, Option[Int],
   def species = column[String]("species", O NotNull)
   def numRows = column[Int]("num_rows", O NotNull)
   def numColumns = column[Int]("num_columns", O NotNull)
+  def numClusters = column[Int]("num_clusters", O NotNull)
 
-  def * = startTime ~ finishTime ~ numIterations ~ lastIteration ~ organism ~ species ~ numRows ~ numColumns
+  def * = startTime ~ finishTime ~ numIterations ~ lastIteration ~ organism ~ species ~ numRows ~ numColumns ~ numClusters
   def findAll = database.withSession { implicit db: Session =>
     (for {
       t <- this
      } yield t.startTime ~ t.finishTime ~ t.numIterations ~ t.lastIteration ~ t.organism ~ t.species ~
-       t.numRows ~ t.numColumns).list
+       t.numRows ~ t.numColumns ~ t.numClusters).list
   }
 }
 
@@ -397,7 +398,8 @@ class IterationResultReader(Synonyms: SynonymsMap) {
 case class RunStatus(startTime: String, finishTime: Option[String],
                      numIterations: Int, lastIteration: Option[Int],
                      organismCode: String,
-                     species: String, numRows: Int, numColumns: Int) {
+                     species: String, numRows: Int, numColumns: Int,
+                     numClusters: Int) {
   def finished = finishTime != null
 }
 
@@ -407,7 +409,8 @@ object RunStatusReader {
     val runInfos = RunInfos.findAll
     if (runInfos.length > 0) {
       val info = runInfos(0)
-      Some(RunStatus(info._1, info._2, info._3, info._4, info._5, info._6, info._7, info._8))
+      Some(RunStatus(info._1, info._2, info._3, info._4, info._5, info._6, info._7,
+                     info._8, info._9))
     } else None
   }
 }

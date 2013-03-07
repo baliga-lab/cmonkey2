@@ -1,5 +1,4 @@
 @(runInfo: RunInfo,
-snapshot: Option[IterationResult],
 meanResiduals: Array[Double],
 iterationStats: Map[Int, IterationStat],
 rowStats: IntHistogram, columnStats: IntHistogram,
@@ -201,7 +200,7 @@ runLogs: Array[RunLog])
        <div><img style="float: right" alt="Institute for Systems Biology" src="@routes.Assets.at("images/isb_logo.png")"></div>
        <h2>cMonkey/Python</h2>
        <div class="start-info">
-         @runInfo.species (@runInfo.organismCode): @runInfo.numRows genes, @runInfo.numColumns conditions, @runInfo.clusters.length clusters
+         @runInfo.species (@runInfo.organismCode): @runInfo.numRows genes, @runInfo.numColumns conditions, @runInfo.numClusters clusters
        </div>
        <div>&nbsp;</div>
        <div>Iteration <select id="select_iteration">
@@ -244,9 +243,6 @@ runLogs: Array[RunLog])
      <div style="clear: both"></div>
      <h3>Clusters</h3>
      <div id="clustersection">
-       @if(snapshot == None) {
-       No Snapshot
-       } else {
        <table class="item-list" id="cluster-list">
          <thead>
            <tr><th>#</th><th>Cluster</th><th># rows</th><th># columns</th><th>residual</th><th>motif/e-value</th></tr>
@@ -259,7 +255,6 @@ runLogs: Array[RunLog])
        <div class="details-box">
          <span id="cluster-view">Please select a cluster</span>
        </div>
-     }
      </div>
    </div>
 }

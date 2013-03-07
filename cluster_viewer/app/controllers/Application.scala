@@ -13,7 +13,7 @@ case class IntHistogram(xvalues: Array[Int], yvalues: Array[Int])
 case class ResidualHistogram(xvalues: Array[String], yvalues: Array[Int])
 case class RunInfo(runStatus: RunStatus,
                    currentIteration: Int,
-                   clusters: Seq[Int],
+                   numClusters: Int,
                    iterations: Seq[Int],
                    progress: Double) {
   def organismCode = runStatus.organismCode
@@ -63,7 +63,8 @@ object Application extends Controller {
 
   def index2(iteration: Int) = Action {
     // sort keys ascending by iteration number
-    var start = System.currentTimeMillis
+    val time0 = System.currentTimeMillis
+    var start = time0
     val runStatus = RunStatusReader.readRunStatus.get
 
     var elapsed = System.currentTimeMillis - start
@@ -86,13 +87,14 @@ object Application extends Controller {
     java.util.Arrays.sort(statsIterations)
 
     makeRowStats(stats)
-    val resultOption =  snapshotReader.readIterationResult(iteration)
-    val clusters = sortByResidual(resultOption)
     val progress = math.min((lastIteration / runStatus.numIterations.toDouble * 100.0), 100.0)
     
-    val runInfo = RunInfo(runStatus, iteration, clusters, statsIterations, progress)
+    val runInfo = RunInfo(runStatus, iteration, runStatus.numClusters, statsIterations,
+                          progress)
+
+    elapsed = System.currentTimeMillis - time0
+    println("extract index data in " + elapsed + " ms.")
     Ok(views.html.index(runInfo,
-                        resultOption,
                         makeMeanResiduals(statsIterations, stats),
                         stats,
                         makeRowStats(stats),
@@ -245,6 +247,9 @@ object Application extends Controller {
                           gagglePSSMs.toMap, runStatus.species))
   }
 
+  /**
+   * An action that returns the main cluster list of an iteration in JSON format.
+   */
   def clusters(iteration: Int) = Action {
     val resultOption =  snapshotReader.readIterationResult(iteration)
     val result = resultOption.get
