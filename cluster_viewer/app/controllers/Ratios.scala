@@ -4,7 +4,43 @@ import java.io._
 import java.util.zip._
 
 case class RatioMatrix(rows: Array[String], columns: Array[String],
-                       values: Array[Array[Float]])
+                       values: Array[Array[Float]]) {
+  def mean = {
+    val numValues: Float = rows.length * columns.length
+    var sum : Float = 0.0f
+    for (i <- 0 until rows.length; j <- 0 until columns.length) sum += values(i)(j)
+    sum / numValues
+  }
+/*
+  def stdDev = {
+    val numValues: Float = rows.length * columns.length
+    var sum : Float = 0.0f
+    val avg = mean
+    val factor: Float = 1.0f / (numValues - 1)
+    for (i <- 0 until rows.length; j <- 0 until columns.length) {
+      val x = values(i)(j)
+      sum += (x - avg) * (x - avg)
+    }
+    sum *= factor
+    math.sqrt(sum)
+  }
+*/
+
+  private def stdDev(vals: Seq[Float]) = {
+    val numValues: Float = vals.length
+    var sum : Float = 0.0f
+    val mean = vals.sum / numValues
+    val factor: Float = 1.0f / (numValues - 1)
+    for (x <- vals) sum += (x - mean) * (x - mean)
+    sum *= factor
+    math.sqrt(sum)
+  }
+
+  def colStdDev(column: Int) = {
+    val tmp = for (row <- 0 until rows.length) yield values(row)(column)
+    stdDev(tmp)
+  }
+}
 
 class RatioMatrixFactory(ratiofile: File, synonyms: SynonymsMap) {
 

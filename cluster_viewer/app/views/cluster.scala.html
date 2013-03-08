@@ -51,9 +51,52 @@
             },
             series: @Html(HighchartsFormatter.toHSSeries(ratios))
         });
-        //console.debug('# series: ' + chart1.series.length);
-        //console.debug('legend: ' + chart1.legend);
-        //chart1.series[0].setVisible(false, true);
+        var chart2 = new Highcharts.Chart({
+            chart: {
+                renderTo: 'expression-graph2',
+                type: 'boxplot',
+                height: 250
+            },
+            legend: {
+                enabled: false
+            },
+            title: {
+                text: 'Gene Expressions (Box Plot)'
+            },
+            xAxis: {
+              plotLines: [{
+                value: @(columns.length),
+                color: 'red',
+                dashStyle: 'shortdash',
+                width: 1,
+                zIndex: 3,
+                label: {
+                  text: 'columns in/out (@(columns.length))',
+                  style: { color: 'gray', fontSize: '8pt' }
+                }
+              }]
+            },
+            yAxis: {
+                title: {
+                    text: 'log10'
+                },
+                plotLines: [{
+                    value: @(ratios.mean),
+                    color: 'green',
+                    dashStyle: 'shortdash',
+                    width: 1,
+                    zIndex: 3,
+                    label: {
+                        text: 'mean',
+                        style: { color: 'gray', fontSize: '8pt' }
+                    }
+                }]
+            },
+            series: [{
+                name: 'Ratios',
+                data: @Html(HighchartsFormatter.toHSSeriesBoxPlot(ratios, columns.length))
+            }]
+        });
 
         @motifInfoMap.keys.map { seqType =>
           @for(i <- 0 until pssmMap(seqType).length) {
@@ -119,6 +162,7 @@
   <div id="expression-graph"></div>
   <a href="#" id="deselect-all-series">Deselect All</a>
   <a href="#" id="select-all-series">Select All</a>
+  <div id="expression-graph2"></div>
   <div>&nbsp;</div><br>
   <h3>Motifs</h3>
   @if(motifInfoMap.size == 0) {

@@ -1,5 +1,6 @@
 package controllers
 import scala.collection.JavaConversions._
+import scala.collection.mutable.ArrayBuffer
 
 // Formatter object for creating common Javascript constructs for
 // Highcharts graphs
@@ -31,6 +32,85 @@ object HighchartsFormatter {
   def toHSSeriesEntry(name: String, values: Array[Float]) = {
     "{ name: '%s', data: %s }".format(name, formatFloats(values))
   }
+
+  private def makeBoxPlotRow(tmp: IndexedSeq[Float]) = {
+    val min = tmp(0)
+    val max = tmp(tmp.length - 1)
+    val median = tmp(tmp.length / 2 + tmp.length % 2)
+    val quart = tmp.length / 4
+    val lowerQuartile = tmp(quart)
+    val upperQuartile = tmp(tmp.length - quart - 1)
+    Array(min, lowerQuartile, median, upperQuartile, max)
+  }
+
+  private def getSortedHalfs(ratios: RatioMatrix, numColumnsIn: Int) = {
+    val numColumns = ratios.columns.length
+    val numRows = ratios.rows.length
+    val outrowsIn = new ArrayBuffer[Array[Float]]
+    val outrowsOut = new ArrayBuffer[Array[Float]]
+
+    for (col <- 0 until numColumns) {
+      val tmp = for (row <- 0 until numRows) yield ratios.values(row)(col)
+      val outrow = makeBoxPlotRow(tmp.sortWith(_ < _))
+      if (col < numColumnsIn) outrowsIn += outrow
+      else outrowsOut += outrow
+    }
+
+    // split halfs
+    val sortedIn = outrowsIn.sortWith((row1, row2) => row1(2) < row2(2))
+    val sortedOut = outrowsOut.sortWith((row1, row2) => row1(2) < row2(2))
+    (sortedIn, sortedOut)
+  }
+  def toHSSeriesBoxPlot(ratios: RatioMatrix, numColumnsIn: Int) = {
+    val (sortedIn, sortedOut) = getSortedHalfs(ratios, numColumnsIn)
+    val builder = new StringBuilder
+    builder.append("[")
+
+    for (row <- 0 until sortedIn.length) {
+      if (row > 0) builder.append(",")
+      builder.append(formatFloats(sortedIn(row)))
+    }
+    for (row <- 0 until sortedOut.length) {
+      builder.append(",")
+      builder.append(formatFloats(sortedOut(row)))
+    }
+
+    builder.append("]")
+    builder.toString
+  }
+  // **********************************************************************
+  private def stdDev(vals: Seq[Float]) = {
+    val numValues: Float = vals.length
+    var sum : Float = 0.0f
+    val mean = vals.sum / numValues
+    val factor: Float = 1.0f / (numValues - 1)
+    for (x <- vals) sum += (x - mean) * (x - mean)
+    sum *= factor
+    math.sqrt(sum)
+  }
+/*
+  private def getSortedHalfsStdDev(ratios: RatioMatrix, numColumnsIn: Int) = {
+    val numColumns = ratios.columns.length
+    val numRows = ratios.rows.length
+    val outvalsIn = new ArrayBuffer[Float]
+    val outvalsOut = new ArrayBuffer[Float]
+
+    for (col <- 0 until numColumns) {
+      val tmp = for (row <- 0 until numRows) yield ratios.values(row)(col)
+      val outval = stdDev(tmp)
+      if (col < numColumnsIn) outvalsIn += outval
+      else outvalsOut += outval
+    }
+
+    // split halfs
+    val sortedIn = outrowsIn.sortWith((row1, row2) => row1(2) < row2(2))
+    val sortedOut = outrowsOut.sortWith((row1, row2) => row1(2) < row2(2))
+    (sortedIn, sortedOut)
+  }
+
+  def toHSSeriesStdDev(ratios: RatioMatrix, numColumnsIn: Int) = {
+  }*/
+  // **********************************************************************
 
   def toHSSeries(values: Array[Double]) = {
     val builder = new StringBuilder
