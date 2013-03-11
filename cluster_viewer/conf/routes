@@ -4,6 +4,8 @@
 
 # Home page
 GET     /                           controllers.Application.index
+GET     /startrun                   controllers.Application.startrun
+POST    /submitrun                  controllers.Application.submitrun
 GET     /clusters/:iteration        controllers.Application.clusters(iteration: Int)
 GET     /:iteration                 controllers.Application.index2(iteration: Int)
 GET     /cluster/:iteration/:id     controllers.Application.cluster(iteration: Int, id: Int)

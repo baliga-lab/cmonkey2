@@ -19,6 +19,10 @@ h2 {
 .h4 {
     font-weight: bold;
 }
+.caption {
+    font-size: 10pt;
+    font-weight: bold;
+}
 
 .item-box {
     border: 1px solid black;
@@ -82,4 +86,9 @@ table.item-list th {
 .inprogress-info {
     font-size: 8pt;
     color: red;
+}
+
+label {
+    font-size: 10pt;
+    font-weight: bold;
 }

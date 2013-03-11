@@ -1,6 +1,9 @@
 package controllers
 
 import play.api._
+import play.api.data._
+import play.api.data.Forms._
+
 import play.api.mvc._
 import java.io._
 import scala.collection.mutable.HashMap
@@ -8,6 +11,8 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConversions._
 import scala.util.Sorting
 import play.api.libs.json._
+
+import org.systemsbiology.DatabaseConfig
 
 case class IntHistogram(xvalues: Array[Int], yvalues: Array[Int])
 case class ResidualHistogram(xvalues: Array[String], yvalues: Array[Int])
@@ -25,6 +30,7 @@ case class RunInfo(runStatus: RunStatus,
   def numColumns = runStatus.numColumns
   def numIterations = runStatus.numIterations
 }
+case class RunConfig(organism: String, url: String)
 
 object Application extends Controller {
 
@@ -41,7 +47,7 @@ object Application extends Controller {
   val statsReader      = new StatsReader
   val runlogReader     = new RunLogReader
 
-  val ratiosFile = if (ProjectConfig.getProperty("cmonkey.ratios.file") != null) {
+  def ratiosFile = if (ProjectConfig.getProperty("cmonkey.ratios.file") != null) {
     // explicit naming of ratios file
     new File(ProjectConfig.getProperty("cmonkey.ratios.file"))
   } else {
@@ -53,15 +59,46 @@ object Application extends Controller {
     else if (tsvfile.exists) tsvfile
     else throw new FileNotFoundException("could not find ratios file !")
   }
-  val RatiosFactory = new RatioMatrixFactory(ratiosFile, Synonyms)
+  lazy val RatiosFactory = new RatioMatrixFactory(ratiosFile, Synonyms)
+
+  // Define a configuration form
+  val configForm = Form(
+    mapping(
+      "organism" -> text, "url" -> text
+    )(RunConfig.apply)(RunConfig.unapply)
+  )
 
   // **********************************************************************
   // ****** VIEWS
   // **********************************************************************
 
-  def index = index2(1)
+  def index = {
+    if (OutDirectory.exists) index2(1)
+    else startrun
+  }
+
+  def startrun = Action {
+    Ok(views.html.startrun(configForm.fill(RunConfig("hal", "(none)"))))
+  }
+  def submitrun = Action { implicit request =>
+    val config = configForm.bindFromRequest.get
+
+    // simply take the uploaded file and copy into a reachable destination
+    for (body <- request.body.asMultipartFormData;
+         ratios <- body.file("ratios")) {
+      val filename = ratios.filename
+      if (filename.length > 0) {
+        ratios.ref.moveTo(new File(new File("/tmp/play-upload/"), filename))
+      }
+    }
+    Ok(views.html.submitrun())
+  }
+
 
   def index2(iteration: Int) = Action {
+
+    DatabaseConfig.createDataSource("jdbc:sqlite:/home/weiju/Projects/ISB/cmonkey-python/out/cmonkey_run.db")
+
     // sort keys ascending by iteration number
     val time0 = System.currentTimeMillis
     var start = time0

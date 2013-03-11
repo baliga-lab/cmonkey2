@@ -13,6 +13,8 @@ import play.api.db._
 import scala.slick.session.{Database, Session}
 import scala.slick.driver.SQLiteDriver.simple._
 
+import org.systemsbiology.DatabaseConfig
+
 // **********************************************************************
 // **** Data access functionality that is visualized is
 // **** found here together for consolidation
@@ -30,9 +32,9 @@ import scala.slick.driver.SQLiteDriver.simple._
 // **** cMonkey results
 // **********************************************************************
 
+
 object RowNames extends Table[(Int, String)]("row_names") {
 
-  lazy val database = Database.forDataSource(DB.getDataSource())
   def orderNum = column[Int]("order_num", O NotNull)
   def name = column[String]("name", O NotNull)
 
@@ -41,7 +43,6 @@ object RowNames extends Table[(Int, String)]("row_names") {
 
 object ColumnNames extends Table[(Int, String)]("column_names") {
 
-  lazy val database = Database.forDataSource(DB.getDataSource())
   def orderNum = column[Int]("order_num", O NotNull)
   def name = column[String]("name", O NotNull)
 
@@ -50,7 +51,6 @@ object ColumnNames extends Table[(Int, String)]("column_names") {
 
 object RowMembers extends Table[(Int, Int, Int)]("row_members") {
 
-  lazy val database = Database.forDataSource(DB.getDataSource())
   def iteration = column[Int]("iteration", O NotNull)
   def cluster = column[Int]("cluster", O NotNull)
   def orderNum = column[Int]("order_num", O NotNull)
@@ -59,7 +59,6 @@ object RowMembers extends Table[(Int, Int, Int)]("row_members") {
 
 object ColumnMembers extends Table[(Int, Int, Int)]("column_members") {
 
-  lazy val database = Database.forDataSource(DB.getDataSource())
   def iteration = column[Int]("iteration", O NotNull)
   def cluster = column[Int]("cluster", O NotNull)
   def orderNum = column[Int]("order_num", O NotNull)
@@ -69,7 +68,6 @@ object ColumnMembers extends Table[(Int, Int, Int)]("column_members") {
 
 object ClusterResiduals extends Table[(Int, Int, Double)]("cluster_residuals") {
 
-  lazy val database = Database.forDataSource(DB.getDataSource())
   def iteration = column[Int]("iteration", O NotNull)
   def cluster = column[Int]("cluster", O NotNull)
   def residual = column[Double]("residual", O NotNull)
@@ -80,7 +78,6 @@ object ClusterResiduals extends Table[(Int, Int, Double)]("cluster_residuals") {
 
 object MotifInfos extends Table[(Int, Int, Int, String, Int, Double)]("motif_infos") {
 
-  lazy val database = Database.forDataSource(DB.getDataSource())
   def id = column[Int]("rowid", O NotNull)
   def iteration = column[Int]("iteration", O NotNull)
   def cluster = column[Int]("cluster", O NotNull)
@@ -94,7 +91,6 @@ object MotifInfos extends Table[(Int, Int, Int, String, Int, Double)]("motif_inf
 object MotifPSSMRows
 extends Table[(Int, Int, Int, Float, Float, Float, Float)]("motif_pssm_rows") {
 
-  lazy val database = Database.forDataSource(DB.getDataSource())
   def motifInfoId = column[Int]("motif_info_id", O NotNull)
   def iteration = column[Int]("iteration", O NotNull)
   def row = column[Int]("row", O NotNull)
@@ -109,7 +105,6 @@ extends Table[(Int, Int, Int, Float, Float, Float, Float)]("motif_pssm_rows") {
 object MotifAnnotations
 extends Table[(Int, Int, Int, Int, Boolean, Double)]("motif_annotations") {
 
-  lazy val database = Database.forDataSource(DB.getDataSource())
   def motifInfoId = column[Int]("motif_info_id", O NotNull)
   def iteration = column[Int]("iteration", O NotNull)
   def geneNum = column[Int]("gene_num", O NotNull)
@@ -121,7 +116,8 @@ extends Table[(Int, Int, Int, Int, Boolean, Double)]("motif_annotations") {
 }
 
 object ResultQueries {
-  lazy val database = Database.forDataSource(DB.getDataSource())
+  lazy val database = Database.forDataSource(DatabaseConfig.datasource)
+  //lazy val database = Database.forDataSource(DB.getDataSource())
 
   def allRowNames = database.withSession { implicit db: Session =>
     Query(RowNames).sortBy(_.name).map(_.name).list.toArray
@@ -162,7 +158,9 @@ object ResultQueries {
 
 object MotifQueries {
   
-  lazy val database = Database.forDataSource(DB.getDataSource())
+  //lazy val database = Database.forDataSource(DB.getDataSource())
+  lazy val database = Database.forDataSource(DatabaseConfig.datasource)
+
   def findForIteration(iteration: Int, rowNames: Array[String]) =
     // the result structure, a map from seqtype->cluster->motif info
     database.withSession { implicit db: Session =>
@@ -237,7 +235,8 @@ object RunInfos
 extends Table[(String, Option[String], Int, Option[Int],
                String, String, Int, Int, Int)]("run_infos") {
 
-  lazy val database = Database.forDataSource(DB.getDataSource())
+  lazy val database = Database.forDataSource(DatabaseConfig.datasource)
+  //lazy val database = Database.forDataSource(DB.getDataSource())
   def startTime = column[String]("start_time", O NotNull)
   def finishTime = column[Option[String]]("finish_time")
   def numIterations = column[Int]("num_iterations", O NotNull)
@@ -263,7 +262,6 @@ extends Table[(String, Option[String], Int, Option[Int],
 
 object IterationStats extends Table[(Int, Double, Double)]("iteration_stats") {
 
-  lazy val database = Database.forDataSource(DB.getDataSource())
   def iteration = column[Int]("iteration", O NotNull)
   def medianResidual = column[Double]("median_residual", O NotNull)
   def fuzzyCoeff = column[Double]("fuzzy_coeff", O NotNull)
@@ -273,7 +271,6 @@ object IterationStats extends Table[(Int, Double, Double)]("iteration_stats") {
 
 object ClusterStats extends Table[(Int, Int, Int, Int, Double)]("cluster_stats") {
 
-  lazy val database = Database.forDataSource(DB.getDataSource())
   def iteration = column[Int]("iteration", O NotNull)
   def cluster = column[Int]("cluster", O NotNull)
   def numRows = column[Int]("num_rows", O NotNull)
@@ -285,7 +282,6 @@ object ClusterStats extends Table[(Int, Int, Int, Int, Double)]("cluster_stats")
 
 object NetworkStats extends Table[(Int, String, Double)]("network_stats") {
 
-  lazy val database = Database.forDataSource(DB.getDataSource())
   def iteration = column[Int]("iteration", O NotNull)
   def network = column[String]("network", O NotNull)
   def score = column[Double]("score", O NotNull)
@@ -295,7 +291,6 @@ object NetworkStats extends Table[(Int, String, Double)]("network_stats") {
 
 object MotifStats extends Table[(Int, String, Double)]("motif_stats") {
 
-  lazy val database = Database.forDataSource(DB.getDataSource())
   def iteration = column[Int]("iteration", O NotNull)
   def seqtype = column[String]("seqtype", O NotNull)
   def pval = column[Double]("pval", O NotNull)
@@ -304,9 +299,14 @@ object MotifStats extends Table[(Int, String, Double)]("motif_stats") {
 }
 
 object StatsQueries {
-  lazy val database = Database.forDataSource(DB.getDataSource())
+  lazy val database = Database.forDataSource(DatabaseConfig.datasource)
+  //lazy val database = Database.forDataSource(DB.getDataSource())
   def iterationStats = database.withSession { implicit db: Session =>
-    Query(IterationStats).sortBy(_.iteration).list
+    //Query(IterationStats).sortBy(_.iteration).list
+    val q = Query(IterationStats).sortBy(_.iteration)
+    println("session: " + db)
+    println("SQL: " + q.selectStatement)
+    q.list
   }
   def clusterStats = database.withSession { implicit db: Session =>
     Query(ClusterStats).sortBy(_.cluster).list

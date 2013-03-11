@@ -54,8 +54,8 @@ class CMonkeyRun:
         if num_clusters == None:
             num_clusters = int(round(self.ratio_matrix.num_rows *
                                      self['memb.clusters_per_row'] / 20.0))
-        #self['memb.clusters_per_col'] = int(round(num_clusters * 2.0 / 3.0))
-        self['memb.clusters_per_col'] = int(round(num_clusters / 2.0))
+        self['memb.clusters_per_col'] = int(round(num_clusters * 2.0 / 3.0))
+        #self['memb.clusters_per_col'] = int(round(num_clusters / 2.0))
         self['memb.prob_row_change'] = 0.5
         self['memb.prob_col_change'] = 1.0
         self['memb.max_changes_per_row'] = 1
