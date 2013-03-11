@@ -57,7 +57,7 @@ object DatabaseConfig {
   var datasource: DataSource = null
 
   def createDataSource(url: String) {
-    if (datasource != null) {
+    if (datasource == null) {
       datasource = new SQLiteDataSource(url)
     }
   }
