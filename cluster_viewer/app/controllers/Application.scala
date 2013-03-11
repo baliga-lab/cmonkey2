@@ -35,30 +35,13 @@ case class RunConfig(organism: String, url: String)
 object Application extends Controller {
 
   val AppConfig = Play.current.configuration
-  val ProjectConfigFile = new File("project.conf")
-  val ProjectConfig = new java.util.Properties
-  ProjectConfig.load(new FileReader(ProjectConfigFile))
+  val OutDirectory = new File((new File(System.getProperty("user.dir"))).getParentFile, "out")
+  val Synonyms = SynonymsFactory.getSynonyms(null, null)
 
-  val OutDirectory = new File(ProjectConfig.getProperty("cmonkey.out.directory"))
-  val Synonyms = SynonymsFactory.getSynonyms(
-    ProjectConfig.getProperty("cmonkey.synonyms.format"),
-    ProjectConfig.getProperty("cmonkey.synonyms.file"))
   val snapshotReader   = new IterationResultReader(Synonyms)
   val statsReader      = new StatsReader
   val runlogReader     = new RunLogReader
-
-  def ratiosFile = if (ProjectConfig.getProperty("cmonkey.ratios.file") != null) {
-    // explicit naming of ratios file
-    new File(ProjectConfig.getProperty("cmonkey.ratios.file"))
-  } else {
-    // finding the ratios file in the output directory, looks for compressed file
-    // first, then falls back to plain tsv
-    val gzipfile = new File(OutDirectory, "ratios.tsv.gz")
-    val tsvfile = new File(OutDirectory, "ratios.tsv")
-    if (gzipfile.exists) gzipfile
-    else if (tsvfile.exists) tsvfile
-    else throw new FileNotFoundException("could not find ratios file !")
-  }
+  def ratiosFile = new File(OutDirectory, "ratios.tsv.gz")
   lazy val RatiosFactory = new RatioMatrixFactory(ratiosFile, Synonyms)
 
   // Define a configuration form
@@ -97,28 +80,11 @@ object Application extends Controller {
 
   def index2(iteration: Int) = Action {
 
-    DatabaseConfig.createDataSource("jdbc:sqlite:/home/weiju/Projects/ISB/cmonkey-python/out/cmonkey_run.db")
-
     // sort keys ascending by iteration number
-    val time0 = System.currentTimeMillis
-    var start = time0
+    val start = System.currentTimeMillis
     val runStatus = RunStatusReader.readRunStatus.get
-
-    var elapsed = System.currentTimeMillis - start
-    println("read run status in " + elapsed + " ms.")
-    start = System.currentTimeMillis
-
     val stats = statsReader.readStats.toMap
-
-    elapsed = System.currentTimeMillis - start
-    System.out.println("read stats in " + elapsed + " ms.")
-    start = System.currentTimeMillis
-
     val runLogs = runlogReader.readLogs(OutDirectory)
-
-    elapsed = System.currentTimeMillis - start
-    println("read run logs in " + elapsed + " ms.")
-
     val statsIterations = stats.keySet.toArray
     val lastIteration = runStatus.lastIteration.getOrElse(1)
     java.util.Arrays.sort(statsIterations)
@@ -129,7 +95,7 @@ object Application extends Controller {
     val runInfo = RunInfo(runStatus, iteration, runStatus.numClusters, statsIterations,
                           progress)
 
-    elapsed = System.currentTimeMillis - time0
+    val elapsed = System.currentTimeMillis - start
     println("extract index data in " + elapsed + " ms.")
     Ok(views.html.index(runInfo,
                         makeMeanResiduals(statsIterations, stats),
@@ -139,6 +105,7 @@ object Application extends Controller {
                         makeResidualHistogram(stats),
                         runLogs))
   }
+
   // TODO: left over from the time data was stored in JSON, we can let the
   // database sort now
   private def sortByResidual(resultOption: Option[IterationResult]): Seq[Int] = {
@@ -312,7 +279,6 @@ object Application extends Controller {
       result.add(Json.stringify(JsObject(List("alphabet" -> Json.toJson(Array("A", "C", "G", "T")),
                                               "values" -> Json.toJson(motifInfos(i).pssm)))))
     }
-    println("# PSSMS: " + result.length)
     result.toArray(new Array[String](0))
   }
 

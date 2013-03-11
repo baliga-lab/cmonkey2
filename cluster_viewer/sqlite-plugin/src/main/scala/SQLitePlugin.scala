@@ -3,7 +3,7 @@ package org.systemsbiology
 import play.api.{Plugin, Application}
 import javax.sql.DataSource
 import java.sql.DriverManager
-import java.io.PrintWriter
+import java.io.{PrintWriter, File}
 
 /**
  * First shot at a SQLite datasource plugin that can be configured at runtime,
@@ -13,7 +13,11 @@ import java.io.PrintWriter
 class SQLitePlugin(app: Application) extends Plugin {
 
   override def onStart {
-    println("Starting SQLite plugin")
+    // automatic determination of output path
+    println("Starting SQLite plugin, run from: " + System.getProperty("user.dir"))
+    val dbfile = new File((new File(System.getProperty("user.dir"))).getParentFile,
+                          "out/cmonkey_run.db")
+    DatabaseConfig.url = "jdbc:sqlite:%s".format(dbfile.getAbsolutePath)
     Class.forName("org.sqlite.JDBC")
   }
 }
@@ -54,11 +58,12 @@ class SQLiteDataSource(url: String) extends DataSource {
 }
 
 object DatabaseConfig {
-  var datasource: DataSource = null
 
-  def createDataSource(url: String) {
-    if (datasource == null) {
-      datasource = new SQLiteDataSource(url)
-    }
+  var url: String = ""
+  private var _datasource: DataSource = null
+
+  def datasource: DataSource = {
+    if (_datasource == null) _datasource = new SQLiteDataSource(url)
+    _datasource
   }
 }

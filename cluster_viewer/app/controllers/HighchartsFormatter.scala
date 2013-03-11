@@ -20,7 +20,6 @@ object HighchartsFormatter {
   def toHSSeries(ratios: RatioMatrix) = {
     val builder = new StringBuilder
     builder.append("[")
-    println("# rows: " + ratios.rows.length)
     for (row <- 0 until ratios.rows.length) {
       if (row > 0) builder.append(", ")
       builder.append(toHSSeriesEntry(ratios.rows(row), ratios.values(row)))

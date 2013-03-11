@@ -117,7 +117,6 @@ extends Table[(Int, Int, Int, Int, Boolean, Double)]("motif_annotations") {
 
 object ResultQueries {
   lazy val database = Database.forDataSource(DatabaseConfig.datasource)
-  //lazy val database = Database.forDataSource(DB.getDataSource())
 
   def allRowNames = database.withSession { implicit db: Session =>
     Query(RowNames).sortBy(_.name).map(_.name).list.toArray
@@ -158,7 +157,6 @@ object ResultQueries {
 
 object MotifQueries {
   
-  //lazy val database = Database.forDataSource(DB.getDataSource())
   lazy val database = Database.forDataSource(DatabaseConfig.datasource)
 
   def findForIteration(iteration: Int, rowNames: Array[String]) =
@@ -236,7 +234,7 @@ extends Table[(String, Option[String], Int, Option[Int],
                String, String, Int, Int, Int)]("run_infos") {
 
   lazy val database = Database.forDataSource(DatabaseConfig.datasource)
-  //lazy val database = Database.forDataSource(DB.getDataSource())
+
   def startTime = column[String]("start_time", O NotNull)
   def finishTime = column[Option[String]]("finish_time")
   def numIterations = column[Int]("num_iterations", O NotNull)
@@ -300,13 +298,8 @@ object MotifStats extends Table[(Int, String, Double)]("motif_stats") {
 
 object StatsQueries {
   lazy val database = Database.forDataSource(DatabaseConfig.datasource)
-  //lazy val database = Database.forDataSource(DB.getDataSource())
   def iterationStats = database.withSession { implicit db: Session =>
-    //Query(IterationStats).sortBy(_.iteration).list
-    val q = Query(IterationStats).sortBy(_.iteration)
-    println("session: " + db)
-    println("SQL: " + q.selectStatement)
-    q.list
+    Query(IterationStats).sortBy(_.iteration).list
   }
   def clusterStats = database.withSession { implicit db: Session =>
     Query(ClusterStats).sortBy(_.cluster).list
@@ -352,7 +345,6 @@ class IterationResultReader(Synonyms: SynonymsMap) {
   def readIterationResult(iteration: Int) : Option[IterationResult] = {
     val rowNames: Array[String] = ResultQueries.allRowNames
     val columnNames: Array[String] = ResultQueries.allColumnNames
-    printf("# row names: %d, # col names: %d\n", rowNames.length, columnNames.length)
     val rowMembers = ResultQueries.rowMembersForIteration(iteration)
     val colMembers = ResultQueries.columnMembersForIteration(iteration)
     val clusterResiduals = ResultQueries.clusterResidualsForIteration(iteration)
@@ -382,8 +374,6 @@ class IterationResultReader(Synonyms: SynonymsMap) {
     }
     val motifInfos = MotifQueries.findForIteration(iteration, rowNames)
 
-    printf("# row members: %d, # col members: %d, # residuals: %d\n",
-           rowMembers.length, colMembers.length, clusterResiduals.length)
     Some(IterationResult(rows.toMap.withDefaultValue(List()),
                          columns.toMap.withDefaultValue(List()),
                          residuals.toMap.withDefaultValue(0.0),
