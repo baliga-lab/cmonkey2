@@ -63,7 +63,7 @@ def make_rsat_organism_mapper(rsatdb):
         rsat_organism = util.best_matching_links(
             kegg_organism,
             rsatdb.get_directory())[0].rstrip('/')
-        print "mapper_fun(), kegg org = '%s', rsat org = '%s'" % (kegg_organism, rsat_organism)
+        #print "mapper_fun(), kegg org = '%s', rsat org = '%s'" % (kegg_organism, rsat_organism)
         return RsatSpeciesInfo(rsatdb, rsat_organism,
                                is_eukaryote(rsat_organism),
                                get_taxonomy_id(rsat_organism))

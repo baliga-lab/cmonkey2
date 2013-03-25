@@ -42,7 +42,8 @@ class CMonkeyRun:
                  num_clusters=None):
         logging.basicConfig(format=LOG_FORMAT,
                             datefmt='%Y-%m-%d %H:%M:%S',
-                            level=logging.DEBUG)
+                            level=logging.DEBUG,
+                            filename='cmonkey.log')
         self.__membership = None
         self.__organism = None
         self.config_params = {}
@@ -274,7 +275,7 @@ class CMonkeyRun:
         if stringfile == None:
             rsat_info = rsat_mapper(kegg_mapper(self['organism_code']))
             ncbi_code = rsat_info.taxonomy_id
-            print "NCBI CODE IS: ", ncbi_code
+            logging.info("NCBI CODE IS: %s", ncbi_code)
             url = STRING_URL_PATTERN % ncbi_code
             stringfile = "%s/%s.gz" % (self['cache_dir'], ncbi_code)
             self['string_file'] = stringfile
@@ -552,7 +553,7 @@ class CMonkeyRun:
         self.write_stats(iteration_result)
         self.update_iteration(self['num_iterations'] + 1)
         self.write_finish_info()
-        print "Done !!!!"
+        logging.info("Done !!!!")
 
     ############################################################
     ###### CHECKPOINTING
