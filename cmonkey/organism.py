@@ -50,7 +50,7 @@ def make_rsat_organism_mapper(rsatdb):
         """Determine the taxonomy data from the RSAT database"""
         organism_names_dfile = util.dfile_from_text(
             rsatdb.get_organism_names(rsat_organism), comment='--')
-        return organism_names_dfile.lines[0][0]
+        return patches.patch_ncbi_taxonomy(organism_names_dfile.lines[0][0])
 
     def mapper_fun(kegg_organism):
         """Mapper function to return basic information about an organism

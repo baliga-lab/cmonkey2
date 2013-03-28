@@ -24,3 +24,13 @@ def patch_string_gene(code, gene):
         if gene.startswith('CA_'):
             return gene.replace('CA_', 'CA')
     return gene
+
+def patch_ncbi_taxonomy(taxonomy_id):
+    """patch for NCBI overrides:
+    """
+    # E.coli should be mapped to the 511145 code
+    # to keep things consistent
+    if taxonomy_id == '83333':
+        return "511145"
+    else:
+        return taxonomy_id
