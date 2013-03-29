@@ -10,10 +10,6 @@ import datamatrix as dm
 import util
 import argparse
 
-CMONKEY_VERSION = '4.0'
-CHECKPOINT_INTERVAL = 100
-CHECKPOINT_FILE = None
-
 
 if __name__ == '__main__':
     description = """cMonkey (Python port) (c) 2011-2012,
@@ -50,4 +46,7 @@ See README and LICENSE for details.\n"""
                                          string_file=string_file)
     cmonkey_run['output_dir'] = args.out
     cmonkey_run['out_database'] = os.path.join(args.out, 'cmonkey_run.db')
-    cmonkey_run.run()
+    if args.checkpoint:
+        cmonkey_run.run_from_checkpoint(args.checkpoint)
+    else:
+        cmonkey_run.run()

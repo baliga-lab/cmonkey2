@@ -159,6 +159,14 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                 result = cPickle.load(infile)
             return result
 
+    def store_checkpoint_data(self, shelf):
+        """Default implementation does not store checkpoint data"""
+        shelf['network.scores'] = self.network_scores
+
+    def restore_checkpoint_data(self, shelf):
+        """Default implementation does not store checkpoint data"""
+        self.network_scores = shelf['network.scores']
+
     def compute(self, iteration_result, ref_matrix=None):
         """overridden compute for storing additional information"""
         result = scoring.ScoringFunctionBase.compute(self, iteration_result, ref_matrix)
@@ -175,21 +183,24 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         self.network_scores = None
         return result
 
+    def networks(self):
+        """networks are cached"""
+        if self.__networks == None:
+            self.__networks = retrieve_networks(self.__organism)
+        return self.__networks
+
     def __update_score_means(self, network_scores):
         """returns the score means, adjusted to the current cluster setup"""
         # a dictionary that holds the network score means for
         # each cluster, separated for each network
         score_means = {}
-        for network in self.__networks:
+        for network in self.networks():
             score_means[network.name] = self.__compute_cluster_score_means(
                 network_scores[network.name])
         return compute_mean(score_means)
 
     def do_compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
-        # networks are cached
-        if self.__networks == None:
-            self.__networks = retrieve_networks(self.__organism)
 
         matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
                                self.gene_names())
@@ -198,7 +209,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         network_iteration_scores = {cluster: {}
                                     for cluster in xrange(1, self.num_clusters() + 1)}
         network_scores = {}
-        for network in self.__networks:
+        for network in self.networks():
             logging.info("Compute scores for network '%s', WEIGHT: %f",
                          network.name, network.weight)
             start_time = util.current_millis()

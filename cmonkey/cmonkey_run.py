@@ -92,7 +92,7 @@ class CMonkeyRun:
         self['out_database'] = self['output_dir'] + '/cmonkey_run.db'
 
         today = date.today()
-        self.CHECKPOINT_INTERVAL = None
+        self['checkpoint_interval'] = 100
         self.__checkpoint_basename = "cmonkey-checkpoint-%s-%d%d%d" % (
             organism_code, today.year, today.month, today.day)
 
@@ -513,7 +513,8 @@ class CMonkeyRun:
             self.membership().reseed_empty_row_clusters(self.ratio_matrix.row_names)
             self.membership().reseed_empty_column_clusters(self.ratio_matrix.column_names)
 
-            if iteration > 0 and self.CHECKPOINT_INTERVAL and iteration % self.CHECKPOINT_INTERVAL == 0:
+            if (iteration > 0 and self['checkpoint_interval']
+                and iteration % self['checkpoint_interval'] == 0):
                 self.save_checkpoint_data(iteration, row_scoring, col_scoring)
             mean_net_score = 0.0
             mean_mot_pvalue = 0.0
