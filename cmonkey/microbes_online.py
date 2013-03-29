@@ -20,7 +20,10 @@ import patches
 try:
     import MySQLdb as mysql
 except ImportError:
-    logging.warn("Could not import MySQLdb - Microbes Online MySQL integration will not work")
+    # do not use the logging system here !!!
+    # this would lead to the logging.basicConfig() call being
+    # ignored !!!
+    print "WARNINGY Could not import MySQLdb - Microbes Online MySQL integration will not work"
 
 MICROBES_ONLINE_BASE_URL = 'http://www.microbesonline.org'
 MYSQL_HOST = 'pub.microbesonline.org'

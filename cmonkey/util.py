@@ -22,7 +22,10 @@ import logging
 try:
     import BeautifulSoup as bs
 except ImportError:
-    logging.warn("could not import BeautifulSoup, RSAT organism finding won't work")
+    # do not use the logging system here !!!
+    # this would lead to the logging.basicConfig() call being
+    # ignored !!!
+    print "WARN: could not import BeautifulSoup, RSAT organism finding won't work"
 
 
 # this tuple structure holds data of a delimited file
