@@ -248,10 +248,12 @@ class ClusterMembershipTest(unittest.TestCase):
                                           [4.0, 5.0, 6.0, 7.0],
                                           [7.0, 8.0, 9.0, 10.0]])
         result = memb.get_best_clusters(matrix, 2)
-        self.assertEquals([4, 3], result['Row 0'])
-        self.assertEquals([4, 3], result['Row 1'])
-        self.assertEquals([4, 3], result['Row 2'])
-        #print result
+        self.assertTrue(len(result['Row 0']) == 2 and
+                        3 in result['Row 0'] and 4 in result['Row 0'])
+        self.assertTrue(len(result['Row 1']) == 2 and
+                        3 in result['Row 1'] and 4 in result['Row 1'])
+        self.assertTrue(len(result['Row 2']) == 2 and
+                        3 in result['Row 2'] and 4 in result['Row 2'])
 
     def test_reseed_empty_row_clusters(self):
         row_names = ['R1', 'R2', 'R3', 'R4', 'R5']

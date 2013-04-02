@@ -687,14 +687,12 @@ def get_best_clusters(scores, num_per_cluster):
     row/column score matrix"""
     result = {}
     for row in xrange(scores.num_rows):
-        row_values = scores.row_values(row)
-        row_values = [value for value in row_values]  # compatibility hack
+        row_values = [value for value in scores.row_values(row)]
+        #row_values = [value for value in row_values]  # compatibility hack
         ranked_scores = sorted(row_values, reverse=True)
         rowname = scores.row_names[row]
-        result[rowname] = []
-        for index in xrange(num_per_cluster):
-            result[rowname].append(row_values.index(
-                    ranked_scores[index]) + 1)
+        result[rowname] = {row_values.index(ranked_scores[index]) + 1
+                           for index in xrange(num_per_cluster)}
     return result
 
 
