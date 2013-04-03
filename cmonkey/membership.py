@@ -709,11 +709,11 @@ def get_density_scores(membership, row_scores, col_scores):
 
     start_time = util.current_millis()
     for cluster in xrange(1, num_clusters + 1):
-        rr_scores = __get_rr_scores(membership, row_scores, rowscore_bandwidth,
-                                    cluster)
         # instead of assigning the rr_scores values per row, we can assign to the
         # transpose and let numpy do the assignment
-        rds_values.T[cluster - 1] = rr_scores
+        rds_values.T[cluster - 1] = __get_rr_scores(membership, row_scores,
+                                                    rowscore_bandwidth,
+                                                    cluster)
 
     elapsed = util.current_millis() - start_time
     logging.info("RR_SCORES IN %f s.", elapsed / 1000.0)
@@ -728,11 +728,11 @@ def get_density_scores(membership, row_scores, col_scores):
 
     start_time = util.current_millis()
     for cluster in xrange(1, num_clusters + 1):
-        cc_scores = __get_cc_scores(membership, col_scores, colscore_bandwidth,
-                                    cluster)
         # instead of assigning the cc_scores values per row, we can assign to the
         # transpose and let numpy do the assignment
-        cds_values.T[cluster - 1] = cc_scores
+        cds_values.T[cluster - 1] = __get_cc_scores(membership, col_scores,
+                                                    colscore_bandwidth,
+                                                    cluster)
 
     elapsed = util.current_millis() - start_time
     logging.info("CC_SCORES IN %f s.", elapsed / 1000.0)
