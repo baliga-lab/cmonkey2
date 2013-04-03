@@ -308,7 +308,7 @@ class DataMatrixFactory:
 
         for matrix_filter in self.filters:
             data_matrix = matrix_filter(data_matrix)
-        return data_matrix
+        return data_matrix.sorted_by_row_name()
 
 
 FILTER_THRESHOLD = 0.98

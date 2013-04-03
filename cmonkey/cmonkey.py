@@ -41,6 +41,7 @@ See README and LICENSE for details.\n"""
         infile = util.read_dfile(matrix_filename, has_header=True, quote='\"')
 
     matrix = matrix_factory.create_from(infile)
+    infile = None
     # num_cluster=250 for halo_ref
     cmonkey_run = cmonkey_run.CMonkeyRun(args.organism, matrix,
                                          string_file=string_file)

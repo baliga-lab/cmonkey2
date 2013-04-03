@@ -47,7 +47,7 @@ class CMonkeyRun:
         self.__membership = None
         self.__organism = None
         self.config_params = {}
-        self.ratio_matrix = ratio_matrix.sorted_by_row_name()
+        self.ratio_matrix = ratio_matrix
 
         # membership update default parameters
         # these come first, since a lot depends on clustering numbers
@@ -496,6 +496,10 @@ class CMonkeyRun:
                  for row_name in self.ratio_matrix.row_names]
         self.gene_indexes = {genes[index]: index
                              for index in xrange(len(genes))}
+        # mark available for GC
+        genes = None
+        thesaurus = None
+        membership = self.membership()
 
         for iteration in range(self['start_iteration'],
                                self['num_iterations'] + 1):
@@ -508,10 +512,10 @@ class CMonkeyRun:
             elapsed = util.current_millis() - start_time
             logging.info("computed column_scores in %f s.", elapsed / 1000.0)
 
-            self.membership().update(self.ratio_matrix, rscores, cscores,
+            membership.update(self.ratio_matrix, rscores, cscores,
                                      self['num_iterations'], iteration_result)
-            self.membership().reseed_empty_row_clusters(self.ratio_matrix.row_names)
-            self.membership().reseed_empty_column_clusters(self.ratio_matrix.column_names)
+            membership.reseed_empty_row_clusters(self.ratio_matrix.row_names)
+            membership.reseed_empty_column_clusters(self.ratio_matrix.column_names)
 
             if (iteration > 0 and self['checkpoint_interval']
                 and iteration % self['checkpoint_interval'] == 0):
@@ -542,10 +546,10 @@ class CMonkeyRun:
             #print "# MOT SCORING: ", sizes.asizeof(self.motif_scoring)
             #print "# NET SCORING: ", sizes.asizeof(self.network_scoring)
             #print "# COL SCORING: ", sizes.asizeof(col_scoring)
-            #print "# MEMBERSHIP: ", sizes.asizeof(self.membership())
+            #print "# MEMBERSHIP: ", sizes.asizeof(membership)
 
         logging.info("Postprocessing: Adjusting the clusters....")
-        self.membership().postadjust()
+        membership.postadjust()
         iteration = self['num_iterations'] + 1
         iteration_result = {'iteration': iteration}
         logging.info("Adjusted. Now re-run scoring (iteration: %d)", iteration_result['iteration'])
