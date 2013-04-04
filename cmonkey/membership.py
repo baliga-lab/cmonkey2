@@ -568,7 +568,6 @@ class ClusterMembership:
 
 # Parallelized updating of row and column membership changes
 UPDATE_MEMBERSHIP = None
-COLNAMES = None
 ROWNAMES = None
 BEST_CLUSTERS = None
 CHANGE_PROBABILITY = None
@@ -586,7 +585,12 @@ def update_for_rows(membership, rd_scores, multiprocessing):
 
     if multiprocessing:
         pool = mp.Pool()
-        llist = pool.map(compute_update_row_cluster_pairs, xrange(rd_scores.num_rows))
+
+        chunksize = max(1, rd_scores.num_rows / mp.cpu_count() / 2)
+        logging.info("processing RD scores with chunksize: %d", chunksize)
+        llist = pool.map(compute_update_row_cluster_pairs, xrange(rd_scores.num_rows),
+                         chunksize=chunksize)
+
         pool.close()
         pool.join()
         result = [item for sublist in llist for item in sublist]
@@ -623,26 +627,35 @@ def compute_update_row_cluster_pairs(row):
 
 def update_for_cols(membership, cd_scores, multiprocessing):
     """updating column memberships according to cd_scores"""
-    global UPDATE_MEMBERSHIP, COLNAMES, BEST_CLUSTERS, CHANGE_PROBABILITY, MAX_CHANGES
+    global UPDATE_MEMBERSHIP
 
-    MAX_CHANGES = membership.max_changes_per_col()
-    BEST_CLUSTERS = get_best_clusters(cd_scores, membership.num_clusters_per_column())
-    CHANGE_PROBABILITY = membership.probability_seeing_col_change()
+    max_changes = membership.max_changes_per_col()
+    change_prob = membership.probability_seeing_col_change()
     UPDATE_MEMBERSHIP = membership
-    COLNAMES = cd_scores.row_names
+    colnames = cd_scores.row_names
+    best_clusters = get_best_clusters(cd_scores, membership.num_clusters_per_column())
 
     start_time = util.current_millis()
 
     if multiprocessing:
         pool = mp.Pool()
-        llist = pool.map(compute_update_col_cluster_pairs, xrange(cd_scores.num_rows))
+        data = [(colnames[index], best_clusters[colnames[index]],
+                 seeing_change(change_prob), max_changes)
+                for index in range(cd_scores.num_rows)]
+        best_clusters = None  # get rid of the temp data
+        chunksize = max(1, len(data) / mp.cpu_count() / 2)
+        logging.info("processing CD scores with chunksize: %d", chunksize)
+        llist = pool.map(compute_update_col_cluster_pairs, data, chunksize=chunksize)
         result = [item for sublist in llist for item in sublist]
         pool.close()
         pool.join()
     else:
         result = []
-        for row in xrange(cd_scores.num_rows):
-            result.extend(compute_update_col_cluster_pairs(row))
+        for i in xrange(cd_scores.num_rows):
+            result.extend(compute_update_col_cluster_pairs((colnames[i],
+                                                            best_clusters[colnames[i]],
+                                                            seeing_change(change_prob),
+                                                            max_changes)))
 
     elapsed = util.current_millis() - start_time
     logging.info("computed update_for cdscores in %f s. Result size = %d",
@@ -660,19 +673,18 @@ def update_for_cols(membership, cd_scores, multiprocessing):
     elapsed = util.current_millis() - start_time
     logging.info("updated column clusters in update_for in %f s.", elapsed / 1000.0)
 
-def compute_update_col_cluster_pairs(index):
-    """The map() part to detemine the new column-cluster pairs"""
-    global UPDATE_MEMBERSHIP, COLNAMES, BEST_CLUSTERS, CHANGE_PROBABILITY, MAX_CHANGES
 
-    colname = COLNAMES[index]
-    best_members = BEST_CLUSTERS[colname]
-    if (not UPDATE_MEMBERSHIP.is_column_in_clusters(colname, best_members) and
-        seeing_change(CHANGE_PROBABILITY)):
+def compute_update_col_cluster_pairs(param):
+    """The map() part to detemine the new column-cluster pairs"""
+    global UPDATE_MEMBERSHIP
+    colname, best_members, do_change, max_changes = param
+
+    if (do_change and (not UPDATE_MEMBERSHIP.is_column_in_clusters(colname, best_members))):
         cluster_columns = set(UPDATE_MEMBERSHIP.clusters_for_column(colname))
         change_clusters = [cluster for cluster in best_members
                            if cluster not in cluster_columns]
         return [(colname, change_clusters[change])
-                for change in xrange(min(MAX_CHANGES, len(change_clusters)))]
+                for change in xrange(min(max_changes, len(change_clusters)))]
     else:
         return []
 
