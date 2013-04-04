@@ -568,28 +568,26 @@ class ClusterMembership:
 
 # Parallelized updating of row and column membership changes
 UPDATE_MEMBERSHIP = None
-ROWNAMES = None
-BEST_CLUSTERS = None
-CHANGE_PROBABILITY = None
-MAX_CHANGES = None
 
 def update_for_rows(membership, rd_scores, multiprocessing):
     """generically updating row memberships according to  rd_scores"""
-    global UPDATE_MEMBERSHIP, ROWNAMES, BEST_CLUSTERS, CHANGE_PROBABILITY, MAX_CHANGES
+    global UPDATE_MEMBERSHIP
 
-    MAX_CHANGES = membership.max_changes_per_row()
-    BEST_CLUSTERS = get_best_clusters(rd_scores, membership.num_clusters_per_row())
     UPDATE_MEMBERSHIP = membership
-    ROWNAMES = rd_scores.row_names
-    CHANGE_PROBABILITY = membership.probability_seeing_row_change()
+    rownames = rd_scores.row_names
+    best_clusters = get_best_clusters(rd_scores, membership.num_clusters_per_row())
+    max_changes = membership.max_changes_per_row()
+    change_prob = membership.probability_seeing_row_change()
 
     if multiprocessing:
         pool = mp.Pool()
-
         chunksize = max(1, rd_scores.num_rows / mp.cpu_count() / 2)
         logging.info("processing RD scores with chunksize: %d", chunksize)
-        llist = pool.map(compute_update_row_cluster_pairs, xrange(rd_scores.num_rows),
-                         chunksize=chunksize)
+        data = [(rownames[index], best_clusters[rownames[index]],
+                 seeing_change(change_prob), max_changes)
+                for index in xrange(rd_scores.num_rows)]
+        best_clusters = None
+        llist = pool.map(compute_update_row_cluster_pairs, data, chunksize=chunksize)
 
         pool.close()
         pool.join()
@@ -597,7 +595,10 @@ def update_for_rows(membership, rd_scores, multiprocessing):
     else:
         result = []
         for row in xrange(rd_scores.num_rows):
-            result.extend(compute_update_row_cluster_pairs(row))
+            result.extend(compute_update_row_cluster_pairs((rownames[index],
+                                                            best_clusters[rownames[index]],
+                                                            seeing_change(change_prob),
+                                                            max_changes)))
     UPDATE_MEMBERSHIP = None
     for row, cluster in result:
         # Ways to add a member to a cluster:
@@ -609,18 +610,18 @@ def update_for_rows(membership, rd_scores, multiprocessing):
         else:
             membership.replace_lowest_scoring_row_member(row, cluster, rd_scores)
 
-def compute_update_row_cluster_pairs(row):
+
+def compute_update_row_cluster_pairs(param):
     """The map() part to detemine the new row-cluster pairs"""
-    global UPDATE_MEMBERSHIP, ROWNAMES, BEST_CLUSTERS, CHANGE_PROBABILITY, MAX_CHANGES
-    rowname = ROWNAMES[row]
-    best_members = BEST_CLUSTERS[rowname]
-    if (not UPDATE_MEMBERSHIP.is_row_in_clusters(rowname, best_members) and
-        seeing_change(CHANGE_PROBABILITY)):
+    global UPDATE_MEMBERSHIP
+    rowname, best_members, do_change, max_changes = param
+
+    if (do_change and (not UPDATE_MEMBERSHIP.is_row_in_clusters(rowname, best_members))):
         cluster_rows = set(UPDATE_MEMBERSHIP.clusters_for_row(rowname))
         change_clusters = [cluster for cluster in best_members
                            if cluster not in cluster_rows]
         return [(rowname, change_clusters[change])
-                for change in xrange(min(MAX_CHANGES, len(change_clusters)))]
+                for change in xrange(min(max_changes, len(change_clusters)))]
     else:
         return []
 
@@ -641,10 +642,9 @@ def update_for_cols(membership, cd_scores, multiprocessing):
         pool = mp.Pool()
         data = [(colnames[index], best_clusters[colnames[index]],
                  seeing_change(change_prob), max_changes)
-                for index in range(cd_scores.num_rows)]
+                for index in xrange(cd_scores.num_rows)]
         best_clusters = None  # get rid of the temp data
         chunksize = max(1, len(data) / mp.cpu_count() / 2)
-        logging.info("processing CD scores with chunksize: %d", chunksize)
         llist = pool.map(compute_update_col_cluster_pairs, data, chunksize=chunksize)
         result = [item for sublist in llist for item in sublist]
         pool.close()
