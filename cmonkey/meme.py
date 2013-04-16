@@ -123,10 +123,17 @@ class MemeSuite:
 
         # run mast
         meme_outfile = None
-        with tempfile.NamedTemporaryFile(prefix='meme.out.',
-                                         delete=False) as outfile:
-            meme_outfile = outfile.name
-            outfile.write(output)
+        if params.keep_memeout:
+            meme_outfile = 'meme-out-%d-%d' % (params.iteration, params.cluster)
+            with open(meme_outfile, 'w') as outfile:
+                outfile.write(output)
+        else:
+            with tempfile.NamedTemporaryFile(prefix='meme.out.',
+                                             delete=False) as outfile:
+                meme_outfile = outfile.name
+                outfile.write(output)
+
+
         logging.info('wrote meme output to %s', meme_outfile)
         dbfile = self.make_sequence_file(
             [(feature_id, locseq[1])
@@ -147,7 +154,8 @@ class MemeSuite:
                 except:
                     logging.warn("could not remove tmp file: '%s'", seqfile)
                 try:
-                    os.remove(meme_outfile)
+                    if not params.keep_memeout:
+                        os.remove(meme_outfile)
                 except:
                     logging.warn("could not remove tmp file: '%s'", meme_outfile)
                 try:

@@ -22,10 +22,11 @@ import cPickle
 import collections
 
 ComputeScoreParams = collections.namedtuple('ComputeScoreParams',
-                                            ['cluster', 'feature_ids', 'seqs', 'used_seqs',
+                                            ['iteration',
+                                             'cluster', 'feature_ids', 'seqs', 'used_seqs',
                                              'meme_runner', 'min_cluster_rows',
                                              'max_cluster_rows', 'num_motifs',
-                                             'previous_motif_infos'])
+                                             'previous_motif_infos', 'keep_memeout'])
 
 
 def default_nmotif_fun(iteration, num_iterations):
@@ -207,7 +208,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             num_motifs = self.num_motif_func(iteration,
                                              self.config_params['num_iterations'])
             self.__last_iteration_result = {}
-            all_pvalues = self.compute_pvalues(self.__last_iteration_result,
+            all_pvalues = self.compute_pvalues(iteration,
+                                               self.__last_iteration_result,
                                                num_motifs)
             with open(self.pickle_path(), 'w') as outfile:
                 cPickle.dump(all_pvalues, outfile)
@@ -276,7 +278,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             matrix, self.membership(),  self.organism)
         return matrix
 
-    def compute_pvalues(self, iteration_result, num_motifs):
+    def compute_pvalues(self, iteration, iteration_result, num_motifs):
         """Compute motif scores.
         The result is a dictionary from cluster -> (feature_id, pvalue)
         containing a sparse gene-to-pvalue mapping for each cluster
@@ -321,7 +323,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             else:
                 previous_motif_infos = None
 
-            params.append(ComputeScoreParams(cluster,
+            params.append(ComputeScoreParams(iteration, cluster,
                                              feature_ids,
                                              seqs,
                                              self.used_seqs,
@@ -329,7 +331,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                                              min_cluster_rows_allowed,
                                              max_cluster_rows_allowed,
                                              num_motifs,
-                                             previous_motif_infos))
+                                             previous_motif_infos,
+                                             self.config_params['keep_memeout']))
 
         # create motif result map if necessary
         for cluster in xrange(1, self.num_clusters() + 1):
