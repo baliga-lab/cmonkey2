@@ -141,7 +141,7 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                       st.Location('contig1', 15, 21, False)),
                   'gene3': st.Feature('feature3', 'typ2', 'feature_name3',
                                       st.Location('contig1', 100, 154, False))
-                  }))
+                  }), check_size=False)
         self.assertEquals(3, network.num_edges())
         self.assertEquals(6000, network.total_score())
         self.assertEquals(123, network.weight)

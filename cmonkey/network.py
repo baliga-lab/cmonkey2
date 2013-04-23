@@ -65,8 +65,10 @@ class Network:
                                                len(self.edges))
 
     @classmethod
-    def create(cls, name, edges, weight):
+    def create(cls, name, edges, weight, check_size=True):
         """standard Factory method"""
+        if edges == None:
+            raise Exception("no edges specified in network '%s'" % name)
         added = {}
         network_edges = []
 
@@ -78,6 +80,9 @@ class Network:
             added[key] = True
             added[key_rev] = True
 
+        if check_size and len(network_edges) < 10:
+            raise Exception("Error: only %d edges in network '%s'" % (len(network_edges), name))
+        logging.info("Created network '%s' with %d edges", name, len(network_edges))
         return Network(name, network_edges, weight, 0)
 
 
