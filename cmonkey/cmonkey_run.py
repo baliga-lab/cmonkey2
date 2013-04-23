@@ -91,7 +91,7 @@ class CMonkeyRun:
         self['string_file'] = string_file
         self['out_database'] = self['output_dir'] + '/cmonkey_run.db'
 
-        self['keep_memeout'] = True
+        self['keep_memeout'] = False
 
         today = date.today()
         self['checkpoint_interval'] = 100

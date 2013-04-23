@@ -332,7 +332,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                                              max_cluster_rows_allowed,
                                              num_motifs,
                                              previous_motif_infos,
-                                             self.config_params['keep_memeout']))
+                                             self.config_params.get('keep_memeout', False)))
 
         # create motif result map if necessary
         for cluster in xrange(1, self.num_clusters() + 1):
