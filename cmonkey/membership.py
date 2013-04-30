@@ -92,9 +92,9 @@ class ClusterMembership:
             result = {}
             for row_index in xrange(len(names)):
                 row = membership[row_index]
-                result[names[row_index]] = sorted([row[col_index] for col_index
-                                                   in xrange(len(row))
-                                                   if row[col_index] > 0])
+                result[names[row_index]] = sorted(set(
+                    [row[col_index] for col_index in xrange(len(row))
+                     if row[col_index] > 0]))
             return result
 
         # using the seeding functions, build the initial membership
