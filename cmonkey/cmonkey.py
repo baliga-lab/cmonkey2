@@ -9,6 +9,7 @@ import cmonkey_run
 import datamatrix as dm
 import util
 import argparse
+import logging
 
 
 if __name__ == '__main__':
@@ -25,6 +26,8 @@ See README and LICENSE for details.\n"""
     parser.add_argument('--string',
                         help='tab-separated STRING file for the organism')
     parser.add_argument('--checkpoint', help='checkpoint-file')
+    parser.add_argument('--checkratios', default=True,
+                        help='check gene expression quality')
     args = parser.parse_args()
 
     string_file = args.string
@@ -47,7 +50,25 @@ See README and LICENSE for details.\n"""
                                          string_file=string_file)
     cmonkey_run['output_dir'] = args.out
     cmonkey_run['out_database'] = os.path.join(args.out, 'cmonkey_run.db')
-    if args.checkpoint:
-        cmonkey_run.run_from_checkpoint(args.checkpoint)
+
+    proceed = True
+    if bool(args.checkratios):
+        thesaurus = cmonkey_run.organism().thesaurus()
+        logging.info("Checking the quality of the input matrix names...")
+        found = [name for name in matrix.row_names if name in thesaurus]
+        num_found = len(found)
+        total = len(matrix.row_names)
+        percent = (float(num_found) / float(total)) * 100.0
+        proceed = percent > 50.0
+
+    if proceed:
+       logging.error("""# genes found: %d, # total: %d, %f %% - please check
+ your ratios file""",
+                     num_found, total, percent)
+       print "found: ", found
     else:
-        cmonkey_run.run()
+        logging.info("%f %% of genes found, proceed", percent)
+        if args.checkpoint:
+            cmonkey_run.run_from_checkpoint(args.checkpoint)
+        else:
+            cmonkey_run.run()

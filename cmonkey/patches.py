@@ -16,6 +16,11 @@ def patch_mo_gene(code, gene):
         elif re.compile('BT\d+').match(gene):
             # BT1234 -> BT_1234
             return gene.replace('BT', 'BT_')
+    elif code == 'son':
+        if re.compile('SO\d+').match(gene):
+            # SO1234 -> SO_1234
+            return gene.replace('SO', 'SO_')
+            
     return gene
 
 def patch_string_gene(code, gene):

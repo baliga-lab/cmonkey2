@@ -531,6 +531,8 @@ class ClusterMembership:
                 if len(pick_row_names) > 0:
                     row_name = pick_row_names[random.randint(0, len(pick_row_names) - 1)]
                     self.add_cluster_to_row(row_name, cluster)
+                else:
+                    logging.warn("no rows available to stick the cluster %d into", cluster)
 
     def reseed_empty_column_clusters(self, column_names):
         """prevent empty clusters by taking a random row and adding
@@ -547,6 +549,8 @@ class ClusterMembership:
                 if len(pick_col_names) > 0:
                     col_name = pick_col_names[random.randint(0, len(pick_col_names) - 1)]
                     self.add_cluster_to_column(col_name, cluster)
+                else:
+                    logging.warn("no columns available to stick cluster %d into", cluster)
 
     def store_checkpoint_data(self, shelf):
         """Save memberships into checkpoint"""
