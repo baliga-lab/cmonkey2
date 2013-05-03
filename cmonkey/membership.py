@@ -825,6 +825,7 @@ def compensate_size(membership, matrix, rd_scores, cd_scores):
     def compensate_rows(cluster):
         """compensate density scores for row dimension"""
         num_rowmembers = membership.num_row_members(cluster)
+        """
         if num_rowmembers > 0:
             rd_scores.multiply_column_by(
                 cluster - 1, compensate_row_size(num_rowmembers))
@@ -832,11 +833,16 @@ def compensate_size(membership, matrix, rd_scores, cd_scores):
             logging.warn("CLUSTER %d has 0 members now ! Compensating...", cluster)
             rd_scores.multiply_column_by(
                 cluster - 1,
-                compensate_row_size(membership.min_cluster_rows_allowed()))            
+                compensate_row_size(membership.min_cluster_rows_allowed()))            """
+        rd_scores.multiply_column_by(
+            cluster - 1,
+            compensate_row_size(max(num_rowmembers,
+                                    membership.min_cluster_rows_allowed())))
 
     def compensate_columns(cluster):
         """compensate density scores for column dimension"""
         num_colmembers = membership.num_column_members(cluster)
+        """
         if num_colmembers > 0:
             cd_scores.multiply_column_by(
                 cluster - 1, compensate_column_size(num_colmembers))
@@ -844,6 +850,11 @@ def compensate_size(membership, matrix, rd_scores, cd_scores):
             cd_scores.multiply_column_by(
                 cluster - 1,
                 compensate_column_size(matrix.num_columns / 10.0))
+                """
+        cd_scores.multiply_column_by(
+            cluster - 1,
+            compensate_column_size(max(num_colmembers,
+                                       matrix.num_columns / 10.0)))
 
     num_clusters = membership.num_clusters()
     for cluster in xrange(1, num_clusters + 1):

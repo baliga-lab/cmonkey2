@@ -61,11 +61,10 @@ See README and LICENSE for details.\n"""
         percent = (float(num_found) / float(total)) * 100.0
         proceed = percent > 50.0
 
-    if proceed:
+    if not proceed:
        logging.error("""# genes found: %d, # total: %d, %f %% - please check
  your ratios file""",
                      num_found, total, percent)
-       print "found: ", found
     else:
         logging.info("%f %% of genes found, proceed", percent)
         if args.checkpoint:
