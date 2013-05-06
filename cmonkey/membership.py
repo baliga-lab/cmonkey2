@@ -145,8 +145,12 @@ class ClusterMembership:
         return self.__config_params[KEY_MAX_CHANGES_PER_COL]
 
     def min_cluster_rows_allowed(self):
-        """returns the maximum number of changes per column"""
+        """returns the minimum number of rows that should be in a cluster"""
         return self.__config_params[KEY_MIN_CLUSTER_ROWS_ALLOWED]
+
+    def min_cluster_columns_allowed(self):
+        """returns the minimum number of columns that should be in a cluster"""
+        return 0
 
     def clusters_for_row(self, row_name):
         """determine the clusters for the specified row"""
@@ -516,7 +520,7 @@ class ClusterMembership:
                      cluster, old_num, old_num + len(result))
         return result
 
-    def reseed_empty_row_clusters(self, row_names):
+    def reseed_small_row_clusters(self, row_names):
         """prevent empty clusters by taking a random row and adding
         it to an empty cluster"""
         for cluster in xrange(1, self.num_clusters() + 1):
@@ -534,7 +538,7 @@ class ClusterMembership:
                 else:
                     logging.warn("no rows available to stick the cluster %d into", cluster)
 
-    def reseed_empty_column_clusters(self, column_names):
+    def reseed_small_column_clusters(self, column_names):
         """prevent empty clusters by taking a random row and adding
         it to an empty cluster"""        
         for cluster in xrange(1, self.num_clusters() + 1):
