@@ -37,6 +37,7 @@ KEY_PROB_COL_CHANGE = 'memb.prob_col_change'
 KEY_MAX_CHANGES_PER_ROW = 'memb.max_changes_per_row'
 KEY_MAX_CHANGES_PER_COL = 'memb.max_changes_per_col'
 KEY_MIN_CLUSTER_ROWS_ALLOWED = 'memb.min_cluster_rows_allowed'
+KEY_MAX_CLUSTER_ROWS_ALLOWED = 'memb.max_cluster_rows_allowed'
 
 # These keys are for save points
 KEY_ROW_IS_MEMBER_OF = 'memb.row_is_member_of'
@@ -147,6 +148,10 @@ class ClusterMembership:
     def min_cluster_rows_allowed(self):
         """returns the minimum number of rows that should be in a cluster"""
         return self.__config_params[KEY_MIN_CLUSTER_ROWS_ALLOWED]
+
+    def max_cluster_rows_allowed(self):
+        """returns the maximum number of rows that should be in a cluster"""
+        return self.__config_params[KEY_MAX_CLUSTER_ROWS_ALLOWED]
 
     def min_cluster_columns_allowed(self):
         """returns the minimum number of columns that should be in a cluster"""
