@@ -26,7 +26,7 @@ See README and LICENSE for details.\n"""
     parser.add_argument('--string',
                         help='tab-separated STRING file for the organism')
     parser.add_argument('--checkpoint', help='checkpoint-file')
-    parser.add_argument('--checkratios', default=True,
+    parser.add_argument('--checkratios', default="True",
                         help='check gene expression quality')
     args = parser.parse_args()
 
@@ -52,7 +52,9 @@ See README and LICENSE for details.\n"""
     cmonkey_run['out_database'] = os.path.join(args.out, 'cmonkey_run.db')
 
     proceed = True
-    if bool(args.checkratios):
+    checkratios = args.checkratios == "True"
+    
+    if checkratios:
         thesaurus = cmonkey_run.organism().thesaurus()
         logging.info("Checking the quality of the input matrix names...")
         found = [name for name in matrix.row_names if name in thesaurus]
@@ -66,7 +68,6 @@ See README and LICENSE for details.\n"""
  your ratios file""",
                      num_found, total, percent)
     else:
-        logging.info("%f %% of genes found, proceed", percent)
         if args.checkpoint:
             cmonkey_run.run_from_checkpoint(args.checkpoint)
         else:

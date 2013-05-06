@@ -261,6 +261,8 @@ class ClusterMembershipTest(unittest.TestCase):
             row_is_member_of={'R1': [1, 3], 'R2': [2, 3]},
             column_is_member_of={},
             config_params={'memb.clusters_per_row': 2,
+                           'memb.min_cluster_rows_allowed': 3,
+                           'memb.max_cluster_rows_allowed': 70,
                            'num_clusters': 4})
         membership.reseed_small_row_clusters(row_names)
         for cluster in xrange(1, 5):
