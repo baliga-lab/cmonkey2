@@ -24,7 +24,7 @@ try:
 except ImportError:
     try:
         print "BeautifulSoup 3 not available, trying BeautifulSoup 4..."
-        import bs4 as bs:
+        import bs4 as bs
         print "Found."
     except ImportError:
         # do not use the logging system here !!!
