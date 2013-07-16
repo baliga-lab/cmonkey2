@@ -102,7 +102,7 @@ class RsatOrganismMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_mapper(self):
         """tests the get_organism method for an existing organism"""
-        info = self.mapper('Halobacterium')
+        info = self.mapper('Halobacterium', None)
         self.assertEquals('Halobacterium_sp', info.species)
         self.assertTrue(info.is_eukaryote)
         self.assertEquals('4711', info.taxonomy_id)
@@ -146,9 +146,9 @@ class MicrobeFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """tests creating a Prokaryote"""
         factory = org.MicrobeFactory(
             lambda _: 'KEGG organism',
-            lambda _: org.RsatSpeciesInfo(MockRsatDatabase(''),
-                                          'RSAT_organism',
-                                          False, 4711),
+            lambda x, y: org.RsatSpeciesInfo(MockRsatDatabase(''),
+                                             'RSAT_organism',
+                                             False, 4711),
             mock_go_mapper,
             MockMicrobesOnline(),
             [])
@@ -165,9 +165,9 @@ class MicrobeFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """tests creating an eukaryote"""
         factory = org.MicrobeFactory(
             lambda _: 'KEGG organism',
-            lambda _: org.RsatSpeciesInfo(MockRsatDatabase(''),
-                                          'RSAT_organism',
-                                          True, 4711),
+            lambda x, y: org.RsatSpeciesInfo(MockRsatDatabase(''),
+                                             'RSAT_organism',
+                                             True, 4711),
             lambda _: 'GO taxonomy id',
             MockMicrobesOnline(),
             [])

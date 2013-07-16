@@ -40,7 +40,8 @@ class CMonkeyRun:
     def __init__(self, organism_code, ratio_matrix,
                  string_file=None,
                  num_clusters=None,
-                 use_operons=True):
+                 use_operons=True,
+                 rsat_organism=None):
         logging.basicConfig(format=LOG_FORMAT,
                             datefmt='%Y-%m-%d %H:%M:%S',
                             level=logging.DEBUG,
@@ -66,6 +67,7 @@ class CMonkeyRun:
         self['organism_code'] = organism_code
         self['num_clusters'] = num_clusters
         self['use_operons'] = use_operons
+        self['rsat_organism'] = rsat_organism
         logging.info("# CLUSTERS: %d", self['num_clusters'])
         logging.info("use operons: %d", self['use_operons'])
 
@@ -278,7 +280,8 @@ class CMonkeyRun:
 
         # automatically download STRING file
         if stringfile == None:
-            rsat_info = rsat_mapper(kegg_mapper(self['organism_code']))
+            rsat_info = rsat_mapper(kegg_mapper(self['organism_code']),
+                                    self['rsat_organism'])
             ncbi_code = rsat_info.taxonomy_id
             logging.info("NCBI CODE IS: %s", ncbi_code)
             url = STRING_URL_PATTERN % ncbi_code
@@ -299,7 +302,6 @@ class CMonkeyRun:
             nw_factories.append(microbes_online.get_network_factory(
                     mo_db, max_operon_size=self.ratio_matrix.num_rows / 20,
                     weight=0.5))
-            
 
         org_factory = org.MicrobeFactory(kegg_mapper,
                                          rsat_mapper,
@@ -308,7 +310,9 @@ class CMonkeyRun:
                                          nw_factories)
         return org_factory.create(self['organism_code'],
                                   self['search_distances'],
-                                  self['scan_distances'])
+                                  self['scan_distances'],
+                                  self['use_operons'],
+                                  self['rsat_organism'])
 
     def __make_dirs_if_needed(self):
         output_dir = self['output_dir']

@@ -30,6 +30,8 @@ See README and LICENSE for details.\n"""
                         help="""don't use operons in retrieving features and networks""")
     parser.add_argument('--checkratios', default="True",
                         help='check gene expression quality')
+    parser.add_argument('--rsat_organism', default=None,
+                        help="""override the RSAT organism name""")
     args = parser.parse_args()
 
     string_file = args.string
@@ -50,7 +52,8 @@ See README and LICENSE for details.\n"""
     # num_cluster=250 for halo_ref
     cmonkey_run = cmonkey_run.CMonkeyRun(args.organism, matrix,
                                          string_file=string_file,
-                                         use_operons=args.no_operons == "False")
+                                         use_operons=args.no_operons == "False",
+                                         rsat_organism=args.rsat_organism)
     cmonkey_run['output_dir'] = args.out
     cmonkey_run['out_database'] = os.path.join(args.out, 'cmonkey_run.db')
 
