@@ -157,7 +157,7 @@ class Microbe(OrganismBase):
                  go_taxonomy_id, microbes_online_db,
                  network_factories,
                  search_distances, scan_distances,
-                 use_operons):
+                 use_operons=True):
         """create an Organism instance"""
         # microbe-specific network factories need access to synonyms
         # and rsat info, so initialize them here before the base class
@@ -244,7 +244,16 @@ class Microbe(OrganismBase):
             return self.__read_sequences(features, distance,
                                          st.extract_upstream)
 
-        shifted_pairs = do_operon_shift()
+        if self.__use_operons:
+            shifted_pairs = do_operon_shift()
+        else:
+            # if operons should not be used, we simply map
+            # the gene heads to themselves
+            synonyms = self.thesaurus()
+            genes = [synonyms[alias]
+                     for alias in gene_aliases if alias in synonyms]
+            shifted_pairs = [(gene, gene) for gene in genes]
+
         unique_seqs = unique_sequences(shifted_pairs)
         outseqs = {}
         for gene, head in shifted_pairs:
