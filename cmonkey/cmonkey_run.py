@@ -39,7 +39,8 @@ RESULT_FREQ = 50
 class CMonkeyRun:
     def __init__(self, organism_code, ratio_matrix,
                  string_file=None,
-                 num_clusters=None):
+                 num_clusters=None,
+                 use_operons=True):
         logging.basicConfig(format=LOG_FORMAT,
                             datefmt='%Y-%m-%d %H:%M:%S',
                             level=logging.DEBUG,
@@ -64,7 +65,9 @@ class CMonkeyRun:
 
         self['organism_code'] = organism_code
         self['num_clusters'] = num_clusters
+        self['use_operons'] = use_operons
         logging.info("# CLUSTERS: %d", self['num_clusters'])
+        logging.info("use operons: %d", self['use_operons'])
 
         # defaults
         self.row_seeder = memb.make_kmeans_row_seeder(num_clusters)
@@ -291,9 +294,12 @@ class CMonkeyRun:
         else:
             logging.warn("no STRING file specified !")
 
-        nw_factories.append(microbes_online.get_network_factory(
-                mo_db, max_operon_size=self.ratio_matrix.num_rows / 20,
-                weight=0.5))
+        if self['use_operons']:
+            logging.info('adding operon network factory')
+            nw_factories.append(microbes_online.get_network_factory(
+                    mo_db, max_operon_size=self.ratio_matrix.num_rows / 20,
+                    weight=0.5))
+            
 
         org_factory = org.MicrobeFactory(kegg_mapper,
                                          rsat_mapper,

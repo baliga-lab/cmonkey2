@@ -98,7 +98,7 @@ class MicrobeFactory:
         self.__network_factories = network_factories
 
     def create(self, organism_code, search_distances,
-               scan_distances):
+               scan_distances, use_operons=True):
         """factory method to create an organism from a code"""
         logging.info("Creating organism object for code '%s'...",
                      organism_code)
@@ -113,7 +113,9 @@ class MicrobeFactory:
                        go_taxonomy_id,
                        self.__microbes_online_db,
                        self.__network_factories,
-                       search_distances, scan_distances)
+                       search_distances,
+                       scan_distances,
+                       use_operons)
 
 
 class OrganismBase:
@@ -154,13 +156,15 @@ class Microbe(OrganismBase):
     def __init__(self, code, kegg_organism, rsat_info,
                  go_taxonomy_id, microbes_online_db,
                  network_factories,
-                 search_distances, scan_distances):
+                 search_distances, scan_distances,
+                 use_operons):
         """create an Organism instance"""
         # microbe-specific network factories need access to synonyms
         # and rsat info, so initialize them here before the base class
         # init
         self.__synonyms = None  # lazy loaded
         self.__rsat_info = rsat_info
+        self.__use_operons = use_operons
         logging.info("RSAT taxonomy id = %s" % rsat_info.taxonomy_id)
 
         OrganismBase.__init__(self, code, network_factories)

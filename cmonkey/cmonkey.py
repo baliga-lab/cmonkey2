@@ -26,6 +26,8 @@ See README and LICENSE for details.\n"""
     parser.add_argument('--string',
                         help='tab-separated STRING file for the organism')
     parser.add_argument('--checkpoint', help='checkpoint-file')
+    parser.add_argument('--no_operons', default="False",
+                        help="""don't use operons in retrieving features and networks""")
     parser.add_argument('--checkratios', default="True",
                         help='check gene expression quality')
     args = parser.parse_args()
@@ -47,7 +49,8 @@ See README and LICENSE for details.\n"""
     infile = None
     # num_cluster=250 for halo_ref
     cmonkey_run = cmonkey_run.CMonkeyRun(args.organism, matrix,
-                                         string_file=string_file)
+                                         string_file=string_file,
+                                         use_operons=args.no_operons == "False")
     cmonkey_run['output_dir'] = args.out
     cmonkey_run['out_database'] = os.path.join(args.out, 'cmonkey_run.db')
 
