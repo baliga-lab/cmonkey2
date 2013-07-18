@@ -21,6 +21,11 @@ Testing
 * csh (for running MEME)
 for the human setup, Weeder 1.4.2 is needed
 
+for running the cluster viewer (optional):
+
+* Java JDK (Oracle or OpenJDK) >= 6
+* Play Framework >= 2.1
+
 ### Running the Unit Tests
 
     ./run_tests.sh
@@ -35,10 +40,24 @@ expressions with
 
 The file can be either in your file system or a web URL.
 
+After the program was started, a log file will be written in cmonkey.log. You
+can see all available options with
+
+    ./run_cmonkey.sh --help
+
+
 ### Test Run with Halobacterium Salinarum
 
 There is a startup script for cMonkey to run the current integrated
 system
 
     ./run_cmonkey.sh --organism hal --ratios halo_ratios5.tsv
+
+
+### Start the monitoring application
+
+
+    cd cluster_viewer
+    play
+    run
 
