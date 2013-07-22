@@ -25,14 +25,38 @@ class Network:
         self.name = name
         self.edges = edges
         self.weight = weight
+        self.__compute_edges_with_source()
+
+    def __compute_edges_with_source(self):
         self.edges_with_source = {}
-        for edge in edges:
+        for edge in self.edges:
             if edge[0] not in self.edges_with_source:
                 self.edges_with_source[edge[0]] = []
             if edge[1] not in self.edges_with_source:
                 self.edges_with_source[edge[1]] = []
             self.edges_with_source[edge[0]].append(edge)
             self.edges_with_source[edge[1]].append(edge)
+
+    def validate(self, synonyms, genes):
+        # remap first
+        new_edges = []
+        for n0, n1, score in self.edges:
+            n0 = synonyms[n0] if n0 in synonyms else n0
+            n1 = synonyms[n1] if n1 in synonyms else n1
+            new_edges.append((n0, n1, score))
+        self.edges = new_edges
+        self.__compute_edges_with_source()
+
+        # then validate
+        found = []
+        for g in genes:
+            primary = synonyms[g]
+            for n0, n1, score in self.edges:
+                if primary == n0 or primary == n1:
+                    found.append(primary)
+        if len(found) < len(genes) / 2:
+            print edges
+            raise(Exception("only %d genes found in edges" % len(found)))
 
     def num_edges(self):
         """returns the number of edges in this graph"""
@@ -192,6 +216,10 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """networks are cached"""
         if self.__networks == None:
             self.__networks = retrieve_networks(self.__organism)
+            # check validity of networks
+            for network in self.__networks:
+                network.validate(self.__organism.thesaurus(),
+                                 self.gene_names())
         return self.__networks
 
     def __update_score_means(self, network_scores):
