@@ -6,6 +6,7 @@ more information and licensing details.
 """
 import logging
 import util
+import StringIO
 
 
 class RsatDatabase:
@@ -85,7 +86,14 @@ class RsatDatabase:
         cache_file = "/".join([self.cache_dir, organism + '_' + contig])
         url = "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
                         'genome', contig + '.raw'])
-        return util.read_url_cached(url, cache_file).upper()
+        # we take the safer route and assume that the input could
+        # be separated out into lines
+        seqstr = util.read_url_cached(url, cache_file).upper()
+        buf = StringIO.StringIO(seqstr)
+        result = ''
+        for line in buf:
+            result += line.strip()
+        return result
 
 
 __all__ = ['RsatDatabase']

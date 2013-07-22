@@ -41,11 +41,12 @@ class CMonkeyRun:
                  string_file=None,
                  num_clusters=None,
                  use_operons=True,
-                 rsat_organism=None):
+                 rsat_organism=None,
+                 log_filename=None):
         logging.basicConfig(format=LOG_FORMAT,
                             datefmt='%Y-%m-%d %H:%M:%S',
                             level=logging.DEBUG,
-                            filename='cmonkey.log')
+                            filename=log_filename)
         self.__membership = None
         self.__organism = None
         self.config_params = {}

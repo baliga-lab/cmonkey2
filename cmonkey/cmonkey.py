@@ -32,6 +32,8 @@ See README and LICENSE for details.\n"""
                         help='check gene expression quality')
     parser.add_argument('--rsat_organism', default=None,
                         help="""override the RSAT organism name""")
+    parser.add_argument('--logfile', default=None,
+                        help="""path to log file""")
     args = parser.parse_args()
 
     string_file = args.string
@@ -53,7 +55,8 @@ See README and LICENSE for details.\n"""
     cmonkey_run = cmonkey_run.CMonkeyRun(args.organism, matrix,
                                          string_file=string_file,
                                          use_operons=args.no_operons == "False",
-                                         rsat_organism=args.rsat_organism)
+                                         rsat_organism=args.rsat_organism,
+                                         log_filename=args.logfile)
     cmonkey_run['output_dir'] = args.out
     cmonkey_run['out_database'] = os.path.join(args.out, 'cmonkey_run.db')
 
