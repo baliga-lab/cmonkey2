@@ -50,7 +50,7 @@ class Network:
         # then validate
         found = []
         for g in genes:
-            primary = synonyms[g]
+            primary = synonyms.get(g, g)
             for n0, n1, score in self.edges:
                 if primary == n0 or primary == n1:
                     found.append(primary)
@@ -216,10 +216,12 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """networks are cached"""
         if self.__networks == None:
             self.__networks = retrieve_networks(self.__organism)
-            # check validity of networks
-            for network in self.__networks:
-                network.validate(self.__organism.thesaurus(),
-                                 self.gene_names())
+            if self.config_params['remap_network_nodes']:
+                # network names are non-primary, this can happen
+                # when the user makes up their own data
+                for network in self.__networks:
+                    network.validate(self.__organism.thesaurus(),
+                                     self.gene_names())
         return self.__networks
 
     def __update_score_means(self, network_scores):

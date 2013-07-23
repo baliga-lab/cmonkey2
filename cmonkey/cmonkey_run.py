@@ -42,7 +42,8 @@ class CMonkeyRun:
                  num_clusters=None,
                  use_operons=True,
                  rsat_organism=None,
-                 log_filename=None):
+                 log_filename=None,
+                 remap_network_nodes=False):
         logging.basicConfig(format=LOG_FORMAT,
                             datefmt='%Y-%m-%d %H:%M:%S',
                             level=logging.DEBUG,
@@ -69,6 +70,7 @@ class CMonkeyRun:
         self['num_clusters'] = num_clusters
         self['use_operons'] = use_operons
         self['rsat_organism'] = rsat_organism
+        self['remap_network_nodes'] = remap_network_nodes
         logging.info("# CLUSTERS: %d", self['num_clusters'])
         logging.info("use operons: %d", self['use_operons'])
 
