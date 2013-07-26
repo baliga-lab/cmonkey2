@@ -540,10 +540,6 @@ class ClusterMembership:
                           for cluster in xrange(1, self.num_clusters() + 1)
                           if self.num_row_members(cluster) >=
                           self.max_cluster_rows_allowed()]
-        if len(small_clusters) > 0:
-            print "small row clusters: ", small_clusters
-        if len(large_clusters) > 0:
-            print "large row clusters: ", large_clusters
 
         for cluster in small_clusters:
             logging.warning("# reseeding row cluster %d", cluster)
@@ -565,8 +561,6 @@ class ClusterMembership:
         small_clusters = [cluster
                           for cluster in xrange(1, self.num_clusters() + 1)
                           if self.num_column_members(cluster) == 0]
-        if len(small_clusters) > 0:
-            print "small column clusters: ", small_clusters
 
         for cluster in small_clusters:
             logging.warning("# reseeding column cluster %d", cluster)
@@ -854,15 +848,6 @@ def compensate_size(membership, matrix, rd_scores, cd_scores):
     def compensate_rows(cluster):
         """compensate density scores for row dimension"""
         num_rowmembers = membership.num_row_members(cluster)
-        """
-        if num_rowmembers > 0:
-            rd_scores.multiply_column_by(
-                cluster - 1, compensate_row_size(num_rowmembers))
-        else:
-            logging.warn("CLUSTER %d has 0 members now ! Compensating...", cluster)
-            rd_scores.multiply_column_by(
-                cluster - 1,
-                compensate_row_size(membership.min_cluster_rows_allowed()))            """
         rd_scores.multiply_column_by(
             cluster - 1,
             compensate_row_size(max(num_rowmembers,
@@ -871,15 +856,6 @@ def compensate_size(membership, matrix, rd_scores, cd_scores):
     def compensate_columns(cluster):
         """compensate density scores for column dimension"""
         num_colmembers = membership.num_column_members(cluster)
-        """
-        if num_colmembers > 0:
-            cd_scores.multiply_column_by(
-                cluster - 1, compensate_column_size(num_colmembers))
-        else:
-            cd_scores.multiply_column_by(
-                cluster - 1,
-                compensate_column_size(matrix.num_columns / 10.0))
-                """
         cd_scores.multiply_column_by(
             cluster - 1,
             compensate_column_size(max(num_colmembers,

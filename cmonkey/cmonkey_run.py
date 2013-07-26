@@ -273,6 +273,7 @@ class CMonkeyRun:
 
     def make_microbe(self):
         """returns the organism object to work on"""
+        self.__make_dirs_if_needed()
         keggfile = util.read_dfile(KEGG_FILE_PATH, comment='#')
         gofile = util.read_dfile(GO_FILE_PATH)
         rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, self['cache_dir'])
@@ -318,6 +319,7 @@ class CMonkeyRun:
                                   self['rsat_organism'])
 
     def __make_dirs_if_needed(self):
+        logging.info('creating aux directories')
         output_dir = self['output_dir']
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
