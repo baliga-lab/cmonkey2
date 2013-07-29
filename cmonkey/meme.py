@@ -631,4 +631,18 @@ def global_background_file(organism, gene_aliases, seqtype, bgorder=3,
                  "(%d sequences)", seqtype, len(global_seqs))
     return make_background_file(global_seqs, use_revcomp, bgorder)
 
+
+def check_meme_version():
+    logging.info('checking MEME...')
+    try:
+        command = ['meme', '-nostatus', '-text', 'testdata/fasta_test.fa']
+        output = subprocess.check_output(command).split('\n')
+        for line in output:
+            if line.startswith('MEME version'):
+                return line.split(' ')[2]
+    except OSError:
+        logging.error("MEME does not exist")
+        return None
+        
+    
 __all__ = ['read_meme_output']

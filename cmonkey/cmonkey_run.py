@@ -105,6 +105,12 @@ class CMonkeyRun:
         self['checkpoint_interval'] = 100
         self.__checkpoint_basename = "cmonkey-checkpoint-%s-%d%d%d" % (
             organism_code, today.year, today.month, today.day)
+        self['meme_version'] = meme.check_meme_version()
+        if self['meme_version']:
+            logging.info('using MEME version %s', self['meme_version'])
+        else:
+            logging.error('MEME not detected - please check')
+
 
     def __dbconn(self, isolation_level='DEFERRED'):
         """returns an autocommit database connection"""
@@ -218,7 +224,14 @@ class CMonkeyRun:
             config_params=self.config_params)
         self.row_scoring = row_scoring
 
-        meme_suite = meme.MemeSuite430()
+        if self['meme_version'] == '4.3.0':
+            meme_suite = meme.MemeSuite430()
+        elif self['meme_version'] == '4.8.1' or self['meme_version'] == '4.9.0':
+            meme_suite = meme.MemeSuite481()
+        else:
+            logging.error("MEME version %s currently not supported !", self['meme_version'])
+            raise Exception("unsupported MEME version")
+
         sequence_filters = [
             motif.unique_filter,
             motif.get_remove_low_complexity_filter(meme_suite),
