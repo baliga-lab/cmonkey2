@@ -265,9 +265,26 @@ class MemeSuite481(MemeSuite):
                    '-evt', '1e9', '-minw', '6', '-maxw', str(self.max_width()),
                    '-mod',  'zoops', '-nostatus', '-text']
 
-        ### NOTE: In MEME 4.9.0, there is a bug that makes the -cons option unusable
-        ### ----- We leave it out here so it won't take down the whole cmonkey
-
+        ### NOTE: There is a bug in current MEME 4.9.0, that can cause the
+        ### -cons option to crash
+        ### ----- We leave it out here for now
+        """
+        # if determine the seed sequence (-cons parameter) for this MEME run
+        # uses the PSSM with the smallest score that has an e-value lower
+        # than 0.1
+        if previous_motif_infos != None:
+            max_evalue = 0.1
+            min_evalue = 10000000.0
+            min_motif_info = None
+            for motif_info in previous_motif_infos:
+                if motif_info.evalue < min_evalue:
+                    min_evalue = motif_info.evalue
+                    min_motif_info = motif_info
+            if min_motif_info != None and min_motif_info.evalue < max_evalue:
+                cons = min_motif_info.consensus_string().upper()
+                logging.info("seeding MEME with good motif %s", cons)
+                command.extend(['-cons', cons])
+        """
         if pspfile_path:
             command.extend(['-psp', pspfile_path])
 
