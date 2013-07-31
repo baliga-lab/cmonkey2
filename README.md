@@ -17,7 +17,7 @@ Testing
 * BeautifulSoup >= 3.2.0
 * R >= 2.14.1
 * rpy2 >= 2.2.1
-* MEME 4.3.0
+* MEME 4.3.0 or >= 4.8.1
 * csh (for running MEME)
 for the human setup, Weeder 1.4.2 is needed
 
