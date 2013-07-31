@@ -13,8 +13,10 @@ import seqtools as st
 import os
 import os.path
 import util
+import shutil
 import re
 import collections
+import xml.etree.ElementTree as ET
 
 
 MemeRunResult = collections.namedtuple('MemeRunResult',
@@ -145,8 +147,6 @@ class MemeSuite:
             pe_values, annotations = self.read_mast_output(mast_output,
                                                            input_seqs.keys())
             return MemeRunResult(pe_values, annotations, motif_infos)
-        except:
-            return MemeRunResult([], {}, [])
         finally:
             if self.__remove_tempfiles:
                 #logging.info("DELETING ALL TMP FILES...")
@@ -313,15 +313,23 @@ class MemeSuite481(MemeSuite):
         # note: originally run with -ev 99999, but MAST will crash with
         # memory errors
         dirname = tempfile.mkdtemp(prefix="mastout")
-        command = ['mast', meme_outfile_path, database_file_path,
-                   '-bfile', bgfile_path, '-nostatus',
-                   '-ev', '1500', '-mev', '99999', '-mt', '0.99', '-nohtml',
-                   '-seqp', '-remcorr', '-oc', dirname]
-        logging.info("running: %s", " ".join(command))
-        output = subprocess.check_output(command)
-        with open(os.path.join(dirname, "mast.txt")) as infile:
-            result = infile.read()
-        return result
+        try:
+            command = ['mast', meme_outfile_path, database_file_path,
+                       '-bfile', bgfile_path, '-nostatus',
+                       '-ev', '1500', '-mev', '99999', '-mt', '0.99', '-nohtml',
+                       '-notext', '-seqp', '-remcorr', '-oc', dirname]
+            logging.info("running: %s", " ".join(command))
+            output = subprocess.check_output(command)
+            with open(os.path.join(dirname, "mast.xml")) as infile:
+                result = infile.read()
+            return result
+        except:
+            logging.warn("there is an exception thrown in MAST !!!")
+            return MemeRunResult([], {}, [])
+        finally:
+            print "removing %s..." % dirname
+            shutil.rmtree(dirname)
+            print "done."
 
     def read_mast_output(self, mast_output, genes):
         """XML MAST output"""
@@ -465,7 +473,28 @@ def read_mast_output_xml(output_text, genes):
     Returns: a pair (pevalues, annotations)
     -------- - pevalues is [(gene, pval, eval)]
              - annotations is a dictionary gene -> [(pval, pos, motifnum)]"""
-    return [], {}
+    root = ET.fromstring(output_text)
+    pevalues = []
+    annotations = {}
+    for sequence in root.iter('sequence'):
+        score = sequence.find('score')
+        seqname = sequence.get('name')
+        if not seqname in annotations:
+            annotations[seqname] = []
+        pevalues.append((seqname,
+                         float(score.get('combined_pvalue')),
+                         float(score.get('evalue'))))
+        if seqname in genes:
+            for hit in sequence.iter('hit'):
+                strand = hit.get('strand')
+                motifnum = int(hit.get('motif').replace('motif_', ''))
+                if strand == 'reverse':
+                    motifnum = -motifnum
+                annot = (float(hit.get('pvalue')),
+                         int(hit.get('pos')) + 2,  # like R cmonkey
+                         motifnum)
+                annotations[seqname].append(annot)
+    return pevalues, annotations
 
 def read_mast_output_oldstyle(output_text, genes):
     """Reads out the p-values and e-values and the gene annotations
