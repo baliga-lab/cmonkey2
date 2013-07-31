@@ -52,11 +52,11 @@ class MemeTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals('TGATAAAACACTTTATCTCTGTAT', sites0[3][4])
         self.assertEquals('ACGTAGACCGTATCGCGGAGATCT', sites0[4][4])
 
-    def test_read_mast_output(self):
+    def test_read_mast_output_oldstyle(self):
         """tests the read_mast_output function"""
         with open('testdata/mast.out') as inputfile:
-            pevalues, annotations = meme.read_mast_output(inputfile.read(),
-                                                          ['VNG6198H', 'VNG0117H'])
+            pevalues, annotations = meme.read_mast_output_oldstyle(
+                inputfile.read(), ['VNG6198H', 'VNG0117H'])
         self.assertEquals('VNG6198H', pevalues[0][0])
         self.assertEquals('VNG0117H', pevalues[1][0])
 
@@ -78,30 +78,32 @@ class MemeTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEquals(223, annot2[5][1])
         self.assertAlmostEquals(-2, annot2[5][2])
 
-    def test_read_mast_output2(self):
+    def test_read_mast_output_oldstyle2(self):
         """tests the read_mast_output function, this one has some
         more silly blank line placements"""
         with open('testdata/mast2.out') as inputfile:
-            pevalues, annotations = meme.read_mast_output(inputfile.read(),
-                                                          ['NP_279634.1', 'NP_279286.1'])
+            pevalues, annotations = meme.read_mast_output_oldstyle(
+                inputfile.read(), ['NP_279634.1', 'NP_279286.1'])
         self.assertTrue('NP_279634.1' in annotations)
         self.assertTrue('NP_279286.1' in annotations)
 
-    def test_read_mast_output3(self):
+    def test_read_mast_output_oldstyle3(self):
         """tests the read_mast_output function, this one has an incomplete block"""
         with open('testdata/mast3.out') as inputfile:
-            pevalues, annotations = meme.read_mast_output(inputfile.read(),
-                                                          ['NP_279608.1'])
+            pevalues, annotations = meme.read_mast_output_oldstyle(
+                inputfile.read(), ['NP_279608.1'])
+        print "PEVALUES ---- ",  pevalues
+        print "ANNOTATIONS ---- ", annotations
         pev = [pevalue for pevalue in pevalues if pevalue[0] == 'NP_279608.1']
         self.assertAlmostEquals(3.9e-08, pev[0][1])
         self.assertAlmostEquals(9.61e-11, pev[0][2])
         self.assertTrue('NP_279608.1' in annotations)
 
-    def test_read_mast_output4(self):
+    def test_read_mast_output_oldstyle4(self):
         """tests the read_mast_output function, this has on sequence/annotation block"""
         with open('testdata/mast4.out') as inputfile:
-            pevalues, annotations = meme.read_mast_output(inputfile.read(),
-                                                          ['NP_280363.1', 'NP_280692.1'])
+            pevalues, annotations = meme.read_mast_output_oldstyle(
+                inputfile.read(), ['NP_280363.1', 'NP_280692.1'])
         pev = [pevalue for pevalue in pevalues if pevalue[0] == 'NP_280363.1']
         self.assertAlmostEquals(1.0, pev[0][1])
         self.assertAlmostEquals(4.0e02, pev[0][2])
