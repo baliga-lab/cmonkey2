@@ -894,3 +894,20 @@ def make_kmeans_row_seeder(num_clusters):
             row_membership[row][0] = seeding[row]
 
     return seed
+
+def make_file_seeder(filename, sep=' '):
+    """uses a TSV file to seed row membership"""
+    
+    def seed(row_membership, matrix):
+        """ignore matrix parameter"""
+        row_map = {name: idx
+                   for idx, name in enumerate(matrix.row_names)}
+
+        with open(filename) as infile:
+            header = infile.readline()
+            for line in infile:
+                row = line.strip().replace('"', '').split(sep)
+                row_index = row_map[row[0]]
+                row_membership[row_index][0] = int(row[1])
+    
+    return seed
