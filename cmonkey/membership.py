@@ -911,3 +911,34 @@ def make_file_seeder(filename, sep=' '):
                 row_membership[row_index][0] = int(row[1])
     
     return seed
+
+def make_file_column_seeder(filename, sep=' '):
+    def patchup_column_name(name):
+        """this is a hack, R-cmonkey for indexing reasons, takes the
+        column name and translates all "-" into "."
+        and all names that are numbers are prefixed with an X
+        In python, we don't need this, but our seed files are from
+        the R version
+        """
+        try:
+            num = int(name)
+            return "X" + name
+        except:
+            return name.replace('-', '.')
+
+    def seed(matrix, row_membership, num_clusters,
+             num_clusters_per_column):
+        column_map = {patchup_column_name(name): idx
+                      for idx, name in enumerate(matrix.column_names)}
+
+        column_members = []
+        with open(filename) as infile:
+            header = infile.readline()
+            for line in infile:
+                row = line.strip().replace('"', '').split(sep)
+                col_index = column_map[row[0]]
+                column_members.append(map(int, row[1:]))
+
+        return column_members
+
+    return seed
