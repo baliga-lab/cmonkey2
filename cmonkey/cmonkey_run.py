@@ -222,7 +222,6 @@ class CMonkeyRun:
             self.membership(), self.ratio_matrix,
             scaling_func=lambda iteration: self['row_scaling'],
             config_params=self.config_params)
-        self.row_scoring = row_scoring
 
         if self['meme_version'] == '4.3.0':
             meme_suite = meme.MemeSuite430()
@@ -252,7 +251,6 @@ class CMonkeyRun:
             #update_in_iteration=scoring.schedule(100, 10),
             #motif_in_iteration=scoring.schedule(100, 100),
             config_params=self.config_params)
-        self.motif_scoring = motif_scoring
 
         network_scaling_fun = scoring.get_default_network_scaling(
             self['num_iterations'])
@@ -263,7 +261,6 @@ class CMonkeyRun:
             scaling_func=network_scaling_fun,
             run_in_iteration=scoring.schedule(1, 7),
             config_params=self.config_params)
-        self.network_scoring = network_scoring
 
         row_scoring_functions = [row_scoring, motif_scoring, network_scoring]
         return scoring.ScoringFunctionCombiner(
@@ -348,7 +345,9 @@ class CMonkeyRun:
             for filename in outfiles:
                 os.remove('/'.join([output_dir, filename]))
 
-    def run(self):
+    def prepare_run(self):
+        """Setup output directories and scoring functions for the scoring.
+        Separating setup and actual run facilitates testing"""
         self.__make_dirs_if_needed()
         self.__clear_output_dir()
         self.__create_output_database()
@@ -357,8 +356,19 @@ class CMonkeyRun:
         if not os.path.exists(output_dir + '/ratios.tsv'):
             self.ratio_matrix.write_tsv_file(output_dir + '/ratios.tsv')
 
+        # gene index map is used for writing statistics
+        thesaurus = self.organism().thesaurus()
+        genes = [thesaurus[row_name] if row_name in thesaurus else row_name
+                 for row_name in self.ratio_matrix.row_names]
+        self.gene_indexes = {genes[index]: index
+                             for index in xrange(len(genes))}
+
         row_scoring = self.make_row_scoring()
         col_scoring = self.make_column_scoring()
+        return row_scoring, col_scoring
+
+    def run(self):
+        row_scoring, col_scoring = self.prepare_run()
         self.run_iterations(row_scoring, col_scoring)
 
     def run_from_checkpoint(self, checkpoint_filename):
@@ -517,69 +527,57 @@ class CMonkeyRun:
             conn.execute('''update run_infos set finish_time = ?''', (datetime.now(),))
         conn.close()
 
+    def run_iteration(self, row_scoring, col_scoring, iteration):
+        logging.info("Iteration # %d", iteration)
+        iteration_result = {'iteration': iteration}
+        membership = self.membership()
+
+        rscores = row_scoring.compute(iteration_result)
+        start_time = util.current_millis()
+        cscores = col_scoring.compute(iteration_result)
+        elapsed = util.current_millis() - start_time
+        logging.info("computed column_scores in %f s.", elapsed / 1000.0)
+
+        membership.update(self.ratio_matrix, rscores, cscores,
+                                 self['num_iterations'], iteration_result)
+        membership.reseed_small_row_clusters(self.ratio_matrix.row_names)
+        membership.reseed_small_column_clusters(self.ratio_matrix.column_names)
+
+        if (iteration > 0 and self['checkpoint_interval']
+            and iteration % self['checkpoint_interval'] == 0):
+            self.save_checkpoint_data(iteration, row_scoring, col_scoring)
+        mean_net_score = 0.0
+        mean_mot_pvalue = 0.0
+        if 'networks' in iteration_result.keys():
+            mean_net_score = iteration_result['networks']
+        mean_mot_pvalue = "NA"
+        if 'motif-pvalue' in iteration_result.keys():
+            mean_mot_pvalue = ""
+            mean_mot_pvalues = iteration_result['motif-pvalue']
+            mean_mot_pvalue = ""
+            for seqtype in mean_mot_pvalues.keys():
+                mean_mot_pvalue = mean_mot_pvalue + (" '%s' = %f" % (seqtype, mean_mot_pvalues[seqtype]))
+
+        logging.info('mean net = %s | mean mot = %s', str(mean_net_score), mean_mot_pvalue)
+
+        if iteration == 1 or (iteration % RESULT_FREQ == 0):
+            self.write_results(iteration_result)
+
+        if iteration == 1 or (iteration % STATS_FREQ == 0):
+            self.write_stats(iteration_result)
+            self.update_iteration(iteration)
+
+        gc.collect()
+
     def run_iterations(self, row_scoring, col_scoring):
         self.report_params()
         self.write_start_info()
-        thesaurus = self.organism().thesaurus()
-
-        genes = [thesaurus[row_name] if row_name in thesaurus else row_name
-                 for row_name in self.ratio_matrix.row_names]
-        self.gene_indexes = {genes[index]: index
-                             for index in xrange(len(genes))}
-        # mark available for GC
-        genes = None
-        thesaurus = None
-        membership = self.membership()
-
         for iteration in range(self['start_iteration'],
                                self['num_iterations'] + 1):
-            logging.info("Iteration # %d", iteration)
-            iteration_result = {'iteration': iteration}
-
-            rscores = row_scoring.compute(iteration_result)
-            start_time = util.current_millis()
-            cscores = col_scoring.compute(iteration_result)
-            elapsed = util.current_millis() - start_time
-            logging.info("computed column_scores in %f s.", elapsed / 1000.0)
-
-            membership.update(self.ratio_matrix, rscores, cscores,
-                                     self['num_iterations'], iteration_result)
-            membership.reseed_small_row_clusters(self.ratio_matrix.row_names)
-            membership.reseed_small_column_clusters(self.ratio_matrix.column_names)
-
-            if (iteration > 0 and self['checkpoint_interval']
-                and iteration % self['checkpoint_interval'] == 0):
-                self.save_checkpoint_data(iteration, row_scoring, col_scoring)
-            mean_net_score = 0.0
-            mean_mot_pvalue = 0.0
-            if 'networks' in iteration_result.keys():
-                mean_net_score = iteration_result['networks']
-            mean_mot_pvalue = "NA"
-            if 'motif-pvalue' in iteration_result.keys():
-                mean_mot_pvalue = ""
-                mean_mot_pvalues = iteration_result['motif-pvalue']
-                mean_mot_pvalue = ""
-                for seqtype in mean_mot_pvalues.keys():
-                    mean_mot_pvalue = mean_mot_pvalue + (" '%s' = %f" % (seqtype, mean_mot_pvalues[seqtype]))
-
-            logging.info('mean net = %s | mean mot = %s', str(mean_net_score), mean_mot_pvalue)
-
-            if iteration == 1 or (iteration % RESULT_FREQ == 0):
-                self.write_results(iteration_result)
-
-            if iteration == 1 or (iteration % STATS_FREQ == 0):
-                self.write_stats(iteration_result)
-                self.update_iteration(iteration)
-
-            gc.collect()
-            #print "# ROW SCORING: ", sizes.asizeof(self.row_scoring)
-            #print "# MOT SCORING: ", sizes.asizeof(self.motif_scoring)
-            #print "# NET SCORING: ", sizes.asizeof(self.network_scoring)
-            #print "# COL SCORING: ", sizes.asizeof(col_scoring)
-            #print "# MEMBERSHIP: ", sizes.asizeof(membership)
+            self.run_iteration(row_scoring, col_scoring, iteration)
 
         logging.info("Postprocessing: Adjusting the clusters....")
-        membership.postadjust()
+        self.membership.postadjust()
         iteration = self['num_iterations'] + 1
         iteration_result = {'iteration': iteration}
         logging.info("Adjusted. Now re-run scoring (iteration: %d)", iteration_result['iteration'])
