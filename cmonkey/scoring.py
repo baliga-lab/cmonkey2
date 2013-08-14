@@ -273,13 +273,13 @@ def compute_column_scores(membership, matrix, num_clusters):
     for cluster in xrange(1, num_clusters + 1):
         submatrix = matrix.submatrix_by_name(
             row_names=membership.rows_for_cluster(cluster))
+
         if submatrix.num_rows > 1:
             cluster_column_scores.append(compute_column_scores_submatrix(
                     submatrix))
         else:
             cluster_column_scores.append(None)
             null_scores_found = True
-
     if null_scores_found:
         substitution = compute_substitution(cluster_column_scores)
 
@@ -331,7 +331,7 @@ class ScoringFunctionCombiner:
                  log_subresults=False):
         """creates a combiner instance"""
         self.__membership = membership
-        self.__scoring_functions = scoring_functions
+        self.scoring_functions = scoring_functions
         self.__log_subresults = log_subresults
         self.__scaling_func = scaling_func
         self.__config_params = config_params
@@ -342,7 +342,7 @@ class ScoringFunctionCombiner:
         score_scalings = []
         reference_matrix = ref_matrix
         iteration = iteration_result['iteration']
-        for scoring_function in self.__scoring_functions:
+        for scoring_function in self.scoring_functions:
             # clean up before doing something complicated
             gc.collect()
 
@@ -364,7 +364,7 @@ class ScoringFunctionCombiner:
         score_scalings = []
         reference_matrix = ref_matrix
         iteration = iteration_result['iteration']
-        for scoring_function in self.__scoring_functions:
+        for scoring_function in self.scoring_functions:
             # clean up before doing something complicated
             gc.collect()
 
@@ -399,7 +399,7 @@ class ScoringFunctionCombiner:
             combined_score = np.zeros(matrix0.values.shape)
             for i in xrange(len(result_matrices)):
                 combined_score += (result_matrices[i].values *
-                                   self.__scoring_functions[i].scaling(iteration))
+                                   self.scoring_functions[i].scaling(iteration))
 
             elapsed = util.current_millis() - start_time
             logging.info("combined score in %f s.", elapsed / 1000.0)
@@ -428,17 +428,17 @@ class ScoringFunctionCombiner:
 
     def store_checkpoint_data(self, shelf):
         """recursively invokes store_checkpoint_data() on the children"""
-        for scoring_func in self.__scoring_functions:
+        for scoring_func in self.scoring_functions:
             scoring_func.store_checkpoint_data(shelf)
 
     def restore_checkpoint_data(self, shelf):
         """recursively invokes store_checkpoint_data() on the children"""
-        for scoring_func in self.__scoring_functions:
+        for scoring_func in self.scoring_functions:
             scoring_func.restore_checkpoint_data(shelf)
 
     def run_logs(self):
         """joins all contained function's run logs"""
         result = []
-        for scoring_func in self.__scoring_functions:
+        for scoring_func in self.scoring_functions:
             result.extend(scoring_func.run_logs())
         return result
