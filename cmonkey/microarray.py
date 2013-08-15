@@ -135,7 +135,7 @@ def __compute_row_scores_for_submatrix(matrix, submatrix):
     matrix should be filtered by the columns of a specific cluster in
     order for the column means to be applied properly.
     The result is a DataMatrix with one row containing all the row scores"""
-    rm = util.row_means(np.square(matrix.values - submatrix.column_means()))
+    rm = util.row_means(np.square(matrix.values - util.column_means(submatrix.values)))
     # we clip the values to make sure the argument to log will be
     # sufficiently above 0 to avoid errors
     return np.log(np.clip(rm, 1e-20, 1000.0) + 1e-99)

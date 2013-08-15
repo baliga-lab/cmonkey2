@@ -155,14 +155,6 @@ class DataMatrix:
                           new_row_names, self.column_names,
                           values=new_rows)
 
-    def column_means(self):
-        """Returns a numpy array, containing the column means"""
-        return util.column_means(self.values)
-
-    def row_means(self):
-        """Returns a numpy array, containing the column means"""
-        return util.row_means(self.values)
-
     ######################################################################
     #### Operations on the matrix values
     ######################################################################
@@ -209,8 +201,8 @@ class DataMatrix:
     def residual(self, max_row_variance=None):
         """computes the residual for this matrix, if max_row_variance is given,
         result is normalized by the row variance"""
-        d_rows = self.row_means()
-        d_cols = self.column_means()
+        d_rows = util.row_means(self.values)
+        d_cols = util.column_means(self.values)
         d_all = util.mean(d_rows)
         tmp = self.values + d_all - util.r_outer(d_rows, d_cols, operator.add)
         average = util.mean(np.abs(tmp))
