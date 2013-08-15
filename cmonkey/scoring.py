@@ -12,6 +12,7 @@ import os.path
 import datamatrix as dm
 from datetime import date
 import util
+import multiprocessing as mp
 import membership as memb
 import numpy as np
 import cPickle
@@ -250,16 +251,19 @@ class ColumnScoringFunction(ScoringFunctionBase):
     def do_compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
         return compute_column_scores(self.membership(), self.matrix(),
-                                     self.num_clusters())
+                                     self.num_clusters(),
+                                     self.config_params[KEY_MULTIPROCESSING])
 
-def compute_column_scores(membership, matrix, num_clusters):
+
+def compute_column_scores(membership, matrix, num_clusters,
+                          use_multiprocessing):
     """Computes the column scores for the specified number of clusters"""
 
     def compute_substitution(cluster_column_scores):
         """calculate substitution value for missing column scores"""
         membership_values = []
         for cluster in xrange(1, num_clusters + 1):
-            columns = membership.columns_for_cluster(cluster)
+            columns = set(membership.columns_for_cluster(cluster))
             column_scores = cluster_column_scores[cluster - 1]
             if column_scores != None:
                 for row in xrange(column_scores.num_rows):
@@ -268,16 +272,22 @@ def compute_column_scores(membership, matrix, num_clusters):
                             membership_values.append(column_scores.values[row][col])
         return util.quantile(membership_values, 0.95)
 
-    cluster_column_scores = []
-    for cluster in xrange(1, num_clusters + 1):
-        submatrix = matrix.submatrix_by_name(
-            row_names=membership.rows_for_cluster(cluster))
-
-        if submatrix.num_rows > 1:
-            cluster_column_scores.append(compute_column_scores_submatrix(
-                    submatrix))
+    def make_submatrix(cluster):
+        row_names = membership.rows_for_cluster(cluster)
+        if len(row_names) > 1:
+            return matrix.submatrix_by_name(row_names=row_names)
         else:
-            cluster_column_scores.append(None)
+            return None        
+
+    if use_multiprocessing:
+        pool = mp.Pool()
+        cluster_column_scores = pool.map(compute_column_scores_submatrix,
+                                         map(make_submatrix, xrange(1, num_clusters + 1)))
+    else:
+        cluster_column_scores = []
+        for cluster in xrange(1, num_clusters + 1):
+            cluster_column_scores.append(compute_column_scores_submatrix(
+                        make_submatrix(cluster)))
 
     substitution = compute_substitution(cluster_column_scores)
 
@@ -314,6 +324,8 @@ def compute_column_scores_submatrix(matrix):
     http://en.wikipedia.org/wiki/Index_of_dispersion
     for details
     """
+    if matrix == None:
+        return None
     colmeans = util.column_means(matrix.values)
     matrix_minus_colmeans_squared = np.square(matrix.values - colmeans)
     var_norm = np.abs(colmeans) + 0.01
