@@ -222,14 +222,14 @@ def mean(nparray):
 
 def column_means(matrix):
     """computes the column means of a matrix"""
-    return np.mean(np.ma.masked_array(matrix, np.isnan(matrix)),
-                   axis=0)
+    return np.ma.filled(np.mean(np.ma.masked_array(matrix, np.isnan(matrix)),
+                                axis=0), np.nan)
 
 
 def row_means(matrix):
     """computes the row means of a matrix"""
-    return np.mean(np.ma.masked_array(matrix, np.isnan(matrix)),
-                   axis=1)
+    return np.ma.filled(np.mean(np.ma.masked_array(matrix, np.isnan(matrix)),
+                                axis=1), np.nan)
 
 
 class DocumentNotFound(Exception):

@@ -312,7 +312,7 @@ def compute_column_scores_submatrix(matrix):
     http://en.wikipedia.org/wiki/Index_of_dispersion
     for details
     """
-    colmeans = matrix.column_means()
+    colmeans = util.column_means(matrix.values)
     matrix_minus_colmeans_squared = np.square(matrix.values - colmeans)
     var_norm = np.abs(colmeans) + 0.01
     result = util.column_means(matrix_minus_colmeans_squared) / var_norm
