@@ -269,7 +269,6 @@ def compute_column_scores(membership, matrix, num_clusters):
         return util.quantile(membership_values, 0.95)
 
     cluster_column_scores = []
-    null_scores_found = False
     for cluster in xrange(1, num_clusters + 1):
         submatrix = matrix.submatrix_by_name(
             row_names=membership.rows_for_cluster(cluster))
@@ -279,9 +278,8 @@ def compute_column_scores(membership, matrix, num_clusters):
                     submatrix))
         else:
             cluster_column_scores.append(None)
-            null_scores_found = True
-    if null_scores_found:
-        substitution = compute_substitution(cluster_column_scores)
+
+    substitution = compute_substitution(cluster_column_scores)
 
     # Convert scores into a matrix that have the clusters as columns
     # and conditions in the rows
@@ -290,6 +288,10 @@ def compute_column_scores(membership, matrix, num_clusters):
     rvalues = result.values
     for cluster in xrange(num_clusters):
         column_scores = cluster_column_scores[cluster]
+
+        if column_scores != None:
+            column_scores.values[np.isnan(column_scores.values)] = substitution
+
         for row_index in xrange(matrix.num_columns):
             if column_scores == None:
                 rvalues[row_index][cluster] = substitution

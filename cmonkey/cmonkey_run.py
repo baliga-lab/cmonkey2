@@ -577,7 +577,7 @@ class CMonkeyRun:
             self.run_iteration(row_scoring, col_scoring, iteration)
 
         logging.info("Postprocessing: Adjusting the clusters....")
-        self.membership.postadjust()
+        self.membership().postadjust()
         iteration = self['num_iterations'] + 1
         iteration_result = {'iteration': iteration}
         logging.info("Adjusted. Now re-run scoring (iteration: %d)", iteration_result['iteration'])
