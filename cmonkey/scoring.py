@@ -283,6 +283,8 @@ def compute_column_scores(membership, matrix, num_clusters,
         pool = mp.Pool()
         cluster_column_scores = pool.map(compute_column_scores_submatrix,
                                          map(make_submatrix, xrange(1, num_clusters + 1)))
+        pool.close()
+        pool.join()
     else:
         cluster_column_scores = []
         for cluster in xrange(1, num_clusters + 1):
