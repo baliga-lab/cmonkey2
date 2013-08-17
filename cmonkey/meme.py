@@ -147,6 +147,13 @@ class MemeSuite:
             pe_values, annotations = self.read_mast_output(mast_output,
                                                            input_seqs.keys())
             return MemeRunResult(pe_values, annotations, motif_infos)
+        except subprocess.CalledProcessError, e:
+            if e.output.startswith('No input motifs pass the E-value'):
+                logging.warn("no input motifs pass the e-value, ignoring result")
+                return MemeRunResult([], [], [])
+            else:
+                print "Unknown error in MAST:\n ", e.__dict__
+                raise
         finally:
             if self.__remove_tempfiles:
                 #logging.info("DELETING ALL TMP FILES...")
@@ -249,7 +256,7 @@ class MemeSuite430(MemeSuite):
                    '-bfile', bgfile_path, '-nostatus', '-stdout', '-text',
                    '-brief', '-ev', '99999', '-mev', '99999', '-mt', '0.99',
                    '-seqp', '-remcorr']
-        output = subprocess.check_output(command)
+        output = subprocess.check_output(command, stderr=subprocess.STDOUT)
         return output
 
     def read_mast_output(self, mast_output, genes):
@@ -319,11 +326,12 @@ class MemeSuite481(MemeSuite):
                        '-ev', '1500', '-mev', '99999', '-mt', '0.99', '-nohtml',
                        '-notext', '-seqp', '-remcorr', '-oc', dirname]
             logging.info("running: %s", " ".join(command))
-            output = subprocess.check_output(command)
+            output = subprocess.check_output(command, stderr=subprocess.STDOUT)
             with open(os.path.join(dirname, "mast.xml")) as infile:
                 result = infile.read()
             return result
-        except:
+        except subprocess.CalledProcessError, e:
+            print "error: ", e.out
             logging.warn("there is an exception thrown in MAST !!!")
             return MemeRunResult([], {}, [])
         finally:
