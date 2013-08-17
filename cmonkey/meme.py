@@ -331,9 +331,9 @@ class MemeSuite481(MemeSuite):
                 result = infile.read()
             return result
         except subprocess.CalledProcessError, e:
-            print "error: ", e.out
-            logging.warn("there is an exception thrown in MAST !!!")
-            return MemeRunResult([], {}, [])
+            logging.warn("there is an exception thrown in MAST: %s",
+                         e.output)
+            return None  # return nothing if there was an error
         finally:
             print "removing %s..." % dirname
             shutil.rmtree(dirname)
@@ -481,9 +481,12 @@ def read_mast_output_xml(output_text, genes):
     Returns: a pair (pevalues, annotations)
     -------- - pevalues is [(gene, pval, eval)]
              - annotations is a dictionary gene -> [(pval, pos, motifnum)]"""
-    root = ET.fromstring(output_text)
     pevalues = []
     annotations = {}
+    if output_text == None:  # there was an error in mast, ignore its output
+        return pevalues, annotations
+
+    root = ET.fromstring(output_text)
     for sequence in root.iter('sequence'):
         score = sequence.find('score')
         seqname = sequence.get('name')
