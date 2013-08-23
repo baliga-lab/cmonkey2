@@ -42,6 +42,15 @@ object HighchartsFormatter {
     Array(min, lowerQuartile, median, upperQuartile, max)
   }
 
+
+  private def rowLT(row1: Array[Float], row2: Array[Float]): Boolean = {
+    val v1 = row1(2)
+    val v2 = row2(2)
+    if (java.lang.Double.isNaN(v1)) true
+    else if (java.lang.Double.isNaN(v2)) false
+    else v1 < v2
+  }
+
   private def getSortedHalfs(ratios: RatioMatrix, numColumnsIn: Int) = {
     val numColumns = ratios.columns.length
     val numRows = ratios.rows.length
@@ -56,8 +65,8 @@ object HighchartsFormatter {
     }
 
     // split halfs
-    val sortedIn = outrowsIn.sortWith((row1, row2) => row1(2) < row2(2))
-    val sortedOut = outrowsOut.sortWith((row1, row2) => row1(2) < row2(2))
+    val sortedIn = outrowsIn.sortWith(rowLT)
+    val sortedOut = outrowsOut.sortWith(rowLT)
     (sortedIn, sortedOut)
   }
   def toHSSeriesBoxPlot(ratios: RatioMatrix, numColumnsIn: Int) = {
