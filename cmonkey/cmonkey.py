@@ -36,6 +36,8 @@ See README and LICENSE for details.\n"""
                         help="""override the RSAT organism name""")
     parser.add_argument('--logfile', default=None,
                         help="""path to log file""")
+    parser.add_argument('--keep_memeout', default="False",
+                        help="""keep MEME output files""")
     args = parser.parse_args()
 
     string_file = args.string
@@ -62,6 +64,7 @@ See README and LICENSE for details.\n"""
                                          remap_network_nodes=args.remap_network_nodes == "True")
     cmonkey_run['output_dir'] = args.out
     cmonkey_run['out_database'] = os.path.join(args.out, 'cmonkey_run.db')
+    cmonkey_run['keep_memeout'] = args.keep_memeout == "True"
 
     proceed = True
     checkratios = args.checkratios == "True"
