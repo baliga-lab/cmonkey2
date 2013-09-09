@@ -42,7 +42,8 @@ class CMonkeyRun:
                  use_operons=True,
                  rsat_organism=None,
                  log_filename=None,
-                 remap_network_nodes=False):
+                 remap_network_nodes=False,
+                 ncbi_code=None):
         logging.basicConfig(format=LOG_FORMAT,
                             datefmt='%Y-%m-%d %H:%M:%S',
                             level=logging.DEBUG,
@@ -69,6 +70,7 @@ class CMonkeyRun:
         self['num_clusters'] = num_clusters
         self['use_operons'] = use_operons
         self['rsat_organism'] = rsat_organism
+        self['ncbi_code'] = ncbi_code
         self['remap_network_nodes'] = remap_network_nodes
         logging.info("# CLUSTERS: %d", self['num_clusters'])
         logging.info("use operons: %d", self['use_operons'])
@@ -283,28 +285,28 @@ class CMonkeyRun:
         gofile = util.read_dfile(GO_FILE_PATH)
         rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, self['cache_dir'])
         mo_db = microbes_online.MicrobesOnline(self['cache_dir'])
-        stringfile = self.config_params['string_file']
+        stringfile = self['string_file']
         kegg_mapper = org.make_kegg_code_mapper(keggfile)
         rsat_mapper = org.make_rsat_organism_mapper(rsatdb)
+        ncbi_code = self['ncbi_code']
+        nw_factories = []
 
         # automatically download STRING file
         if stringfile == None:
-            rsat_info = rsat_mapper(kegg_mapper(self['organism_code']),
-                                    self['rsat_organism'])
-            ncbi_code = rsat_info.taxonomy_id
+            if ncbi_code == None:
+                rsat_info = rsat_mapper(kegg_mapper(self['organism_code']),
+                                        self['rsat_organism'])
+                ncbi_code = rsat_info.taxonomy_id
+
             logging.info("NCBI CODE IS: %s", ncbi_code)
             url = STRING_URL_PATTERN % ncbi_code
             stringfile = "%s/%s.gz" % (self['cache_dir'], ncbi_code)
             self['string_file'] = stringfile
             logging.info("Automatically using STRING file in '%s'", stringfile)
             util.get_url_cached(url, stringfile)
-
-        nw_factories = []
-        if stringfile != None:
+        else:
             nw_factories.append(stringdb.get_network_factory2(
                     self['organism_code'], stringfile, 0.5))
-        else:
-            logging.warn("no STRING file specified !")
 
         if self['use_operons']:
             logging.info('adding operon network factory')
@@ -316,7 +318,8 @@ class CMonkeyRun:
                                          rsat_mapper,
                                          org.make_go_taxonomy_mapper(gofile),
                                          mo_db,
-                                         nw_factories)
+                                         nw_factories,
+                                         self['ncbi_code'])
         return org_factory.create(self['organism_code'],
                                   self['search_distances'],
                                   self['scan_distances'],

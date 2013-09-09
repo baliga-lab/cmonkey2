@@ -44,8 +44,8 @@ def make_halo(search_distances, scan_distances):
     """returns the organism object to work on"""
     keggfile = util.read_dfile(KEGG_FILE_PATH, comment='#')
     gofile = util.read_dfile(GO_FILE_PATH)
-    rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, CACHE_DIR        )
-    mo_db = microbes_online.MicrobesOnline()
+    rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
+    mo_db = microbes_online.MicrobesOnline(CACHE_DIR)
 
     org_factory = org.MicrobeFactory(org.make_kegg_code_mapper(keggfile),
                                      org.make_rsat_organism_mapper(rsatdb),

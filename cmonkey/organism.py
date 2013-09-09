@@ -52,7 +52,7 @@ def make_rsat_organism_mapper(rsatdb):
             rsatdb.get_organism_names(rsat_organism), comment='--')
         return patches.patch_ncbi_taxonomy(organism_names_dfile.lines[0][0])
 
-    def mapper_fun(kegg_organism, rsat_organism):
+    def mapper_fun(kegg_organism, rsat_organism, ncbi_code=None):
         """Mapper function to return basic information about an organism
         stored in the RSAT database. Only the genes in gene_names will
         be considered in the construction"""
@@ -67,9 +67,10 @@ def make_rsat_organism_mapper(rsatdb):
                 rsatdb.get_directory())[0].rstrip('/')
 
         print "mapper_fun(), kegg org = '%s', rsat org = '%s'" % (kegg_organism, rsat_organism)
-        return RsatSpeciesInfo(rsatdb, rsat_organism,
-                               is_eukaryote(rsat_organism),
-                               get_taxonomy_id(rsat_organism))
+        if ncbi_code == None:
+            ncbi_code = get_taxonomy_id(rsat_organism)
+        return RsatSpeciesInfo(rsatdb, rsat_organism, is_eukaryote(rsat_organism),
+                               ncbi_code)
     return mapper_fun
 
 
@@ -92,13 +93,15 @@ class MicrobeFactory:
                  rsat_mapper,
                  get_go_taxonomy_id,
                  microbes_online_db,
-                 network_factories):
+                 network_factories,
+                 ncbi_code=None):
         """create a OrganismFactory instance"""
         self.__code2kegg_organism = code2kegg_organism
         self.__rsat_mapper = rsat_mapper
         self.__get_taxonomy_id = get_go_taxonomy_id
         self.__microbes_online_db = microbes_online_db
         self.__network_factories = network_factories
+        self.__ncbi_code = ncbi_code
 
     def create(self, organism_code, search_distances,
                scan_distances, use_operons=True,
@@ -108,7 +111,8 @@ class MicrobeFactory:
                      organism_code)
         kegg_organism = self.__code2kegg_organism(organism_code)
         logging.info('KEGG organism: %s', kegg_organism)
-        rsat_info = self.__rsat_mapper(kegg_organism, rsat_organism)
+        rsat_info = self.__rsat_mapper(kegg_organism, rsat_organism,
+                                       self.__ncbi_code)
         logging.info('RSAT info retrieved: %s', rsat_info.species)
         go_taxonomy_id = self.__get_taxonomy_id(
             rsat_info.species.replace('_', ' '))

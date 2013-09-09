@@ -40,6 +40,8 @@ See README and LICENSE for details.\n"""
                         help="""keep MEME output files""")
     parser.add_argument('--cachedir', default="cache",
                         help="path to cache directory")
+    parser.add_argument('--ncbi_code', default=None,
+                        help="path to cache directory")
     args = parser.parse_args()
 
     string_file = args.string
@@ -63,7 +65,8 @@ See README and LICENSE for details.\n"""
                                          use_operons=args.no_operons == "False",
                                          rsat_organism=args.rsat_organism,
                                          log_filename=args.logfile,
-                                         remap_network_nodes=args.remap_network_nodes == "True")
+                                         remap_network_nodes=args.remap_network_nodes == "True",
+                                         ncbi_code=args.ncbi_code)
     cmonkey_run['output_dir'] = args.out
     cmonkey_run['cache_dir'] = args.cachedir
     cmonkey_run['out_database'] = os.path.join(args.out, 'cmonkey_run.db')

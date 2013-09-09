@@ -17,7 +17,7 @@ class MicrobesOnlineTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """test fixture"""
         if not os.path.exists('testcache'):
             os.mkdir('testcache')
-        self.service = mo.MicrobesOnline(mo.MICROBES_ONLINE_BASE_URL, 'testcache')
+        self.service = mo.MicrobesOnline('testcache', mo.MICROBES_ONLINE_BASE_URL)
 
     def tearDown(self):  # pylint: disable-msg=C0103
         """test cleanup"""
