@@ -26,7 +26,6 @@ GO_FILE_PATH = 'testdata/proteome2taxid'
 RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 STRING_URL_PATTERN = "http://networks.systemsbiology.net/string9/%s.gz"
-CACHE_DIR = 'cache'
 
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 
@@ -79,8 +78,6 @@ class CMonkeyRun:
         self.column_seeder = microarray.seed_column_members
         self['row_scaling'] = 6.0
         self['string_file'] = None
-        self['cache_dir'] = CACHE_DIR
-        self['output_dir'] = 'out'
         self['start_iteration'] = 1
         self['num_iterations'] = 2000
         self['multiprocessing'] = True
@@ -97,8 +94,6 @@ class CMonkeyRun:
         self['memb.min_cluster_rows_allowed'] = 3
         self['memb.max_cluster_rows_allowed'] = 70
         self['string_file'] = string_file
-        self['out_database'] = self['output_dir'] + '/cmonkey_run.db'
-
         self['keep_memeout'] = False
 
         today = date.today()
@@ -287,7 +282,7 @@ class CMonkeyRun:
         keggfile = util.read_dfile(KEGG_FILE_PATH, comment='#')
         gofile = util.read_dfile(GO_FILE_PATH)
         rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, self['cache_dir'])
-        mo_db = microbes_online.MicrobesOnline()
+        mo_db = microbes_online.MicrobesOnline(self['cache_dir'])
         stringfile = self.config_params['string_file']
         kegg_mapper = org.make_kegg_code_mapper(keggfile)
         rsat_mapper = org.make_rsat_organism_mapper(rsatdb)

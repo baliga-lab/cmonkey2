@@ -35,8 +35,8 @@ MYSQL_DB = 'genomics'
 class MicrobesOnline:
     """Interface to Microbes Online web service"""
 
-    def __init__(self, base_url=MICROBES_ONLINE_BASE_URL,
-                 cache_dir='cache'):
+    def __init__(self, cache_dir,
+                 base_url=MICROBES_ONLINE_BASE_URL):
         """creates a MicrobesOnline service instance"""
         self.base_url = base_url
         self.cache_dir = cache_dir
