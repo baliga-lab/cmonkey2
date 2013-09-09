@@ -256,7 +256,7 @@ class ColumnScoringFunction(ScoringFunctionBase):
 
 
 def compute_column_scores(membership, matrix, num_clusters,
-                          use_multiprocessing):
+                          use_multiprocessing=False):
     """Computes the column scores for the specified number of clusters"""
 
     def compute_substitution(cluster_column_scores):
