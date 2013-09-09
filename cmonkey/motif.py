@@ -26,7 +26,8 @@ ComputeScoreParams = collections.namedtuple('ComputeScoreParams',
                                              'cluster', 'feature_ids', 'seqs', 'used_seqs',
                                              'meme_runner', 'min_cluster_rows',
                                              'max_cluster_rows', 'num_motifs',
-                                             'previous_motif_infos', 'keep_memeout'])
+                                             'previous_motif_infos',
+                                             'keep_memeout', 'outdir'])
 
 
 def default_nmotif_fun(iteration, num_iterations):
@@ -332,7 +333,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                                              max_cluster_rows_allowed,
                                              num_motifs,
                                              previous_motif_infos,
-                                             self.config_params.get('keep_memeout', False)))
+                                             self.config_params.get('keep_memeout', False),
+                                             self.config_params['output_dir']))
 
         # create motif result map if necessary
         for cluster in xrange(1, self.num_clusters() + 1):

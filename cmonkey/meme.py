@@ -127,7 +127,8 @@ class MemeSuite:
         # run mast
         meme_outfile = None
         if params.keep_memeout:
-            meme_outfile = 'meme-out-%d-%d' % (params.iteration, params.cluster)
+            meme_outfile = '%s/meme-out-%d-%d' % (params.outdir,
+                                                  params.iteration, params.cluster)
             with open(meme_outfile, 'w') as outfile:
                 outfile.write(output)
         else:

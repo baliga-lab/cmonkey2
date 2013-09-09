@@ -3,6 +3,11 @@ import sqlite3
 import argparse
 import os.path
 
+"""
+This is a script taking a result directory from a run that was run with
+--keepmemeout True
+and produces tsv files for validation
+"""
 def meme_to_str(outpath, iteration, cluster):
     lines = ""
     try:
