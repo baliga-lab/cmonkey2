@@ -39,7 +39,6 @@ class CMonkeyRun:
     def __init__(self, organism_code, ratio_matrix,
                  string_file=None,
                  num_clusters=None,
-                 use_operons=True,
                  rsat_organism=None,
                  log_filename=None,
                  remap_network_nodes=False,
@@ -68,7 +67,8 @@ class CMonkeyRun:
 
         self['organism_code'] = organism_code
         self['num_clusters'] = num_clusters
-        self['use_operons'] = use_operons
+        self['use_operons'] = True
+        self['use_string'] = True
         self['rsat_organism'] = rsat_organism
         self['ncbi_code'] = ncbi_code
         self['remap_network_nodes'] = remap_network_nodes
@@ -97,6 +97,10 @@ class CMonkeyRun:
         self['memb.max_cluster_rows_allowed'] = 70
         self['string_file'] = string_file
         self['keep_memeout'] = False
+
+        # which scoring functions should be active
+        self['donetworks'] = True
+        self['domotifs'] = True
 
         today = date.today()
         self['checkpoint_interval'] = 100
@@ -219,47 +223,50 @@ class CMonkeyRun:
             self.membership(), self.ratio_matrix,
             scaling_func=lambda iteration: self['row_scaling'],
             config_params=self.config_params)
+        row_scoring_functions = [row_scoring]
 
-        if self['meme_version'] == '4.3.0':
-            meme_suite = meme.MemeSuite430()
-        elif self['meme_version'] == '4.8.1' or self['meme_version'] == '4.9.0':
-            meme_suite = meme.MemeSuite481()
-        else:
-            logging.error("MEME version %s currently not supported !", self['meme_version'])
-            raise Exception("unsupported MEME version")
+        if self['domotifs']:
+            if self['meme_version'] == '4.3.0':
+                meme_suite = meme.MemeSuite430()
+            elif self['meme_version'] == '4.8.1' or self['meme_version'] == '4.9.0':
+                meme_suite = meme.MemeSuite481()
+            else:
+                logging.error("MEME version %s currently not supported !", self['meme_version'])
+                raise Exception("unsupported MEME version")
 
-        sequence_filters = [
-            motif.unique_filter,
-            motif.get_remove_low_complexity_filter(meme_suite),
-            motif.get_remove_atgs_filter(self['search_distances']['upstream'])]
+            sequence_filters = [
+                motif.unique_filter,
+                motif.get_remove_low_complexity_filter(meme_suite),
+                motif.get_remove_atgs_filter(self['search_distances']['upstream'])]
 
-        motif_scaling_fun = scoring.get_default_motif_scaling(
-            self['num_iterations'])
-        motif_scoring = motif.MemeScoringFunction(
-            self.organism(),
-            self.membership(),
-            self.ratio_matrix,
-            meme_suite,
-            sequence_filters=sequence_filters,
-            scaling_func=motif_scaling_fun,
-            num_motif_func=motif.default_nmotif_fun,
-            update_in_iteration=scoring.schedule(601, 3),
-            motif_in_iteration=scoring.schedule(600, 100),
-            #update_in_iteration=scoring.schedule(100, 10),
-            #motif_in_iteration=scoring.schedule(100, 100),
-            config_params=self.config_params)
+            motif_scaling_fun = scoring.get_default_motif_scaling(
+                self['num_iterations'])
+            motif_scoring = motif.MemeScoringFunction(
+                self.organism(),
+                self.membership(),
+                self.ratio_matrix,
+                meme_suite,
+                sequence_filters=sequence_filters,
+                scaling_func=motif_scaling_fun,
+                num_motif_func=motif.default_nmotif_fun,
+                update_in_iteration=scoring.schedule(601, 3),
+                motif_in_iteration=scoring.schedule(600, 100),
+                #update_in_iteration=scoring.schedule(100, 10),
+                #motif_in_iteration=scoring.schedule(100, 100),
+                config_params=self.config_params)
+            row_scoring_functions.append(motif_scoring)
 
-        network_scaling_fun = scoring.get_default_network_scaling(
-            self['num_iterations'])
-        network_scoring = nw.ScoringFunction(
-            self.organism(),
-            self.membership(),
-            self.ratio_matrix,
-            scaling_func=network_scaling_fun,
-            run_in_iteration=scoring.schedule(1, 7),
-            config_params=self.config_params)
+        if self['donetworks']:
+            network_scaling_fun = scoring.get_default_network_scaling(self['num_iterations'])
+            network_scoring = nw.ScoringFunction(
+                self.organism(),
+                self.membership(),
+                self.ratio_matrix,
+                scaling_func=network_scaling_fun,
+                run_in_iteration=scoring.schedule(1, 7),
+                config_params=self.config_params)
+            row_scoring_functions.append(network_scoring)
 
-        row_scoring_functions = [row_scoring, motif_scoring, network_scoring]
         return scoring.ScoringFunctionCombiner(
             self.membership(),
             row_scoring_functions,
@@ -292,23 +299,23 @@ class CMonkeyRun:
         nw_factories = []
 
         # automatically download STRING file
-        if stringfile == None:
-            if ncbi_code == None:
-                rsat_info = rsat_mapper(kegg_mapper(self['organism_code']),
-                                        self['rsat_organism'])
-                ncbi_code = rsat_info.taxonomy_id
+        if self['donetworks'] and self['use_string']:
+            if stringfile == None:
+                if ncbi_code == None:
+                    rsat_info = rsat_mapper(kegg_mapper(self['organism_code']),
+                                            self['rsat_organism'])
+                    ncbi_code = rsat_info.taxonomy_id
 
-            logging.info("NCBI CODE IS: %s", ncbi_code)
-            url = STRING_URL_PATTERN % ncbi_code
-            stringfile = "%s/%s.gz" % (self['cache_dir'], ncbi_code)
-            self['string_file'] = stringfile
-            logging.info("Automatically using STRING file in '%s'", stringfile)
-            util.get_url_cached(url, stringfile)
-        else:
+                logging.info("NCBI CODE IS: %s", ncbi_code)
+                url = STRING_URL_PATTERN % ncbi_code
+                stringfile = "%s/%s.gz" % (self['cache_dir'], ncbi_code)
+                self['string_file'] = stringfile
+                logging.info("Automatically using STRING file in '%s'", stringfile)
+                util.get_url_cached(url, stringfile)
             nw_factories.append(stringdb.get_network_factory2(
                     self['organism_code'], stringfile, 0.5))
 
-        if self['use_operons']:
+        if self['donetworks'] and self['use_operons']:
             logging.info('adding operon network factory')
             nw_factories.append(microbes_online.get_network_factory(
                     mo_db, max_operon_size=self.ratio_matrix.num_rows / 20,
@@ -455,7 +462,7 @@ class CMonkeyRun:
         # write stats for this iteration
         iteration = iteration_result['iteration']
 
-        network_scores = iteration_result['networks']
+        network_scores = iteration_result['networks'] if 'networks' in iteration_result else {}
         motif_pvalues = iteration_result['motif-pvalue'] if 'motif-pvalue' in iteration_result else {}
         fuzzy_coeff = iteration_result['fuzzy-coeff'] if 'fuzzy-coeff' in iteration_result else 0.0
 

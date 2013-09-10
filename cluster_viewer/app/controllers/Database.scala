@@ -480,7 +480,7 @@ class StatsReader {
     }
 
     val networkStats = StatsQueries.networkStats
-    val networkIterationMap = new HashMap[Int, HashMap[String, Double]]
+    val networkIterationMap = (new HashMap[Int, HashMap[String, Double]]).withDefaultValue(new HashMap[String, Double])
     networkStats.foreach { nstat =>
       if (!networkIterationMap.contains(nstat._1)) {
         networkIterationMap(nstat._1) = new HashMap[String, Double]
