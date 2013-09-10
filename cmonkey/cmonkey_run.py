@@ -281,7 +281,9 @@ class CMonkeyRun:
 
     def organism(self):
         """returns the organism object to work on"""
-        if self.__organism == None:
+        if self['dummy_organism']:
+            self.__organism = org.DummyOrganism()
+        elif self.__organism == None:
             self.__organism = self.make_microbe()
         return self.__organism
 
@@ -353,6 +355,8 @@ class CMonkeyRun:
     def prepare_run(self):
         """Setup output directories and scoring functions for the scoring.
         Separating setup and actual run facilitates testing"""
+        self['dummy_organism'] = (self['organism_code'] == None and
+                                  not self['donetworks'] and not self['domotifs'])
         self.__make_dirs_if_needed()
         self.__clear_output_dir()
         self.__create_output_database()

@@ -153,6 +153,16 @@ class OrganismBase:
         synonyms = self.thesaurus()
         return [synonyms[alias] for alias in gene_aliases if alias in synonyms]
 
+class DummyOrganism(OrganismBase):
+
+    def __init__(self):
+        OrganismBase.__init__(self, 0, [])
+
+    def thesaurus(self):
+        return {}
+
+    def species(self):
+        return "Dummy organism"
 
 class Microbe(OrganismBase):
     """Abstraction of a microbial organism in cMonkey. It captures all

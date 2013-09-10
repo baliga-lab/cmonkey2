@@ -19,7 +19,7 @@ This program is licensed under the General Public License V3.
 See README and LICENSE for details.\n"""
 
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--organism', required=True, help='KEGG organism code')
+    parser.add_argument('--organism', help='KEGG organism code', default=None)
     parser.add_argument('--ratios', required=True,
                         help='tab-separated ratios matrix file')
     parser.add_argument('--out', default='out', help='output directory')
@@ -42,6 +42,10 @@ See README and LICENSE for details.\n"""
     parser.add_argument('--nostring', action="store_true", help="deactivate STRING network scoring")
     parser.add_argument('--nooperons', action="store_true", help="deactivate operon network scoring")
     args = parser.parse_args()
+    if args.organism == None:
+        print("WARNING - no organism provided - assuming that you want to score ratios only")
+        args.nomotifs = True
+        args.nonetworks = True
 
     CHECKPOINT_FILE = args.checkpoint
     matrix_factory = dm.DataMatrixFactory([dm.nochange_filter,
