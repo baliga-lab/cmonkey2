@@ -52,11 +52,14 @@ def genes_for_motifs(conn, motifs, gene_map):
         cluster = comps[1]
         motifnum = comps[2]
         cursor.execute('select rowid from motif_infos where iteration = 2001 and cluster = ? and motif_num = ?', [cluster, motifnum])
-        motif_id = cursor.fetchone()[0]
-        cursor.execute('select distinct gene_num from motif_annotations where motif_info_id = ?',
-                       [motif_id])
-        genes = [gene_map[int(row[0])] for row in cursor.fetchall()]
-        result.extend(genes)
+        try:
+            motif_id = cursor.fetchone()[0]
+            cursor.execute('select distinct gene_num from motif_annotations where motif_info_id = ?',
+                           [motif_id])
+            genes = [gene_map[int(row[0])] for row in cursor.fetchall()]
+            result.extend(genes)
+        except:
+            pass
     cursor.close()
     return set(result)
 
