@@ -10,6 +10,7 @@ import datamatrix as dm
 import util
 import argparse
 import logging
+import ConfigParser
 
 
 if __name__ == '__main__':
@@ -18,11 +19,19 @@ Institute for Systems Biology
 This program is licensed under the General Public License V3.
 See README and LICENSE for details.\n"""
 
+    # read default configuration parameters
+    config = ConfigParser.ConfigParser()
+    config.read('default.ini')
+
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--organism', help='KEGG organism code', default=None)
     parser.add_argument('--ratios', required=True,
                         help='tab-separated ratios matrix file')
-    parser.add_argument('--out', default='out', help='output directory')
+
+    parser.add_argument('--organism', help='KEGG organism code', default=None)
+    parser.add_argument('--out', default=config.get("General", "output_dir"),
+                        help='output directory')
+    parser.add_argument('--cachedir', default=config.get("General", "cache_dir"),
+                        help="path to cache directory")
     parser.add_argument('--string', help='tab-separated STRING file for the organism')
     parser.add_argument('--checkpoint', help='checkpoint-file')
     parser.add_argument('--checkratios', action="store_true",
@@ -34,18 +43,24 @@ See README and LICENSE for details.\n"""
     parser.add_argument('--logfile', default=None, help="""path to log file""")
     parser.add_argument('--keep_memeout', action="store_true",
                         help="""keep MEME output files""")
-    parser.add_argument('--cachedir', default="cache", help="path to cache directory")
     parser.add_argument('--ncbi_code', default=None, help="path to cache directory")
 
     parser.add_argument('--nomotifs', action="store_true", help="deactivate motif scoring")
     parser.add_argument('--nonetworks', action="store_true", help="deactivate network scoring")
     parser.add_argument('--nostring', action="store_true", help="deactivate STRING network scoring")
     parser.add_argument('--nooperons', action="store_true", help="deactivate operon network scoring")
+    parser.add_argument('--config', default=None, help="additional configuration file")
     args = parser.parse_args()
+
+    # no organism provided -> dummy organism
     if args.organism == None:
         print("WARNING - no organism provided - assuming that you want to score ratios only")
         args.nomotifs = True
         args.nonetworks = True
+
+    # user overrides in config files
+    if args.config:
+        config.read(args.config)
 
     CHECKPOINT_FILE = args.checkpoint
     matrix_factory = dm.DataMatrixFactory([dm.nochange_filter,
