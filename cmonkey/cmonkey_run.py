@@ -75,12 +75,6 @@ class CMonkeyRun:
         self.column_seeder = microarray.seed_column_members
         self['string_file'] = None
 
-        # used to select sequences and MEME
-        self['sequence_types'] = ['upstream']
-        self['search_distances'] = {'upstream': (-20, 150)}
-        # used for background distribution and MAST
-        self['scan_distances'] = {'upstream': (-30, 250)}
-
         self['string_file'] = string_file
 
         # which scoring functions should be active
@@ -88,7 +82,6 @@ class CMonkeyRun:
         self['domotifs'] = True
 
         today = date.today()
-        self['checkpoint_interval'] = 100
         self.__checkpoint_basename = "cmonkey-checkpoint-%s-%d%d%d" % (
             organism_code, today.year, today.month, today.day)
         self['meme_version'] = meme.check_meme_version()
@@ -338,11 +331,14 @@ class CMonkeyRun:
                 os.remove('/'.join([output_dir, filename]))
 
     def __check_parameters(self):
+        """ensure that we all required parameters before we start running"""
         PARAM_NAMES = ['num_iterations', 'start_iteration', 'multiprocessing',
                        'quantile_normalize', 'row_scaling', 'keep_memeout',
                        'memb.min_cluster_rows_allowed', 'memb.max_cluster_rows_allowed',
                        'memb.prob_row_change', 'memb.prob_col_change',
-                       'memb.max_changes_per_row', 'memb.max_changes_per_col']
+                       'memb.max_changes_per_row', 'memb.max_changes_per_col',
+                       'sequence_types', 'search_distances', 'scan_distances',
+                       'checkpoint_interval']
 
         for param in PARAM_NAMES:
             if param not in self.config_params:

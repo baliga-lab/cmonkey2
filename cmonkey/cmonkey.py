@@ -88,7 +88,8 @@ See README and LICENSE for details.\n"""
     cmonkey_run['out_database'] = os.path.join(args.out,
                                                config.get("General", "dbfile_name"))
     cmonkey_run['multiprocessing'] = config.getboolean('General', 'use_multiprocessing')
-    
+    cmonkey_run['checkpoint_interval'] = config.getint('General', 'checkpoint_interval')
+
     # Quantile normalization is false by default in cMonkey-R
     cmonkey_run['quantile_normalize'] = config.getboolean('Scoring', 'quantile_normalize')
     cmonkey_run['row_scaling'] = config.getfloat('Scoring', 'row_scaling')
@@ -99,6 +100,16 @@ See README and LICENSE for details.\n"""
     cmonkey_run['memb.prob_col_change'] = config.getfloat('Membership', 'probability_column_change')
     cmonkey_run['memb.max_changes_per_row'] = config.getint('Membership', 'max_changes_per_row')
     cmonkey_run['memb.max_changes_per_col'] = config.getint('Membership', 'max_changes_per_column')
+
+    cmonkey_run['sequence_types'] = config.get('Motifs', 'sequence_types').split(',')
+    cmonkey_run['search_distances'] = {}
+    cmonkey_run['scan_distances'] = {}
+    for seqtype in cmonkey_run['sequence_types']:
+        cat = "SequenceType-%s" % seqtype
+        cmonkey_run['search_distances'][seqtype] = (config.getint(cat, 'search_distance_start'),
+                                                    config.getint(cat, 'search_distance_stop'))
+        cmonkey_run['scan_distances'][seqtype] = (config.getint(cat, 'scan_distance_start'),
+                                                  config.getint(cat, 'scan_distance_stop'))
 
     cmonkey_run['keep_memeout'] = args.keep_memeout
     cmonkey_run['donetworks'] = not args.nonetworks
