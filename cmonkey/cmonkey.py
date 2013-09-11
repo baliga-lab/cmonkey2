@@ -62,7 +62,6 @@ See README and LICENSE for details.\n"""
     if args.config:
         config.read(args.config)
 
-    CHECKPOINT_FILE = args.checkpoint
     matrix_factory = dm.DataMatrixFactory([dm.nochange_filter,
                                            dm.center_scale_filter])
     matrix_filename = args.ratios
@@ -84,7 +83,12 @@ See README and LICENSE for details.\n"""
                                          ncbi_code=args.ncbi_code)
     cmonkey_run['output_dir'] = args.out
     cmonkey_run['cache_dir'] = args.cachedir
-    cmonkey_run['out_database'] = os.path.join(args.out, 'cmonkey_run.db')
+    cmonkey_run['num_iterations'] = config.getint("General", "num_iterations")
+    cmonkey_run['out_database'] = os.path.join(args.out,
+                                               config.get("General", "dbfile_name"))
+    cmonkey_run['multiprocessing'] = config.getboolean('General', 'use_multiprocessing')
+    cmonkey_run['quantile_normalize'] = config.getboolean('Scoring', 'quantile_normalize')
+
     cmonkey_run['keep_memeout'] = args.keep_memeout
     cmonkey_run['donetworks'] = not args.nonetworks
     cmonkey_run['domotifs'] = not args.nomotifs

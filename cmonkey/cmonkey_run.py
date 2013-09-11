@@ -59,7 +59,6 @@ class CMonkeyRun:
             num_clusters = int(round(self.ratio_matrix.num_rows *
                                      self['memb.clusters_per_row'] / 20.0))
         self['memb.clusters_per_col'] = int(round(num_clusters * 2.0 / 3.0))
-        #self['memb.clusters_per_col'] = int(round(num_clusters / 2.0))
         self['memb.prob_row_change'] = 0.5
         self['memb.prob_col_change'] = 1.0
         self['memb.max_changes_per_row'] = 1
@@ -81,7 +80,6 @@ class CMonkeyRun:
         self['row_scaling'] = 6.0
         self['string_file'] = None
         self['start_iteration'] = 1
-        self['num_iterations'] = 2000
         self['multiprocessing'] = True
         # Quantile normalization is false by default in cMonkey-R
         self['quantile_normalize'] = True
