@@ -59,10 +59,6 @@ class CMonkeyRun:
             num_clusters = int(round(self.ratio_matrix.num_rows *
                                      self['memb.clusters_per_row'] / 20.0))
         self['memb.clusters_per_col'] = int(round(num_clusters * 2.0 / 3.0))
-        self['memb.prob_row_change'] = 0.5
-        self['memb.prob_col_change'] = 1.0
-        self['memb.max_changes_per_row'] = 1
-        self['memb.max_changes_per_col'] = 5
 
         self['organism_code'] = organism_code
         self['num_clusters'] = num_clusters
@@ -77,12 +73,7 @@ class CMonkeyRun:
         # defaults
         self.row_seeder = memb.make_kmeans_row_seeder(num_clusters)
         self.column_seeder = microarray.seed_column_members
-        self['row_scaling'] = 6.0
         self['string_file'] = None
-        self['start_iteration'] = 1
-        self['multiprocessing'] = True
-        # Quantile normalization is false by default in cMonkey-R
-        self['quantile_normalize'] = True
 
         # used to select sequences and MEME
         self['sequence_types'] = ['upstream']
@@ -90,11 +81,7 @@ class CMonkeyRun:
         # used for background distribution and MAST
         self['scan_distances'] = {'upstream': (-30, 250)}
 
-        # membership default parameters
-        self['memb.min_cluster_rows_allowed'] = 3
-        self['memb.max_cluster_rows_allowed'] = 70
         self['string_file'] = string_file
-        self['keep_memeout'] = False
 
         # which scoring functions should be active
         self['donetworks'] = True
@@ -350,11 +337,23 @@ class CMonkeyRun:
             for filename in outfiles:
                 os.remove('/'.join([output_dir, filename]))
 
+    def __check_parameters(self):
+        PARAM_NAMES = ['num_iterations', 'start_iteration', 'multiprocessing',
+                       'quantile_normalize', 'row_scaling', 'keep_memeout',
+                       'memb.min_cluster_rows_allowed', 'memb.max_cluster_rows_allowed',
+                       'memb.prob_row_change', 'memb.prob_col_change',
+                       'memb.max_changes_per_row', 'memb.max_changes_per_col']
+
+        for param in PARAM_NAMES:
+            if param not in self.config_params:
+                raise Exception("required parameter not found in config: '%s'" % param)
+
     def prepare_run(self):
         """Setup output directories and scoring functions for the scoring.
-        Separating setup and actual run facilitates testing"""
+        Separating setup and actual run facilitates testing"""        
         self['dummy_organism'] = (self['organism_code'] == None and
                                   not self['donetworks'] and not self['domotifs'])
+        self.__check_parameters()
         self.__make_dirs_if_needed()
         self.__clear_output_dir()
         self.__create_output_database()

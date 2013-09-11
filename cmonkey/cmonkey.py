@@ -84,10 +84,21 @@ See README and LICENSE for details.\n"""
     cmonkey_run['output_dir'] = args.out
     cmonkey_run['cache_dir'] = args.cachedir
     cmonkey_run['num_iterations'] = config.getint("General", "num_iterations")
+    cmonkey_run['start_iteration'] = config.getint("General", "start_iteration")
     cmonkey_run['out_database'] = os.path.join(args.out,
                                                config.get("General", "dbfile_name"))
     cmonkey_run['multiprocessing'] = config.getboolean('General', 'use_multiprocessing')
+    
+    # Quantile normalization is false by default in cMonkey-R
     cmonkey_run['quantile_normalize'] = config.getboolean('Scoring', 'quantile_normalize')
+    cmonkey_run['row_scaling'] = config.getfloat('Scoring', 'row_scaling')
+    # membership default parameters
+    cmonkey_run['memb.min_cluster_rows_allowed'] = config.getint('Membership', 'min_cluster_rows_allowed')
+    cmonkey_run['memb.max_cluster_rows_allowed'] = config.getint('Membership', 'max_cluster_rows_allowed')
+    cmonkey_run['memb.prob_row_change'] = config.getfloat('Membership', 'probability_row_change')
+    cmonkey_run['memb.prob_col_change'] = config.getfloat('Membership', 'probability_column_change')
+    cmonkey_run['memb.max_changes_per_row'] = config.getint('Membership', 'max_changes_per_row')
+    cmonkey_run['memb.max_changes_per_col'] = config.getint('Membership', 'max_changes_per_column')
 
     cmonkey_run['keep_memeout'] = args.keep_memeout
     cmonkey_run['donetworks'] = not args.nonetworks
