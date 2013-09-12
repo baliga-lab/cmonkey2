@@ -165,7 +165,7 @@ class RowScoringFunction(scoring.ScoringFunctionBase):
     """Scoring algorithm for microarray data based on genes"""
 
     def __init__(self, membership, matrix, scaling_func=None,
-                 run_in_iteration=scoring.schedule(1, 2),
+                 run_in_iteration=None,
                  config_params=None):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,

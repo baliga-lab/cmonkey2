@@ -233,8 +233,7 @@ class ColumnScoringFunction(ScoringFunctionBase):
     function output format and can therefore not be combined in
     a generic way (the format is |condition x cluster|)"""
 
-    def __init__(self, membership, matrix,
-                 run_in_iteration=schedule(1, 5),
+    def __init__(self, membership, matrix, run_in_iteration=None,
                  config_params=None):
         """create scoring function instance"""
         ScoringFunctionBase.__init__(self, membership,

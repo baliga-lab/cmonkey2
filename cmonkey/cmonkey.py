@@ -106,10 +106,21 @@ See README and LICENSE for details.\n"""
     cmonkey_run['scan_distances'] = {}
     for seqtype in cmonkey_run['sequence_types']:
         cat = "SequenceType-%s" % seqtype
-        cmonkey_run['search_distances'][seqtype] = (config.getint(cat, 'search_distance_start'),
-                                                    config.getint(cat, 'search_distance_stop'))
-        cmonkey_run['scan_distances'][seqtype] = (config.getint(cat, 'scan_distance_start'),
-                                                  config.getint(cat, 'scan_distance_stop'))
+        cmonkey_run['search_distances'][seqtype] = tuple(
+            map(int, config.get(cat, 'search_distance').split(',')))
+        cmonkey_run['scan_distances'][seqtype] = tuple(
+            map(int, config.get(cat, 'scan_distance').split(',')))
+
+    cmonkey_run['row_schedule'] = tuple(map(int, config.get("Rows", "schedule").split(',')))
+    cmonkey_run['column_schedule'] = tuple(map(int, config.get("Columns",
+                                                               "schedule").split(',')))
+    cmonkey_run['meme_schedule'] = tuple(map(int, config.get("MEME", "schedule").split(',')))
+    cmonkey_run['motif_schedule'] = tuple(map(int, config.get("Motifs", "schedule").split(',')))
+    cmonkey_run['network_schedule'] = tuple(map(int, config.get("Networks",
+                                                                "schedule").split(',')))
+
+    cmonkey_run['stats_freq'] = config.getint('General', 'stats_frequency')
+    cmonkey_run['result_freq'] = config.getint('General', 'result_frequency')
 
     cmonkey_run['keep_memeout'] = args.keep_memeout
     cmonkey_run['donetworks'] = not args.nonetworks

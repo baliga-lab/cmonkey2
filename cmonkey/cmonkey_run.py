@@ -29,11 +29,6 @@ STRING_URL_PATTERN = "http://networks.systemsbiology.net/string9/%s.gz"
 
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 
-# these parameters have a strong impact on the size of the result file
-# Please set it to something >= 10 (which can be in the 10s of gigabytes)
-STATS_FREQ = 50
-RESULT_FREQ = 50
-
 
 class CMonkeyRun:
     def __init__(self, organism_code, ratio_matrix,
@@ -192,6 +187,8 @@ class CMonkeyRun:
         """returns the column scoring function"""
         return scoring.ColumnScoringFunction(
             self.membership(), self.ratio_matrix,
+            run_in_iteration=scoring.schedule(self['column_schedule'][0],
+                                              self['column_schedule'][1]),
             config_params=self.config_params)
 
     def make_row_scoring(self):
@@ -200,6 +197,8 @@ class CMonkeyRun:
         row_scoring = microarray.RowScoringFunction(
             self.membership(), self.ratio_matrix,
             scaling_func=lambda iteration: self['row_scaling'],
+            run_in_iteration=scoring.schedule(self["row_schedule"][0],
+                                              self["row_schedule"][1]),
             config_params=self.config_params)
         row_scoring_functions = [row_scoring]
 
@@ -227,10 +226,10 @@ class CMonkeyRun:
                 sequence_filters=sequence_filters,
                 scaling_func=motif_scaling_fun,
                 num_motif_func=motif.default_nmotif_fun,
-                update_in_iteration=scoring.schedule(601, 3),
-                motif_in_iteration=scoring.schedule(600, 100),
-                #update_in_iteration=scoring.schedule(100, 10),
-                #motif_in_iteration=scoring.schedule(100, 100),
+                update_in_iteration=scoring.schedule(self['motif_schedule'][0],
+                                                     self['motif_schedule'][1]),
+                motif_in_iteration=scoring.schedule(self['meme_schedule'][0],
+                                                    self['meme_schedule'][1]),
                 config_params=self.config_params)
             row_scoring_functions.append(motif_scoring)
 
@@ -241,7 +240,8 @@ class CMonkeyRun:
                 self.membership(),
                 self.ratio_matrix,
                 scaling_func=network_scaling_fun,
-                run_in_iteration=scoring.schedule(1, 7),
+                run_in_iteration=scoring.schedule(self['network_schedule'][0],
+                                                  self['network_schedule'][1]),
                 config_params=self.config_params)
             row_scoring_functions.append(network_scoring)
 
@@ -562,10 +562,10 @@ class CMonkeyRun:
 
         logging.info('mean net = %s | mean mot = %s', str(mean_net_score), mean_mot_pvalue)
 
-        if iteration == 1 or (iteration % RESULT_FREQ == 0):
+        if iteration == 1 or (iteration % self['result_freq'] == 0):
             self.write_results(iteration_result)
 
-        if iteration == 1 or (iteration % STATS_FREQ == 0):
+        if iteration == 1 or (iteration % self['stats_freq'] == 0):
             self.write_stats(iteration_result)
             self.update_iteration(iteration)
 
