@@ -44,6 +44,8 @@ See README and LICENSE for details.\n"""
     parser.add_argument('--keep_memeout', action="store_true",
                         help="""keep MEME output files""")
     parser.add_argument('--ncbi_code', default=None, help="path to cache directory")
+    parser.add_argument('--numclusters', type=int,
+                        default=None, help="override the number of clusters")
 
     parser.add_argument('--nomotifs', action="store_true", help="deactivate motif scoring")
     parser.add_argument('--nonetworks', action="store_true", help="deactivate network scoring")
@@ -80,7 +82,8 @@ See README and LICENSE for details.\n"""
                                          rsat_organism=args.rsat_organism,
                                          log_filename=args.logfile,
                                          remap_network_nodes=args.remap_network_nodes,
-                                         ncbi_code=args.ncbi_code)
+                                         ncbi_code=args.ncbi_code,
+                                         num_clusters=args.numclusters)
     cmonkey_run['output_dir'] = args.out
     cmonkey_run['cache_dir'] = args.cachedir
     cmonkey_run['num_iterations'] = config.getint("General", "num_iterations")

@@ -20,6 +20,7 @@ import sizes
 import gzip
 import sqlite3
 from decimal import Decimal
+import cPickle
 
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
 GO_FILE_PATH = 'testdata/proteome2taxid'
@@ -529,6 +530,9 @@ class CMonkeyRun:
             conn.execute('''update run_infos set finish_time = ?''', (datetime.now(),))
         conn.close()
 
+    def combined_rscores_pickle_path(self):
+        return "%s/combined_rscores_last.pkl" % self.config_params['output_dir']
+
     def run_iteration(self, row_scoring, col_scoring, iteration):
         logging.info("Iteration # %d", iteration)
         iteration_result = {'iteration': iteration}
@@ -583,7 +587,11 @@ class CMonkeyRun:
         iteration = self['num_iterations'] + 1
         iteration_result = {'iteration': iteration}
         logging.info("Adjusted. Now re-run scoring (iteration: %d)", iteration_result['iteration'])
-        row_scoring.compute_force(iteration_result)
+        combined_scores = row_scoring.compute_force(iteration_result)
+        # write the combined scores for benchmarking/diagnostics
+        with open(self.combined_rscores_pickle_path(), 'w') as outfile:
+            cPickle.dump(combined_scores, outfile)
+
         self.write_results(iteration_result)
         self.write_stats(iteration_result)
         self.update_iteration(self['num_iterations'] + 1)
