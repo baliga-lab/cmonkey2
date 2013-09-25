@@ -259,6 +259,11 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                                                    network_score, network.weight)
             iteration_scores = compute_iteration_scores(network_iteration_scores)
 
+        outfile_path = self.network_scores_pickle_path()
+        outfile_dir = os.path.dirname(outfile_path)
+        if not os.path.isdir(outfile_dir):
+            from os import makedirs
+            makedirs(outfile_dir)
         with open(self.network_scores_pickle_path(), 'w') as outfile:
             cPickle.dump(network_scores, outfile)
         # immediately use in means computation
