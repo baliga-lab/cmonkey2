@@ -111,7 +111,7 @@ class ClusterMembershipTest(unittest.TestCase):
                                                     'num_clusters': 43})
         self.assertTrue(seed_row_memberships.was_called)
         self.assertTrue(seed_col_memberships.was_called)
-        self.assertEquals(memb.NUM_CLUSTERS, membership.num_clusters())
+        self.assertEquals(43, membership.num_clusters())
 
     def test_compute_column_scores_submatrix(self):
         """tests compute_column_scores_submatrix"""
