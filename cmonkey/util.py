@@ -264,6 +264,9 @@ def read_url_cached(url, cache_filename):
     """convenience method to read a document from a URL using the
     CMonkeyURLopener, cached version"""
     if not os.path.exists(cache_filename):
+        cache_dir = os.path.dirname(cache_filename)
+        if not os.path.isdir(cache_dir):
+            os.makedirs(cache_dir)
         CMonkeyURLopener().retrieve(url, cache_filename)
     with open(cache_filename) as cached_file:
         return cached_file.read()
