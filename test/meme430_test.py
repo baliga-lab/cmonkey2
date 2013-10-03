@@ -12,6 +12,7 @@ import organism as org
 import microbes_online
 import stringdb
 import datamatrix as dm
+import os, os.path
 
 
 KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
@@ -32,6 +33,10 @@ class FakeMembership:
 
 class Meme430Test(unittest.TestCase):  # pylint: disable-msg=R0904
     """This class tests a Halo setup"""
+
+    def setUp(self):  # pylint: disable-msg=C0103
+        if not os.path.exists('out'):
+            os.mkdir('out')
 
     def test_meme_simple(self):
         """simplest of all: just run meme and parse the output, just tests
