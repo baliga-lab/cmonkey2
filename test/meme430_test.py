@@ -52,7 +52,8 @@ class Meme430Test(unittest.TestCase):  # pylint: disable-msg=R0904
         scan_distances = {'upstream': (-30, 250)}
 
         matrix_factory = dm.DataMatrixFactory([dm.nochange_filter, dm.center_scale_filter])
-        infile = util.read_dfile('halo_ratios5.tsv', has_header=True, quote='\"')
+        infile = util.read_dfile('example_data/hal/halo_ratios5.tsv',
+                                 has_header=True, quote='\"')
         ratio_matrix = matrix_factory.create_from(infile)
         meme_suite = meme.MemeSuite430(remove_tempfiles=True)
         sequence_filters = [
@@ -94,7 +95,7 @@ def make_halo(ratio_matrix, search_distances, scan_distances):
     gofile = util.read_dfile(GO_FILE_PATH)
     rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
     mo_db = microbes_online.MicrobesOnline(CACHE_DIR)
-    stringfile = 'string_links_64091.tab'
+    stringfile = 'testdata/string_links_64091.tab'
 
     nw_factories = []
     if stringfile != None:

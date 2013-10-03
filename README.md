@@ -51,7 +51,7 @@ can see all available options with
 There is a startup script for cMonkey to run the current integrated
 system
 
-    ./run_cmonkey.sh --organism hal --ratios halo_ratios5.tsv
+    ./run_cmonkey.sh --organism hal --ratios example_data/hal/halo_ratios5.tsv
 
 
 ### Start the monitoring application
