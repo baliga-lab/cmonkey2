@@ -36,10 +36,10 @@ def read_edges(filename, sep='\t', prefix=PROTEIN_PREFIX):
             result.append([protein1, protein2, score])
             if score > max_score:
                 max_score = score
-    return normalize_edge_list(result, max_score)
+    return normalize_edges_to_max_score(result, max_score)
 
 
-def normalize_edge_list(edges, max_score):
+def normalize_edges_to_max_score(edges, max_score):
     """normalize scores to 1000, for combined scores"""
     for edge in edges:
         score = edge[2] / max_score * 1000.0
@@ -61,21 +61,27 @@ def get_network_factory(filename, weight):
     return make_network
 
 
-def get_network_factory2(organism_code, filename, weight, sep='\t'):
+def get_network_factory2(organism_code, filename, weight, sep='\t',
+                         normalized=False):
     """STRING network factory from preprocessed edge file
     (protein1, protein2, combined_score), scores are already
     normalized to 1000.
-    This is the standard factory method used for Microbes
+    This is the standard factory method used for Microbes.
     """
     def read_edges2(filename):
         """just read a preprocessed file, much faster to debug"""
         logging.info("stringdb.read_edges2()")
         dfile = util.read_dfile(filename, sep)
         result = []
+        max_score = 0.0
         for line in dfile.lines:
+            score = float(line[2])
+            max_score = max(score, max_score)
             result.append([patches.patch_string_gene(organism_code, line[0]),
                            patches.patch_string_gene(organism_code, line[1]),
-                           float(line[2])])
+                           score])
+        if not normalized:
+            normalize_edges_to_max_score(result, max_score)
         return result
 
     def make_network(_):
