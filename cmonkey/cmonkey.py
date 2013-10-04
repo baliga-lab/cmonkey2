@@ -12,6 +12,46 @@ import argparse
 import logging
 import ConfigParser
 
+def set_config(cmonkey_run, config):
+    cmonkey_run['num_iterations'] = config.getint("General", "num_iterations")
+    cmonkey_run['start_iteration'] = config.getint("General", "start_iteration")
+    cmonkey_run['out_database'] = os.path.join(cmonkey_run['output_dir'],
+                                               config.get("General", "dbfile_name"))
+    cmonkey_run['multiprocessing'] = config.getboolean('General', 'use_multiprocessing')
+    cmonkey_run['checkpoint_interval'] = config.getint('General', 'checkpoint_interval')
+
+    # Quantile normalization is false by default in cMonkey-R
+    cmonkey_run['quantile_normalize'] = config.getboolean('Scoring', 'quantile_normalize')
+    cmonkey_run['row_scaling'] = config.getfloat('Scoring', 'row_scaling')
+    # membership default parameters
+    cmonkey_run['memb.min_cluster_rows_allowed'] = config.getint('Membership', 'min_cluster_rows_allowed')
+    cmonkey_run['memb.max_cluster_rows_allowed'] = config.getint('Membership', 'max_cluster_rows_allowed')
+    cmonkey_run['memb.prob_row_change'] = config.getfloat('Membership', 'probability_row_change')
+    cmonkey_run['memb.prob_col_change'] = config.getfloat('Membership', 'probability_column_change')
+    cmonkey_run['memb.max_changes_per_row'] = config.getint('Membership', 'max_changes_per_row')
+    cmonkey_run['memb.max_changes_per_col'] = config.getint('Membership', 'max_changes_per_column')
+
+    cmonkey_run['sequence_types'] = config.get('Motifs', 'sequence_types').split(',')
+    cmonkey_run['search_distances'] = {}
+    cmonkey_run['scan_distances'] = {}
+    for seqtype in cmonkey_run['sequence_types']:
+        cat = "SequenceType-%s" % seqtype
+        cmonkey_run['search_distances'][seqtype] = tuple(
+            map(int, config.get(cat, 'search_distance').split(',')))
+        cmonkey_run['scan_distances'][seqtype] = tuple(
+            map(int, config.get(cat, 'scan_distance').split(',')))
+
+    cmonkey_run['row_schedule'] = tuple(map(int, config.get("Rows", "schedule").split(',')))
+    cmonkey_run['column_schedule'] = tuple(map(int, config.get("Columns",
+                                                               "schedule").split(',')))
+    cmonkey_run['meme_schedule'] = tuple(map(int, config.get("MEME", "schedule").split(',')))
+    cmonkey_run['motif_schedule'] = tuple(map(int, config.get("Motifs", "schedule").split(',')))
+    cmonkey_run['network_schedule'] = tuple(map(int, config.get("Networks",
+                                                                "schedule").split(',')))
+
+    cmonkey_run['stats_freq'] = config.getint('General', 'stats_frequency')
+    cmonkey_run['result_freq'] = config.getint('General', 'result_frequency')
+
 
 if __name__ == '__main__':
     description = """cMonkey (Python port) (c) 2011-2012,
@@ -86,44 +126,7 @@ See README and LICENSE for details.\n"""
                                          num_clusters=args.numclusters)
     cmonkey_run['output_dir'] = args.out
     cmonkey_run['cache_dir'] = args.cachedir
-    cmonkey_run['num_iterations'] = config.getint("General", "num_iterations")
-    cmonkey_run['start_iteration'] = config.getint("General", "start_iteration")
-    cmonkey_run['out_database'] = os.path.join(args.out,
-                                               config.get("General", "dbfile_name"))
-    cmonkey_run['multiprocessing'] = config.getboolean('General', 'use_multiprocessing')
-    cmonkey_run['checkpoint_interval'] = config.getint('General', 'checkpoint_interval')
-
-    # Quantile normalization is false by default in cMonkey-R
-    cmonkey_run['quantile_normalize'] = config.getboolean('Scoring', 'quantile_normalize')
-    cmonkey_run['row_scaling'] = config.getfloat('Scoring', 'row_scaling')
-    # membership default parameters
-    cmonkey_run['memb.min_cluster_rows_allowed'] = config.getint('Membership', 'min_cluster_rows_allowed')
-    cmonkey_run['memb.max_cluster_rows_allowed'] = config.getint('Membership', 'max_cluster_rows_allowed')
-    cmonkey_run['memb.prob_row_change'] = config.getfloat('Membership', 'probability_row_change')
-    cmonkey_run['memb.prob_col_change'] = config.getfloat('Membership', 'probability_column_change')
-    cmonkey_run['memb.max_changes_per_row'] = config.getint('Membership', 'max_changes_per_row')
-    cmonkey_run['memb.max_changes_per_col'] = config.getint('Membership', 'max_changes_per_column')
-
-    cmonkey_run['sequence_types'] = config.get('Motifs', 'sequence_types').split(',')
-    cmonkey_run['search_distances'] = {}
-    cmonkey_run['scan_distances'] = {}
-    for seqtype in cmonkey_run['sequence_types']:
-        cat = "SequenceType-%s" % seqtype
-        cmonkey_run['search_distances'][seqtype] = tuple(
-            map(int, config.get(cat, 'search_distance').split(',')))
-        cmonkey_run['scan_distances'][seqtype] = tuple(
-            map(int, config.get(cat, 'scan_distance').split(',')))
-
-    cmonkey_run['row_schedule'] = tuple(map(int, config.get("Rows", "schedule").split(',')))
-    cmonkey_run['column_schedule'] = tuple(map(int, config.get("Columns",
-                                                               "schedule").split(',')))
-    cmonkey_run['meme_schedule'] = tuple(map(int, config.get("MEME", "schedule").split(',')))
-    cmonkey_run['motif_schedule'] = tuple(map(int, config.get("Motifs", "schedule").split(',')))
-    cmonkey_run['network_schedule'] = tuple(map(int, config.get("Networks",
-                                                                "schedule").split(',')))
-
-    cmonkey_run['stats_freq'] = config.getint('General', 'stats_frequency')
-    cmonkey_run['result_freq'] = config.getint('General', 'result_frequency')
+    set_config(cmonkey_run, config)
 
     cmonkey_run['keep_memeout'] = args.keep_memeout
     cmonkey_run['donetworks'] = not args.nonetworks

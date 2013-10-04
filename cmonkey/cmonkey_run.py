@@ -345,12 +345,13 @@ class CMonkeyRun:
             if param not in self.config_params:
                 raise Exception("required parameter not found in config: '%s'" % param)
 
-    def prepare_run(self):
+    def prepare_run(self, check_params=True):
         """Setup output directories and scoring functions for the scoring.
         Separating setup and actual run facilitates testing"""        
         self['dummy_organism'] = (self['organism_code'] == None and
                                   not self['donetworks'] and not self['domotifs'])
-        self.__check_parameters()
+        if check_params:
+            self.__check_parameters()
         self.__make_dirs_if_needed()
         self.__clear_output_dir()
         self.__create_output_database()
