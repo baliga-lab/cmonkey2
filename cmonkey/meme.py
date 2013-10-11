@@ -106,7 +106,7 @@ class MemeSuite:
         def background_file():
             """decide whether to use global or specific background file"""
             if self.__background_file != None:
-                logging.info("using global background")
+                logging.info("using global background: '%s'", self.__background_file)
                 return self.__background_file
             else:
                 bgseqs = {feature_id: all_seqs[feature_id]
@@ -244,7 +244,7 @@ class MemeSuite430(MemeSuite):
         if pspfile_path:
             command.extend(['-psp', pspfile_path])
 
-        #logging.info("running: %s", " ".join(command))
+        logging.info("running: %s", " ".join(command))
         output = subprocess.check_output(command)
         return (read_meme_output(output, num_motifs), output)
 
@@ -255,8 +255,9 @@ class MemeSuite430(MemeSuite):
         # memory errors
         command = ['mast', meme_outfile_path, '-d', database_file_path,
                    '-bfile', bgfile_path, '-nostatus', '-stdout', '-text',
-                   '-brief', '-ev', '99999', '-mev', '99999', '-mt', '0.99',
+                   '-brief', '-ev', '999999', '-mev', '9999999', '-mt', '0.99',
                    '-seqp', '-remcorr']
+        logging.info("running: %s", " ".join(command))
         output = subprocess.check_output(command, stderr=subprocess.STDOUT)
         return output
 
