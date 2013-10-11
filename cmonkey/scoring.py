@@ -37,8 +37,10 @@ def get_default_motif_scaling(num_iterations):
     """this scaling function is based on the tricky default motif scaling
     sequence in the R reference"""
     def default_motif_scaling(iteration):
+        if iteration <= 100:
+            return 1e-5
         steps = int(round(num_iterations * 0.75))
-        if iteration > steps:
+        if iteration > steps + 100:
             return 1.0
         else:
             return (1.0 / (steps - 1)) * (iteration - 1)
