@@ -272,6 +272,11 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
         if 'motifs' not in iteration_result:
             iteration_result['motifs'] = {}
+
+        # remove the 'iteration' key that we inserted
+        if "iteration" in self.__last_iteration_result:
+            del self.__last_iteration_result['iteration']
+
         iteration_result['motifs'][self.seqtype] = self.__last_iteration_result
 
         # for stats, support multiple sequence types
