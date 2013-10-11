@@ -284,7 +284,14 @@ class DataMatrixFactory:
         header = delimited_file.header
         nrows = len(lines)
         ncols = len(header) - 1
-        colnames = header[1:len(header)]
+
+        # This handles header formats that omit the 0-column
+        if len(lines) > 0 and len(lines[0]) - 1 > ncols:
+            ncols = len(lines[0]) - 1
+            colnames = header
+        else:
+            colnames = header[1:len(header)]
+
         rownames = []
         for row in xrange(nrows):
             rownames.append(lines[row][0])
