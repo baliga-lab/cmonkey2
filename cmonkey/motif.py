@@ -193,6 +193,43 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         return "%s/%s_matrix_last.pkl" % (self.config_params['output_dir'],
                                           self.name())
 
+    def pvalues2matrix(self, all_pvalues):
+        logging.info('Recomputing motif scores...')
+        start_time = util.current_millis()
+        # running the scoring itself
+        remapped = {}
+        for cluster in all_pvalues:
+            pvalues_k = all_pvalues[cluster]
+            pvalues_genes = {}
+            for feature_id, pvalue in pvalues_k.items():
+                pvalues_genes[self.reverse_map[feature_id]] = pvalue
+            remapped[cluster] = pvalues_genes
+
+        current = util.current_millis()
+        logging.info("built remapped in %f s.", (current - start_time) / 1000.0)
+        start_time = current
+
+        # convert remapped to an actual scoring matrix
+        matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
+                               self.gene_names())
+        mvalues = matrix.values
+        for row_index in xrange(matrix.num_rows):
+            row = matrix.row_names[row_index]
+            for cluster in xrange(1, self.num_clusters() + 1):
+                if (cluster in remapped.keys() and
+                    row in remapped[cluster].keys()):
+                    mvalues[row_index][cluster - 1] = remapped[cluster][row]
+        matrix.apply_log()
+
+        current = util.current_millis()
+        logging.info("built scoring matrix in %f s.", (current - start_time) / 1000.0)
+
+        start_time = current
+        matrix.fix_extreme_values()
+        current = util.current_millis()
+        logging.info("fixed extreme values in %f s.", (current - start_time) / 1000.0)
+        return matrix
+
     def __compute(self, iteration_result, force, ref_matrix=None):
         """compute method for the specified iteration
         Note: will return None if not computed yet and the result of a previous
@@ -202,15 +239,14 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         all_pvalues = None
 
         if force or self.motif_in_iteration(iteration):  # meme.iter in R
-            logging.info('Running Motifing...')
+            logging.info("Running Motifing for sequence type '%s'...", self.seqtype)
             # running MEME and store the result for the non-motifing iterations
             # to reuse
             # Note: currently, iteration results are only computed here
             num_motifs = self.num_motif_func(iteration,
                                              self.config_params['num_iterations'])
-            self.__last_iteration_result = {}
-            all_pvalues = self.compute_pvalues(iteration,
-                                               self.__last_iteration_result,
+            self.__last_iteration_result = {'iteration': iteration}
+            all_pvalues = self.compute_pvalues(self.__last_iteration_result,
                                                num_motifs)
             with open(self.pickle_path(), 'w') as outfile:
                 cPickle.dump(all_pvalues, outfile)
@@ -221,43 +257,10 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         matrix = None
         if all_pvalues != None and (
             force or self.update_in_iteration(iteration)):  # mot.iter in R
-            logging.info('Recomputing motif scores...')
-            start_time = util.current_millis()
-            # running the scoring itself
-            remapped = {}
-            for cluster in all_pvalues:
-                pvalues_k = all_pvalues[cluster]
-                pvalues_genes = {}
-                for feature_id, pvalue in pvalues_k.items():
-                    pvalues_genes[self.reverse_map[feature_id]] = pvalue
-                remapped[cluster] = pvalues_genes
 
-            current = util.current_millis()
-            logging.info("built remapped in %f s.", (current - start_time) / 1000.0)
-            start_time = current
-
-            # convert remapped to an actual scoring matrix
-            matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
-                                   self.gene_names())
-            mvalues = matrix.values
-            for row_index in xrange(matrix.num_rows):
-                row = matrix.row_names[row_index]
-                for cluster in xrange(1, self.num_clusters() + 1):
-                    if (cluster in remapped.keys() and
-                        row in remapped[cluster].keys()):
-                        mvalues[row_index][cluster - 1] = remapped[cluster][row]
-            matrix.apply_log()
-
-            current = util.current_millis()
-            logging.info("built scoring matrix in %f s.", (current - start_time) / 1000.0)
-            start_time = current
-
-            matrix.fix_extreme_values()
-            current = util.current_millis()
-            logging.info("fixed extreme values in %f s.", (current - start_time) / 1000.0)
+            matrix = self.pvalues2matrix(all_pvalues)
             with open(self.matrix_pickle_path(), 'w') as outfile:
                 cPickle.dump(matrix, outfile)
-
         elif os.path.exists(self.matrix_pickle_path()):
             with open(self.matrix_pickle_path()) as infile:
                 matrix = cPickle.load(infile)
@@ -279,7 +282,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             matrix, self.membership(),  self.organism)
         return matrix
 
-    def compute_pvalues(self, iteration, iteration_result, num_motifs):
+    def compute_pvalues(self, iteration_result, num_motifs):
         """Compute motif scores.
         The result is a dictionary from cluster -> (feature_id, pvalue)
         containing a sparse gene-to-pvalue mapping for each cluster
@@ -324,7 +327,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             else:
                 previous_motif_infos = None
 
-            params.append(ComputeScoreParams(iteration, cluster,
+            params.append(ComputeScoreParams(iteration_result['iteration'], cluster,
                                              feature_ids,
                                              seqs,
                                              self.used_seqs,
@@ -406,7 +409,7 @@ def compute_cluster_score(cluster):
     pvalues = {}
     run_result = None
     nseqs = len(params.seqs)
-    logging.info('%d: computing cluster score for %s seqs...', params.cluster, nseqs)
+    logging.info('Cluster %d, # sequences: %d', params.cluster, nseqs)
     if (nseqs >= params.min_cluster_rows
         and nseqs <= params.max_cluster_rows):
         run_result = params.meme_runner(params)
