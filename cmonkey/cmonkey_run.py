@@ -60,6 +60,7 @@ class CMonkeyRun:
         self['num_clusters'] = num_clusters
         self['use_operons'] = True
         self['use_string'] = True
+        self['global_background'] = True
         self['rsat_organism'] = rsat_organism
         self['ncbi_code'] = ncbi_code
         self['remap_network_nodes'] = remap_network_nodes
@@ -204,10 +205,16 @@ class CMonkeyRun:
         row_scoring_functions = [row_scoring]
 
         if self['domotifs']:
+            background_file = None
+            if self['global_background']:
+                background_file = meme.global_background_file(
+                    self.organism(), self.ratio_matrix.row_names,
+                    self['sequence_types'][0])
+
             if self['meme_version'] == '4.3.0':
-                meme_suite = meme.MemeSuite430()
+                meme_suite = meme.MemeSuite430(background_file=background_file)
             elif self['meme_version'] == '4.8.1' or self['meme_version'] == '4.9.0':
-                meme_suite = meme.MemeSuite481()
+                meme_suite = meme.MemeSuite481(background_file=background_file)
             else:
                 logging.error("MEME version %s currently not supported !", self['meme_version'])
                 raise Exception("unsupported MEME version")
