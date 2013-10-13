@@ -120,7 +120,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
             motif.unique_filter,
             motif.get_remove_low_complexity_filter(meme_suite),
             motif.get_remove_atgs_filter(self.search_distances['upstream'])]
-        motif_scaling_fun = scoring.get_default_motif_scaling(2000)
+        motif_scaling_fun = scoring.get_default_motif_scaling(2000, offset=0)
         motif_scoring = motif.MemeScoringFunction(
             self.organism,
             self.membership,
@@ -152,7 +152,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
         class DummyMotifScoring(scoring.ScoringFunctionBase):
             def __init__(self):
-                scaling_fun = scoring.get_default_motif_scaling(2000)
+                scaling_fun = scoring.get_default_motif_scaling(2000, offset=0)
                 scoring.ScoringFunctionBase.__init__(self, None, None, scaling_fun)
 
             def compute(self, iteration_result, ref_matrix=None):

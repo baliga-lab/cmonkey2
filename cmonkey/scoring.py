@@ -33,17 +33,17 @@ KEY_STRING_FILE = 'string_file'
 
 USE_MULTIPROCESSING = True
 
-def get_default_motif_scaling(num_iterations):
+def get_default_motif_scaling(num_iterations, offset=100):
     """this scaling function is based on the tricky default motif scaling
     sequence in the R reference"""
     def default_motif_scaling(iteration):
-        if iteration <= 100:
+        if iteration <= offset:
             return 1e-5
         steps = int(round(num_iterations * 0.75))
-        if iteration > steps + 100:
+        if iteration > steps + offset:
             return 1.0
         else:
-            return (1.0 / (steps - 1)) * (iteration - 1)
+            return (1.0 / (steps - 1)) * (iteration - (offset + 1))
     return default_motif_scaling
 
 
