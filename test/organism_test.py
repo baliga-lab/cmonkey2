@@ -179,38 +179,47 @@ class MicrobeFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
 class MicrobeTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for Organism"""
 
+    def setUp(self):  # pylint: disable-msg=C0103
+        """test fixture"""
+        self.mockFactory = MockNetworkFactory()
+        self.organism = org.Microbe('hal', 'Halobacterium SP',
+                                    org.RsatSpeciesInfo(MockRsatDatabase(''),
+                                                        'Halobacterium_SP',
+                                                        False,
+                                                        12345),
+                                    12345,
+                                    MockMicrobesOnline(),
+                                    [self.mockFactory],
+                                    SEARCH_DISTANCES,
+                                    SCAN_DISTANCES)
+
     def test_init_genome(self):
         """Tests the init_genome() method"""
-        organism = org.Microbe('hal', 'Halobacterium SP',
-                               org.RsatSpeciesInfo(MockRsatDatabase(''),
-                                                   'Halobacterium_SP',
-                                                   False,
-                                                   12345),
-                               12345,
-                               MockMicrobesOnline(),
-                               [],
-                               SEARCH_DISTANCES,
-                               SCAN_DISTANCES)
-        seqs = organism.sequences_for_genes_scan(['VNG12345G'], seqtype='upstream')
+        organism = self.organism
+        scan_seqs = organism.sequences_for_genes_scan(['VNG12345G'], seqtype='upstream')
         self.assertEquals((st.Location('NC_000915.1', -128, 152, False),
                            'ACGTTTAAAAGAGAGAGAGACACAGTATATATTTTTTTAAAA'),
-                          seqs['NP_206803.1'])
+                          scan_seqs['NP_206803.1'])
+        search_seqs = organism.sequences_for_genes_search(['VNG12345G'], seqtype='upstream')
+        self.assertEquals((st.Location('NC_000915.1', -28, 142, False),
+                           'ACGTTTAAAAGAGAGAGAGACACAGTATATATTTTTTTAAAA'),
+                          search_seqs['NP_206803.1'])
+
+    def test_search_no_operons(self):
+        """Tests the init_genome() method"""
+        organism = self.organism
+        organism.use_operons = False
+        scan_seqs = organism.sequences_for_genes_scan(['VNG12345G'], seqtype='upstream')
+        self.assertEquals((st.Location('NC_000915.1', -128, 152, False),
+                           'ACGTTTAAAAGAGAGAGAGACACAGTATATATTTTTTTAAAA'),
+                          scan_seqs['NP_206803.1'])
 
     def test_get_networks(self):
         """tests the networks() method"""
-        mockFactory = MockNetworkFactory()
-        organism = org.Microbe('hal', 'Halobacterium SP',
-                               org.RsatSpeciesInfo(MockRsatDatabase(''),
-                                                   'Halobacterium_SP',
-                                                   False,
-                                                   12345), 12345,
-                               MockMicrobesOnline(),
-                               [mockFactory],
-                               SEARCH_DISTANCES,
-                               SCAN_DISTANCES)
+        organism = self.organism
         networks = organism.networks()
         self.assertEquals(1, len(networks))
-        self.assertEquals(organism, mockFactory.create_called_with)
+        self.assertEquals(organism, self.mockFactory.create_called_with)
 
 
 class MockNetworkFactory:
