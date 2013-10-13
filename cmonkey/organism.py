@@ -344,9 +344,9 @@ class Microbe(OrganismBase):
         contig_seqs = {contig: self.__rsatdb().get_contig_sequence(self.species(), contig)
                        for contig in unique_contigs()}
 
-        for feature in features.values():
+        for key, feature in features.items():
             location = feature.location
-            sequences[feature.id] = extractor(
+            sequences[key] = extractor(
                 contig_seqs[location.contig], location, distance)
         if len(sequences) == 0:
             logging.error('No sequences read for %s!' %self.code)
