@@ -273,10 +273,7 @@ class Microbe(OrganismBase):
             shifted_pairs = [(gene, gene) for gene in valid_genes]
 
         unique_seqs = unique_sequences(shifted_pairs)
-        outseqs = {}
-        for gene, head in shifted_pairs:
-            outseqs[gene] = unique_seqs[head]
-        return outseqs
+        return {gene: unique_seqs[head] for gene, head in shifted_pairs}
 
     def operon_map(self):
         """Returns the operon map for this particular organism.
@@ -285,9 +282,7 @@ class Microbe(OrganismBase):
         if not self.__operon_mappings:
             pairs = mo.get_operon_pairs(self.__microbes_online_db, self)
             synonyms = self.thesaurus()
-            self.__operon_mappings = {}
-            for head, gene in pairs:
-                self.__operon_mappings[synonyms[gene]] = synonyms[head]
+            self.__operon_mappings = {synonyms[gene]: synonyms[head] for head, gene in pairs}
         return self.__operon_mappings
 
     def thesaurus(self):
@@ -345,11 +340,9 @@ class Microbe(OrganismBase):
                     result.append(feature.location.contig)
             return result
 
-        contig_seqs = {}
         sequences = {}
-        for contig in unique_contigs():
-            contig_seqs[contig] = self.__rsatdb().get_contig_sequence(
-                self.species(), contig)
+        contig_seqs = {contig: self.__rsatdb().get_contig_sequence(self.species(), contig)
+                       for contig in unique_contigs()}
 
         for feature in features.values():
             location = feature.location
@@ -395,17 +388,17 @@ class GenericOrganism(OrganismBase):
         """Determines whether this object is an eukaryote"""
         return False
 
-    def sequences_for_genes_search(self, gene_aliases, seqtype):
+    def sequences_for_genes_search(self, genes, seqtype):
         """retrieve the sequences for the specified"""
         distance = self.__search_distances[seqtype]
-        return self.__sequences_for_genes(seqtype, gene_aliases, distance)
+        return self.__sequences_for_genes(seqtype, genes, distance)
 
-    def sequences_for_genes_scan(self, gene_aliases, seqtype):
+    def sequences_for_genes_scan(self, genes, seqtype):
         """retrieve the sequences for the specified"""
         distance = self.__scan_distances[seqtype]
-        return self.__sequences_for_genes(seqtype, gene_aliases, distance)
+        return self.__sequences_for_genes(seqtype, genes, distance)
 
-    def __sequences_for_genes(self, seqtype, gene_aliases, distance):
+    def __sequences_for_genes(self, seqtype, genes, distance):
         """retrieves the specified sequences from the supplied genomic data"""
         if not seqtype in self.__seqs:
             logging.info('loading %s sequences' %seqtype)
@@ -416,7 +409,7 @@ class GenericOrganism(OrganismBase):
             logging.info('loaded %i %s sequences' \
                           %( len(self.__seqs[seqtype]), seqtype))
         result = {}
-        for alias in gene_aliases:
+        for alias in genes:
             if alias in self.thesaurus():
                 gene = self.thesaurus()[alias]
                 if gene in self.__seqs[seqtype]:
