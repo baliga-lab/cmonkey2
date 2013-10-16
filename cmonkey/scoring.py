@@ -337,6 +337,31 @@ def compute_column_scores_submatrix(matrix):
                          matrix.column_names, [result])
 
 
+def combine(result_matrices, score_scalings, quantile_normalize):
+    """This is  the combining function, taking n result matrices and scalings"""
+    if len(result_matrices) > 1 and quantile_normalize:
+        start_time = util.current_millis()
+        result_matrices = dm.quantile_normalize_scores(result_matrices,
+                                                       score_scalings)
+        elapsed = util.current_millis() - start_time
+        logging.info("quantile normalize in %f s.", elapsed / 1000.0)
+
+    if len(result_matrices) > 0:
+        matrix0 = result_matrices[0]
+        start_time = util.current_millis()
+        # assuming same format of all matrices
+        combined_score = np.zeros(matrix0.values.shape)
+        for i in xrange(len(result_matrices)):
+            combined_score += result_matrices[i].values * score_scalings[i]
+
+        elapsed = util.current_millis() - start_time
+        logging.info("combined score in %f s.", elapsed / 1000.0)
+        return dm.DataMatrix(matrix0.num_rows, matrix0.num_columns,
+                          matrix0.row_names, matrix0.column_names,
+                          values=combined_score)
+    else:
+        return None
+
 class ScoringFunctionCombiner:
     """Taking advantage of the composite pattern, this combiner function
     exposes the basic interface of a scoring function in order to
@@ -399,32 +424,8 @@ class ScoringFunctionCombiner:
                 if self.__log_subresults:
                     self.__log_subresult(scoring_function, matrix)
 
-        return self.__combine(result_matrices, score_scalings, iteration)
-
-    def __combine(self, result_matrices, score_scalings, iteration):
-        if len(result_matrices) > 1 and self.__config_params['quantile_normalize']:
-            start_time = util.current_millis()
-            result_matrices = dm.quantile_normalize_scores(result_matrices,
-                                                           score_scalings)
-            elapsed = util.current_millis() - start_time
-            logging.info("quantile normalize in %f s.", elapsed / 1000.0)
-
-        if len(result_matrices) > 0:
-            matrix0 = result_matrices[0]
-            start_time = util.current_millis()
-            # assuming same format of all matrices
-            combined_score = np.zeros(matrix0.values.shape)
-            for i in xrange(len(result_matrices)):
-                combined_score += (result_matrices[i].values *
-                                   self.scoring_functions[i].scaling(iteration))
-
-            elapsed = util.current_millis() - start_time
-            logging.info("combined score in %f s.", elapsed / 1000.0)
-            return dm.DataMatrix(matrix0.num_rows, matrix0.num_columns,
-                              matrix0.row_names, matrix0.column_names,
-                              values=combined_score)
-        else:
-            return None
+        return combine(result_matrices, score_scalings,
+                       self.__config_params['quantile_normalize'])
 
     def __log_subresult(self, score_function, matrix):
         """output an accumulated subresult to the log"""
