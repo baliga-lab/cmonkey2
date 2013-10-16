@@ -383,6 +383,13 @@ def rrank(values):
     return r_rank(robjects.FloatVector(values), **kwargs)
 
 
+def mad(values):
+    """invokes the R function mad"""
+    r_mad = robjects.r['mad']
+    kwargs = {'na.rm': False}
+    return r_mad(robjects.FloatVector(values), **kwargs)
+
+
 def sd_rnorm(values, num_rnorm_values, fuzzy_coeff):
     """computes standard deviation on values and then calls rnorm to
     generate the num_rnorm_values. This combines stddev and rnorm
