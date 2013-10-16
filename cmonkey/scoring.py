@@ -398,7 +398,8 @@ class ScoringFunctionCombiner:
 
                 if self.__log_subresults:
                     self.__log_subresult(scoring_function, matrix)
-        return self.__combine(result_matrices, score_scalings, iteration)
+        return combine(result_matrices, score_scalings
+                       self.__config_params['quantile_normalize'])
 
     def compute(self, iteration_result, ref_matrix=None):
         """compute scores for one iteration"""
