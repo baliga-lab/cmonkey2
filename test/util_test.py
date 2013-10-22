@@ -112,6 +112,11 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals(4, util.quantile(data, 0.75))
         self.assertEquals(5, util.quantile(data, 1))
 
+    def test_quantile_nan(self):
+        """tests the quantile function with NaN"""
+        data = [0.2, 0.1, np.nan, 0.3]
+        self.assertAlmostEqual(0.102, util.quantile(data, 0.01))
+
     def test_r_stddev(self):
         """tests the standard deviation function"""
         self.assertEquals(0.1, util.r_stddev([0.1, 0.2, 0.3]))
@@ -204,6 +209,12 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """tests the mean() function"""
         array = np.array([2.0, 3.0, np.nan, 1.0])
         result = util.mean(array)
+        self.assertAlmostEqual(2.0, result)
+
+    def test_median_with_nans(self):
+        """tests the mean() function"""
+        array = np.array([2.0, 3.0, np.nan, 1.0])
+        result = util.median(array)
         self.assertAlmostEqual(2.0, result)
 
     def test_density(self):

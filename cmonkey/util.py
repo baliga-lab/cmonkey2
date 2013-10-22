@@ -180,6 +180,8 @@ def quantile(values, probability):
     values a list of numeric values
     probability a value in the range between 0 and 1
     """
+    values = np.array(values)
+    values = values[np.isfinite(values)]
     return scipy.stats.scoreatpercentile(values, probability * 100)
 
 
@@ -215,9 +217,17 @@ def r_outer(x, y, f):
     y = np.array(y)
     return f(x[:, np.newaxis], y)
 
+
 def mean(nparray):
     """computes the mean of a numpy array, ignoring NaN values"""
     return np.mean(np.ma.masked_array(nparray, np.isnan(nparray)))
+
+
+def median(values):
+    """computes the mean of a numpy array, ignoring NaN values"""
+    values = np.array(values)
+    values = values[np.isfinite(values)]
+    return np.median(values)
 
 
 def column_means(matrix):

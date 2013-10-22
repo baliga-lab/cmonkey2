@@ -337,7 +337,7 @@ def compute_column_scores_submatrix(matrix):
                          matrix.column_names, [result])
 
 
-def combine(result_matrices, score_scalings, quantile_normalize):
+def combine(result_matrices, score_scalings, membership, quantile_normalize):
     """This is  the combining function, taking n result matrices and scalings"""
     if len(result_matrices) > 1 and quantile_normalize:
         start_time = util.current_millis()
@@ -345,17 +345,63 @@ def combine(result_matrices, score_scalings, quantile_normalize):
                                                        score_scalings)
         elapsed = util.current_millis() - start_time
         logging.info("quantile normalize in %f s.", elapsed / 1000.0)
+        in_matrices = [m.values for m in result_matrices]
+
+    if not quantile_normalize:
+        in_matrices = []
+        num_clusters = membership.num_clusters()
+        mat = result_matrices[0]
+        mat.fix_extreme_values()  ## TODO: we might need to move that
+        index_map = { name: index
+                      for index, name in enumerate(mat.row_names) }
+        # we assume matrix 0 is always the gene expression score
+        # we also assume that the matrices are already extreme value
+        # fixed
+        rsm = []
+        for cluster in range(1, num_clusters + 1):
+            row_members = membership.rows_for_cluster(cluster)
+            rsm.extend([mat.values[index_map[row]][cluster - 1]
+                        for row in row_members])
+        scale = util.mad(rsm)
+        if scale == 0:  # avoid that we are dividing by 0
+            scale = util.r_stddev(rsm)
+        if scale != 0:
+            median_rsm = util.median(rsm)
+            rsvalues = (mat.values - median_rsm) / scale
+            num_rows, num_cols = rsvalues.shape
+            rscores = dm.DataMatrix(num_rows, num_cols,
+                                    mat.row_names,
+                                    mat.column_names,
+                                    values=rsvalues)
+            rscores.fix_extreme_values()
+        else:
+            logging.warn("combiner scaling -> scale == 0 !!!")
+            rscores = mat
+        in_matrices.append(rscores.values)
+
+        if len(result_matrices) > 1:
+            rs_quant = util.quantile(rscores.values, 0.01)
+            print "RS_QUANT = ", rs_quant
+            for i in range(1, len(result_matrices)):
+                result_matrices[i].fix_extreme_values()  # TODO: do we need to do this again ?
+                values = result_matrices[i].values
+                qqq = abs(util.quantile(values, 0.01))
+                print "qqq(%d) = %f" % (i, qqq)
+                if qqq == 0:
+                    logging.error("very sparse score !!!")
+                values = values / qqq * abs(rs_quant)
+                in_matrices.append(values)
 
     if len(result_matrices) > 0:
-        matrix0 = result_matrices[0]
         start_time = util.current_millis()
         # assuming same format of all matrices
-        combined_score = np.zeros(matrix0.values.shape)
-        for i in xrange(len(result_matrices)):
-            combined_score += result_matrices[i].values * score_scalings[i]
+        combined_score = np.zeros(in_matrices[0].shape)
+        for i in xrange(len(in_matrices)):
+            combined_score += in_matrices[i] * score_scalings[i]
 
         elapsed = util.current_millis() - start_time
         logging.info("combined score in %f s.", elapsed / 1000.0)
+        matrix0 = result_matrices[0]  # as reference for names
         return dm.DataMatrix(matrix0.num_rows, matrix0.num_columns,
                           matrix0.row_names, matrix0.column_names,
                           values=combined_score)
@@ -398,7 +444,7 @@ class ScoringFunctionCombiner:
 
                 if self.__log_subresults:
                     self.__log_subresult(scoring_function, matrix)
-        return combine(result_matrices, score_scalings
+        return combine(result_matrices, score_scalings, self.__membership,
                        self.__config_params['quantile_normalize'])
 
     def compute(self, iteration_result, ref_matrix=None):
@@ -425,7 +471,7 @@ class ScoringFunctionCombiner:
                 if self.__log_subresults:
                     self.__log_subresult(scoring_function, matrix)
 
-        return combine(result_matrices, score_scalings,
+        return combine(result_matrices, score_scalings, self.__membership,
                        self.__config_params['quantile_normalize'])
 
     def __log_subresult(self, score_function, matrix):
