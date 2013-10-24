@@ -724,7 +724,7 @@ def get_best_clusters(scores, num_per_cluster):
     return result
 
 
-def get_density_scores(membership, row_scores, col_scores):
+def get_row_density_scores(membership, row_scores):
     """getting density scores improves small clusters"""
     num_clusters = membership.num_clusters()
     rscore_range = abs(row_scores.max() - row_scores.min())
@@ -739,13 +739,16 @@ def get_density_scores(membership, row_scores, col_scores):
     for cluster in xrange(1, num_clusters + 1):
         # instead of assigning the rr_scores values per row, we can assign to the
         # transpose and let numpy do the assignment
-        rds_values.T[cluster - 1] = __get_rr_scores(membership, row_scores,
-                                                    rowscore_bandwidth,
-                                                    cluster)
+        rds_values.T[cluster - 1] = get_rr_scores(membership, row_scores,
+                                                  rowscore_bandwidth,
+                                                  cluster)
 
     elapsed = util.current_millis() - start_time
     logging.info("RR_SCORES IN %f s.", elapsed / 1000.0)
+    return rd_scores
 
+def get_col_density_scores(membership, col_scores):
+    num_clusters = membership.num_clusters()
     cscore_range = abs(col_scores.max() - col_scores.min())
     colscore_bandwidth = max(cscore_range / 100.0, 0.001)
     cd_scores = dm.DataMatrix(col_scores.num_rows,
@@ -758,17 +761,19 @@ def get_density_scores(membership, row_scores, col_scores):
     for cluster in xrange(1, num_clusters + 1):
         # instead of assigning the cc_scores values per row, we can assign to the
         # transpose and let numpy do the assignment
-        cds_values.T[cluster - 1] = __get_cc_scores(membership, col_scores,
-                                                    colscore_bandwidth,
-                                                    cluster)
+        cds_values.T[cluster - 1] = get_cc_scores(membership, col_scores,
+                                                  colscore_bandwidth,
+                                                  cluster)
 
     elapsed = util.current_millis() - start_time
     logging.info("CC_SCORES IN %f s.", elapsed / 1000.0)
+    return cd_scores
 
-    return (rd_scores, cd_scores)
+def get_density_scores(membership, row_scores, col_scores):
+    return (get_row_density_scores(membership, row_scores),
+            get_col_density_scores(membership, col_scores))
 
-
-def __get_rr_scores(membership, rowscores, bandwidth, cluster):
+def get_rr_scores(membership, rowscores, bandwidth, cluster):
     """calculate the density scores for the given row score values in the
     specified cluster"""
     def bwscale(value):
@@ -793,7 +798,7 @@ def __get_rr_scores(membership, rowscores, bandwidth, cluster):
                             np.amax(kscores_finite) + 1)
 
 
-def __get_cc_scores(membership, scores, bandwidth, cluster):
+def get_cc_scores(membership, scores, bandwidth, cluster):
     """calculate the density scores for the given column score values in the
     specified cluster"""
     cluster_rows = membership.rows_for_cluster(cluster)
