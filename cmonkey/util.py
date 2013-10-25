@@ -429,6 +429,12 @@ def rrank_matrix(npmatrix):
     return np.array(res, dtype=np.int32)
 
 
+def order_fast(values, result_size, reverse=True):
+    ranked = sorted(zip(values, xrange(1, len(values) + 1)),
+                    key=lambda x: x[0], reverse=reverse)
+    return [ranked[i][1] for i in xrange(result_size)]
+
+
 ######################################################################
 ### Misc functionality
 ######################################################################

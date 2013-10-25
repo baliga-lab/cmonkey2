@@ -710,18 +710,10 @@ def seeing_change(prob):
     return prob >= 1.0 or random.uniform(0.0, 1.0) <= prob
 
 
-def get_best_clusters(scores, num_per_cluster):
-    """retrieve the best scored gene clusters from the given
-    row/column score matrix"""
-    result = {}
-    for row in xrange(scores.num_rows):
-        row_values = [value for value in scores.row_values(row)]
-        #row_values = [value for value in row_values]  # compatibility hack
-        ranked_scores = sorted(row_values, reverse=True)
-        rowname = scores.row_names[row]
-        result[rowname] = {row_values.index(ranked_scores[index]) + 1
-                           for index in xrange(num_per_cluster)}
-    return result
+def get_best_clusters(scores, n):
+    """retrieve the n best scored clusters for the given row/column score matrix"""
+    return {scores.row_names[row]: util.order_fast(scores.row_values(row), n)
+            for row in xrange(scores.num_rows)}
 
 
 def get_row_density_scores(membership, row_scores):
