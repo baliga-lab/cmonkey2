@@ -151,10 +151,7 @@ class ClusterMembership:
 
     def clusters_for_row(self, row_name):
         """determine the clusters for the specified row"""
-        if row_name in self.__row_is_member_of:
-            return self.__row_is_member_of[row_name]
-        else:
-            return []
+        return self.__row_is_member_of.get(row_name, [])
 
     def num_clusters_for_row(self, row_name):
         """returns the number of clusters for the row"""
@@ -162,31 +159,19 @@ class ClusterMembership:
 
     def clusters_for_column(self, column_name):
         """determine the clusters for the specified column"""
-        if column_name in self.__column_is_member_of:
-            return self.__column_is_member_of[column_name]
-        else:
-            return []
+        return self.__column_is_member_of.get(column_name, [])
 
     def num_clusters_for_column(self, column_name):
         """returns the number of clusters for the column"""
         return len(self.clusters_for_column(column_name))
 
     def rows_for_cluster(self, cluster):
-        """determine the rows that belong to a cluster"""
-        if cluster in self.__cluster_row_members:
-            return sorted(set(self.__cluster_row_members[cluster]))
-        else:
-            return set()
+        """returns a sorted set containing the rows in a cluster"""
+        return sorted(set(self.__cluster_row_members.get(cluster, [])))
 
     def columns_for_cluster(self, cluster):
-        """determine the rows that belong to a cluster.
-        Takes care of the fact that a column can be in the same
-        cluster more than once"""
-        if cluster in self.__cluster_column_members:
-            result = set(self.__cluster_column_members[cluster])
-            return sorted(result)
-        else:
-            return set()
+        """returns a sorted set containing the columns in a cluster"""
+        return sorted(set(self.__cluster_column_members.get(cluster, [])))
 
     def num_row_members(self, cluster):
         """returns the number of row members in the specified cluster"""
@@ -591,7 +576,20 @@ def update_for_rows(membership, rd_scores, multiprocessing):
 
     UPDATE_MEMBERSHIP = membership
     rownames = rd_scores.row_names
+    
+    start_time = util.current_millis()
     best_clusters = get_best_clusters(rd_scores, membership.num_clusters_per_row())
+    elapsed = util.current_millis() - start_time
+    logging.info("computed best row clusters in %f s.", elapsed / 1000.0)
+
+    with open('cmpy-best_rowclusters.tsv', 'w') as outfile:
+        genes = sorted(best_clusters.keys())
+        for gene in genes:
+            outfile.write('%s\t' % gene)
+            clusters = map(str, sorted(best_clusters[gene]))
+            outfile.write('\t'.join(clusters))
+            outfile.write('\n')
+
     max_changes = membership.max_changes_per_row()
     change_prob = membership.probability_seeing_row_change()
 
@@ -650,7 +648,18 @@ def update_for_cols(membership, cd_scores, multiprocessing):
     change_prob = membership.probability_seeing_col_change()
     UPDATE_MEMBERSHIP = membership
     colnames = cd_scores.row_names
+
+    start_time = util.current_millis()
     best_clusters = get_best_clusters(cd_scores, membership.num_clusters_per_column())
+    elapsed = util.current_millis() - start_time
+    logging.info("computed best column clusters in %f s.", elapsed / 1000.0)
+    with open('cmpy-best_colclusters.tsv', 'w') as outfile:
+        conds = sorted(best_clusters.keys())
+        for cond in conds:
+            outfile.write('%s\t' % cond)
+            clusters = map(str, sorted(best_clusters[cond]))
+            outfile.write('\t'.join(clusters))
+            outfile.write('\n')
 
     start_time = util.current_millis()
 

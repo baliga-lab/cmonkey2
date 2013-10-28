@@ -319,7 +319,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             ## TODO: we can rewrite this as a list comprehension. Check whether that
             ## will be faster
             cluster_scores = []
-            for gene in sorted(self.rows_for_cluster(cluster)):
+            for gene in self.rows_for_cluster(cluster):
                 if gene in network_score[cluster].keys():
                     cluster_scores.append(network_score[cluster][gene])
                 else:
@@ -330,7 +330,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     def __update_network_iteration_scores(self, result, network_score, weight):
         """compute network iteration scores"""
         for cluster in xrange(1, self.num_clusters() + 1):
-            for gene in sorted(self.rows_for_cluster(cluster)):
+            for gene in self.rows_for_cluster(cluster):
                 if gene not in result[cluster].keys():
                     result[cluster][gene] = 0.0
                 if gene in network_score[cluster].keys():

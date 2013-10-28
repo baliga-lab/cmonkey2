@@ -339,9 +339,10 @@ def kcombinations(alist, k):
 
 def trim_mean(values, trim):
     """returns the trim mean"""
-    values = sorted(values, reverse=True)
     if not values or len(values) == 0:
         return 0
+
+    values = sorted(values, reverse=True)
     if trim == 0.5:
         return np.median(values)
 
@@ -430,8 +431,8 @@ def rrank_matrix(npmatrix):
 
 
 def order_fast(values, result_size, reverse=True):
-    ranked = sorted(zip(values, xrange(1, len(values) + 1)),
-                    key=lambda x: x[0], reverse=reverse)
+    ranked = zip(values, xrange(1, len(values) + 1))
+    ranked.sort(key=operator.itemgetter(0), reverse=reverse)
     return [ranked[i][1] for i in xrange(result_size)]
 
 

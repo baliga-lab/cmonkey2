@@ -314,7 +314,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         # create parameters
         params = []
         for cluster in xrange(1, self.num_clusters() + 1):
-            genes = sorted(self.rows_for_cluster(cluster))
+            genes = self.rows_for_cluster(cluster)
             feature_ids = self.organism.feature_ids_for(genes)
             seqs = self.organism.sequences_for_genes_search(
                 genes, seqtype=self.seqtype)
