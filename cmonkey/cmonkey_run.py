@@ -54,7 +54,11 @@ class CMonkeyRun:
         if num_clusters == None:
             num_clusters = int(round(self.ratio_matrix.num_rows *
                                      self['memb.clusters_per_row'] / 20.0))
-        self['memb.clusters_per_col'] = int(round(num_clusters * 2.0 / 3.0))
+        if ratio_matrix.num_columns >= 60:
+            self['memb.clusters_per_col'] = int(round(num_clusters / 2.0))
+        else:
+            self['memb.clusters_per_col'] = int(round(num_clusters * 2.0 / 3.0))
+        logging.info("# clusters/column: %d", self['memb.clusters_per_col'])
 
         self['organism_code'] = organism_code
         self['num_clusters'] = num_clusters
