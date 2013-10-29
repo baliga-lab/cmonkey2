@@ -575,21 +575,8 @@ def update_for_rows(membership, rd_scores, multiprocessing):
     global UPDATE_MEMBERSHIP
 
     UPDATE_MEMBERSHIP = membership
-    rownames = rd_scores.row_names
-    
-    start_time = util.current_millis()
+    rownames = rd_scores.row_names    
     best_clusters = get_best_clusters(rd_scores, membership.num_clusters_per_row())
-    elapsed = util.current_millis() - start_time
-    logging.info("computed best row clusters in %f s.", elapsed / 1000.0)
-
-    with open('cmpy-best_rowclusters.tsv', 'w') as outfile:
-        genes = sorted(best_clusters.keys())
-        for gene in genes:
-            outfile.write('%s\t' % gene)
-            clusters = map(str, sorted(best_clusters[gene]))
-            outfile.write('\t'.join(clusters))
-            outfile.write('\n')
-
     max_changes = membership.max_changes_per_row()
     change_prob = membership.probability_seeing_row_change()
 
@@ -648,18 +635,7 @@ def update_for_cols(membership, cd_scores, multiprocessing):
     change_prob = membership.probability_seeing_col_change()
     UPDATE_MEMBERSHIP = membership
     colnames = cd_scores.row_names
-
-    start_time = util.current_millis()
     best_clusters = get_best_clusters(cd_scores, membership.num_clusters_per_column())
-    elapsed = util.current_millis() - start_time
-    logging.info("computed best column clusters in %f s.", elapsed / 1000.0)
-    with open('cmpy-best_colclusters.tsv', 'w') as outfile:
-        conds = sorted(best_clusters.keys())
-        for cond in conds:
-            outfile.write('%s\t' % cond)
-            clusters = map(str, sorted(best_clusters[cond]))
-            outfile.write('\t'.join(clusters))
-            outfile.write('\n')
 
     start_time = util.current_millis()
 
