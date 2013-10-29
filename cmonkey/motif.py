@@ -195,39 +195,20 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
     def pvalues2matrix(self, all_pvalues):
         logging.info('Recomputing motif scores...')
-        start_time = util.current_millis()
-        # running the scoring itself
-        remapped = {}
-        for cluster in all_pvalues:
-            pvalues_k = all_pvalues[cluster]
-            pvalues_genes = {}
-            for feature_id, pvalue in pvalues_k.items():
-                pvalues_genes[self.reverse_map[feature_id]] = pvalue
-            remapped[cluster] = pvalues_genes
-
-        current = util.current_millis()
-        logging.info("built remapped in %f s.", (current - start_time) / 1000.0)
-        start_time = current
+        row_map = {gene: index for index, gene in enumerate(self.gene_names()) }
+        reverse_map = self.reverse_map
 
         # convert remapped to an actual scoring matrix
         matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
                                self.gene_names())
         mvalues = matrix.values
-        for row_index in xrange(matrix.num_rows):
-            row = matrix.row_names[row_index]
-            for cluster in xrange(1, self.num_clusters() + 1):
-                if (cluster in remapped.keys() and
-                    row in remapped[cluster].keys()):
-                    mvalues[row_index][cluster - 1] = remapped[cluster][row]
+        for cluster, feature_pvals in all_pvalues.items():
+            for feature_id, pval in feature_pvals.items():
+                ridx = row_map[reverse_map[feature_id]]
+                mvalues[ridx][cluster - 1] = pval
+
         matrix.apply_log()
-
-        current = util.current_millis()
-        logging.info("built scoring matrix in %f s.", (current - start_time) / 1000.0)
-
-        start_time = current
         matrix.fix_extreme_values()
-        current = util.current_millis()
-        logging.info("fixed extreme values in %f s.", (current - start_time) / 1000.0)
         return matrix
 
     def __compute(self, iteration_result, force, ref_matrix=None):
