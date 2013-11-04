@@ -175,11 +175,11 @@ class ClusterMembership:
 
     def num_row_members(self, cluster):
         """returns the number of row members in the specified cluster"""
-        return len(self.rows_for_cluster(cluster))
+        return len(self.__cluster_row_members.get(cluster, []))
 
     def num_column_members(self, cluster):
         """returns the number of row members in the specified cluster"""
-        return len(self.columns_for_cluster(cluster))
+        return len(self.__cluster_column_members.get(cluster, []))
 
     def is_row_in_clusters(self, row, clusters):
         """returns true if the specified row is in all spefied clusters"""
@@ -388,46 +388,32 @@ class ClusterMembership:
         #logging.info("fuzzify() finished in %f s.", elapsed / 1000.0)
         return row_scores, column_scores
 
-    def replace_lowest_scoring_row_member(self, row, cluster, rd_scores,
-                                          check_zero_size=False):
-        """replaces the lowest scoring cluster in row with cluster"""
+    def replace_delta_row_member(self, row, cluster, rd_scores,
+                                 check_zero_size=False):
+        index = rd_scores.row_indexes([row])[0]
         rds_values = rd_scores.values
         current_clusters = self.__row_is_member_of[row]
-        min_score = sys.maxint
-        min_cluster = None
-        member_index = rd_scores.row_indexes([row])[0]
+        compval = rds_values[index][cluster - 1]
+        
+        deltas = sorted([(compval - rds_values[index][c - 1], c) for c in current_clusters],
+                        reverse=True)
+        if len(deltas) > 0 and deltas[0][0] > 0:
+            self.replace_row_cluster(row, deltas[0][1], cluster)
+            return deltas[0][1]
+        return 0
 
-        for current_cluster in current_clusters:
-            if rds_values[member_index][current_cluster - 1] < min_score:
-                min_score = rds_values[member_index][current_cluster - 1]
-                min_cluster = current_cluster
-        self.replace_row_cluster(row, min_cluster, cluster)
-
-        if check_zero_size:
-            # this is more an assertion: we try to avoid 0-sized clusters
-            if self.num_row_members(min_cluster) == 0:
-                raise Exception("CLUSTER ", cluster, " HAS 0 ROWS !!!!")
-
-    def replace_lowest_scoring_col_member(self, column, cluster, cd_scores,
-                                          check_zero_size=False):
-        """replaces the lowest scoring cluster for a column with
-        another cluster"""
+    def replace_delta_column_member(self, col, cluster, cd_scores):
+        index = cd_scores.row_indexes([col])[0]
         cds_values = cd_scores.values
-        current_clusters = self.__column_is_member_of[column]
-        min_score = sys.maxint
-        min_cluster = None
-        member_index = cd_scores.row_indexes([column])[0]
-
-        for current_cluster in current_clusters:
-            if cds_values[member_index][current_cluster - 1] < min_score:
-                min_score = cds_values[member_index][current_cluster - 1]
-                min_cluster = current_cluster
-        self.replace_column_cluster(column, min_cluster, cluster)
-
-        if check_zero_size:
-            # this is more an assertion: we try to avoid 0-sized clusters
-            if self.num_column_members(min_cluster) == 0:
-                raise Exception("CLUSTER ", cluster, " HAS 0 COLUMNS !!!!")
+        current_clusters = self.__column_is_member_of[col]
+        compval = cds_values[index][cluster - 1]
+        
+        deltas = sorted([(compval - cds_values[index][c - 1], c) for c in current_clusters],
+                        reverse=True)
+        if len(deltas) > 0 and deltas[0][0] > 0:
+            self.replace_column_cluster(col, deltas[0][1], cluster)
+            return deltas[0][1]
+        return 0
 
 
     def postadjust(self, rowscores=None, cutoff=0.33, limit=100):
@@ -572,123 +558,48 @@ UPDATE_MEMBERSHIP = None
 
 def update_for_rows(membership, rd_scores, multiprocessing):
     """generically updating row memberships according to  rd_scores"""
-    global UPDATE_MEMBERSHIP
-
-    UPDATE_MEMBERSHIP = membership
     rownames = rd_scores.row_names    
     best_clusters = get_best_clusters(rd_scores, membership.num_clusters_per_row())
     max_changes = membership.max_changes_per_row()
     change_prob = membership.probability_seeing_row_change()
-
-    if multiprocessing:
-        pool = mp.Pool()
-        chunksize = max(1, rd_scores.num_rows / mp.cpu_count() / 2)
-        logging.info("processing RD scores with chunksize: %d", chunksize)
-        data = [(rownames[index], best_clusters[rownames[index]],
-                 seeing_change(change_prob), max_changes)
-                for index in xrange(rd_scores.num_rows)]
-        best_clusters = None
-        llist = pool.map(compute_update_row_cluster_pairs, data, chunksize=chunksize)
-
-        pool.close()
-        pool.join()
-        result = [item for sublist in llist for item in sublist]
-    else:
-        result = []
-        for row in xrange(rd_scores.num_rows):
-            result.extend(compute_update_row_cluster_pairs((rownames[index],
-                                                            best_clusters[rownames[index]],
-                                                            seeing_change(change_prob),
-                                                            max_changes)))
-    UPDATE_MEMBERSHIP = None
-    for row, cluster in result:
-        # Ways to add a member to a cluster:
-        # 1. if the number of members is less than the allowed, simply add
-        # 2. if there is a conflict, replace a gene with a lower score in the
-        # scores matrix
-        if membership.num_clusters_for_row(row) < membership.num_clusters_per_row():
-            membership.add_cluster_to_row(row, cluster)
-        else:
-            membership.replace_lowest_scoring_row_member(row, cluster, rd_scores)
-
-
-def compute_update_row_cluster_pairs(param):
-    """The map() part to detemine the new row-cluster pairs"""
-    global UPDATE_MEMBERSHIP
-    rowname, best_members, do_change, max_changes = param
-
-    if (do_change and (not UPDATE_MEMBERSHIP.is_row_in_clusters(rowname, best_members))):
-        cluster_rows = set(UPDATE_MEMBERSHIP.clusters_for_row(rowname))
-        change_clusters = [cluster for cluster in best_members
-                           if cluster not in cluster_rows]
-        return [(rowname, change_clusters[change])
-                for change in xrange(min(max_changes, len(change_clusters)))]
-    else:
-        return []
+    for index in xrange(rd_scores.num_rows):
+        row = rownames[index]
+        clusters = best_clusters[row]
+        if seeing_change(change_prob):
+            for _ in range(max_changes):
+                # make sure we do not crash out when we do not have any clusters
+                if len(clusters) == 0: 
+                    break
+                if membership.num_clusters_for_row(row) < membership.num_clusters_per_row():
+                    membership.add_cluster_to_row(row, clusters[0])
+                    del clusters[0]
+                else:
+                    old = membership.replace_delta_row_member(row, clusters[0], rd_scores)
 
 
 def update_for_cols(membership, cd_scores, multiprocessing):
     """updating column memberships according to cd_scores"""
     global UPDATE_MEMBERSHIP
 
-    max_changes = membership.max_changes_per_col()
-    change_prob = membership.probability_seeing_col_change()
-    UPDATE_MEMBERSHIP = membership
     colnames = cd_scores.row_names
     best_clusters = get_best_clusters(cd_scores, membership.num_clusters_per_column())
+    max_changes = membership.max_changes_per_col()
+    change_prob = membership.probability_seeing_col_change()
 
-    start_time = util.current_millis()
-
-    if multiprocessing:
-        pool = mp.Pool()
-        data = [(colnames[index], best_clusters[colnames[index]],
-                 seeing_change(change_prob), max_changes)
-                for index in xrange(cd_scores.num_rows)]
-        best_clusters = None  # get rid of the temp data
-        chunksize = max(1, len(data) / mp.cpu_count() / 2)
-        llist = pool.map(compute_update_col_cluster_pairs, data, chunksize=chunksize)
-        result = [item for sublist in llist for item in sublist]
-        pool.close()
-        pool.join()
-    else:
-        result = []
-        for i in xrange(cd_scores.num_rows):
-            result.extend(compute_update_col_cluster_pairs((colnames[i],
-                                                            best_clusters[colnames[i]],
-                                                            seeing_change(change_prob),
-                                                            max_changes)))
-
-    elapsed = util.current_millis() - start_time
-    logging.info("computed update_for cdscores in %f s. Result size = %d",
-                 elapsed / 1000.0, len(result))
-    start_time = util.current_millis()
-
-    UPDATE_MEMBERSHIP = None
-    for col, cluster in result:
-        if (membership.num_clusters_for_column(col) <
-            membership.num_clusters_per_column()):
-            membership.add_cluster_to_column(col, cluster)
-        else:
-            membership.replace_lowest_scoring_col_member(col, cluster, cd_scores)
-
-    elapsed = util.current_millis() - start_time
-    logging.info("updated column clusters in update_for in %f s.", elapsed / 1000.0)
-
-
-def compute_update_col_cluster_pairs(param):
-    """The map() part to detemine the new column-cluster pairs"""
-    global UPDATE_MEMBERSHIP
-    colname, best_members, do_change, max_changes = param
-
-    if (do_change and (not UPDATE_MEMBERSHIP.is_column_in_clusters(colname, best_members))):
-        cluster_columns = set(UPDATE_MEMBERSHIP.clusters_for_column(colname))
-        change_clusters = [cluster for cluster in best_members
-                           if cluster not in cluster_columns]
-        return [(colname, change_clusters[change])
-                for change in xrange(min(max_changes, len(change_clusters)))]
-    else:
-        return []
-
+    for index in xrange(cd_scores.num_rows):
+        col = colnames[index]
+        clusters = best_clusters[col]
+        if seeing_change(change_prob):
+            for c in range(max_changes):
+                # make sure we do not crash out when we do not have any clusters
+                if len(clusters) == 0: 
+                    break
+                if (membership.num_clusters_for_column(col) <
+                    membership.num_clusters_per_column()):
+                    membership.add_cluster_to_column(col, clusters[0])
+                    del clusters[0]
+                else:
+                    old = membership.replace_delta_column_member(col, clusters[0], cd_scores)
 
 def seeing_change(prob):
     """returns true if the update is seeing the change"""
