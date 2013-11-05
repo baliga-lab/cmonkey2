@@ -10,6 +10,7 @@ import datamatrix as dm
 import util
 import argparse
 import logging
+from schedule import make_schedule
 import ConfigParser
 
 def set_config(cmonkey_run, config):
@@ -41,13 +42,11 @@ def set_config(cmonkey_run, config):
         cmonkey_run['scan_distances'][seqtype] = tuple(
             map(int, config.get(cat, 'scan_distance').split(',')))
 
-    cmonkey_run['row_schedule'] = tuple(map(int, config.get("Rows", "schedule").split(',')))
-    cmonkey_run['column_schedule'] = tuple(map(int, config.get("Columns",
-                                                               "schedule").split(',')))
-    cmonkey_run['meme_schedule'] = tuple(map(int, config.get("MEME", "schedule").split(',')))
-    cmonkey_run['motif_schedule'] = tuple(map(int, config.get("Motifs", "schedule").split(',')))
-    cmonkey_run['network_schedule'] = tuple(map(int, config.get("Networks",
-                                                                "schedule").split(',')))
+    cmonkey_run['row_schedule'] = make_schedule(config.get("Rows", "schedule"))
+    cmonkey_run['column_schedule'] = make_schedule(config.get("Columns", "schedule"))
+    cmonkey_run['meme_schedule'] = make_schedule(config.get("MEME", "schedule"))
+    cmonkey_run['motif_schedule'] = make_schedule(config.get("Motifs", "schedule"))
+    cmonkey_run['network_schedule'] = make_schedule(config.get("Networks", "schedule"))
 
     cmonkey_run['stats_freq'] = config.getint('General', 'stats_frequency')
     cmonkey_run['result_freq'] = config.getint('General', 'result_frequency')

@@ -164,13 +164,11 @@ def __quantile_normalize_scores(cluster_row_scores,
 class RowScoringFunction(scoring.ScoringFunctionBase):
     """Scoring algorithm for microarray data based on genes"""
 
-    def __init__(self, membership, matrix, scaling_func=None,
-                 run_in_iteration=None,
-                 config_params=None):
+    def __init__(self, membership, matrix, scaling_func, schedule, config_params):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
                                              matrix, scaling_func,
-                                             run_in_iteration,
+                                             schedule,
                                              config_params)
         self.cache_result = True
         self.run_log = scoring.RunLog("row_scoring", config_params)

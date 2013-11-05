@@ -193,8 +193,7 @@ class CMonkeyRun:
         """returns the column scoring function"""
         return scoring.ColumnScoringFunction(
             self.membership(), self.ratio_matrix,
-            run_in_iteration=scoring.schedule(self['column_schedule'][0],
-                                              self['column_schedule'][1]),
+            schedule=self['column_schedule'],
             config_params=self.config_params)
 
     def make_row_scoring(self):
@@ -203,8 +202,7 @@ class CMonkeyRun:
         row_scoring = microarray.RowScoringFunction(
             self.membership(), self.ratio_matrix,
             scaling_func=lambda iteration: self['row_scaling'],
-            run_in_iteration=scoring.schedule(self["row_schedule"][0],
-                                              self["row_schedule"][1]),
+            schedule=self["row_schedule"],
             config_params=self.config_params)
         row_scoring_functions = [row_scoring]
 
@@ -238,10 +236,8 @@ class CMonkeyRun:
                 sequence_filters=sequence_filters,
                 scaling_func=motif_scaling_fun,
                 num_motif_func=motif.default_nmotif_fun,
-                update_in_iteration=scoring.schedule(self['motif_schedule'][0],
-                                                     self['motif_schedule'][1]),
-                motif_in_iteration=scoring.schedule(self['meme_schedule'][0],
-                                                    self['meme_schedule'][1]),
+                update_in_iteration=self['motif_schedule'],
+                motif_in_iteration=self['meme_schedule'],
                 config_params=self.config_params)
             row_scoring_functions.append(motif_scoring)
 
@@ -252,8 +248,7 @@ class CMonkeyRun:
                 self.membership(),
                 self.ratio_matrix,
                 scaling_func=network_scaling_fun,
-                run_in_iteration=scoring.schedule(self['network_schedule'][0],
-                                                  self['network_schedule'][1]),
+                schedule=self['network_schedule'],
                 config_params=self.config_params)
             row_scoring_functions.append(network_scoring)
 

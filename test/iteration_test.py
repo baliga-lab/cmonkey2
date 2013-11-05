@@ -85,7 +85,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         row_scoring = microarray.RowScoringFunction(
             self.membership, self.ratio_matrix,
             scaling_func=lambda iteration: 6.0,
-            run_in_iteration=lambda x: True,
+            schedule=lambda x: True,
             config_params=self.config_params)
         rowscores = row_scoring.compute(self.iteration_result)
         ref_rowscores = read_matrix('testdata/rowscores_fixed.tsv')
@@ -95,7 +95,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         # tests the column scoring by itself
         colscoring = scoring.ColumnScoringFunction(
             self.membership, self.ratio_matrix,
-            run_in_iteration=lambda x: True,
+            schedule=lambda x: True,
             config_params=self.config_params)
         colscores = colscoring.compute(self.iteration_result)
         ref_colscores = read_matrix('testdata/colscores_fixed.tsv')
@@ -108,7 +108,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                              self.membership,
                                              self.ratio_matrix,
                                              scaling_func=network_scaling_fun,
-                                             run_in_iteration=lambda x: True,
+                                             schedule=lambda x: True,
                                              config_params=self.config_params)
         netscores = network_scoring.compute(self.iteration_result).sorted_by_row_name()
         ref_netscores = read_matrix('testdata/netscores_fixed.tsv')

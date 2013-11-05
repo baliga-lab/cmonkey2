@@ -59,23 +59,27 @@ def get_default_network_scaling(num_iterations):
     return default_network_scaling
 
 
-def schedule(starts_at, every):
-    def runs_in_iteration(iteration):
-        return iteration >= starts_at and (iteration - starts_at) % every == 0
-    return runs_in_iteration
+class RepeatingSchedule:
+    """A basic building block of a schedule: start and interval"""
 
+    def __init__(self, start, interval):
+        self.start = start
+        self.interval = interval
 
-def default_motif_iterations(iteration):
-    return schedule(601, 3)
+    def __call__(self, iteration):
+        return iteration >= self.start and (iteration - self.start) % self.interval == 0
 
-
-def default_meme_iterations(iteration):
-    return schedule(600, 100)
-
-
-def default_network_iterations(iteration):
-    return schedule(1, 7)
-
+def make_schedule(schedulestr):
+    """creates a schedule for the specified schedule string.
+    The following formats is supported
+    <schedule>:[<schedule>]*
+    where schedule is one of
+    
+    start,interval - repeating
+    iteration - one-time
+    """
+    start, interval = tuple(map(int, schedulestr.split(',')))
+    return RepeatingSchedule(start, interval)
 
 class RunLog:
     """This is a class that captures information about a particular
@@ -98,13 +102,13 @@ class ScoringFunctionBase:
     """Base class for scoring functions"""
 
     def __init__(self, membership, matrix, scaling_func,
-                 run_in_iteration=lambda iteration: True,
+                 schedule=lambda iteration: True,
                  config_params={}):
         """creates a function instance"""
         self.__membership = membership
         self.__matrix = matrix
         self.__scaling_func = scaling_func
-        self.run_in_iteration = run_in_iteration
+        self.run_in_iteration = schedule
 
         # the cache_result parameter can be used by scoring functions
         # or users to fine-tune the behavior during non-compute operations
@@ -235,12 +239,11 @@ class ColumnScoringFunction(ScoringFunctionBase):
     function output format and can therefore not be combined in
     a generic way (the format is |condition x cluster|)"""
 
-    def __init__(self, membership, matrix, run_in_iteration=None,
-                 config_params=None):
+    def __init__(self, membership, matrix, schedule, config_params):
         """create scoring function instance"""
         ScoringFunctionBase.__init__(self, membership,
                                      matrix, scaling_func=None,
-                                     run_in_iteration=run_in_iteration,
+                                     schedule=schedule,
                                      config_params=config_params)
         self.cache_result = True
         self.run_log = RunLog("column_scoring", config_params)

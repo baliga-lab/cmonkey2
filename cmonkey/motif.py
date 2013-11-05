@@ -104,7 +104,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         # two schedules, motif_in_iteration and update_in_iteration here
         scoring.ScoringFunctionBase.__init__(self, membership,
                                              matrix, scaling_func,
-                                             run_in_iteration=None,
+                                             schedule=None,
                                              config_params=config_params)
         # attributes accessible by subclasses
         self.organism = organism
@@ -417,8 +417,8 @@ class MemeScoringFunction(MotifScoringFunctionBase):
                  sequence_filters=[],
                  scaling_func=None,
                  num_motif_func=None,
-                 update_in_iteration=scoring.default_motif_iterations,
-                 motif_in_iteration=scoring.default_meme_iterations,
+                 update_in_iteration=None,
+                 motif_in_iteration=None,
                  config_params=None):
         """creates a ScoringFunction"""
         MotifScoringFunctionBase.__init__(self, organism, membership,

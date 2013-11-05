@@ -156,13 +156,12 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     since the scores are computed through weighted addition rather than
     quantile normalization"""
 
-    def __init__(self, organism, membership, matrix, scaling_func=None,
-                 run_in_iteration=scoring.default_network_iterations,
-                 config_params=None):
+    def __init__(self, organism, membership, matrix, scaling_func,
+                 schedule, config_params):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
                                              matrix, scaling_func,
-                                             run_in_iteration,
+                                             schedule,
                                              config_params)
         self.__organism = organism
         self.__networks = None

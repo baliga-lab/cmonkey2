@@ -97,12 +97,12 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     def __init__(self, membership, matrix,
                  set_types,
                  scaling_func=None,
-                 run_in_iteration=lambda iteration: True,
+                 schedule=lambda iteration: True,
                  config_params=None):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
                                              matrix, scaling_func,
-                                             run_in_iteration,
+                                             schedule,
                                              config_params)
         self.__set_types = set_types
         # stores (min_set, pvalue) pairs for each cluster and set type
