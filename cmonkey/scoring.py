@@ -389,7 +389,7 @@ def combine(result_matrices, score_scalings, membership, quantile_normalize):
                 result_matrices[i].fix_extreme_values()  # TODO: do we need to do this again ?
                 values = result_matrices[i].values
                 qqq = abs(util.quantile(values, 0.01))
-                print "qqq(%d) = %f" % (i, qqq)
+                #print "qqq(%d) = %f" % (i, qqq)
                 if qqq == 0:
                     logging.error("very sparse score !!!")
                 values = values / qqq * abs(rs_quant)

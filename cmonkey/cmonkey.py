@@ -19,6 +19,7 @@ def set_config(cmonkey_run, config):
     cmonkey_run['out_database'] = os.path.join(cmonkey_run['output_dir'],
                                                config.get("General", "dbfile_name"))
     cmonkey_run['multiprocessing'] = config.getboolean('General', 'use_multiprocessing')
+    cmonkey_run['postadjust'] = config.getboolean('General', 'postadjust')
     cmonkey_run['checkpoint_interval'] = config.getint('General', 'checkpoint_interval')
 
     # Quantile normalization is false by default in cMonkey-R
