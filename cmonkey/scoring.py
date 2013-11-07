@@ -36,26 +36,32 @@ USE_MULTIPROCESSING = True
 def get_default_motif_scaling(num_iterations, offset=100):
     """this scaling function is based on the tricky default motif scaling
     sequence in the R reference"""
+    seq = [1e-5] * offset
+    num_steps = int(round(num_iterations * 0.75))
+    step = 1.0 / (num_steps - 1)
+    seq2 = [step * i for i in range(num_steps)]
+    seq.extend(seq2)
+
     def default_motif_scaling(iteration):
-        if iteration <= offset:
-            return 1e-5
-        steps = int(round(num_iterations * 0.75))
-        if iteration > steps + offset:
-            return 1.0
+        if iteration <= len(seq):
+            return seq[iteration - 1]
         else:
-            return (1.0 / (steps - 1)) * (iteration - (offset + 1))
+            return 1.0
+
     return default_motif_scaling
 
 
 def get_default_network_scaling(num_iterations):
     """this scaling function is based on the tricky default network scaling
     sequence in the R reference"""
+    steps = int(round(num_iterations * 0.75))
+    step = (0.5 - 1e-5) / steps
+
     def default_network_scaling(iteration):
-        steps = int(round(num_iterations * 0.75))
         if iteration > steps:
             return 0.5
         else:
-            return (0.5 / (steps - 1)) * (iteration - 1)
+            return 1e-5 + step * (iteration - 1)
     return default_network_scaling
 
 
@@ -153,6 +159,8 @@ class ScoringFunctionBase:
         iteration = iteration_result['iteration']
 
         if self.run_in_iteration(iteration):
+            logging.info("running '%s' in iteration %d with scaling: %f",
+                         self.name(), iteration, self.scaling(iteration))
             computed_result = self.do_compute(iteration_result,
                                               reference_matrix)
             # store the result for later, either by pickling them
@@ -342,6 +350,7 @@ def compute_column_scores_submatrix(matrix):
 
 def combine(result_matrices, score_scalings, membership, quantile_normalize):
     """This is  the combining function, taking n result matrices and scalings"""
+    logging.info("combine()")
     if len(result_matrices) > 1 and quantile_normalize:
         start_time = util.current_millis()
         result_matrices = dm.quantile_normalize_scores(result_matrices,
@@ -384,7 +393,7 @@ def combine(result_matrices, score_scalings, membership, quantile_normalize):
 
         if len(result_matrices) > 1:
             rs_quant = util.quantile(rscores.values, 0.01)
-            print "RS_QUANT = ", rs_quant
+            logging.info("RS_QUANT = %f", rs_quant)
             for i in range(1, len(result_matrices)):
                 result_matrices[i].fix_extreme_values()  # TODO: do we need to do this again ?
                 values = result_matrices[i].values

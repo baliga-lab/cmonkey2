@@ -138,11 +138,11 @@ class MemeSuite:
                 outfile.write(output)
 
 
-        logging.info('wrote meme output to %s', meme_outfile)
+        #logging.info('wrote meme output to %s', meme_outfile)
         dbfile = self.make_sequence_file(
             [(feature_id, locseq[1])
              for feature_id, locseq in all_seqs.items()])
-        logging.info('created mast database in %s', dbfile)
+        #logging.info('created mast database in %s', dbfile)
         try:
             mast_output = self.mast(meme_outfile, dbfile, bgfile)
             pe_values, annotations = self.read_mast_output(mast_output,
@@ -244,7 +244,7 @@ class MemeSuite430(MemeSuite):
         if pspfile_path:
             command.extend(['-psp', pspfile_path])
 
-        logging.info("running: %s", " ".join(command))
+        #logging.info("running: %s", " ".join(command))
         output = subprocess.check_output(command)
         return (read_meme_output(output, num_motifs), output)
 
