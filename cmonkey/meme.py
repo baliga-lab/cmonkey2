@@ -106,7 +106,7 @@ class MemeSuite:
         def background_file():
             """decide whether to use global or specific background file"""
             if self.__background_file != None:
-                logging.info("using global background: '%s'", self.__background_file)
+                #logging.info("using global background: '%s'", self.__background_file)
                 return self.__background_file
             else:
                 bgseqs = {feature_id: all_seqs[feature_id]
@@ -257,7 +257,7 @@ class MemeSuite430(MemeSuite):
                    '-bfile', bgfile_path, '-nostatus', '-stdout', '-text',
                    '-brief', '-ev', '999999', '-mev', '9999999', '-mt', '0.99',
                    '-seqp', '-remcorr']
-        logging.info("running: %s", " ".join(command))
+        #logging.info("running: %s", " ".join(command))
         output = subprocess.check_output(command, stderr=subprocess.STDOUT)
         return output
 

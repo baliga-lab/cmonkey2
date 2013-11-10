@@ -239,6 +239,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         matrix = None
         if all_pvalues != None and (
             force or self.update_in_iteration(iteration)):  # mot.iter in R
+            logging.info("running '%s' in iteration %d with scaling: %f",
+                         self.name(), iteration, self.scaling(iteration))
 
             matrix = pvalues2matrix(all_pvalues, self.num_clusters(), self.gene_names(),
                                     self.reverse_map)
