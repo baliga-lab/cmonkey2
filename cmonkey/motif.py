@@ -104,7 +104,6 @@ def pvalues2matrix(all_pvalues, num_clusters, gene_names, reverse_map):
             mvalues[ridx][cluster - 1] = pval
 
     matrix.apply_log()
-    matrix.fix_extreme_values()
     return matrix
 
 

@@ -597,8 +597,6 @@ class CMonkeyRun:
             iteration = self['num_iterations'] + 1
             iteration_result = {'iteration': iteration}
             logging.info("Adjusted. Now re-run scoring (iteration: %d)", iteration_result['iteration'])
-            # force quantile normalization in postprocessing in line with R reference version
-            self.config_params['quantile_normalize'] = True
             combined_scores = row_scoring.compute_force(iteration_result)
             # write the combined scores for benchmarking/diagnostics
             with open(self.combined_rscores_pickle_path(), 'w') as outfile:

@@ -351,6 +351,10 @@ def compute_column_scores_submatrix(matrix):
 def combine(result_matrices, score_scalings, membership, quantile_normalize):
     """This is  the combining function, taking n result matrices and scalings"""
     logging.info("combine()")
+
+    for m in result_matrices:
+        m.fix_extreme_values()
+
     if len(result_matrices) > 1 and quantile_normalize:
         start_time = util.current_millis()
         result_matrices = dm.quantile_normalize_scores(result_matrices,
@@ -363,7 +367,6 @@ def combine(result_matrices, score_scalings, membership, quantile_normalize):
         in_matrices = []
         num_clusters = membership.num_clusters()
         mat = result_matrices[0]
-        mat.fix_extreme_values()  ## TODO: we might need to move that
         index_map = { name: index
                       for index, name in enumerate(mat.row_names) }
         # we assume matrix 0 is always the gene expression score
@@ -395,7 +398,6 @@ def combine(result_matrices, score_scalings, membership, quantile_normalize):
             rs_quant = util.quantile(rscores.values, 0.01)
             logging.info("RS_QUANT = %f", rs_quant)
             for i in range(1, len(result_matrices)):
-                result_matrices[i].fix_extreme_values()  # TODO: do we need to do this again ?
                 values = result_matrices[i].values
                 qqq = abs(util.quantile(values, 0.01))
                 #print "qqq(%d) = %f" % (i, qqq)

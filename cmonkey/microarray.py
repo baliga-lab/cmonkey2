@@ -76,7 +76,6 @@ def compute_row_scores(membership, matrix, num_clusters,
                            values=values)
     logging.info("made result matrix in %f s.",
                  (util.current_millis() - start_time) / 1000.0)
-    result.fix_extreme_values()
     return result
 
 ROW_SCORE_MATRIX = None
