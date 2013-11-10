@@ -54,6 +54,7 @@ class ComputeArrayScoresTest(unittest.TestCase):
         refresult = self.__read_rowscores_refresult()
         print "(compute my own row scores...)"
         result = ma.compute_row_scores(membership, ratios, 43, True)
+        result.fix_extreme_values()
         print "(comparing computed with reference results...)"
         self.__compare_with_refresult(refresult, result)
 
@@ -64,6 +65,7 @@ class ComputeArrayScoresTest(unittest.TestCase):
         refresult = self.__read_rowscores_refresult()
         print "(compute my own row scores...)"
         result = ma.compute_row_scores(membership, ratios, 43, False)
+        result.fix_extreme_values()
         print "(comparing computed with reference results...)"
         self.__compare_with_refresult(refresult, result)
 
