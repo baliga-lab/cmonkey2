@@ -88,6 +88,26 @@ def compute_mean_score(pvalue_matrix, membership, organism):
 # Readonly structure to avoid passing it to the forked child processes
 MOTIF_PARAMS = None
 
+def pvalues2matrix(all_pvalues, num_clusters, gene_names, reverse_map):
+    """converts a map from {cluster: {feature: pvalue}} to a scoring matrix
+    """
+    logging.info('Recomputing motif scores...')
+    row_map = {gene: index for index, gene in enumerate(gene_names) }
+
+    # convert remapped to an actual scoring matrix
+    matrix = dm.DataMatrix(len(gene_names), num_clusters,
+                           gene_names)
+    mvalues = matrix.values
+    for cluster, feature_pvals in all_pvalues.items():
+        for feature_id, pval in feature_pvals.items():
+            ridx = row_map[reverse_map[feature_id]]
+            mvalues[ridx][cluster - 1] = pval
+
+    matrix.apply_log()
+    matrix.fix_extreme_values()
+    return matrix
+
+
 class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
     """Base class for motif scoring functions that use MEME"""
 
@@ -193,24 +213,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         return "%s/%s_matrix_last.pkl" % (self.config_params['output_dir'],
                                           self.name())
 
-    def pvalues2matrix(self, all_pvalues):
-        logging.info('Recomputing motif scores...')
-        row_map = {gene: index for index, gene in enumerate(self.gene_names()) }
-        reverse_map = self.reverse_map
-
-        # convert remapped to an actual scoring matrix
-        matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
-                               self.gene_names())
-        mvalues = matrix.values
-        for cluster, feature_pvals in all_pvalues.items():
-            for feature_id, pval in feature_pvals.items():
-                ridx = row_map[reverse_map[feature_id]]
-                mvalues[ridx][cluster - 1] = pval
-
-        matrix.apply_log()
-        matrix.fix_extreme_values()
-        return matrix
-
     def __compute(self, iteration_result, force, ref_matrix=None):
         """compute method for the specified iteration
         Note: will return None if not computed yet and the result of a previous
@@ -239,7 +241,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         if all_pvalues != None and (
             force or self.update_in_iteration(iteration)):  # mot.iter in R
 
-            matrix = self.pvalues2matrix(all_pvalues)
+            matrix = pvalues2matrix(all_pvalues, self.num_clusters(), self.gene_names(),
+                                    self.reverse_map)
+
             with open(self.matrix_pickle_path(), 'w') as outfile:
                 cPickle.dump(matrix, outfile)
         elif os.path.exists(self.matrix_pickle_path()):

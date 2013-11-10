@@ -11,7 +11,6 @@ require('doMC')
 DEBUG <- T
 source('SD.DR.Inferelator.pkg.R')
 source('cmonkey-python.R')
-source('extract-biclusters.R')
 
 inferelate <- function (ratios, clusterStack, tf.file) {
   tau <- 0
