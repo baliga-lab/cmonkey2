@@ -241,6 +241,14 @@ class ClusterMembershipTest(unittest.TestCase):
         self.assertEquals(['C1', 'C2'], membership.columns_for_cluster(3))
         self.assertEquals(['C1'], membership.columns_for_cluster(1))
 
+    def test_clusters_not_in_column(self):
+        membership = memb.ClusterMembership(
+            row_is_member_of={},
+            column_is_member_of={'C1': [1, 3], 'C2': [2, 3]},
+            config_params={'memb.clusters_per_col': 2})
+        result = membership.clusters_not_in_column('C1', [4, 2, 3, 1])
+        self.assertEquals([4, 2], result)  # make sure the order is preserved
+
     def test_replace_row_cluster(self):
         membership = memb.ClusterMembership(
             row_is_member_of={'R1': [1, 3], 'R2': [2, 3]},
@@ -269,6 +277,14 @@ class ClusterMembershipTest(unittest.TestCase):
         self.assertEquals([1, 3], membership.clusters_for_row('R1'))
         self.assertEquals(['R1'], membership.rows_for_cluster(1))
         self.assertEquals(['R1', 'R2'], membership.rows_for_cluster(3))
+
+    def test_clusters_not_in_row(self):
+        membership = memb.ClusterMembership(
+            row_is_member_of={'R1': [1, 3], 'R2': [2, 3]},
+            column_is_member_of={},
+            config_params={'memb.clusters_per_row': 2})
+        result = membership.clusters_not_in_row('R2', [4, 2, 3, 1])
+        self.assertEquals([4, 1], result)  # test preservation of order
 
     def test_std_fuzzy_coefficient(self):
         result = [memb.std_fuzzy_coefficient(value, 10) for value in range(1, 11)]

@@ -63,6 +63,7 @@ class ClusterMembership:
                         result[cluster] = []
                     result[cluster].append(name)
             return result
+        ## TODO: the members of row_is_member_of should be sets !!!
         self.__config_params = config_params
         self.__row_is_member_of = row_is_member_of
         self.__column_is_member_of = column_is_member_of
@@ -180,6 +181,17 @@ class ClusterMembership:
     def num_column_members(self, cluster):
         """returns the number of row members in the specified cluster"""
         return len(self.__cluster_column_members.get(cluster, []))
+
+    def clusters_not_in_row(self, row, clusters):
+        """returns the clusters in the input that are not in column,
+        preserving the order of clusters"""
+        return [cluster for cluster in clusters
+                if cluster not in set(self.__row_is_member_of[row])]
+
+    def clusters_not_in_column(self, column, clusters):
+        """returns the clusters in the input that are not in column"""
+        return [cluster for cluster in clusters
+                if cluster not in set(self.__column_is_member_of[column])]
 
     def is_row_in_clusters(self, row, clusters):
         """returns true if the specified row is in all spefied clusters"""
@@ -564,14 +576,17 @@ def update_for_rows(membership, rd_scores, multiprocessing):
     change_prob = membership.probability_seeing_row_change()
     for index in xrange(rd_scores.num_rows):
         row = rownames[index]
-        clusters = best_clusters[row]
+        clusters = membership.clusters_not_in_row(row, best_clusters[row])
         if seeing_change(change_prob):
             for _ in range(max_changes):
                 if len(clusters) > 0:
                     if membership.num_clusters_for_row(row) < membership.num_clusters_per_row():
                         membership.add_cluster_to_row(row, clusters[0])
+                        del clusters[0]
                     else:
                         old = membership.replace_delta_row_member(row, clusters[0], rd_scores)
+                        if old != 0:
+                            del clusters[0]
 
 
 def update_for_cols(membership, cd_scores, multiprocessing):
@@ -585,15 +600,18 @@ def update_for_cols(membership, cd_scores, multiprocessing):
 
     for index in xrange(cd_scores.num_rows):
         col = colnames[index]
-        clusters = best_clusters[col]
+        clusters = membership.clusters_not_in_column(col, best_clusters[col])
         if seeing_change(change_prob):
             for c in range(max_changes):
                 if len(clusters) > 0:
                     if (membership.num_clusters_for_column(col) <
                         membership.num_clusters_per_column()):
                         membership.add_cluster_to_column(col, clusters[0])
+                        del clusters[0]
                     else:
                         old = membership.replace_delta_column_member(col, clusters[0], cd_scores)
+                        if old != 0:
+                            del clusters[0]
 
 def seeing_change(prob):
     """returns true if the update is seeing the change"""
