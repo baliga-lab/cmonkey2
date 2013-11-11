@@ -74,8 +74,6 @@ class CMonkeyRun:
         # defaults
         self.row_seeder = memb.make_kmeans_row_seeder(num_clusters)
         self.column_seeder = microarray.seed_column_members
-        self['string_file'] = None
-
         self['string_file'] = string_file
 
         # which scoring functions should be active

@@ -311,14 +311,12 @@ class ClusterMembership:
           %( min(rpc), max(rpc), np.median(rpc) ) )
 
         start = util.current_millis()
-        logging.info("GET_DENSITY_SCORES()...")
         rd_scores, cd_scores = get_density_scores(self, row_scores,
                                                   column_scores)
         elapsed = util.current_millis() - start
         logging.info("GET_DENSITY_SCORES() took %f s.", elapsed / 1000.0)
 
         start = util.current_millis()
-        logging.info("COMPENSATE_SIZE()...")
         compensate_size(self, matrix, rd_scores, cd_scores)
         elapsed = util.current_millis() - start
         logging.info("COMPENSATE_SIZE() took %f s.", elapsed / 1000.0)

@@ -91,7 +91,6 @@ MOTIF_PARAMS = None
 def pvalues2matrix(all_pvalues, num_clusters, gene_names, reverse_map):
     """converts a map from {cluster: {feature: pvalue}} to a scoring matrix
     """
-    logging.info('Recomputing motif scores...')
     row_map = {gene: index for index, gene in enumerate(gene_names) }
 
     # convert remapped to an actual scoring matrix

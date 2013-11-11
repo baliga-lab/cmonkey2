@@ -350,8 +350,6 @@ def compute_column_scores_submatrix(matrix):
 
 def combine(result_matrices, score_scalings, membership, quantile_normalize):
     """This is  the combining function, taking n result matrices and scalings"""
-    logging.info("combine()")
-
     for m in result_matrices:
         m.fix_extreme_values()
 
