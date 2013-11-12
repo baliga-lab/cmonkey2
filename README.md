@@ -4,10 +4,6 @@
 
 This is the Python implementation of the cMonkey algorithm based on the original R implementation by David Reiss, Institute for Systems Biology
 
-### Status
-
-Testing
-
 ### System requirements
 
 * Developed and tested with Python 2.7.2
