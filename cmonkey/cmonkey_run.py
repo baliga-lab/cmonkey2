@@ -547,7 +547,8 @@ class CMonkeyRun:
         start_time = util.current_millis()
         cscores = col_scoring.compute(iteration_result)
         elapsed = util.current_millis() - start_time
-        logging.info("computed column_scores in %f s.", elapsed / 1000.0)
+        if elapsed > 0.0001:
+            logging.info("computed column_scores in %f s.", elapsed / 1000.0)
 
         membership.update(self.ratio_matrix, rscores, cscores,
                                  self['num_iterations'], iteration_result)
@@ -586,7 +587,10 @@ class CMonkeyRun:
         self.write_start_info()
         for iteration in range(self['start_iteration'],
                                self['num_iterations'] + 1):
+            start_time = util.current_millis()
             self.run_iteration(row_scoring, col_scoring, iteration)
+            elapsed = util.current_millis() - start_time
+            logging.info("performed iteration % in %f s.", iteration, elapsed / 1000.0)
 
         if self['postadjust']:
             logging.info("Postprocessing: Adjusting the clusters....")
