@@ -302,10 +302,14 @@ class ClusterMembership:
                num_iterations, iteration_result, add_fuzz=True):
         """top-level update method"""
         if add_fuzz:
+            start = util.current_millis()
             row_scores, column_scores = self.__fuzzify(row_scores,
                                                        column_scores,
                                                        num_iterations,
                                                        iteration_result)
+            elapsed = util.current_millis() - start
+            logging.info("fuzzify took %f s.", elapsed / 1000.0)
+
         # pickle the (potentially fuzzed) row scores to use them
         # in the post adjustment step. We only need to do that in the last
         # iteration
@@ -314,9 +318,9 @@ class ClusterMembership:
             with open(self.pickle_path(), 'w') as outfile:
                 cPickle.dump(row_scores, outfile)
 
-        rpc = map(len, self.__cluster_row_members.values())
-        logging.info('Rows per cluster: %i to %i (median %d)' \
-          %( min(rpc), max(rpc), np.median(rpc) ) )
+        #rpc = map(len, self.__cluster_row_members.values())
+        #logging.info('Rows per cluster: %i to %i (median %d)' \
+        #  %( min(rpc), max(rpc), np.median(rpc) ) )
 
         start = util.current_millis()
         rd_scores, cd_scores = get_density_scores(self, row_scores,

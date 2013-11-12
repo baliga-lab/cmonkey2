@@ -36,14 +36,14 @@ for running the cluster viewer (optional):
 In general, you should be able to run cmonkey-python on microbial gene
 expressions with
 
-    ./run_cmonkey.sh --organism <organism-code> --ratios <tab separated file of gene expressions>
+    ./cmonkey.py --organism <organism-code> --ratios <tab separated file of gene expressions>
 
 The file can be either in your file system or a web URL.
 
 After the program was started, a log file will be written in cmonkey.log. You
 can see all available options with
 
-    ./run_cmonkey.sh --help
+    ./cmonkey.py --help
 
 
 ### Test Run with Halobacterium Salinarum
@@ -51,7 +51,7 @@ can see all available options with
 There is a startup script for cMonkey to run the current integrated
 system
 
-    ./run_cmonkey.sh --organism hal --ratios example_data/hal/halo_ratios5.tsv
+    ./cmonkey.py --organism hal --ratios example_data/hal/halo_ratios5.tsv
 
 
 ### Start the monitoring application

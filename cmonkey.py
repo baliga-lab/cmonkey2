@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # vi: sw=4 ts=4 et:
 """cmonkey.py - cMonkey top-level module
 
@@ -5,12 +6,12 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import os.path
-import cmonkey_run
-import datamatrix as dm
-import util
+import cmonkey.cmonkey_run as cmr
+import cmonkey.datamatrix as dm
+import cmonkey.util as util
 import argparse
 import logging
-from schedule import make_schedule
+from cmonkey.schedule import make_schedule
 import ConfigParser
 
 def set_config(cmonkey_run, config):
@@ -117,13 +118,13 @@ See README and LICENSE for details.\n"""
     matrix = matrix_factory.create_from(infile)
     infile = None
     # num_cluster=250 for halo_ref
-    cmonkey_run = cmonkey_run.CMonkeyRun(args.organism, matrix,
-                                         string_file=args.string,
-                                         rsat_organism=args.rsat_organism,
-                                         log_filename=args.logfile,
-                                         remap_network_nodes=args.remap_network_nodes,
-                                         ncbi_code=args.ncbi_code,
-                                         num_clusters=args.numclusters)
+    cmonkey_run = cmr.CMonkeyRun(args.organism, matrix,
+                                 string_file=args.string,
+                                 rsat_organism=args.rsat_organism,
+                                 log_filename=args.logfile,
+                                 remap_network_nodes=args.remap_network_nodes,
+                                 ncbi_code=args.ncbi_code,
+                                 num_clusters=args.numclusters)
     cmonkey_run['output_dir'] = args.out
     cmonkey_run['cache_dir'] = args.cachedir
     set_config(cmonkey_run, config)
