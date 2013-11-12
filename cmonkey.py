@@ -54,6 +54,9 @@ def set_config(cmonkey_run, config):
     cmonkey_run['result_freq'] = config.getint('General', 'result_frequency')
 
 
+# if we were installed through Debian package management, default.ini is found here
+SYSTEM_INI_PATH='/etc/cmonkey-python/default.ini'
+
 if __name__ == '__main__':
     description = """cMonkey (Python port) (c) 2011-2012,
 Institute for Systems Biology
@@ -62,7 +65,13 @@ See README and LICENSE for details.\n"""
 
     # read default configuration parameters
     config = ConfigParser.ConfigParser()
-    config.read('default.ini')
+    if os.path.exists('default.ini'):
+        config.read('default.ini')
+    elif os.path.exists(SYSTEM_INI_PATH):
+        config.read(SYSTEM_INI_PATH)
+    else:
+        raise Exception('could not find default.ini !')
+
 
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--ratios', required=True,
