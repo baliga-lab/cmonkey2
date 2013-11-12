@@ -175,18 +175,6 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     def run_logs(self):
         return [self.run_log]
 
-    def network_scores_pickle_path(self):
-        return "%s/%s_scores_last.pkl" % (self.config_params['output_dir'],
-                                          self.name())
-
-    def current_network_scores(self):
-        if self.network_scores != None:
-            return self.network_scores
-        else:
-            with open(self.network_scores_pickle_path()) as infile:
-                result = cPickle.load(infile)
-            return result
-
     def store_checkpoint_data(self, shelf):
         """Default implementation does not store checkpoint data"""
         shelf['network.scores'] = self.network_scores
@@ -198,17 +186,13 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     def compute(self, iteration_result, ref_matrix=None):
         """overridden compute for storing additional information"""
         result = scoring.ScoringFunctionBase.compute(self, iteration_result, ref_matrix)
-        iteration_result['networks'] = self.__update_score_means(
-            self.current_network_scores())
-        self.network_scores = None
+        iteration_result['networks'] = self.__update_score_means(self.network_scores)
         return result
 
     def compute_force(self, iteration_result, ref_matrix=None):
         """overridden compute for storing additional information"""
         result = scoring.ScoringFunctionBase.compute_force(self, iteration_result, ref_matrix)
-        iteration_result['networks'] = self.__update_score_means(
-            self.current_network_scores())
-        self.network_scores = None
+        iteration_result['networks'] = self.__update_score_means(self.network_scores)
         return result
 
     def networks(self):
@@ -228,9 +212,10 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         # a dictionary that holds the network score means for
         # each cluster, separated for each network
         score_means = {}
-        for network in self.networks():
-            score_means[network.name] = self.__compute_cluster_score_means(
-                network_scores[network.name])
+        if network_scores:
+            for network in self.networks():
+                score_means[network.name] = self.__compute_cluster_score_means(
+                    network_scores[network.name])
         return compute_mean(score_means)
 
     def do_compute(self, iteration_result, ref_matrix=None):
@@ -258,15 +243,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                                                    network_score, network.weight)
             iteration_scores = compute_iteration_scores(network_iteration_scores)
 
-        outfile_path = self.network_scores_pickle_path()
-        outfile_dir = os.path.dirname(outfile_path)
-        if not os.path.isdir(outfile_dir):
-            from os import makedirs
-            makedirs(outfile_dir)
-        with open(self.network_scores_pickle_path(), 'w') as outfile:
-            cPickle.dump(network_scores, outfile)
-        # immediately use in means computation
-        self.network_scores = network_scores
+        self.network_scores = network_scores  # for trim mean computation
         matrix.subtract_with_quantile(0.99)
         return matrix
 
