@@ -733,10 +733,20 @@ def global_background_file(organism, gene_aliases, seqtype, bgorder=3,
     return make_background_file(global_seqs, use_revcomp, bgorder)
 
 
+USER_TEST_FASTA_PATH='config/fasta_test.fa'
+SYSTEM_TEST_FASTA_PATH='/etc/cmonkey-python/fasta_test.fa'
+
 def check_meme_version():
     logging.info('checking MEME...')
+    if os.path.exists(USER_TEST_FASTA_PATH):
+        test_fasta = USER_TEST_FASTA_PATH
+    elif os.path.exists(SYSTEM_TEST_FASTA_PATH):
+        test_fasta = SYSTEM_TEST_FASTA_PATH
+    else:
+        raise Exception('fasta_test.fa not found !')
+
     try:
-        command = ['meme', '-nostatus', '-text', 'testdata/fasta_test.fa']
+        command = ['meme', '-nostatus', '-text', test_fasta]
         output = subprocess.check_output(command).split('\n')
         for line in output:
             if line.startswith('MEME version'):

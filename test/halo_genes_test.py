@@ -9,8 +9,8 @@ import unittest
 import util
 import rsat
 
-KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
-GO_FILE_PATH = 'testdata/proteome2taxid'
+KEGG_FILE_PATH = 'config/KEGG_taxonomy'
+GO_FILE_PATH = 'config/proteome2taxid'
 RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'

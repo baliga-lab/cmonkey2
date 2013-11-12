@@ -11,8 +11,8 @@ import organism as org
 import seqtools as st
 
 
-TAXONOMY_FILE_PATH = "testdata/KEGG_taxonomy"
-PROT2TAXID_FILE_PATH = "testdata/proteome2taxid"
+TAXONOMY_FILE_PATH = "config/KEGG_taxonomy"
+PROT2TAXID_FILE_PATH = "config/proteome2taxid"
 RSAT_LIST_FILE_PATH = "testdata/RSAT_genomes_listing.txt"
 
 SEARCH_DISTANCES = {'upstream':(-20, 150)}

@@ -22,8 +22,11 @@ import sqlite3
 from decimal import Decimal
 import cPickle
 
-KEGG_FILE_PATH = 'testdata/KEGG_taxonomy'
-GO_FILE_PATH = 'testdata/proteome2taxid'
+USER_KEGG_FILE_PATH = 'config/KEGG_taxonomy'
+USER_GO_FILE_PATH = 'config/proteome2taxid'
+SYSTEM_KEGG_FILE_PATH = '/etc/cmonkey-python/KEGG_taxonomy'
+SYSTEM_GO_FILE_PATH = '/etc/cmonkey-python/proteome2taxid'
+
 RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 STRING_URL_PATTERN = "http://networks.systemsbiology.net/string9/%s.gz"
@@ -273,8 +276,21 @@ class CMonkeyRun:
     def make_microbe(self):
         """returns the organism object to work on"""
         self.__make_dirs_if_needed()
-        keggfile = util.read_dfile(KEGG_FILE_PATH, comment='#')
-        gofile = util.read_dfile(GO_FILE_PATH)
+
+        if os.path.exists(USER_KEGG_FILE_PATH):
+            keggfile = util.read_dfile(USER_KEGG_FILE_PATH, comment='#')
+        elif os.path.exists(SYSTEM_KEGG_FILE_PATH):
+            keggfile = util.read_dfile(SYSTEM_KEGG_FILE_PATH, comment='#')
+        else:
+            raise Exception('KEGG file not found !!')
+
+        if os.path.exists(USER_GO_FILE_PATH):
+            gofile = util.read_dfile(USER_GO_FILE_PATH)
+        elif os.path.exists(SYSTEM_GO_FILE_PATH):
+            gofile = util.read_dfile(SYSTEM_GO_FILE_PATH)
+        else:
+            raise Exception('GO file not found !!')
+
         rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, self['cache_dir'])
         mo_db = microbes_online.MicrobesOnline(self['cache_dir'])
         stringfile = self['string_file']
