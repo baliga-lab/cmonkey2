@@ -60,13 +60,15 @@ class ClusterMembership:
             for name, clusters in name_to_cluster_map.items():
                 for cluster in clusters:
                     if cluster not in result:
-                        result[cluster] = []
-                    result[cluster].append(name)
+                        result[cluster] = set()
+                    result[cluster].add(name)
             return result
-        ## TODO: the members of row_is_member_of should be sets !!!
+        # converting to set for efficiency in membership tests
         self.__config_params = config_params
-        self.__row_is_member_of = row_is_member_of
-        self.__column_is_member_of = column_is_member_of
+        self.__row_is_member_of = {row: set(clusters)
+                                   for row, clusters in row_is_member_of.items()}
+        self.__column_is_member_of = {col: set(clusters)
+                                      for col, clusters in column_is_member_of.items()}
         self.__cluster_row_members = create_cluster_to_names_map(
             self.__row_is_member_of)
         self.__cluster_column_members = create_cluster_to_names_map(
@@ -86,9 +88,9 @@ class ClusterMembership:
             result = {}
             for row_index in xrange(len(names)):
                 row = membership[row_index]
-                result[names[row_index]] = sorted(set(
+                result[names[row_index]] = set(
                     [row[col_index] for col_index in xrange(len(row))
-                     if row[col_index] > 0]))
+                     if row[col_index] > 0])
             return result
 
         # using the seeding functions, build the initial membership
@@ -152,7 +154,7 @@ class ClusterMembership:
 
     def clusters_for_row(self, row_name):
         """determine the clusters for the specified row"""
-        return self.__row_is_member_of.get(row_name, [])
+        return self.__row_is_member_of.get(row_name, set())
 
     def num_clusters_for_row(self, row_name):
         """returns the number of clusters for the row"""
@@ -160,38 +162,38 @@ class ClusterMembership:
 
     def clusters_for_column(self, column_name):
         """determine the clusters for the specified column"""
-        return self.__column_is_member_of.get(column_name, [])
+        return self.__column_is_member_of.get(column_name, set())
 
     def num_clusters_for_column(self, column_name):
         """returns the number of clusters for the column"""
         return len(self.clusters_for_column(column_name))
 
     def rows_for_cluster(self, cluster):
-        """returns a sorted set containing the rows in a cluster"""
-        return sorted(set(self.__cluster_row_members.get(cluster, [])))
+        """returns the rows contained in a cluster"""
+        return self.__cluster_row_members.get(cluster, set())
 
     def columns_for_cluster(self, cluster):
-        """returns a sorted set containing the columns in a cluster"""
-        return sorted(set(self.__cluster_column_members.get(cluster, [])))
+        """returns the columns contained in a cluster"""
+        return self.__cluster_column_members.get(cluster, set())
 
     def num_row_members(self, cluster):
         """returns the number of row members in the specified cluster"""
-        return len(self.__cluster_row_members.get(cluster, []))
+        return len(self.__cluster_row_members.get(cluster, set()))
 
     def num_column_members(self, cluster):
         """returns the number of row members in the specified cluster"""
-        return len(self.__cluster_column_members.get(cluster, []))
+        return len(self.__cluster_column_members.get(cluster, set()))
 
     def clusters_not_in_row(self, row, clusters):
         """returns the clusters in the input that are not in column,
         preserving the order of clusters"""
         return [cluster for cluster in clusters
-                if cluster not in set(self.__row_is_member_of[row])]
+                if cluster not in self.__row_is_member_of[row]]
 
     def clusters_not_in_column(self, column, clusters):
         """returns the clusters in the input that are not in column"""
         return [cluster for cluster in clusters
-                if cluster not in set(self.__column_is_member_of[column])]
+                if cluster not in self.__column_is_member_of[column]]
 
     def is_row_in_clusters(self, row, clusters):
         """returns true if the specified row is in all spefied clusters"""
@@ -218,22 +220,16 @@ class ClusterMembership:
         """adds the specified row as a member to the cluster. Unchecked
         version, without checking limits"""
         if not row in self.__row_is_member_of:
-            self.__row_is_member_of[row] = []
+            self.__row_is_member_of[row] = set()
         if not cluster in self.__cluster_row_members:
-            self.__cluster_row_members[cluster] = []
+            self.__cluster_row_members[cluster] = set()
 
         clusters = self.__row_is_member_of[row]
         rows = self.__cluster_row_members[cluster]
-
         if cluster not in clusters:
-            #logging.info("ROW %s -> CLUSTER %d", row, cluster)
-            clusters.append(cluster)
-        else:
-            pass
-            #logging.warn("cluster %s already associated with %s",
-            #             str(cluster), str(row))
+            clusters.add(cluster)
         if row not in rows:
-            rows.append(row)
+            rows.add(row)
 
     def remove_cluster_from_row(self, row, cluster):
         """removes a cluster from the list of associated clusters for a row"""
@@ -262,16 +258,16 @@ class ClusterMembership:
     def __add_cluster_to_column(self, column, cluster):
         """unchecked adding of a column to a cluster"""
         if not column in self.__column_is_member_of:
-            self.__column_is_member_of[column] = []
+            self.__column_is_member_of[column] = set()
         if not cluster in self.__cluster_column_members:
-            self.__cluster_column_members[cluster] = []
+            self.__cluster_column_members[cluster] = set()
 
         clusters = self.__column_is_member_of[column]
         columns = self.__cluster_column_members[cluster]
         if cluster not in clusters:
-            clusters.append(cluster)
+            clusters.add(cluster)
         if column not in columns:
-            columns.append(column)
+            columns.add(column)
 
     def remove_cluster_from_column(self, column, cluster):
         """removes a cluster from the list of associated clusters

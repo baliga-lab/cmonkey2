@@ -197,7 +197,7 @@ def compute_cluster_score(args):
     set_type = SET_SET_TYPE
     matrix = SET_MATRIX
     ref_matrix = SET_REF_MATRIX
-    cluster_rows = SET_MEMBERSHIP.rows_for_cluster(cluster)
+    cluster_rows = sorted(SET_MEMBERSHIP.rows_for_cluster(cluster))
     cluster_genes = [gene for gene in cluster_rows
                      if gene in set_type.genes()]
     overlap_sizes = []

@@ -128,16 +128,16 @@ class DataMatrix:
             row_names = self.row_names
             row_indexes = None
         else:
-            row_names = [name for name in row_names
-                         if name in self.row_names]
+            row_names = [name for name in sorted(row_names)
+                         if name in set(self.row_names)]
             row_indexes = self.row_indexes(row_names)
 
         if column_names == None:
             column_names = self.column_names
             col_indexes = None
         else:
-            column_names = [name for name in column_names
-                            if name in self.column_names]
+            column_names = [name for name in sorted(column_names)
+                            if name in set(self.column_names)]
             col_indexes = self.column_indexes(column_names)
 
         new_values = make_values(row_indexes, col_indexes)

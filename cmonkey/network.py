@@ -119,7 +119,7 @@ def compute_network_scores(cluster):
     global COMPUTE_NETWORK, ALL_GENES, NETWORK_SCORE_MEMBERSHIP
     network = COMPUTE_NETWORK
 
-    genes = NETWORK_SCORE_MEMBERSHIP.rows_for_cluster(cluster)
+    genes = sorted(NETWORK_SCORE_MEMBERSHIP.rows_for_cluster(cluster))
     gene_scores = {}
     for gene in genes:
         edges = network.edges_with_node(gene)

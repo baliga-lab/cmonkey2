@@ -275,7 +275,7 @@ def compute_column_scores(membership, matrix, num_clusters,
         """calculate substitution value for missing column scores"""
         membership_values = []
         for cluster in xrange(1, num_clusters + 1):
-            columns = set(membership.columns_for_cluster(cluster))
+            columns = membership.columns_for_cluster(cluster)
             column_scores = cluster_column_scores[cluster - 1]
             if column_scores != None:
                 for row in xrange(column_scores.num_rows):
@@ -372,7 +372,7 @@ def combine(result_matrices, score_scalings, membership, quantile_normalize):
         # fixed
         rsm = []
         for cluster in range(1, num_clusters + 1):
-            row_members = membership.rows_for_cluster(cluster)
+            row_members = sorted(membership.rows_for_cluster(cluster))
             rsm.extend([mat.values[index_map[row]][cluster - 1]
                         for row in row_members])
         scale = util.mad(rsm)
