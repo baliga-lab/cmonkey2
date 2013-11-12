@@ -119,9 +119,9 @@ class ScoringFunctionBase:
         # the cache_result parameter can be used by scoring functions
         # or users to fine-tune the behavior during non-compute operations
         # either recall a previous result from RAM or from a pickled
-        # state. For very large results, pickling can be better, while
-        # for smaller results, recalling from RAM can be faster
-        self.cache_result = False
+        # state. In general, setting this to True will be the best, but
+        # if your environment has little memory, set this to False
+        self.cache_result = True
         self.config_params = config_params
         if config_params == None:
             raise Exception('NO CONFIG PARAMS !!!')
@@ -172,6 +172,13 @@ class ScoringFunctionBase:
                 logging.info("pickle result to %s", self.pickle_path())
                 with open(self.pickle_path(), 'w') as outfile:
                     cPickle.dump(computed_result, outfile)
+
+            # for diagnostics, we always pickle out the last results
+            if self.cache_result and iteration >= self.config_params['num_iterations']:
+                logging.info("pickle result to %s", self.pickle_path())
+                with open(self.pickle_path(), 'w') as outfile:
+                    cPickle.dump(computed_result, outfile)
+
         elif self.cache_result:
             computed_result = self.cached_result
         elif os.path.exists(self.pickle_path()):
