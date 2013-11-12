@@ -135,6 +135,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.__sequence_filters = sequence_filters
         self.__last_run_results = None
         self.__last_iteration_result = {}
+        self.all_pvalues = None
+        self.matrix = None
 
         self.update_log = scoring.RunLog("motif-score-" + seqtype, config_params)
         self.motif_log = scoring.RunLog("motif-motif-" + seqtype, config_params)
@@ -217,8 +219,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         scoring if the function is not supposed to actually run in this iteration
         """
         iteration = iteration_result['iteration']
-        all_pvalues = None
-
         if force or self.motif_in_iteration(iteration):  # meme.iter in R
             logging.info("Running Motifing for sequence type '%s'...", self.seqtype)
             # running MEME and store the result for the non-motifing iterations
@@ -227,30 +227,15 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             num_motifs = self.num_motif_func(iteration,
                                              self.config_params['num_iterations'])
             self.__last_iteration_result = {'iteration': iteration}
-            all_pvalues = self.compute_pvalues(self.__last_iteration_result,
-                                               num_motifs)
-            with open(self.pickle_path(), 'w') as outfile:
-                cPickle.dump(all_pvalues, outfile)
-        elif os.path.exists(self.pickle_path()):
-            with open(self.pickle_path()) as infile:
-                all_pvalues = cPickle.load(infile)
+            self.all_pvalues = self.compute_pvalues(self.__last_iteration_result,
+                                                    num_motifs)
 
-        matrix = None
-        if all_pvalues != None and (
+        if self.all_pvalues != None and (
             force or self.update_in_iteration(iteration)):  # mot.iter in R
             logging.info("UPDATING MOTIF SCORES in iteration %d with scaling: %f",
                          iteration, self.scaling(iteration))
-
-            matrix = pvalues2matrix(all_pvalues, self.num_clusters(), self.gene_names(),
-                                    self.reverse_map)
-
-            with open(self.matrix_pickle_path(), 'w') as outfile:
-                cPickle.dump(matrix, outfile)
-        elif os.path.exists(self.matrix_pickle_path()):
-            with open(self.matrix_pickle_path()) as infile:
-                matrix = cPickle.load(infile)
-        else:
-            logging.warn("NO PVALUES AND NO UPDATE ON NOTHING")
+            self.matrix = pvalues2matrix(self.all_pvalues, self.num_clusters(), self.gene_names(),
+                                         self.reverse_map)
 
         self.update_log.log(iteration, self.update_in_iteration(iteration),
                             self.scaling(iteration))
@@ -271,8 +256,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             iteration_result['motif-pvalue'] = {}
 
         iteration_result['motif-pvalue'][self.seqtype] = compute_mean_score(
-            matrix, self.membership(),  self.organism)
-        return matrix
+            self.matrix, self.membership(),  self.organism)
+        return self.matrix
 
     def compute_pvalues(self, iteration_result, num_motifs):
         """Compute motif scores.
