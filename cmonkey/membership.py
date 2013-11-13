@@ -503,53 +503,6 @@ class ClusterMembership:
                      cluster, old_num, old_num + len(result))
         return result
 
-    def reseed_small_row_clusters(self, row_names):
-        """prevent empty clusters by taking a random row and adding
-        it to an empty cluster"""
-        n_r = self.min_cluster_rows_allowed() * 2
-        small_clusters = [cluster
-                          for cluster in xrange(1, self.num_clusters() + 1)
-                          if self.num_row_members(cluster) <=
-                          self.min_cluster_rows_allowed()]
-        large_clusters = [cluster
-                          for cluster in xrange(1, self.num_clusters() + 1)
-                          if self.num_row_members(cluster) >=
-                          self.max_cluster_rows_allowed()]
-
-        for cluster in small_clusters:
-            logging.warning("# reseeding row cluster %d", cluster)
-            # We only have a chance to successfully pick a replacement
-            # if we have enough row names to distribute
-            pick_row_names = [row_name for row_name in row_names
-                              if self.num_clusters_for_row(row_name) <
-                              self.num_clusters_per_row()]
-            if len(pick_row_names) > 0:
-                row_name = pick_row_names[random.randint(0, len(pick_row_names) - 1)]
-                self.__add_cluster_to_row(row_name, cluster)
-            else:
-                logging.warn("no rows available to stick the cluster %d into", cluster)
-
-    def reseed_small_column_clusters(self, column_names):
-        """prevent empty clusters by taking a random row and adding
-        it to an empty cluster"""
-        n_c = 5
-        small_clusters = [cluster
-                          for cluster in xrange(1, self.num_clusters() + 1)
-                          if self.num_column_members(cluster) == 0]
-
-        for cluster in small_clusters:
-            logging.warning("# reseeding column cluster %d", cluster)
-            # We only have a chance to successfully pick a replacement
-            # if we have enough column names to distribute
-            pick_col_names = [col_name for col_name in column_names
-                              if self.num_clusters_for_column(col_name) <
-                              self.num_clusters_per_column()]
-            if len(pick_col_names) > 0:
-                col_name = pick_col_names[random.randint(0, len(pick_col_names) - 1)]
-                self.__add_cluster_to_column(col_name, cluster)
-            else:
-                logging.warn("no columns available to stick cluster %d into", cluster)
-
     def store_checkpoint_data(self, shelf):
         """Save memberships into checkpoint"""
         logging.info("Saving checkpoint data for memberships in iteration %d",

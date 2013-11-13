@@ -568,9 +568,6 @@ class CMonkeyRun:
 
         membership.update(self.ratio_matrix, rscores, cscores,
                                  self['num_iterations'], iteration_result)
-        # for now, we do not reseed
-        #membership.reseed_small_row_clusters(self.ratio_matrix.row_names)
-        #membership.reseed_small_column_clusters(self.ratio_matrix.column_names)
 
         if (iteration > 0 and self['checkpoint_interval']
             and iteration % self['checkpoint_interval'] == 0):

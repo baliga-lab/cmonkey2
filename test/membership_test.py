@@ -311,29 +311,3 @@ class ClusterMembershipTest(unittest.TestCase):
                         3 in result['Row 1'] and 4 in result['Row 1'])
         self.assertTrue(len(result['Row 2']) == 2 and
                         3 in result['Row 2'] and 4 in result['Row 2'])
-
-    def test_reseed_small_row_clusters(self):
-        row_names = ['R1', 'R2', 'R3', 'R4', 'R5']
-        membership = memb.ClusterMembership(
-            row_is_member_of={'R1': [1, 3], 'R2': [2, 3]},
-            column_is_member_of={},
-            config_params={'memb.clusters_per_row': 2,
-                           'memb.min_cluster_rows_allowed': 3,
-                           'memb.max_cluster_rows_allowed': 70,
-                           'num_clusters': 4})
-        membership.reseed_small_row_clusters(row_names)
-        for cluster in xrange(1, 5):
-            self.assertTrue(membership.num_row_members(cluster) > 0)
-
-    def test_reseed_small_column_clusters(self):
-        col_names = ['C1', 'C2', 'C3']
-        membership = memb.ClusterMembership(
-            row_is_member_of={'R1': [1, 3], 'R2': [2, 3]},
-            column_is_member_of={'C1': [1], 'C3': [2]},
-            config_params={'memb.clusters_per_row': 2,
-                           'memb.clusters_per_col': 2,
-                           'num_clusters': 4})
-        membership.reseed_small_column_clusters(col_names)
-        for cluster in xrange(1, 5):
-            self.assertTrue(membership.num_column_members(cluster) > 0)
-        

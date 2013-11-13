@@ -140,26 +140,6 @@ def __compute_row_scores_for_submatrix(matrix, submatrix):
     return np.log(np.clip(rm, 1e-20, 1000.0) + 1e-99)
 
 
-"""
-def __quantile_normalize_scores(cluster_row_scores,
-                                row_names,
-                                membership,
-                                num_clusters):
-    #quantile normalize the row scores in cluster_row_scores
-    #that are not NaN or +/-Inf and are in a row cluster membership
-    values_for_quantile = []
-    for cluster in xrange(1, num_clusters + 1):
-        row_scores_for_cluster = cluster_row_scores[cluster - 1]
-        cluster_rows = membership.rows_for_cluster(cluster)
-        if row_scores_for_cluster != None:
-            for row in xrange(len(row_scores_for_cluster)):
-                score = row_scores_for_cluster[row]
-                gene_name = row_names[row]
-                if np.isfinite(score) and (gene_name in cluster_rows):
-                    values_for_quantile.append(score)
-    return util.quantile(values_for_quantile, 0.95)
-"""
-
 class RowScoringFunction(scoring.ScoringFunctionBase):
     """Scoring algorithm for microarray data based on genes"""
 
