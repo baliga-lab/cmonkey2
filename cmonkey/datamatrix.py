@@ -12,6 +12,7 @@ import logging
 import rpy2.robjects as robj
 import gzip
 import multiprocessing as mp
+import os, os.path, random
 
 class DataMatrix:
     """
@@ -480,6 +481,30 @@ def qm_result_matrices(matrices, tmp_mean, multiprocessing=True):
                                    values=values)
             result.append(outmatrix)
         return result
+
+
+# Ensemble functionality
+def split_matrix(matrix, outdir, n, k):
+    """Split the input matrix into n matrices with the original
+    number of rows and k columns. Write the resulting matrix to
+    the specified output directory"""
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
+    column_sets = [random.sample(matrix.column_names, k)
+                   for _ in range(n)]
+
+    for i, column_names in enumerate(column_sets):
+        m = matrix.submatrix_by_name(column_names=column_names)
+        path = '%s/ratios-%03d.tsv' % (outdir, i)
+        m.write_tsv_file(path)
+
+def prepare_ensemble_matrix(ratiofile, outdir, n, k):
+    matrix_factory = DataMatrixFactory([nochange_filter,
+                                        center_scale_filter])
+    if os.path.exists(ratiofile):
+        infile = util.read_dfile(ratiofile, has_header=True, quote='\"')
+        matrix = matrix_factory.create_from(infile)
+        split_matrix(matrix, outdir, n, k)
 
 
 __all__ = ['DataMatrix', 'DataMatrixFactory', 'nochange_filter', 'center_scale_filter']
