@@ -92,7 +92,6 @@ class CMonkeyRun:
         else:
             logging.error('MEME not detected - please check')
 
-
     def __dbconn(self, isolation_level='DEFERRED'):
         """returns an autocommit database connection"""
         conn = sqlite3.connect(self['out_database'])
@@ -216,7 +215,9 @@ class CMonkeyRun:
 
             if self['meme_version'] == '4.3.0':
                 meme_suite = meme.MemeSuite430(background_file=background_file)
-            elif self['meme_version'].startswith('4.8') or self['meme_version'].startswith('4.9'):
+            elif (self['meme_version'] and
+                  (self['meme_version'].startswith('4.8') or
+                   self['meme_version'].startswith('4.9'))):
                 meme_suite = meme.MemeSuite481(background_file=background_file)
             else:
                 logging.error("MEME version %s currently not supported !", self['meme_version'])

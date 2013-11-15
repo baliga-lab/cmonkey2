@@ -111,6 +111,7 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals(3, util.quantile(data, 0.5))
         self.assertEquals(4, util.quantile(data, 0.75))
         self.assertEquals(5, util.quantile(data, 1))
+        self.assertTrue(np.isnan(util.quantile([], 0.99)))
 
     def test_quantile_nan(self):
         """tests the quantile function with NaN"""

@@ -141,7 +141,7 @@ See README and LICENSE for details.\n"""
 
     cmonkey_run['keep_memeout'] = args.keep_memeout
     cmonkey_run['donetworks'] = not args.nonetworks
-    cmonkey_run['domotifs'] = not args.nomotifs
+    cmonkey_run['domotifs'] = not args.nomotifs and cmonkey_run['meme_version']
     cmonkey_run['use_string'] = not args.nostring
     cmonkey_run['use_operons'] = not args.nooperons
 

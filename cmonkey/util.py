@@ -182,8 +182,10 @@ def quantile(values, probability):
     """
     values = np.array(values)
     values = values[np.isfinite(values)]
-    return scipy.stats.scoreatpercentile(values, probability * 100)
-
+    if len(values):
+        return scipy.stats.scoreatpercentile(values, probability * 100)
+    else:
+        return np.nan
 
 def r_stddev(values):
     """This is a standard deviation function, adjusted so it will
