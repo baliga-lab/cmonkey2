@@ -1,0 +1,12 @@
+Source: cmonkey-python
+Section: python
+Priority: extra
+Maintainer: Wei-ju Wu
+Build-Depends: debhelper (>= 7), python-support
+Standards-version: 3.8.0
+Homepage: http://github.com/weiju/cmonkey-python
+
+Package: cmonkey-python
+Architecture: all
+Depends: python (>= 2.7), python-numpy, python-scipy, python-rpy2, python-beautifulsoup, python-mysqldb, csh
+Description: This is the cmonkey-python package
