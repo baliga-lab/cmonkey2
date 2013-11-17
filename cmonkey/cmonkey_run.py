@@ -333,7 +333,8 @@ class CMonkeyRun:
                                   self['search_distances'],
                                   self['scan_distances'],
                                   self['use_operons'],
-                                  self['rsat_organism'])
+                                  self['rsat_organism'],
+                                  self.ratio_matrix)
 
     def __make_dirs_if_needed(self):
         logging.info('creating aux directories')

@@ -46,9 +46,10 @@ def get_network_factory2(organism_code, filename, weight, sep='\t',
             normalize_edges_to_max_score(result, max_score)
         return result
 
-    def make_network(_):
+    def make_network(organism, ratios=None, check_size=False):
         """make network"""
-        return network.Network.create("STRING", read_edges2(filename), weight)
+        return network.Network.create("STRING", read_edges2(filename), weight,
+                                      organism, ratios)
 
     return make_network
 

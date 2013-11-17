@@ -105,7 +105,8 @@ class MicrobeFactory:
 
     def create(self, organism_code, search_distances,
                scan_distances, use_operons=True,
-               rsat_organism=None):
+               rsat_organism=None,
+               ratios=None):
         """factory method to create an organism from a code"""
         logging.info("Creating organism object for code '%s'...",
                      organism_code)
@@ -123,20 +124,21 @@ class MicrobeFactory:
                        self.__network_factories,
                        search_distances,
                        scan_distances,
-                       use_operons)
+                       use_operons,
+                       ratios)
 
 
 class OrganismBase:
     """The organism base class contains functionality that is likely to
     be the same among Organism implementations"""
 
-    def __init__(self, code, network_factories):
+    def __init__(self, code, network_factories, ratios=None):
         """Initialize the base class instance"""
         self.code = code
         logging.info("Creating networks...")
         self.__networks = []
         for make_network in network_factories:
-            self.__networks.append(make_network(self))        
+            self.__networks.append(make_network(self, ratios))
         logging.info("Finished creating networks.")
 
     def networks(self):
@@ -175,7 +177,7 @@ class Microbe(OrganismBase):
                  go_taxonomy_id, microbes_online_db,
                  network_factories,
                  search_distances, scan_distances,
-                 use_operons=True):
+                 use_operons=True, ratios=None):
         """create an Organism instance"""
         # microbe-specific network factories need access to synonyms
         # and rsat info, so initialize them here before the base class
@@ -185,7 +187,7 @@ class Microbe(OrganismBase):
         self.use_operons = use_operons
         logging.info("RSAT taxonomy id = %s" % rsat_info.taxonomy_id)
 
-        OrganismBase.__init__(self, code, network_factories)
+        OrganismBase.__init__(self, code, network_factories, ratios=ratios)
         self.kegg_organism = kegg_organism
         self.__microbes_online_db = microbes_online_db
         self.go_taxonomy_id = go_taxonomy_id

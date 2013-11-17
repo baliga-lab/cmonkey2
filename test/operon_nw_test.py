@@ -9,7 +9,7 @@ import organism as org
 import microbes_online as mo
 import util
 import thesaurus as th
-
+    
 
 class MockMicrobesOnline:
     """mock class for MicrobesOnline"""
@@ -40,6 +40,9 @@ class MockOrganism:
 
     def feature_id_for(self, gene_alias):
         return gene_alias
+
+    def thesaurus(self):
+        return self.__synonyms
 
 
 class MockOrganismWithSynonyms:
@@ -141,7 +144,9 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                       st.Location('contig1', 15, 21, False)),
                   'gene3': st.Feature('feature3', 'typ2', 'feature_name3',
                                       st.Location('contig1', 100, 154, False))
-                  }), check_size=False)
+                  },
+                {'gene1': 'gene1', 'gene2': 'gene2', 'gene3': 'gene3'}
+                ), check_size=False)
         self.assertEquals(3, network.num_edges())
         self.assertEquals(6000, network.total_score())
         self.assertEquals(123, network.weight)

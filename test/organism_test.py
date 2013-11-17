@@ -227,6 +227,6 @@ class MockNetworkFactory:
     def __init__(self):
         self.create_called_with = None
 
-    def __call__(self, organism):
+    def __call__(self, organism, ratios):
         self.create_called_with = organism
         return nw.Network.create('network', [], 0.0, check_size=False)
