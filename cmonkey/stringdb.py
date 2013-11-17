@@ -16,11 +16,11 @@ PROTEIN_PREFIX = re.compile('^string:\d+[.]')
 
 def normalize_edges_to_max_score(edges, max_score):
     """normalize scores to 1000, for combined scores"""
-    for edge in edges:
-        score = edge[2] / max_score * 1000.0
-        score = 1000 * math.exp(score / 1000.0) / math.exp(1.0)
-        edge[2] = score
-    return edges
+    def normalize(edge_score):
+        score = edge_score / max_score * 1000.0
+        return 1000 * math.exp(score / 1000.0) / math.exp(1.0)
+
+    return [(edge[0], edge[1], normalize(edge[2])) for edge in edges]
 
 
 def get_network_factory2(organism_code, filename, weight, sep='\t',
@@ -39,9 +39,9 @@ def get_network_factory2(organism_code, filename, weight, sep='\t',
         for line in dfile.lines:
             score = float(line[2])
             max_score = max(score, max_score)
-            result.append([patches.patch_string_gene(organism_code, line[0]),
+            result.append((patches.patch_string_gene(organism_code, line[0]),
                            patches.patch_string_gene(organism_code, line[1]),
-                           score])
+                           score))
         if not normalized:
             normalize_edges_to_max_score(result, max_score)
         return result
