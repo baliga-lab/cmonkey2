@@ -91,18 +91,26 @@ class Network:
     @classmethod
     def create(cls, name, edges, weight, check_size=True):
         """standard Factory method"""
+        logging.info("Network.create() called with %d edges", len(edges))
         if edges == None:
             raise Exception("no edges specified in network '%s'" % name)
-        added = {}
+        added = set([])
         network_edges = []
+        nodes = set()
+        for edge in edges:
+            nodes.add(edge[0])
+            nodes.add(edge[1])
+        print "# nodes in network '%s': %d" % (name, len(nodes))
 
         for edge in edges:
+            if edge[0] == edge[1]:  # self-interactions are not added
+                continue
             key = "%s:%s" % (edge[0], edge[1])
             key_rev = "%s:%s" % (edge[1], edge[0])
             if key not in added and key_rev not in added:
                 network_edges.append(edge)
-            added[key] = True
-            added[key_rev] = True
+            added.add(key)
+            added.add(key_rev)
 
         if check_size and len(network_edges) < 10:
             raise Exception("Error: only %d edges in network '%s'" % (len(network_edges), name))
