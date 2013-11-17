@@ -188,7 +188,11 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
     def compute_force(self, iteration_result, ref_matrix=None):
         """override base class compute() method, behavior is more complicated,
         since it nests Motif and MEME runs"""
-        return self.__compute(iteration_result, True, ref_matrix)
+        result = self.__compute(iteration_result, True, ref_matrix)
+        # and pickle the last result for diagnostics
+        with open(self.pickle_path(), 'w') as outfile:
+            cPickle.dump(result, outfile)
+        return result
 
     def matrix_pickle_path(self):
         return "%s/%s_matrix_last.pkl" % (self.config_params['output_dir'],

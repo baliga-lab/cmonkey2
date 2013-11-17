@@ -173,12 +173,6 @@ class ScoringFunctionBase:
                 with open(self.pickle_path(), 'w') as outfile:
                     cPickle.dump(computed_result, outfile)
 
-            # for diagnostics, we always pickle out the last results
-            if self.cache_result and iteration >= self.config_params['num_iterations']:
-                logging.info("pickle result to %s", self.pickle_path())
-                with open(self.pickle_path(), 'w') as outfile:
-                    cPickle.dump(computed_result, outfile)
-
         elif self.cache_result:
             computed_result = self.cached_result
         elif os.path.exists(self.pickle_path()):
