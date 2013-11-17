@@ -74,8 +74,8 @@ class Network:
             # score_e / score_total * score == score_e * (score_total / score)
             # we use this to save a division per loop iteration
             scale = float(score) / float(total)
-            for edge in self.edges:
-                edge[2] = edge[2] * scale
+            self.edges = [(edge[0], edge[1], edge[2] * scale) for edge in self.edges]
+        self.__compute_edges_with_source()
 
     def edges_with_node(self, node):
         """returns the edges where node is a node of"""
