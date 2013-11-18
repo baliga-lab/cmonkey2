@@ -84,8 +84,12 @@ def compute_mean_score(pvalue_matrix, membership, organism):
             values.append(pvalues[row][cluster - 1])
     return np.median(values)
 
-# Readonly structure to avoid passing it to the forked child processes
+# Readonly structure to avoid passing it to the forked child processes for efficiency.
+# non-serializable parameters go here, too
 MOTIF_PARAMS = None
+SEQUENCE_FILTERS = None
+ORGANISM = None
+MEMBERSIP = None
 
 def pvalues2matrix(all_pvalues, num_clusters, gene_names, reverse_map):
     """converts a map from {cluster: {feature: pvalue}} to a scoring matrix
@@ -255,12 +259,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         (seqs, feature_ids, distance) -> seqs
         These filters are applied in the order they appear in the list.
         """
-        global MOTIF_PARAMS
-        def apply_sequence_filters(seqs, feature_ids):
-            """apply all filters in the filters list in order"""
-            for sequence_filter in self.__sequence_filters:
-                seqs = sequence_filter(seqs, feature_ids)
-            return seqs
+        global MOTIF_PARAMS, SEQUENCE_FILTERS, ORGANISM, MEMBERSHIP
 
         cluster_pvalues = {}
         min_cluster_rows_allowed = self.config_params['memb.min_cluster_rows_allowed']
@@ -268,18 +267,25 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         use_multiprocessing = self.config_params[
             scoring.KEY_MULTIPROCESSING]
 
-        # create parameters
+        # extract the sequences for each cluster, slow
+        start_time = util.current_millis()
+        SEQUENCE_FILTERS = self.__sequence_filters
+        ORGANISM = self.organism
+        MEMBERSHIP = self.membership()
+
+        pool = mp.Pool()
+        cluster_seqs_params = [(cluster, self.seqtype)
+                               for cluster in xrange(1, self.num_clusters() + 1)]
+        seqs_list = pool.map(cluster_seqs, cluster_seqs_params)
+        SEQUENCE_FILTERS = None
+        ORGANISM = None
+        MEMBERSHIP = None
+        logging.info("prepared sequences in %d ms.", util.current_millis() - start_time)
+
+        # Make the parameters, this is fast enough
+        start_time = util.current_millis()
         params = []
         for cluster in xrange(1, self.num_clusters() + 1):
-            genes = sorted(self.rows_for_cluster(cluster))
-            feature_ids = self.organism.feature_ids_for(genes)
-            seqs = self.organism.sequences_for_genes_search(
-                genes, seqtype=self.seqtype)
-            seqs = apply_sequence_filters(seqs, feature_ids)
-            if len(seqs) == 0:
-                logging.warn('Cluster %i with %i genes: no sequences!' \
-                                %(cluster,len(seqs)) )
-
             # Pass the previous run's seed if possible
             if (self.__last_run_results != None and
                 cluster in self.__last_run_results.keys() and
@@ -289,6 +295,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             else:
                 previous_motif_infos = None
 
+            seqs, feature_ids = seqs_list[cluster - 1]
             params.append(ComputeScoreParams(iteration_result['iteration'], cluster,
                                              feature_ids,
                                              seqs,
@@ -300,6 +307,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                                              previous_motif_infos,
                                              self.config_params.get('keep_memeout', False),
                                              self.config_params['output_dir']))
+
+        logging.info("prepared MEME parameters in %d ms.",
+                     util.current_millis() - start_time)
 
         # create motif result map if necessary
         for cluster in xrange(1, self.num_clusters() + 1):
@@ -332,6 +342,22 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         # cleanup
         MOTIF_PARAMS = None
         return cluster_pvalues
+
+
+def cluster_seqs(params):
+    """Retrieves the sequences for a cluster. Designed to run in in pool.map()"""
+    global SEQUENCE_FILTERS, ORGANISM, MEMBERSHIP
+    cluster, seqtype = params
+    genes = sorted(MEMBERSHIP.rows_for_cluster(cluster))
+    feature_ids = ORGANISM.feature_ids_for(genes)
+    seqs = ORGANISM.sequences_for_genes_search(
+        feature_ids, seqtype=seqtype)
+    for sequence_filter in SEQUENCE_FILTERS:
+        seqs = sequence_filter(seqs, feature_ids)
+    if len(seqs) == 0:
+        logging.warn('Cluster %i with %i genes: no sequences!',
+                     cluster, len(seqs))
+    return (seqs, feature_ids)
 
 
 def meme_json(run_result):

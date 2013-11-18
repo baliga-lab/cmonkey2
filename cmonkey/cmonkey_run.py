@@ -605,7 +605,7 @@ class CMonkeyRun:
             start_time = util.current_millis()
             self.run_iteration(row_scoring, col_scoring, iteration)
             elapsed = util.current_millis() - start_time
-            logging.info("performed iteration % in %f s.", iteration, elapsed / 1000.0)
+            logging.info("performed iteration %d in %f s.", iteration, elapsed / 1000.0)
 
         if self['postadjust']:
             logging.info("Postprocessing: Adjusting the clusters....")
