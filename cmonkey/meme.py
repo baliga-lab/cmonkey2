@@ -126,7 +126,7 @@ class MemeSuite:
 
         # run mast
         meme_outfile = None
-        if params.keep_memeout:
+        if params.keep_memeout and params.iteration > params.num_iterations:
             meme_outfile = '%s/meme-out-%d-%d' % (params.outdir,
                                                   params.iteration, params.cluster)
             with open(meme_outfile, 'w') as outfile:
@@ -163,7 +163,7 @@ class MemeSuite:
                 except:
                     logging.warn("could not remove tmp file: '%s'", seqfile)
                 try:
-                    if not params.keep_memeout:
+                    if params.iteration <= params.num_iterations or not params.keep_memeout:
                         os.remove(meme_outfile)
                 except:
                     logging.warn("could not remove tmp file: '%s'", meme_outfile)
