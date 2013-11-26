@@ -144,6 +144,12 @@ class CMonkeyRun:
                      iteration int, row int, a decimal, c decimal, g decimal,
                      t decimal)''')
 
+        # Additional info: MEME generated top matching sites
+        c.execute('''create table meme_motif_sites (motif_info_id int,
+                     seq_name text,
+                     reverse boolean, start int, pvalue decimal,
+                     flank_left text, seq text, flank_right text)''')
+
         c.execute('''create table motif_annotations (motif_info_id int,
                      iteration int, gene_num int,
                      position int, reverse boolean, pvalue decimal)''')
@@ -469,6 +475,14 @@ class CMonkeyRun:
                                         (motif_info_id, iteration, gene_num,
                                         annotation['position'],
                                         annotation['reverse'], annotation['pvalue']))
+
+                            sites = motif_info['sites']
+                            for seqname, strand, start, pval, flank_left, seq, flank_right in sites:
+                                conn.execute('''insert into meme_motif_sites (motif_info_id, seq_name, reverse, start, pvalue, flank_left, seq, flank_right)
+                                                values (?,?,?,?,?,?,?,?)''',
+                                             (motif_info_id, seqname, strand == '-',
+                                              start, pval, flank_left, seq,
+                                              flank_right))
 
                         pvalues = motifs[seqtype][cluster]['pvalues']
                         for gene in pvalues:

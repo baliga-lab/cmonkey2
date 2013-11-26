@@ -387,7 +387,8 @@ def meme_json(run_result):
             result.append({'motif_num': motif_num,
                            'pssm': motif_info.pssm,
                            'evalue': motif_info.evalue,
-                           'annotations': motif_annot})
+                           'annotations': motif_annot,
+                           'sites': motif_info.sites})
     return result
 
 
