@@ -126,7 +126,7 @@ class MemeSuite:
 
         # run mast
         meme_outfile = None
-        if params.keep_memeout:
+        if params.keep_memeout: # and params.iteration > params.num_iterations:
             meme_outfile = '%s/meme-out-%d-%d' % (params.outdir,
                                                   params.iteration, params.cluster)
             with open(meme_outfile, 'w') as outfile:
@@ -163,6 +163,7 @@ class MemeSuite:
                 except:
                     logging.warn("could not remove tmp file: '%s'", seqfile)
                 try:
+                    #if params.iteration <= params.num_iterations or not params.keep_memeout:
                     if not params.keep_memeout:
                         os.remove(meme_outfile)
                 except:
@@ -418,7 +419,7 @@ def read_meme_output(output_text, num_motifs):
         """reads the sites"""
         sites_index = next_sites_index(start_index, lines)
         pattern = re.compile(
-            "(\S+)\s+([+-])\s+(\d+)\s+(\S+)\s+\S+ (\S+) (\S+)?")
+            "(\S+)\s+([+-])\s+(\d+)\s+(\S+)\s+(\S+) (\S+) (\S+)?")
         current_index = sites_index + 4
         line = lines[current_index]
         sites = []
@@ -427,7 +428,8 @@ def read_meme_output(output_text, num_motifs):
             if match == None:
                 logging.error("ERROR in read_sites(), line(#%d) is: '%s'", current_index, line)
             sites.append((match.group(1), match.group(2), int(match.group(3)),
-                          float(match.group(4)), match.group(5)))
+                          float(match.group(4)),
+                          match.group(5), match.group(6), match.group(7)))
             current_index += 1
             line = lines[current_index]
         return sites

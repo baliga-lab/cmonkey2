@@ -237,20 +237,21 @@ def get_network_factory(microbes_online, max_operon_size, weight):
         for operon in operons:
             if len(operon) <= max_operon_size:
                 combs = util.kcombinations(operon, 2)
-                edges.extend([[comb[0], comb[1], 1000.0]
+                edges.extend([(comb[0], comb[1], 1000.0)
                               for comb in combs if comb[0] != comb[1]])
             else:
                 logging.warn("dropped operon from network (max_operon_size " +
                              "exceeded): %s", str(operon))
         return edges
 
-    def make_network(organism, check_size=True):
+    def make_network(organism, ratios=None, check_size=True):
         """factory method to create a network from operon predictions"""
 
         logging.info("MicrobesOnline - make_network()")
         edges = get_operon_edges(microbes_online, organism)
         logging.info("%d edges computed", len(edges))
-        return network.Network.create('operons', edges, weight, check_size)
+        return network.Network.create('operons', edges, weight, organism,
+                                      ratios, check_size)
 
     return make_network
 

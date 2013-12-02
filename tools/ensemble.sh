@@ -1,6 +1,6 @@
 #!/bin/bash
 RATIOS="tmp/ecoli.tsv"
-INDIR=ensemble_in
+INDIR="ensemble_in"
 N=2
 K=8
 

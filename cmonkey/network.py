@@ -74,8 +74,8 @@ class Network:
             # score_e / score_total * score == score_e * (score_total / score)
             # we use this to save a division per loop iteration
             scale = float(score) / float(total)
-            for edge in self.edges:
-                edge[2] = edge[2] * scale
+            self.edges = [(edge[0], edge[1], edge[2] * scale) for edge in self.edges]
+        self.__compute_edges_with_source()
 
     def edges_with_node(self, node):
         """returns the edges where node is a node of"""
@@ -89,20 +89,46 @@ class Network:
                                                len(self.edges))
 
     @classmethod
-    def create(cls, name, edges, weight, check_size=True):
+    def create(cls, name, edges, weight, organism=None, ratios=None,
+               check_size=True):
         """standard Factory method"""
+        logging.info("Network.create() called with %d edges", len(edges))
         if edges == None:
             raise Exception("no edges specified in network '%s'" % name)
-        added = {}
+        added = set([])
         network_edges = []
+        nodes = set()
+        for edge in edges:
+            nodes.add(edge[0])
+            nodes.add(edge[1])
+        """Shrink the number of edges to the ones that are actually usable. These
+        are selected by the following considerations:
+        # 1. check nodes that are in the thesaurus
+        # 2. check gene names that are in the ratios matrix, but not in the network
+        # 3. keep the nodes that are in the ratios and are in the thesaurus
+        """
+        num_nodes_orig = len(nodes)
+        if organism:
+            thesaurus = organism.thesaurus()
+            nodes = {n for n in nodes if n in thesaurus}
+            if ratios:
+                cano_nodes = {thesaurus[n] for n in nodes}
+                cano_genes = {thesaurus[row] for row in ratios.row_names
+                              if row in thesaurus}
+                probes_in = [gene for gene in cano_genes if gene in cano_nodes]
+                nodes = {n for n in nodes if thesaurus[n] in probes_in}
+
+        logging.info("# nodes in network '%s': %d (of %d)",name, len(nodes), num_nodes_orig)
 
         for edge in edges:
-            key = "%s:%s" % (edge[0], edge[1])
-            key_rev = "%s:%s" % (edge[1], edge[0])
-            if key not in added and key_rev not in added:
-                network_edges.append(edge)
-            added[key] = True
-            added[key_rev] = True
+            # we ignore self-edges, and edges with nodes not in the final nodes
+            if edge[0] != edge[1] and (edge[0] in nodes or edge[1] in nodes):
+                key = "%s:%s" % (edge[0], edge[1])
+                key_rev = "%s:%s" % (edge[1], edge[0])
+                if key not in added and key_rev not in added:
+                    network_edges.append(edge)
+                added.add(key)
+                added.add(key_rev)
 
         if check_size and len(network_edges) < 10:
             raise Exception("Error: only %d edges in network '%s'" % (len(network_edges), name))
