@@ -1,8 +1,10 @@
-cmonkey-python (1.0.1) unstable; urgency=low
+cmonkey-python (1.0.1-1) unstable; urgency=low
 
-  * motif sites found in MEME are now stored in the database
+  * motif sites found in MEME are now stored in the database.
 
-cmonkey-python (1.0.0) unstable; urgency=low
+ -- Wei-ju Wu <wwu@systemsbiology.org>  Mon, 02 Dec 2013 15:40:00 -0800
+
+cmonkey-python (1.0.0-1) unstable; urgency=low
 
   * Initial version.
 
