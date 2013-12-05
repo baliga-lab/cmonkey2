@@ -1,8 +1,7 @@
 # Inferelator Integration package
 
-This directory contains tools to integrate with Inferelator
+This directory contains tools to integrate with the Inferelator version at https://github.com/dreiss-isb/cMonkeyNwInf
 
-Usage: Rscript sqlite.R <result-directory>
-
-This script will generate an RData file which contains a clusterStack and the ratios
+The script to use is run_inf.R. Please look at the header comments in this file for usage
+details.
 

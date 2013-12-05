@@ -37,7 +37,7 @@ read.cmonkey.sqlite <- function(db.filename, iteration=0) {
 
   cat('Reading cluster information...\n')
   for (cluster in 1:num.clusters) {
-    cat('cluster', cluster, '\n')
+    cat('.')
     cluster.data <- list()
     row.members <- dbGetPreparedQuery(con, "select order_num from row_members where iteration = :iteration and cluster = :cluster",
                                       data.frame(iteration=iteration, cluster=cluster))[,]
@@ -60,7 +60,7 @@ read.cmonkey.sqlite <- function(db.filename, iteration=0) {
     cluster.data$resid <- cluster.residual
     result[[cluster]] <- cluster.data
   }
-  cat('done.\n')
+  cat('\ndone.\n')
   dbDisconnect(con)
   result
 }
