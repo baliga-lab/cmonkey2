@@ -19,7 +19,7 @@ The script to use is run_inf.R. It can be used in 3 ways:
 ./run_inf.R --tfsfile <tfsfile> --json <jsonfile> --ratios <ratios> --outfile <outfile>
 ```
 
-The JSON format for cluster stacks looks like this:
+  The JSON format for cluster stacks looks like this:
 
 ```
 [
