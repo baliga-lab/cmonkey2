@@ -8,19 +8,23 @@ library('getopt')
 #### the command line arguments, runs Inferelator and returns
 #### a set of bicluster -> influence mappings in JSON format.
 ####
-#### It can be used in 2 ways:
+#### It can be used in 3 ways:
 ####
 #### 1. provide a list of transcription factors and a cmonkey-python
 ####    output directory.
 #### Example: ./run_inf.R --tfsfile <tfsfile> --resultdir <resultdir> --outfile <outfile>
 ####
-#### 2. provide an R environment as an RData file that contains the
+#### 2. provide a list of transcription factors, a gzip compressed ratios matrix and
+####    a cluster stack in JSON format
+#### Example: ./run_inf.R --tfsfile <tfsfile> --json <jsonfile> --ratios <ratios> --outfile <outfile>
+####
+#### 3. provide an R environment as an RData file that contains the
 ####    following parameters:
 ####    - ratios: the gene expression matrix
 ####    - predictors: the list of transcription factors
 ####    - e: an environment with the following data
 ####      - clusterStack: cMonkey standard cluster stack format
-#### Example: ./run_inf.R --tfsfile <tfsfile> --rdata <rdatafile> --outfile <outfile>
+#### Example: ./run_inf.R --rdata <rdatafile> --outfile <outfile>
 ####
 #### Note: This script assumes that the necessary R packages and their
 #### ----- dependencies are installed, namely
@@ -31,26 +35,38 @@ library('getopt')
 ####
 ######################################################################
 
-run.inferelator <- function(tfsfile, outfile, resultdir=NULL, rdata=NULL) {
+init.env <- function(clusterStack) {
+  e <- environment()
+  e$k.clust <- length(e$clusterStack)
+  e$envMap <- NULL
+  e$colMap <- NULL
+  e
+}
+
+run.inferelator <- function(outfile, tfsfile=NULL, json=NULL, ratios=NULL,
+                            resultdir=NULL, rdata=NULL) {
   source('cmonkey-python.R')
   library('cMonkeyNwInf')
   library('RJSONIO')
 
   ge <- globalenv()
-  ge$predictors <- readLines(tfsfile)
+
+  if (!is.null(tfsfile)) {
+    ge$predictors <- readLines(tfsfile)
+  }
 
   if (!is.null(resultdir)) {
     message('Creating cluster stack from result directory...')
     ratio.filename <- paste(resultdir, 'ratios.tsv.gz', sep='/')
     result.filename <- paste(resultdir, 'cmonkey_run.db', sep='/')
     ge$ratios <- read.table(gzfile(ratio.filename), header=T, as.is=T, row.names=1)
-    e <- environment()
-    e$clusterStack <- read.cmonkey.sqlite(result.filename)
-    e$k.clust <- length(e$clusterStack)
-    e$envMap <- NULL
-    e$colMap <- NULL
-    ge$e <- e
+    ge$e <- init.env(read.cmonkey.sqlite(result.filename))
     message('done.')
+  } else if (!is.null(json)) {
+    message('Creating cluster stack from JSON...')
+    ge$ratios <- read.table(gzfile(ratios), header=T, as.is=T, row.names=1)
+    ge$e <- init.env(fromJSON(json))
+    message('done.')    
   } else {
     message('Loading cluster stack and ratios from environment...')
     load(rdata, envir=ge)
@@ -74,21 +90,25 @@ run.inferelator <- function(tfsfile, outfile, resultdir=NULL, rdata=NULL) {
 }
 
 spec = matrix(c(
-  'verbose', 'v', 2, "integer",
-  'help',    'h', 0, "logical",
-  'tfsfile', 'tfs', 1, "character",
+  'verbose',   'v',   2, "integer",
+  'outfile',   'o',   1, "character",
+  'tfsfile',   'tfs', 2, "character",
   'resultdir', 'res', 2, "character",
-  'rdata', 'rdat', 2, "character",
-  'outfile', 'o', 1, "character"
+  'json',      'j',   2, "character",
+  'ratios',    'r',   2, "character",
+  'rdata', 'rdat',    2, "character"
   ), byrow=TRUE, ncol=4)
 
 opt <- getopt(spec, usage=FALSE)
 if (is.null(opt$verbose)) opt$verbose = 0
 if (is.null(opt$help)) opt$help = FALSE
 
-if (is.null(opt$tfsfile) || is.null(opt$outfile) ||
-    is.null(opt$resultdir) && is.null(opt$rdata)) {
-  print(getopt(spec, usage=TRUE))
+if (!is.null(opt$outfile) &&
+    (!is.null(opt$rdata) ||
+    !is.null(opt$tfsfile) && !is.null(opt$resultdir) ||
+    !is.null(opt$tfsfile) && !is.null(opt$json) && !is.null(opt$ratios))) {
+  run.inferelator(opt$outfile, opt$tfsfile,
+                  opt$json, opt$ratios, opt$resultdir, opt$rdata)
 } else {
-  run.inferelator(opt$tfsfile, opt$outfile, opt$resultdir, opt$rdata)
+  print(getopt(spec, usage=TRUE))
 }
