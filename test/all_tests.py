@@ -4,6 +4,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
+import xmlrunner
 import membership_test as membtest
 import datamatrix_test as dmtest
 import util_test as ut
@@ -17,6 +18,7 @@ import meme_test as met
 import pssm_test as pt
 import read_wee_test as rwt
 import scoring_test as st
+import sys
 
 
 # pylint: disable-msg=C0301
@@ -62,4 +64,8 @@ if __name__ == '__main__':
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(st.DefaultScalingTest))
 
-    unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))
+    if len(sys.argv) > 1 and sys.argv[1] == 'xml':
+      xmlrunner.XMLTestRunner(output='test-reports').run(unittest.TestSuite(SUITE))
+    else:
+      unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))
+      

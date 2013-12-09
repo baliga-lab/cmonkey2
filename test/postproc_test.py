@@ -6,6 +6,7 @@ more information and licensing details.
 import meme
 import motif
 import unittest
+import xmlrunner
 import util
 import rsat
 import organism as org
@@ -17,6 +18,7 @@ import microarray
 import scoring
 import network as nw
 import logging
+import sys
 
 KEGG_FILE_PATH = 'config/KEGG_taxonomy'
 GO_FILE_PATH = 'config/proteome2taxid'
@@ -155,4 +157,7 @@ if __name__ == '__main__':
     SUITE = []
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
             PostprocTest))
-    unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))
+    if len(sys.argv) > 1 and sys.argv[1] == 'xml':
+      xmlrunner.XMLTestRunner(output='test-reports').run(unittest.TestSuite(SUITE))
+    else:
+      unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))
