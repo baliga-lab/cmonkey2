@@ -80,7 +80,7 @@ run.inferelator <- function(outfile, tfsfile=NULL, json=NULL, ratios=NULL,
   }
   coeffs <- runnit.wrapper.halo(e, cv.choose="min+4se", tf.groups=999, alpha=0.8,
                                 n.boot=1, tau=10,
-                                r.cutoff=2, r.filter=0.8, weighted=T, aic.filter=25, plot=F)
+                                r.cutoff=Inf, r.filter=Inf, weighted=T, aic.filter=Inf, plot=F)
   influences <- sapply(coeffs,
                        function(c) { if (class(c) != 'character') c$coeffs else emptyNamedList })
   names(influences) <- 1:length(influences)
