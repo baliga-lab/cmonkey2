@@ -600,6 +600,12 @@ class OrigMembership:
     def is_column_in_cluster(self, col, cluster):
         return cluster in self.clusters_for_column(col)
 
+    def has_free_slots_for_row(self, row):
+        return len([m for m in self.row_memb[row] if m == 0]) > 0
+
+    def has_free_slots_for_column(self, col):
+        return len([m for m in self.col_memb[col] if m == 0]) > 0
+
     def add_cluster_to_row(self, row, cluster, force=False):
         try:
             index = self.row_memb[row].index(0)
@@ -705,7 +711,7 @@ def update_for_rows2(membership, rd_scores, multiprocessing):
         if seeing_change(change_prob):
             for _ in range(max_changes):
                 if len(clusters) > 0:
-                    if membership.num_clusters_for_row(row) < membership.num_clusters_per_row():
+                    if membership.has_free_slots_for_row(row):
                         membership.add_cluster_to_row(row, clusters[0])
                         del clusters[0]
                     else:
@@ -730,8 +736,7 @@ def update_for_cols2(membership, cd_scores, multiprocessing):
         if seeing_change(change_prob):
             for c in range(max_changes):
                 if len(clusters) > 0:
-                    if (membership.num_clusters_for_column(col) <
-                        membership.num_clusters_per_column()):
+                    if (membership.has_free_slots_for_column(col)):
                         membership.add_cluster_to_column(col, clusters[0])
                         del clusters[0]
                     else:
