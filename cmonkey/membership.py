@@ -195,19 +195,13 @@ class ClusterMembership:
         return [cluster for cluster in clusters
                 if cluster not in self.__column_is_member_of[column]]
 
-    def is_row_in_clusters(self, row, clusters):
+    def is_row_in_cluster(self, row, cluster):
         """returns true if the specified row is in all spefied clusters"""
-        for cluster in clusters:
-            if not row in self.rows_for_cluster(cluster):
-                return False
-        return True
+        return row in self.rows_for_cluster(cluster)
 
-    def is_column_in_clusters(self, col, clusters):
+    def is_column_in_cluster(self, col, cluster):
         """returns true if the specified row is in all spefied clusters"""
-        for cluster in clusters:
-            if not col in self.columns_for_cluster(cluster):
-                return False
-        return True
+        return col in self.columns_for_cluster(cluster)
 
     def add_cluster_to_row(self, row, cluster):
         """checked adding of a row to a cluster"""
@@ -243,7 +237,7 @@ class ClusterMembership:
 
     def replace_row_cluster(self, row, cluster, replacement):
         """replaces a cluster in the list of clusters for a row"""
-        if cluster != replacement and not self.is_row_in_clusters(row, [replacement]):
+        if cluster != replacement and not self.is_row_in_cluster(row, replacement):
             self.remove_cluster_from_row(row, cluster)
             self.add_cluster_to_row(row, replacement)
 
@@ -282,7 +276,7 @@ class ClusterMembership:
 
     def replace_column_cluster(self, column, cluster, replacement):
         """replaces a cluster in the list of clusters for a column"""
-        if replacement != cluster and not self.is_column_in_clusters(column, [replacement]):
+        if replacement != cluster and not self.is_column_in_cluster(column, replacement):
             self.remove_cluster_from_column(column, cluster)
             self.add_cluster_to_column(column, replacement)
 
@@ -303,10 +297,10 @@ class ClusterMembership:
         """top-level update method"""
         if add_fuzz:
             start = util.current_millis()
-            row_scores, column_scores = self.__fuzzify(row_scores,
-                                                       column_scores,
-                                                       num_iterations,
-                                                       iteration_result)
+            row_scores, column_scores = fuzzify(self, row_scores,
+                                                column_scores,
+                                                num_iterations,
+                                                iteration_result)
             elapsed = util.current_millis() - start
             logging.info("fuzzify took %f s.", elapsed / 1000.0)
 
@@ -342,63 +336,6 @@ class ClusterMembership:
         update_for_cols(self, cd_scores, self.__config_params['multiprocessing'])
         elapsed = util.current_millis() - start_time
         logging.info("update_for cdscores finished in %f s.", elapsed / 1000.0)
-
-    def __fuzzify(self, row_scores, column_scores, num_iterations, iteration_result):
-        """Provide an iteration-specific fuzzification"""
-        iteration = iteration_result['iteration']
-        #logging.info("__fuzzify(), setup...")
-        #start_time = util.current_millis()
-        #fuzzy_coeff = std_fuzzy_coefficient(iteration, num_iterations)
-        fuzzy_coeff = old_fuzzy_coefficient(iteration, num_iterations)
-        iteration_result['fuzzy-coeff'] = fuzzy_coeff
-        num_row_fuzzy_values = row_scores.num_rows * row_scores.num_columns
-        num_col_fuzzy_values = (column_scores.num_rows *
-                                column_scores.num_columns)
-        row_sd_values = []
-
-        # optimization: unwrap the numpy arrays to access them directly
-        row_score_values = row_scores.values
-        col_score_values = column_scores.values
-
-        # iterate the row names directly
-        row_names = row_scores.row_names
-        for col in xrange(row_scores.num_columns):
-            cluster_rows = self.rows_for_cluster(col + 1)
-            for row in xrange(row_scores.num_rows):
-                if row_names[row] in cluster_rows:
-                    row_sd_values.append(row_score_values[row][col])
-
-        # Note: If there are no non-NaN values in row_sd_values, row_rnorm
-        # will have all NaNs
-        row_rnorm = util.sd_rnorm(row_sd_values, num_row_fuzzy_values,
-                                  fuzzy_coeff)
-
-        col_sd_values = []
-        row_names = column_scores.row_names
-        for col in xrange(column_scores.num_columns):
-            cluster_cols = self.columns_for_cluster(col + 1)
-            for row in xrange(column_scores.num_rows):
-                if row_names[row] in cluster_cols:
-                    col_sd_values.append(col_score_values[row][col])
-
-        # Note: If there are no non-NaN values in col_sd_values, col_rnorm
-        # will have all NaNs
-        col_rnorm = util.sd_rnorm(col_sd_values, num_col_fuzzy_values,
-                                  fuzzy_coeff)
-
-        #elapsed = util.current_millis() - start_time
-        #logging.info("fuzzify() SETUP finished in %f s.", elapsed / 1000.0)
-        #logging.info("fuzzifying scores...")
-        #start_time = util.current_millis()
-
-        # add fuzzy values to the row/column scores
-        row_score_values += np.array(row_rnorm).reshape(
-            row_scores.num_rows, row_scores.num_columns)
-        col_score_values += np.array(col_rnorm).reshape(
-            column_scores.num_rows, column_scores.num_columns)
-        #elapsed = util.current_millis() - start_time
-        #logging.info("fuzzify() finished in %f s.", elapsed / 1000.0)
-        return row_scores, column_scores
 
     def replace_delta_row_member(self, row, cluster, rd_scores,
                                  check_zero_size=False):
@@ -517,6 +454,299 @@ class ClusterMembership:
         row_is_member_of = shelf[KEY_ROW_IS_MEMBER_OF]
         col_is_member_of = shelf[KEY_COL_IS_MEMBER_OF]
         return cls(row_is_member_of, col_is_member_of, config_params)
+
+##################################################################################
+####
+#### Original membership class
+####
+##################################################################################
+
+class OrigMembership:
+    """This is an implementation of a membership data structure that
+    closely resembles the R original"""
+    def __init__(self, row_is_member_of, col_is_member_of,
+                 config_params):
+        """identical constructor to ClusterMembership"""
+        self.__config_params = config_params
+
+        # table with |genes| rows and the configured number of columns
+        num_per_row = config_params['memb.clusters_per_row']
+        num_per_col = config_params['memb.clusters_per_col']
+
+        self.row_memb = {}
+        self.col_memb = {}
+        for row, clusters in row_is_member_of.items():
+            self.row_memb[row] = row_is_member_of[row][:num_per_row]
+            self.row_memb[row].extend([0] * (num_per_row - len(self.row_memb[row])))
+
+        for col, clusters in col_is_member_of.items():
+            self.col_memb[col] = col_is_member_of[col][:num_per_col]
+            self.col_memb[col].extend([0] * (num_per_col - len(self.col_memb[col])))
+        
+    def num_clusters(self):
+        """returns the number of clusters"""
+        return self.__config_params[KEY_NUM_CLUSTERS]
+
+    def num_clusters_per_row(self):
+        """returns the number of clusters per row"""
+        return self.__config_params[KEY_CLUSTERS_PER_ROW]
+
+    def num_clusters_per_column(self):
+        """returns the number of clusters per row"""
+        return self.__config_params[KEY_CLUSTERS_PER_COL]
+
+    def probability_seeing_row_change(self):
+        """returns the probability for seeing a row change"""
+        return self.__config_params[KEY_PROB_ROW_CHANGE]
+
+    def probability_seeing_col_change(self):
+        """returns the probability for seeing a row change"""
+        return self.__config_params[KEY_PROB_COL_CHANGE]
+
+    def max_changes_per_row(self):
+        """returns the maximum number of changes per row"""
+        return self.__config_params[KEY_MAX_CHANGES_PER_ROW]
+
+    def max_changes_per_col(self):
+        """returns the maximum number of changes per column"""
+        return self.__config_params[KEY_MAX_CHANGES_PER_COL]
+
+    def min_cluster_rows_allowed(self):
+        """returns the minimum number of rows that should be in a cluster"""
+        return self.__config_params[KEY_MIN_CLUSTER_ROWS_ALLOWED]
+
+    def max_cluster_rows_allowed(self):
+        """returns the maximum number of rows that should be in a cluster"""
+        return self.__config_params[KEY_MAX_CLUSTER_ROWS_ALLOWED]
+
+    def min_cluster_columns_allowed(self):
+        """returns the minimum number of columns that should be in a cluster"""
+        return 0
+
+    def clusters_for_row(self, row_name):
+        """determine the clusters for the specified row"""
+        return {m for m in self.row_memb[row_name] if m > 0}
+
+    def num_clusters_for_row(self, row_name):
+        """returns the number of clusters for the row"""
+        return len(self.clusters_for_row(row_name))
+
+    def clusters_for_column(self, column_name):
+        """determine the clusters for the specified column"""
+        return {m for m in self.col_memb[column_name] if m > 0}
+
+    def num_clusters_for_column(self, column_name):
+        """returns the number of clusters for the column"""
+        return len(self.clusters_for_column(column_name))
+
+    def rows_for_cluster(self, cluster):
+        return {row for row, clusters in self.row_memb.items()
+                if cluster in set(clusters)}
+
+    def columns_for_cluster(self, cluster):
+        return {col for col, clusters in self.col_memb.items()
+                if cluster in set(clusters)}
+
+    def clusters_not_in_row(self, row, clusters):
+        return [cluster for cluster in clusters
+                if cluster not in self.clusters_for_row(row)]
+
+    def clusters_not_in_column(self, col, clusters):
+        return [cluster for cluster in clusters
+                if cluster not in self.clusters_for_column(col)]
+
+    def is_row_in_cluster(self, row, cluster):
+        return cluster in self.clusters_for_row(row)
+
+    def is_column_in_cluster(self, col, cluster):
+        return cluster in self.clusters_for_column(col)
+
+    def add_cluster_to_row(self, row, cluster, force=False):
+        try:
+            index = self.row_memb[row].index(0)
+            self.row_memb[row][index] = cluster
+        except:
+            if not force:
+                raise Exception(("add_cluster_to_row() - exceeded clusters/row " +
+                                 "limit for row: '%s'" % str(row)))
+            else:
+                self.row_memb[row].append(cluster)
+
+    def add_cluster_to_column(self, col, cluster, force=False):
+        try:
+            index = self.col_memb[col].index(0)
+            self.col_memb[col][index] = cluster
+        except:
+            if not force:
+                raise Exception(("add_cluster_to_column() - exceeded clusters/col " +
+                                 "limit for column: '%s'" % str(col)))
+            else:
+                self.col_memb[col].append(cluster)
+
+    def update(self, matrix, row_scores, column_scores,
+               num_iterations, iteration_result, add_fuzz=True):
+        """top-level update method"""
+        if add_fuzz:
+            start = util.current_millis()
+            row_scores, column_scores = fuzzify(self, row_scores, column_scores,
+                                                num_iterations, iteration_result)
+            elapsed = util.current_millis() - start
+            logging.info("fuzzify took %f s.", elapsed / 1000.0)
+
+        # pickle the (potentially fuzzed) row scores to use them
+        # in the post adjustment step. We only need to do that in the last
+        # iteration
+        iteration = iteration_result['iteration']
+        if iteration == num_iterations:
+            with open(self.pickle_path(), 'w') as outfile:
+                cPickle.dump(row_scores, outfile)
+
+        #rpc = map(len, self.__cluster_row_members.values())
+        #logging.info('Rows per cluster: %i to %i (median %d)' \
+        #  %( min(rpc), max(rpc), np.median(rpc) ) )
+
+        start = util.current_millis()
+        rd_scores, cd_scores = get_density_scores(self, row_scores,
+                                                  column_scores)
+        elapsed = util.current_millis() - start
+        logging.info("GET_DENSITY_SCORES() took %f s.", elapsed / 1000.0)
+
+        start = util.current_millis()
+        compensate_size(self, matrix, rd_scores, cd_scores)
+        elapsed = util.current_millis() - start
+        logging.info("COMPENSATE_SIZE() took %f s.", elapsed / 1000.0)
+
+        start_time = util.current_millis()
+        update_for_rows(self, rd_scores, self.__config_params['multiprocessing'])
+        elapsed = util.current_millis() - start_time
+        logging.info("update_for rdscores finished in %f s.", elapsed / 1000.0)
+
+        start_time = util.current_millis()
+        update_for_cols(self, cd_scores, self.__config_params['multiprocessing'])
+        elapsed = util.current_millis() - start_time
+        logging.info("update_for cdscores finished in %f s.", elapsed / 1000.0)
+
+    def replace_delta_row_member(self, row, cluster, rd_scores,
+                                 check_zero_size=False):
+        index = rd_scores.row_indexes([row])[0]
+        rds_values = rd_scores.values
+        current_clusters = self.__row_is_member_of[row]
+        compval = rds_values[index][cluster - 1]
+        
+        deltas = sorted([(compval - rds_values[index][c - 1], c) for c in current_clusters],
+                        reverse=True)
+        if len(deltas) > 0 and deltas[0][0] > 0:
+            self.replace_row_cluster(row, deltas[0][1], cluster)
+            return deltas[0][1]
+        return 0
+
+    def replace_delta_column_member(self, col, cluster, cd_scores):
+        index = cd_scores.row_indexes([col])[0]
+        cds_values = cd_scores.values
+        current_clusters = self.__column_is_member_of[col]
+        compval = cds_values[index][cluster - 1]
+        
+        deltas = sorted([(compval - cds_values[index][c - 1], c) for c in current_clusters],
+                        reverse=True)
+        if len(deltas) > 0 and deltas[0][0] > 0:
+            self.replace_column_cluster(col, deltas[0][1], cluster)
+            return deltas[0][1]
+        return 0
+
+
+    def postadjust(self, rowscores=None, cutoff=0.33, limit=100):
+        """adjusting the cluster memberships after the main iterations have been done
+        Returns true if the function changed the membership, false if not"""
+        if rowscores == None:
+            # load the row scores from the last iteration from the pickle file
+            with open(self.pickle_path()) as infile:
+                rowscores = cPickle.load(infile)
+
+        has_changed = False
+        assign_list = []
+        for cluster in range(1, self.num_clusters() + 1):
+            assign = self.adjust_cluster(cluster, rowscores, cutoff, limit)
+            assign_list.append(assign)
+
+        for assign in assign_list:
+            if len(assign) > 0:
+                has_changed = True
+            for row, cluster in assign.items():
+                self.__add_cluster_to_row(row, cluster)
+        return has_changed
+
+    def adjust_cluster(self, cluster, rowscores, cutoff, limit):
+        """adjust a single cluster"""
+        def max_row_in_column(matrix, column):
+            """returns a pair of the maximum row index and score in the given matrix and column"""
+            sm = matrix.submatrix_by_name(wh, [matrix.column_names[column]])
+            sm_values = sm.values
+            max_row = 0
+            max_score = sys.float_info.min
+            for row in range(sm.num_rows):
+                if sm_values[row][0] > max_score:
+                    max_score = sm_values[row][0]
+                    max_row = row
+            return sm.row_names[max_row]
+
+        old_rows = self.rows_for_cluster(cluster)
+        not_in = []
+        for row in range(rowscores.num_rows):
+            row_name = rowscores.row_names[row]
+            if row_name not in old_rows:
+                not_in.append((row, rowscores.row_names[row]))
+        #print old_rows
+        threshold = rowscores.submatrix_by_name(old_rows,
+                                                [rowscores.column_names[cluster - 1]]).quantile(cutoff)
+        wh = []
+        rs_values = rowscores.values
+        for row, row_name in not_in:
+            if rs_values[row][cluster - 1] < threshold:
+                #print "Appending %s with score: %f" % (row_name, rowscores[row][cluster - 1])
+                wh.append(row_name)
+        #print "THRESHOLD: ", threshold
+        #print "WH: ", wh
+        if len(wh) == 0:
+            return {} # return unmodified row membership
+        elif len(wh) > limit:
+            return {} # return unmodified row membership
+ 
+        tries = 0
+        result = {}
+        while len(wh) > 0 and tries < MAX_ADJUST_TRIES:
+            wh2 = max_row_in_column(rowscores, cluster - 1)
+            wh2_index = rowscores.row_names.index(wh2)
+            clusters = self.clusters_for_row(wh2)
+            wh2_scores = []
+            for c in clusters:
+                wh2_scores.append(rs_values[wh2_index][c - 1])
+            #print "WH2: ", wh2, " CLUSTERS: ", clusters, " WH2_SCORES: ", wh2_scores
+            result[wh2] = cluster
+            wh.remove(wh2)
+            tries += 1
+        old_num = len(self.rows_for_cluster(cluster))
+        logging.info("CLUSTER %d, # ROWS BEFORE: %d, AFTER: %d",
+                     cluster, old_num, old_num + len(result))
+        return result
+
+    def store_checkpoint_data(self, shelf):
+        """Save memberships into checkpoint"""
+        logging.info("Saving checkpoint data for memberships in iteration %d",
+                     shelf['iteration'])
+        shelf['row_membs'] = self.row_memb
+        shelf['col_membs'] = self.col_memb
+
+    @classmethod
+    def restore_from_checkpoint(cls, config_params, shelf):
+        """Restore memberships from checkpoint information"""
+        logging.info("Restoring cluster memberships from checkpoint data")
+        row_is_member_of = shelf[KEY_ROW_IS_MEMBER_OF]
+        col_is_member_of = shelf[KEY_COL_IS_MEMBER_OF]
+        return cls(row_is_member_of, col_is_member_of, config_params)
+
+######################################################################
+### Helpers
+######################################################################
 
 # Parallelized updating of row and column membership changes
 UPDATE_MEMBERSHIP = None
@@ -779,3 +1009,61 @@ def make_file_column_seeder(filename, sep=' '):
         return column_members
 
     return seed
+
+
+def fuzzify(membership, row_scores, column_scores, num_iterations, iteration_result):
+    """Provide an iteration-specific fuzzification"""
+    iteration = iteration_result['iteration']
+    #logging.info("__fuzzify(), setup...")
+    #start_time = util.current_millis()
+    #fuzzy_coeff = std_fuzzy_coefficient(iteration, num_iterations)
+    fuzzy_coeff = old_fuzzy_coefficient(iteration, num_iterations)
+    iteration_result['fuzzy-coeff'] = fuzzy_coeff
+    num_row_fuzzy_values = row_scores.num_rows * row_scores.num_columns
+    num_col_fuzzy_values = (column_scores.num_rows *
+                            column_scores.num_columns)
+    row_sd_values = []
+
+    # optimization: unwrap the numpy arrays to access them directly
+    row_score_values = row_scores.values
+    col_score_values = column_scores.values
+
+    # iterate the row names directly
+    row_names = row_scores.row_names
+    for col in xrange(row_scores.num_columns):
+        cluster_rows = membership.rows_for_cluster(col + 1)
+        for row in xrange(row_scores.num_rows):
+            if row_names[row] in cluster_rows:
+                row_sd_values.append(row_score_values[row][col])
+
+    # Note: If there are no non-NaN values in row_sd_values, row_rnorm
+    # will have all NaNs
+    row_rnorm = util.sd_rnorm(row_sd_values, num_row_fuzzy_values,
+                              fuzzy_coeff)
+
+    col_sd_values = []
+    row_names = column_scores.row_names
+    for col in xrange(column_scores.num_columns):
+        cluster_cols = membership.columns_for_cluster(col + 1)
+        for row in xrange(column_scores.num_rows):
+            if row_names[row] in cluster_cols:
+                col_sd_values.append(col_score_values[row][col])
+
+    # Note: If there are no non-NaN values in col_sd_values, col_rnorm
+    # will have all NaNs
+    col_rnorm = util.sd_rnorm(col_sd_values, num_col_fuzzy_values,
+                              fuzzy_coeff)
+
+    #elapsed = util.current_millis() - start_time
+    #logging.info("fuzzify() SETUP finished in %f s.", elapsed / 1000.0)
+    #logging.info("fuzzifying scores...")
+    #start_time = util.current_millis()
+
+    # add fuzzy values to the row/column scores
+    row_score_values += np.array(row_rnorm).reshape(
+        row_scores.num_rows, row_scores.num_columns)
+    col_score_values += np.array(col_rnorm).reshape(
+        column_scores.num_rows, column_scores.num_columns)
+    #elapsed = util.current_millis() - start_time
+    #logging.info("fuzzify() finished in %f s.", elapsed / 1000.0)
+    return row_scores, column_scores
