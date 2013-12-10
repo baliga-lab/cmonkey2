@@ -53,6 +53,10 @@ class OrigMembershipTest(unittest.TestCase):
 
         self.assertEquals({'R1'}, m.rows_for_cluster(1))
         self.assertEquals({'C1'}, m.columns_for_cluster(3))
+        self.assertEquals(1, m.num_row_members(1))
+        self.assertEquals(0, m.num_row_members(7))
+        self.assertEquals(1, m.num_column_members(3))
+        self.assertEquals(0, m.num_column_members(7))
 
         self.assertEquals([2, 3], m.clusters_not_in_row('R1', [1, 2, 3, 5]))
         self.assertEquals([1, 2, 5], m.clusters_not_in_column('C1', [1, 2, 3, 5]))
@@ -76,6 +80,7 @@ class OrigMembershipTest(unittest.TestCase):
         self.assertEquals({1, 3}, m.clusters_for_row('R2'))
         self.assertEquals(2, m.num_clusters_for_row('R2'))
         self.assertEquals({'R1', 'R2'}, m.rows_for_cluster(1))
+        self.assertEquals(2, m.num_row_members(1))
 
     def test_add_cluster_to_row_twice(self):
         """allow to add duplicate clusters"""
@@ -112,6 +117,7 @@ class OrigMembershipTest(unittest.TestCase):
 
         m.add_cluster_to_column('C2', 3)
         self.assertEquals({'C1', 'C2'}, m.columns_for_cluster(3))
+        self.assertEquals(2, m.num_column_members(3))
 
     def test_add_cluster_to_column_twice(self):
         """allow to add duplicate clusters"""

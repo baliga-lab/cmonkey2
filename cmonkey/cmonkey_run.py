@@ -190,7 +190,7 @@ class CMonkeyRun:
 
     def __make_membership(self):
         """returns the seeded membership on demand"""
-        return memb.ClusterMembership.create(
+        return memb.OrigMembership.create(
             self.ratio_matrix,
             self.row_seeder, self.column_seeder,
             self.config_params)
@@ -623,7 +623,8 @@ class CMonkeyRun:
 
         if self['postadjust']:
             logging.info("Postprocessing: Adjusting the clusters....")
-            self.membership().postadjust()
+            #self.membership().postadjust()
+            memb.postadjust2(self.membership())
 
             iteration = self['num_iterations'] + 1
             iteration_result = {'iteration': iteration}

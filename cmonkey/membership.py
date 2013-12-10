@@ -462,8 +462,9 @@ class ClusterMembership:
 ##################################################################################
 
 class OrigMembership:
-    """This is an implementation of a membership data structure that
-    closely resembles the R original"""
+    """This is an implementation of a membership data structure that more
+    closely resembles the R original. It is much simpler than
+    ClusterMembership, with a smaller memory footprint"""
     def __init__(self, row_is_member_of, col_is_member_of,
                  config_params):
         """identical constructor to ClusterMembership"""
@@ -482,7 +483,39 @@ class OrigMembership:
         for col, clusters in col_is_member_of.items():
             self.col_memb[col] = col_is_member_of[col][:num_per_col]
             self.col_memb[col].extend([0] * (num_per_col - len(self.col_memb[col])))
-        
+
+    # pylint: disable-msg=R0913
+    @classmethod
+    def create(cls, matrix,
+               seed_row_memberships,
+               seed_column_memberships,
+               config_params):
+        """create instance of ClusterMembership using
+        the provided seeding algorithms"""
+        def make_member_map(membs, names):
+            """build a map row->[clusters]"""
+            result = {}
+            for i in xrange(len(names)):
+                result[names[i]] = [c for c in membs[i] if c > 0]
+            return result
+
+        # using the seeding functions, build the initial membership
+        # dictionaries
+        num_clusters_per_row = config_params[KEY_CLUSTERS_PER_ROW]
+        num_clusters = config_params[KEY_NUM_CLUSTERS]
+        num_clusters_per_col = config_params[KEY_CLUSTERS_PER_COL]
+
+        num_rows = matrix.num_rows
+        row_membership = [[0 for _ in xrange(num_clusters_per_row)]
+                          for _ in xrange(num_rows)]
+        seed_row_memberships(row_membership, matrix)
+        column_membership = seed_column_memberships(matrix, row_membership,
+                                                    num_clusters, num_clusters_per_col)
+        row_is_member_of = make_member_map(row_membership, matrix.row_names)
+        col_is_member_of = make_member_map(column_membership, matrix.column_names)
+        return OrigMembership(row_is_member_of, col_is_member_of,
+                              config_params)
+
     def num_clusters(self):
         """returns the number of clusters"""
         return self.__config_params[KEY_NUM_CLUSTERS]
@@ -527,17 +560,17 @@ class OrigMembership:
         """determine the clusters for the specified row"""
         return {m for m in self.row_memb[row_name] if m > 0}
 
-    def num_clusters_for_row(self, row_name):
+    def num_clusters_for_row(self, row):
         """returns the number of clusters for the row"""
-        return len(self.clusters_for_row(row_name))
+        return len(self.clusters_for_row(row))
 
     def clusters_for_column(self, column_name):
         """determine the clusters for the specified column"""
         return {m for m in self.col_memb[column_name] if m > 0}
 
-    def num_clusters_for_column(self, column_name):
+    def num_clusters_for_column(self, column):
         """returns the number of clusters for the column"""
-        return len(self.clusters_for_column(column_name))
+        return len(self.clusters_for_column(column))
 
     def rows_for_cluster(self, cluster):
         return {row for row, clusters in self.row_memb.items()
@@ -546,6 +579,12 @@ class OrigMembership:
     def columns_for_cluster(self, cluster):
         return {col for col, clusters in self.col_memb.items()
                 if cluster in set(clusters)}
+
+    def num_row_members(self, cluster):
+        return len(self.rows_for_cluster(cluster))
+
+    def num_column_members(self, cluster):
+        return len(self.columns_for_cluster(cluster))
 
     def clusters_not_in_row(self, row, clusters):
         return [cluster for cluster in clusters
@@ -583,6 +622,18 @@ class OrigMembership:
             else:
                 self.col_memb[col].append(cluster)
 
+    def replace_row_cluster(self, row, old, new):
+        index = self.row_memb[row].index(old)
+        self.row_memb[row][index] = new
+
+    def replace_column_cluster(self, col, old, new):
+        index = self.col_memb[col].index(old)
+        self.col_memb[col][index] = new
+
+    def pickle_path(self):
+        """returns the function-specific pickle-path"""
+        return '%s/last_row_scores.pkl' % (self.__config_params['output_dir'])
+
     def update(self, matrix, row_scores, column_scores,
                num_iterations, iteration_result, add_fuzz=True):
         """top-level update method"""
@@ -617,124 +668,21 @@ class OrigMembership:
         logging.info("COMPENSATE_SIZE() took %f s.", elapsed / 1000.0)
 
         start_time = util.current_millis()
-        update_for_rows(self, rd_scores, self.__config_params['multiprocessing'])
+        update_for_rows2(self, rd_scores, self.__config_params['multiprocessing'])
         elapsed = util.current_millis() - start_time
         logging.info("update_for rdscores finished in %f s.", elapsed / 1000.0)
 
         start_time = util.current_millis()
-        update_for_cols(self, cd_scores, self.__config_params['multiprocessing'])
+        update_for_cols2(self, cd_scores, self.__config_params['multiprocessing'])
         elapsed = util.current_millis() - start_time
         logging.info("update_for cdscores finished in %f s.", elapsed / 1000.0)
-
-    def replace_delta_row_member(self, row, cluster, rd_scores,
-                                 check_zero_size=False):
-        index = rd_scores.row_indexes([row])[0]
-        rds_values = rd_scores.values
-        current_clusters = self.__row_is_member_of[row]
-        compval = rds_values[index][cluster - 1]
-        
-        deltas = sorted([(compval - rds_values[index][c - 1], c) for c in current_clusters],
-                        reverse=True)
-        if len(deltas) > 0 and deltas[0][0] > 0:
-            self.replace_row_cluster(row, deltas[0][1], cluster)
-            return deltas[0][1]
-        return 0
-
-    def replace_delta_column_member(self, col, cluster, cd_scores):
-        index = cd_scores.row_indexes([col])[0]
-        cds_values = cd_scores.values
-        current_clusters = self.__column_is_member_of[col]
-        compval = cds_values[index][cluster - 1]
-        
-        deltas = sorted([(compval - cds_values[index][c - 1], c) for c in current_clusters],
-                        reverse=True)
-        if len(deltas) > 0 and deltas[0][0] > 0:
-            self.replace_column_cluster(col, deltas[0][1], cluster)
-            return deltas[0][1]
-        return 0
-
-
-    def postadjust(self, rowscores=None, cutoff=0.33, limit=100):
-        """adjusting the cluster memberships after the main iterations have been done
-        Returns true if the function changed the membership, false if not"""
-        if rowscores == None:
-            # load the row scores from the last iteration from the pickle file
-            with open(self.pickle_path()) as infile:
-                rowscores = cPickle.load(infile)
-
-        has_changed = False
-        assign_list = []
-        for cluster in range(1, self.num_clusters() + 1):
-            assign = self.adjust_cluster(cluster, rowscores, cutoff, limit)
-            assign_list.append(assign)
-
-        for assign in assign_list:
-            if len(assign) > 0:
-                has_changed = True
-            for row, cluster in assign.items():
-                self.__add_cluster_to_row(row, cluster)
-        return has_changed
-
-    def adjust_cluster(self, cluster, rowscores, cutoff, limit):
-        """adjust a single cluster"""
-        def max_row_in_column(matrix, column):
-            """returns a pair of the maximum row index and score in the given matrix and column"""
-            sm = matrix.submatrix_by_name(wh, [matrix.column_names[column]])
-            sm_values = sm.values
-            max_row = 0
-            max_score = sys.float_info.min
-            for row in range(sm.num_rows):
-                if sm_values[row][0] > max_score:
-                    max_score = sm_values[row][0]
-                    max_row = row
-            return sm.row_names[max_row]
-
-        old_rows = self.rows_for_cluster(cluster)
-        not_in = []
-        for row in range(rowscores.num_rows):
-            row_name = rowscores.row_names[row]
-            if row_name not in old_rows:
-                not_in.append((row, rowscores.row_names[row]))
-        #print old_rows
-        threshold = rowscores.submatrix_by_name(old_rows,
-                                                [rowscores.column_names[cluster - 1]]).quantile(cutoff)
-        wh = []
-        rs_values = rowscores.values
-        for row, row_name in not_in:
-            if rs_values[row][cluster - 1] < threshold:
-                #print "Appending %s with score: %f" % (row_name, rowscores[row][cluster - 1])
-                wh.append(row_name)
-        #print "THRESHOLD: ", threshold
-        #print "WH: ", wh
-        if len(wh) == 0:
-            return {} # return unmodified row membership
-        elif len(wh) > limit:
-            return {} # return unmodified row membership
- 
-        tries = 0
-        result = {}
-        while len(wh) > 0 and tries < MAX_ADJUST_TRIES:
-            wh2 = max_row_in_column(rowscores, cluster - 1)
-            wh2_index = rowscores.row_names.index(wh2)
-            clusters = self.clusters_for_row(wh2)
-            wh2_scores = []
-            for c in clusters:
-                wh2_scores.append(rs_values[wh2_index][c - 1])
-            #print "WH2: ", wh2, " CLUSTERS: ", clusters, " WH2_SCORES: ", wh2_scores
-            result[wh2] = cluster
-            wh.remove(wh2)
-            tries += 1
-        old_num = len(self.rows_for_cluster(cluster))
-        logging.info("CLUSTER %d, # ROWS BEFORE: %d, AFTER: %d",
-                     cluster, old_num, old_num + len(result))
-        return result
 
     def store_checkpoint_data(self, shelf):
         """Save memberships into checkpoint"""
         logging.info("Saving checkpoint data for memberships in iteration %d",
                      shelf['iteration'])
-        shelf['row_membs'] = self.row_memb
-        shelf['col_membs'] = self.col_memb
+        shelf[KEY_ROW_IS_MEMBER_OF] = self.row_memb
+        shelf[KEY_COL_IS_MEMBER_OF] = self.col_memb
 
     @classmethod
     def restore_from_checkpoint(cls, config_params, shelf):
@@ -743,6 +691,160 @@ class OrigMembership:
         row_is_member_of = shelf[KEY_ROW_IS_MEMBER_OF]
         col_is_member_of = shelf[KEY_COL_IS_MEMBER_OF]
         return cls(row_is_member_of, col_is_member_of, config_params)
+
+
+def update_for_rows2(membership, rd_scores, multiprocessing):
+    """generically updating row memberships according to  rd_scores"""
+    rownames = rd_scores.row_names    
+    best_clusters = get_best_clusters(rd_scores, membership.num_clusters_per_row())
+    max_changes = membership.max_changes_per_row()
+    change_prob = membership.probability_seeing_row_change()
+    for index in xrange(rd_scores.num_rows):
+        row = rownames[index]
+        clusters = membership.clusters_not_in_row(row, best_clusters[row])
+        if seeing_change(change_prob):
+            for _ in range(max_changes):
+                if len(clusters) > 0:
+                    if membership.num_clusters_for_row(row) < membership.num_clusters_per_row():
+                        membership.add_cluster_to_row(row, clusters[0])
+                        del clusters[0]
+                    else:
+                        old = replace_delta_row_member2(membership, row, clusters[0],
+                                                        rd_scores)
+                        if old != 0:
+                            del clusters[0]
+
+
+def update_for_cols2(membership, cd_scores, multiprocessing):
+    """updating column memberships according to cd_scores"""
+    global UPDATE_MEMBERSHIP
+
+    colnames = cd_scores.row_names
+    best_clusters = get_best_clusters(cd_scores, membership.num_clusters_per_column())
+    max_changes = membership.max_changes_per_col()
+    change_prob = membership.probability_seeing_col_change()
+
+    for index in xrange(cd_scores.num_rows):
+        col = colnames[index]
+        clusters = membership.clusters_not_in_column(col, best_clusters[col])
+        if seeing_change(change_prob):
+            for c in range(max_changes):
+                if len(clusters) > 0:
+                    if (membership.num_clusters_for_column(col) <
+                        membership.num_clusters_per_column()):
+                        membership.add_cluster_to_column(col, clusters[0])
+                        del clusters[0]
+                    else:
+                        old = replace_delta_column_member2(membership, col, clusters[0],
+                                                           cd_scores)
+                        if old != 0:
+                            del clusters[0]
+
+
+def replace_delta_row_member2(membership, row, cluster, rd_scores,
+                              check_zero_size=False):
+    index = rd_scores.row_indexes([row])[0]
+    rds_values = rd_scores.values
+    current_clusters = membership.clusters_for_row(row)
+    compval = rds_values[index][cluster - 1]
+
+    deltas = sorted([(compval - rds_values[index][c - 1], c) for c in current_clusters],
+                    reverse=True)
+    if len(deltas) > 0 and deltas[0][0] > 0:
+        membership.replace_row_cluster(row, deltas[0][1], cluster)
+        return deltas[0][1]
+    return 0
+
+
+def replace_delta_column_member2(membership, col, cluster, cd_scores):
+    index = cd_scores.row_indexes([col])[0]
+    cds_values = cd_scores.values
+    current_clusters = membership.clusters_for_column(col)
+    compval = cds_values[index][cluster - 1]
+
+    deltas = sorted([(compval - cds_values[index][c - 1], c) for c in current_clusters],
+                    reverse=True)
+    if len(deltas) > 0 and deltas[0][0] > 0:
+        membership.replace_column_cluster(col, deltas[0][1], cluster)
+        return deltas[0][1]
+    return 0
+
+
+def postadjust2(membership, rowscores=None, cutoff=0.33, limit=100):
+    """adjusting the cluster memberships after the main iterations have been done
+    Returns true if the function changed the membership, false if not"""
+    if rowscores == None:
+        # load the row scores from the last iteration from the pickle file
+        with open(membership.pickle_path()) as infile:
+            rowscores = cPickle.load(infile)
+
+    has_changed = False
+    assign_list = []
+    for cluster in range(1, membership.num_clusters() + 1):
+        assign = adjust_cluster2(membership, cluster, rowscores, cutoff, limit)
+        assign_list.append(assign)
+
+    for assign in assign_list:
+        if len(assign) > 0:
+            has_changed = True
+        for row, cluster in assign.items():
+            membership.add_cluster_to_row(row, cluster, force=True)
+    return has_changed
+
+
+def adjust_cluster2(membership, cluster, rowscores, cutoff, limit):
+    """adjust a single cluster"""
+    def max_row_in_column(matrix, column):
+        """returns a pair of the maximum row index and score in the given matrix and column"""
+        sm = matrix.submatrix_by_name(wh, [matrix.column_names[column]])
+        sm_values = sm.values
+        max_row = 0
+        max_score = sys.float_info.min
+        for row in range(sm.num_rows):
+            if sm_values[row][0] > max_score:
+                max_score = sm_values[row][0]
+                max_row = row
+        return sm.row_names[max_row]
+
+    old_rows = membership.rows_for_cluster(cluster)
+    not_in = []
+    for row in range(rowscores.num_rows):
+        row_name = rowscores.row_names[row]
+        if row_name not in old_rows:
+            not_in.append((row, rowscores.row_names[row]))
+    #print old_rows
+    threshold = rowscores.submatrix_by_name(old_rows,
+                                            [rowscores.column_names[cluster - 1]]).quantile(cutoff)
+    wh = []
+    rs_values = rowscores.values
+    for row, row_name in not_in:
+        if rs_values[row][cluster - 1] < threshold:
+            #print "Appending %s with score: %f" % (row_name, rowscores[row][cluster - 1])
+            wh.append(row_name)
+    #print "THRESHOLD: ", threshold
+    #print "WH: ", wh
+    if len(wh) == 0:
+        return {} # return unmodified row membership
+    elif len(wh) > limit:
+        return {} # return unmodified row membership
+
+    tries = 0
+    result = {}
+    while len(wh) > 0 and tries < MAX_ADJUST_TRIES:
+        wh2 = max_row_in_column(rowscores, cluster - 1)
+        wh2_index = rowscores.row_names.index(wh2)
+        clusters = membership.clusters_for_row(wh2)
+        wh2_scores = []
+        for c in clusters:
+            wh2_scores.append(rs_values[wh2_index][c - 1])
+        #print "WH2: ", wh2, " CLUSTERS: ", clusters, " WH2_SCORES: ", wh2_scores
+        result[wh2] = cluster
+        wh.remove(wh2)
+        tries += 1
+    old_num = len(membership.rows_for_cluster(cluster))
+    logging.info("CLUSTER %d, # ROWS BEFORE: %d, AFTER: %d",
+                 cluster, old_num, old_num + len(result))
+    return result
 
 ######################################################################
 ### Helpers
@@ -795,6 +897,7 @@ def update_for_cols(membership, cd_scores, multiprocessing):
                         old = membership.replace_delta_column_member(col, clusters[0], cd_scores)
                         if old != 0:
                             del clusters[0]
+
 
 def seeing_change(prob):
     """returns true if the update is seeing the change"""
