@@ -468,6 +468,17 @@ class OrigMembership:
     def __init__(self, row_is_member_of, col_is_member_of,
                  config_params):
         """identical constructor to ClusterMembership"""
+
+        def cluster2names_map(name2clusters):
+            result = {}
+            for name, clusters in name2clusters.items():
+                for cluster in clusters:
+                    if cluster > 0:
+                        if cluster not in result:
+                            result[cluster] = set()
+                        result[cluster].add(name)
+            return result
+            
         self.__config_params = config_params
 
         # table with |genes| rows and the configured number of columns
@@ -483,6 +494,10 @@ class OrigMembership:
         for col, clusters in col_is_member_of.items():
             self.col_memb[col] = col_is_member_of[col][:num_per_col]
             self.col_memb[col].extend([0] * (num_per_col - len(self.col_memb[col])))
+
+        # without these maps, updating will be super-slow
+        self.cluster_rows = cluster2names_map(self.row_memb)
+        self.cluster_cols = cluster2names_map(self.col_memb)
 
     # pylint: disable-msg=R0913
     @classmethod
@@ -573,12 +588,10 @@ class OrigMembership:
         return len(self.clusters_for_column(column))
 
     def rows_for_cluster(self, cluster):
-        return {row for row, clusters in self.row_memb.items()
-                if cluster in set(clusters)}
+        return self.cluster_rows.get(cluster, set())
 
     def columns_for_cluster(self, cluster):
-        return {col for col, clusters in self.col_memb.items()
-                if cluster in set(clusters)}
+        return self.cluster_cols.get(cluster, set())
 
     def num_row_members(self, cluster):
         return len(self.rows_for_cluster(cluster))
@@ -607,34 +620,62 @@ class OrigMembership:
         return len([m for m in self.col_memb[col] if m == 0]) > 0
 
     def add_cluster_to_row(self, row, cluster, force=False):
+        def add_reverse(cluster, row):
+            if cluster not in self.cluster_rows:
+                self.cluster_rows[cluster] = {row}
+            else:
+                self.cluster_rows[cluster].add(row)
+
         try:
             index = self.row_memb[row].index(0)
             self.row_memb[row][index] = cluster
+            add_reverse(cluster, row)
         except:
             if not force:
                 raise Exception(("add_cluster_to_row() - exceeded clusters/row " +
                                  "limit for row: '%s'" % str(row)))
             else:
                 self.row_memb[row].append(cluster)
+                add_reverse(cluster, row)
 
     def add_cluster_to_column(self, col, cluster, force=False):
+        def add_reverse(cluster, col):
+            if cluster not in self.cluster_cols:
+                self.cluster_cols[cluster] = {col}
+            else:
+                self.cluster_cols[cluster].add(col)
+            
         try:
             index = self.col_memb[col].index(0)
             self.col_memb[col][index] = cluster
+            add_reverse(cluster, col)
         except:
             if not force:
                 raise Exception(("add_cluster_to_column() - exceeded clusters/col " +
                                  "limit for column: '%s'" % str(col)))
             else:
                 self.col_memb[col].append(cluster)
+                add_reverse(cluster, col)
 
     def replace_row_cluster(self, row, old, new):
         index = self.row_memb[row].index(old)
         self.row_memb[row][index] = new
 
+        # check whether old is still member of this row
+        if old not in self.row_memb[row]:
+            self.cluster_rows[old].remove(row)
+        self.cluster_rows[new].add(row)
+
+
     def replace_column_cluster(self, col, old, new):
         index = self.col_memb[col].index(old)
         self.col_memb[col][index] = new
+
+        # check whether old is still member of this row
+        if old not in self.col_memb[col]:
+            self.cluster_cols[old].remove(col)
+        self.cluster_cols[new].add(col)
+
 
     def pickle_path(self):
         """returns the function-specific pickle-path"""

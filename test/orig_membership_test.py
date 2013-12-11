@@ -28,7 +28,6 @@ class OrigMembershipTest(unittest.TestCase):
         """verify initialization"""
         m = memb.OrigMembership({'R1': [1, 5], 'R2': []}, {'C1': [3], 'C2': []},
                                 CONFIG_PARAMS)
-
         self.assertEquals(43, m.num_clusters())
         self.assertEquals(2, m.num_clusters_per_row())
         self.assertEquals(5, m.num_clusters_per_column())
