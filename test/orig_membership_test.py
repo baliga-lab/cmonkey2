@@ -98,6 +98,13 @@ class OrigMembershipTest(unittest.TestCase):
                                 CONFIG_PARAMS)
         self.assertRaises(Exception, m.add_cluster_to_row, 'R1', 2)
 
+    def test_add_cluster_to_row_error_full_same_cluster(self):
+        """add_cluster_to_row() will only work if there are enough 0-slots"""
+        m = memb.OrigMembership({'R1': [1, 5], 'R2': []}, {'C1': [3], 'C2': []},
+                                CONFIG_PARAMS)
+        m.row_memb['R2'] = [2, 2]  # fill the spaces
+        self.assertRaises(Exception, m.add_cluster_to_row, 'R2', 2)
+
     def test_add_cluster_to_row_full_force(self):
         """full row memberships can be added to with the force switch"""
         m = memb.OrigMembership({'R1': [1, 5], 'R2': []}, {'C1': [3], 'C2': []},
@@ -128,6 +135,27 @@ class OrigMembershipTest(unittest.TestCase):
         self.assertEquals([3, 4, 4, 0, 0], m.col_memb['C1'])
         self.assertEquals({3, 4}, m.clusters_for_column('C1'))
         self.assertEquals(2, m.num_clusters_for_column('C1'))
+
+    def test_add_cluster_to_column_error_full(self):
+        """full row memberships can not be added to in the normal case"""
+        m = memb.OrigMembership({'R1': [1, 5], 'R2': []}, {'C1': [3, 4, 5, 6, 7], 'C2': []},
+                                CONFIG_PARAMS)
+        self.assertRaises(Exception, m.add_cluster_to_column, 'C1', 2)
+
+    def test_add_cluster_to_column_error_full_same_cluster(self):
+        """full row memberships can not be added to in the normal case"""
+        m = memb.OrigMembership({'R1': [1, 5], 'R2': []}, {'C1': [3], 'C2': []},
+                                CONFIG_PARAMS)
+        m.col_memb['C1'] = [1, 3, 6, 6, 6]
+        self.assertRaises(Exception, m.add_cluster_to_column, 'C1', 2)
+
+    def test_add_cluster_to_column_full_force(self):
+        """full col memberships can be added to if forced"""
+        m = memb.OrigMembership({'R1': [1, 5], 'R2': []}, {'C1': [3, 4, 5, 6, 7], 'C2': []},
+                                CONFIG_PARAMS)
+        m.add_cluster_to_column('C1', 2, force=True)
+        self.assertEquals({2, 3, 4, 5, 6, 7}, m.clusters_for_column('C1'))
+        self.assertEquals({'C1'}, m.columns_for_cluster(2))
 
     def pickle_path(self):
         """returns the function-specific pickle-path"""
