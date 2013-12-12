@@ -6,6 +6,7 @@ more information and licensing details.
 import unittest
 import xmlrunner
 import membership_test as membtest
+import orig_membership_test as omembtest
 import datamatrix_test as dmtest
 import util_test as ut
 import organism_test as ot
@@ -54,6 +55,7 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(nwt.NetworkTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(membtest.ClusterMembershipTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(omembtest.OrigMembershipTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(mat.ComputeArrayScoresTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(met.MemeTest))
@@ -68,4 +70,3 @@ if __name__ == '__main__':
       xmlrunner.XMLTestRunner(output='test-reports').run(unittest.TestSuite(SUITE))
     else:
       unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))
-      

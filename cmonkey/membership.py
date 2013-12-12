@@ -16,6 +16,7 @@ import numpy as np
 import rpy2.robjects as robjects
 import multiprocessing as mp
 import cPickle
+import array
 
 
 # Default values for membership creation
@@ -488,12 +489,14 @@ class OrigMembership:
         self.row_memb = {}
         self.col_memb = {}
         for row, clusters in row_is_member_of.items():
-            self.row_memb[row] = row_is_member_of[row][:num_per_row]
-            self.row_memb[row].extend([0] * (num_per_row - len(self.row_memb[row])))
+            tmp = row_is_member_of[row][:num_per_row]
+            tmp.extend([0] * (num_per_row - len(tmp)))
+            self.row_memb[row] = array.array('i', tmp)
 
         for col, clusters in col_is_member_of.items():
-            self.col_memb[col] = col_is_member_of[col][:num_per_col]
-            self.col_memb[col].extend([0] * (num_per_col - len(self.col_memb[col])))
+            tmp = col_is_member_of[col][:num_per_col]
+            tmp.extend([0] * (num_per_col - len(tmp)))
+            self.col_memb[col] = array.array('i', tmp)
 
         # without these maps, updating will be super-slow
         self.cluster_rows = cluster2names_map(self.row_memb)

@@ -39,10 +39,10 @@ class OrigMembershipTest(unittest.TestCase):
         self.assertEquals(5, m.max_cluster_rows_allowed())
         self.assertEquals(0, m.min_cluster_columns_allowed())
 
-        self.assertEquals([1, 5], m.row_memb['R1'])
-        self.assertEquals([0, 0], m.row_memb['R2'])
-        self.assertEquals([3, 0, 0, 0, 0], m.col_memb['C1'])
-        self.assertEquals([0, 0, 0, 0, 0], m.col_memb['C2'])
+        self.assertEquals([1, 5], m.row_memb['R1'].tolist())
+        self.assertEquals([0, 0], m.row_memb['R2'].tolist())
+        self.assertEquals([3, 0, 0, 0, 0], m.col_memb['C1'].tolist())
+        self.assertEquals([0, 0, 0, 0, 0], m.col_memb['C2'].tolist())
 
         self.assertEquals({1, 5}, m.clusters_for_row('R1'))
         self.assertEquals({3}, m.clusters_for_column('C1'))
@@ -87,7 +87,7 @@ class OrigMembershipTest(unittest.TestCase):
                                 CONFIG_PARAMS)
         m.add_cluster_to_row('R2', 1)
         m.add_cluster_to_row('R2', 1)
-        self.assertEquals([1, 1], m.row_memb['R2'])
+        self.assertEquals([1, 1], m.row_memb['R2'].tolist())
         self.assertEquals({1}, m.clusters_for_row('R2'))
         self.assertEquals(1, m.num_clusters_for_row('R2'))
 
@@ -131,7 +131,7 @@ class OrigMembershipTest(unittest.TestCase):
                                 CONFIG_PARAMS)
         m.add_cluster_to_column('C1', 4)
         m.add_cluster_to_column('C1', 4)
-        self.assertEquals([3, 4, 4, 0, 0], m.col_memb['C1'])
+        self.assertEquals([3, 4, 4, 0, 0], m.col_memb['C1'].tolist())
         self.assertEquals({3, 4}, m.clusters_for_column('C1'))
         self.assertEquals(2, m.num_clusters_for_column('C1'))
 
