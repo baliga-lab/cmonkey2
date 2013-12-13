@@ -667,6 +667,9 @@ class OrigMembership:
         # check whether old is still member of this row
         if old not in self.row_memb[row]:
             self.cluster_rows[old].remove(row)
+        if new not in self.cluster_rows:
+            self.cluster_rows[new] = set()
+
         self.cluster_rows[new].add(row)
 
 
@@ -677,6 +680,8 @@ class OrigMembership:
         # check whether old is still member of this row
         if old not in self.col_memb[col]:
             self.cluster_cols[old].remove(col)
+        if new not in self.cluster_cols:
+            self.cluster_cols[new] = set()
         self.cluster_cols[new].add(col)
 
 

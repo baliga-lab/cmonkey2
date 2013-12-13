@@ -156,6 +156,23 @@ class OrigMembershipTest(unittest.TestCase):
         self.assertEquals({2, 3, 4, 5, 6, 7}, m.clusters_for_column('C1'))
         self.assertEquals({'C1'}, m.columns_for_cluster(2))
 
+    def test_replace_column_cluster(self):
+        """full col memberships can be added to if forced"""
+        m = memb.OrigMembership({'R1': [1, 5], 'R2': []}, {'C1': [3, 4, 3, 6, 7], 'C2': []},
+                                CONFIG_PARAMS)
+        m.replace_column_cluster('C1', 3, 1)
+        self.assertEquals({1, 3, 4, 6, 7}, m.clusters_for_column('C1'))
+        self.assertEquals({'C1'}, m.columns_for_cluster(1))
+
+
+    def test_replace_row_cluster(self):
+        """full col memberships can be added to if forced"""
+        m = memb.OrigMembership({'R1': [1, 1], 'R2': []}, {'C1': [3, 4, 3, 6, 7], 'C2': []},
+                                CONFIG_PARAMS)
+        m.replace_row_cluster('R1', 1, 3)
+        self.assertEquals({1, 3}, m.clusters_for_row('R1'))
+        self.assertEquals({'R1'}, m.rows_for_cluster(3))
+
     def pickle_path(self):
         """returns the function-specific pickle-path"""
         return '%s/last_row_scores.pkl' % (self.__config_params['output_dir'])
