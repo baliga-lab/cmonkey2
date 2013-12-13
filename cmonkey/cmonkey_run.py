@@ -489,7 +489,7 @@ class CMonkeyRun:
                             gene_num = self.gene_indexes[gene]
                             conn.execute('''insert into motif_pvalues (iteration,cluster,gene_num,pvalue)
                                             values (?,?,?,?)''',
-                                        (iteration, cluster, 4711, pvalues[gene]))
+                                        (iteration, cluster, gene_num, pvalues[gene]))
                 c.close()
             conn.close()
 
