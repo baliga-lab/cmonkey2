@@ -170,6 +170,19 @@ class OrigMembershipTest(unittest.TestCase):
         self.assertEquals({1, 3}, m.clusters_for_row('R1'))
         self.assertEquals({'R1'}, m.rows_for_cluster(3))
 
+    def test_free_slots_for_row(self):
+        """Happy path for add_cluster_to_row()"""
+        m = memb.OrigMembership({'R1': [1, 5], 'R2': []}, {'C1': [3], 'C2': []},
+                                CONFIG_PARAMS)
+        self.assertEquals(0, len(m.free_slots_for_row('R1')))
+
+    def test_free_slots_for_column(self):
+        """Happy path for add_cluster_to_row()"""
+        m = memb.OrigMembership({'R1': [1, 5], 'R2': []}, {'C1': [3], 'C2': [1, 2, 3, 4, 5]},
+                                CONFIG_PARAMS)
+        self.assertEquals(0, len(m.free_slots_for_column('C2')))
+        self.assertEquals(4, len(m.free_slots_for_column('C1')))
+
 if __name__ == '__main__':
     SUITE = []
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(OrigMembershipTest))

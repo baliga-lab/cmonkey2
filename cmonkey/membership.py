@@ -610,11 +610,11 @@ class OrigMembership:
     def is_column_in_cluster(self, col, cluster):
         return cluster in self.clusters_for_column(col)
 
-    def first_free_slot_for_row(self, row):
-        return self.row_memb[row].index(0)
+    def free_slots_for_row(self, row):
+        return np.where(self.row_membs[self.rowidx[row]] == 0)[0]
 
-    def first_free_slot_for_column(self, col):
-        return self.col_memb[col].index(0)
+    def free_slots_for_column(self, col):
+        return np.where(self.col_membs[self.colidx[col]] == 0)[0]
 
     def add_cluster_to_row(self, row, cluster, force=False):
         rowidx = self.rowidx[row]
@@ -740,21 +740,19 @@ def update_for_rows2(membership, rd_scores, multiprocessing):
         if seeing_change(change_prob):
             for _ in range(max_changes):
                 if len(clusters) > 0:
-                    # array.index() throws exception if 0 not in array
-                    # using exception handling is idiomatic in Python
-                    try:
-                        free_slot = membership.first_free_slot_for_row(row)
-                        take_cluster = clusters[free_slot]
+                    free_slots = membership.free_slots_for_row(row)
+                    if len(free_slots) > 0:
+                        take_cluster = clusters[free_slots[0]]
                         if take_cluster not in membership.clusters_for_row(row):
                             membership.add_cluster_to_row(row, take_cluster)
-                    except:
+                    else:
                         replace_delta_row_member2(membership, row, clusters, rd_scores)
 
 
 def replace_delta_row_member2(membership, row, rm, rd_scores):
     index = rd_scores.row_indexes([row])[0]
     rds_values = rd_scores.values
-    curr_indexes = [c - 1 for c in membership.row_memb[row]]
+    curr_indexes = [c - 1 for c in membership.row_membs[membership.rowidx[row]]]
     rm_indexes = [c - 1 for c in rm]    
     deltas = rds_values[index][rm_indexes] - rds_values[index][curr_indexes]
     if len(deltas[deltas != 0.0]) > 0:
@@ -777,21 +775,19 @@ def update_for_cols2(membership, cd_scores, multiprocessing):
         if seeing_change(change_prob):
             for c in range(max_changes):
                 if len(clusters) > 0:
-                    # array.index() throws exception if 0 not in array
-                    # using exception handling is idiomatic in Python
-                    try:
-                        free_slot = membership.first_free_slot_for_column(col)
-                        take_cluster = clusters[free_slot]
+                    free_slots = membership.free_slots_for_column(col)
+                    if len(free_slots) > 0:
+                        take_cluster = clusters[free_slots[0]]
                         if take_cluster not in membership.clusters_for_column(col):
                             membership.add_cluster_to_column(col, take_cluster)
-                    except:
+                    else:
                         replace_delta_column_member2(membership, col, clusters, cd_scores)
 
 
 def replace_delta_column_member2(membership, col, cm, cd_scores):
     index = cd_scores.row_indexes([col])[0]
     cds_values = cd_scores.values
-    curr_indexes = [c - 1 for c in membership.col_memb[col]]
+    curr_indexes = [c - 1 for c in membership.col_membs[membership.colidx[col]]]
     cm_indexes = [c - 1 for c in cm]
     deltas = cds_values[index][cm_indexes] - cds_values[index][curr_indexes]
     if len(deltas[deltas != 0.0]) > 0:
