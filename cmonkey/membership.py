@@ -468,39 +468,29 @@ class OrigMembership:
     ClusterMembership, with a smaller memory footprint"""
     def __init__(self, row_is_member_of, col_is_member_of,
                  config_params):
-        """identical constructor to ClusterMembership"""
-
-        def cluster2names_map(name2clusters):
-            result = {}
-            for name, clusters in name2clusters.items():
-                for cluster in clusters:
-                    if cluster > 0:
-                        if cluster not in result:
-                            result[cluster] = set()
-                        result[cluster].add(name)
-            return result
-            
+        """identical constructor to ClusterMembership"""            
         self.__config_params = config_params
 
         # table with |genes| rows and the configured number of columns
         num_per_row = config_params['memb.clusters_per_row']
         num_per_col = config_params['memb.clusters_per_col']
+        self.row_names = sorted(row_is_member_of.keys())
+        self.col_names = sorted(col_is_member_of.keys())
+        self.rowidx = {name: i for i, name in enumerate(self.row_names)}
+        self.colidx = {name: i for i, name in enumerate(self.col_names)}
 
-        self.row_memb = {}
-        self.col_memb = {}
+        self.row_membs = np.zeros((len(row_is_member_of), num_per_row))
+        self.col_membs = np.zeros((len(col_is_member_of), num_per_col))
+
         for row, clusters in row_is_member_of.items():
             tmp = row_is_member_of[row][:num_per_row]
-            tmp.extend([0] * (num_per_row - len(tmp)))
-            self.row_memb[row] = array.array('i', tmp)
+            for i in range(len(tmp)):
+                self.row_membs[self.rowidx[row]][i] = tmp[i]
 
         for col, clusters in col_is_member_of.items():
             tmp = col_is_member_of[col][:num_per_col]
-            tmp.extend([0] * (num_per_col - len(tmp)))
-            self.col_memb[col] = array.array('i', tmp)
-
-        # without these maps, updating will be super-slow
-        self.cluster_rows = cluster2names_map(self.row_memb)
-        self.cluster_cols = cluster2names_map(self.col_memb)
+            for i in range(len(tmp)):
+                self.col_membs[self.colidx[col]][i] = tmp[i]
 
     # pylint: disable-msg=R0913
     @classmethod
@@ -574,27 +564,31 @@ class OrigMembership:
         """returns the minimum number of columns that should be in a cluster"""
         return 0
 
-    def clusters_for_row(self, row_name):
+    def clusters_for_row(self, row):
         """determine the clusters for the specified row"""
-        return {m for m in self.row_memb[row_name] if m > 0}
+        c = self.row_membs[self.rowidx[row]]
+        return set(c[c > 0])
 
     def num_clusters_for_row(self, row):
         """returns the number of clusters for the row"""
         return len(self.clusters_for_row(row))
 
-    def clusters_for_column(self, column_name):
+    def clusters_for_column(self, column):
         """determine the clusters for the specified column"""
-        return {m for m in self.col_memb[column_name] if m > 0}
+        c = self.col_membs[self.colidx[column]]
+        return set(c[c > 0])
 
     def num_clusters_for_column(self, column):
         """returns the number of clusters for the column"""
         return len(self.clusters_for_column(column))
 
     def rows_for_cluster(self, cluster):
-        return self.cluster_rows.get(cluster, set())
+        idx = set(np.where(self.row_membs == cluster)[0])
+        return {self.row_names[i] for i in idx}
 
     def columns_for_cluster(self, cluster):
-        return self.cluster_cols.get(cluster, set())
+        idx = set(np.where(self.col_membs == cluster)[0])
+        return {self.col_names[i] for i in idx}
 
     def num_row_members(self, cluster):
         return len(self.rows_for_cluster(cluster))
@@ -623,68 +617,42 @@ class OrigMembership:
         return self.col_memb[col].index(0)
 
     def add_cluster_to_row(self, row, cluster, force=False):
-        def add_reverse(cluster, row):
-            if cluster not in self.cluster_rows:
-                self.cluster_rows[cluster] = {row}
-            else:
-                self.cluster_rows[cluster].add(row)
-
-        try:
-            index = self.row_memb[row].index(0)
-            self.row_memb[row][index] = cluster
-            add_reverse(cluster, row)
-        except:
-            if not force:
-                raise Exception(("add_cluster_to_row() - exceeded clusters/row " +
-                                 "limit for row: '%s'" % str(row)))
-            else:
-                self.row_memb[row].append(cluster)
-                add_reverse(cluster, row)
+        rowidx = self.rowidx[row]
+        free_slots = np.where(self.row_membs[rowidx] == 0)[0]
+        if len(free_slots > 0):
+            index = free_slots[0]
+            self.row_membs[rowidx][index] = cluster
+        elif not force:
+            raise Exception(("add_cluster_to_row() - exceeded clusters/row " +
+                             "limit for row: '%s'" % str(row)))
+        else:
+            tmp = np.zeros((self.row_membs.shape[0], self.row_membs.shape[1] + 1))
+            tmp[:,:-1] = self.row_membs
+            self.row_membs = tmp
+            self.row_membs[rowidx][-1] = cluster
 
     def add_cluster_to_column(self, col, cluster, force=False):
-        def add_reverse(cluster, col):
-            if cluster not in self.cluster_cols:
-                self.cluster_cols[cluster] = {col}
-            else:
-                self.cluster_cols[cluster].add(col)
-            
-        try:
-            index = self.col_memb[col].index(0)
-            self.col_memb[col][index] = cluster
-            add_reverse(cluster, col)
-        except:
-            if not force:
-                raise Exception(("add_cluster_to_column() - exceeded clusters/col " +
-                                 "limit for column: '%s'" % str(col)))
-            else:
-                self.col_memb[col].append(cluster)
-                add_reverse(cluster, col)
+        colidx = self.colidx[col]
+        free_slots = np.where(self.col_membs[colidx] == 0)[0]
+        if len(free_slots) > 0:
+            index = free_slots[0]
+            self.col_membs[colidx][index] = cluster
+        elif not force:
+            raise Exception(("add_cluster_to_column() - exceeded clusters/col " +
+                             "limit for column: '%s'" % str(col)))
+        else:
+            tmp = np.zeros((self.col_membs.shape[0], self.col_membs.shape[1] + 1))
+            tmp[:,:-1] = self.col_membs
+            self.col_membs = tmp
+            self.col_membs[colidx][-1] = cluster
 
     def replace_row_cluster(self, row, index, new):
         if new not in self.clusters_for_row(row):
-            old = self.row_memb[row][index]
-            self.row_memb[row][index] = new
-
-            # add reverse edge
-            # check whether old is still member of this row
-            if old not in self.row_memb[row]:
-                self.cluster_rows[old].remove(row)
-            if new not in self.cluster_rows:
-                self.cluster_rows[new] = set()
-            self.cluster_rows[new].add(row)
-
+            self.row_membs[self.rowidx[row]][index] = new
 
     def replace_column_cluster(self, col, index, new):
         if new not in self.clusters_for_column(col):
-            old = self.col_memb[col][index]
-            self.col_memb[col][index] = new
-
-            # check whether old is still member of this row
-            if old not in self.col_memb[col]:
-                self.cluster_cols[old].remove(col)
-            if new not in self.cluster_cols:
-                self.cluster_cols[new] = set()
-            self.cluster_cols[new].add(col)
+            self.col_membs[self.colidx[col]][index] = new
 
 
     def pickle_path(self):

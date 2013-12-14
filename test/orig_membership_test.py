@@ -39,10 +39,10 @@ class OrigMembershipTest(unittest.TestCase):
         self.assertEquals(5, m.max_cluster_rows_allowed())
         self.assertEquals(0, m.min_cluster_columns_allowed())
 
-        self.assertEquals([1, 5], m.row_memb['R1'].tolist())
-        self.assertEquals([0, 0], m.row_memb['R2'].tolist())
-        self.assertEquals([3, 0, 0, 0, 0], m.col_memb['C1'].tolist())
-        self.assertEquals([0, 0, 0, 0, 0], m.col_memb['C2'].tolist())
+        self.assertEquals([1, 5], m.row_membs[0].tolist())
+        self.assertEquals([0, 0], m.row_membs[1].tolist())
+        self.assertEquals([3, 0, 0, 0, 0], m.col_membs[0].tolist())
+        self.assertEquals([0, 0, 0, 0, 0], m.col_membs[1].tolist())
 
         self.assertEquals({1, 5}, m.clusters_for_row('R1'))
         self.assertEquals({3}, m.clusters_for_column('C1'))
@@ -74,7 +74,7 @@ class OrigMembershipTest(unittest.TestCase):
         self.assertEquals({3}, m.clusters_for_row('R2'))
         self.assertEquals(1, m.num_clusters_for_row('R2'))
         self.assertEquals({'R2'}, m.rows_for_cluster(3))
-
+        
         m.add_cluster_to_row('R2', 1)
         self.assertEquals({1, 3}, m.clusters_for_row('R2'))
         self.assertEquals(2, m.num_clusters_for_row('R2'))
@@ -87,7 +87,7 @@ class OrigMembershipTest(unittest.TestCase):
                                 CONFIG_PARAMS)
         m.add_cluster_to_row('R2', 1)
         m.add_cluster_to_row('R2', 1)
-        self.assertEquals([1, 1], m.row_memb['R2'].tolist())
+        self.assertEquals([1, 1], m.row_membs[1].tolist())
         self.assertEquals({1}, m.clusters_for_row('R2'))
         self.assertEquals(1, m.num_clusters_for_row('R2'))
 
@@ -101,19 +101,19 @@ class OrigMembershipTest(unittest.TestCase):
         """add_cluster_to_row() will only work if there are enough 0-slots"""
         m = memb.OrigMembership({'R1': [1, 5], 'R2': []}, {'C1': [3], 'C2': []},
                                 CONFIG_PARAMS)
-        m.row_memb['R2'] = [2, 2]  # fill the spaces
+        m.row_membs[1] = [2, 2]  # fill the spaces
         self.assertRaises(Exception, m.add_cluster_to_row, 'R2', 2)
 
     def test_add_cluster_to_row_full_force(self):
-        """full row memberships can be added to with the force switch"""
+        # full row memberships can be added to with the force switch
         m = memb.OrigMembership({'R1': [1, 5], 'R2': []}, {'C1': [3], 'C2': []},
                                 CONFIG_PARAMS)
         m.add_cluster_to_row('R1', 3, True)
         self.assertEquals({1, 3, 5}, m.clusters_for_row('R1'))
         self.assertEquals({'R1'}, m.rows_for_cluster(3))
-
+    
     def test_add_cluster_to_column(self):
-        """happy path for add_cluster_to_column()"""
+        # happy path for add_cluster_to_column()
         m = memb.OrigMembership({'R1': [1, 5], 'R2': []}, {'C1': [3], 'C2': []},
                                 CONFIG_PARAMS)
         m.add_cluster_to_column('C1', 4)
@@ -126,30 +126,30 @@ class OrigMembershipTest(unittest.TestCase):
         self.assertEquals(2, m.num_column_members(3))
 
     def test_add_cluster_to_column_twice(self):
-        """allow to add duplicate clusters"""
+        # allow to add duplicate clusters
         m = memb.OrigMembership({'R1': [1, 5], 'R2': []}, {'C1': [3], 'C2': []},
                                 CONFIG_PARAMS)
         m.add_cluster_to_column('C1', 4)
         m.add_cluster_to_column('C1', 4)
-        self.assertEquals([3, 4, 4, 0, 0], m.col_memb['C1'].tolist())
+        self.assertEquals([3, 4, 4, 0, 0], m.col_membs[0].tolist())
         self.assertEquals({3, 4}, m.clusters_for_column('C1'))
         self.assertEquals(2, m.num_clusters_for_column('C1'))
 
     def test_add_cluster_to_column_error_full(self):
-        """full row memberships can not be added to in the normal case"""
+        # full row memberships can not be added to in the normal case
         m = memb.OrigMembership({'R1': [1, 5], 'R2': []}, {'C1': [3, 4, 5, 6, 7], 'C2': []},
                                 CONFIG_PARAMS)
         self.assertRaises(Exception, m.add_cluster_to_column, 'C1', 2)
 
     def test_add_cluster_to_column_error_full_same_cluster(self):
-        """full row memberships can not be added to in the normal case"""
+        # full row memberships can not be added to in the normal case
         m = memb.OrigMembership({'R1': [1, 5], 'R2': []}, {'C1': [3], 'C2': []},
                                 CONFIG_PARAMS)
-        m.col_memb['C1'] = [1, 3, 6, 6, 6]
+        m.col_membs[0] = [1, 3, 6, 6, 6]
         self.assertRaises(Exception, m.add_cluster_to_column, 'C1', 2)
 
     def test_add_cluster_to_column_full_force(self):
-        """full col memberships can be added to if forced"""
+        # full col memberships can be added to if forced
         m = memb.OrigMembership({'R1': [1, 5], 'R2': []}, {'C1': [3, 4, 5, 6, 7], 'C2': []},
                                 CONFIG_PARAMS)
         m.add_cluster_to_column('C1', 2, force=True)
@@ -163,18 +163,12 @@ class OrigMembershipTest(unittest.TestCase):
         self.assertEquals({1, 3, 4, 6, 7}, m.clusters_for_column('C1'))
         self.assertEquals({'C1'}, m.columns_for_cluster(1))
 
-
     def test_replace_row_cluster(self):
         m = memb.OrigMembership({'R1': [1, 1], 'R2': []}, {'C1': [3, 4, 3, 6, 7], 'C2': []},
                                 CONFIG_PARAMS)
         m.replace_row_cluster('R1', 1, 3)
         self.assertEquals({1, 3}, m.clusters_for_row('R1'))
         self.assertEquals({'R1'}, m.rows_for_cluster(3))
-
-    def pickle_path(self):
-        """returns the function-specific pickle-path"""
-        return '%s/last_row_scores.pkl' % (self.__config_params['output_dir'])
-
 
 if __name__ == '__main__':
     SUITE = []
