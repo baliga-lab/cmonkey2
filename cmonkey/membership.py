@@ -674,16 +674,17 @@ class OrigMembership:
             self.cluster_rows[new].add(row)
 
 
-    def replace_column_cluster(self, col, old, new):
-        index = self.col_memb[col].index(old)
-        self.col_memb[col][index] = new
+    def replace_column_cluster(self, col, index, new):
+        if new not in self.clusters_for_column(col):
+            old = self.col_memb[col][index]
+            self.col_memb[col][index] = new
 
-        # check whether old is still member of this row
-        if old not in self.col_memb[col]:
-            self.cluster_cols[old].remove(col)
-        if new not in self.cluster_cols:
-            self.cluster_cols[new] = set()
-        self.cluster_cols[new].add(col)
+            # check whether old is still member of this row
+            if old not in self.col_memb[col]:
+                self.cluster_cols[old].remove(col)
+            if new not in self.cluster_cols:
+                self.cluster_cols[new] = set()
+            self.cluster_cols[new].add(col)
 
 
     def pickle_path(self):
@@ -788,7 +789,7 @@ def replace_delta_row_member2(membership, row, rm, rd_scores):
     curr_indexes = [c - 1 for c in membership.row_memb[row]]
     rm_indexes = [c - 1 for c in rm]    
     deltas = rds_values[index][rm_indexes] - rds_values[index][curr_indexes]
-    if len(deltas[deltas != 0.0]) != 0:
+    if len(deltas[deltas != 0.0]) > 0:
         maxidx = deltas.argmax(axis=0)
         membership.replace_row_cluster(row, maxidx, rm[maxidx])
 
@@ -804,7 +805,7 @@ def update_for_cols2(membership, cd_scores, multiprocessing):
 
     for index in xrange(cd_scores.num_rows):
         col = colnames[index]
-        clusters = membership.clusters_not_in_column(col, best_clusters[col])
+        clusters = best_clusters[col]
         if seeing_change(change_prob):
             for c in range(max_changes):
                 if len(clusters) > 0:
@@ -814,23 +815,20 @@ def update_for_cols2(membership, cd_scores, multiprocessing):
                         free_slot = membership.first_free_slot_for_column(col)
                         take_cluster = clusters[free_slot]
                         if take_cluster not in membership.clusters_for_column(col):
-                            membership.add_cluster_to_column(row, take_cluster)
+                            membership.add_cluster_to_column(col, take_cluster)
                     except:
-                        old = replace_delta_column_member2(membership, col, clusters[0],
-                                                           cd_scores)
+                        replace_delta_column_member2(membership, col, clusters, cd_scores)
 
-def replace_delta_column_member2(membership, col, cluster, cd_scores):
+
+def replace_delta_column_member2(membership, col, cm, cd_scores):
     index = cd_scores.row_indexes([col])[0]
     cds_values = cd_scores.values
-    current_clusters = membership.clusters_for_column(col)
-    compval = cds_values[index][cluster - 1]
-
-    deltas = sorted([(compval - cds_values[index][c - 1], c) for c in current_clusters],
-                    reverse=True)
-    if len(deltas) > 0 and deltas[0][0] > 0:
-        membership.replace_column_cluster(col, deltas[0][1], cluster)
-        return deltas[0][1]
-    return 0
+    curr_indexes = [c - 1 for c in membership.col_memb[col]]
+    cm_indexes = [c - 1 for c in cm]
+    deltas = cds_values[index][cm_indexes] - cds_values[index][curr_indexes]
+    if len(deltas[deltas != 0.0]) > 0:
+        maxidx = deltas.argmax(axis=0)
+        membership.replace_column_cluster(col, maxidx, cm[maxidx])
 
 
 def postadjust2(membership, rowscores=None, cutoff=0.33, limit=100):
