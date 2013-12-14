@@ -616,11 +616,11 @@ class OrigMembership:
     def is_column_in_cluster(self, col, cluster):
         return cluster in self.clusters_for_column(col)
 
-    def has_free_slots_for_row(self, row):
-        return len([m for m in self.row_memb[row] if m == 0]) > 0
+    def first_free_slot_for_row(self, row):
+        return self.row_memb[row].index(0)
 
-    def has_free_slots_for_column(self, col):
-        return len([m for m in self.col_memb[col] if m == 0]) > 0
+    def first_free_slot_for_column(self, col):
+        return self.col_memb[col].index(0)
 
     def add_cluster_to_row(self, row, cluster, force=False):
         def add_reverse(cluster, row):
@@ -750,24 +750,34 @@ class OrigMembership:
 
 def update_for_rows2(membership, rd_scores, multiprocessing):
     """generically updating row memberships according to  rd_scores"""
-    rownames = rd_scores.row_names    
-    best_clusters = get_best_clusters(rd_scores, membership.num_clusters_per_row())
+    rownames = rd_scores.row_names
+    # note: for rows, the original version sorts the best clusters by cluster number !!!
+    best_clusters = get_best_clusters(rd_scores, membership.num_clusters_per_row(), True)
     max_changes = membership.max_changes_per_row()
     change_prob = membership.probability_seeing_row_change()
+    with open('cmpy-rm.tsv', 'w') as outfile:
+        outfile.write('V1\tV2\n')
+        for gene in sorted(best_clusters.keys()):
+            clust = best_clusters[gene]
+            outfile.write('%s\t%d\t%d\n' % (gene, clust[0], clust[1]))
+
     for index in xrange(rd_scores.num_rows):
         row = rownames[index]
-        clusters = membership.clusters_not_in_row(row, best_clusters[row])
+        #clusters = membership.clusters_not_in_row(row, best_clusters[row])
+        clusters = best_clusters[row]
+
         if seeing_change(change_prob):
             for _ in range(max_changes):
                 if len(clusters) > 0:
-                    if membership.has_free_slots_for_row(row):
-                        membership.add_cluster_to_row(row, clusters[0])
-                        del clusters[0]
-                    else:
-                        old = replace_delta_row_member2(membership, row, clusters[0],
-                                                        rd_scores)
-                        if old != 0:
-                            del clusters[0]
+                    # array.index() throws exception if 0 not in array
+                    # using exception handling is idiomatic in Python
+                    try:
+                        free_slot = membership.first_free_slot_for_row(row)
+                        take_cluster = clusters[free_slot]
+                        if take_cluster not in membership.clusters_for_row(row):
+                            membership.add_cluster_to_row(row, take_cluster)
+                    except:
+                        replace_delta_row_member2(membership, row, clusters, rd_scores)
 
 
 def update_for_cols2(membership, cd_scores, multiprocessing):
@@ -785,29 +795,27 @@ def update_for_cols2(membership, cd_scores, multiprocessing):
         if seeing_change(change_prob):
             for c in range(max_changes):
                 if len(clusters) > 0:
-                    if (membership.has_free_slots_for_column(col)):
-                        membership.add_cluster_to_column(col, clusters[0])
-                        del clusters[0]
-                    else:
+                    # array.index() throws exception if 0 not in array
+                    # using exception handling is idiomatic in Python
+                    try:
+                        free_slot = membership.first_free_slot_for_column(col)
+                        take_cluster = clusters[free_slot]
+                        if take_cluster not in membership.clusters_for_column(col):
+                            membership.add_cluster_to_column(row, take_cluster)
+                    except:
                         old = replace_delta_column_member2(membership, col, clusters[0],
                                                            cd_scores)
-                        if old != 0:
-                            del clusters[0]
 
-
-def replace_delta_row_member2(membership, row, cluster, rd_scores,
+def replace_delta_row_member2(membership, row, rm, rd_scores,
                               check_zero_size=False):
     index = rd_scores.row_indexes([row])[0]
     rds_values = rd_scores.values
-    current_clusters = membership.clusters_for_row(row)
-    compval = rds_values[index][cluster - 1]
-
-    deltas = sorted([(compval - rds_values[index][c - 1], c) for c in current_clusters],
-                    reverse=True)
-    if len(deltas) > 0 and deltas[0][0] > 0:
-        membership.replace_row_cluster(row, deltas[0][1], cluster)
-        return deltas[0][1]
-    return 0
+    curr_indexes = [c - 1 for c in membership.row_memb[row]]
+    rm_indexes = [c - 1 for c in rm]    
+    deltas = rds_values[index][rm_indexes] - rds_values[index][curr_indexes]
+    if len(deltas[deltas != 0.0]) != 0:
+        maxidx = deltas.argmax(axis=0)
+        print deltas, " max index: ", maxidx
 
 
 def replace_delta_column_member2(membership, col, cluster, cd_scores):
@@ -958,10 +966,15 @@ def seeing_change(prob):
     return prob >= 1.0 or random.uniform(0.0, 1.0) <= prob
 
 
-def get_best_clusters(scores, n):
+def get_best_clusters(scores, n, sort=False):
     """retrieve the n best scored clusters for the given row/column score matrix"""
-    return {scores.row_names[row]: util.order_fast(scores.row_values(row), n)
-            for row in xrange(scores.num_rows)}
+    if sort:
+        return {scores.row_names[row]: sorted(util.order_fast(scores.row_values(row), n))
+                for row in xrange(scores.num_rows)}
+    else:
+        return {scores.row_names[row]: util.order_fast(scores.row_values(row), n)
+                for row in xrange(scores.num_rows)}
+
 
 
 def get_row_density_scores(membership, row_scores):

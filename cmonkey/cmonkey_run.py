@@ -61,6 +61,7 @@ class CMonkeyRun:
             self['memb.clusters_per_col'] = int(round(num_clusters / 2.0))
         else:
             self['memb.clusters_per_col'] = int(round(num_clusters * 2.0 / 3.0))
+        logging.info("# clusters/row: %d", self['memb.clusters_per_row'])
         logging.info("# clusters/column: %d", self['memb.clusters_per_col'])
 
         self['organism_code'] = organism_code
