@@ -479,8 +479,8 @@ class OrigMembership:
         self.rowidx = {name: i for i, name in enumerate(self.row_names)}
         self.colidx = {name: i for i, name in enumerate(self.col_names)}
 
-        self.row_membs = np.zeros((len(row_is_member_of), num_per_row))
-        self.col_membs = np.zeros((len(col_is_member_of), num_per_col))
+        self.row_membs = np.zeros((len(row_is_member_of), num_per_row), dtype='int32')
+        self.col_membs = np.zeros((len(col_is_member_of), num_per_col), dtype='int32')
 
         for row, clusters in row_is_member_of.items():
             tmp = row_is_member_of[row][:num_per_row]
@@ -626,7 +626,7 @@ class OrigMembership:
             raise Exception(("add_cluster_to_row() - exceeded clusters/row " +
                              "limit for row: '%s'" % str(row)))
         else:
-            tmp = np.zeros((self.row_membs.shape[0], self.row_membs.shape[1] + 1))
+            tmp = np.zeros((self.row_membs.shape[0], self.row_membs.shape[1] + 1), dtype='int32')
             tmp[:,:-1] = self.row_membs
             self.row_membs = tmp
             self.row_membs[rowidx][-1] = cluster
@@ -641,7 +641,7 @@ class OrigMembership:
             raise Exception(("add_cluster_to_column() - exceeded clusters/col " +
                              "limit for column: '%s'" % str(col)))
         else:
-            tmp = np.zeros((self.col_membs.shape[0], self.col_membs.shape[1] + 1))
+            tmp = np.zeros((self.col_membs.shape[0], self.col_membs.shape[1] + 1), dtype='int32')
             tmp[:,:-1] = self.col_membs
             self.col_membs = tmp
             self.col_membs[colidx][-1] = cluster
@@ -706,8 +706,8 @@ class OrigMembership:
         """Save memberships into checkpoint"""
         logging.info("Saving checkpoint data for memberships in iteration %d",
                      shelf['iteration'])
-        shelf[KEY_ROW_IS_MEMBER_OF] = self.row_memb
-        shelf[KEY_COL_IS_MEMBER_OF] = self.col_memb
+        shelf[KEY_ROW_IS_MEMBER_OF] = self.row_membs
+        shelf[KEY_COL_IS_MEMBER_OF] = self.col_membs
 
     @classmethod
     def restore_from_checkpoint(cls, config_params, shelf):
