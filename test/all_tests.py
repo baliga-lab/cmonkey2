@@ -5,7 +5,6 @@ more information and licensing details.
 """
 import unittest
 import xmlrunner
-import membership_test as membtest
 import orig_membership_test as omembtest
 import datamatrix_test as dmtest
 import util_test as ut
@@ -54,7 +53,6 @@ if __name__ == '__main__':
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(nwt.NetworkTest))
 
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(membtest.ClusterMembershipTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(omembtest.OrigMembershipTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(mat.ComputeArrayScoresTest))
 

@@ -56,8 +56,8 @@ class PostprocTest(unittest.TestCase):  # pylint: disable-msg=R0904
                     column_members[cond] = []
                 column_members[cond].append(int(row[col]))
 
-        return memb.ClusterMembership(row_members, column_members,
-                                      self.config_params)
+        return memb.OrigMembership(row_members, column_members,
+                                   self.config_params)
 
     def setUp(self):  # pylint; disable-msg=C0103
         """test fixture"""
@@ -83,12 +83,18 @@ class PostprocTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """tests the row scoring by itself, which combines scoring and fixing
         extreme values"""
         rowscores = read_matrix('testdata/rowscores-43-before-postproc.tsv')
-        assign1 = self.membership.adjust_cluster(1, rowscores, cutoff=0.33, limit=100)
+        assign1 = memb.adjust_cluster2(self.membership,
+                                       1, rowscores, cutoff=0.33,
+                                       limit=100)
         self.assertEquals(0, len(assign1))
-        assign2 = self.membership.adjust_cluster(2, rowscores, cutoff=0.33, limit=100)
+        assign2 = memb.adjust_cluster2(self.membership,
+                                       2, rowscores, cutoff=0.33,
+                                       limit=100)
         self.assertEquals(1, len(assign2))
         self.assertEquals(2, assign2['VNG6210G'])
-        assign5 = self.membership.adjust_cluster(5, rowscores, cutoff=0.33, limit=100)
+        assign5 = memb.adjust_cluster2(self.membership,
+                                       5, rowscores, cutoff=0.33,
+                                       limit=100)
         self.assertEquals(3, len(assign5))
         self.assertEquals(5, assign5['VNG1182H'])
         self.assertEquals(5, assign5['VNG2259C'])
@@ -98,7 +104,7 @@ class PostprocTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """tests the row scoring by itself, which combines scoring and fixing
         extreme values"""
         rowscores = read_matrix('testdata/rowscores-43-before-postproc.tsv')
-        self.membership.postadjust(rowscores)
+        memb.postadjust2(self.membership, rowscores)
 
 
 def read_matrix(filename):

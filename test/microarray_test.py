@@ -29,8 +29,10 @@ class ComputeArrayScoresTest(unittest.TestCase):
             row = line.strip().split('\t')
             column_members[row[0]] = [int(cluster)
                                       for cluster in row[1].split(':')]
-        return memb.ClusterMembership(row_members, column_members,
-                                      {'memb.num_clusters': 43})
+        return memb.OrigMembership(row_members, column_members,
+                                   {'memb.num_clusters': 43,
+                                    'memb.clusters_per_row': 2,
+                                    'memb.clusters_per_col': 29 })
 
     def __read_ratios(self):
         dfile = util.read_dfile('testdata/row_scores_testratios.tsv',
