@@ -226,11 +226,11 @@ def compute_cluster_score(args):
         min_genes = set_type.sets[min_set].genes
         min_genes = [gene for gene in min_genes
                      if gene in matrix.row_names]
-        min_indexes = matrix.row_indexes(min_genes)
+        min_indexes = matrix.row_indexes_for(min_genes)
 
         if set_type.sets[min_set].cutoff == 'discrete':
             overlap_genes = set(cluster_genes).intersection(set(min_genes))
-            overlap_indexes = matrix.row_indexes(overlap_genes)
+            overlap_indexes = matrix.row_indexes_for(overlap_genes)
             for index in min_indexes:
                 scores[index] = 0.5
             for index in overlap_indexes:

@@ -42,7 +42,7 @@ class OrigMembership:
     ClusterMembership, with a smaller memory footprint"""
     def __init__(self, row_names, col_names,
                  row_is_member_of, col_is_member_of,
-                 config_params):
+                 config_params, row_indexes=None, col_indexes=None):
         """identical constructor to ClusterMembership"""            
         self.__config_params = config_params
 
@@ -51,8 +51,16 @@ class OrigMembership:
         num_per_col = config_params['memb.clusters_per_col']
         self.row_names = row_names
         self.col_names = col_names
-        self.rowidx = {name: i for i, name in enumerate(self.row_names)}
-        self.colidx = {name: i for i, name in enumerate(self.col_names)}
+
+        # reuse column indexes if they were provided
+        if row_indexes:
+            self.rowidx = row_indexes
+        else:
+            self.rowidx = {name: i for i, name in enumerate(self.row_names)}
+        if col_indexes:
+            self.colidx = col_indexes
+        else:
+            self.colidx = {name: i for i, name in enumerate(self.col_names)}
 
         self.row_membs = np.zeros((len(row_is_member_of), num_per_row), dtype='int32')
         self.col_membs = np.zeros((len(col_is_member_of), num_per_col), dtype='int32')
@@ -288,7 +296,7 @@ def create_membership(matrix, seed_row_memberships, seed_column_memberships,
     col_is_member_of = make_member_map(column_membership, matrix.column_names)
     return OrigMembership(matrix.row_names, matrix.column_names,
                           row_is_member_of, col_is_member_of,
-                          config_params)
+                          config_params, matrix.row_indexes, matrix.column_indexes)
 
 def update_for_rows2(membership, rd_scores, multiprocessing):
     """generically updating row memberships according to  rd_scores"""
@@ -322,7 +330,7 @@ def update_for_rows2(membership, rd_scores, multiprocessing):
 
 
 def replace_delta_row_member2(membership, row, rm, rd_scores):
-    index = rd_scores.row_indexes([row])[0]
+    index = rd_scores.row_indexes_for([row])[0]
     rds_values = rd_scores.values
     curr_indexes = [c - 1 for c in membership.row_membs[membership.rowidx[row]]]
     rm_indexes = [c - 1 for c in rm]    
@@ -357,7 +365,7 @@ def update_for_cols2(membership, cd_scores, multiprocessing):
 
 
 def replace_delta_column_member2(membership, col, cm, cd_scores):
-    index = cd_scores.row_indexes([col])[0]
+    index = cd_scores.row_indexes_for([col])[0]
     cds_values = cd_scores.values
     curr_indexes = [c - 1 for c in membership.col_membs[membership.colidx[col]]]
     cm_indexes = [c - 1 for c in cm]
@@ -532,7 +540,7 @@ def get_rr_scores(membership, rowscores, bandwidth, cluster):
         num_rows = rowscores.num_rows
         return [(1.0 / num_rows) for _ in xrange(num_rows)]
     else:
-        score_indexes = rowscores.row_indexes(cluster_rows)
+        score_indexes = rowscores.row_indexes_for(cluster_rows)
         cluster_scores = [kscores[index] for index in score_indexes]
         cluster_bandwidth = bandwidth * bwscale(len(cluster_rows))
         return util.density(kscores, cluster_scores, cluster_bandwidth,
@@ -555,7 +563,7 @@ def get_cc_scores(membership, scores, bandwidth, cluster):
         num_rows = scores.num_rows
         return [(1.0 / num_rows) for _ in xrange(num_rows)]
     else:
-        score_indexes = scores.row_indexes(cluster_columns)
+        score_indexes = scores.row_indexes_for(cluster_columns)
         cluster_scores = [kscores[index] for index in score_indexes]
         return util.density(kscores, cluster_scores, bandwidth,
                             np.amin(kscores_finite) - 1,

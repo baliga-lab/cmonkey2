@@ -62,26 +62,26 @@ class DataMatrix:
                 self.values.fill(init_value)
 
         self.__row_variance = None
-        self.__row_indexes = None
-        self.__col_indexes = None
+        self.row_indexes = None
+        self.column_indexes = None
 
         # store the number of rows/columns as an attribute, so we do not have
         # to recalculate them
         self.num_rows = nrows
         self.num_columns = 0 if nrows == 0 else ncols
 
-    def row_indexes(self, row_names):
+    def row_indexes_for(self, row_names):
         """returns the row indexes with the matching names"""
-        if self.__row_indexes == None:
-            self.__row_indexes = { row: index for index, row in enumerate(self.row_names) }
-        return [self.__row_indexes[name] if name in self.__row_indexes else -1
+        if self.row_indexes == None:
+            self.row_indexes = { row: index for index, row in enumerate(self.row_names) }
+        return [self.row_indexes[name] if name in self.row_indexes else -1
                 for name in row_names]
 
-    def column_indexes(self, column_names):
+    def column_indexes_for(self, column_names):
         """returns the column indexes with the matching names"""
-        if self.__col_indexes == None:
-            self.__col_indexes = { col: index for index, col in enumerate(self.column_names) }
-        return [self.__col_indexes[name] if name in self.__col_indexes else -1
+        if self.column_indexes == None:
+            self.column_indexes = { col: index for index, col in enumerate(self.column_names) }
+        return [self.column_indexes[name] if name in self.column_indexes else -1
                 for name in column_names]
 
     def row_values(self, row):
@@ -129,7 +129,7 @@ class DataMatrix:
         else:
             row_names = [name for name in sorted(row_names)
                          if name in set(self.row_names)]
-            row_indexes = self.row_indexes(row_names)
+            row_indexes = self.row_indexes_for(row_names)
 
         if column_names == None:
             column_names = self.column_names
@@ -137,7 +137,7 @@ class DataMatrix:
         else:
             column_names = [name for name in sorted(column_names)
                             if name in set(self.column_names)]
-            col_indexes = self.column_indexes(column_names)
+            col_indexes = self.column_indexes_for(column_names)
 
         new_values = make_values(row_indexes, col_indexes)
         return DataMatrix(len(row_names), len(column_names), row_names,

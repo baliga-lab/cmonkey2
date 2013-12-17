@@ -424,12 +424,12 @@ class CMonkeyRun:
         with conn:
             for cluster in range(1, self['num_clusters'] + 1):
                 column_names = self.membership().columns_for_cluster(cluster)
-                for order_num in self.ratio_matrix.column_indexes(column_names):
+                for order_num in self.ratio_matrix.column_indexes_for(column_names):
                     conn.execute('''insert into column_members (iteration,cluster,order_num)
                                     values (?,?,?)''', (iteration, cluster, order_num))
 
                 row_names = self.membership().rows_for_cluster(cluster)
-                for order_num in self.ratio_matrix.row_indexes(row_names):
+                for order_num in self.ratio_matrix.row_indexes_for(row_names):
                     conn.execute('''insert into row_members (iteration,cluster,order_num)
                                     values (?,?,?)''', (iteration, cluster, order_num))
                 try:
@@ -570,8 +570,6 @@ class CMonkeyRun:
     def run_iteration(self, row_scoring, col_scoring, iteration):
         logging.info("Iteration # %d", iteration)
         iteration_result = {'iteration': iteration}
-        membership = self.membership()
-
         rscores = row_scoring.compute(iteration_result)
         start_time = util.current_millis()
         cscores = col_scoring.compute(iteration_result)
@@ -579,7 +577,7 @@ class CMonkeyRun:
         if elapsed > 0.0001:
             logging.info("computed column_scores in %f s.", elapsed / 1000.0)
 
-        membership.update(self.ratio_matrix, rscores, cscores,
+        self.membership().update(self.ratio_matrix, rscores, cscores,
                                  self['num_iterations'], iteration_result)
 
         if (iteration > 0 and self['checkpoint_interval']
@@ -606,8 +604,6 @@ class CMonkeyRun:
             self.write_stats(iteration_result)
             self.update_iteration(iteration)
 
-        gc.collect()
-
     def run_iterations(self, row_scoring, col_scoring):
         self.report_params()
         self.write_start_info()
@@ -615,12 +611,13 @@ class CMonkeyRun:
                                self['num_iterations'] + 1):
             start_time = util.current_millis()
             self.run_iteration(row_scoring, col_scoring, iteration)
+            # garbage collection after everything in iteration went out of scope
+            gc.collect() 
             elapsed = util.current_millis() - start_time
             logging.info("performed iteration %d in %f s.", iteration, elapsed / 1000.0)
 
         if self['postadjust']:
             logging.info("Postprocessing: Adjusting the clusters....")
-            #self.membership().postadjust()
             memb.postadjust2(self.membership())
 
             iteration = self['num_iterations'] + 1

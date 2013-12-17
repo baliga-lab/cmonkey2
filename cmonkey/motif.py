@@ -79,7 +79,7 @@ def compute_mean_score(pvalue_matrix, membership, organism):
     pvalues = pvalue_matrix.values
     for cluster in xrange(1, membership.num_clusters() + 1):
         cluster_rows = membership.rows_for_cluster(cluster)
-        row_indexes = pvalue_matrix.row_indexes(cluster_rows)
+        row_indexes = pvalue_matrix.row_indexes_for(cluster_rows)
         for row in row_indexes:
             values.append(pvalues[row][cluster - 1])
     return np.median(values)
