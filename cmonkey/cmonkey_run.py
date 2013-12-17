@@ -101,81 +101,79 @@ class CMonkeyRun:
 
     def __create_output_database(self):
         conn = self.__dbconn()
-        c = conn.cursor()
         # these are the tables for storing cmonkey run information.
         # run information
-        c.execute('''create table run_infos (start_time timestamp,
-                     finish_time timestamp,
-                     num_iterations int, last_iteration int,
-                     organism text, species text, num_rows int,
-                     num_columns int, num_clusters int)''')
+        conn.execute('''create table run_infos (start_time timestamp,
+                        finish_time timestamp,
+                        num_iterations int, last_iteration int,
+                        organism text, species text, num_rows int,
+                        num_columns int, num_clusters int)''')
 
         # stats tables
         # Note: there is some redundancy with the result tables here.
         # ----- I measured the cost for creating those on the fly and
         #       it is more expensive
         #       than I expected, so I left the tables in-place
-        c.execute('''create table iteration_stats (iteration int,
-                     median_residual decimal,
-                     fuzzy_coeff decimal)''')
-        c.execute('''create table cluster_stats (iteration int, cluster int,
-                     num_rows int, num_cols int, residual decimal)''')
-        c.execute('''create table network_stats (iteration int, network text,
-                     score decimal)''')
-        c.execute('''create table motif_stats (iteration int, seqtype text,
-                     pval decimal)''')
-        c.execute('''create table row_names (order_num int, name text)''')
-        c.execute('''create table column_names (order_num int, name text)''')
+        conn.execute('''create table iteration_stats (iteration int,
+                        median_residual decimal,
+                        fuzzy_coeff decimal)''')
+        conn.execute('''create table cluster_stats (iteration int, cluster int,
+                        num_rows int, num_cols int, residual decimal)''')
+        conn.execute('''create table network_stats (iteration int, network text,
+                        score decimal)''')
+        conn.execute('''create table motif_stats (iteration int, seqtype text,
+                        pval decimal)''')
+        conn.execute('''create table row_names (order_num int, name text)''')
+        conn.execute('''create table column_names (order_num int, name text)''')
 
         # result tables
-        c.execute('''create table row_members (iteration int, cluster int,
-                     order_num int)''')
-        c.execute('''create table column_members (iteration int, cluster int,
-                     order_num int)''')
-        c.execute('''create table cluster_residuals (iteration int,
-                     cluster int, residual decimal)''')
+        conn.execute('''create table row_members (iteration int, cluster int,
+                        order_num int)''')
+        conn.execute('''create table column_members (iteration int, cluster int,
+                        order_num int)''')
+        conn.execute('''create table cluster_residuals (iteration int,
+                        cluster int, residual decimal)''')
 
         # motif results: TODO: we might want to have the motif scoring function
         # ------------- write it
         # in case you are wondering about the redundant iteration field here -
         # it allows for much faster database access when selecting by iteration
-        c.execute('''create table motif_infos (iteration int, cluster int,
-                     seqtype text, motif_num int, evalue decimal)''')
-        c.execute('''create table motif_pssm_rows (motif_info_id int,
-                     iteration int, row int, a decimal, c decimal, g decimal,
-                     t decimal)''')
+        conn.execute('''create table motif_infos (iteration int, cluster int,
+                        seqtype text, motif_num int, evalue decimal)''')
+        conn.execute('''create table motif_pssm_rows (motif_info_id int,
+                        iteration int, row int, a decimal, c decimal, g decimal,
+                        t decimal)''')
 
         # Additional info: MEME generated top matching sites
-        c.execute('''create table meme_motif_sites (motif_info_id int,
-                     seq_name text,
-                     reverse boolean, start int, pvalue decimal,
-                     flank_left text, seq text, flank_right text)''')
+        conn.execute('''create table meme_motif_sites (motif_info_id int,
+                        seq_name text,
+                        reverse boolean, start int, pvalue decimal,
+                        flank_left text, seq text, flank_right text)''')
 
-        c.execute('''create table motif_annotations (motif_info_id int,
-                     iteration int, gene_num int,
-                     position int, reverse boolean, pvalue decimal)''')
-        c.execute('''create table motif_pvalues (iteration int, cluster int,
-                     gene_num int, pvalue decimal)''')
-        c.execute('''create index if not exists colmemb_iter_index
-                     on column_members (iteration)''')
-        c.execute('''create index if not exists rowmemb_iter_index
-                     on row_members (iteration)''')
-        c.execute('''create index if not exists clustresid_iter_index
-                     on cluster_residuals (iteration)''')
+        conn.execute('''create table motif_annotations (motif_info_id int,
+                        iteration int, gene_num int,
+                        position int, reverse boolean, pvalue decimal)''')
+        conn.execute('''create table motif_pvalues (iteration int, cluster int,
+                        gene_num int, pvalue decimal)''')
+        conn.execute('''create index if not exists colmemb_iter_index
+                        on column_members (iteration)''')
+        conn.execute('''create index if not exists rowmemb_iter_index
+                        on row_members (iteration)''')
+        conn.execute('''create index if not exists clustresid_iter_index
+                        on cluster_residuals (iteration)''')
         logging.info("created output database schema")
 
         # all cluster members are stored relative to the base ratio matrix
-        for index in xrange(len(self.ratio_matrix.row_names)):
-            c.execute('''insert into row_names (order_num, name) values
-                         (?,?)''',
-                      (index, self.ratio_matrix.row_names[index]))
-        for index in xrange(len(self.ratio_matrix.column_names)):
-            c.execute('''insert into column_names (order_num, name) values
-                         (?,?)''',
-                      (index, self.ratio_matrix.column_names[index]))
+        with conn:
+            for index in xrange(len(self.ratio_matrix.row_names)):
+                conn.execute('''insert into row_names (order_num, name) values
+                                (?,?)''',
+                             (index, self.ratio_matrix.row_names[index]))
+            for index in xrange(len(self.ratio_matrix.column_names)):
+                conn.execute('''insert into column_names (order_num, name) values
+                                (?,?)''',
+                             (index, self.ratio_matrix.column_names[index]))
         logging.info("added row and column names to output database")
-        conn.commit()
-        c.close()
         conn.close()
 
     def report_params(self):
@@ -450,16 +448,17 @@ class CMonkeyRun:
         if 'motifs' in iteration_result:
             motifs = iteration_result['motifs']
             with conn:
-                c = conn.cursor()
                 for seqtype in motifs:
                     for cluster in motifs[seqtype]:
                         motif_infos = motifs[seqtype][cluster]['motif-info']
                         for motif_info in motif_infos:
+                            c = conn.cursor()
                             c.execute('''insert into motif_infos (iteration,cluster,seqtype,motif_num,evalue)
                                         values (?,?,?,?,?)''',
                                         (iteration, cluster, seqtype, motif_info['motif_num'],
                                         motif_info['evalue']))
                             motif_info_id = c.lastrowid
+                            c.close()
                             pssm_rows = motif_info['pssm']
                             for row in xrange(len(pssm_rows)):
                                 pssm_row = pssm_rows[row]
@@ -491,7 +490,6 @@ class CMonkeyRun:
                             conn.execute('''insert into motif_pvalues (iteration,cluster,gene_num,pvalue)
                                             values (?,?,?,?)''',
                                         (iteration, cluster, gene_num, pvalues[gene]))
-                c.close()
             conn.close()
 
     def write_stats(self, iteration_result):
@@ -547,7 +545,6 @@ class CMonkeyRun:
 
     def write_start_info(self):
         conn = self.__dbconn()
-        c = conn.cursor()
         with conn:
             conn.execute('''insert into run_infos (start_time, num_iterations, organism,
                             species, num_rows, num_columns, num_clusters) values (?,?,?,?,?,?,?)''',

@@ -248,10 +248,6 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
         matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
                                self.gene_names())
-
-        # a dictionary that holds the scores of each gene in a given cluster
-        network_iteration_scores = {cluster: {}
-                                    for cluster in xrange(1, self.num_clusters() + 1)}
         network_scores = {}
         for network in self.networks():
             logging.info("Compute scores for network '%s', WEIGHT: %f",
