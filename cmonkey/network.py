@@ -202,22 +202,22 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
     def store_checkpoint_data(self, shelf):
         """Default implementation does not store checkpoint data"""
-        shelf['network.scores'] = self.network_scores
+        pass
 
     def restore_checkpoint_data(self, shelf):
         """Default implementation does not store checkpoint data"""
-        self.network_scores = shelf['network.scores']
+        pass
 
     def compute(self, iteration_result, ref_matrix=None):
         """overridden compute for storing additional information"""
         result = scoring.ScoringFunctionBase.compute(self, iteration_result, ref_matrix)
-        iteration_result['networks'] = self.__update_score_means(self.network_scores)
+        iteration_result['networks'] = self.score_means
         return result
 
     def compute_force(self, iteration_result, ref_matrix=None):
         """overridden compute for storing additional information"""
         result = scoring.ScoringFunctionBase.compute_force(self, iteration_result, ref_matrix)
-        iteration_result['networks'] = self.__update_score_means(self.network_scores)
+        iteration_result['networks'] = self.score_means
         return result
 
     def networks(self):
@@ -264,7 +264,8 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             logging.info("NETWORK '%s' SCORING TIME: %f s.",
                          network.name, (elapsed / 1000.0))
 
-        self.network_scores = network_scores  # for trim mean computation
+        # compute and store score means
+        self.score_means = self.__update_score_means(network_scores)
         matrix.subtract_with_quantile(0.99)
         return matrix
 
