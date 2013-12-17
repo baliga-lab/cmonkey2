@@ -267,7 +267,6 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             # additional scoring information, not used for the actual clustering
             self.__update_network_iteration_scores(network_iteration_scores,
                                                    network_score, network.weight)
-            iteration_scores = compute_iteration_scores(network_iteration_scores)
 
         self.network_scores = network_scores  # for trim mean computation
         matrix.subtract_with_quantile(0.99)
@@ -340,9 +339,9 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                     result[cluster][gene] += weighted_score
         return result
 
-
+"""
 def compute_iteration_scores(network_iteration_scores):
-    """called 'cluster.ns' in the original cMonkey"""
+    #called 'cluster.ns' in the original cMonkey
     result = {}
     for cluster in network_iteration_scores:
         cluster_scores = []
@@ -350,7 +349,7 @@ def compute_iteration_scores(network_iteration_scores):
             cluster_scores.append(score)
         result[cluster] = util.trim_mean(cluster_scores, 0.05)
     return result
-
+"""
 
 def retrieve_networks(organism):
     """retrieves the networks provided by the organism object and

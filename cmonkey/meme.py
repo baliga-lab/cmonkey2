@@ -126,7 +126,7 @@ class MemeSuite:
 
         # run mast
         meme_outfile = None
-        if params.keep_memeout: # and params.iteration > params.num_iterations:
+        if params.keep_memeout and params.iteration > params.num_iterations:
             meme_outfile = '%s/meme-out-%d-%d' % (params.outdir,
                                                   params.iteration, params.cluster)
             with open(meme_outfile, 'w') as outfile:
