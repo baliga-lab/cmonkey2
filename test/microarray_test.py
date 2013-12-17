@@ -29,7 +29,9 @@ class ComputeArrayScoresTest(unittest.TestCase):
             row = line.strip().split('\t')
             column_members[row[0]] = [int(cluster)
                                       for cluster in row[1].split(':')]
-        return memb.OrigMembership(row_members, column_members,
+        return memb.OrigMembership(sorted(row_members.keys()),
+                                   sorted(column_members.keys()),
+                                   row_members, column_members,
                                    {'memb.num_clusters': 43,
                                     'memb.clusters_per_row': 2,
                                     'memb.clusters_per_col': 29 })

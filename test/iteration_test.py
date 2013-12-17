@@ -56,8 +56,10 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                     column_members[cond] = []
                 column_members[cond].append(int(row[col]))
 
-        return memb.OrigMembership(row_members, column_members,
-                                      self.config_params)
+        return memb.OrigMembership(sorted(row_members.keys()),
+                                   sorted(column_members.keys()),
+                                   row_members, column_members,
+                                   self.config_params)
 
     def setUp(self):  # pylint; disable-msg=C0103
         """test fixture"""

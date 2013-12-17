@@ -189,10 +189,9 @@ class CMonkeyRun:
 
     def __make_membership(self):
         """returns the seeded membership on demand"""
-        return memb.OrigMembership.create(
-            self.ratio_matrix,
-            self.row_seeder, self.column_seeder,
-            self.config_params)
+        return memb.create_membership(self.ratio_matrix,
+                                      self.row_seeder, self.column_seeder,
+                                      self.config_params)
 
     def make_column_scoring(self):
         """returns the column scoring function"""

@@ -40,7 +40,8 @@ class OrigMembership:
     """This is an implementation of a membership data structure that more
     closely resembles the R original. It is much simpler than
     ClusterMembership, with a smaller memory footprint"""
-    def __init__(self, row_is_member_of, col_is_member_of,
+    def __init__(self, row_names, col_names,
+                 row_is_member_of, col_is_member_of,
                  config_params):
         """identical constructor to ClusterMembership"""            
         self.__config_params = config_params
@@ -48,8 +49,8 @@ class OrigMembership:
         # table with |genes| rows and the configured number of columns
         num_per_row = config_params['memb.clusters_per_row']
         num_per_col = config_params['memb.clusters_per_col']
-        self.row_names = sorted(row_is_member_of.keys())
-        self.col_names = sorted(col_is_member_of.keys())
+        self.row_names = row_names
+        self.col_names = col_names
         self.rowidx = {name: i for i, name in enumerate(self.row_names)}
         self.colidx = {name: i for i, name in enumerate(self.col_names)}
 
@@ -65,38 +66,6 @@ class OrigMembership:
             tmp = col_is_member_of[col][:num_per_col]
             for i in range(len(tmp)):
                 self.col_membs[self.colidx[col]][i] = tmp[i]
-
-    # pylint: disable-msg=R0913
-    @classmethod
-    def create(cls, matrix,
-               seed_row_memberships,
-               seed_column_memberships,
-               config_params):
-        """create instance of ClusterMembership using
-        the provided seeding algorithms"""
-        def make_member_map(membs, names):
-            """build a map row->[clusters]"""
-            result = {}
-            for i in xrange(len(names)):
-                result[names[i]] = [c for c in membs[i] if c > 0]
-            return result
-
-        # using the seeding functions, build the initial membership
-        # dictionaries
-        num_clusters_per_row = config_params[KEY_CLUSTERS_PER_ROW]
-        num_clusters = config_params[KEY_NUM_CLUSTERS]
-        num_clusters_per_col = config_params[KEY_CLUSTERS_PER_COL]
-
-        num_rows = matrix.num_rows
-        row_membership = [[0 for _ in xrange(num_clusters_per_row)]
-                          for _ in xrange(num_rows)]
-        seed_row_memberships(row_membership, matrix)
-        column_membership = seed_column_memberships(matrix, row_membership,
-                                                    num_clusters, num_clusters_per_col)
-        row_is_member_of = make_member_map(row_membership, matrix.row_names)
-        col_is_member_of = make_member_map(column_membership, matrix.column_names)
-        return OrigMembership(row_is_member_of, col_is_member_of,
-                              config_params)
 
     def num_clusters(self):
         """returns the number of clusters"""
@@ -291,6 +260,35 @@ class OrigMembership:
         col_is_member_of = shelf[KEY_COL_IS_MEMBER_OF]
         return cls(row_is_member_of, col_is_member_of, config_params)
 
+
+def create_membership(matrix, seed_row_memberships, seed_column_memberships,
+                      config_params):
+    """create instance of ClusterMembership using
+    the provided seeding algorithms"""
+    def make_member_map(membs, names):
+        """build a map row->[clusters]"""
+        result = {}
+        for i in xrange(len(names)):
+            result[names[i]] = [c for c in membs[i] if c > 0]
+        return result
+
+    # using the seeding functions, build the initial membership
+    # dictionaries
+    num_clusters_per_row = config_params[KEY_CLUSTERS_PER_ROW]
+    num_clusters = config_params[KEY_NUM_CLUSTERS]
+    num_clusters_per_col = config_params[KEY_CLUSTERS_PER_COL]
+
+    num_rows = matrix.num_rows
+    row_membership = [[0 for _ in xrange(num_clusters_per_row)]
+                      for _ in xrange(num_rows)]
+    seed_row_memberships(row_membership, matrix)
+    column_membership = seed_column_memberships(matrix, row_membership,
+                                                num_clusters, num_clusters_per_col)
+    row_is_member_of = make_member_map(row_membership, matrix.row_names)
+    col_is_member_of = make_member_map(column_membership, matrix.column_names)
+    return OrigMembership(matrix.row_names, matrix.column_names,
+                          row_is_member_of, col_is_member_of,
+                          config_params)
 
 def update_for_rows2(membership, rd_scores, multiprocessing):
     """generically updating row memberships according to  rd_scores"""

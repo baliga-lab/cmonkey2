@@ -44,14 +44,14 @@ class DataMatrix:
         else:
             if len(row_names) != nrows:
                 raise ValueError("number of row names should be %d" % nrows)
-            self.row_names = list(row_names)
+            self.row_names = row_names
 
         if col_names == None:
             self.column_names = ["Col " + str(i) for i in xrange(ncols)]
         else:
             if len(col_names) != ncols:
                 raise ValueError("number of column names should be %d" % ncols)
-            self.column_names = list(col_names)
+            self.column_names = col_names
 
         if values != None:
             check_values()
@@ -73,16 +73,14 @@ class DataMatrix:
     def row_indexes(self, row_names):
         """returns the row indexes with the matching names"""
         if self.__row_indexes == None:
-            self.__row_indexes = { self.row_names[index]: index
-                                   for index in xrange(len(self.row_names)) }
+            self.__row_indexes = { row: index for index, row in enumerate(self.row_names) }
         return [self.__row_indexes[name] if name in self.__row_indexes else -1
                 for name in row_names]
 
     def column_indexes(self, column_names):
         """returns the column indexes with the matching names"""
         if self.__col_indexes == None:
-            self.__col_indexes = { self.column_names[index]: index
-                                   for index in xrange(len(self.column_names)) }
+            self.__col_indexes = { col: index for index, col in enumerate(self.column_names) }
         return [self.__col_indexes[name] if name in self.__col_indexes else -1
                 for name in column_names]
 

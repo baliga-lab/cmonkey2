@@ -136,7 +136,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.num_motif_func = num_motif_func
 
         self.__sequence_filters = sequence_filters
-        self.__last_run_results = None
+        self.__last_motif_infos = None
         self.__last_iteration_result = {}
         self.all_pvalues = None
         self.matrix = None
@@ -223,8 +223,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             force or self.update_in_iteration(iteration)):  # mot.iter in R
             logging.info("UPDATING MOTIF SCORES in iteration %d with scaling: %f",
                          iteration, self.scaling(iteration))
-            self.matrix = pvalues2matrix(self.all_pvalues, self.num_clusters(), self.gene_names(),
-                                         self.reverse_map)
+            self.matrix = pvalues2matrix(self.all_pvalues, self.num_clusters(),
+                                         self.gene_names(), self.reverse_map)
 
         self.update_log.log(iteration, self.update_in_iteration(iteration),
                             self.scaling(iteration))
@@ -245,7 +245,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             iteration_result['motif-pvalue'] = {}
 
         iteration_result['motif-pvalue'][self.seqtype] = compute_mean_score(
-            self.matrix, self.membership(),  self.organism)
+            self.matrix, self.membership(), self.organism)
         return self.matrix
 
     def compute_pvalues(self, iteration_result, num_motifs):
@@ -287,11 +287,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         params = []
         for cluster in xrange(1, self.num_clusters() + 1):
             # Pass the previous run's seed if possible
-            if (self.__last_run_results != None and
-                cluster in self.__last_run_results.keys() and
-                self.__last_run_results[cluster] != None and
-                self.__last_run_results[cluster].motif_infos != None):
-                previous_motif_infos = self.__last_run_results[cluster].motif_infos
+            if self.__last_motif_infos != None:
+                previous_motif_infos = self.__last_motif_infos.get(cluster, None)
             else:
                 previous_motif_infos = None
 
@@ -319,7 +316,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
         # compute and store motif results
         MOTIF_PARAMS = params
-        self.__last_run_results = {}
+        self.__last_motif_infos = {}
         if use_multiprocessing:
             pool = mp.Pool()
             results = pool.map(compute_cluster_score, xrange(1, self.num_clusters() + 1))
@@ -327,7 +324,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             for cluster in xrange(1, self.num_clusters() + 1):
                 pvalues, run_result = results[cluster - 1]
                 cluster_pvalues[cluster] = pvalues
-                self.__last_run_results[cluster] = run_result
+                if run_result:
+                    self.__last_motif_infos[cluster] = run_result.motif_infos
                 iteration_result[cluster]['motif-info'] = meme_json(run_result)
                 iteration_result[cluster]['pvalues'] = pvalues
             pool.close()
@@ -336,7 +334,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             for cluster in xrange(1, self.num_clusters() + 1):
                 pvalues, run_result = compute_cluster_score(cluster)
                 cluster_pvalues[cluster] = pvalues
-                self.__last_run_results[cluster] = run_result
+                if run_result:
+                    self.__last_motif_infos[cluster] = run_result.motif_infos
                 iteration_result[cluster]['motif-info'] = meme_json(run_result)
                 iteration_result[cluster]['pvalues'] = pvalues
 

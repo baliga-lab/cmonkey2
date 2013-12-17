@@ -149,7 +149,6 @@ class RowScoringFunction(scoring.ScoringFunctionBase):
                                              matrix, scaling_func,
                                              schedule,
                                              config_params)
-        self.cache_result = True
         self.run_log = scoring.RunLog("row_scoring", config_params)
 
     def name(self):
