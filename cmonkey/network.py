@@ -191,7 +191,6 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                                              config_params)
         self.__organism = organism
         self.__networks = None
-        self.__last_computed_result = None
         self.run_log = scoring.RunLog("network", config_params)
 
     def name(self):
@@ -264,9 +263,6 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             elapsed = util.current_millis() - start_time
             logging.info("NETWORK '%s' SCORING TIME: %f s.",
                          network.name, (elapsed / 1000.0))
-            # additional scoring information, not used for the actual clustering
-            self.__update_network_iteration_scores(network_iteration_scores,
-                                                   network_score, network.weight)
 
         self.network_scores = network_scores  # for trim mean computation
         matrix.subtract_with_quantile(0.99)
@@ -328,28 +324,6 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             result[cluster] = util.trim_mean(cluster_scores, 0.05)
         return result
 
-    def __update_network_iteration_scores(self, result, network_score, weight):
-        """compute network iteration scores"""
-        for cluster in xrange(1, self.num_clusters() + 1):
-            for gene in self.rows_for_cluster(cluster):
-                if gene not in result[cluster].keys():
-                    result[cluster][gene] = 0.0
-                if gene in network_score[cluster].keys():
-                    weighted_score = network_score[cluster][gene] * weight
-                    result[cluster][gene] += weighted_score
-        return result
-
-"""
-def compute_iteration_scores(network_iteration_scores):
-    #called 'cluster.ns' in the original cMonkey
-    result = {}
-    for cluster in network_iteration_scores:
-        cluster_scores = []
-        for _, score in network_iteration_scores[cluster].items():
-            cluster_scores.append(score)
-        result[cluster] = util.trim_mean(cluster_scores, 0.05)
-    return result
-"""
 
 def retrieve_networks(organism):
     """retrieves the networks provided by the organism object and
