@@ -306,13 +306,6 @@ def update_for_rows2(membership, rd_scores, multiprocessing):
     max_changes = membership.max_changes_per_row()
     change_prob = membership.probability_seeing_row_change()
 
-    """
-    with open('cmpy-rm.tsv', 'w') as outfile:
-        outfile.write('V1\tV2\n')
-        for gene in sorted(best_clusters.keys()):
-            clust = best_clusters[gene]
-            outfile.write('%s\t%d\t%d\n' % (gene, clust[0], clust[1]))
-    """
     for index in xrange(rd_scores.num_rows):
         row = rownames[index]
         clusters = best_clusters[row]
@@ -332,9 +325,15 @@ def update_for_rows2(membership, rd_scores, multiprocessing):
 def replace_delta_row_member2(membership, row, rm, rd_scores):
     index = rd_scores.row_indexes_for([row])[0]
     rds_values = rd_scores.values
-    curr_indexes = [c - 1 for c in membership.row_membs[membership.rowidx[row]]]
-    rm_indexes = [c - 1 for c in rm]    
-    deltas = rds_values[index][rm_indexes] - rds_values[index][curr_indexes]
+    curr_clusters = [c - 1 for c in membership.row_membs[membership.rowidx[row]]]
+    rm_clusters = [c - 1 for c in rm]
+    deltas = rds_values[index][rm_clusters] - rds_values[index][curr_clusters]
+
+    # ignore the positions in curr_cluster that are also in rm_clusters
+    # delta 0 is a non-replacement
+    erase = [i for i, cluster in enumerate(curr_clusters) if cluster in rm_clusters]
+    for i in erase:
+        deltas[i] = 0
     if len(deltas[deltas != 0.0]) > 0:
         maxidx = deltas.argmax(axis=0)
         membership.replace_row_cluster(row, maxidx, rm[maxidx])
@@ -367,9 +366,10 @@ def update_for_cols2(membership, cd_scores, multiprocessing):
 def replace_delta_column_member2(membership, col, cm, cd_scores):
     index = cd_scores.row_indexes_for([col])[0]
     cds_values = cd_scores.values
-    curr_indexes = [c - 1 for c in membership.col_membs[membership.colidx[col]]]
-    cm_indexes = [c - 1 for c in cm]
-    deltas = cds_values[index][cm_indexes] - cds_values[index][curr_indexes]
+    curr_clusters = [c - 1 for c in membership.col_membs[membership.colidx[col]]]
+    cm_clusters = [c - 1 for c in cm]
+    deltas = cds_values[index][cm_clusters] - cds_values[index][curr_clusters]
+
     if len(deltas[deltas != 0.0]) > 0:
         maxidx = deltas.argmax(axis=0)
         membership.replace_column_cluster(col, maxidx, cm[maxidx])
