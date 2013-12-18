@@ -198,13 +198,10 @@ class OrigMembership:
             self.col_membs[colidx][-1] = cluster
 
     def replace_row_cluster(self, row, index, new):
-        if new not in self.clusters_for_row(row):
-            self.row_membs[self.rowidx[row]][index] = new
+        self.row_membs[self.rowidx[row]][index] = new
 
     def replace_column_cluster(self, col, index, new):
-        if new not in self.clusters_for_column(col):
-            self.col_membs[self.colidx[col]][index] = new
-
+        self.col_membs[self.colidx[col]][index] = new
 
     def pickle_path(self):
         """returns the function-specific pickle-path"""
@@ -325,6 +322,9 @@ def update_for_rows2(membership, rd_scores, multiprocessing):
 def replace_delta_row_member2(membership, row, rm, rd_scores):
     index = rd_scores.row_indexes_for([row])[0]
     rds_values = rd_scores.values
+    # Since Python is 0-based, we adjust the clusters by -1 to access the
+    # arrays. This a little confusing, so we need to pay attention to this
+    # function
     curr_clusters = [c - 1 for c in membership.row_membs[membership.rowidx[row]]]
     rm_clusters = [c - 1 for c in rm]
     deltas = rds_values[index][rm_clusters] - rds_values[index][curr_clusters]
@@ -336,7 +336,10 @@ def replace_delta_row_member2(membership, row, rm, rd_scores):
         deltas[i] = 0
     if len(deltas[deltas != 0.0]) > 0:
         maxidx = deltas.argmax(axis=0)
-        membership.replace_row_cluster(row, maxidx, rm[maxidx])
+        # Note: this means clusters can only be assigned to rows once, we don't
+        # really have to check whether we have more than 1 of the same cluster
+        if rm[maxidx] not in membership.clusters_for_row(row):
+            membership.replace_row_cluster(row, maxidx, rm[maxidx])
 
 
 def update_for_cols2(membership, cd_scores, multiprocessing):
@@ -358,10 +361,28 @@ def update_for_cols2(membership, cd_scores, multiprocessing):
                     if len(free_slots) > 0:
                         take_cluster = clusters[free_slots[0]]
                         if take_cluster not in membership.clusters_for_column(col):
+                            #print "row ", index,  " - add cluster -> ", take_cluster
                             membership.add_cluster_to_column(col, take_cluster)
                     else:
-                        replace_delta_column_member2(membership, col, clusters, cd_scores)
+                        col_clusters = membership.col_membs[membership.colidx[col]]
+                        multi = which_multiple(col_clusters)
+                        if len(multi) > 0:
+                            # indexes of col_clusters that are in multiple
+                            for i, cluster in enumerate(col_clusters):
+                                if cluster in multi:
+                                    #print "multiple in row: ", index, " ii: ", c, " col.change ", i, " -> ", clusters[i]
+                                    membership.replace_column_cluster(col, i, clusters[i])
+                                    break
+                        else:
+                            replace_delta_column_member2(membership, col, clusters, cd_scores)
 
+def which_multiple(clusters):
+    result = {}
+    for cluster in clusters:
+        if cluster not in result:
+            result[cluster] = 0
+        result[cluster] += 1
+    return {cluster for cluster, count in result.items() if count > 1}
 
 def replace_delta_column_member2(membership, col, cm, cd_scores):
     index = cd_scores.row_indexes_for([col])[0]
@@ -372,6 +393,8 @@ def replace_delta_column_member2(membership, col, cm, cd_scores):
 
     if len(deltas[deltas != 0.0]) > 0:
         maxidx = deltas.argmax(axis=0)
+        #print "col.change ", maxidx, " -> ", cm[maxidx]
+        # Note: columns allow multiple cluster assignment !!!
         membership.replace_column_cluster(col, maxidx, cm[maxidx])
 
 
