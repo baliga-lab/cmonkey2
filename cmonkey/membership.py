@@ -360,9 +360,8 @@ def update_for_cols2(membership, cd_scores, multiprocessing):
                     free_slots = membership.free_slots_for_column(col)
                     if len(free_slots) > 0:
                         take_cluster = clusters[free_slots[0]]
-                        if take_cluster not in membership.clusters_for_column(col):
-                            #print "row ", index,  " - add cluster -> ", take_cluster
-                            membership.add_cluster_to_column(col, take_cluster)
+                        #print "ii = ", c, ", add cluster ", take_cluster, " at ", free_slots[0]
+                        membership.add_cluster_to_column(col, take_cluster)
                     else:
                         col_clusters = membership.col_membs[membership.colidx[col]]
                         multi = which_multiple(col_clusters)
@@ -393,7 +392,7 @@ def replace_delta_column_member2(membership, col, cm, cd_scores):
 
     if len(deltas[deltas != 0.0]) > 0:
         maxidx = deltas.argmax(axis=0)
-        #print "col.change ", maxidx, " -> ", cm[maxidx]
+        #print "replace_delta col.change ", maxidx, " -> ", cm[maxidx]
         # Note: columns allow multiple cluster assignment !!!
         membership.replace_column_cluster(col, maxidx, cm[maxidx])
 
