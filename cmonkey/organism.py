@@ -58,9 +58,7 @@ def make_rsat_organism_mapper(rsatdb):
             kegg_organism = patches.KEGG_EXCEPTIONS[kegg_organism]
 
         if not rsat_organism:
-            rsat_organism = util.best_matching_links(
-                kegg_organism,
-                rsatdb.get_directory())[0].rstrip('/')
+            rsat_organism = rsatdb.get_rsat_organism(kegg_organism)
 
         print "mapper_fun(), kegg org = '%s', rsat org = '%s'" % (kegg_organism, rsat_organism)
         if ncbi_code == None:

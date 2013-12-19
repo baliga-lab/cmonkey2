@@ -74,6 +74,9 @@ class MockRsatDatabase:
         """returns a simulation of the organism_names.tab file"""
         return "4711"
 
+    def get_rsat_organism(self, _):
+        return 'Halobacterium_sp'
+
     def get_features(self, _):
         """returns a fake feature.tab file"""
         return ('-- comment\n' +

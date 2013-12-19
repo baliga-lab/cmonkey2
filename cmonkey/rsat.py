@@ -14,16 +14,20 @@ import os
 class RsatFiles:
     """This class implements the same service functions as RsatDatabase, but
     takes the data from files"""
-    def __init__(self, dirname, is_eukaryote, taxonomy_id):
+    def __init__(self, dirname, basename, is_eukaryote, taxonomy_id):
         self.dirname = dirname
         self.is_eukaryote = is_eukaryote
         self.taxonomy_id = taxonomy_id
+        self.basename = basename
     
     def is_eukaryote(self, organism):
         return self.is_eukaryote
 
     def get_taxonomy_id(self, organism):
         return self.taxonomy_id
+
+    def get_rsat_organism(self, kegg_organism):
+        return self.basename
 
     def get_features(self, organism):
         path = os.path.join(self.dirname, organism + '_features')
@@ -54,13 +58,13 @@ class RsatDatabase:
         self.base_url = base_url
         self.cache_dir = cache_dir.rstrip('/')
 
-    def get_directory(self):
+    def get_rsat_organism(self, kegg_organism):
         """returns the HTML page for the directory listing"""
         logging.info('RSAT - get_directory()')
         cache_file = "/".join([self.cache_dir, 'rsat_dir.html'])
-        return util.read_url_cached("/".join([self.base_url,
-                                              RsatDatabase.DIR_PATH]),
+        text = util.read_url_cached("/".join([self.base_url, RsatDatabase.DIR_PATH]),
                                     cache_file)
+        return util.best_matching_links(kegg_organism, text)[0].rstrip('/')
 
     def is_eukaryote(self, organism):
         """returns the file contents for the specified organism"""
