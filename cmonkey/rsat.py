@@ -16,12 +16,12 @@ class RsatFiles:
     takes the data from files"""
     def __init__(self, dirname, basename, is_eukaryote, taxonomy_id):
         self.dirname = dirname
-        self.is_eukaryote = is_eukaryote
+        self.eukaryote = is_eukaryote
         self.taxonomy_id = taxonomy_id
         self.basename = basename
     
     def is_eukaryote(self, organism):
-        return self.is_eukaryote
+        return self.eukaryote
 
     def get_taxonomy_id(self, organism):
         return self.taxonomy_id

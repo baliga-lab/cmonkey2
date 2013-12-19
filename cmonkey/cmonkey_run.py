@@ -42,7 +42,9 @@ class CMonkeyRun:
                  log_filename=None,
                  remap_network_nodes=False,
                  ncbi_code=None,
-                 operon_file=None):
+                 operon_file=None,
+                 is_eukaryote=None,
+                 rsat_dir=None):
         logging.basicConfig(format=LOG_FORMAT,
                             datefmt='%Y-%m-%d %H:%M:%S',
                             level=logging.DEBUG,
@@ -70,7 +72,6 @@ class CMonkeyRun:
         self['use_operons'] = True
         self['use_string'] = True
         self['global_background'] = True
-        self['rsat_organism'] = rsat_organism
         self['ncbi_code'] = ncbi_code
         self['remap_network_nodes'] = remap_network_nodes
         logging.info("# CLUSTERS: %d", self['num_clusters'])
@@ -79,8 +80,14 @@ class CMonkeyRun:
         # defaults
         self.row_seeder = memb.make_kmeans_row_seeder(num_clusters)
         self.column_seeder = microarray.seed_column_members
+
+        # file overrides
         self['string_file'] = string_file
         self['operon_file'] = operon_file
+
+        self['rsat_organism'] = rsat_organism
+        self['rsat_eukaryote'] = is_eukaryote
+        self['rsat_dir'] = rsat_dir
 
         # which scoring functions should be active
         self['donetworks'] = True
@@ -298,7 +305,18 @@ class CMonkeyRun:
         else:
             raise Exception('GO file not found !!')
 
-        rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, self['cache_dir'])
+        if self['rsat_dir']:
+            if not self['ncbi_code']:
+                raise Exception('override RSAT loading: please specify --ncbi_code')
+            if not self['rsat_organism']:
+                raise Exception('override RSAT loading: please specify --rsat_organism')
+            if not self['rsat_eukaryote']:
+                raise Exception('override RSAT loading: please specify --is_prokaryote or --is_eukaryote')
+            rsatdb = rsat.RsatFiles(self['rsat_dir'], self['rsat_organism'],
+                                    self['rsat_eukaryote'], self['ncbi_code'])
+        else:
+            rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, self['cache_dir'])
+
         if self['operon_file']:
             mo_db = microbes_online.MicrobesOnlineOperonFile(self['operon_file'])
         else:
