@@ -83,7 +83,10 @@ See README and LICENSE for details.\n"""
                         help='output directory')
     parser.add_argument('--cachedir', default=config.get("General", "cache_dir"),
                         help="path to cache directory")
-    parser.add_argument('--string', help='tab-separated STRING file for the organism')
+    parser.add_argument('--string', help='tab-separated STRING file for the organism',
+                        default=None)
+    parser.add_argument('--operons', help='tab-separated STRING file for the organism',
+                        default=None)
     parser.add_argument('--checkpoint', help='checkpoint-file')
     parser.add_argument('--checkratios', action="store_true",
                         help='check gene expression quality')
@@ -134,7 +137,8 @@ See README and LICENSE for details.\n"""
                                  log_filename=args.logfile,
                                  remap_network_nodes=args.remap_network_nodes,
                                  ncbi_code=args.ncbi_code,
-                                 num_clusters=args.numclusters)
+                                 num_clusters=args.numclusters,
+                                 operon_file=args.operons)
     cmonkey_run['output_dir'] = args.out
     cmonkey_run['cache_dir'] = args.cachedir
     set_config(cmonkey_run, config)

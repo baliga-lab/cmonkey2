@@ -41,7 +41,8 @@ class CMonkeyRun:
                  rsat_organism=None,
                  log_filename=None,
                  remap_network_nodes=False,
-                 ncbi_code=None):
+                 ncbi_code=None,
+                 operon_file=None):
         logging.basicConfig(format=LOG_FORMAT,
                             datefmt='%Y-%m-%d %H:%M:%S',
                             level=logging.DEBUG,
@@ -79,6 +80,7 @@ class CMonkeyRun:
         self.row_seeder = memb.make_kmeans_row_seeder(num_clusters)
         self.column_seeder = microarray.seed_column_members
         self['string_file'] = string_file
+        self['operon_file'] = operon_file
 
         # which scoring functions should be active
         self['donetworks'] = True
@@ -297,7 +299,11 @@ class CMonkeyRun:
             raise Exception('GO file not found !!')
 
         rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, self['cache_dir'])
-        mo_db = microbes_online.MicrobesOnline(self['cache_dir'])
+        if self['operon_file']:
+            mo_db = microbes_online.MicrobesOnlineOperonFile(self['operon_file'])
+        else:
+            mo_db = microbes_online.MicrobesOnline(self['cache_dir'])
+
         stringfile = self['string_file']
         kegg_mapper = org.make_kegg_code_mapper(keggfile)
         rsat_mapper = org.make_rsat_organism_mapper(rsatdb)

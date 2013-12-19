@@ -22,6 +22,16 @@ MYSQL_PASSWD = 'guest'
 MYSQL_DB = 'genomics'
 
 
+class MicrobesOnlineOperonFile:
+    """access to Microbes online operon prediction by providing a file"""
+
+    def __init__(self, path):
+        self.path = path
+
+    def get_operon_predictions_for(self, organism_id):
+        with open(self.path) as infile:
+            return infile.read()
+
 class MicrobesOnline:
     """Interface to Microbes Online web service"""
 
