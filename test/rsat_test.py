@@ -41,21 +41,7 @@ class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_get_organism_names(self):
         """test get_organism_names method"""
-        text = self.database.get_organism_names(
-            'Helicobacter_pylori_26695')
-        self.assertIsNotNone(text)
-
-    def test_get_ensembl_organism_names(self):
-        """test get_ensembl_organism_names method"""
-        text = self.database.get_ensembl_organism_names(
-            'Saccharomyces_cerevisiae')
-        self.assertIsNotNone(text)
-
-    def test_get_ensembl_organism_names_404(self):
-        """test get_ensembl_organism_names method with not found"""
-        self.assertRaises(util.DocumentNotFound,
-                          self.database.get_ensembl_organism_names,
-                          'nonexist')
+        self.assertEquals("85962", self.database.get_taxonomy_id('Helicobacter_pylori_26695'))
 
     def test_get_features(self):
         """test get_features method"""

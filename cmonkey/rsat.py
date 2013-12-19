@@ -8,15 +8,38 @@ import logging
 import util
 import StringIO
 import re
+import patches
+import os
 
 class RsatFiles:
     """This class implements the same service functions as RsatDatabase, but
     takes the data from files"""
-    def __init__(self, is_eukaryote):
+    def __init__(self, dirname, is_eukaryote, taxonomy_id):
+        self.dirname = dirname
         self.is_eukaryote = is_eukaryote
+        self.taxonomy_id = taxonomy_id
     
     def is_eukaryote(self, organism):
         return self.is_eukaryote
+
+    def get_taxonomy_id(self, organism):
+        return self.taxonomy_id
+
+    def get_features(self, organism):
+        path = os.path.join(self.dirname, organism + '_features')
+        with open(path) as infile:
+            return infile.read()
+
+    def get_feature_names(self, organism):
+        path = os.path.join(self.dirname, organism + '_feature_names')
+        with open(path) as infile:
+            return infile.read()
+
+    def get_contig_sequence(self, organism, contig):
+        path = os.path.join(self.dirname, organism + '_' + contig)
+        with open(path) as infile:
+            seqstr = infile.read().upper()
+            return join_contig_sequence(seqstr)
 
 class RsatDatabase:
     """abstract interface to access an RSAT mirror"""
@@ -49,21 +72,16 @@ class RsatDatabase:
         return re.search('Eukaryota', text) != None
 
 
-    def get_organism_names(self, organism):
+    def get_taxonomy_id(self, organism):
         """returns the specified organism name file contents"""
         logging.info('RSAT - get_organism_names(%s)', organism)
         cache_file = "/".join([self.cache_dir, 'rsatnames_' + organism])
-        return util.read_url_cached(
+        text = util.read_url_cached(
             "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
                       RsatDatabase.ORGANISM_NAMES_PATH]), cache_file)
+        organism_names_dfile = util.dfile_from_text(text, comment='--')
+        return patches.patch_ncbi_taxonomy(organism_names_dfile.lines[0][0])
 
-    def get_ensembl_organism_names(self, organism):
-        """returns the specified organism name file contents, using
-        the EnsEMBL path"""
-        logging.info('RSAT - get_ensembl_organism_names(%s)', organism)
-        return util.read_url("/".join([self.base_url, RsatDatabase.DIR_PATH,
-                                       organism + '_EnsEMBL',
-                                       RsatDatabase.ORGANISM_NAMES_PATH]))
 
     def get_features(self, organism):
         """returns the specified organism's feature file contents
@@ -97,14 +115,17 @@ class RsatDatabase:
         cache_file = "/".join([self.cache_dir, organism + '_' + contig])
         url = "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
                         'genome', contig + '.raw'])
-        # we take the safer route and assume that the input could
-        # be separated out into lines
         seqstr = util.read_url_cached(url, cache_file).upper()
-        buf = StringIO.StringIO(seqstr)
-        result = ''
-        for line in buf:
-            result += line.strip()
-        return result
+        return join_contig_sequence(seqstr)
 
+
+def join_contig_sequence(seqstr):
+    """we take the safer route and assume that the input could
+    be separated out into lines"""
+    buf = StringIO.StringIO(seqstr)
+    result = ''
+    for line in buf:
+        result += line.strip()
+    return result
 
 __all__ = ['RsatDatabase']

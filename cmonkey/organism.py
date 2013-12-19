@@ -6,7 +6,6 @@ from Microbes Online and RSAT
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import re
 import string
 import logging
 import thesaurus
@@ -47,9 +46,7 @@ def make_rsat_organism_mapper(rsatdb):
 
     def get_taxonomy_id(rsat_organism):
         """Determine the taxonomy data from the RSAT database"""
-        organism_names_dfile = util.dfile_from_text(
-            rsatdb.get_organism_names(rsat_organism), comment='--')
-        return patches.patch_ncbi_taxonomy(organism_names_dfile.lines[0][0])
+        return rsatdb.get_taxonomy_id(rsat_organism)
 
     def mapper_fun(kegg_organism, rsat_organism, ncbi_code=None):
         """Mapper function to return basic information about an organism

@@ -70,9 +70,9 @@ class MockRsatDatabase:
         """returns the organism file's content"""
         return True
 
-    def get_organism_names(self, _):
+    def get_taxonomy_id(self, _):
         """returns a simulation of the organism_names.tab file"""
-        return '-- comment\n4711\tRSAT organism'
+        return "4711"
 
     def get_features(self, _):
         """returns a fake feature.tab file"""
