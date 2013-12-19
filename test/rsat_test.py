@@ -35,10 +35,9 @@ class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
         html = self.database.get_directory()
         self.assertIsNotNone(html)
 
-    def test_get_organism(self):
-        """test get_organism method"""
-        text = self.database.get_organism('Helicobacter_pylori_26695')
-        self.assertIsNotNone(text)
+    def test_is_eukaryote(self):
+        """test is_eukaryote"""
+        self.assertFalse(self.database.is_eukaryote('Helicobacter_pylori_26695'))
 
     def test_get_organism_names(self):
         """test get_organism_names method"""

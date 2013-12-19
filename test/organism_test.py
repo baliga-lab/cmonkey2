@@ -66,9 +66,9 @@ class MockRsatDatabase:
         """returns the directory listing's html text"""
         return self.html
 
-    def get_organism(self, _):  # pylint: disable-msg=R0201
+    def is_eukaryote(self, _):  # pylint: disable-msg=R0201
         """returns the organism file's content"""
-        return '-- comment\nfoo bar; Eukaryota; something else'
+        return True
 
     def get_organism_names(self, _):
         """returns a simulation of the organism_names.tab file"""

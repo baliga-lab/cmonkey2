@@ -43,8 +43,7 @@ def make_rsat_organism_mapper(rsatdb):
     """
     def is_eukaryote(rsat_organism):
         """determine whether this organism is an eukaryote"""
-        organism_text = rsatdb.get_organism(rsat_organism)
-        return re.search('Eukaryota', organism_text) != None
+        return rsatdb.is_eukaryote(rsat_organism)
 
     def get_taxonomy_id(rsat_organism):
         """Determine the taxonomy data from the RSAT database"""

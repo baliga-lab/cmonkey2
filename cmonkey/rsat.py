@@ -7,7 +7,16 @@ more information and licensing details.
 import logging
 import util
 import StringIO
+import re
 
+class RsatFiles:
+    """This class implements the same service functions as RsatDatabase, but
+    takes the data from files"""
+    def __init__(self, is_eukaryote):
+        self.is_eukaryote = is_eukaryote
+    
+    def is_eukaryote(self, organism):
+        return self.is_eukaryote
 
 class RsatDatabase:
     """abstract interface to access an RSAT mirror"""
@@ -30,13 +39,15 @@ class RsatDatabase:
                                               RsatDatabase.DIR_PATH]),
                                     cache_file)
 
-    def get_organism(self, organism):
+    def is_eukaryote(self, organism):
         """returns the file contents for the specified organism"""
         logging.info('RSAT - get_organism(%s)', organism)
         cache_file = "/".join([self.cache_dir, 'rsat_' + organism])
-        return util.read_url_cached(
+        text = util.read_url_cached(
             "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
                       RsatDatabase.ORGANISM_PATH]), cache_file)
+        return re.search('Eukaryota', text) != None
+
 
     def get_organism_names(self, organism):
         """returns the specified organism name file contents"""
