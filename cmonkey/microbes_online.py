@@ -15,16 +15,6 @@ import util
 import network
 import patches
 
-# most people won't need MicrobesOnline integration, so we'll make the
-# import optional
-try:
-    import MySQLdb as mysql
-except ImportError:
-    # do not use the logging system here !!!
-    # this would lead to the logging.basicConfig() call being
-    # ignored !!!
-    print "WARNINGY Could not import MySQLdb - Microbes Online MySQL integration will not work"
-
 MICROBES_ONLINE_BASE_URL = 'http://www.microbesonline.org'
 MYSQL_HOST = 'pub.microbesonline.org'
 MYSQL_USER = 'guest'
@@ -49,28 +39,6 @@ class MicrobesOnline:
                        'gnc%s.named' % str(organism_id)])
         cache_file = '/'.join([self.cache_dir,
                               'gnc%s.named' % str(organism_id)])
-        return util.read_url_cached(url, cache_file)
-
-    def get_genome_info_for(self, organism_id):
-        """Returns the Genome info from Microbes Online"""
-        logging.info('MicrobesOnline.get_genome_info_for(%s)',
-                     str(organism_id))
-        url = '/'.join([self.base_url, 'cgi-bin',
-                        'genomeInfo.cgi?tId=%s;export=tab' %
-                        str(organism_id)])
-        cache_file = '/'.join([self.cache_dir,
-                              'mo_%s.genome_info' % str(organism_id)])
-        return util.read_url_cached(url, cache_file)
-
-    def get_genome_for(self, organism_id):
-        """Returns the genome from Microbes Online, stored in FASTA format"""
-        logging.info('MicrobesOnline.get_genome_for(%s)',
-                     str(organism_id))
-        url = '/'.join([self.base_url, 'cgi-bin',
-                        'genomeInfo.cgi?tId=%s;export=genome' %
-                        str(organism_id)])
-        cache_file = '/'.join([self.cache_dir,
-                              'mo_genome_%s.fasta' % str(organism_id)])
         return util.read_url_cached(url, cache_file)
 
 
