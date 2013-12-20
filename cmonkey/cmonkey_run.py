@@ -303,8 +303,6 @@ class CMonkeyRun:
             raise Exception('GO file not found !!')
 
         if self['rsat_dir']:
-            if not self['ncbi_code']:
-                raise Exception('override RSAT loading: please specify --ncbi_code')
             if not self['rsat_organism']:
                 raise Exception('override RSAT loading: please specify --rsat_organism')
             rsatdb = rsat.RsatFiles(self['rsat_dir'], self['rsat_organism'], self['ncbi_code'])
