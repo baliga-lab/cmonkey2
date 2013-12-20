@@ -29,8 +29,7 @@ def make_go_taxonomy_mapper(dfile):
 
 
 RsatSpeciesInfo = collections.namedtuple('RsatSpeciesInfo',
-                                         ['rsatdb', 'species', 'is_eukaryote',
-                                          'taxonomy_id'])
+                                         ['rsatdb', 'species', 'taxonomy_id'])
 
 KEGGExceptions = { 'Pseudomonas aeruginosa PAO1': 'Pseudomonas aeruginosa',
                    'Campylobacter jejuni NCTC11168': 'Campylobacter jejuni' }
@@ -40,10 +39,6 @@ def make_rsat_organism_mapper(rsatdb):
     """return a function that maps from a KEGG organism name to
     related RSAT information
     """
-    def is_eukaryote(rsat_organism):
-        """determine whether this organism is an eukaryote"""
-        return rsatdb.is_eukaryote(rsat_organism)
-
     def get_taxonomy_id(rsat_organism):
         """Determine the taxonomy data from the RSAT database"""
         return rsatdb.get_taxonomy_id(rsat_organism)
@@ -63,8 +58,7 @@ def make_rsat_organism_mapper(rsatdb):
         print "mapper_fun(), kegg org = '%s', rsat org = '%s'" % (kegg_organism, rsat_organism)
         if ncbi_code == None:
             ncbi_code = get_taxonomy_id(rsat_organism)
-        return RsatSpeciesInfo(rsatdb, rsat_organism, is_eukaryote(rsat_organism),
-                               ncbi_code)
+        return RsatSpeciesInfo(rsatdb, rsat_organism, ncbi_code)
     return mapper_fun
 
 
@@ -196,10 +190,6 @@ class Microbe(OrganismBase):
     def taxonomy_id(self):
         """Returns the taxonomy id"""
         return self.__rsat_info.taxonomy_id
-
-    def is_eukaryote(self):
-        """Determines whether this object is an eukaryote"""
-        return self.__rsat_info.is_eukaryote
 
     def cog_organism(self):
         """returns the COG organism name"""
@@ -379,10 +369,6 @@ class GenericOrganism(OrganismBase):
     def species(self):
         """Retrieves the species of this object"""
         return self.code
-
-    def is_eukaryote(self):
-        """Determines whether this object is an eukaryote"""
-        return False
 
     def sequences_for_genes_search(self, genes, seqtype):
         """retrieve the sequences for the specified"""

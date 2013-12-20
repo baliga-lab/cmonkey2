@@ -66,10 +66,6 @@ class MockRsatDatabase:
         """returns the directory listing's html text"""
         return self.html
 
-    def is_eukaryote(self, _):  # pylint: disable-msg=R0201
-        """returns the organism file's content"""
-        return True
-
     def get_taxonomy_id(self, _):
         """returns a simulation of the organism_names.tab file"""
         return "4711"
@@ -107,7 +103,6 @@ class RsatOrganismMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """tests the get_organism method for an existing organism"""
         info = self.mapper('Halobacterium', None)
         self.assertEquals('Halobacterium_sp', info.species)
-        self.assertTrue(info.is_eukaryote)
         self.assertEquals('4711', info.taxonomy_id)
 
 
@@ -121,10 +116,6 @@ class MockRsatOrganismMapper:
     def get_organism(self, _):  # pylint: disable-msg=R0201
         """returns an organism for a KEGG organism"""
         return "RSAT organism"
-
-    def is_eukaryote(self, _):
-        """determine whether eukaryotic or prokaryotic"""
-        return self.is_eukaryotic
 
 
 def mock_go_mapper(rsat_organism):
@@ -145,13 +136,12 @@ class MockMicrobesOnline:
 class MicrobeFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for OrganismFactory"""
 
-    def test_create_prokaryote(self):
+    def test_create(self):
         """tests creating a Prokaryote"""
         factory = org.MicrobeFactory(
             lambda _: 'KEGG organism',
-            lambda x, y, z: org.RsatSpeciesInfo(MockRsatDatabase(''),
-                                                'RSAT_organism',
-                                                False, 4711),
+            lambda x, y, z: org.RsatSpeciesInfo(MockRsatDatabase(''), 'RSAT_organism',
+                                                4711),
             mock_go_mapper,
             MockMicrobesOnline(),
             [])
@@ -161,22 +151,7 @@ class MicrobeFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals('KEGG organism', organism.kegg_organism)
         self.assertEquals('RSAT_organism', organism.species())
         self.assertEquals('GO taxonomy id', organism.go_taxonomy_id)
-        self.assertFalse(organism.is_eukaryote())
         self.assertIsNotNone(str(organism))
-
-    def test_create_eukaryote(self):
-        """tests creating an eukaryote"""
-        factory = org.MicrobeFactory(
-            lambda _: 'KEGG organism',
-            lambda x, y, z: org.RsatSpeciesInfo(MockRsatDatabase(''),
-                                             'RSAT_organism',
-                                             True, 4711),
-            lambda _: 'GO taxonomy id',
-            MockMicrobesOnline(),
-            [])
-        organism = factory.create('hpy', SEARCH_DISTANCES, SCAN_DISTANCES)
-        self.assertEquals('hpy', organism.code)
-        self.assertTrue(organism.is_eukaryote())
 
 
 class MicrobeTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -188,7 +163,6 @@ class MicrobeTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.organism = org.Microbe('hal', 'Halobacterium SP',
                                     org.RsatSpeciesInfo(MockRsatDatabase(''),
                                                         'Halobacterium_SP',
-                                                        False,
                                                         12345),
                                     12345,
                                     MockMicrobesOnline(),

@@ -27,7 +27,6 @@ USER_GO_FILE_PATH = 'config/proteome2taxid'
 SYSTEM_KEGG_FILE_PATH = '/etc/cmonkey-python/KEGG_taxonomy'
 SYSTEM_GO_FILE_PATH = '/etc/cmonkey-python/proteome2taxid'
 
-RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 STRING_URL_PATTERN = "http://networks.systemsbiology.net/string9/%s.gz"
 
@@ -43,7 +42,6 @@ class CMonkeyRun:
                  remap_network_nodes=False,
                  ncbi_code=None,
                  operon_file=None,
-                 is_eukaryote=None,
                  rsat_dir=None):
         logging.basicConfig(format=LOG_FORMAT,
                             datefmt='%Y-%m-%d %H:%M:%S',
@@ -86,7 +84,6 @@ class CMonkeyRun:
         self['operon_file'] = operon_file
 
         self['rsat_organism'] = rsat_organism
-        self['rsat_eukaryote'] = is_eukaryote
         self['rsat_dir'] = rsat_dir
 
         # which scoring functions should be active
@@ -310,12 +307,9 @@ class CMonkeyRun:
                 raise Exception('override RSAT loading: please specify --ncbi_code')
             if not self['rsat_organism']:
                 raise Exception('override RSAT loading: please specify --rsat_organism')
-            if not self['rsat_eukaryote']:
-                raise Exception('override RSAT loading: please specify --is_prokaryote or --is_eukaryote')
-            rsatdb = rsat.RsatFiles(self['rsat_dir'], self['rsat_organism'],
-                                    self['rsat_eukaryote'], self['ncbi_code'])
+            rsatdb = rsat.RsatFiles(self['rsat_dir'], self['rsat_organism'], self['ncbi_code'])
         else:
-            rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, self['cache_dir'])
+            rsatdb = rsat.RsatDatabase(rsat.RSAT_BASE_URL, self['cache_dir'])
 
         if self['operon_file']:
             mo_db = microbes_online.MicrobesOnlineOperonFile(self['operon_file'])

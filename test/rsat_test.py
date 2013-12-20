@@ -22,22 +22,12 @@ class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """test fixture"""
         if not os.path.exists('testcache'):
             os.mkdir('testcache')
-        self.database = rsat.RsatDatabase('http://rsat.ccb.sickkids.ca',
-                                          'testcache')
+        self.database = rsat.RsatDatabase(rsat.RSAT_BASE_URL, 'testcache')
 
     def tearDown(self):  # pylint: disable-msg=C0103
         """test cleanup"""
         if os.path.exists('testcache'):
             shutil.rmtree('testcache')
-
-    def test_get_directory(self):
-        """test get_directory method"""
-        html = self.database.get_directory()
-        self.assertIsNotNone(html)
-
-    def test_is_eukaryote(self):
-        """test is_eukaryote"""
-        self.assertFalse(self.database.is_eukaryote('Helicobacter_pylori_26695'))
 
     def test_get_organism_names(self):
         """test get_organism_names method"""

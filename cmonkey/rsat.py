@@ -11,18 +11,16 @@ import re
 import patches
 import os
 
+RSAT_BASE_URL = 'http://embnet.ccg.unam.mx/rsa-tools'
+
 class RsatFiles:
     """This class implements the same service functions as RsatDatabase, but
     takes the data from files"""
-    def __init__(self, dirname, basename, is_eukaryote, taxonomy_id):
+    def __init__(self, dirname, basename, taxonomy_id):
         self.dirname = dirname
-        self.eukaryote = is_eukaryote
         self.taxonomy_id = taxonomy_id
         self.basename = basename
     
-    def is_eukaryote(self, organism):
-        return self.eukaryote
-
     def get_taxonomy_id(self, organism):
         return self.taxonomy_id
 
@@ -65,16 +63,6 @@ class RsatDatabase:
         text = util.read_url_cached("/".join([self.base_url, RsatDatabase.DIR_PATH]),
                                     cache_file)
         return util.best_matching_links(kegg_organism, text)[0].rstrip('/')
-
-    def is_eukaryote(self, organism):
-        """returns the file contents for the specified organism"""
-        logging.info('RSAT - get_organism(%s)', organism)
-        cache_file = "/".join([self.cache_dir, 'rsat_' + organism])
-        text = util.read_url_cached(
-            "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
-                      RsatDatabase.ORGANISM_PATH]), cache_file)
-        return re.search('Eukaryota', text) != None
-
 
     def get_taxonomy_id(self, organism):
         """returns the specified organism name file contents"""

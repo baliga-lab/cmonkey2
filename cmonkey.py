@@ -106,10 +106,6 @@ See README and LICENSE for details.\n"""
     parser.add_argument('--config', default=None, help="additional configuration file")
 
     # RSAT overrides
-    parser.add_argument('--is_eukaryote', action="store_true",
-                        help="""RSAT override: eukaryote ?""")
-    parser.add_argument('--is_prokaryote', action="store_true",
-                        help="""RSAT override: prokaryote ?""")
     parser.add_argument('--rsat_dir', default=None,
                         help="""RSAT override: data directory""")
     parser.add_argument('--rsat_organism', default=None,
@@ -140,16 +136,6 @@ See README and LICENSE for details.\n"""
 
     matrix = matrix_factory.create_from(infile)
     infile = None
-    is_eukaryote = None
-    if args.is_eukaryote or args.is_prokaryote:
-        if args.is_eukaryote and args.is_prokaryote:            
-            raise Exception("""ambiguous organism type:
-            both is_eukaryote and is_prokaryote specified""")
-        elif args.is_prokaryote:
-            is_eukaryote = False
-        else:
-            is_eukaryote = True
-
     cmonkey_run = cmr.CMonkeyRun(args.organism, matrix,
                                  string_file=args.string,
                                  rsat_organism=args.rsat_organism,
@@ -158,7 +144,6 @@ See README and LICENSE for details.\n"""
                                  ncbi_code=args.ncbi_code,
                                  num_clusters=args.numclusters,
                                  operon_file=args.operons,
-                                 is_eukaryote=is_eukaryote,
                                  rsat_dir=args.rsat_dir)
     cmonkey_run['output_dir'] = args.out
     cmonkey_run['cache_dir'] = args.cachedir
