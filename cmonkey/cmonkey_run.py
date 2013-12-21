@@ -91,8 +91,8 @@ class CMonkeyRun:
         self['domotifs'] = True
 
         today = date.today()
-        self.__checkpoint_basename = "cmonkey-checkpoint-%s-%d%d%d" % (
-            organism_code, today.year, today.month, today.day)
+        self.__checkpoint_basename = "cmonkey-checkpoint-%d%d%d" % (
+            today.year, today.month, today.day)
         self['meme_version'] = meme.check_meme_version()
         if self['meme_version']:
             logging.info('using MEME version %s', self['meme_version'])
@@ -304,14 +304,17 @@ class CMonkeyRun:
 
         if self['rsat_dir']:
             if not self['rsat_organism']:
-                raise Exception('override RSAT loading: please specify --rsat_organism')
+                raise Exception('override RSAT loading: please specify --rsat_organism')            
+            logging.info("using RSAT files for '%s'", self['rsat_organism'])
             rsatdb = rsat.RsatFiles(self['rsat_dir'], self['rsat_organism'], self['ncbi_code'])
         else:
             rsatdb = rsat.RsatDatabase(rsat.RSAT_BASE_URL, self['cache_dir'])
 
         if self['operon_file']:
+            logging.info("using operon file at '%s'", self['operon_file'])
             mo_db = microbes_online.MicrobesOnlineOperonFile(self['operon_file'])
         else:
+            logging.info("attempting automatic download of operons from Microbes Online")
             mo_db = microbes_online.MicrobesOnline(self['cache_dir'])
 
         stringfile = self['string_file']
@@ -320,8 +323,9 @@ class CMonkeyRun:
         ncbi_code = self['ncbi_code']
         nw_factories = []
 
-        # automatically download STRING file
+        # do we use STRING ?
         if self['donetworks'] and self['use_string']:
+            # download if not provided
             if stringfile == None:
                 if ncbi_code == None:
                     rsat_info = rsat_mapper(kegg_mapper(self['organism_code']),
@@ -334,9 +338,14 @@ class CMonkeyRun:
                 self['string_file'] = stringfile
                 logging.info("Automatically using STRING file in '%s'", stringfile)
                 util.get_url_cached(url, stringfile)
+            else:
+                logging.info("Loading STRING file at '%s'", stringfile)
+                
+            # create and add network
             nw_factories.append(stringdb.get_network_factory2(
                     self['organism_code'], stringfile, 0.5))
 
+        # do we use operons ?
         if self['donetworks'] and self['use_operons']:
             logging.info('adding operon network factory')
             nw_factories.append(microbes_online.get_network_factory(

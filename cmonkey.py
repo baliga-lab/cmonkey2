@@ -116,9 +116,11 @@ See README and LICENSE for details.\n"""
 
     # no organism provided -> dummy organism
     if args.organism == None:
-        print("WARNING - no organism provided - assuming that you want to score ratios only")
-        args.nomotifs = True
-        args.nonetworks = True
+        print("WARNING - no organism provided - assuming that you want to score ratios only or don't use automatic download")
+        if not args.rsat_dir:
+            args.nomotifs = True
+        if not args.string and not args.operons:
+            args.nonetworks = True
 
     # user overrides in config files
     if args.config:
