@@ -13,8 +13,14 @@ import argparse
 import logging
 from cmonkey.schedule import make_schedule
 import ConfigParser
+import tempfile
 
 def set_config(cmonkey_run, config):
+    # override temp file location
+    tmp_dir = config.get('General', 'tmp_dir')
+    if tmp_dir:
+        tempfile.tempdir = tmp_dir
+
     cmonkey_run['num_iterations'] = config.getint("General", "num_iterations")
     cmonkey_run['start_iteration'] = config.getint("General", "start_iteration")
     cmonkey_run['out_database'] = os.path.join(cmonkey_run['output_dir'],
