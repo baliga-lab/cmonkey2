@@ -59,12 +59,12 @@ run.inferelator <- function(outfile, tfsfile=NULL, json=NULL, ratios=NULL,
     message('Creating cluster stack from result directory...')
     ratio.filename <- paste(resultdir, 'ratios.tsv.gz', sep='/')
     result.filename <- paste(resultdir, 'cmonkey_run.db', sep='/')
-    ge$ratios <- read.table(gzfile(ratio.filename), header=T, as.is=T, row.names=1)
+    ge$ratios <- read.table(gzfile(ratio.filename), header=T, as.is=T, row.names=1, check.names=F)
     ge$e <- init.env(read.cmonkey.sqlite(result.filename))
     message('done.')
   } else if (!is.null(json)) {
     message('Creating cluster stack from JSON...')
-    ge$ratios <- read.table(gzfile(ratios), header=T, as.is=T, row.names=1)
+    ge$ratios <- read.table(gzfile(ratios), header=T, as.is=T, row.names=1, check.names=F)
     ge$e <- init.env(fromJSON(json))
     message('done.')    
   } else {
