@@ -84,6 +84,11 @@ run.inferelator <- function(outfile, tfsfile=NULL, json=NULL, ratios=NULL,
   influences <- sapply(coeffs,
                        function(c) { if (class(c) != 'character') c$coeffs else emptyNamedList })
   names(influences) <- 1:length(influences)
+  # fix empty clusters. RJSONIO serializes empty lists to the empty string, which
+  # leads to wrong JSON files
+  influences <- sapply(influences,
+                       function (i) { if (length(i) > 0) i else emptyNamedList })
+
   fileConn <- file(outfile)
   writeLines(toJSON(influences), fileConn)
   close(fileConn)
