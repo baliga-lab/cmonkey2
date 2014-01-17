@@ -31,8 +31,8 @@ def make_go_taxonomy_mapper(dfile):
 RsatSpeciesInfo = collections.namedtuple('RsatSpeciesInfo',
                                          ['rsatdb', 'species', 'taxonomy_id'])
 
-KEGGExceptions = { 'Pseudomonas aeruginosa PAO1': 'Pseudomonas aeruginosa',
-                   'Campylobacter jejuni NCTC11168': 'Campylobacter jejuni' }
+KEGGExceptions = {'Pseudomonas aeruginosa PAO1': 'Pseudomonas aeruginosa',
+                  'Campylobacter jejuni NCTC11168': 'Campylobacter jejuni'}
 
 
 def make_rsat_organism_mapper(rsatdb):
@@ -56,7 +56,7 @@ def make_rsat_organism_mapper(rsatdb):
             rsat_organism = rsatdb.get_rsat_organism(kegg_organism)
 
         print "mapper_fun(), kegg org = '%s', rsat org = '%s'" % (kegg_organism, rsat_organism)
-        if ncbi_code == None:
+        if ncbi_code is None:
             ncbi_code = get_taxonomy_id(rsat_organism)
         return RsatSpeciesInfo(rsatdb, rsat_organism, ncbi_code)
     return mapper_fun
@@ -143,6 +143,7 @@ class OrganismBase:
         synonyms = self.thesaurus()
         return [synonyms[alias] for alias in gene_aliases if alias in synonyms]
 
+
 class DummyOrganism(OrganismBase):
 
     def __init__(self):
@@ -153,6 +154,7 @@ class DummyOrganism(OrganismBase):
 
     def species(self):
         return "Dummy organism"
+
 
 class Microbe(OrganismBase):
     """Abstraction of a microbial organism in cMonkey. It captures all
@@ -335,7 +337,7 @@ class Microbe(OrganismBase):
             sequences[key] = extractor(
                 contig_seqs[location.contig], location, distance)
         if len(sequences) == 0:
-            logging.error('No sequences read for %s!' %self.code)
+            logging.error('No sequences read for %s!' % self.code)
         return sequences
 
     def __str__(self):
@@ -383,13 +385,13 @@ class GenericOrganism(OrganismBase):
     def __sequences_for_genes(self, seqtype, genes, distance):
         """retrieves the specified sequences from the supplied genomic data"""
         if not seqtype in self.__seqs:
-            logging.info('loading %s sequences' %seqtype)
+            logging.info('loading %s sequences' % seqtype)
             dfile = util.read_dfile(self.__seq_filenames[seqtype], sep=',')
             self.__seqs[seqtype] = {}
             for line in dfile.lines:
                 self.__seqs[seqtype][line[0].upper()] = line[1].upper()
-            logging.info('loaded %i %s sequences' \
-                          %( len(self.__seqs[seqtype]), seqtype))
+            logging.info('loaded %i %s sequences' % (len(self.__seqs[seqtype]), seqtype))
+
         result = {}
         for alias in genes:
             if alias in self.thesaurus():

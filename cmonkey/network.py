@@ -93,7 +93,7 @@ class Network:
                check_size=True):
         """standard Factory method"""
         logging.info("Network.create() called with %d edges", len(edges))
-        if edges == None:
+        if edges is None:
             raise Exception("no edges specified in network '%s'" % name)
         added = set([])
         network_edges = []
@@ -118,7 +118,7 @@ class Network:
                 probes_in = [gene for gene in cano_genes if gene in cano_nodes]
                 nodes = {n for n in nodes if thesaurus[n] in probes_in}
 
-        logging.info("# nodes in network '%s': %d (of %d)",name, len(nodes), num_nodes_orig)
+        logging.info("# nodes in network '%s': %d (of %d)", name, len(nodes), num_nodes_orig)
 
         for edge in edges:
             # we ignore self-edges, and edges with nodes not in the final nodes
@@ -140,6 +140,7 @@ COMPUTE_NETWORK = None
 ALL_GENES = None
 NETWORK_SCORE_MEMBERSHIP = None
 
+
 def compute_network_scores(cluster):
     """Generic method to compute network scores"""
     global COMPUTE_NETWORK, ALL_GENES, NETWORK_SCORE_MEMBERSHIP
@@ -157,7 +158,6 @@ def compute_network_scores(cluster):
                 if other_gene not in gene_scores:
                     gene_scores[other_gene] = []
                 gene_scores[other_gene].append(edge[2])
-
 
     final_gene_scores = {}
     for gene, scores in gene_scores.items():
@@ -222,7 +222,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
     def networks(self):
         """networks are cached"""
-        if self.__networks == None:
+        if self.__networks is None:
             self.__networks = retrieve_networks(self.__organism)
             if self.config_params['remap_network_nodes']:
                 # network names are non-primary, this can happen
