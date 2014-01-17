@@ -33,6 +33,7 @@ KEY_STRING_FILE = 'string_file'
 
 USE_MULTIPROCESSING = True
 
+
 def get_default_motif_scaling(num_iterations, offset=100):
     """this scaling function is based on the tricky default motif scaling
     sequence in the R reference"""
@@ -64,28 +65,6 @@ def get_default_network_scaling(num_iterations):
             return 1e-5 + step * (iteration - 1)
     return default_network_scaling
 
-
-class RepeatingSchedule:
-    """A basic building block of a schedule: start and interval"""
-
-    def __init__(self, start, interval):
-        self.start = start
-        self.interval = interval
-
-    def __call__(self, iteration):
-        return iteration >= self.start and (iteration - self.start) % self.interval == 0
-
-def make_schedule(schedulestr):
-    """creates a schedule for the specified schedule string.
-    The following formats is supported
-    <schedule>:[<schedule>]*
-    where schedule is one of
-    
-    start,interval - repeating
-    iteration - one-time
-    """
-    start, interval = tuple(map(int, schedulestr.split(',')))
-    return RepeatingSchedule(start, interval)
 
 class RunLog:
     """This is a class that captures information about a particular
@@ -123,7 +102,7 @@ class ScoringFunctionBase:
         # if your environment has little memory, set this to False
         self.cache_result = True
         self.config_params = config_params
-        if config_params == None:
+        if config_params is None:
             raise Exception('NO CONFIG PARAMS !!!')
 
     def name(self):
@@ -146,7 +125,7 @@ class ScoringFunctionBase:
     def pickle_path(self):
         """returns the function-specific pickle-path"""
         return '%s/%s_last.pkl' % (self.config_params['output_dir'], self.name())
-        
+
     def compute(self, iteration_result, reference_matrix=None):
         """general compute method,
         iteration_result is a dictionary that contains the
@@ -216,7 +195,7 @@ class ScoringFunctionBase:
 
     def scaling(self, iteration):
         """returns the quantile normalization scaling for the specified iteration"""
-        if self.__scaling_func != None:
+        if self.__scaling_func is not None:
             return self.__scaling_func(iteration)
         else:
             return 0.0
@@ -233,6 +212,7 @@ class ScoringFunctionBase:
         """returns a list of RunLog objects, giving information about
         the last run of this function"""
         return []
+
 
 class ColumnScoringFunction(ScoringFunctionBase):
     """Scoring algorithm for microarray data based on conditions.
@@ -269,7 +249,7 @@ def compute_column_scores(membership, matrix, num_clusters,
         for cluster in xrange(1, num_clusters + 1):
             columns = membership.columns_for_cluster(cluster)
             column_scores = cluster_column_scores[cluster - 1]
-            if column_scores != None:
+            if column_scores is not None:
                 for row in xrange(column_scores.num_rows):
                     for col in xrange(column_scores.num_columns):
                         if column_scores.column_names[col] in columns:
@@ -281,7 +261,7 @@ def compute_column_scores(membership, matrix, num_clusters,
         if len(row_names) > 1:
             return matrix.submatrix_by_name(row_names=row_names)
         else:
-            return None        
+            return None
 
     if use_multiprocessing:
         pool = mp.Pool()
@@ -293,7 +273,7 @@ def compute_column_scores(membership, matrix, num_clusters,
         cluster_column_scores = []
         for cluster in xrange(1, num_clusters + 1):
             cluster_column_scores.append(compute_column_scores_submatrix(
-                        make_submatrix(cluster)))
+                make_submatrix(cluster)))
 
     substitution = compute_substitution(cluster_column_scores)
 
@@ -305,16 +285,17 @@ def compute_column_scores(membership, matrix, num_clusters,
     for cluster in xrange(num_clusters):
         column_scores = cluster_column_scores[cluster]
 
-        if column_scores != None:
+        if column_scores is not None:
             column_scores.values[np.isnan(column_scores.values)] = substitution
 
         for row_index in xrange(matrix.num_columns):
-            if column_scores == None:
+            if column_scores is None:
                 rvalues[row_index][cluster] = substitution
             else:
                 rvalues[row_index][cluster] = column_scores.values[0][row_index]
     result.fix_extreme_values()
     return result
+
 
 def compute_column_scores_submatrix(matrix):
     """For a given matrix, compute the column scores.
@@ -330,7 +311,7 @@ def compute_column_scores_submatrix(matrix):
     http://en.wikipedia.org/wiki/Index_of_dispersion
     for details
     """
-    if matrix == None:
+    if matrix is None:
         return None
     colmeans = util.column_means(matrix.values)
     matrix_minus_colmeans_squared = np.square(matrix.values - colmeans)
@@ -357,8 +338,7 @@ def combine(result_matrices, score_scalings, membership, quantile_normalize):
         in_matrices = []
         num_clusters = membership.num_clusters()
         mat = result_matrices[0]
-        index_map = { name: index
-                      for index, name in enumerate(mat.row_names) }
+        index_map = {name: index for index, name in enumerate(mat.row_names)}
         # we assume matrix 0 is always the gene expression score
         # we also assume that the matrices are already extreme value
         # fixed
@@ -407,10 +387,11 @@ def combine(result_matrices, score_scalings, membership, quantile_normalize):
         logging.info("combined score in %f s.", elapsed / 1000.0)
         matrix0 = result_matrices[0]  # as reference for names
         return dm.DataMatrix(matrix0.num_rows, matrix0.num_columns,
-                          matrix0.row_names, matrix0.column_names,
-                          values=combined_score)
+                             matrix0.row_names, matrix0.column_names,
+                             values=combined_score)
     else:
         return None
+
 
 class ScoringFunctionCombiner:
     """Taking advantage of the composite pattern, this combiner function
@@ -438,11 +419,11 @@ class ScoringFunctionCombiner:
             # clean up before doing something complicated
             gc.collect()
 
-            if reference_matrix == None and len(result_matrices) > 0:
+            if reference_matrix is None and len(result_matrices) > 0:
                 reference_matrix = result_matrices[0]
 
             matrix = scoring_function.compute_force(iteration_result, reference_matrix)
-            if matrix != None:
+            if matrix is not None:
                 result_matrices.append(matrix)
                 score_scalings.append(scoring_function.scaling(iteration))
 
@@ -464,11 +445,11 @@ class ScoringFunctionCombiner:
             # This  is actually a hack in order to propagate
             # a reference matrix to the compute function
             # This could have negative impact on scalability
-            if reference_matrix == None and len(result_matrices) > 0:
+            if reference_matrix is None and len(result_matrices) > 0:
                 reference_matrix = result_matrices[0]
 
             matrix = scoring_function.compute(iteration_result, reference_matrix)
-            if matrix != None:
+            if matrix is not None:
                 result_matrices.append(matrix)
                 score_scalings.append(scoring_function.scaling(iteration))
 
