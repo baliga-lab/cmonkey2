@@ -61,8 +61,8 @@ def set_config(cmonkey_run, config):
 
 
 # if we were installed through Debian package management, default.ini is found here
-SYSTEM_INI_PATH='/etc/cmonkey-python/default.ini'
-USER_INI_PATH='config/default.ini'
+SYSTEM_INI_PATH = '/etc/cmonkey-python/default.ini'
+USER_INI_PATH = 'config/default.ini'
 
 if __name__ == '__main__':
     description = """cMonkey (Python port) (c) 2011-2012,
@@ -78,7 +78,6 @@ See README and LICENSE for details.\n"""
         config.read(SYSTEM_INI_PATH)
     else:
         raise Exception('could not find default.ini !')
-
 
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--ratios', required=True,
@@ -116,12 +115,11 @@ See README and LICENSE for details.\n"""
                         help="""RSAT override: data directory""")
     parser.add_argument('--rsat_organism', default=None,
                         help="""override the RSAT organism name""")
-    
 
     args = parser.parse_args()
 
     # no organism provided -> dummy organism
-    if args.organism == None:
+    if args.organism is None:
         print("WARNING - no organism provided - assuming that you want to score ratios only or don't use automatic download")
         if not args.rsat_dir:
             args.nomotifs = True
@@ -165,7 +163,7 @@ See README and LICENSE for details.\n"""
 
     proceed = True
     checkratios = args.checkratios
-    
+
     if args.checkratios:
         thesaurus = cmonkey_run.organism().thesaurus()
         logging.info("Checking the quality of the input matrix names...")
@@ -176,9 +174,8 @@ See README and LICENSE for details.\n"""
         proceed = percent > 50.0
 
     if not proceed:
-       logging.error("""# genes found: %d, # total: %d, %f %% - please check
- your ratios file""",
-                     num_found, total, percent)
+        logging.error("# genes found: %d, # total: %d, %f %% - please check your ratios file",
+                      num_found, total, percent)
     else:
         if args.checkpoint:
             cmonkey_run.run_from_checkpoint(args.checkpoint)

@@ -55,7 +55,7 @@ class CMonkeyRun:
         # membership update default parameters
         # these come first, since a lot depends on clustering numbers
         self['memb.clusters_per_row'] = 2
-        if num_clusters == None:
+        if num_clusters is None:
             num_clusters = int(round(self.ratio_matrix.num_rows *
                                      self['memb.clusters_per_row'] / 20.0))
         if ratio_matrix.num_columns >= 60:
@@ -271,7 +271,7 @@ class CMonkeyRun:
             log_subresults=True)
 
     def membership(self):
-        if self.__membership == None:
+        if self.__membership is None:
             logging.info("creating and seeding memberships")
             self.__membership = self.__make_membership()
         return self.__membership
@@ -280,7 +280,7 @@ class CMonkeyRun:
         """returns the organism object to work on"""
         if self['dummy_organism']:
             self.__organism = org.DummyOrganism()
-        elif self.__organism == None:
+        elif self.__organism is None:
             self.__organism = self.make_microbe()
         return self.__organism
 
@@ -304,7 +304,7 @@ class CMonkeyRun:
 
         if self['rsat_dir']:
             if not self['rsat_organism']:
-                raise Exception('override RSAT loading: please specify --rsat_organism')            
+                raise Exception('override RSAT loading: please specify --rsat_organism')
             logging.info("using RSAT files for '%s'", self['rsat_organism'])
             rsatdb = rsat.RsatFiles(self['rsat_dir'], self['rsat_organism'], self['ncbi_code'])
         else:
@@ -326,8 +326,8 @@ class CMonkeyRun:
         # do we use STRING ?
         if self['donetworks'] and self['use_string']:
             # download if not provided
-            if stringfile == None:
-                if ncbi_code == None:
+            if stringfile is None:
+                if ncbi_code is None:
                     rsat_info = rsat_mapper(kegg_mapper(self['organism_code']),
                                             self['rsat_organism'])
                     ncbi_code = rsat_info.taxonomy_id
@@ -340,17 +340,17 @@ class CMonkeyRun:
                 util.get_url_cached(url, stringfile)
             else:
                 logging.info("Loading STRING file at '%s'", stringfile)
-                
+
             # create and add network
             nw_factories.append(stringdb.get_network_factory2(
-                    self['organism_code'], stringfile, 0.5))
+                self['organism_code'], stringfile, 0.5))
 
         # do we use operons ?
         if self['donetworks'] and self['use_operons']:
             logging.info('adding operon network factory')
             nw_factories.append(microbes_online.get_network_factory(
-                    mo_db, max_operon_size=self.ratio_matrix.num_rows / 20,
-                    weight=0.5))
+                mo_db, max_operon_size=self.ratio_matrix.num_rows / 20,
+                weight=0.5))
 
         org_factory = org.MicrobeFactory(kegg_mapper,
                                          rsat_mapper,
@@ -398,8 +398,8 @@ class CMonkeyRun:
 
     def prepare_run(self, check_params=True):
         """Setup output directories and scoring functions for the scoring.
-        Separating setup and actual run facilitates testing"""        
-        self['dummy_organism'] = (self['organism_code'] == None and
+        Separating setup and actual run facilitates testing"""
+        self['dummy_organism'] = (self['organism_code'] is None and
                                   not self['donetworks'] and not self['domotifs'])
         if check_params:
             self.__check_parameters()
@@ -479,8 +479,8 @@ class CMonkeyRun:
                             c = conn.cursor()
                             c.execute('''insert into motif_infos (iteration,cluster,seqtype,motif_num,evalue)
                                         values (?,?,?,?,?)''',
-                                        (iteration, cluster, seqtype, motif_info['motif_num'],
-                                        motif_info['evalue']))
+                                      (iteration, cluster, seqtype, motif_info['motif_num'],
+                                       motif_info['evalue']))
                             motif_info_id = c.lastrowid
                             c.close()
                             pssm_rows = motif_info['pssm']
@@ -488,17 +488,17 @@ class CMonkeyRun:
                                 pssm_row = pssm_rows[row]
                                 conn.execute('''insert into motif_pssm_rows (motif_info_id,iteration,row,a,c,g,t)
                                                 values (?,?,?,?,?,?,?)''',
-                                            (motif_info_id, iteration, row, pssm_row[0], pssm_row[1],
-                                            pssm_row[2], pssm_row[3]))
+                                             (motif_info_id, iteration, row, pssm_row[0], pssm_row[1],
+                                              pssm_row[2], pssm_row[3]))
                             annotations = motif_info['annotations']
                             for annotation in annotations:
                                 gene_num = self.gene_indexes[annotation['gene']]
                                 conn.execute('''insert into motif_annotations (motif_info_id,
                                                 iteration,gene_num,
                                                 position,reverse,pvalue) values (?,?,?,?,?,?)''',
-                                        (motif_info_id, iteration, gene_num,
-                                        annotation['position'],
-                                        annotation['reverse'], annotation['pvalue']))
+                                             (motif_info_id, iteration, gene_num,
+                                              annotation['position'],
+                                              annotation['reverse'], annotation['pvalue']))
 
                             sites = motif_info['sites']
                             for seqname, strand, start, pval, flank_left, seq, flank_right in sites:
@@ -605,8 +605,7 @@ class CMonkeyRun:
         self.membership().update(self.ratio_matrix, rscores, cscores,
                                  self['num_iterations'], iteration_result)
 
-        if (iteration > 0 and self['checkpoint_interval']
-            and iteration % self['checkpoint_interval'] == 0):
+        if (iteration > 0 and self['checkpoint_interval'] and iteration % self['checkpoint_interval'] == 0):
             self.save_checkpoint_data(iteration, row_scoring, col_scoring)
         mean_net_score = 0.0
         mean_mot_pvalue = 0.0
@@ -637,7 +636,7 @@ class CMonkeyRun:
             start_time = util.current_millis()
             self.run_iteration(row_scoring, col_scoring, iteration)
             # garbage collection after everything in iteration went out of scope
-            gc.collect() 
+            gc.collect()
             elapsed = util.current_millis() - start_time
             logging.info("performed iteration %d in %f s.", iteration, elapsed / 1000.0)
 
