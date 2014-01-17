@@ -36,7 +36,7 @@ class MemeSuite:
     mast - search for a group of motifs in a set of sequences
     """
     def __init__(self, max_width=24, use_revcomp=True, background_file=None,
-            remove_tempfiles=True):
+                 remove_tempfiles=True):
         """Create MemeSuite instance"""
         self.__max_width = max_width
         self.__use_revcomp = use_revcomp
@@ -78,7 +78,7 @@ class MemeSuite:
 
         seqs_for_dust = {}
         for feature_id, seq in seqs.items():
-            if isinstance(seq,str):
+            if isinstance(seq, str):
                 if len(seq) > self.__max_width:
                     seqs_for_dust[feature_id] = seq
             else:
@@ -102,10 +102,10 @@ class MemeSuite:
         feature_ids = set(params.feature_ids)  # optimization: reduce lookup time
         input_seqs = params.seqs
         all_seqs = params.used_seqs
-        
+
         def background_file():
             """decide whether to use global or specific background file"""
-            if self.__background_file != None:
+            if self.__background_file is not None:
                 #logging.info("using global background: '%s'", self.__background_file)
                 return self.__background_file
             else:
@@ -136,7 +136,6 @@ class MemeSuite:
                                              delete=False) as outfile:
                 meme_outfile = outfile.name
                 outfile.write(output)
-
 
         #logging.info('wrote meme output to %s', meme_outfile)
         dbfile = self.make_sequence_file(
@@ -173,7 +172,7 @@ class MemeSuite:
                 except:
                     logging.warn("could not remove tmp file: '%s'", dbfile)
 
-                if self.__background_file == None:
+                if self.__background_file is None:
                     try:
                         os.remove(bgfile)
                     except:
@@ -229,7 +228,7 @@ class MemeSuite430(MemeSuite):
         # if determine the seed sequence (-cons parameter) for this MEME run
         # uses the PSSM with the smallest score that has an e-value lower
         # than 0.1
-        if previous_motif_infos != None:
+        if previous_motif_infos is not None:
             max_evalue = 0.1
             min_evalue = 10000000.0
             min_motif_info = None
@@ -237,7 +236,7 @@ class MemeSuite430(MemeSuite):
                 if motif_info.evalue < min_evalue:
                     min_evalue = motif_info.evalue
                     min_motif_info = motif_info
-            if min_motif_info != None and min_motif_info.evalue < max_evalue:
+            if min_motif_info is not None and min_motif_info.evalue < max_evalue:
                 cons = min_motif_info.consensus_string().upper()
                 logging.info("seeding MEME with good motif %s", cons)
                 command.extend(['-cons', cons])
@@ -265,7 +264,7 @@ class MemeSuite430(MemeSuite):
     def read_mast_output(self, mast_output, genes):
         """old-style MAST output"""
         return read_mast_output_oldstyle(mast_output, genes)
-        
+
 
 class MemeSuite481(MemeSuite):
     """Version 4.8.1 of MEME"""
@@ -425,7 +424,7 @@ def read_meme_output(output_text, num_motifs):
         sites = []
         while not line.startswith('----------------------'):
             match = pattern.match(line)
-            if match == None:
+            if match is None:
                 logging.error("ERROR in read_sites(), line(#%d) is: '%s'", current_index, line)
             sites.append((match.group(1), match.group(2), int(match.group(3)),
                           float(match.group(4)),
@@ -444,7 +443,7 @@ def read_meme_output(output_text, num_motifs):
         rows = []
         while not line.startswith('----------------------'):
             match = pattern.match(line)
-            if match == None:
+            if match is None:
                 logging.error("ERROR in read_pssm(), line(#%d) is: '%s'", current_index, line)
             rows.append([float(match.group(1)), float(match.group(2)),
                          float(match.group(3)), float(match.group(4))])
@@ -487,7 +486,7 @@ def read_mast_output_xml(output_text, genes):
              - annotations is a dictionary gene -> [(pval, pos, motifnum)]"""
     pevalues = []
     annotations = {}
-    if output_text == None:  # there was an error in mast, ignore its output
+    if output_text is None:  # there was an error in mast, ignore its output
         return pevalues, annotations
 
     root = ET.fromstring(output_text)
@@ -510,6 +509,7 @@ def read_mast_output_xml(output_text, genes):
                          motifnum)
                 annotations[seqname].append(annot)
     return pevalues, annotations
+
 
 def read_mast_output_oldstyle(output_text, genes):
     """Reads out the p-values and e-values and the gene annotations
@@ -591,7 +591,7 @@ def read_mast_output_oldstyle(output_text, genes):
             return ((len(seqline) - seq_start) + seqstart_index >= seqlen or
                     not re.match('(\d+).*', lines[index + 10]))
         except:
-            if seqline != None:
+            if seqline is not None:
                 print "ERROR IN SEQLINE: [%s]" % seqline
 
     def read_motif_numbers(motifnum_line):
@@ -607,10 +607,9 @@ def read_mast_output_oldstyle(output_text, genes):
             if index_num < len(indexes) - 1:
                 pvalues.append(
                     float(pvalue_line[indexes[index_num]:
-                                          indexes[index_num + 1]]))
+                                      indexes[index_num + 1]]))
             else:
-                pvalues.append(float(
-                        pvalue_line[indexes[index_num]:]))
+                pvalues.append(float(pvalue_line[indexes[index_num]:]))
         return pvalues
 
     def read_positions(motifnum_line, seqline):
@@ -637,7 +636,7 @@ def read_mast_output_oldstyle(output_text, genes):
                 has_seqalign_block = True
                 diagram_match = re.match('^\s+DIAGRAM:\s+(\d+)$',
                                          lines[current_index + 1])
-                if diagram_match != None:
+                if diagram_match is not None:
                     diagram = int(diagram_match.group(1))
                     if diagram == length:
                         has_seqalign_block = False
@@ -735,8 +734,9 @@ def global_background_file(organism, gene_aliases, seqtype, bgorder=3,
     return make_background_file(global_seqs, use_revcomp, bgorder)
 
 
-USER_TEST_FASTA_PATH='config/fasta_test.fa'
-SYSTEM_TEST_FASTA_PATH='/etc/cmonkey-python/fasta_test.fa'
+USER_TEST_FASTA_PATH = 'config/fasta_test.fa'
+SYSTEM_TEST_FASTA_PATH = '/etc/cmonkey-python/fasta_test.fa'
+
 
 def check_meme_version():
     logging.info('checking MEME...')
@@ -756,6 +756,6 @@ def check_meme_version():
     except OSError:
         logging.error("MEME does not exist")
         return None
-        
-    
+
+
 __all__ = ['read_meme_output']
