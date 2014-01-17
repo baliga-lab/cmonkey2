@@ -44,8 +44,7 @@ def unique_filter(seqs, feature_ids):
     feature_ids and only contains unique sequences"""
     unique_seqs = {}
     for feature_id in feature_ids:
-        if (feature_id in seqs
-            and seqs[feature_id] not in unique_seqs.values()):
+        if feature_id in seqs and seqs[feature_id] not in unique_seqs.values():
             unique_seqs[feature_id] = seqs[feature_id]
     return unique_seqs
 
@@ -73,7 +72,7 @@ def get_remove_atgs_filter(distance):
 
 def compute_mean_score(pvalue_matrix, membership, organism):
     """cluster-specific mean scores"""
-    if pvalue_matrix == None:
+    if pvalue_matrix is None:
         return 0.0
     values = []
     pvalues = pvalue_matrix.values
@@ -91,10 +90,11 @@ SEQUENCE_FILTERS = None
 ORGANISM = None
 MEMBERSIP = None
 
+
 def pvalues2matrix(all_pvalues, num_clusters, gene_names, reverse_map):
     """converts a map from {cluster: {feature: pvalue}} to a scoring matrix
     """
-    row_map = {gene: index for index, gene in enumerate(gene_names) }
+    row_map = {gene: index for index, gene in enumerate(gene_names)}
 
     # convert remapped to an actual scoring matrix
     matrix = dm.DataMatrix(len(gene_names), num_clusters,
@@ -172,7 +172,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         num_not_found = 0
         for row_name in matrix.row_names:
             feature_id = feature_id_for(row_name)
-            if feature_id != None:
+            if feature_id is not None:
                 result[feature_id] = row_name
             else:
                 num_not_found += 1
@@ -219,8 +219,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             self.all_pvalues = self.compute_pvalues(self.__last_iteration_result,
                                                     num_motifs)
 
-        if self.all_pvalues != None and (
-            force or self.update_in_iteration(iteration)):  # mot.iter in R
+        if self.all_pvalues is not None and (force or self.update_in_iteration(iteration)):  # mot.iter in R
             logging.info("UPDATING MOTIF SCORES in iteration %d with scaling: %f",
                          iteration, self.scaling(iteration))
             self.matrix = pvalues2matrix(self.all_pvalues, self.num_clusters(),
@@ -287,7 +286,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         params = []
         for cluster in xrange(1, self.num_clusters() + 1):
             # Pass the previous run's seed if possible
-            if self.__last_motif_infos != None:
+            if self.__last_motif_infos is not None:
                 previous_motif_infos = self.__last_motif_infos.get(cluster, None)
             else:
                 previous_motif_infos = None
@@ -312,7 +311,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         # create motif result map if necessary
         for cluster in xrange(1, self.num_clusters() + 1):
             if not cluster in iteration_result:
-                iteration_result[cluster] = { }
+                iteration_result[cluster] = {}
 
         # compute and store motif results
         MOTIF_PARAMS = params
@@ -362,7 +361,7 @@ def cluster_seqs(params):
 
 def meme_json(run_result):
     result = []
-    if run_result != None:
+    if run_result is not None:
         motif_annotations = {}  # map motif_num -> [annotations]
         for gene in run_result.annotations:
             for annotation in run_result.annotations[gene]:
@@ -399,8 +398,7 @@ def compute_cluster_score(cluster):
     run_result = None
     nseqs = len(params.seqs)
     logging.info('Cluster %d, # sequences: %d', params.cluster, nseqs)
-    if (nseqs >= params.min_cluster_rows
-        and nseqs <= params.max_cluster_rows):
+    if (nseqs >= params.min_cluster_rows and nseqs <= params.max_cluster_rows):
         run_result = params.meme_runner(params)
         pe_values = run_result.pe_values
         for feature_id, pvalue, evalue in pe_values:
@@ -498,7 +496,7 @@ class WeederRunner:
         dbfile = self.meme_suite.make_sequence_file(
             [(feature_id, locseq[1])
              for feature_id, locseq in params.used_seqs.items()])
-        logging.info("# PSSMS created: %d %s", len(pssms),str([i.consensus_motif() for i in pssms]))
+        logging.info("# PSSMS created: %d %s", len(pssms), str([i.consensus_motif() for i in pssms]))
         logging.info("run MAST on '%s'", meme_outfile)
 
         motif_infos = []
@@ -521,7 +519,7 @@ class WeederRunner:
             return meme.MemeRunResult([], {}, [])
         finally:
             if self.__remove_tempfiles:
-                for fileExtension in ['','.wee','.mix','.html','.meme','.1.f1','.1.f2','.2.f1','.2.f2']:
+                for fileExtension in ['', '.wee', '.mix', '.html', '.meme', '.1.f1', '.1.f2', '.2.f1', '.2.f2']:
                     tmpName = filename+fileExtension
                     if os.path.exists(tmpName):
                         try:

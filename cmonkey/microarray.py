@@ -44,6 +44,7 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
     logging.info("seed column members in %f s.", elapsed % 1000.0)
     return column_members
 
+
 def order(alist):
     """a weird R function that gives each item's position in the original list
     if you enumerate each item in a sorted list"""

@@ -32,6 +32,7 @@ class MicrobesOnlineOperonFile:
         with open(self.path) as infile:
             return infile.read()
 
+
 class MicrobesOnline:
     """Interface to Microbes Online web service"""
 
