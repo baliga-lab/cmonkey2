@@ -48,7 +48,7 @@ def read_features_from_file(filename):
     features = {}
     dfile = DelimitedFile.read(filename, comment='--')
     for line in dfile.lines():
-        features[ line[0] ] = read_feature(line)
+        features[line[0]] = read_feature(line)
     return features
 
 
@@ -67,6 +67,7 @@ def extract_upstream(source, location, distance):
                               location.reverse)
     return (final_location,
             subsequence(source, winstart, winend, location.reverse))
+
 
 def extract_downstream(source, location, distance):
     """Extract a subsequence of the specified  size from the source sequence
@@ -93,16 +94,20 @@ def subsequence(sequence, start, stop, reverse=False):
     calculated. Not that the start/stop positions are shifted to comply with
     the original cMonkey's behavior
     """
-    if start < 1: start = 1
+    if start < 1:
+        start = 1
     lseq = len(sequence)
-    if stop > lseq: stop = lseq+1
+    if stop > lseq:
+        stop = lseq + 1
     result = sequence[start - 1:stop - 1]
     if reverse:
         result = revcomp(result)
     return result
 
 
-REV_DICT = { 'A': 'T', 'G': 'C', 'C': 'G', 'T': 'A' }
+REV_DICT = {'A': 'T', 'G': 'C', 'C': 'G', 'T': 'A'}
+
+
 def revcomp(sequence):
     """compute the reverse complement of the input string"""
     return "".join([__revchar(c) for c in sequence[::-1]])
@@ -154,18 +159,20 @@ def markov_background(seqs, order):
     return result
 
 
-def all_kmers(length, seqs, seq=[], pos=0, choices=['A','C','G','T'] ):
+def all_kmers(length, seqs, seq=[], pos=0, choices=['A', 'C', 'G', 'T']):
     """works with lists intead of strings as this is believed to be faster"""
     #logger.debug(pos)
     if seq == []:
-        for i in range(length): seq.append('')
+        for i in range(length):
+            seq.append('')
     for choice in choices:
         seq[pos] = choice
-        if pos == length-1:
+        if pos == length - 1:
             kmer = string.join(seq, '')
             #logger.debug('added kmer %s' %kmer)
             seqs.append(kmer)
-        else: all_kmers(length, seqs, seq, pos+1, choices)
+        else:
+            all_kmers(length, seqs, seq, pos + 1, choices)
 
 
 def replace_degenerate_residues(seqs):
@@ -183,7 +190,7 @@ def replace_degenerate_residues(seqs):
         for match in pat.finditer(seq):
             replace_chars = replacements[seq[match.start(1)]]
             replace_char = replace_chars[random.randint(
-                    0, len(replace_chars) - 1)]
+                0, len(replace_chars) - 1)]
             seq = seq[:match.start(1)] + replace_char + seq[match.end(1):]
         result.append(seq)
     return result
@@ -220,7 +227,8 @@ def read_sequences_from_fasta_file(filepath):
 def write_sequences_to_fasta_file(outputfile, seqs):
     """Write a list of sequence tuples to the specified outputfile"""
     for seq in seqs:
-        if len(seq[1]) == 0: continue       # do not allow 0 length sequences
+        if len(seq[1]) == 0:
+            continue  # do not allow 0 length sequences
         outputfile.write('>%s\n' % seq[0])
         outputfile.write('%s\n' % seq[1])
 
