@@ -30,7 +30,7 @@ class EnrichmentSet:
 
     def genes_above_cutoff(self):
         """returns the genes that have a weight above the cutoff"""
-        if self.__genes_above_cutoff == None:
+        if self.__genes_above_cutoff is None:
             self.__genes_above_cutoff = []
             for index in xrange(0, len(self.genes)):
                 if self.cutoff == 'discrete':
@@ -55,7 +55,7 @@ class SetType:
 
     def genes(self):
         """All genes contained in the sets"""
-        if self.__genes == None:
+        if self.__genes is None:
             self.__genes = set()
             for enrichment_set in self.sets.values():
                 for gene in enrichment_set.genes:
@@ -144,28 +144,27 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             if use_multiprocessing:
                 pool = mp.Pool()
                 results = pool.map(compute_cluster_score,
-                        [(cluster, self.bonferroni_cutoff())
-                         for cluster in xrange(1,
-                                               self.num_clusters() + 1)])
+                                   [(cluster, self.bonferroni_cutoff())
+                                    for cluster in xrange(1, self.num_clusters() + 1)])
                 pool.close()
                 pool.join()
             else:
                 results = []
                 for cluster in xrange(1, self.num_clusters() + 1):
                     results.append(compute_cluster_score(
-                            (cluster, self.bonferroni_cutoff())))
+                        (cluster, self.bonferroni_cutoff())))
 
             elapsed1 = util.current_millis() - start1
             logging.info("ENRICHMENT SCORES COMPUTED in %f s, STORING...",
                          elapsed1 / 1000.0)
             if not os.path.exists('out/setEnrichment_set.csv'):
-                setFile = open('out/setEnrichment_set.csv','w')
-                setFile.write(','+','.join([str(i) for i in xrange(1,self.num_clusters() + 1)]))
-                pvFile = open('out/setEnrichment_pvalue.csv','w')
-                pvFile.write(','+','.join([str(i) for i in xrange(1,self.num_clusters() + 1)]))
+                setFile = open('out/setEnrichment_set.csv', 'w')
+                setFile.write(',' + ','.join([str(i) for i in xrange(1, self.num_clusters() + 1)]))
+                pvFile = open('out/setEnrichment_pvalue.csv', 'w')
+                pvFile.write(',' + ','.join([str(i) for i in xrange(1, self.num_clusters() + 1)]))
             else:
-                setFile = open('out/setEnrichment_set.csv','a')
-                pvFile = open('out/setEnrichment_pvalue.csv','a')
+                setFile = open('out/setEnrichment_set.csv', 'a')
+                pvFile = open('out/setEnrichment_pvalue.csv', 'a')
             minSets = []
             pValues = []
             for cluster in xrange(1, self.num_clusters() + 1):

@@ -199,8 +199,7 @@ class WeederReader:
         while (not self.__input_end_reached() and
                not self.__current_line().startswith('**** MY ADVICE ****')):
             comps = self.__current_line().strip().split(' ')
-            if (len(comps) == 4 and
-                not self.__current_line().startswith('****')):
+            if len(comps) == 4 and not self.__current_line().startswith('****'):
                 result.append(comps[3][1:])
             self.__current_index += 1
         return result

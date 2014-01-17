@@ -14,6 +14,7 @@ import patches
 STRING_FILE2 = 'string_links_64091.tab'
 PROTEIN_PREFIX = re.compile('^string:\d+[.]')
 
+
 def normalize_edges_to_max_score(edges, max_score):
     """normalize scores to 1000, for combined scores"""
     def normalize(edge_score):

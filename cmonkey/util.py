@@ -84,7 +84,7 @@ def make_delimited_file_from_lines(lines, sep, has_header, comment, quote):
 
 
 def dfile_from_text(text, sep='\t', has_header=False,
-                     comment=None, quote=None):
+                    comment=None, quote=None):
     """creates a DelimitedFile instance from a text"""
     return make_delimited_file_from_lines(text.split('\n'), sep,
                                           has_header, comment, quote)
@@ -187,6 +187,7 @@ def quantile(values, probability):
     else:
         return np.nan
 
+
 def r_stddev(values):
     """This is a standard deviation function, adjusted so it will
     return approximately the same value as R's sd() function would"""
@@ -211,6 +212,7 @@ def max_row_var(matrix):
     """computes the maximum row variance of a matrix"""
     masked = np.ma.masked_array(matrix, np.isnan(matrix))
     return np.mean(np.var(masked, 1, ddof=1))
+
 
 def r_outer(x, y, f):
     """emulates the R "outer" function, calculating the outer product
@@ -417,7 +419,7 @@ def sd_rnorm(values, num_rnorm_values, fuzzy_coeff):
                 fuzzy_coeff)
 
 
-def rrank_matrix(npmatrix):    
+def rrank_matrix(npmatrix):
     func = robjects.r("""
       rank_mat <- function(values, nrow, ncol) {
         xr <- t(matrix(values, nrow=nrow, ncol=ncol, byrow=T))
