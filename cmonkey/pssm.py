@@ -146,6 +146,6 @@ def read_fasta(infile):
     result = []
     while next_index >= 0 and next_index < len(lines):
         pssm, next_index = read_pssm(lines, next_index)
-        if pssm != None:
+        if pssm is not None:
             result.append(pssm)
     return result

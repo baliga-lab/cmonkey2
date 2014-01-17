@@ -13,6 +13,7 @@ import os
 
 RSAT_BASE_URL = 'http://embnet.ccg.unam.mx/rsa-tools'
 
+
 class RsatFiles:
     """This class implements the same service functions as RsatDatabase, but
     takes the data from files"""
@@ -20,7 +21,7 @@ class RsatFiles:
         self.dirname = dirname
         self.taxonomy_id = taxonomy_id
         self.basename = basename
-    
+
     def get_taxonomy_id(self, organism):
         return self.taxonomy_id
 
@@ -43,6 +44,7 @@ class RsatFiles:
             seqstr = infile.read().upper()
             return join_contig_sequence(seqstr)
 
+
 class RsatDatabase:
     """abstract interface to access an RSAT mirror"""
     DIR_PATH = 'data/genomes'
@@ -60,7 +62,8 @@ class RsatDatabase:
         """returns the HTML page for the directory listing"""
         logging.info('RSAT - get_directory()')
         cache_file = "/".join([self.cache_dir, 'rsat_dir.html'])
-        text = util.read_url_cached("/".join([self.base_url, RsatDatabase.DIR_PATH]),
+        text = util.read_url_cached("/".join([self.base_url,
+                                              RsatDatabase.DIR_PATH]),
                                     cache_file)
         return util.best_matching_links(kegg_organism, text)[0].rstrip('/')
 
@@ -74,7 +77,6 @@ class RsatDatabase:
         organism_names_dfile = util.dfile_from_text(text, comment='--')
         return patches.patch_ncbi_taxonomy(organism_names_dfile.lines[0][0])
 
-
     def get_features(self, organism):
         """returns the specified organism's feature file contents
         Note: the current version only tries to read from feature.tab
@@ -87,7 +89,7 @@ class RsatDatabase:
                                               RsatDatabase.DIR_PATH,
                                               organism,
                                               RsatDatabase.FEATURE_PATH]),
-                               cache_file)
+                                    cache_file)
 
     def get_feature_names(self, organism):
         """returns the specified organism's feature name file contents"""
