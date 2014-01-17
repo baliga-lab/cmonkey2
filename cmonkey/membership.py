@@ -36,6 +36,7 @@ KEY_MAX_CLUSTER_ROWS_ALLOWED = 'memb.max_cluster_rows_allowed'
 KEY_ROW_IS_MEMBER_OF = 'memb.row_is_member_of'
 KEY_COL_IS_MEMBER_OF = 'memb.col_is_member_of'
 
+
 class OrigMembership:
     """This is an implementation of a membership data structure that more
     closely resembles the R original. It is much simpler than
@@ -43,7 +44,7 @@ class OrigMembership:
     def __init__(self, row_names, col_names,
                  row_is_member_of, col_is_member_of,
                  config_params, row_indexes=None, col_indexes=None):
-        """identical constructor to ClusterMembership"""            
+        """identical constructor to ClusterMembership"""
         self.__config_params = config_params
 
         # table with |genes| rows and the configured number of columns
@@ -178,7 +179,7 @@ class OrigMembership:
                              "limit for row: '%s'" % str(row)))
         else:
             tmp = np.zeros((self.row_membs.shape[0], self.row_membs.shape[1] + 1), dtype='int32')
-            tmp[:,:-1] = self.row_membs
+            tmp[:, :-1] = self.row_membs
             self.row_membs = tmp
             self.row_membs[rowidx][-1] = cluster
 
@@ -193,7 +194,7 @@ class OrigMembership:
                              "limit for column: '%s'" % str(col)))
         else:
             tmp = np.zeros((self.col_membs.shape[0], self.col_membs.shape[1] + 1), dtype='int32')
-            tmp[:,:-1] = self.col_membs
+            tmp[:, :-1] = self.col_membs
             self.col_membs = tmp
             self.col_membs[colidx][-1] = cluster
 
@@ -295,6 +296,7 @@ def create_membership(matrix, seed_row_memberships, seed_column_memberships,
                           row_is_member_of, col_is_member_of,
                           config_params, matrix.row_indexes, matrix.column_indexes)
 
+
 def update_for_rows2(membership, rd_scores, multiprocessing):
     """generically updating row memberships according to  rd_scores"""
     rownames = rd_scores.row_names
@@ -375,6 +377,7 @@ def update_for_cols2(membership, cd_scores, multiprocessing):
                         else:
                             replace_delta_column_member2(membership, col, clusters, cd_scores)
 
+
 def which_multiple(clusters):
     result = {}
     for cluster in clusters:
@@ -382,6 +385,7 @@ def which_multiple(clusters):
             result[cluster] = 0
         result[cluster] += 1
     return {cluster for cluster, count in result.items() if count > 1}
+
 
 def replace_delta_column_member2(membership, col, cm, cd_scores):
     index = cd_scores.row_indexes_for([col])[0]
@@ -400,7 +404,7 @@ def replace_delta_column_member2(membership, col, cm, cd_scores):
 def postadjust2(membership, rowscores=None, cutoff=0.33, limit=100):
     """adjusting the cluster memberships after the main iterations have been done
     Returns true if the function changed the membership, false if not"""
-    if rowscores == None:
+    if rowscores is None:
         # load the row scores from the last iteration from the pickle file
         with open(membership.pickle_path()) as infile:
             rowscores = cPickle.load(infile)
@@ -451,9 +455,9 @@ def adjust_cluster2(membership, cluster, rowscores, cutoff, limit):
     #print "THRESHOLD: ", threshold
     #print "WH: ", wh
     if len(wh) == 0:
-        return {} # return unmodified row membership
+        return {}  # return unmodified row membership
     elif len(wh) > limit:
-        return {} # return unmodified row membership
+        return {}  # return unmodified row membership
 
     tries = 0
     result = {}
@@ -480,6 +484,7 @@ def adjust_cluster2(membership, cluster, rowscores, cutoff, limit):
 # Parallelized updating of row and column membership changes
 UPDATE_MEMBERSHIP = None
 
+
 def seeing_change(prob):
     """returns true if the update is seeing the change"""
     return prob >= 1.0 or random.uniform(0.0, 1.0) <= prob
@@ -493,7 +498,6 @@ def get_best_clusters(scores, n, sort=False):
     else:
         return {scores.row_names[row]: util.order_fast(scores.row_values(row), n)
                 for row in xrange(scores.num_rows)}
-
 
 
 def get_row_density_scores(membership, row_scores):
@@ -519,6 +523,7 @@ def get_row_density_scores(membership, row_scores):
     logging.info("RR_SCORES IN %f s.", elapsed / 1000.0)
     return rd_scores
 
+
 def get_col_density_scores(membership, col_scores):
     num_clusters = membership.num_clusters()
     cscore_range = abs(col_scores.max() - col_scores.min())
@@ -541,9 +546,11 @@ def get_col_density_scores(membership, col_scores):
     logging.info("CC_SCORES IN %f s.", elapsed / 1000.0)
     return cd_scores
 
+
 def get_density_scores(membership, row_scores, col_scores):
     return (get_row_density_scores(membership, row_scores),
             get_col_density_scores(membership, col_scores))
+
 
 def get_rr_scores(membership, rowscores, bandwidth, cluster):
     """calculate the density scores for the given row score values in the
@@ -557,8 +564,7 @@ def get_rr_scores(membership, rowscores, bandwidth, cluster):
     kscores = rowscores.column_values(cluster - 1)
     kscores_finite = kscores[np.isfinite(kscores)]
 
-    if (len(cluster_rows) == 0 or len(kscores_finite) == 0 or
-        len(cluster_columns) == 0):
+    if len(cluster_rows) == 0 or len(kscores_finite) == 0 or len(cluster_columns) == 0:
         num_rows = rowscores.num_rows
         return [(1.0 / num_rows) for _ in xrange(num_rows)]
     else:
@@ -578,8 +584,7 @@ def get_cc_scores(membership, scores, bandwidth, cluster):
     kscores = scores.column_values(cluster - 1)
     kscores_finite = kscores[np.isfinite(kscores)]
 
-    if (len(cluster_rows) == 0 or len(kscores_finite) == 0 or
-        len(cluster_columns) <= 1):
+    if len(cluster_rows) == 0 or len(kscores_finite) == 0 or len(cluster_columns) <= 1:
         # This is a little weird, but is here to at least attempt to simulate
         # what the original cMonkey is doing
         num_rows = scores.num_rows
@@ -664,9 +669,10 @@ def make_kmeans_row_seeder(num_clusters):
 
     return seed
 
+
 def make_file_seeder(filename, sep=' '):
     """uses a TSV file to seed row membership"""
-    
+
     def seed(row_membership, matrix):
         """ignore matrix parameter"""
         row_map = {name: idx
@@ -678,8 +684,9 @@ def make_file_seeder(filename, sep=' '):
                 row = line.strip().replace('"', '').split(sep)
                 row_index = row_map[row[0]]
                 row_membership[row_index][0] = int(row[1])
-    
+
     return seed
+
 
 def make_file_column_seeder(filename, sep=' '):
     def seed(matrix, row_membership, num_clusters,
