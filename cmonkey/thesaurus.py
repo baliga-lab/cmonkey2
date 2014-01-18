@@ -12,10 +12,7 @@ def create_from_delimited_file1(dfile):
     """creates a thesaurus from a delimited file where the format is
     <alternative>SEPARATOR<original>
     ..."""
-    result = {}
-    for line in dfile.lines:
-        result[line[0]] = line[1]
-    return result
+    return {line[0]: line[1] for line in dfile.lines}
 
 
 def create_from_delimited_file2(dfile):

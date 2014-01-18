@@ -703,9 +703,12 @@ def make_background_file(bgseqs, use_revcomp, bgorder=3):
         meme_input_seqs = []
         for locseq in seqs.values():
             seq = locseq[1]
-            util.add_if_unique(meme_input_seqs, seq)
+            if seq not in meme_input_seqs:
+                meme_input_seqs.append(seq)
             if use_revcomp:
-                util.add_if_unique(meme_input_seqs, st.revcomp(seq))
+                revseq = st.revcomp(seq)
+                if revseq not in meme_input_seqs:
+                    meme_input_seqs.append(revseq)
         return meme_input_seqs
 
     filename = None

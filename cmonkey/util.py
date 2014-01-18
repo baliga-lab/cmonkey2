@@ -444,13 +444,6 @@ def order_fast(values, result_size, reverse=True):
 ### Misc functionality
 ######################################################################
 
-
-def add_if_unique(sequence, item):
-    """add the item to the Python sequence only if it does not exist"""
-    if item not in sequence:
-        sequence.append(item)
-
-
 class open_shelf:
     """A shelf content manager, so the user does not have to care about
     closing the shelf"""
