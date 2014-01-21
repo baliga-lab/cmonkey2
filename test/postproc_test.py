@@ -106,7 +106,7 @@ class PostprocTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """tests the row scoring by itself, which combines scoring and fixing
         extreme values"""
         rowscores = read_matrix('testdata/rowscores-43-before-postproc.tsv')
-        memb.postadjust2(self.membership, rowscores)
+        memb.postadjust(self.membership, rowscores)
 
 
 def read_matrix(filename):

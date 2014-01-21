@@ -401,7 +401,7 @@ def replace_delta_column_member2(membership, col, cm, cd_scores):
         membership.replace_column_cluster(col, maxidx, cm[maxidx])
 
 
-def postadjust2(membership, rowscores=None, cutoff=0.33, limit=100):
+def postadjust(membership, rowscores=None, cutoff=0.33, limit=100):
     """adjusting the cluster memberships after the main iterations have been done
     Returns true if the function changed the membership, false if not"""
     if rowscores is None:

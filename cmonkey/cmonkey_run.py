@@ -642,7 +642,7 @@ class CMonkeyRun:
 
         if self['postadjust']:
             logging.info("Postprocessing: Adjusting the clusters....")
-            memb.postadjust2(self.membership())
+            memb.postadjust(self.membership())
 
             iteration = self['num_iterations'] + 1
             iteration_result = {'iteration': iteration}
