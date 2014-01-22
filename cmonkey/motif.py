@@ -198,6 +198,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             cPickle.dump(result, outfile)
         return result
 
+    def last_cached(self):
+        return self.matrix
+
     def matrix_pickle_path(self):
         return "%s/%s_matrix_last.pkl" % (self.config_params['output_dir'],
                                           self.name())

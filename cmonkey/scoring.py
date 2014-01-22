@@ -126,6 +126,15 @@ class ScoringFunctionBase:
         """returns the function-specific pickle-path"""
         return '%s/%s_last.pkl' % (self.config_params['output_dir'], self.name())
 
+    def last_cached(self):
+        if self.cache_result:
+            return self.cached_result
+        elif os.path.exists(self.pickle_path()):
+            with open(self.pickle_path()) as infile:
+                return cPickle.load(infile)
+        else:
+            return None
+
     def compute(self, iteration_result, reference_matrix=None):
         """general compute method,
         iteration_result is a dictionary that contains the
@@ -458,6 +467,20 @@ class ScoringFunctionCombiner:
 
         return combine(result_matrices, score_scalings, self.__membership,
                        self.__config_params['quantile_normalize'])
+
+    def collect(self, iteration_result):
+        """compute scores for one iteration"""
+        result_matrices = []
+        score_scalings = []
+        iteration = iteration_result['iteration']
+        for scoring_function in self.scoring_functions:
+            matrix = scoring_function.last_cached()
+            if matrix is not None:
+                result_matrices.append(matrix)
+                score_scalings.append(scoring_function.scaling(iteration))
+
+        return combine(result_matrices, score_scalings, self.__membership, True)
+
 
     def __log_subresult(self, score_function, matrix):
         """output an accumulated subresult to the log"""
