@@ -640,26 +640,28 @@ class CMonkeyRun:
             elapsed = util.current_millis() - start_time
             logging.info("performed iteration %d in %f s.", iteration, elapsed / 1000.0)
 
-            # run post processing on the last iteration
-            if iteration == self['num_iterations'] and self['postadjust']:
-                logging.info("Postprocessing: Adjusting the clusters....")
-                iteration_result = {'iteration': iteration}
-                rscores = row_scoring.collect(iteration_result)
-                logging.info("Recomputed combined scores.")
-                """
-                memb.postadjust(self.membership())
+        """run post processing after the last iteration. We store the results in
+        num_iterations + 1 to have a clean separation"""
+        if self['postadjust']:
+            logging.info("Postprocessing: Adjusting the clusters....")
+            # run combiner using the weights of the last iteration
+            rscores = row_scoring.combine_cached(self['num_iterations'])
+            rd_scores = memb.get_row_density_scores(self.membership(), rscores)
+            logging.info("Recomputed combined + density scores.")
+            memb.postadjust(self.membership(), rd_scores)
+            logging.info("Adjusted. Now re-run scoring (iteration: %d)",
+                         self['num_iterations'])
 
-                iteration_result = {'iteration': iteration}
-                logging.info("Adjusted. Now re-run scoring (iteration: %d)",
-                             iteration_result['iteration'])
-                combined_scores = row_scoring.compute_force(iteration_result)
-                # write the combined scores for benchmarking/diagnostics
-                with open(self.combined_rscores_pickle_path(), 'w') as outfile:
-                    cPickle.dump(combined_scores, outfile)
+            iteration_result = {'iteration': self['num_iterations'] + 1}
+            combined_scores = row_scoring.compute_force(iteration_result)
 
-                self.write_results(iteration_result)
-                self.write_stats(iteration_result)
-                self.update_iteration(self['num_iterations'] + 1)"""
+            # write the combined scores for benchmarking/diagnostics
+            with open(self.combined_rscores_pickle_path(), 'w') as outfile:
+                cPickle.dump(combined_scores, outfile)
+
+            self.write_results(iteration_result)
+            self.write_stats(iteration_result)
+            self.update_iteration(iteration)
 
         self.write_finish_info()
         logging.info("Done !!!!")

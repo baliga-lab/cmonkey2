@@ -85,18 +85,18 @@ class PostprocTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """tests the row scoring by itself, which combines scoring and fixing
         extreme values"""
         rowscores = read_matrix('testdata/rowscores-43-before-postproc.tsv')
-        assign1 = memb.adjust_cluster2(self.membership,
-                                       1, rowscores, cutoff=0.33,
-                                       limit=100)
+        assign1 = memb.adjust_cluster(self.membership,
+                                      1, rowscores, cutoff=0.33,
+                                      limit=100)
         self.assertEquals(0, len(assign1))
-        assign2 = memb.adjust_cluster2(self.membership,
-                                       2, rowscores, cutoff=0.33,
-                                       limit=100)
+        assign2 = memb.adjust_cluster(self.membership,
+                                      2, rowscores, cutoff=0.33,
+                                      limit=100)
         self.assertEquals(1, len(assign2))
         self.assertEquals(2, assign2['VNG6210G'])
-        assign5 = memb.adjust_cluster2(self.membership,
-                                       5, rowscores, cutoff=0.33,
-                                       limit=100)
+        assign5 = memb.adjust_cluster(self.membership,
+                                      5, rowscores, cutoff=0.33,
+                                      limit=100)
         self.assertEquals(3, len(assign5))
         self.assertEquals(5, assign5['VNG1182H'])
         self.assertEquals(5, assign5['VNG2259C'])

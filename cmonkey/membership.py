@@ -401,29 +401,20 @@ def replace_delta_column_member2(membership, col, cm, cd_scores):
         membership.replace_column_cluster(col, maxidx, cm[maxidx])
 
 
-def postadjust(membership, rowscores=None, cutoff=0.33, limit=100):
+def postadjust(membership, rowscores, cutoff=0.33, limit=100):
     """adjusting the cluster memberships after the main iterations have been done
     Returns true if the function changed the membership, false if not"""
-    if rowscores is None:
-        # load the row scores from the last iteration from the pickle file
-        with open(membership.pickle_path()) as infile:
-            rowscores = cPickle.load(infile)
-
-    has_changed = False
     assign_list = []
     for cluster in range(1, membership.num_clusters() + 1):
-        assign = adjust_cluster2(membership, cluster, rowscores, cutoff, limit)
+        assign = adjust_cluster(membership, cluster, rowscores, cutoff, limit)
         assign_list.append(assign)
 
     for assign in assign_list:
-        if len(assign) > 0:
-            has_changed = True
         for row, cluster in assign.items():
             membership.add_cluster_to_row(row, cluster, force=True)
-    return has_changed
 
 
-def adjust_cluster2(membership, cluster, rowscores, cutoff, limit):
+def adjust_cluster(membership, cluster, rowscores, cutoff, limit):
     """adjust a single cluster"""
     def max_row_in_column(matrix, column):
         """returns a pair of the maximum row index and score in the given matrix and column"""

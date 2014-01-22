@@ -468,11 +468,11 @@ class ScoringFunctionCombiner:
         return combine(result_matrices, score_scalings, self.__membership,
                        self.__config_params['quantile_normalize'])
 
-    def collect(self, iteration_result):
-        """compute scores for one iteration"""
+    def combine_cached(self, iteration):
+        """Combine the cached results of the contained scoring function.
+        This is used by the post adjustment"""
         result_matrices = []
         score_scalings = []
-        iteration = iteration_result['iteration']
         for scoring_function in self.scoring_functions:
             matrix = scoring_function.last_cached()
             if matrix is not None:
