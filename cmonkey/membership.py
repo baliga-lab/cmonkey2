@@ -429,11 +429,8 @@ def adjust_cluster(membership, cluster, rowscores, cutoff, limit):
         return sm.row_names[max_row]
 
     old_rows = membership.rows_for_cluster(cluster)
-    not_in = []
-    for row in range(rowscores.num_rows):
-        row_name = rowscores.row_names[row]
-        if row_name not in old_rows:
-            not_in.append((row, rowscores.row_names[row]))
+    not_in = [(i, row) for i, row in enumerate(rowscores.row_names)
+              if row not in old_rows]
     #print old_rows
     threshold = rowscores.submatrix_by_name(old_rows,
                                             [rowscores.column_names[cluster - 1]]).quantile(cutoff)
@@ -445,9 +442,7 @@ def adjust_cluster(membership, cluster, rowscores, cutoff, limit):
             wh.append(row_name)
     #print "THRESHOLD: ", threshold
     #print "WH: ", wh
-    if len(wh) == 0:
-        return {}  # return unmodified row membership
-    elif len(wh) > limit:
+    if len(wh) == 0 or len(wh) > limit:
         return {}  # return unmodified row membership
 
     tries = 0
