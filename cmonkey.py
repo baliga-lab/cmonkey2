@@ -14,8 +14,21 @@ import logging
 from cmonkey.schedule import make_schedule
 import ConfigParser
 import tempfile
+import cmonkey.scoring as scoring
+
 
 def set_config(cmonkey_run, config):
+    def set_scaling(section, prefix):
+        try:
+            cmonkey_run[prefix + 'scaling_const'] = config.getfloat(section, 'scaling_const')
+            return
+        except:
+            pass
+        try:
+            cmonkey_run[prefix + 'scaling_rvec'] = config.get(section, 'scaling_rvec')
+        except:
+            raise Exception("no scaling found for section '%s'" % section)
+
     # override temp file location
     tmp_dir = config.get('General', 'tmp_dir')
     if tmp_dir:
@@ -31,7 +44,6 @@ def set_config(cmonkey_run, config):
 
     # Quantile normalization is false by default in cMonkey-R
     cmonkey_run['quantile_normalize'] = config.getboolean('Scoring', 'quantile_normalize')
-    cmonkey_run['row_scaling'] = config.getfloat('Scoring', 'row_scaling')
     # membership default parameters
     cmonkey_run['memb.min_cluster_rows_allowed'] = config.getint('Membership', 'min_cluster_rows_allowed')
     cmonkey_run['memb.max_cluster_rows_allowed'] = config.getint('Membership', 'max_cluster_rows_allowed')
@@ -59,6 +71,10 @@ def set_config(cmonkey_run, config):
     cmonkey_run['stats_freq'] = config.getint('General', 'stats_frequency')
     cmonkey_run['result_freq'] = config.getint('General', 'result_frequency')
 
+    # parse the scalings
+    set_scaling('Motifs', 'motif_')
+    set_scaling('Rows', 'row_')
+    set_scaling('Networks', 'network_')
 
 # if we were installed through Debian package management, default.ini is found here
 SYSTEM_INI_PATH = '/etc/cmonkey-python/default.ini'

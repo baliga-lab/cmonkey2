@@ -18,6 +18,8 @@ import numpy as np
 import cPickle
 import gc
 import sqlite3
+import rpy2.robjects as robj
+
 
 # Official keys to access values in the configuration map
 KEY_ORGANISM_CODE = 'organism_code'
@@ -34,36 +36,30 @@ KEY_STRING_FILE = 'string_file'
 USE_MULTIPROCESSING = True
 
 
-def get_default_motif_scaling(num_iterations, offset=100):
-    """this scaling function is based on the tricky default motif scaling
-    sequence in the R reference"""
-    seq = [1e-5] * offset
-    num_steps = int(round(num_iterations * 0.75))
-    step = 1.0 / (num_steps - 1)
-    seq2 = [step * i for i in range(num_steps)]
-    seq.extend(seq2)
-
-    def default_motif_scaling(iteration):
-        if iteration <= len(seq):
-            return seq[iteration - 1]
+def get_rvec_scaling(rvecstr):
+    """make scaling function based on an R vector expression string"""
+    def scale(iteration):
+        rvec = robj.r(rvecstr)
+        if iteration > len(rvec):
+            return rvec[-1]
         else:
-            return 1.0
+            return rvec[iteration - 1]
+    return scale
+        
 
-    return default_motif_scaling
-
-
-def get_default_network_scaling(num_iterations):
-    """this scaling function is based on the tricky default network scaling
-    sequence in the R reference"""
-    steps = int(round(num_iterations * 0.75))
-    step = (0.5 - 1e-5) / steps
-
-    def default_network_scaling(iteration):
-        if iteration > steps:
-            return 0.5
-        else:
-            return 1e-5 + step * (iteration - 1)
-    return default_network_scaling
+def get_scaling(params, prefix):
+    """returns a scaling function for the given prefix from the configuration parameters"""
+    try:
+        scaling_const = params[prefix + 'scaling_const']
+        return lambda i: scaling_const
+    except:
+        pass
+    try:
+        scaling_rvec = params[prefix + 'scaling_rvec']
+        return get_rvec_scaling(scaling_rvec.replace('num_iterations',
+                                                     str(params['num_iterations'])))
+    except:
+        raise Exception("no scaling found for prefix '%s'" % prefix)
 
 
 class RunLog:

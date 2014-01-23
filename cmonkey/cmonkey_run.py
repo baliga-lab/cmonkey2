@@ -21,6 +21,7 @@ import gzip
 import sqlite3
 from decimal import Decimal
 import cPickle
+import rpy2.robjects as robj
 
 USER_KEGG_FILE_PATH = 'config/KEGG_taxonomy'
 USER_GO_FILE_PATH = 'config/proteome2taxid'
@@ -209,9 +210,10 @@ class CMonkeyRun:
     def make_row_scoring(self):
         """makes a row scoring function on demand"""
         # Default row scoring functions
+        row_scaling_fun = scoring.get_scaling(self, 'row_')
         row_scoring = microarray.RowScoringFunction(
             self.membership(), self.ratio_matrix,
-            scaling_func=lambda iteration: self['row_scaling'],
+            scaling_func=row_scaling_fun,
             schedule=self["row_schedule"],
             config_params=self.config_params)
         row_scoring_functions = [row_scoring]
@@ -238,8 +240,7 @@ class CMonkeyRun:
                 motif.get_remove_low_complexity_filter(meme_suite),
                 motif.get_remove_atgs_filter(self['search_distances']['upstream'])]
 
-            motif_scaling_fun = scoring.get_default_motif_scaling(
-                self['num_iterations'])
+            motif_scaling_fun = scoring.get_scaling(self, 'motif_')
             motif_scoring = motif.MemeScoringFunction(
                 self.organism(),
                 self.membership(),
@@ -254,7 +255,7 @@ class CMonkeyRun:
             row_scoring_functions.append(motif_scoring)
 
         if self['donetworks']:
-            network_scaling_fun = scoring.get_default_network_scaling(self['num_iterations'])
+            network_scaling_fun = scoring.get_scaling(self, 'network_')
             network_scoring = nw.ScoringFunction(
                 self.organism(),
                 self.membership(),
@@ -385,7 +386,7 @@ class CMonkeyRun:
     def __check_parameters(self):
         """ensure that we all required parameters before we start running"""
         PARAM_NAMES = ['num_iterations', 'start_iteration', 'multiprocessing',
-                       'quantile_normalize', 'row_scaling', 'keep_memeout',
+                       'quantile_normalize', 'keep_memeout',
                        'memb.min_cluster_rows_allowed', 'memb.max_cluster_rows_allowed',
                        'memb.prob_row_change', 'memb.prob_col_change',
                        'memb.max_changes_per_row', 'memb.max_changes_per_col',
