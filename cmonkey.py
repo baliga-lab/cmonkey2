@@ -29,10 +29,12 @@ def set_config(cmonkey_run, config):
         except:
             raise Exception("no scaling found for section '%s'" % section)
 
-    # override temp file location
+    # override directories
     tmp_dir = config.get('General', 'tmp_dir')
     if tmp_dir:
         tempfile.tempdir = tmp_dir
+    cmonkey_run['output_dir'] = config.get('General', 'output_dir')
+    cmonkey_run['cache_dir'] = config.get('General', 'cache_dir')
 
     cmonkey_run['num_iterations'] = config.getint("General", "num_iterations")
     cmonkey_run['start_iteration'] = config.getint("General", "start_iteration")
