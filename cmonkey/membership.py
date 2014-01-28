@@ -76,6 +76,32 @@ class OrigMembership:
             for i in range(len(tmp)):
                 self.col_membs[self.colidx[col]][i] = tmp[i]
 
+    def write_column_members(self, filename):
+        """Mostly for debugging, write out the current column membership state into a TSV file"""
+        with open(filename, 'w') as outfile:
+            colnums = range(1, len(self.col_membs[0]) + 1)
+            outfile.write('\t'.join(map(lambda i: 'V%d' % i, colnums)))
+            outfile.write('\n')
+            for colname in sorted(self.col_names):
+                idx = self.colidx[colname]
+                row = self.col_membs[idx]
+                outfile.write('%s\t' % colname)
+                outfile.write('\t'.join(map(str, row)))
+                outfile.write('\n')
+
+    def write_row_members(self, filename):
+        """Mostly for debugging, write out the current row membership state into a TSV file"""
+        with open(filename, 'w') as outfile:
+            colnums = range(1, len(self.row_membs[0]) + 1)
+            outfile.write('\t'.join(map(lambda i: 'V%d' % i, colnums)))
+            outfile.write('\n')
+            for rowname in sorted(self.row_names):
+                idx = self.rowidx[rowname]
+                row = self.row_membs[idx]
+                outfile.write('%s\t' % rowname)
+                outfile.write('\t'.join(map(str, row)))
+                outfile.write('\n')
+
     def num_clusters(self):
         """returns the number of clusters"""
         return self.__config_params[KEY_NUM_CLUSTERS]
@@ -669,7 +695,8 @@ def make_file_seeder(filename, sep=' '):
             for line in infile:
                 row = line.strip().replace('"', '').split(sep)
                 row_index = row_map[row[0]]
-                row_membership[row_index][0] = int(row[1])
+                for j, elem in enumerate(row[1:]):
+                    row_membership[row_index][j] = int(elem)
 
     return seed
 
