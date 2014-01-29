@@ -235,9 +235,9 @@ class OrigMembership:
         return '%s/last_row_scores.pkl' % (self.__config_params['output_dir'])
 
     def update(self, matrix, row_scores, column_scores,
-               num_iterations, iteration_result, add_fuzz=True):
+               num_iterations, iteration_result):
         """top-level update method"""
-        if add_fuzz:
+        if self.__config_params['fuzzify']:
             start = util.current_millis()
             row_scores, column_scores = fuzzify(self, row_scores, column_scores,
                                                 num_iterations, iteration_result)
