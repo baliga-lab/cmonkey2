@@ -244,13 +244,11 @@ class DataMatrix:
     def write_tsv_file(self, path, compressed=True):
         """writes this matrix to tab-separated file"""
         def write_data(outfile):
-            title = ['GENE']
-            title.extend(self.column_names)
-            titlerow = '\t'.join(title)
+            titlerow = '\t'.join(self.column_names)
             outfile.write(titlerow + '\n')
             for row_index in range(len(self.row_names)):
                 row = [self.row_names[row_index]]
-                row.extend([('%f' % value) for value in self.values[row_index]])
+                row.extend([('%.17f' % value) for value in self.values[row_index]])
                 outfile.write('\t'.join(row) + '\n')
         if compressed:
             if not path.endswith('.gz'):
