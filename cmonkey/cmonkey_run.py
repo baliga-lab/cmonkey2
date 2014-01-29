@@ -1,4 +1,5 @@
 # vi: sw=4 ts=4 et:
+import re
 import logging
 import microarray
 import membership as memb
@@ -196,6 +197,9 @@ class CMonkeyRun:
 
     def __make_membership(self):
         """returns the seeded membership on demand"""
+        if self['debug']:
+            util.r_set_seed(10)
+
         return memb.create_membership(self.ratio_matrix,
                                       self.row_seeder, self.column_seeder,
                                       self.config_params)
@@ -629,11 +633,22 @@ class CMonkeyRun:
             self.write_stats(iteration_result)
             self.update_iteration(iteration)
 
+        if self['debug']:
+            # write complete result into a cmresults.tsv
+            conn = self.__dbconn()
+            path =  os.path.join(self['output_dir'], 'cmresults-%d.tsv' % iteration)
+            with open(path, 'w') as outfile:
+                write_iteration(conn, outfile, iteration,
+                                self['num_clusters'], self['output_dir'])
+            conn.close()
+
     def run_iterations(self, row_scoring, col_scoring):
         self.report_params()
         self.write_start_info()
         for iteration in range(self['start_iteration'],
                                self['num_iterations'] + 1):
+            if self['debug']:
+                util.r_set_seed(10)
             start_time = util.current_millis()
             self.run_iteration(row_scoring, col_scoring, iteration)
             # garbage collection after everything in iteration went out of scope
@@ -644,6 +659,8 @@ class CMonkeyRun:
         """run post processing after the last iteration. We store the results in
         num_iterations + 1 to have a clean separation"""
         if self['postadjust']:
+            if self['debug']:
+                util.r_set_seed(10)
             logging.info("Postprocessing: Adjusting the clusters....")
             # run combiner using the weights of the last iteration
             rscores = row_scoring.combine_cached(self['num_iterations'])
@@ -663,6 +680,17 @@ class CMonkeyRun:
             self.write_results(iteration_result)
             self.write_stats(iteration_result)
             self.update_iteration(iteration)
+
+            if self['debug']:
+                # write complete result into a cmresults.tsv
+                conn = self.__dbconn()
+                path =  os.path.join(self['output_dir'], 'cmresults-postproc.tsv')
+                with open(path, 'w') as outfile:
+                    write_iteration(conn, outfile,
+                                    self['num_iterations'] + 1,
+                                    self['num_clusters'], self['output_dir'])
+                conn.close()
+
 
         self.write_finish_info()
         logging.info("Done !!!!")
@@ -693,3 +721,68 @@ class CMonkeyRun:
             row_scoring.restore_checkpoint_data(shelf)
             col_scoring.restore_checkpoint_data(shelf)
             #return row_scoring, col_scoring necessary??
+
+
+############################################################
+#### DEBUGGING
+############################################################
+
+
+def get_last_meme_iteration(outdir):
+    """Returns the last iteration where MEME was run"""
+    pat = re.compile('meme-out-(\\d+)-(\\d+)$')
+    filenames = os.listdir(outdir)
+    iterations = []
+    for name in filenames:
+        m = pat.match(name)
+        if m:
+            iterations.append(int(m.group(1)))
+    if len(iterations) > 0:
+        return max(iterations)
+    return None
+
+
+def meme_to_str(outdir, iteration, cluster):
+    """get the meme out file as a string"""
+    lines = ""
+    try:
+        with open(os.path.join(outdir, 'meme-out-%d-%d' % (iteration, cluster))) as infile:
+            lines = [line.replace('\n', '<<<<>>>>') for line in infile.readlines()]
+    except:
+        pass
+    return ''.join(lines)
+
+
+def write_iteration(conn, outfile, iteration, num_clusters, outdir):
+    """writes the iteration into a debug file"""
+    cursor = conn.cursor()
+    outfile.write('"cols"\t"dens_string"\t"k"\t"meanp_meme"\t"meme_out"\t"resid"\t"rows"\n')
+    for cluster in range(num_clusters):
+        cursor.execute('select name from column_members m join column_names c on m.order_num = c.order_num where m.cluster = ? and iteration = ?',
+                       [(cluster + 1), iteration])
+        colnames = [row[0] for row in cursor.fetchall()]
+        cols_out = ",".join(colnames)
+        cursor.execute('select score from network_stats where network = \'STRING\' and iteration = ?',
+                       [iteration])
+        row = cursor.fetchone()
+        string_dens = row[0] if row != None else 1.0
+
+        cursor.execute('select pval from motif_stats where seqtype = \'upstream\' and iteration = ?',
+                       [iteration])
+        row = cursor.fetchone()
+        meme_pval = row[0] if row != None else 1.0
+
+        last_meme_iteration = get_last_meme_iteration(outdir)
+        meme_out = meme_to_str(outdir, last_meme_iteration, cluster + 1)
+
+        cursor.execute('select residual from cluster_residuals where cluster = ? and iteration = ?',
+                       [cluster, iteration])
+        row = cursor.fetchone()
+        resid = row[0] if row != None else 1.0
+
+        cursor.execute('select name from row_members m join row_names r on m.order_num = r.order_num where m.cluster = ? and iteration = ?',
+                       [(cluster + 1), iteration])
+        rownames = [row[0] for row in cursor.fetchall()]
+        rows_out = ",".join(rownames)
+        
+        outfile.write('"%s"\t%f\t%d\t%f\t"%s"\t%f\t"%s"\n' % (cols_out, string_dens, cluster + 1, meme_pval, meme_out, resid, rows_out))

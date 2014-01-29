@@ -361,7 +361,6 @@ def trim_mean(values, trim):
 ######################################################################
 def density(kvalues, cluster_values, bandwidth, dmin, dmax):
     """generic function to compute density scores"""
-    r_density = robjects.r['density']
     kwargs = {'bw': bandwidth, 'adjust': 2, 'from': dmin,
               'to': dmax, 'n': 256, 'na.rm': True}
     rdens = robjects.r("""
@@ -372,6 +371,18 @@ def density(kvalues, cluster_values, bandwidth, dmin, dmax):
       }""")
     return rdens(robjects.FloatVector(cluster_values),
                  robjects.FloatVector(kvalues), **kwargs)
+
+
+def r_set_seed(value):
+    """calls R's set.seed()"""
+    set_seed = robjects.r['set.seed']
+    set_seed(value)
+
+
+def r_runif(value):
+    """calls R's set.seed()"""
+    runif = robjects.r['runif']
+    return runif(value)
 
 
 def rnorm(num_values, std_deviation):

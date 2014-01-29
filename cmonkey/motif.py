@@ -26,7 +26,8 @@ ComputeScoreParams = collections.namedtuple('ComputeScoreParams',
                                              'meme_runner', 'min_cluster_rows',
                                              'max_cluster_rows', 'num_motifs',
                                              'previous_motif_infos',
-                                             'keep_memeout', 'outdir', 'num_iterations'])
+                                             'keep_memeout', 'outdir', 'num_iterations',
+                                             'debug'])
 
 
 def default_nmotif_fun(iteration, num_iterations):
@@ -306,7 +307,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                                              previous_motif_infos,
                                              self.config_params.get('keep_memeout', False),
                                              self.config_params['output_dir'],
-                                             self.config_params['num_iterations']))
+                                             self.config_params['num_iterations'],
+                                             self.config_params['debug']))
 
         logging.info("prepared MEME parameters in %d ms.",
                      util.current_millis() - start_time)

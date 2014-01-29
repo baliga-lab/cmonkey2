@@ -264,12 +264,14 @@ class OrigMembership:
         logging.info("COMPENSATE_SIZE() took %f s.", elapsed / 1000.0)
 
         start_time = util.current_millis()
-        update_for_rows2(self, rd_scores, self.__config_params['multiprocessing'])
+        update_for_rows2(self, rd_scores, self.__config_params['multiprocessing'],
+                         self.__config_params['debug'])
         elapsed = util.current_millis() - start_time
         logging.info("update_for rdscores finished in %f s.", elapsed / 1000.0)
 
         start_time = util.current_millis()
-        update_for_cols2(self, cd_scores, self.__config_params['multiprocessing'])
+        update_for_cols2(self, cd_scores, self.__config_params['multiprocessing'],
+                         self.__config_params['debug'])
         elapsed = util.current_millis() - start_time
         logging.info("update_for cdscores finished in %f s.", elapsed / 1000.0)
 
@@ -319,7 +321,7 @@ def create_membership(matrix, seed_row_memberships, seed_column_memberships,
                           config_params, matrix.row_indexes, matrix.column_indexes)
 
 
-def update_for_rows2(membership, rd_scores, multiprocessing):
+def update_for_rows2(membership, rd_scores, multiprocessing, debug):
     """generically updating row memberships according to  rd_scores"""
     rownames = rd_scores.row_names
     # note: for rows, the original version sorts the best clusters by cluster number !!!
@@ -331,7 +333,7 @@ def update_for_rows2(membership, rd_scores, multiprocessing):
         row = rownames[index]
         clusters = best_clusters[row]
 
-        if seeing_change(change_prob):
+        if seeing_change(change_prob, debug):
             for _ in range(max_changes):
                 if len(clusters) > 0:
                     free_slots = membership.free_slots_for_row(row)
@@ -366,7 +368,7 @@ def replace_delta_row_member2(membership, row, rm, rd_scores):
             membership.replace_row_cluster(row, maxidx, rm[maxidx])
 
 
-def update_for_cols2(membership, cd_scores, multiprocessing):
+def update_for_cols2(membership, cd_scores, multiprocessing, debug):
     """updating column memberships according to cd_scores"""
     global UPDATE_MEMBERSHIP
 
@@ -378,7 +380,7 @@ def update_for_cols2(membership, cd_scores, multiprocessing):
     for index in xrange(cd_scores.num_rows):
         col = colnames[index]
         clusters = best_clusters[col]
-        if seeing_change(change_prob):
+        if seeing_change(change_prob, debug):
             for c in range(max_changes):
                 if len(clusters) > 0:
                     free_slots = membership.free_slots_for_column(col)
@@ -493,9 +495,22 @@ def adjust_cluster(membership, cluster, rowscores, cutoff, limit):
 UPDATE_MEMBERSHIP = None
 
 
-def seeing_change(prob):
+def seeing_change_normal(prob):
     """returns true if the update is seeing the change"""
     return prob >= 1.0 or random.uniform(0.0, 1.0) <= prob
+
+
+def seeing_change_debug(prob):
+    """returns true if the update is seeing the change"""
+    return prob >= 1.0 or util.r_runif(1) <= prob
+
+
+def seeing_change(prob, debug):
+    """returns true if the update is seeing the change"""
+    if debug:
+        return seeing_change_debug(prob)
+    return seeing_change_normal(prob)
+
 
 
 def get_best_clusters(scores, n, sort=False):

@@ -128,6 +128,8 @@ See README and LICENSE for details.\n"""
     parser.add_argument('--nostring', action="store_true", help="deactivate STRING network scoring")
     parser.add_argument('--nooperons', action="store_true", help="deactivate operon network scoring")
     parser.add_argument('--config', default=None, help="additional configuration file")
+    parser.add_argument('--debug', action="store_true",
+                        help="""run in debug mode""")
 
     # RSAT overrides
     parser.add_argument('--rsat_dir', default=None,
@@ -174,7 +176,8 @@ See README and LICENSE for details.\n"""
     cmonkey_run['cache_dir'] = args.cachedir
     set_config(cmonkey_run, config)
 
-    cmonkey_run['keep_memeout'] = args.keep_memeout
+    cmonkey_run['debug'] = args.debug
+    cmonkey_run['keep_memeout'] = args.keep_memeout or args.debug
     cmonkey_run['donetworks'] = not args.nonetworks
     cmonkey_run['domotifs'] = not args.nomotifs and cmonkey_run['meme_version']
     cmonkey_run['use_string'] = not args.nostring
