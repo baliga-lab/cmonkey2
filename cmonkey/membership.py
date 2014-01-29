@@ -252,10 +252,6 @@ class OrigMembership:
             with open(self.pickle_path(), 'w') as outfile:
                 cPickle.dump(row_scores, outfile)
 
-        #rpc = map(len, self.__cluster_row_members.values())
-        #logging.info('Rows per cluster: %i to %i (median %d)' \
-        #  %( min(rpc), max(rpc), np.median(rpc) ) )
-
         start = util.current_millis()
         rd_scores, cd_scores = get_density_scores(self, row_scores,
                                                   column_scores)
