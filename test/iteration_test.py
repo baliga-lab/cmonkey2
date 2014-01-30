@@ -26,6 +26,36 @@ RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
 
+def get_default_motif_scaling(num_iterations, offset=100):
+    """this scaling function is based on the tricky default motif scaling
+    sequence in the R reference"""
+    seq = [1e-5] * offset
+    num_steps = int(round(num_iterations * 0.75))
+    step = 1.0 / (num_steps - 1)
+    seq2 = [step * i for i in range(num_steps)]
+    seq.extend(seq2)
+
+    def default_motif_scaling(iteration):
+        if iteration <= len(seq):
+            return seq[iteration - 1]
+        else:
+            return 1.0
+
+    return default_motif_scaling
+
+
+def get_default_network_scaling(num_iterations):
+    """this scaling function is based on the tricky default network scaling
+    sequence in the R reference"""
+    steps = int(round(num_iterations * 0.75))
+    step = (0.5 - 1e-5) / steps
+
+    def default_network_scaling(iteration):
+        if iteration > steps:
+            return 0.5
+        else:
+            return 1e-5 + step * (iteration - 1)
+    return default_network_scaling
 
 class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """This class tests a Halo setup which was extracted from iteration 49
@@ -79,7 +109,8 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                               'num_clusters': 43,
                               'output_dir': 'out',
                               'remap_network_nodes': False,
-                              'num_iterations': 2000}
+                              'num_iterations': 2000,
+                              'debug': False}
         self.membership = self.__read_members()  # relies on config_params
         self.iteration_result = { 'iteration': 51 }
 
@@ -107,7 +138,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_net_scoring(self):
         #tests the network scoring by itself#
-        network_scaling_fun = scoring.get_default_network_scaling(2000)
+        network_scaling_fun = get_default_network_scaling(2000)
         network_scoring = nw.ScoringFunction(self.organism,
                                              self.membership,
                                              self.ratio_matrix,
@@ -124,7 +155,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
             motif.unique_filter,
             motif.get_remove_low_complexity_filter(meme_suite),
             motif.get_remove_atgs_filter(self.search_distances['upstream'])]
-        motif_scaling_fun = scoring.get_default_motif_scaling(2000, offset=0)
+        motif_scaling_fun = get_default_motif_scaling(2000, offset=0)
         motif_scoring = motif.MemeScoringFunction(
             self.organism,
             self.membership,
@@ -149,7 +180,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
         class DummyNetworkScoring(scoring.ScoringFunctionBase):
             def __init__(self):
-                scaling_fun = scoring.get_default_network_scaling(2000)
+                scaling_fun = get_default_network_scaling(2000)
                 scoring.ScoringFunctionBase.__init__(self, None, None, scaling_fun)
 
             def compute(self, iteration_result, ref_matrix=None):
@@ -157,7 +188,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
         class DummyMotifScoring(scoring.ScoringFunctionBase):
             def __init__(self):
-                scaling_fun = scoring.get_default_motif_scaling(2000, offset=0)
+                scaling_fun = get_default_motif_scaling(2000, offset=0)
                 scoring.ScoringFunctionBase.__init__(self, None, None, scaling_fun)
 
             def compute(self, iteration_result, ref_matrix=None):

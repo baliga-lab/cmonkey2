@@ -17,7 +17,6 @@ import microarray_test as mat
 import meme_test as met
 import pssm_test as pt
 import read_wee_test as rwt
-import scoring_test as st
 import sys
 
 
@@ -61,8 +60,6 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(pt.PssmTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(rwt.ReadWeeTest))
-
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(st.DefaultScalingTest))
 
     if len(sys.argv) > 1 and sys.argv[1] == 'xml':
       xmlrunner.XMLTestRunner(output='test-reports').run(unittest.TestSuite(SUITE))
