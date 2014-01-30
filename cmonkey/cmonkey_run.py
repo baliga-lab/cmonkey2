@@ -279,6 +279,19 @@ class CMonkeyRun:
         if self.__membership is None:
             logging.info("creating and seeding memberships")
             self.__membership = self.__make_membership()
+
+            # debug: write seed into an analytical file for iteration 0
+            if self['debug']:
+                conn = self.__dbconn()
+                with conn:
+                    self.write_memberships(conn, 0)
+                # write complete result into a cmresults.tsv
+                path =  os.path.join(self['output_dir'], 'cmresults-0.tsv')
+                with open(path, 'w') as outfile:
+                    write_iteration(conn, outfile, 0,
+                                    self['num_clusters'], self['output_dir'])
+                conn.close()
+
         return self.__membership
 
     def organism(self):
@@ -447,30 +460,33 @@ class CMonkeyRun:
                                                          column_names)
             return matrix.residual()
 
+    def write_memberships(self, conn, iteration):
+        for cluster in range(1, self['num_clusters'] + 1):
+            column_names = self.membership().columns_for_cluster(cluster)
+            for order_num in self.ratio_matrix.column_indexes_for(column_names):
+                conn.execute('''insert into column_members (iteration,cluster,order_num)
+                                values (?,?,?)''', (iteration, cluster, order_num))
+
+            row_names = self.membership().rows_for_cluster(cluster)
+            for order_num in self.ratio_matrix.row_indexes_for(row_names):
+                conn.execute('''insert into row_members (iteration,cluster,order_num)
+                                values (?,?,?)''', (iteration, cluster, order_num))
+            try:
+                residual = self.residual_for(row_names, column_names)
+                conn.execute('''insert into cluster_residuals (iteration,cluster,residual)
+                           values (?,?,?)''', (iteration, cluster, residual))
+            except:
+                # apparently computing the mean residual led to a numpy masked
+                # value. We set it to 1.0 to avoid crashing out
+                conn.execute('''insert into cluster_residuals (iteration,cluster,residual)
+                           values (?,?,?)''', (iteration, cluster, 1.0))
+
     def write_results(self, iteration_result, compressed=True):
         """write iteration results to database"""
         iteration = iteration_result['iteration']
         conn = self.__dbconn()
         with conn:
-            for cluster in range(1, self['num_clusters'] + 1):
-                column_names = self.membership().columns_for_cluster(cluster)
-                for order_num in self.ratio_matrix.column_indexes_for(column_names):
-                    conn.execute('''insert into column_members (iteration,cluster,order_num)
-                                    values (?,?,?)''', (iteration, cluster, order_num))
-
-                row_names = self.membership().rows_for_cluster(cluster)
-                for order_num in self.ratio_matrix.row_indexes_for(row_names):
-                    conn.execute('''insert into row_members (iteration,cluster,order_num)
-                                    values (?,?,?)''', (iteration, cluster, order_num))
-                try:
-                    residual = self.residual_for(row_names, column_names)
-                    conn.execute('''insert into cluster_residuals (iteration,cluster,residual)
-                               values (?,?,?)''', (iteration, cluster, residual))
-                except:
-                    # apparently computing the mean residual led to a numpy masked
-                    # value. We set it to 1.0 to avoid crashing out
-                    conn.execute('''insert into cluster_residuals (iteration,cluster,residual)
-                               values (?,?,?)''', (iteration, cluster, 1.0))
+            self.write_memberships(conn, iteration)
 
         # write motif infos: TODO: we might want the motif scoring function writing
         # this part
