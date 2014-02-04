@@ -203,6 +203,12 @@ See README and LICENSE for details.\n"""
         percent = (float(num_found) / float(total)) * 100.0
         proceed = percent > 50.0
 
+    # Set update frequency to every iteration, so the full results are written
+    if cmonkey_run['debug']:
+        cmonkey_run['stats_freq'] = 1
+        cmonkey_run['result_freq'] = 1
+
+
     if not proceed:
         logging.error("# genes found: %d, # total: %d, %f %% - please check your ratios file",
                       num_found, total, percent)
