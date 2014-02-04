@@ -163,13 +163,21 @@ See README and LICENSE for details.\n"""
 
     matrix = matrix_factory.create_from(infile)
     infile = None
+
+    # override number of clusters either on the command line or through
+    # the config file
+    try:
+        num_clusters = config.getint("General", "num_clusters")
+    except:
+        num_clusters = args.numclusters
+
     cmonkey_run = cmr.CMonkeyRun(args.organism, matrix,
                                  string_file=args.string,
                                  rsat_organism=args.rsat_organism,
                                  log_filename=args.logfile,
                                  remap_network_nodes=args.remap_network_nodes,
                                  ncbi_code=args.ncbi_code,
-                                 num_clusters=args.numclusters,
+                                 num_clusters=num_clusters,
                                  operon_file=args.operons,
                                  rsat_dir=args.rsat_dir)
     cmonkey_run['output_dir'] = args.out
