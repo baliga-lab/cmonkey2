@@ -481,7 +481,7 @@ class CMonkeyRun:
                 conn.execute('''insert into cluster_residuals (iteration,cluster,residual)
                            values (?,?,?)''', (iteration, cluster, 1.0))
 
-    def write_results(self, iteration_result, compressed=True):
+    def write_results(self, iteration_result):
         """write iteration results to database"""
         iteration = iteration_result['iteration']
         conn = self.__dbconn()
@@ -663,8 +663,6 @@ class CMonkeyRun:
         self.write_start_info()
         for iteration in range(self['start_iteration'],
                                self['num_iterations'] + 1):
-            if self['debug']:
-                util.r_set_seed(10)
             start_time = util.current_millis()
             self.run_iteration(row_scoring, col_scoring, iteration)
             # garbage collection after everything in iteration went out of scope
@@ -675,8 +673,6 @@ class CMonkeyRun:
         """run post processing after the last iteration. We store the results in
         num_iterations + 1 to have a clean separation"""
         if self['postadjust']:
-            if self['debug']:
-                util.r_set_seed(10)
             logging.info("Postprocessing: Adjusting the clusters....")
             # run combiner using the weights of the last iteration
             rscores = row_scoring.combine_cached(self['num_iterations'])
@@ -771,34 +767,42 @@ def meme_to_str(outdir, iteration, cluster):
 
 def write_iteration(conn, outfile, iteration, num_clusters, outdir):
     """writes the iteration into a debug file"""
-    cursor = conn.cursor()
     outfile.write('"cols"\t"dens_string"\t"k"\t"meanp_meme"\t"meme_out"\t"resid"\t"rows"\n')
-    for cluster in range(num_clusters):
-        cursor.execute('select name from column_members m join column_names c on m.order_num = c.order_num where m.cluster = ? and iteration = ?',
-                       [(cluster + 1), iteration])
+    for cluster in range(1, num_clusters + 1):
+        cursor = conn.cursor()
+        cursor.execute('select name from column_members m join column_names c on m.order_num = c.order_num where m.cluster = ? and iteration = ?', [cluster, iteration])
         colnames = [row[0] for row in cursor.fetchall()]
         cols_out = ",".join(colnames)
+        cursor.close()
+
+        cursor = conn.cursor()
         cursor.execute('select score from network_stats where network = \'STRING\' and iteration = ?',
                        [iteration])
         row = cursor.fetchone()
         string_dens = row[0] if row != None else 1.0
+        cursor.close()
 
+        cursor = conn.cursor()
         cursor.execute('select pval from motif_stats where seqtype = \'upstream\' and iteration = ?',
                        [iteration])
         row = cursor.fetchone()
         meme_pval = row[0] if row != None else 1.0
 
         last_meme_iteration = get_last_meme_iteration(outdir)
-        meme_out = meme_to_str(outdir, last_meme_iteration, cluster + 1)
+        meme_out = meme_to_str(outdir, last_meme_iteration, cluster)
+        cursor.close()
 
+        cursor = conn.cursor()
         cursor.execute('select residual from cluster_residuals where cluster = ? and iteration = ?',
                        [cluster, iteration])
         row = cursor.fetchone()
         resid = row[0] if row != None else 1.0
+        cursor.close()
 
-        cursor.execute('select name from row_members m join row_names r on m.order_num = r.order_num where m.cluster = ? and iteration = ?',
-                       [(cluster + 1), iteration])
+        cursor = conn.cursor()
+        cursor.execute('select name from row_members m join row_names r on m.order_num = r.order_num where m.cluster = ? and iteration = ?', [cluster, iteration])
         rownames = [row[0] for row in cursor.fetchall()]
         rows_out = ",".join(rownames)
+        cursor.close()
         
-        outfile.write('"%s"\t%f\t%d\t%f\t"%s"\t%f\t"%s"\n' % (cols_out, string_dens, cluster + 1, meme_pval, meme_out, resid, rows_out))
+        outfile.write('"%s"\t%f\t%d\t%f\t"%s"\t%f\t"%s"\n' % (cols_out, string_dens, cluster, meme_pval, meme_out, resid, rows_out))
