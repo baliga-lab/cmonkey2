@@ -66,7 +66,8 @@ class RatioMatrixFactory(ratiofile: File, synonyms: SynonymsMap) {
   private def read(in: BufferedReader) {
     // First line
     var line = in.readLine
-    columnTitles = line.split("\t").tail.toArray
+    columnTitles = line.split("\t").toArray
+    if (columnTitles.head.length == 0) columnTitles = columnTitles.tail
     val rows = new java.util.ArrayList[String]
 
     while (line != null) {
