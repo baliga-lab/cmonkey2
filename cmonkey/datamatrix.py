@@ -9,6 +9,7 @@ import numpy as np
 import operator
 import util
 import logging
+import rpy2.robjects as robj
 import gzip
 import multiprocessing as mp
 import os

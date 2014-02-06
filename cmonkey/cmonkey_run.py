@@ -12,6 +12,7 @@ import organism as org
 import scoring
 import network as nw
 import stringdb
+import debug
 import os
 from datetime import date, datetime
 import json
@@ -22,7 +23,8 @@ import gzip
 import sqlite3
 from decimal import Decimal
 import cPickle
-
+import rpy2.robjects as robj
+import bz2
 
 USER_KEGG_FILE_PATH = 'config/KEGG_taxonomy'
 USER_GO_FILE_PATH = 'config/proteome2taxid'
@@ -245,7 +247,6 @@ class CMonkeyRun:
                 motif.get_remove_atgs_filter(self['search_distances']['upstream'])]
 
             motif_scaling_fun = scoring.get_scaling(self, 'motif_')
-            nmotif_fun = motif.num_meme_motif_fun(self)
             motif_scoring = motif.MemeScoringFunction(
                 self.organism(),
                 self.membership(),
@@ -253,7 +254,7 @@ class CMonkeyRun:
                 meme_suite,
                 sequence_filters=sequence_filters,
                 scaling_func=motif_scaling_fun,
-                num_motif_func=nmotif_fun,
+                num_motif_func=motif.default_nmotif_fun,
                 update_in_iteration=self['motif_schedule'],
                 motif_in_iteration=self['meme_schedule'],
                 config_params=self.config_params)
@@ -287,9 +288,9 @@ class CMonkeyRun:
                 with conn:
                     self.write_memberships(conn, 0)
                 # write complete result into a cmresults.tsv
-                path =  os.path.join(self['output_dir'], 'cmresults-0.tsv')
-                with open(path, 'w') as outfile:
-                    write_iteration(conn, outfile, 0,
+                path =  os.path.join(self['output_dir'], 'cmresults-0000.tsv.bz2')
+                with bz2.BZ2File(path, 'w') as outfile:
+                    debug.write_iteration(conn, outfile, 0,
                                     self['num_clusters'], self['output_dir'])
                 conn.close()
 
@@ -653,9 +654,9 @@ class CMonkeyRun:
         if self['debug']:
             # write complete result into a cmresults.tsv
             conn = self.__dbconn()
-            path =  os.path.join(self['output_dir'], 'cmresults-%d.tsv' % iteration)
-            with open(path, 'w') as outfile:
-                write_iteration(conn, outfile, iteration,
+            path =  os.path.join(self['output_dir'], 'cmresults-%04d.tsv.bz2' % iteration)
+            with bz2.BZ2File(path, 'w') as outfile:
+                debug.write_iteration(conn, outfile, iteration,
                                 self['num_clusters'], self['output_dir'])
             conn.close()
 
@@ -697,9 +698,9 @@ class CMonkeyRun:
             if self['debug']:
                 # write complete result into a cmresults.tsv
                 conn = self.__dbconn()
-                path =  os.path.join(self['output_dir'], 'cmresults-postproc.tsv')
-                with open(path, 'w') as outfile:
-                    write_iteration(conn, outfile,
+                path =  os.path.join(self['output_dir'], 'cmresults-postproc.tsv.bz2')
+                with bz2.BZ2File(path, 'w') as outfile:
+                    debug.write_iteration(conn, outfile,
                                     self['num_iterations'] + 1,
                                     self['num_clusters'], self['output_dir'])
                 conn.close()
@@ -714,7 +715,7 @@ class CMonkeyRun:
 
     def save_checkpoint_data(self, iteration, row_scoring, col_scoring):
         """save checkpoint data for the specified iteration"""
-        with util.open_shelf("%s.%d" % (self.__checkpoint_basename,
+        with util.open_shelf("%s.%04d" % (self.__checkpoint_basename,
                                         iteration)) as shelf:
             shelf['config'] = self.config_params
             shelf['iteration'] = iteration
@@ -735,75 +736,3 @@ class CMonkeyRun:
             col_scoring.restore_checkpoint_data(shelf)
             #return row_scoring, col_scoring necessary??
 
-
-############################################################
-#### DEBUGGING
-############################################################
-
-
-def get_last_meme_iteration(outdir):
-    """Returns the last iteration where MEME was run"""
-    pat = re.compile('meme-out-(\\d+)-(\\d+)$')
-    filenames = os.listdir(outdir)
-    iterations = []
-    for name in filenames:
-        m = pat.match(name)
-        if m:
-            iterations.append(int(m.group(1)))
-    if len(iterations) > 0:
-        return max(iterations)
-    return None
-
-
-def meme_to_str(outdir, iteration, cluster):
-    """get the meme out file as a string"""
-    lines = ""
-    try:
-        with open(os.path.join(outdir, 'meme-out-%d-%d' % (iteration, cluster))) as infile:
-            lines = [line.replace('\n', '<<<<>>>>') for line in infile.readlines()]
-    except:
-        pass
-    return ''.join(lines)
-
-
-def write_iteration(conn, outfile, iteration, num_clusters, outdir):
-    """writes the iteration into a debug file"""
-    outfile.write('"cols"\t"dens_string"\t"k"\t"meanp_meme"\t"meme_out"\t"resid"\t"rows"\n')
-    for cluster in range(1, num_clusters + 1):
-        cursor = conn.cursor()
-        cursor.execute('select name from column_members m join column_names c on m.order_num = c.order_num where m.cluster = ? and iteration = ?', [cluster, iteration])
-        colnames = [row[0] for row in cursor.fetchall()]
-        cols_out = ",".join(colnames)
-        cursor.close()
-
-        cursor = conn.cursor()
-        cursor.execute('select score from network_stats where network = \'STRING\' and iteration = ?',
-                       [iteration])
-        row = cursor.fetchone()
-        string_dens = row[0] if row != None else 1.0
-        cursor.close()
-
-        cursor = conn.cursor()
-        cursor.execute('select pval from motif_stats where seqtype = \'upstream\' and iteration = ?',
-                       [iteration])
-        row = cursor.fetchone()
-        meme_pval = row[0] if row != None else 1.0
-
-        last_meme_iteration = get_last_meme_iteration(outdir)
-        meme_out = meme_to_str(outdir, last_meme_iteration, cluster)
-        cursor.close()
-
-        cursor = conn.cursor()
-        cursor.execute('select residual from cluster_residuals where cluster = ? and iteration = ?',
-                       [cluster, iteration])
-        row = cursor.fetchone()
-        resid = row[0] if row != None else 1.0
-        cursor.close()
-
-        cursor = conn.cursor()
-        cursor.execute('select name from row_members m join row_names r on m.order_num = r.order_num where m.cluster = ? and iteration = ?', [cluster, iteration])
-        rownames = [row[0] for row in cursor.fetchall()]
-        rows_out = ",".join(rownames)
-        cursor.close()
-        
-        outfile.write('"%s"\t%f\t%d\t%f\t"%s"\t%f\t"%s"\n' % (cols_out, string_dens, cluster, meme_pval, meme_out, resid, rows_out))
