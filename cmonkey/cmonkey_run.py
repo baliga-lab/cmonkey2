@@ -290,7 +290,7 @@ class CMonkeyRun:
                 # write complete result into a cmresults.tsv
                 path =  os.path.join(self['output_dir'], 'cmresults-0000.tsv.bz2')
                 with bz2.BZ2File(path, 'w') as outfile:
-                    write_iteration(conn, outfile, 0,
+                    debug.write_iteration(conn, outfile, 0,
                                     self['num_clusters'], self['output_dir'])
                 conn.close()
 
@@ -656,7 +656,7 @@ class CMonkeyRun:
             conn = self.__dbconn()
             path =  os.path.join(self['output_dir'], 'cmresults-%04d.tsv.bz2' % iteration)
             with bz2.BZ2File(path, 'w') as outfile:
-                write_iteration(conn, outfile, iteration,
+                debug.write_iteration(conn, outfile, iteration,
                                 self['num_clusters'], self['output_dir'])
             conn.close()
 
@@ -700,7 +700,7 @@ class CMonkeyRun:
                 conn = self.__dbconn()
                 path =  os.path.join(self['output_dir'], 'cmresults-postproc.tsv.bz2')
                 with bz2.BZ2File(path, 'w') as outfile:
-                    write_iteration(conn, outfile,
+                    debug.write_iteration(conn, outfile,
                                     self['num_iterations'] + 1,
                                     self['num_clusters'], self['output_dir'])
                 conn.close()

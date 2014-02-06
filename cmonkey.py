@@ -79,6 +79,12 @@ def set_config(cmonkey_run, config):
     set_scaling('Rows', 'row_')
     set_scaling('Networks', 'network_')
 
+    try:
+        cmonkey_run['nmotifs_rvec'] = config.get('MEME', 'nmotifs_rvec')
+    except:
+        raise Exception("no setting found to retrieve the MEME nmotifs function")
+
+
 # if we were installed through Debian package management, default.ini is found here
 SYSTEM_INI_PATH = '/etc/cmonkey-python/default.ini'
 USER_INI_PATH = 'config/default.ini'
