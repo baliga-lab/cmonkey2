@@ -22,7 +22,7 @@ import gzip
 import sqlite3
 from decimal import Decimal
 import cPickle
-import rpy2.robjects as robj
+
 
 USER_KEGG_FILE_PATH = 'config/KEGG_taxonomy'
 USER_GO_FILE_PATH = 'config/proteome2taxid'

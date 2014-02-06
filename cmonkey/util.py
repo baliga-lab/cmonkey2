@@ -451,6 +451,17 @@ def order_fast(values, result_size, reverse=True):
     return [ranked[i][1] for i in xrange(result_size)]
 
 
+def get_rvec_scaling(rvecstr):
+    """make scaling function based on an R vector expression string"""
+    def scale(iteration):
+        rvec = robj.r(rvecstr)
+        if iteration > len(rvec):
+            return rvec[-1]
+        else:
+            return rvec[iteration - 1]
+    return scale
+        
+
 ######################################################################
 ### Misc functionality
 ######################################################################
