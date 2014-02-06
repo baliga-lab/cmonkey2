@@ -213,7 +213,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             # running MEME and store the result for the non-motifing iterations
             # to reuse
             # Note: currently, iteration results are only computed here
-            num_motifs = self.num_motif_func(iteration)
+            num_motifs = int(self.num_motif_func(iteration))
             self.__last_iteration_result = {'iteration': iteration}
             self.all_pvalues = self.compute_pvalues(self.__last_iteration_result,
                                                     num_motifs)
