@@ -21,7 +21,7 @@ def meme_to_str(outdir, iteration, cluster):
     """get the meme out file as a string"""
     lines = ""
     try:
-        with open(os.path.join(outdir, 'meme-out-%d-%d' % (iteration, cluster))) as infile:
+        with open(os.path.join(outdir, 'meme-out-%04d-%04d' % (iteration, cluster))) as infile:
             lines = [line.replace('\n', '<<<<>>>>') for line in infile.readlines()]
     except:
         pass

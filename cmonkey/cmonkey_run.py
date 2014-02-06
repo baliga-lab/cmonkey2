@@ -287,7 +287,7 @@ class CMonkeyRun:
                 with conn:
                     self.write_memberships(conn, 0)
                 # write complete result into a cmresults.tsv
-                path =  os.path.join(self['output_dir'], 'cmresults-0.tsv')
+                path =  os.path.join(self['output_dir'], 'cmresults-0000.tsv')
                 with open(path, 'w') as outfile:
                     write_iteration(conn, outfile, 0,
                                     self['num_clusters'], self['output_dir'])
@@ -653,7 +653,7 @@ class CMonkeyRun:
         if self['debug']:
             # write complete result into a cmresults.tsv
             conn = self.__dbconn()
-            path =  os.path.join(self['output_dir'], 'cmresults-%d.tsv' % iteration)
+            path =  os.path.join(self['output_dir'], 'cmresults-%04d.tsv' % iteration)
             with open(path, 'w') as outfile:
                 write_iteration(conn, outfile, iteration,
                                 self['num_clusters'], self['output_dir'])
@@ -714,7 +714,7 @@ class CMonkeyRun:
 
     def save_checkpoint_data(self, iteration, row_scoring, col_scoring):
         """save checkpoint data for the specified iteration"""
-        with util.open_shelf("%s.%d" % (self.__checkpoint_basename,
+        with util.open_shelf("%s.%04d" % (self.__checkpoint_basename,
                                         iteration)) as shelf:
             shelf['config'] = self.config_params
             shelf['iteration'] = iteration
