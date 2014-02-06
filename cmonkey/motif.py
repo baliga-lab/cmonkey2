@@ -30,13 +30,9 @@ ComputeScoreParams = collections.namedtuple('ComputeScoreParams',
                                              'debug'])
 
 
-def default_nmotif_fun(iteration, num_iterations):
-    """default function to compute the nmotif parameter for MEME dependent on
-    the iteration"""
-    if iteration <= (num_iterations * 2 / 3):
-        return 1
-    else:
-        return 2
+def num_meme_motif_fun(params):
+    """returns a function that returns the number of motifs to be returned by MEME"""
+    return util.get_iter_fun(params, "nmotifs", params['num_iterations'])
 
 
 # Applicable sequence filters
@@ -217,8 +213,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             # running MEME and store the result for the non-motifing iterations
             # to reuse
             # Note: currently, iteration results are only computed here
-            num_motifs = self.num_motif_func(iteration,
-                                             self.config_params['num_iterations'])
+            num_motifs = int(self.num_motif_func(iteration))
             self.__last_iteration_result = {'iteration': iteration}
             self.all_pvalues = self.compute_pvalues(self.__last_iteration_result,
                                                     num_motifs)

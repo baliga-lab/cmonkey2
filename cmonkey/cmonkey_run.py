@@ -23,7 +23,6 @@ import gzip
 import sqlite3
 from decimal import Decimal
 import cPickle
-import rpy2.robjects as robj
 import bz2
 
 USER_KEGG_FILE_PATH = 'config/KEGG_taxonomy'
@@ -247,6 +246,7 @@ class CMonkeyRun:
                 motif.get_remove_atgs_filter(self['search_distances']['upstream'])]
 
             motif_scaling_fun = scoring.get_scaling(self, 'motif_')
+            nmotif_fun = motif.num_meme_motif_fun(self)
             motif_scoring = motif.MemeScoringFunction(
                 self.organism(),
                 self.membership(),
@@ -254,7 +254,7 @@ class CMonkeyRun:
                 meme_suite,
                 sequence_filters=sequence_filters,
                 scaling_func=motif_scaling_fun,
-                num_motif_func=motif.default_nmotif_fun,
+                num_motif_func=nmotif_fun,
                 update_in_iteration=self['motif_schedule'],
                 motif_in_iteration=self['meme_schedule'],
                 config_params=self.config_params)
@@ -291,7 +291,7 @@ class CMonkeyRun:
                 path =  os.path.join(self['output_dir'], 'cmresults-0000.tsv.bz2')
                 with bz2.BZ2File(path, 'w') as outfile:
                     debug.write_iteration(conn, outfile, 0,
-                                    self['num_clusters'], self['output_dir'])
+                                          self['num_clusters'], self['output_dir'])
                 conn.close()
 
         return self.__membership
@@ -657,7 +657,7 @@ class CMonkeyRun:
             path =  os.path.join(self['output_dir'], 'cmresults-%04d.tsv.bz2' % iteration)
             with bz2.BZ2File(path, 'w') as outfile:
                 debug.write_iteration(conn, outfile, iteration,
-                                self['num_clusters'], self['output_dir'])
+                                      self['num_clusters'], self['output_dir'])
             conn.close()
 
     def run_iterations(self, row_scoring, col_scoring):
@@ -701,8 +701,8 @@ class CMonkeyRun:
                 path =  os.path.join(self['output_dir'], 'cmresults-postproc.tsv.bz2')
                 with bz2.BZ2File(path, 'w') as outfile:
                     debug.write_iteration(conn, outfile,
-                                    self['num_iterations'] + 1,
-                                    self['num_clusters'], self['output_dir'])
+                                          self['num_iterations'] + 1,
+                                          self['num_clusters'], self['output_dir'])
                 conn.close()
 
 
@@ -716,7 +716,7 @@ class CMonkeyRun:
     def save_checkpoint_data(self, iteration, row_scoring, col_scoring):
         """save checkpoint data for the specified iteration"""
         with util.open_shelf("%s.%04d" % (self.__checkpoint_basename,
-                                        iteration)) as shelf:
+                                          iteration)) as shelf:
             shelf['config'] = self.config_params
             shelf['iteration'] = iteration
             self.membership().store_checkpoint_data(shelf)

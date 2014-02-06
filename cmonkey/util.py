@@ -451,6 +451,30 @@ def order_fast(values, result_size, reverse=True):
     return [ranked[i][1] for i in xrange(result_size)]
 
 
+def get_rvec_fun(rvecstr):
+    """make scaling function based on an R vector expression string"""
+    def scale(iteration):
+        rvec = robjects.r(rvecstr)
+        if iteration > len(rvec):
+            return rvec[-1]
+        else:
+            return rvec[iteration - 1]
+    return scale
+        
+
+def get_iter_fun(params, prefix, num_iterations):
+    """returns an iteration function for the given prefix from the configuration parameters"""
+    try:
+        constval = params[prefix + '_const']
+        return lambda i: constval
+    except:
+        pass
+    try:
+        rvec = params[prefix + '_rvec']
+        return get_rvec_fun(rvec.replace('num_iterations', str(num_iterations)))
+    except:
+        raise Exception("no rvec found for prefix '%s'" % prefix)
+
 ######################################################################
 ### Misc functionality
 ######################################################################

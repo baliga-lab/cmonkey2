@@ -17,7 +17,6 @@ import os, os.path
 
 KEGG_FILE_PATH = 'config/KEGG_taxonomy'
 GO_FILE_PATH = 'config/proteome2taxid'
-RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
 
@@ -79,7 +78,7 @@ class Meme430Test(unittest.TestCase):  # pylint: disable-msg=R0904
                                          meme_suite,
                                          sequence_filters=sequence_filters,
                                          scaling_func=lambda iter: 1.0,
-                                         num_motif_func=motif.default_nmotif_fun,
+                                         num_motif_func=lambda iter: 1,
                                          update_in_iteration=lambda x: True,
                                          motif_in_iteration=lambda x: True,
                                          config_params=config_params)
@@ -101,7 +100,7 @@ def make_halo(ratio_matrix, search_distances, scan_distances):
     """returns the organism object to work on"""
     keggfile = util.read_dfile(KEGG_FILE_PATH, comment='#')
     gofile = util.read_dfile(GO_FILE_PATH)
-    rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
+    rsatdb = rsat.RsatDatabase(rsat.RSAT_BASE_URL, CACHE_DIR)
     mo_db = microbes_online.MicrobesOnline(CACHE_DIR)
     stringfile = 'testdata/string_links_64091.tab'
 

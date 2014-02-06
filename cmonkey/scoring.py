@@ -18,7 +18,6 @@ import numpy as np
 import cPickle
 import gc
 import sqlite3
-import rpy2.robjects as robj
 
 
 # Official keys to access values in the configuration map
@@ -36,30 +35,9 @@ KEY_STRING_FILE = 'string_file'
 USE_MULTIPROCESSING = True
 
 
-def get_rvec_scaling(rvecstr):
-    """make scaling function based on an R vector expression string"""
-    def scale(iteration):
-        rvec = robj.r(rvecstr)
-        if iteration > len(rvec):
-            return rvec[-1]
-        else:
-            return rvec[iteration - 1]
-    return scale
-        
-
 def get_scaling(params, prefix):
     """returns a scaling function for the given prefix from the configuration parameters"""
-    try:
-        scaling_const = params[prefix + 'scaling_const']
-        return lambda i: scaling_const
-    except:
-        pass
-    try:
-        scaling_rvec = params[prefix + 'scaling_rvec']
-        return get_rvec_scaling(scaling_rvec.replace('num_iterations',
-                                                     str(params['num_iterations'])))
-    except:
-        raise Exception("no scaling found for prefix '%s'" % prefix)
+    return util.get_iter_fun(params, prefix + 'scaling', params['num_iterations'])
 
 
 class RunLog:
