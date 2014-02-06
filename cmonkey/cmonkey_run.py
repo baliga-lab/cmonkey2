@@ -24,6 +24,7 @@ import sqlite3
 from decimal import Decimal
 import cPickle
 import rpy2.robjects as robj
+import bz2
 
 USER_KEGG_FILE_PATH = 'config/KEGG_taxonomy'
 USER_GO_FILE_PATH = 'config/proteome2taxid'
@@ -287,8 +288,8 @@ class CMonkeyRun:
                 with conn:
                     self.write_memberships(conn, 0)
                 # write complete result into a cmresults.tsv
-                path =  os.path.join(self['output_dir'], 'cmresults-0000.tsv')
-                with open(path, 'w') as outfile:
+                path =  os.path.join(self['output_dir'], 'cmresults-0000.tsv.bz2')
+                with bz2.BZ2File(path, 'w') as outfile:
                     write_iteration(conn, outfile, 0,
                                     self['num_clusters'], self['output_dir'])
                 conn.close()
@@ -653,8 +654,8 @@ class CMonkeyRun:
         if self['debug']:
             # write complete result into a cmresults.tsv
             conn = self.__dbconn()
-            path =  os.path.join(self['output_dir'], 'cmresults-%04d.tsv' % iteration)
-            with open(path, 'w') as outfile:
+            path =  os.path.join(self['output_dir'], 'cmresults-%04d.tsv.bz2' % iteration)
+            with bz2.BZ2File(path, 'w') as outfile:
                 write_iteration(conn, outfile, iteration,
                                 self['num_clusters'], self['output_dir'])
             conn.close()
@@ -697,8 +698,8 @@ class CMonkeyRun:
             if self['debug']:
                 # write complete result into a cmresults.tsv
                 conn = self.__dbconn()
-                path =  os.path.join(self['output_dir'], 'cmresults-postproc.tsv')
-                with open(path, 'w') as outfile:
+                path =  os.path.join(self['output_dir'], 'cmresults-postproc.tsv.bz2')
+                with bz2.BZ2File(path, 'w') as outfile:
                     write_iteration(conn, outfile,
                                     self['num_iterations'] + 1,
                                     self['num_clusters'], self['output_dir'])
