@@ -245,6 +245,7 @@ class CMonkeyRun:
                 motif.get_remove_atgs_filter(self['search_distances']['upstream'])]
 
             motif_scaling_fun = scoring.get_scaling(self, 'motif_')
+            nmotif_fun = motif.num_meme_motif_fun(self)
             motif_scoring = motif.MemeScoringFunction(
                 self.organism(),
                 self.membership(),
@@ -252,7 +253,7 @@ class CMonkeyRun:
                 meme_suite,
                 sequence_filters=sequence_filters,
                 scaling_func=motif_scaling_fun,
-                num_motif_func=motif.default_nmotif_fun,
+                num_motif_func=nmotif_fun,
                 update_in_iteration=self['motif_schedule'],
                 motif_in_iteration=self['meme_schedule'],
                 config_params=self.config_params)

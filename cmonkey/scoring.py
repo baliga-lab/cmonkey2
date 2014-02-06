@@ -37,17 +37,7 @@ USE_MULTIPROCESSING = True
 
 def get_scaling(params, prefix):
     """returns a scaling function for the given prefix from the configuration parameters"""
-    try:
-        scaling_const = params[prefix + 'scaling_const']
-        return lambda i: scaling_const
-    except:
-        pass
-    try:
-        scaling_rvec = params[prefix + 'scaling_rvec']
-        return util.get_rvec_scaling(scaling_rvec.replace('num_iterations',
-                                                          str(params['num_iterations'])))
-    except:
-        raise Exception("no scaling found for prefix '%s'" % prefix)
+    return util.get_iter_fun(params, prefix + 'scaling', params['num_iterations'])
 
 
 class RunLog:
