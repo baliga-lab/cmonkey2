@@ -233,10 +233,10 @@ def compute_column_scores(membership, matrix, num_clusters,
             columns = membership.columns_for_cluster(cluster)
             column_scores = cluster_column_scores[cluster - 1]
             if column_scores is not None:
-                for row in xrange(column_scores.num_rows):
-                    for col in xrange(column_scores.num_columns):
-                        if column_scores.column_names[col] in columns:
-                            membership_values.append(column_scores.values[row][col])
+                colnames, scores = column_scores
+                for col in xrange(len(colnames)):
+                    if colnames[col] in columns:
+                        membership_values.append(scores[col])
         return util.quantile(membership_values, 0.95)
 
     def make_submatrix(cluster):
@@ -269,13 +269,15 @@ def compute_column_scores(membership, matrix, num_clusters,
         column_scores = cluster_column_scores[cluster]
 
         if column_scores is not None:
-            column_scores.values[np.isnan(column_scores.values)] = substitution
+            _, scores = column_scores
+            scores[np.isnan(scores)] = substitution
 
         for row_index in xrange(matrix.num_columns):
             if column_scores is None:
                 rvalues[row_index][cluster] = substitution
             else:
-                rvalues[row_index][cluster] = column_scores.values[0][row_index]
+                _, scores = column_scores
+                rvalues[row_index][cluster] = scores[row_index]
     result.fix_extreme_values()
     return result
 
@@ -300,8 +302,7 @@ def compute_column_scores_submatrix(matrix):
     matrix_minus_colmeans_squared = np.square(matrix.values - colmeans)
     var_norm = np.abs(colmeans) + 0.01
     result = util.column_means(matrix_minus_colmeans_squared) / var_norm
-    return dm.DataMatrix(1, matrix.num_columns, ['Col. Scores'],
-                         matrix.column_names, [result])
+    return (matrix.column_names, result)
 
 
 def combine(result_matrices, score_scalings, membership, quantile_normalize):
