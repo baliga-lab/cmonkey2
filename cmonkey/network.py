@@ -310,14 +310,9 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """compute the score means on the given network score"""
         result = {}
         for cluster in xrange(1, self.num_clusters() + 1):
-            ## TODO: we can rewrite this as a list comprehension. Check whether that
-            ## will be faster
-            cluster_scores = []
-            for gene in self.rows_for_cluster(cluster):
-                if gene in network_score[cluster].keys():
-                    cluster_scores.append(network_score[cluster][gene])
-                else:
-                    cluster_scores.append(0.0)
+            cluster_scores = [network_score[cluster][gene]
+                              if gene in network_score[cluster] else 0.0
+                              for gene in self.rows_for_cluster(cluster)]
             result[cluster] = util.trim_mean(cluster_scores, 0.05)
         return result
 

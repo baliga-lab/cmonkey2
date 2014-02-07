@@ -143,8 +143,6 @@ class CMonkeyRun:
         conn.execute('''create table cluster_residuals (iteration int,
                         cluster int, residual decimal)''')
 
-        # motif results: TODO: we might want to have the motif scoring function
-        # ------------- write it
         # in case you are wondering about the redundant iteration field here -
         # it allows for much faster database access when selecting by iteration
         conn.execute('''create table motif_infos (iteration int, cluster int,
@@ -490,8 +488,6 @@ class CMonkeyRun:
         with conn:
             self.write_memberships(conn, iteration)
 
-        # write motif infos: TODO: we might want the motif scoring function writing
-        # this part
         if 'motifs' in iteration_result:
             motifs = iteration_result['motifs']
             with conn:
