@@ -445,7 +445,7 @@ def adjust_cluster(membership, cluster, rowscores, cutoff, limit):
         sm = matrix.submatrix_by_name(wh, [matrix.column_names[column]])
         sm_values = sm.values
         max_row = 0
-        max_score = sys.float_info.min
+        max_score = -sys.float_info.max
         for row in range(sm.num_rows):
             if sm_values[row][0] > max_score:
                 max_score = sm_values[row][0]
@@ -462,7 +462,7 @@ def adjust_cluster(membership, cluster, rowscores, cutoff, limit):
     rs_values = rowscores.values
     for row, row_name in not_in:
         if rs_values[row][cluster - 1] < threshold:
-            #print "Appending %s with score: %f" % (row_name, rowscores[row][cluster - 1])
+            #print "Appending %s with score: %f" % (row_name, rs_values[row][cluster - 1])
             wh.append(row_name)
     #print "THRESHOLD: ", threshold
     #print "WH: ", wh
