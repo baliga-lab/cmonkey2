@@ -1,8 +1,12 @@
 #!/usr/bin/python
 import argparse
+import math
 
-EPS = 0.0000001
+EPS = 0.00005
 def compare(file1, file2, verbose, eps=EPS):
+    def tofloat(x):
+        return float('nan') if x == 'NA' else float(x)
+
     num_errors = 0
     num_correct = 0
     
@@ -14,8 +18,8 @@ def compare(file1, file2, verbose, eps=EPS):
                 raise Exception('Num clusters do not match')
             inrows1 = [line.strip().split('\t') for line in infile1]
             inrows2 = [line.strip().split('\t') for line in infile2]
-            data1 = {line[0]: map(float, line[1:]) for line in inrows1 }
-            data2 = {line[0]: map(float, line[1:]) for line in inrows2 }
+            data1 = {line[0]: map(tofloat, line[1:]) for line in inrows1 }
+            data2 = {line[0]: map(tofloat, line[1:]) for line in inrows2 }
             if len(data1) != len(data2):
                 raise Exception('Numbers of entries does not match')
             if set(data1.keys()) != set(data2.keys()):
@@ -30,7 +34,17 @@ def compare(file1, file2, verbose, eps=EPS):
                 if len(values1) != len(values2):
                     raise Exception("data for key '%s' does not have the same length" % key)
                 for i in range(len(values1)):
-                    if abs(values1[i] - values2[i]) > eps:
+                    if math.isnan(values1[i]) and  math.isnan(values2[i]):
+                        continue
+                    elif math.isnan(values1[i]) and not math.isnan(values2[i]):
+                        if verbose:
+                            print "[%s, %d]: NaN != %.13f" % (key, i, values2[i])
+                        num_errors += 1
+                    elif not math.isnan(values1[i]) and math.isnan(values2[i]):
+                        if verbose:
+                            print "[%s, %d]: %.13f != NaN" % (key, i, values1[i])
+                        num_errors += 1
+                    elif abs(values1[i] - values2[i]) > eps:
                         if verbose:
                             print "[%s, %d]: %.13f != %.13f" % (key, i, values1[i], values2[i])
                         num_errors += 1
