@@ -42,7 +42,7 @@ def set_config(cmonkey_run, config):
                                                config.get("General", "dbfile_name"))
     cmonkey_run['multiprocessing'] = config.getboolean('General', 'use_multiprocessing')
     cmonkey_run['postadjust'] = config.getboolean('General', 'postadjust')
-    cmonkey_run['fuzzify'] = config.getboolean('General', 'fuzzify')
+    cmonkey_run['add_fuzz'] = config.get('General', 'add_fuzz')
     cmonkey_run['checkpoint_interval'] = config.getint('General', 'checkpoint_interval')
 
     # Quantile normalization is false by default in cMonkey-R

@@ -237,12 +237,12 @@ class OrigMembership:
     def update(self, matrix, row_scores, column_scores,
                num_iterations, iteration_result):
         """top-level update method"""
-        if self.__config_params['fuzzify']:
-            start = util.current_millis()
-            row_scores, column_scores = fuzzify(self, row_scores, column_scores,
-                                                num_iterations, iteration_result)
-            elapsed = util.current_millis() - start
-            logging.info("fuzzify took %f s.", elapsed / 1000.0)
+        start = util.current_millis()
+        row_scores, column_scores = fuzzify(self, row_scores, column_scores,
+                                            num_iterations, iteration_result,
+                                            self.__config_params['add_fuzz'])
+        elapsed = util.current_millis() - start
+        logging.info("fuzzify took %f s.", elapsed / 1000.0)
 
         # pickle the (potentially fuzzed) row scores to use them
         # in the post adjustment step. We only need to do that in the last
@@ -731,59 +731,62 @@ def make_file_column_seeder(filename, sep=' '):
     return seed
 
 
-def fuzzify(membership, row_scores, column_scores, num_iterations, iteration_result):
+def fuzzify(membership, row_scores, column_scores, num_iterations, iteration_result,
+            add_fuzz):
     """Provide an iteration-specific fuzzification"""
+    if add_fuzz == 'none':
+        logging.info('DO NOT FUZZIFY !!')
+        return row_scores, column_scores
+
+    # truth table maps from add_fuzz parameter to where fuzz should be added
+    fuzz_vals = {'both': (True, True), 'rows': (True, False), 'columns': (False, True)}
+    fuzz_rows, fuzz_cols = fuzz_vals[add_fuzz]
+
     iteration = iteration_result['iteration']
     #logging.info("__fuzzify(), setup...")
     #start_time = util.current_millis()
-    #fuzzy_coeff = std_fuzzy_coefficient(iteration, num_iterations)
     fuzzy_coeff = old_fuzzy_coefficient(iteration, num_iterations)
     iteration_result['fuzzy-coeff'] = fuzzy_coeff
-    num_row_fuzzy_values = row_scores.num_rows * row_scores.num_columns
-    num_col_fuzzy_values = (column_scores.num_rows *
-                            column_scores.num_columns)
-    row_sd_values = []
 
-    # optimization: unwrap the numpy arrays to access them directly
-    row_score_values = row_scores.values
-    col_score_values = column_scores.values
+    if fuzz_rows:
+        logging.info('fuzzify rows')
+        num_row_fuzzy_values = row_scores.num_rows * row_scores.num_columns
+        row_score_values = row_scores.values
+        row_sd_values = []
 
-    # iterate the row names directly
-    row_names = row_scores.row_names
-    for col in xrange(row_scores.num_columns):
-        cluster_rows = membership.rows_for_cluster(col + 1)
-        for row in xrange(row_scores.num_rows):
-            if row_names[row] in cluster_rows:
-                row_sd_values.append(row_score_values[row][col])
+        # iterate the row names directly
+        row_names = row_scores.row_names
+        for col in xrange(row_scores.num_columns):
+            cluster_rows = membership.rows_for_cluster(col + 1)
+            for row in xrange(row_scores.num_rows):
+                if row_names[row] in cluster_rows:
+                    row_sd_values.append(row_score_values[row][col])
 
-    # Note: If there are no non-NaN values in row_sd_values, row_rnorm
-    # will have all NaNs
-    row_rnorm = util.sd_rnorm(row_sd_values, num_row_fuzzy_values,
-                              fuzzy_coeff)
+        # Note: If there are no non-NaN values in row_sd_values, row_rnorm
+        # will have all NaNs
+        row_rnorm = util.sd_rnorm(row_sd_values, num_row_fuzzy_values, fuzzy_coeff)
+        row_score_values += np.array(row_rnorm).reshape(row_scores.num_rows,
+                                                        row_scores.num_columns)
 
-    col_sd_values = []
-    row_names = column_scores.row_names
-    for col in xrange(column_scores.num_columns):
-        cluster_cols = membership.columns_for_cluster(col + 1)
-        for row in xrange(column_scores.num_rows):
-            if row_names[row] in cluster_cols:
-                col_sd_values.append(col_score_values[row][col])
+    if fuzz_cols:
+        logging.info('fuzzify columns')
+        num_col_fuzzy_values = column_scores.num_rows * column_scores.num_columns
+        col_score_values = column_scores.values
+        col_sd_values = []
+        row_names = column_scores.row_names
+        for col in xrange(column_scores.num_columns):
+            cluster_cols = membership.columns_for_cluster(col + 1)
+            for row in xrange(column_scores.num_rows):
+                if row_names[row] in cluster_cols:
+                    col_sd_values.append(col_score_values[row][col])
 
-    # Note: If there are no non-NaN values in col_sd_values, col_rnorm
-    # will have all NaNs
-    col_rnorm = util.sd_rnorm(col_sd_values, num_col_fuzzy_values,
-                              fuzzy_coeff)
+        # Note: If there are no non-NaN values in col_sd_values, col_rnorm
+        # will have all NaNs
+        col_rnorm = util.sd_rnorm(col_sd_values, num_col_fuzzy_values, fuzzy_coeff)
+        # add fuzzy values to the row/column scores
+        col_score_values += np.array(col_rnorm).reshape(column_scores.num_rows,
+                                                        column_scores.num_columns)
 
-    #elapsed = util.current_millis() - start_time
-    #logging.info("fuzzify() SETUP finished in %f s.", elapsed / 1000.0)
-    #logging.info("fuzzifying scores...")
-    #start_time = util.current_millis()
-
-    # add fuzzy values to the row/column scores
-    row_score_values += np.array(row_rnorm).reshape(
-        row_scores.num_rows, row_scores.num_columns)
-    col_score_values += np.array(col_rnorm).reshape(
-        column_scores.num_rows, column_scores.num_columns)
     #elapsed = util.current_millis() - start_time
     #logging.info("fuzzify() finished in %f s.", elapsed / 1000.0)
     return row_scores, column_scores
