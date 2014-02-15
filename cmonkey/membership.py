@@ -749,7 +749,6 @@ def fuzzify(membership, row_scores, column_scores, num_iterations, iteration_res
     iteration_result['fuzzy-coeff'] = fuzzy_coeff
 
     if fuzz_rows:
-        logging.info('fuzzify rows')
         num_row_fuzzy_values = row_scores.num_rows * row_scores.num_columns
         row_score_values = row_scores.values
         row_sd_values = []
@@ -769,7 +768,6 @@ def fuzzify(membership, row_scores, column_scores, num_iterations, iteration_res
                                                         row_scores.num_columns)
 
     if fuzz_cols:
-        logging.info('fuzzify columns')
         num_col_fuzzy_values = column_scores.num_rows * column_scores.num_columns
         col_score_values = column_scores.values
         col_sd_values = []
