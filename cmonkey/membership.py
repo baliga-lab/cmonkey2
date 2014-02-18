@@ -264,14 +264,14 @@ class OrigMembership:
         logging.info("COMPENSATE_SIZE() took %f s.", elapsed / 1000.0)
 
         start_time = util.current_millis()
-        update_for_rows2(self, rd_scores, self.__config_params['multiprocessing'],
-                         self.__config_params['debug'])
+        update_for_rows(self, rd_scores, self.__config_params['multiprocessing'],
+                        self.__config_params['debug'])
         elapsed = util.current_millis() - start_time
         logging.info("update_for rdscores finished in %f s.", elapsed / 1000.0)
 
         start_time = util.current_millis()
-        update_for_cols2(self, cd_scores, self.__config_params['multiprocessing'],
-                         self.__config_params['debug'])
+        update_for_cols(self, cd_scores, self.__config_params['multiprocessing'],
+                        self.__config_params['debug'])
         elapsed = util.current_millis() - start_time
         logging.info("update_for cdscores finished in %f s.", elapsed / 1000.0)
 
@@ -321,7 +321,7 @@ def create_membership(matrix, seed_row_memberships, seed_column_memberships,
                           config_params, matrix.row_indexes, matrix.column_indexes)
 
 
-def update_for_rows2(membership, rd_scores, multiprocessing, debug):
+def update_for_rows(membership, rd_scores, multiprocessing, debug):
     """generically updating row memberships according to  rd_scores"""
     rownames = rd_scores.row_names
     # note: for rows, the original version sorts the best clusters by cluster number !!!
@@ -368,7 +368,7 @@ def replace_delta_row_member2(membership, row, rm, rd_scores):
             membership.replace_row_cluster(row, maxidx, rm[maxidx])
 
 
-def update_for_cols2(membership, cd_scores, multiprocessing, debug):
+def update_for_cols(membership, cd_scores, multiprocessing, debug):
     """updating column memberships according to cd_scores"""
     global UPDATE_MEMBERSHIP
 
