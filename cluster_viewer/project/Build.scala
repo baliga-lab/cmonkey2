@@ -22,7 +22,7 @@ object ApplicationBuild extends Build {
     resolvers += "official Maven mirror" at "http://repo.typesafe.com/typesafe/releases/"
   )
 
-  def pluginDependencies = Seq(libraryDependencies ++= Seq("com.typesafe.play" % "play_2.10" % "2.2.0"))
+  def pluginDependencies = Seq(libraryDependencies ++= Seq("com.typesafe.play" % "play_2.10" % "2.2.1"))
 
   val main = play.Project(appName, appVersion, appDependencies).settings(
     scalacOptions ++= Seq("-feature", "-deprecation", "-unchecked")
