@@ -20,7 +20,7 @@ for the human setup, Weeder 1.4.2 is needed
 for running the cluster viewer (optional):
 
 * Java JDK (Oracle or OpenJDK) >= 6
-* Play Framework >= 2.1
+* Play Framework >= 2.2.1
 
 ### Running the Unit Tests
 
