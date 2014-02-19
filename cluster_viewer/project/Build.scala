@@ -18,11 +18,11 @@ object ApplicationBuild extends Build {
   def clusterViewerSettings = Seq(
     organization := "org.systemsbiology",
     version := "1.0",
-    scalaVersion := "2.10.0",
+    scalaVersion := "2.10.3",
     resolvers += "official Maven mirror" at "http://repo.typesafe.com/typesafe/releases/"
   )
 
-  def pluginDependencies = Seq(libraryDependencies ++= Seq("play" % "play_2.10" % "2.1.0"))
+  def pluginDependencies = Seq(libraryDependencies ++= Seq("com.typesafe.play" % "play_2.10" % "2.2.0"))
 
   val main = play.Project(appName, appVersion, appDependencies).settings(
     scalacOptions ++= Seq("-feature", "-deprecation", "-unchecked")
