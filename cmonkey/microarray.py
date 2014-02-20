@@ -34,7 +34,7 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
         cscores.T[cluster_num - 1] = -scores
 
     start_time = util.current_millis()
-    column_members = [util.order_fast(cscores[i], num_clusters_per_column)
+    column_members = [util.rorder(cscores[i], num_clusters_per_column)
                       for i in xrange(num_cols)]
     elapsed = util.current_millis() - start_time
     logging.info("seed column members in %f s.", elapsed % 1000.0)

@@ -451,6 +451,14 @@ def order_fast(values, result_size, reverse=True):
     return [ranked[i][1] for i in xrange(result_size)]
 
 
+def rorder(values, result_size):
+    """call the R version of order"""
+    r_order = robjects.r['order']
+    kwargs = {'decreasing': True}
+    res = r_order(robjects.FloatVector(values), **kwargs)
+    return res[:result_size]
+
+
 def get_rvec_fun(rvecstr):
     """make scaling function based on an R vector expression string"""
     def scale(iteration):

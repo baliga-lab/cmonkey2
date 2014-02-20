@@ -516,10 +516,10 @@ def seeing_change(prob, debug):
 def get_best_clusters(scores, n, sort=False):
     """retrieve the n best scored clusters for the given row/column score matrix"""
     if sort:
-        return {scores.row_names[row]: sorted(util.order_fast(scores.row_values(row), n))
+        return {scores.row_names[row]: sorted(util.rorder(scores.row_values(row), n))
                 for row in xrange(scores.num_rows)}
     else:
-        return {scores.row_names[row]: util.order_fast(scores.row_values(row), n)
+        return {scores.row_names[row]: util.rorder(scores.row_values(row), n)
                 for row in xrange(scores.num_rows)}
 
 
