@@ -1,9 +1,10 @@
 #!/usr/bin/python
 import argparse
 import math
+import util
 
-EPS = 0.00005
-def compare(file1, file2, verbose, eps=EPS):
+EPS = 0.0001
+def compare(file1, file2, verbose, rnames, eps=EPS):
     def tofloat(x):
         return float('nan') if x == 'NA' else float(x)
 
@@ -18,8 +19,8 @@ def compare(file1, file2, verbose, eps=EPS):
                 raise Exception('Num clusters do not match')
             inrows1 = [line.strip().split('\t') for line in infile1]
             inrows2 = [line.strip().split('\t') for line in infile2]
-            data1 = {line[0]: map(tofloat, line[1:]) for line in inrows1 }
-            data2 = {line[0]: map(tofloat, line[1:]) for line in inrows2 }
+            data1 = {util.make_rname(line[0], rnames): map(tofloat, line[1:]) for line in inrows1 }
+            data2 = {util.make_rname(line[0], rnames): map(tofloat, line[1:]) for line in inrows2 }
             if len(data1) != len(data2):
                 raise Exception('Numbers of entries does not match')
             if set(data1.keys()) != set(data2.keys()):
@@ -58,10 +59,10 @@ if __name__ == '__main__':
     description = "compare_scores.py - compare the scores from 2 tsv files"
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--verbose', required=False, action="store_true", default=False)
+    parser.add_argument('--rnames', required=False, action="store_true", default=False)
     parser.add_argument('file1')
     parser.add_argument('file2')
     args = parser.parse_args()
 
-    num_correct, num_errors = compare(args.file1, args.file2, args.verbose)
+    num_correct, num_errors = compare(args.file1, args.file2, args.verbose, args.rnames)
     print "done, %d correct, %d errors" % (num_correct, num_errors)
-
