@@ -22,7 +22,7 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
     num_rows = data_matrix.num_rows
     num_cols = data_matrix.num_columns
     # create a submatrix for each cluster
-    column_scores = []
+    cscores = np.zeros([data_matrix.num_columns, num_clusters])
     for cluster_num in xrange(1, num_clusters + 1):
         current_cluster_rows = []
         for row_index in xrange(num_rows):
@@ -31,24 +31,14 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
         submatrix = data_matrix.submatrix_by_name(
             row_names=current_cluster_rows)
         _, scores = scoring.compute_column_scores_submatrix(submatrix)
-        column_scores.append(-scores)
+        cscores.T[cluster_num - 1] = -scores
 
-    column_members = []
     start_time = util.current_millis()
-    for column_index in xrange(num_cols):
-        scores_to_order = []
-        for row_index in xrange(num_clusters):
-            scores_to_order.append(column_scores[row_index][column_index])
-        column_members.append(order(scores_to_order)[:num_clusters_per_column])
+    column_members = [util.order_fast(cscores[i], num_clusters_per_column)
+                      for i in xrange(num_cols)]
     elapsed = util.current_millis() - start_time
     logging.info("seed column members in %f s.", elapsed % 1000.0)
     return column_members
-
-
-def order(alist):
-    """a weird R function that gives each item's position in the original list
-    if you enumerate each item in a sorted list"""
-    return map(lambda x: alist.index(x) + 1, sorted(alist, reverse=True))
 
 
 def compute_row_scores(membership, matrix, num_clusters,
