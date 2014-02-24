@@ -4,7 +4,7 @@ import math
 import util
 
 EPS = 0.0001
-def compare(file1, file2, verbose, rnames, eps=EPS):
+def compare(file1, file2, verbose, rnames, mapheaders, eps=EPS):
     def tofloat(x):
         return float('nan') if x == 'NA' else float(x)
 
@@ -34,20 +34,25 @@ def compare(file1, file2, verbose, rnames, eps=EPS):
                 #print "VALUES2 = ", values2
                 if len(values1) != len(values2):
                     raise Exception("data for key '%s' does not have the same length" % key)
-                for i in range(len(values1)):
-                    if math.isnan(values1[i]) and  math.isnan(values2[i]):
+                for i1 in range(len(header1)):
+                    if mapheaders:
+                        i2 = header2.index(header1[i1])
+                    else:
+                        i2 = i1
+                    if math.isnan(values1[i1]) and  math.isnan(values2[i2]):
                         continue
-                    elif math.isnan(values1[i]) and not math.isnan(values2[i]):
+                    elif math.isnan(values1[i1]) and not math.isnan(values2[i2]):
                         if verbose:
-                            print "[%s, %d]: NaN != %.13f" % (key, i, values2[i])
+                            print "[%s, %d]: NaN != %.13f" % (key, i1, values2[i2])
                         num_errors += 1
-                    elif not math.isnan(values1[i]) and math.isnan(values2[i]):
+                    elif not math.isnan(values1[i1]) and math.isnan(values2[i2]):
                         if verbose:
-                            print "[%s, %d]: %.13f != NaN" % (key, i, values1[i])
+                            print "[%s, %d]: %.13f != NaN" % (key, i1, values1[i1])
                         num_errors += 1
-                    elif abs(values1[i] - values2[i]) > eps:
+                    elif abs(values1[i1] - values2[i2]) > eps:
                         if verbose:
-                            print "[%s, %d]: %.13f != %.13f" % (key, i, values1[i], values2[i])
+                            print "[%s, %d/%d]: %.13f != %.13f" % (key, i1, i2,
+                                                                   values1[i1], values2[i2])
                         num_errors += 1
                         #raise Exception("key '%s' col %d mismatch (%f != %f)" % (key, i, values1[i], values2[i]))
                     else:
@@ -60,9 +65,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--verbose', required=False, action="store_true", default=False)
     parser.add_argument('--rnames', required=False, action="store_true", default=False)
+    parser.add_argument('--mapheaders', required=False, action="store_true", default=False)
     parser.add_argument('file1')
     parser.add_argument('file2')
     args = parser.parse_args()
 
-    num_correct, num_errors = compare(args.file1, args.file2, args.verbose, args.rnames)
+    num_correct, num_errors = compare(args.file1, args.file2, args.verbose, args.rnames,
+                                      args.mapheaders)
     print "done, %d correct, %d errors" % (num_correct, num_errors)
