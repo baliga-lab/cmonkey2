@@ -15,6 +15,8 @@ from cmonkey.schedule import make_schedule
 import ConfigParser
 import tempfile
 import cmonkey.scoring as scoring
+import random
+
 
 
 def set_config(cmonkey_run, config):
@@ -44,6 +46,10 @@ def set_config(cmonkey_run, config):
     cmonkey_run['postadjust'] = config.getboolean('General', 'postadjust')
     cmonkey_run['add_fuzz'] = config.get('General', 'add_fuzz')
     cmonkey_run['checkpoint_interval'] = config.getint('General', 'checkpoint_interval')
+    try:
+        cmonkey_run['random_seed'] = config.getint('General', 'random_seed')
+    except:
+        cmonkey_run['random_seed'] = None
 
     # Quantile normalization is false by default in cMonkey-R
     cmonkey_run['quantile_normalize'] = config.getboolean('Scoring', 'quantile_normalize')
@@ -136,6 +142,7 @@ See README and LICENSE for details.\n"""
     parser.add_argument('--config', default=None, help="additional configuration file")
     parser.add_argument('--debug', action="store_true",
                         help="""run in debug mode""")
+    parser.add_argument('--random_seed', type=int)
 
     # RSAT overrides
     parser.add_argument('--rsat_dir', default=None,
@@ -186,16 +193,22 @@ See README and LICENSE for details.\n"""
                                  num_clusters=num_clusters,
                                  operon_file=args.operons,
                                  rsat_dir=args.rsat_dir)
-    cmonkey_run['output_dir'] = args.out
-    cmonkey_run['cache_dir'] = args.cachedir
     set_config(cmonkey_run, config)
 
+    cmonkey_run['output_dir'] = args.out
+    cmonkey_run['cache_dir'] = args.cachedir
     cmonkey_run['debug'] = args.debug
     cmonkey_run['keep_memeout'] = args.keep_memeout or args.debug
     cmonkey_run['donetworks'] = not args.nonetworks
     cmonkey_run['domotifs'] = not args.nomotifs and cmonkey_run['meme_version']
     cmonkey_run['use_string'] = not args.nostring
     cmonkey_run['use_operons'] = not args.nooperons
+    if args.random_seed:
+        cmonkey_run['random_seed'] = args.random_seed
+
+    if cmonkey_run['random_seed']:
+        random.seed(cmonkey_run['random_seed'])
+        util.r_set_seed(cmonkey_run['random_seed'])
 
     proceed = True
     checkratios = args.checkratios
