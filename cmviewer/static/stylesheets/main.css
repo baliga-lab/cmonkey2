@@ -1,0 +1,94 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Geneva, Arial, sans-serif;
+    font-size: 12pt;
+    margin: 10px;
+}
+
+h2 {
+    font-family: Helvetica, Arial, sans-serif;
+    font-weight: bold;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+.h4 {
+    font-weight: bold;
+}
+.caption {
+    font-size: 10pt;
+    font-weight: bold;
+}
+
+.item-box {
+    border: 1px solid black;
+    border-radius: 5px;
+    font-size: 8pt;
+    height: 300px;
+    overflow: auto;
+    margin-right: 10px;
+}
+
+.details-box {
+    vertical-align: top;
+    border: 1px solid black;
+    border-radius: 5px;
+    font-size: 8pt;
+    margin-right: 10px;
+    overflow: auto;
+    padding: 10px;
+}
+
+/* Cluster list table */
+table.item-list td, th {
+    font-size: 8pt;
+}
+
+table.item-list th {
+    color: white;
+    background-color: #888888;
+}
+
+.inactive {
+    color: #aaaaaa;
+}
+
+#statssection {
+    float: right;
+    width: 100%;
+    margin-left: -600px; /* -(LeftColumnWidth + RightColumnWidth) */
+}
+#contentcolumn {
+    margin-left: 600px; /* LeftColumnWidth + RightColumnWidth */
+}
+#leftcolumn {
+    float: left;
+    width: 300px;
+}
+#rightcolumn {
+    float: left;
+    width: 300px;
+}
+
+.start-info {
+    font-size: 8pt;
+    color: blue;
+}
+.finish-info {
+    font-size: 8pt;
+    color: green;
+}
+
+.inprogress-info {
+    font-size: 8pt;
+    color: red;
+}
+
+label {
+    font-size: 10pt;
+    font-weight: bold;
+}
