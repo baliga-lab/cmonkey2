@@ -13,7 +13,31 @@
     <script src="/static/javascripts/isblogo.js" type="text/javascript"></script>
     <script src="/static/javascripts/raphael-min.js"></script>
     <script src="/static/javascripts/gene_annotations.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      $(document).ready(function() {
+         $('#select_iteration').change(function (event) {
+             window.location.href = "/" + $(this).val();
+         });
+         var iterations = {{js_iterations}};
 
+         // residual graph
+         var residualChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'residual-graph',
+                 type: 'line',
+                 width: 300, height: 200
+             },
+             title: { text: 'Mean Residual' },
+             plotOptions: { line: { marker: { enabled: false }, } },
+             xAxis: {
+                 categories: iterations,
+                 tickInterval: 30
+             },
+             yAxis: { title: { text: 'mean resids' } },
+             series: [{name: 'mean resid', 'data': {{js_mean_residuals}} }]
+         });
+      });
+    </script>
   </head>
   <body>
    <div id="maincontainer">
@@ -26,12 +50,32 @@
        <div>&nbsp;</div>
        <div>Iteration <select id="select_iteration">
        {% for iter in iterations %}
+         {% if iter == current_iter %}
+         <option value="{{iter}}" selected>{{iter}}</option>
+         {% else %}
          <option value="{{iter}}">{{iter}}</option>
+         {% endif %}
        {% endfor %}
        </select>/{{runinfo.num_iters}}
        </div>
 
-       {{salutation}}, {{target}}
+       <div style="height: 10px;">&nbsp;</div>
+       <div class="ui-progress-bar ui-container" id="progress_bar" style="width: 20%; height: 15px;">
+         <div class="ui-progress" style="height: 12px; width: @runInfo.progress%;">
+           <span class="ui-label" style="display:none;">
+             Loading Resources
+             <b class="value">7%</b>
+           </span>
+         </div>
+       </div>
+       <div style="font-size: smaller">Progress: {{progress}} %</div>
+       <div class="start-info">Run started at {{runinfo.start_time}}</div>
+       {% if not runinfo.finish_time %}
+       <div class="inprogress-info">Run in progress...</div>
+       {% else %}
+       <div class="finish-info">Run finished at {{runinfo.finish_time}}</div>
+       {% endif %}
+       <div style="height: 10px;">&nbsp;</div>
      </div>
 
      <h3>Statistics</h3>
