@@ -36,6 +36,72 @@
              yAxis: { title: { text: 'mean resids' } },
              series: [{name: 'mean resid', 'data': {{js_mean_residuals}} }]
          });
+
+         // cluster member graph
+         var clusterMemberChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'cluster-member-graph',
+                 type: 'line',
+                 width: 300, height: 200
+             },
+             title: { text: 'Mean nrow, ncol/iter' },
+             plotOptions: { line: { marker: { enabled: false }, } },
+             xAxis: {
+                 categories: iterations,
+                 tickInterval: 30
+             },
+             yAxis: { title: { text: 'mean nrow, ncol/iter' } },
+             series: [{name: 'columns', data: {{js_mean_ncol}} },
+                      {name: 'rows', data: {{js_mean_nrow}} }]
+         });
+         // cluster nrows graph
+         var clusterRowsChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'cluster-row-graph',
+                 type: 'column',
+                 width: 300, height: 200
+             },
+             title: { text: '# clusters -> # rows' },
+             xAxis: {
+                 categories: {{js_nrows_x}},
+                 tickInterval: 5
+             },
+             yAxis: { title: { text: '# clusters' } },
+             series: [ { name: '# rows', data: {{js_nrows_y}} } ]
+         });
+
+         // cluster ncols graph
+         var clusterColumnsChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'cluster-column-graph',
+                 type: 'column',
+                 width: 300, height: 200
+             },
+             title: { text: '# clusters -> # columns' },
+             xAxis: {
+                 categories: {{js_ncols_x}},
+                 tickInterval: 2
+             },
+             yAxis: { title: { text: '# clusters' } },
+             series: [ { name: '# columns', data: {{js_ncols_y}} } ]
+         });
+
+         // cluster residual graph
+         var clusterResidualChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'cluster-residual-graph',
+                 type: 'column',
+                 width: 300, height: 200
+             },
+             title: { text: 'cluster residuals' },
+             xAxis: {
+                 categories: {{js_resids_x}},
+                 tickInterval: 3
+             },
+             yAxis: { title: { text: '# clusters' } },
+             series: [ { name: 'residual', data: {{js_resids_y}} } ]
+         });
+
       });
     </script>
   </head>
