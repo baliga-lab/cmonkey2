@@ -34,7 +34,7 @@
                  tickInterval: 30
              },
              yAxis: { title: { text: 'mean resids' } },
-             series: [{name: 'mean resid', 'data': {{js_mean_residuals}} }]
+             series: [{name: 'mean resid', data: {{js_mean_residuals}} }]
          });
 
          // cluster member graph
@@ -100,6 +100,91 @@
              },
              yAxis: { title: { text: '# clusters' } },
              series: [ { name: 'residual', data: {{js_resids_y}} } ]
+         });
+      <!-- TODO: RUNLOGS  -->
+         var motifScoreChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'motif-score-graph',
+                 type: 'line',
+                 width: 300, height: 200
+             },
+             title: { text: 'Median motif scores' },
+             plotOptions: { line: { marker: { enabled: false }, } },
+             xAxis: {
+                 categories: iterations,
+                 tickInterval: 30
+             },
+             yAxis: { title: { text: 'mean p-value' }, max: -0.5, min: -6 },
+             series: {{js_motif_stats}}
+         });
+
+         var networkScoreChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'network-score-graph',
+                 type: 'line',
+                 width: 300, height: 200
+             },
+             title: { text: 'Mean network scores' },
+             plotOptions: { line: { marker: { enabled: false }, } },
+             xAxis: {
+                 categories: iterations,
+                 tickInterval: 30
+             },
+             yAxis: { title: { text: 'mean net score' }, max: 0, min: -3 },
+             series: {{js_network_stats}}
+         });
+
+         var fuzzyCoeffChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'fuzzy-graph',
+                 type: 'line',
+                 width: 300, height: 200
+             },
+             title: { text: 'Fuzzy coefficient' },
+             plotOptions: { line: { marker: { enabled: false }, } },
+             xAxis: {
+                 categories: iterations,
+                 tickInterval: 30
+             },
+             yAxis: { title: { text: 'fuzzy coeff' } },
+             series: [{name: 'fuzzy coeff', data: {{js_fuzzy_coeff}}}]
+         });
+
+         $('#cluster-list').dataTable({
+           'bPaginate': false,
+           'bFilter': false,
+           'bSort': false,
+           'bInfo': false,
+           'sScrollY': 300,
+           'sScrollX': '100%',
+           'bProcessing': true,
+           'aoColumns': [
+             { 'sWidth': '30px' },
+             { 'sWidth': '60px' },
+             { 'sWidth': '60px' },
+             { 'sWidth': '60px' },
+             { 'sWidth': '70px' },
+             null
+           ],
+           
+           'sAjaxSource': '/clusters/{{current_iter}}' /*,
+           'fnInitComplete': function() {
+              $('a.clusterlink').click(function () {
+                var cluster = $(this).attr('id');
+                $.get('/cluster/{{current_iter}}/' + cluster,
+                   function(html) {
+                       // we need the trim() call in order for jQuery 1.9.x to
+                       // recognize the output as valid HTML
+                       $(html.trim()).replaceAll('#cluster-view');
+                       // notify Firegoose to rescan the page
+                       var ev = document.createEvent("Events");
+                       ev.initEvent("gaggleDataEvent", true, false);
+                       document.dispatchEvent(ev);
+                   });
+                return false;
+              });
+
+            } */
          });
 
       });
