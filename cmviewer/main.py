@@ -6,6 +6,8 @@ import os
 import sqlite3
 from collections import namedtuple, defaultdict
 import json
+import gzip
+import numpy as np
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 env = Environment(loader=FileSystemLoader(os.path.join(current_dir, 'templates')))
@@ -25,6 +27,76 @@ MotifInfo = namedtuple('MotifInfo', ['id', 'cluster', 'seqtype', 'num', 'evalue'
 
 MotifPSSMRow = namedtuple('MotifPSSMRow', ['motif_id', 'row', 'a', 'c', 'g', 't'])
 
+class Ratios:
+    """A helper class that provides useful functionality to generate plotting
+    related information"""
+
+    def __init__(self, genes, conds, data):
+        self.genes = genes
+        self.conds = conds
+        self.data = data
+        self.gene_idx = {gene: i for i, gene in enumerate(genes)}
+        self.cond_idx = {cond: i for i, cond in enumerate(conds)}
+
+    def mean(self):
+        return np.mean(self.data)
+
+    def subratios_for(self, genes, conds):
+        """Arrange cluster expression data for plotting.
+        The result is a sub matrix with |genes| rows and the original number of
+        columns, but rearranged so that the columns inside the cluster are
+        first then the ones that are outside the cluster are last"""
+        in_indexes = [self.cond_idx[cond] for cond in conds]
+        out_indexes = sorted(set(self.cond_idx.values()) - set(in_indexes))
+        col_indexes = in_indexes + out_indexes
+        row_indexes = [self.gene_idx[gene] for gene in genes]
+        data = self.data[row_indexes][:, col_indexes]
+        new_conds = [self.conds[i] for i in col_indexes]
+        return Ratios(genes, new_conds, data)
+
+    def hs_subratios_for(self, genes, conds):
+        subratios = self.subratios_for(genes, conds)
+        return [{'name': gene, 'data': [val for val in subratios.data[i]]}
+                for i, gene in enumerate(genes)]
+
+    def hs_boxplot_data_for(self, genes, conds):
+        def make_row(row):
+            r = sorted(row)
+            minval = r[0]
+            maxval = r[-1]
+            median = r[len(r) / 2 + len(r) % 2]
+            quart = len(r) / 4
+            lower_quartile = r[quart]
+            upper_quartile = r[-(quart + 1)]
+            return [minval, lower_quartile, median, upper_quartile, maxval]
+            
+        subratios = self.subratios_for(genes, conds)
+        # cut up the data into left and right half
+        data_in = subratios.data[:,:len(conds)].T
+        data_out = subratios.data[:,len(conds):].T
+        inrows = sorted(map(make_row, data_in), key=lambda r: r[2])
+        outrows = sorted(map(make_row, data_out), key=lambda r: r[2])
+        result = inrows + outrows
+        return json.dumps(result)
+                
+
+def read_ratios():
+    def to_float(s):
+        if s == 'NA':
+            return float('nan')
+        else:
+            return float(s)
+
+    ratios_file = os.path.join(outdir, 'ratios.tsv.gz')
+    with gzip.open(ratios_file) as infile:
+        column_titles = infile.readline().strip().split('\t')
+        row_titles = []
+        data = []
+        for line in infile:
+            row = line.strip().split('\t')
+            row_titles.append(row[0])
+            data.append(map(to_float, row[1:]))
+    return Ratios(row_titles, column_titles, np.array(data))
 
 def runinfo_factory(cursor, row):
     return RunInfo(*row)
@@ -79,6 +151,9 @@ def make_series(stats):
 
 class ClusterViewerApp:
 
+    def __init__(self):
+        self.ratios = read_ratios()
+
     @cherrypy.expose
     def iteration(self, iteration):
         conn = dbconn()
@@ -131,7 +206,6 @@ class ClusterViewerApp:
         js_network_stats = make_series([row for row in cursor.fetchall()])
         cursor.close()
 
-
         conn.close()
         cursor= None
         conn = None
@@ -181,6 +255,60 @@ class ClusterViewerApp:
         conn.close()
         return json.dumps({'aaData': rows})
 
+    @cherrypy.expose
+    def view_cluster(self, **kw):
+        cluster = int(kw['cluster'])
+        iteration = int(kw['iteration'])
+        conn = dbconn()
+
+        cursor = conn.cursor()
+        cursor.execute('select species from run_infos')
+        species = cursor.fetchone()[0]
+        cursor.close()
+
+        cursor = conn.cursor()
+        cursor.execute('select name from row_names rn join row_members rm on rn.order_num = rm.order_num where iteration = ? and cluster = ?', (iteration, cluster))
+        rows = [row[0] for row in cursor.fetchall()]
+        cursor.close()
+
+        cursor = conn.cursor()
+        cursor.execute('select name from column_names cn join column_members cm on cn.order_num = cm.order_num where iteration = ? and cluster = ?', (iteration, cluster))
+        columns = [row[0] for row in cursor.fetchall()]
+        cursor.close()
+
+        js_ratios = json.dumps(self.ratios.hs_subratios_for(rows, columns))
+
+        # extract motif information
+        conn.row_factory = motifinfo_factory
+        cursor = conn.cursor()
+        cursor.execute("select rowid, cluster, seqtype, motif_num, evalue from motif_infos where iteration = ? and cluster = ?", [iteration, cluster])
+        # grouped by seqtype
+        motif_infos = defaultdict(list)
+        for row in cursor.fetchall():
+            motif_infos[row.seqtype].append(row)
+        cursor.close()
+        seqtypes = motif_infos.keys()
+
+        conn.row_factory = motifpssmrow_factory
+        cursor = conn.cursor()
+        motif_ids = map(lambda i: str(i.id),
+                        [mis for mismis in motif_infos.values() for mis in mismis])
+        cursor.execute("select motif_info_id, row, a, c, g, t from motif_pssm_rows where motif_info_id in (%s)" % ','.join(motif_ids))
+        # grouped by motif info id
+        motif_pssm_rows = defaultdict(list)
+        for row in cursor.fetchall():
+            motif_pssm_rows[row.motif_id].append([row.a, row.c, row.g, row.t])
+        js_motif_pssms = {motif_id: json.dumps({'alphabet':['A','C','G','T'],
+                                                'values':motif_pssm_rows[motif_id]})
+                          for motif_id in motif_pssm_rows}
+        cursor.close()
+
+        conn.close()
+        ratios_mean = self.ratios.subratios_for(rows, columns).mean()
+        js_boxplot_ratios = self.ratios.hs_boxplot_data_for(rows, columns)
+        tmpl = env.get_template('cluster.html')
+        return tmpl.render(locals())
+
 
 def consensus(rows):
     alphabet = ['A', 'C', 'G', 'T']
@@ -211,7 +339,8 @@ def setup_routes():
     d = cherrypy.dispatch.RoutesDispatcher()
     main = ClusterViewerApp()
     d.connect('main', '/:iteration', controller=main, action="iteration")
-    d.connect('main', '/clusters/:iteration', controller=main, action="clusters")
+    d.connect('clusters', '/clusters/:iteration', controller=main, action="clusters")
+    d.connect('cluster', '/cluster/:iteration/:cluster', controller=main, action="view_cluster")
     return d
 
 if __name__ == '__main__':
@@ -221,7 +350,3 @@ if __name__ == '__main__':
     cherrypy.config.update(conf)
     app = cherrypy.tree.mount(None, config=conf)
     cherrypy.quickstart(app)
-
-"""
-select cluster, residual, num_rows, num_cols from cluster_stats where iteration = 2000;
-"""
