@@ -22,6 +22,12 @@ for running the cluster viewer (optional):
 * Java JDK (Oracle or OpenJDK) >= 6
 * Play Framework >= 2.2.1
 
+for running the Python based viewer (optional):
+
+* CherryPy 3
+* Jinja2
+* python-routes
+
 ### Running the Unit Tests
 
     ./run_tests.sh
@@ -57,3 +63,6 @@ system
     play
     run
 
+### Start the python based monitoring application
+
+    python cmviewer/main.py
