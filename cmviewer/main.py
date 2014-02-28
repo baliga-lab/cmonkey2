@@ -27,6 +27,9 @@ MotifInfo = namedtuple('MotifInfo', ['id', 'cluster', 'seqtype', 'num', 'evalue'
 
 MotifPSSMRow = namedtuple('MotifPSSMRow', ['motif_id', 'row', 'a', 'c', 'g', 't'])
 
+MotifAnnotation = namedtuple('MotifAnnotation', ['motif_info_id', 'seqtype', 'motif_num',
+                                                 'gene', 'pos', 'reverse', 'pvalue'])
+
 class Ratios:
     """A helper class that provides useful functionality to generate plotting
     related information"""
@@ -106,6 +109,9 @@ def motifinfo_factory(cursor, row):
 
 def motifpssmrow_factory(cursor, row):
     return MotifPSSMRow(*row)
+
+def motifannot_factory(cursor, row):
+    return MotifAnnotation(*row)
 
 
 def clusterstat_factory(cursor, row):
@@ -302,6 +308,42 @@ class ClusterViewerApp:
                                                 'values':motif_pssm_rows[motif_id]})
                           for motif_id in motif_pssm_rows}
         cursor.close()
+
+        # annotations
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute('select motif_info_id, count(row) from motif_pssm_rows where iteration = ? group by motif_info_id', [iteration])
+        motif_lengths = {row[0]: row[1] for row in cursor.fetchall()}
+        cursor.close()
+
+        conn.row_factory = motifannot_factory
+        cursor = conn.cursor()
+        cursor.execute('select a.motif_info_id, seqtype, motif_num, g.name, position, reverse, pvalue from motif_annotations a join motif_infos i on a.motif_info_id = i.rowid join row_names g on g.order_num = a.gene_num where i.iteration = ? and i.cluster = ?', [iteration, cluster])
+        annotations = [row for row in cursor.fetchall()]
+        cursor.close()
+
+        st_annots = defaultdict(list)  # group by seqtype
+        for annot in annotations:
+            st_annots[annot.seqtype].append(annot)
+        st_gene_annots = {}
+        for seqtype in st_annots:  # group by gene
+            gene_annots = defaultdict(list)
+            for annot in st_annots[seqtype]:
+                gene_annots[annot.gene].append(annot)
+            st_gene_annots[seqtype] = gene_annots
+
+        js_annotation_map = {}
+        for seqtype, gene_annots in st_gene_annots.items():
+            st_annots = []
+            for gene, annots in gene_annots.items():
+                matches = [{'motif': a.motif_num - 1, 'start': a.pos,
+                            'length': motif_lengths[a.motif_info_id],
+                            'reverse': a.reverse, 'score': a.pvalue}
+                           for a in annots]
+                st_annots.append({'gene': gene, 'condition': '', 'log10': 0.17,
+                                  'boxColor': '#08f', 'lineColor': '#000',
+                                  'matches': matches})
+            js_annotation_map[seqtype] = json.dumps(st_annots)
 
         conn.close()
         ratios_mean = self.ratios.subratios_for(rows, columns).mean()

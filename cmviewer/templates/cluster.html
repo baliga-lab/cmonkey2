@@ -1,0 +1,150 @@
+<div id="cluster-view">
+  <script type="text/javascript">
+    {% for seqtype in seqtypes %}{% for motif_info in motif_infos[seqtype] %}
+      var pssm{{seqtype}}_{{loop.index - 1}} = {{js_motif_pssms[motif_info.id]}};{% endfor %}{% endfor %}
+    var canvasOptions = {
+        width: 300,
+        height: 150,
+        glyphStyle: '20pt Helvetica'
+    };
+    function toggleExpandCollapse(text) {
+      return text == "(...)" ? "Hide" : "(...)";
+    }
+
+    $(document).ready(function() {
+      var chart1 = new Highcharts.Chart({
+        chart: {renderTo: 'expression-graph', type: 'line', height: 250 },
+        title: {text: 'Gene Expressions'},
+        plotOptions: {line: {marker: {enabled: false}}},
+        xAxis: {
+          plotLines: [{
+            value: {{columns|length}}, color: 'red', dashStyle: 'shortdash',
+            width: 1, zIndex: 3,
+            label: {
+              text: 'columns in/out ({{columns|length}})',
+              style: {color: 'gray', fontSize: '8pt'}
+            }
+          }]
+        },
+        yAxis: {title: {text: 'log10'}},
+        series: {{js_ratios}}
+      });
+
+      var chart2 = new Highcharts.Chart({
+        chart: {renderTo: 'expression-graph2', type: 'boxplot', height: 250},
+        legend: {enabled: false},
+        title: {text: 'Gene Expressions (Box Plot)'},
+        xAxis: {
+          plotLines: [{
+            value: {{columns|length}}, color: 'red', dashStyle: 'shortdash',
+            width: 1, zIndex: 3,
+            label: {
+              text: 'columns in/out ({{columns|length}})',
+              style: { color: 'gray', fontSize: '8pt' }
+            }
+          }]
+        },
+        yAxis: {
+          title: {text: 'log10'},
+          plotLines: [{
+            value: {{ratios_mean}},
+            color: 'green', dashStyle: 'shortdash', width: 1, zIndex: 3,
+            label: {
+              text: 'mean',
+              style: { color: 'gray', fontSize: '8pt' }
+            }
+          }]
+        },
+        series: [{
+          name: 'Ratios',
+          data: {{js_boxplot_ratios}}
+        }]
+      });
+
+
+      {% for seqtype in seqtypes %}{% for motif_info in motif_infos[seqtype] %}
+        isblogo.makeLogo('canvas{{seqtype}}_{{loop.index - 1}}', pssm{{seqtype}}_{{loop.index - 1}}, canvasOptions);{% endfor %}{% endfor %}
+
+      {% for seqtype in seqtypes %}
+        var annotations_{{seqtype}} = {{js_annotation_map[seqtype]}};
+        annot.draw('annotation-graph_{{seqtype}}', { width: 500, height: 400, annotations: annotations_{{seqtype}} });
+      {% endfor %}
+
+      $('#toggle-row-members').click(function() {
+        $('#toggle-row-members').text(toggleExpandCollapse($('#toggle-row-members').text()));
+        $('#row-members').toggle();
+        return false;
+      });
+      $('#toggle-col-members').click(function() {
+        $('#toggle-col-members').text(toggleExpandCollapse($('#toggle-col-members').text()));
+        $('#column-members').toggle();
+        return false;
+      });
+      $('#deselect-all-series').click(function() {
+        for (var i = 0; i < chart1.series.length; i++) {
+          chart1.series[i].setVisible(false, false);
+        }
+        return false;
+      });
+      $('#select-all-series').click(function() {
+        for (var i = 0; i < chart1.series.length; i++) {
+          chart1.series[i].setVisible(true, false);
+        }
+        return false;
+      });
+    });
+  </script>
+  <h2>Cluster {{cluster}} at iteration {{iteration}}</h2>
+  <h3>Cluster memberships</h3>
+  <br>
+  <div id="cluster-members" style="width: 600px">
+    <div><span class="h4">Row members ({{rows|length}})</span> <a id="toggle-row-members" href="#">(...)</a></div>
+    <div id="row-members" style="display:none">{{rows|join(", ")}}</div>
+    <div><span class="h4">Column members ({{columns|length}})</span> <a id="toggle-col-members" href="#">(...)</a></div>
+    <div id="column-members" style="display:none">{{columns|join(", ")}}</div>
+  </div>
+  <br>
+  <div id="expression-graph"></div>
+  <a href="#" id="deselect-all-series">Deselect All</a>
+  <a href="#" id="select-all-series">Select All</a>
+  <div id="expression-graph2"></div>
+  <div>&nbsp;</div><br>
+  <h3>Motifs</h3>
+  {% if seqtypes|length == 0 %}
+    No motif information available for this cluster/iteration
+  {% else %}
+    {% for seqtype in seqtypes %}{% for motif_info in motif_infos[seqtype] %}
+      <span style="display: inline; float: left; margin-right: 10px;">
+      <div>Sequence type: {{seqtype}}, motif {{loop.index}}, evalue: {{motif_info.evalue}}</div>
+      <div id="canvas{{seqtype}}_{{loop.index - 1}}"></div>
+      </span>
+    {% endfor %}{% endfor %}
+  {% endif %}
+
+  <div style="clear: both"></div><br>
+  {% for seqtype in seqtypes %}
+  <h3>Annotations for {{seqtype}}</h3>
+  <div id="annotation-graph_{{seqtype}}"></div>
+  {% endfor %}
+  <div style="clear: both"></div>
+  <div>&nbsp;</div>
+</div>
+
+<!-- Gaggle microformats embedded here -->
+<div class="gaggle-data" style="display:none">
+  <span class="gaggle-name">Row members cluster {{cluster}}</span>
+  <span class="gaggle-species">{{species}}</span>
+  <span class="gaggle-namelist">
+    <ol>
+      {% for name in rows %}<li>{{name}}</li>{% endfor %}
+    </ol>
+  </span>
+</div>
+<div class="gaggle-data" style="display:none">
+  <span class="gaggle-name">Column members cluster {{cluster}}</span>
+  <span class="gaggle-species">{{species}}</span>
+  <span class="gaggle-namelist">
+    <ol>{% for name in columns %}<li>{{name}}</li>{% endfor %}</ol>
+  </span>
+</div>
+
