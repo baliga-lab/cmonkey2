@@ -17,12 +17,7 @@ This is the Python implementation of the cMonkey algorithm based on the original
 * csh (for running MEME)
 for the human setup, Weeder 1.4.2 is needed
 
-for running the cluster viewer (optional):
-
-* Java JDK (Oracle or OpenJDK) >= 6
-* Play Framework >= 2.2.1
-
-for running the Python based viewer (optional):
+for running the monitoring application (optional):
 
 * CherryPy 3
 * Jinja2
@@ -55,13 +50,6 @@ system
 
     ./cmonkey.py --organism hal --ratios example_data/hal/halo_ratios5.tsv
 
-
-### Start the monitoring application
-
-
-    cd cluster_viewer
-    play
-    run
 
 ### Start the python based monitoring application
 
