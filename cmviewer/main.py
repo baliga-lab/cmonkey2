@@ -8,6 +8,7 @@ from collections import namedtuple, defaultdict
 import json
 import gzip
 import numpy as np
+import glob
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 env = Environment(loader=FileSystemLoader(os.path.join(current_dir, 'templates')))
@@ -100,6 +101,17 @@ def read_ratios():
             row_titles.append(row[0])
             data.append(map(to_float, row[1:]))
     return Ratios(row_titles, column_titles, np.array(data))
+
+def read_runlogs():
+    def read_runlog(fname):
+        with open(fname) as infile:
+            entries = map(lambda l: 0.0 if l[1] == '1' else float(l[2]),
+                          [line.strip().split(':') for line in infile])
+        return {'name': os.path.basename(fname).replace('.runlog', ''), 'data': entries}
+
+    return json.dumps([read_runlog(fname)
+                       for fname in glob.glob(os.path.join(outdir, '*.runlog'))
+                       if os.path.basename(fname) != 'row_scoring.runlog'])
 
 def runinfo_factory(cursor, row):
     return RunInfo(*row)
@@ -215,6 +227,8 @@ class ClusterViewerApp:
         conn.close()
         cursor= None
         conn = None
+
+        js_runlog_series = read_runlogs()
 
         tmpl = env.get_template('index.html')
         progress = "%.2f" % min((runinfo.last_iter / runinfo.num_iters * 100.0), 100.0)

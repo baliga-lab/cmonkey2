@@ -101,19 +101,20 @@
              yAxis: { title: { text: '# clusters' } },
              series: [ { name: 'residual', data: {{js_resids_y}} } ]
          });
-      <!-- TODO: RUNLOGS  -->
+
+         var runlogChart = new Highcharts.Chart({
+             chart: {renderTo: 'runlog-graph', type: 'line', width: 300, height: 200},
+             title: {text: 'Run parameters'},
+             plotOptions: { line: { marker: { enabled: false }, } },
+             yAxis: { title: { text: 'scaling' }, min: 0 },
+             series: {{js_runlog_series}}
+         });
+
          var motifScoreChart = new Highcharts.Chart({
-             chart: {
-                 renderTo: 'motif-score-graph',
-                 type: 'line',
-                 width: 300, height: 200
-             },
+             chart: {renderTo: 'motif-score-graph', type: 'line', width: 300, height: 200},
              title: { text: 'Median motif scores' },
              plotOptions: { line: { marker: { enabled: false }, } },
-             xAxis: {
-                 categories: iterations,
-                 tickInterval: 30
-             },
+             xAxis: {categories: iterations, tickInterval: 30},
              yAxis: { title: { text: 'mean p-value' }, max: -0.5, min: -6 },
              series: {{js_motif_stats}}
          });
