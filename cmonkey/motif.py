@@ -136,7 +136,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.__last_motif_infos = None
         self.__last_iteration_result = {}
         self.all_pvalues = None
-        self.matrix = None
+        self.last_result = None
 
         self.update_log = scoring.RunLog("motif-score-" + seqtype, config_params)
         self.motif_log = scoring.RunLog("motif-motif-" + seqtype, config_params)
@@ -196,7 +196,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         return result
 
     def last_cached(self):
-        return self.matrix
+        return self.last_result
 
     def matrix_pickle_path(self):
         return "%s/%s_matrix_last.pkl" % (self.config_params['output_dir'],
@@ -221,8 +221,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         if self.all_pvalues is not None and (force or self.update_in_iteration(iteration)):  # mot.iter in R
             logging.info("UPDATING MOTIF SCORES in iteration %d with scaling: %f",
                          iteration, self.scaling(iteration))
-            self.matrix = pvalues2matrix(self.all_pvalues, self.num_clusters(),
-                                         self.gene_names(), self.reverse_map)
+            self.last_result = pvalues2matrix(self.all_pvalues, self.num_clusters(),
+                                              self.gene_names(), self.reverse_map)
 
         self.update_log.log(iteration, self.update_in_iteration(iteration),
                             self.scaling(iteration))
@@ -243,8 +243,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             iteration_result['motif-pvalue'] = {}
 
         iteration_result['motif-pvalue'][self.seqtype] = compute_mean_score(
-            self.matrix, self.membership(), self.organism)
-        return self.matrix
+            self.last_result, self.membership, self.organism)
+        return self.last_result
 
     def compute_pvalues(self, iteration_result, num_motifs):
         """Compute motif scores.
@@ -269,7 +269,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         start_time = util.current_millis()
         SEQUENCE_FILTERS = self.__sequence_filters
         ORGANISM = self.organism
-        MEMBERSHIP = self.membership()
+        MEMBERSHIP = self.membership
 
         pool = mp.Pool()
         cluster_seqs_params = [(cluster, self.seqtype)

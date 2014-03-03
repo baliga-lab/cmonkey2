@@ -148,8 +148,8 @@ class RowScoringFunction(scoring.ScoringFunctionBase):
 
     def do_compute(self, iteration_result, ref_matrix=None):
         """the row scoring function"""
-        return compute_row_scores(self.membership(),
-                                  self.matrix(),
+        return compute_row_scores(self.membership,
+                                  self.matrix,
                                   self.num_clusters(),
                                   self.config_params[scoring.KEY_MULTIPROCESSING])
 

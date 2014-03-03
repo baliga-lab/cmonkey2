@@ -64,8 +64,8 @@ class ScoringFunctionBase:
                  schedule=lambda iteration: True,
                  config_params={}):
         """creates a function instance"""
-        self.__membership = membership
-        self.__matrix = matrix
+        self.membership = membership
+        self.matrix = matrix
         self.__scaling_func = scaling_func
         self.run_in_iteration = schedule
 
@@ -87,14 +87,6 @@ class ScoringFunctionBase:
         overwrite each other
         """
         raise Exception("please implement me")
-
-    def membership(self):
-        """returns this function's membership object"""
-        return self.__membership
-
-    def matrix(self):
-        """returns this function's matrix object"""
-        return self.__matrix
 
     def pickle_path(self):
         """returns the function-specific pickle-path"""
@@ -166,15 +158,15 @@ class ScoringFunctionBase:
 
     def num_clusters(self):
         """returns the number of clusters"""
-        return self.__membership.num_clusters()
+        return self.membership.num_clusters()
 
     def gene_names(self):
         """returns the gene names"""
-        return self.__matrix.row_names
+        return self.matrix.row_names
 
     def rows_for_cluster(self, cluster):
         """returns the rows for the specified cluster"""
-        return self.__membership.rows_for_cluster(cluster)
+        return self.membership.rows_for_cluster(cluster)
 
     def scaling(self, iteration):
         """returns the quantile normalization scaling for the specified iteration"""
@@ -217,7 +209,7 @@ class ColumnScoringFunction(ScoringFunctionBase):
 
     def do_compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
-        return compute_column_scores(self.membership(), self.matrix(),
+        return compute_column_scores(self.membership, self.matrix,
                                      self.num_clusters(),
                                      self.config_params[KEY_MULTIPROCESSING])
 
@@ -389,7 +381,7 @@ class ScoringFunctionCombiner:
                  config_params=None,
                  log_subresults=False):
         """creates a combiner instance"""
-        self.__membership = membership
+        self.membership = membership
         self.scoring_functions = scoring_functions
         self.__log_subresults = log_subresults
         self.__scaling_func = scaling_func
@@ -415,7 +407,7 @@ class ScoringFunctionCombiner:
 
                 if self.__log_subresults:
                     self.__log_subresult(scoring_function, matrix)
-        return combine(result_matrices, score_scalings, self.__membership,
+        return combine(result_matrices, score_scalings, self.membership,
                        self.__config_params['quantile_normalize'])
 
     def compute(self, iteration_result, ref_matrix=None):
@@ -442,7 +434,7 @@ class ScoringFunctionCombiner:
                 if self.__log_subresults:
                     self.__log_subresult(scoring_function, matrix)
 
-        return combine(result_matrices, score_scalings, self.__membership,
+        return combine(result_matrices, score_scalings, self.membership,
                        self.__config_params['quantile_normalize'])
 
     def combine_cached(self, iteration):
@@ -456,7 +448,7 @@ class ScoringFunctionCombiner:
                 result_matrices.append(matrix)
                 score_scalings.append(scoring_function.scaling(iteration))
 
-        return combine(result_matrices, score_scalings, self.__membership, True)
+        return combine(result_matrices, score_scalings, self.membership, True)
 
 
     def __log_subresult(self, score_function, matrix):
@@ -464,7 +456,7 @@ class ScoringFunctionCombiner:
         scores = []
         mvalues = matrix.values
         for cluster in xrange(1, matrix.num_columns + 1):
-            cluster_rows = self.__membership.rows_for_cluster(cluster)
+            cluster_rows = self.membership.rows_for_cluster(cluster)
             for row in xrange(matrix.num_rows):
                 if matrix.row_names[row] in cluster_rows:
                     scores.append(mvalues[row][cluster - 1])

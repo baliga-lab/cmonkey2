@@ -276,7 +276,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         # similar brings this down to a crawl
         COMPUTE_NETWORK = network
         ALL_GENES = set(self.gene_names())  # optimization: O(1) lookup
-        NETWORK_SCORE_MEMBERSHIP = self.membership()
+        NETWORK_SCORE_MEMBERSHIP = self.membership
 
         if use_multiprocessing:
             pool = mp.Pool()
@@ -300,7 +300,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         gene_names = self.gene_names()
         for cluster in xrange(1, self.num_clusters() + 1):
             cluster_genes = set(network_score[cluster].keys())
-            for row_index in xrange(self.matrix().num_rows):
+            for row_index in xrange(self.matrix.num_rows):
                 gene = gene_names[row_index]
                 if gene in cluster_genes:
                     weighted_score = network_score[cluster][gene] * weight
