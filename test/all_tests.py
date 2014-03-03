@@ -16,6 +16,7 @@ import network_test as nwt
 import microarray_test as mat
 import meme_test as met
 import pssm_test as pt
+import combiner_test as ct
 import read_wee_test as rwt
 import sys
 
@@ -58,6 +59,7 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(met.MemeTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(pt.PssmTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ct.CombinerTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(rwt.ReadWeeTest))
 

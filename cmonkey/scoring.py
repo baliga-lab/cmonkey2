@@ -310,15 +310,17 @@ def combine(result_matrices, score_scalings, membership, quantile_normalize):
     for m in result_matrices:
         m.fix_extreme_values()
 
-    if len(result_matrices) > 1 and quantile_normalize:
-        start_time = util.current_millis()
-        result_matrices = dm.quantile_normalize_scores(result_matrices,
-                                                       score_scalings)
-        elapsed = util.current_millis() - start_time
-        logging.info("quantile normalize in %f s.", elapsed / 1000.0)
+    if quantile_normalize:
+        if len(result_matrices) > 1:
+            start_time = util.current_millis()
+            result_matrices = dm.quantile_normalize_scores(result_matrices,
+                                                           score_scalings)
+            elapsed = util.current_millis() - start_time
+            logging.info("quantile normalize in %f s.", elapsed / 1000.0)
+
         in_matrices = [m.values for m in result_matrices]
 
-    if not quantile_normalize:
+    else:
         in_matrices = []
         num_clusters = membership.num_clusters()
         mat = result_matrices[0]
