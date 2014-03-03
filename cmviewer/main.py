@@ -9,6 +9,7 @@ import json
 import gzip
 import numpy as np
 import glob
+import math
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 env = Environment(loader=FileSystemLoader(os.path.join(current_dir, 'templates')))
@@ -31,6 +32,13 @@ MotifPSSMRow = namedtuple('MotifPSSMRow', ['motif_id', 'row', 'a', 'c', 'g', 't'
 MotifAnnotation = namedtuple('MotifAnnotation', ['motif_info_id', 'seqtype', 'motif_num',
                                                  'gene', 'pos', 'reverse', 'pvalue'])
 
+def normalize_js(value):
+    if math.isnan(value):
+        return 0.0
+    else:
+        return value
+    
+
 class Ratios:
     """A helper class that provides useful functionality to generate plotting
     related information"""
@@ -44,6 +52,7 @@ class Ratios:
 
     def mean(self):
         return np.mean(self.data)
+
 
     def subratios_for(self, genes, conds):
         """Arrange cluster expression data for plotting.
@@ -60,7 +69,7 @@ class Ratios:
 
     def hs_subratios_for(self, genes, conds):
         subratios = self.subratios_for(genes, conds)
-        return [{'name': gene, 'data': [val for val in subratios.data[i]]}
+        return [{'name': gene, 'data': [normalize_js(val) for val in subratios.data[i]]}
                 for i, gene in enumerate(genes)]
 
     def hs_boxplot_data_for(self, genes, conds):
@@ -72,7 +81,9 @@ class Ratios:
             quart = len(r) / 4
             lower_quartile = r[quart]
             upper_quartile = r[-(quart + 1)]
-            return [minval, lower_quartile, median, upper_quartile, maxval]
+            return [normalize_js(minval), normalize_js(lower_quartile),
+                    normalize_js(median), normalize_js(upper_quartile),
+                    normalize_js(maxval)]
             
         subratios = self.subratios_for(genes, conds)
         # cut up the data into left and right half
