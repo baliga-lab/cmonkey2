@@ -1,0 +1,20 @@
+{
+    "row-scoring": {
+        "id": "combiner", "function": "combiner",
+        "args": {
+            "functions": [
+                {"function": "row", "id": "Row" },
+                {"function": "network", "id": "Network",
+                 "args": {
+                     "networks": [
+                         {"type": "STRING", "weight": 0.5},
+                         {"type": "MO-operons", "weight": 0.5}
+                     ]
+                 }
+                },
+                {"function": "motif", "id": "Motif"}
+            ]
+        }
+    },
+    "column-scoring": { "function": "default" }
+}

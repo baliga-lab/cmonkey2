@@ -29,6 +29,8 @@ USER_KEGG_FILE_PATH = 'config/KEGG_taxonomy'
 USER_GO_FILE_PATH = 'config/proteome2taxid'
 SYSTEM_KEGG_FILE_PATH = '/etc/cmonkey-python/KEGG_taxonomy'
 SYSTEM_GO_FILE_PATH = '/etc/cmonkey-python/proteome2taxid'
+USER_DEFAULT_PIPELINE_PATH = 'config/default_pipeline.json'
+SYSTEM_DEFAULT_PIPELINE_PATH = '/etc/cmonkey-python/default_pipeline.json'
 
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 STRING_URL_PATTERN = "http://networks.systemsbiology.net/string9/%s.gz"
@@ -101,6 +103,10 @@ class CMonkeyRun:
             logging.info('using MEME version %s', self['meme_version'])
         else:
             logging.error('MEME not detected - please check')
+
+        if os.path.exists(USER_DEFAULT_PIPELINE_PATH):
+            with open(USER_DEFAULT_PIPELINE_PATH) as infile:
+                self['pipeline'] = json.load(infile)
 
     def __dbconn(self, isolation_level='DEFERRED'):
         """returns an autocommit database connection"""
@@ -205,6 +211,9 @@ class CMonkeyRun:
 
     def make_column_scoring(self):
         """returns the column scoring function"""
+        colscoring = self['pipeline']['column-scoring']['function']
+        if colscoring != 'default':
+            raise Exception("Column Scoring: currently, only 'default' is supported")
         return scoring.ColumnScoringFunction(
             self.membership(), self.ratio_matrix,
             schedule=self['column_schedule'],
