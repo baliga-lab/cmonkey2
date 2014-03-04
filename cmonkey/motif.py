@@ -109,7 +109,7 @@ def pvalues2matrix(all_pvalues, num_clusters, gene_names, reverse_map):
 class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
     """Base class for motif scoring functions that use MEME"""
 
-    def __init__(self, organism, membership, matrix,
+    def __init__(self, organism, membership, ratios,
                  meme_suite, seqtype,
                  sequence_filters=[],
                  scaling_func=None,
@@ -121,7 +121,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         # run_in_iteration does not apply here, since we actually have
         # two schedules, motif_in_iteration and update_in_iteration here
         scoring.ScoringFunctionBase.__init__(self, membership,
-                                             matrix, scaling_func,
+                                             ratios, scaling_func,
                                              schedule=None,
                                              config_params=config_params)
         # attributes accessible by subclasses
@@ -141,20 +141,20 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.update_log = scoring.RunLog("motif-score-" + seqtype, config_params)
         self.motif_log = scoring.RunLog("motif-motif-" + seqtype, config_params)
 
-        used_genes = sorted(matrix.row_names)
+        used_genes = sorted(ratios.row_names)
         self.used_seqs = organism.sequences_for_genes_scan(
             used_genes, seqtype=self.seqtype)
 
         logging.info("building reverse map...")
         start_time = util.current_millis()
-        self.reverse_map = self.__build_reverse_map(matrix)
+        self.reverse_map = self.__build_reverse_map(ratios)
         logging.info("reverse map built in %d ms.",
                      util.current_millis() - start_time)
 
     def run_logs(self):
         return [self.update_log, self.motif_log]
 
-    def __build_reverse_map(self, matrix):
+    def __build_reverse_map(self, ratios):
         """build a map that reconstructs the original row name from
         a feature id"""
         def feature_id_for(gene):
@@ -167,7 +167,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
         result = {}
         num_not_found = 0
-        for row_name in matrix.row_names:
+        for row_name in ratios.row_names:
             feature_id = feature_id_for(row_name)
             if feature_id is not None:
                 result[feature_id] = row_name
@@ -412,7 +412,7 @@ def compute_cluster_score(cluster):
 class MemeScoringFunction(MotifScoringFunctionBase):
     """Scoring function for motifs"""
 
-    def __init__(self, organism, membership, matrix,
+    def __init__(self, organism, membership, ratios,
                  meme_suite,
                  seqtype='upstream',
                  sequence_filters=[],
@@ -423,7 +423,7 @@ class MemeScoringFunction(MotifScoringFunctionBase):
                  config_params=None):
         """creates a ScoringFunction"""
         MotifScoringFunctionBase.__init__(self, organism, membership,
-                                          matrix, meme_suite, seqtype,
+                                          ratios, meme_suite, seqtype,
                                           sequence_filters,
                                           scaling_func,
                                           num_motif_func,
@@ -443,7 +443,7 @@ class MemeScoringFunction(MotifScoringFunctionBase):
 class WeederScoringFunction(MotifScoringFunctionBase):
     """Motif scoring function that runs Weeder instead of MEME"""
 
-    def __init__(self, organism, membership, matrix,
+    def __init__(self, organism, membership, ratios,
                  meme_suite, seqtype,
                  sequence_filters=[],
                  scaling_func=None,
@@ -452,7 +452,7 @@ class WeederScoringFunction(MotifScoringFunctionBase):
                  motif_in_iteration=None,
                  config_params=None):
         """creates a scoring function"""
-        MotifScoringFunctionBase.__init__(self, organism, membership, matrix,
+        MotifScoringFunctionBase.__init__(self, organism, membership, ratios,
                                           meme_suite, seqtype,
                                           sequence_filters,
                                           scaling_func,

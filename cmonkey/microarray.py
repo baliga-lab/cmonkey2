@@ -134,10 +134,10 @@ def __compute_row_scores_for_submatrix(matrix, submatrix):
 class RowScoringFunction(scoring.ScoringFunctionBase):
     """Scoring algorithm for microarray data based on genes"""
 
-    def __init__(self, membership, matrix, scaling_func, schedule, config_params):
+    def __init__(self, membership, ratios, scaling_func, schedule, config_params):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
-                                             matrix, scaling_func,
+                                             ratios, scaling_func,
                                              schedule,
                                              config_params)
         self.run_log = scoring.RunLog("row_scoring", config_params)
@@ -149,7 +149,7 @@ class RowScoringFunction(scoring.ScoringFunctionBase):
     def do_compute(self, iteration_result, ref_matrix=None):
         """the row scoring function"""
         return compute_row_scores(self.membership,
-                                  self.matrix,
+                                  self.ratios,
                                   self.num_clusters(),
                                   self.config_params[scoring.KEY_MULTIPROCESSING])
 

@@ -60,12 +60,12 @@ class RunLog:
 class ScoringFunctionBase:
     """Base class for scoring functions"""
 
-    def __init__(self, membership, matrix, scaling_func,
+    def __init__(self, membership, ratios, scaling_func,
                  schedule=lambda iteration: True,
                  config_params={}):
         """creates a function instance"""
         self.membership = membership
-        self.matrix = matrix
+        self.ratios = ratios
         self.__scaling_func = scaling_func
         self.run_in_iteration = schedule
 
@@ -162,7 +162,7 @@ class ScoringFunctionBase:
 
     def gene_names(self):
         """returns the gene names"""
-        return self.matrix.row_names
+        return self.ratios.row_names
 
     def rows_for_cluster(self, cluster):
         """returns the rows for the specified cluster"""
@@ -209,7 +209,7 @@ class ColumnScoringFunction(ScoringFunctionBase):
 
     def do_compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
-        return compute_column_scores(self.membership, self.matrix,
+        return compute_column_scores(self.membership, self.ratios,
                                      self.num_clusters(),
                                      self.config_params[KEY_MULTIPROCESSING])
 

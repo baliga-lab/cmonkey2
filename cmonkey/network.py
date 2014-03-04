@@ -182,11 +182,11 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     since the scores are computed through weighted addition rather than
     quantile normalization"""
 
-    def __init__(self, organism, membership, matrix, scaling_func,
+    def __init__(self, organism, membership, ratios, scaling_func,
                  schedule, config_params):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, membership,
-                                             matrix, scaling_func,
+                                             ratios, scaling_func,
                                              schedule,
                                              config_params)
         self.__organism = organism
@@ -300,7 +300,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         gene_names = self.gene_names()
         for cluster in xrange(1, self.num_clusters() + 1):
             cluster_genes = set(network_score[cluster].keys())
-            for row_index in xrange(self.matrix.num_rows):
+            for row_index in xrange(self.ratios.num_rows):
                 gene = gene_names[row_index]
                 if gene in cluster_genes:
                     weighted_score = network_score[cluster][gene] * weight

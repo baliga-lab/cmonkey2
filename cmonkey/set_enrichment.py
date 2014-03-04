@@ -132,7 +132,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                                self.gene_names())
         use_multiprocessing = self.config_params[
             scoring.KEY_MULTIPROCESSING]
-        SET_MATRIX = self.matrix
+        SET_MATRIX = self.ratios
         SET_MEMBERSHIP = self.membership
         SET_REF_MATRIX = ref_matrix
 
