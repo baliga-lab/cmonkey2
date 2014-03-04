@@ -185,11 +185,10 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     def __init__(self, organism, membership, ratios, scaling_func,
                  schedule, config_params):
         """Create scoring function instance"""
-        scoring.ScoringFunctionBase.__init__(self, membership,
+        scoring.ScoringFunctionBase.__init__(self, organism, membership,
                                              ratios, scaling_func,
                                              schedule,
                                              config_params)
-        self.__organism = organism
         self.__networks = None
         self.run_log = scoring.RunLog("network", config_params)
 
@@ -223,12 +222,12 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     def networks(self):
         """networks are cached"""
         if self.__networks is None:
-            self.__networks = retrieve_networks(self.__organism)
+            self.__networks = retrieve_networks(self.organism)
             if self.config_params['remap_network_nodes']:
                 # network names are non-primary, this can happen
                 # when the user makes up their own data
                 for network in self.__networks:
-                    network.validate(self.__organism.thesaurus(),
+                    network.validate(self.organism.thesaurus(),
                                      self.gene_names())
         return self.__networks
 

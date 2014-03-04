@@ -214,7 +214,7 @@ class CMonkeyRun:
         colscoring = self['pipeline']['column-scoring']['function']
         if colscoring != 'default':
             raise Exception("Column Scoring: currently, only 'default' is supported")
-        return scoring.ColumnScoringFunction(
+        return scoring.ColumnScoringFunction(self.organism(),
             self.membership(), self.ratio_matrix,
             schedule=self['column_schedule'],
             config_params=self.config_params)
@@ -223,7 +223,7 @@ class CMonkeyRun:
         """makes a row scoring function on demand"""
         # Default row scoring functions
         row_scaling_fun = scoring.get_scaling(self, 'row_')
-        row_scoring = microarray.RowScoringFunction(
+        row_scoring = microarray.RowScoringFunction(self.organism(),
             self.membership(), self.ratio_matrix,
             scaling_func=row_scaling_fun,
             schedule=self["row_schedule"],
@@ -254,8 +254,7 @@ class CMonkeyRun:
 
             motif_scaling_fun = scoring.get_scaling(self, 'motif_')
             nmotif_fun = motif.num_meme_motif_fun(self)
-            motif_scoring = motif.MemeScoringFunction(
-                self.organism(),
+            motif_scoring = motif.MemeScoringFunction(self.organism(),
                 self.membership(),
                 self.ratio_matrix,
                 meme_suite,
@@ -269,8 +268,7 @@ class CMonkeyRun:
 
         if self['donetworks']:
             network_scaling_fun = scoring.get_scaling(self, 'network_')
-            network_scoring = nw.ScoringFunction(
-                self.organism(),
+            network_scoring = nw.ScoringFunction(self.organism(),
                 self.membership(),
                 self.ratio_matrix,
                 scaling_func=network_scaling_fun,
@@ -279,10 +277,10 @@ class CMonkeyRun:
             row_scoring_functions.append(network_scoring)
 
         return scoring.ScoringFunctionCombiner(
+            self.organism(),
             self.membership(),
             row_scoring_functions,
-            config_params=self.config_params,
-            log_subresults=True)
+            config_params=self.config_params)
 
     def membership(self):
         if self.__membership is None:

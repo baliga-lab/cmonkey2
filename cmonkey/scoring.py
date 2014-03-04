@@ -60,13 +60,15 @@ class RunLog:
 class ScoringFunctionBase:
     """Base class for scoring functions"""
 
-    def __init__(self, membership, ratios, scaling_func,
+    def __init__(self, organism, membership, ratios,
+                 scaling_func,
                  schedule=lambda iteration: True,
                  config_params={}):
         """creates a function instance"""
+        self.organism = organism
         self.membership = membership
         self.ratios = ratios
-        self.__scaling_func = scaling_func
+        self.scaling_func = scaling_func
         self.run_in_iteration = schedule
 
         # the cache_result parameter can be used by scoring functions
@@ -170,8 +172,8 @@ class ScoringFunctionBase:
 
     def scaling(self, iteration):
         """returns the quantile normalization scaling for the specified iteration"""
-        if self.__scaling_func is not None:
-            return self.__scaling_func(iteration)
+        if self.scaling_func is not None:
+            return self.scaling_func(iteration)
         else:
             return 0.0
 
@@ -195,10 +197,10 @@ class ColumnScoringFunction(ScoringFunctionBase):
     function output format and can therefore not be combined in
     a generic way (the format is |condition x cluster|)"""
 
-    def __init__(self, membership, matrix, schedule, config_params):
+    def __init__(self, organism, membership, ratios, schedule, config_params):
         """create scoring function instance"""
-        ScoringFunctionBase.__init__(self, membership,
-                                     matrix, scaling_func=None,
+        ScoringFunctionBase.__init__(self, organism, membership,
+                                     ratios, scaling_func=None,
                                      schedule=schedule,
                                      config_params=config_params)
         self.run_log = RunLog("column_scoring", config_params)
@@ -377,15 +379,14 @@ class ScoringFunctionCombiner:
     allow for nested scoring functions as they are used in the motif
     scoring
     """
-    def __init__(self, membership, scoring_functions, scaling_func=None,
-                 config_params=None,
-                 log_subresults=False):
+    def __init__(self, organism, membership, scoring_functions,
+                 scaling_func=None, schedule=None, config_params=None):
         """creates a combiner instance"""
+        self.organism = organism  # not used, but constructor interface should be the same
         self.membership = membership
         self.scoring_functions = scoring_functions
-        self.__log_subresults = log_subresults
-        self.__scaling_func = scaling_func
-        self.__config_params = config_params
+        self.scaling_func = scaling_func
+        self.config_params = config_params
 
     def compute_force(self, iteration_result, ref_matrix=None):
         """compute scores for one iteration, recursive force"""
@@ -405,10 +406,10 @@ class ScoringFunctionCombiner:
                 result_matrices.append(matrix)
                 score_scalings.append(scoring_function.scaling(iteration))
 
-                if self.__log_subresults:
-                    self.__log_subresult(scoring_function, matrix)
+                if self.config_params['log_subresults']:
+                    self.log_subresult(scoring_function, matrix)
         return combine(result_matrices, score_scalings, self.membership,
-                       self.__config_params['quantile_normalize'])
+                       self.config_params['quantile_normalize'])
 
     def compute(self, iteration_result, ref_matrix=None):
         """compute scores for one iteration"""
@@ -431,11 +432,11 @@ class ScoringFunctionCombiner:
                 result_matrices.append(matrix)
                 score_scalings.append(scoring_function.scaling(iteration))
 
-                if self.__log_subresults:
-                    self.__log_subresult(scoring_function, matrix)
+                if self.config_params['log_subresults']:
+                    self.log_subresult(scoring_function, matrix)
 
         return combine(result_matrices, score_scalings, self.membership,
-                       self.__config_params['quantile_normalize'])
+                       self.config_params['quantile_normalize'])
 
     def combine_cached(self, iteration):
         """Combine the cached results of the contained scoring function.
@@ -451,7 +452,7 @@ class ScoringFunctionCombiner:
         return combine(result_matrices, score_scalings, self.membership, True)
 
 
-    def __log_subresult(self, score_function, matrix):
+    def log_subresult(self, score_function, matrix):
         """output an accumulated subresult to the log"""
         scores = []
         mvalues = matrix.values
@@ -466,7 +467,7 @@ class ScoringFunctionCombiner:
 
     def scaling(self, iteration):
         """returns the scaling for the specified iteration"""
-        return self.__scaling_func(iteration)
+        return self.scaling_func(iteration)
 
     def store_checkpoint_data(self, shelf):
         """recursively invokes store_checkpoint_data() on the children"""

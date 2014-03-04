@@ -120,12 +120,11 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         """creates a ScoringFunction"""
         # run_in_iteration does not apply here, since we actually have
         # two schedules, motif_in_iteration and update_in_iteration here
-        scoring.ScoringFunctionBase.__init__(self, membership,
+        scoring.ScoringFunctionBase.__init__(self, organism, membership,
                                              ratios, scaling_func,
                                              schedule=None,
                                              config_params=config_params)
         # attributes accessible by subclasses
-        self.organism = organism
         self.meme_suite = meme_suite
         self.seqtype = seqtype
         self.update_in_iteration = update_in_iteration
