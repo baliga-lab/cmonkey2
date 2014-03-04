@@ -1,22 +1,30 @@
 {
     "row-scoring": {
-        "id": "combiner", "function": "combiner",
+        "id": "combiner",
+        "function": { "module": "cmonkey.scoring", "class": "ScoringFunctionCombiner" },
         "args": {
             "functions": [
-                {"function": "row", "id": "Row" },
-                {"function": "network", "id": "Network",
-                 "args": {
+                { "id": "Rows",
+                  "function": { "module": "cmonkey.microarray", "class": "RowScoringFunction" }
+                },
+                { "id": "Networks",
+                  "function": { "module": "cmonkey.network", "class": "ScoringFunction" },
+                  "args": {
                      "networks": [
                          {"type": "STRING", "weight": 0.5},
                          {"type": "MO-operons", "weight": 0.5}
                      ]
                  }
                 },
-                {"function": "motif", "id": "Motif"}
+                { "id": "Motifs",
+                  "function": { "module": "cmonkey.motif", "class": "MemeScoringFunction" },
+                  "args": {
+                  }
+                }
             ]
         }
     },
-    "column-scoring": { "id": "Column",
+    "column-scoring": { "id": "Columns",
                         "function": { "module": "cmonkey.scoring",
                                       "class": "ColumnScoringFunction"} }
 }
