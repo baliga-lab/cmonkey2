@@ -485,3 +485,5 @@ class ScoringFunctionCombiner:
         for scoring_func in self.scoring_functions:
             result.extend(scoring_func.run_logs())
         return result
+
+__all__ = ["ColumnScoringFunction"]

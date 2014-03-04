@@ -212,9 +212,13 @@ class CMonkeyRun:
     def make_column_scoring(self):
         """returns the column scoring function"""
         colscoring = self['pipeline']['column-scoring']['function']
-        if colscoring != 'default':
-            raise Exception("Column Scoring: currently, only 'default' is supported")
-        return scoring.ColumnScoringFunction(self.organism(),
+        modulepath = colscoring['module'].split('.')
+        if len(modulepath) > 1:
+            module = __import__(colscoring['module'], fromlist=[modulepath[1]])
+        else:
+            module = __import__(modulepath[0])
+        class_ = getattr(module, colscoring['class'])        
+        return class_(self.organism(),
             self.membership(), self.ratio_matrix,
             schedule=self['column_schedule'],
             config_params=self.config_params)

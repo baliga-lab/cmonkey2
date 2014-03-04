@@ -16,5 +16,7 @@
             ]
         }
     },
-    "column-scoring": { "function": "default" }
+    "column-scoring": { "id": "Column",
+                        "function": { "module": "cmonkey.scoring",
+                                      "class": "ColumnScoringFunction"} }
 }
