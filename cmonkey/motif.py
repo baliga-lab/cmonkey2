@@ -109,7 +109,7 @@ def pvalues2matrix(all_pvalues, num_clusters, gene_names, reverse_map):
 class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
     """Base class for motif scoring functions that use MEME"""
 
-    def __init__(self, organism, membership, ratios,
+    def __init__(self, id, organism, membership, ratios,
                  meme_suite, seqtype,
                  sequence_filters=[],
                  scaling_func=None,
@@ -120,9 +120,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         """creates a ScoringFunction"""
         # run_in_iteration does not apply here, since we actually have
         # two schedules, motif_in_iteration and update_in_iteration here
-        scoring.ScoringFunctionBase.__init__(self, organism, membership,
+        scoring.ScoringFunctionBase.__init__(self, id, organism, membership,
                                              ratios, scaling_func,
-                                             schedule=None,
                                              config_params=config_params)
         # attributes accessible by subclasses
         self.meme_suite = meme_suite
@@ -421,7 +420,7 @@ class MemeScoringFunction(MotifScoringFunctionBase):
                  motif_in_iteration=None,
                  config_params=None):
         """creates a ScoringFunction"""
-        MotifScoringFunctionBase.__init__(self, organism, membership,
+        MotifScoringFunctionBase.__init__(self, "MEME", organism, membership,
                                           ratios, meme_suite, seqtype,
                                           sequence_filters,
                                           scaling_func,
@@ -433,6 +432,10 @@ class MemeScoringFunction(MotifScoringFunctionBase):
     def name(self):
         """returns the name of this scoring function"""
         return "MEME"
+
+    def initialize(self, args):
+        """process additional parameters"""
+        pass
 
     def meme_runner(self):
         """returns the MEME runner object"""
@@ -451,7 +454,7 @@ class WeederScoringFunction(MotifScoringFunctionBase):
                  motif_in_iteration=None,
                  config_params=None):
         """creates a scoring function"""
-        MotifScoringFunctionBase.__init__(self, organism, membership, ratios,
+        MotifScoringFunctionBase.__init__(self, "Weeder", organism, membership, ratios,
                                           meme_suite, seqtype,
                                           sequence_filters,
                                           scaling_func,

@@ -183,12 +183,10 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     quantile normalization"""
 
     def __init__(self, organism, membership, ratios, scaling_func,
-                 schedule, config_params):
+                 config_params):
         """Create scoring function instance"""
-        scoring.ScoringFunctionBase.__init__(self, organism, membership,
-                                             ratios, scaling_func,
-                                             schedule,
-                                             config_params)
+        scoring.ScoringFunctionBase.__init__(self, "Networks", organism, membership,
+                                             ratios, scaling_func, config_params)
         self.__networks = None
         self.run_log = scoring.RunLog("network", config_params)
 
@@ -198,7 +196,8 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
     def initialize(self, args):
         """process additional parameters"""
-        self.args = args
+        self.weights = {nw['type']: nw['weight'] for nw in args['networks']}
+        print "WEIGHTS: ", self.weights
 
     def run_logs(self):
         return [self.run_log]

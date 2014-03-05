@@ -217,7 +217,6 @@ class CMonkeyRun:
         class_ = get_function_class(self['pipeline']['column-scoring']['function'])
         return class_(self.organism(),
             self.membership(), self.ratio_matrix,
-            schedule=self['column_schedule'],
             config_params=self.config_params)
 
     def make_row_scoring(self):
@@ -230,17 +229,22 @@ class CMonkeyRun:
             for fun in nested:
                 scorecl = get_function_class(fun['function'])
                 print "NESTED FUNCTION: ", scorecl.__name__
+                #instance = scorecl(self.organism(), self.membership(), self.ratio_matrix,
+                #                   scaling_func=None,
+                #                   schedule=self['row_schedule'],
+                #                   config_params=self.config_params)
                 if 'args' in fun:
                     print "THERE ARE ARGS: ", fun['args']
+                    #instance.initialize(fun['args'])
         else:
             raise Exception('Row scoring top level must be ScoringFunctionCombiner')
 
         # Default row scoring functions
         row_scaling_fun = scoring.get_scaling(self, 'row_')
-        row_scoring = microarray.RowScoringFunction(self.organism(),
+        row_scoring = microarray.RowScoringFunction(
+            self.organism(),
             self.membership(), self.ratio_matrix,
             scaling_func=row_scaling_fun,
-            schedule=self["row_schedule"],
             config_params=self.config_params)
         row_scoring_functions = [row_scoring]
 
@@ -268,25 +272,26 @@ class CMonkeyRun:
 
             motif_scaling_fun = scoring.get_scaling(self, 'motif_')
             nmotif_fun = motif.num_meme_motif_fun(self)
-            motif_scoring = motif.MemeScoringFunction(self.organism(),
+            motif_scoring = motif.MemeScoringFunction(
+                self.organism(),
                 self.membership(),
                 self.ratio_matrix,
                 meme_suite,
                 sequence_filters=sequence_filters,
                 scaling_func=motif_scaling_fun,
                 num_motif_func=nmotif_fun,
-                update_in_iteration=self['motif_schedule'],
-                motif_in_iteration=self['meme_schedule'],
+                update_in_iteration=self['schedule']['Motifs'],
+                motif_in_iteration=self['schedule']['MEME'],
                 config_params=self.config_params)
             row_scoring_functions.append(motif_scoring)
 
         if self['donetworks']:
             network_scaling_fun = scoring.get_scaling(self, 'network_')
-            network_scoring = nw.ScoringFunction(self.organism(),
+            network_scoring = nw.ScoringFunction(
+                self.organism(),
                 self.membership(),
                 self.ratio_matrix,
                 scaling_func=network_scaling_fun,
-                schedule=self['network_schedule'],
                 config_params=self.config_params)
             row_scoring_functions.append(network_scoring)
 

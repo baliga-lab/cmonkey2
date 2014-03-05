@@ -109,7 +109,10 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                               'output_dir': 'out',
                               'remap_network_nodes': False,
                               'num_iterations': 2000,
-                              'debug': False}
+                              'debug': False,
+                              'schedule': {'Columns': lambda i: True,
+                                           'Rows': lambda i: True,
+                                           'Networks': lambda i: True}}
         self.membership = self.__read_members()  # relies on config_params
         self.iteration_result = { 'iteration': 51 }
 
@@ -119,7 +122,6 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         row_scoring = microarray.RowScoringFunction(self.organism,
             self.membership, self.ratio_matrix,
             scaling_func=lambda iteration: 6.0,
-            schedule=lambda x: True,
             config_params=self.config_params)
         rowscores = row_scoring.compute(self.iteration_result)
         ref_rowscores = read_matrix('testdata/rowscores_fixed.tsv')
@@ -129,7 +131,6 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         # tests the column scoring by itself
         colscoring = scoring.ColumnScoringFunction(self.organism,
             self.membership, self.ratio_matrix,
-            schedule=lambda x: True,
             config_params=self.config_params)
         colscores = colscoring.compute(self.iteration_result)
         ref_colscores = read_matrix('testdata/colscores_fixed.tsv')
@@ -142,7 +143,6 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                              self.membership,
                                              self.ratio_matrix,
                                              scaling_func=network_scaling_fun,
-                                             schedule=lambda x: True,
                                              config_params=self.config_params)
         netscores = network_scoring.compute(self.iteration_result).sorted_by_row_name()
         ref_netscores = read_matrix('testdata/netscores_fixed.tsv')
@@ -180,7 +180,8 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         class DummyNetworkScoring(scoring.ScoringFunctionBase):
             def __init__(self):
                 scaling_fun = get_default_network_scaling(2000)
-                scoring.ScoringFunctionBase.__init__(self, None, None, None, scaling_fun)
+                scoring.ScoringFunctionBase.__init__(self, "Dummy", None, None, None,
+                                                     scaling_fun)
 
             def compute(self, iteration_result, ref_matrix=None):
                 return ref_netscores
@@ -188,14 +189,15 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         class DummyMotifScoring(scoring.ScoringFunctionBase):
             def __init__(self):
                 scaling_fun = get_default_motif_scaling(2000, offset=0)
-                scoring.ScoringFunctionBase.__init__(self, None, None, None, scaling_fun)
+                scoring.ScoringFunctionBase.__init__(self, "Dummy", None, None, None,
+                                                     scaling_fun)
 
             def compute(self, iteration_result, ref_matrix=None):
                 return ref_motscores
 
         class DummyRowScoring(scoring.ScoringFunctionBase):
             def __init__(self):
-                scoring.ScoringFunctionBase.__init__(self, None, None, None,
+                scoring.ScoringFunctionBase.__init__(self, "Dummy", None, None, None,
                                                      lambda iteration: 6.0)
 
             def compute(self, iteration_result, ref_matrix=None):
@@ -205,7 +207,8 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         combiner = scoring.ScoringFunctionCombiner(self.organism, self.membership,
                                                    row_scoring_functions,
                                                    config_params={'quantile_normalize': True,
-                                                                  'log_subresults': False})
+                                                                  'log_subresults': False,
+                                                                  'schedule': {'Dummy': lambda i: True}})
         scores = combiner.compute(self.iteration_result)
         ref_scores = read_matrix('testdata/combined_scores.tsv')
         # note that the rounding error get pretty large here !!!

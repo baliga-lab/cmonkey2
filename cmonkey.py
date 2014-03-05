@@ -72,11 +72,12 @@ def set_config(cmonkey_run, config):
         cmonkey_run['scan_distances'][seqtype] = tuple(
             map(int, config.get(cat, 'scan_distance').split(',')))
 
-    cmonkey_run['row_schedule'] = make_schedule(config.get("Rows", "schedule"))
-    cmonkey_run['column_schedule'] = make_schedule(config.get("Columns", "schedule"))
-    cmonkey_run['meme_schedule'] = make_schedule(config.get("MEME", "schedule"))
-    cmonkey_run['motif_schedule'] = make_schedule(config.get("Motifs", "schedule"))
-    cmonkey_run['network_schedule'] = make_schedule(config.get("Networks", "schedule"))
+    cmonkey_run['schedule'] = {}
+    cmonkey_run['schedule']['Rows'] = make_schedule(config.get("Rows", "schedule"))
+    cmonkey_run['schedule']['Columns'] = make_schedule(config.get("Columns", "schedule"))
+    cmonkey_run['schedule']['MEME'] = make_schedule(config.get("MEME", "schedule"))
+    cmonkey_run['schedule']['Motifs'] = make_schedule(config.get("Motifs", "schedule"))
+    cmonkey_run['schedule']['Networks'] = make_schedule(config.get("Networks", "schedule"))
 
     cmonkey_run['stats_freq'] = config.getint('General', 'stats_frequency')
     cmonkey_run['result_freq'] = config.getint('General', 'result_frequency')

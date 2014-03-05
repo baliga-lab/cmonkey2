@@ -60,16 +60,15 @@ class RunLog:
 class ScoringFunctionBase:
     """Base class for scoring functions"""
 
-    def __init__(self, organism, membership, ratios,
+    def __init__(self, id, organism, membership, ratios,
                  scaling_func,
-                 schedule=lambda iteration: True,
                  config_params={}):
         """creates a function instance"""
+        self.id = id
         self.organism = organism
         self.membership = membership
         self.ratios = ratios
         self.scaling_func = scaling_func
-        self.run_in_iteration = schedule
 
         # the cache_result parameter can be used by scoring functions
         # or users to fine-tune the behavior during non-compute operations
@@ -80,6 +79,9 @@ class ScoringFunctionBase:
         self.config_params = config_params
         if config_params is None:
             raise Exception('NO CONFIG PARAMS !!!')
+
+    def run_in_iteration(self, i):
+        return self.config_params['schedule'][self.id](i)
 
     def name(self):
         """returns the name of this function
@@ -197,11 +199,10 @@ class ColumnScoringFunction(ScoringFunctionBase):
     function output format and can therefore not be combined in
     a generic way (the format is |condition x cluster|)"""
 
-    def __init__(self, organism, membership, ratios, schedule, config_params):
+    def __init__(self, organism, membership, ratios, config_params):
         """create scoring function instance"""
-        ScoringFunctionBase.__init__(self, organism, membership,
+        ScoringFunctionBase.__init__(self, "Columns", organism, membership,
                                      ratios, scaling_func=None,
-                                     schedule=schedule,
                                      config_params=config_params)
         self.run_log = RunLog("column_scoring", config_params)
 
