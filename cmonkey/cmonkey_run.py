@@ -210,21 +210,31 @@ class CMonkeyRun:
                                       self.config_params)
 
     def make_column_scoring(self):
-        """returns the column scoring function"""
-        colscoring = self['pipeline']['column-scoring']['function']
-        modulepath = colscoring['module'].split('.')
-        if len(modulepath) > 1:
-            module = __import__(colscoring['module'], fromlist=[modulepath[1]])
-        else:
-            module = __import__(modulepath[0])
-        class_ = getattr(module, colscoring['class'])        
+        """returns the column scoring function
+        TODO: note that this currently is mostly a transition for a more
+        ----- flexible setup in the future
+        """
+        class_ = get_function_class(self['pipeline']['column-scoring']['function'])
         return class_(self.organism(),
             self.membership(), self.ratio_matrix,
             schedule=self['column_schedule'],
             config_params=self.config_params)
 
     def make_row_scoring(self):
-        """makes a row scoring function on demand"""
+        """makes a row scoring function on demand
+           TODO: for now, we always assume the top level or row scoring is a combiner
+        """
+        class_ = get_function_class(self['pipeline']['row-scoring']['function'])
+        if class_.__name__ == 'ScoringFunctionCombiner':
+            nested = self['pipeline']['row-scoring']['args']['functions']
+            for fun in nested:
+                scorecl = get_function_class(fun['function'])
+                print "NESTED FUNCTION: ", scorecl.__name__
+                if 'args' in fun:
+                    print "THERE ARE ARGS: ", fun['args']
+        else:
+            raise Exception('Row scoring top level must be ScoringFunctionCombiner')
+
         # Default row scoring functions
         row_scaling_fun = scoring.get_scaling(self, 'row_')
         row_scoring = microarray.RowScoringFunction(self.organism(),
@@ -742,4 +752,13 @@ class CMonkeyRun:
             row_scoring.restore_checkpoint_data(shelf)
             col_scoring.restore_checkpoint_data(shelf)
             #return row_scoring, col_scoring necessary??
+
+
+def get_function_class(scorefun):
+    modulepath = scorefun['module'].split('.')
+    if len(modulepath) > 1:
+        module = __import__(scorefun['module'], fromlist=[modulepath[1]])
+    else:
+        module = __import__(modulepath[0])
+    return getattr(module, scorefun['class'])        
 
