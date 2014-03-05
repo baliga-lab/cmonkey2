@@ -381,7 +381,7 @@ class CMonkeyRun:
                 logging.info("Loading STRING file at '%s'", stringfile)
 
             # create and add network
-            nw_factories.append(stringdb.get_network_factory2(
+            nw_factories.append(stringdb.get_network_factory(
                 self['organism_code'], stringfile, 0.5))
 
         # do we use operons ?

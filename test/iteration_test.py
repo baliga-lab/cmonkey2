@@ -116,7 +116,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_row_scoring(self):
         # tests the row scoring by itself, which combines scoring and fixing
         # extreme values
-        row_scoring = microarray.RowScoringFunction(
+        row_scoring = microarray.RowScoringFunction(self.organism,
             self.membership, self.ratio_matrix,
             scaling_func=lambda iteration: 6.0,
             schedule=lambda x: True,
@@ -127,7 +127,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_col_scoring(self):
         # tests the column scoring by itself
-        colscoring = scoring.ColumnScoringFunction(
+        colscoring = scoring.ColumnScoringFunction(self.organism,
             self.membership, self.ratio_matrix,
             schedule=lambda x: True,
             config_params=self.config_params)
@@ -180,7 +180,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         class DummyNetworkScoring(scoring.ScoringFunctionBase):
             def __init__(self):
                 scaling_fun = get_default_network_scaling(2000)
-                scoring.ScoringFunctionBase.__init__(self, None, None, scaling_fun)
+                scoring.ScoringFunctionBase.__init__(self, None, None, None, scaling_fun)
 
             def compute(self, iteration_result, ref_matrix=None):
                 return ref_netscores
@@ -188,24 +188,24 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         class DummyMotifScoring(scoring.ScoringFunctionBase):
             def __init__(self):
                 scaling_fun = get_default_motif_scaling(2000, offset=0)
-                scoring.ScoringFunctionBase.__init__(self, None, None, scaling_fun)
+                scoring.ScoringFunctionBase.__init__(self, None, None, None, scaling_fun)
 
             def compute(self, iteration_result, ref_matrix=None):
                 return ref_motscores
 
         class DummyRowScoring(scoring.ScoringFunctionBase):
             def __init__(self):
-                scoring.ScoringFunctionBase.__init__(self, None, None,
+                scoring.ScoringFunctionBase.__init__(self, None, None, None,
                                                      lambda iteration: 6.0)
 
             def compute(self, iteration_result, ref_matrix=None):
                 return ref_rowscores
 
         row_scoring_functions = [DummyRowScoring(), DummyMotifScoring(), DummyNetworkScoring()]
-        combiner = scoring.ScoringFunctionCombiner(self.membership,
+        combiner = scoring.ScoringFunctionCombiner(self.organism, self.membership,
                                                    row_scoring_functions,
-                                                   config_params={'quantile_normalize': True},
-                                                   log_subresults=False)
+                                                   config_params={'quantile_normalize': True,
+                                                                  'log_subresults': False})
         scores = combiner.compute(self.iteration_result)
         ref_scores = read_matrix('testdata/combined_scores.tsv')
         # note that the rounding error get pretty large here !!!
@@ -283,8 +283,8 @@ def make_halo(ratio_matrix, search_distances, scan_distances):
 
     nw_factories = []
     if stringfile != None:
-        nw_factories.append(stringdb.get_network_factory2('hal', stringfile, 0.5,
-                                                          normalized=True))
+        nw_factories.append(stringdb.get_network_factory('hal', stringfile, 0.5,
+                                                         normalized=True))
     else:
         logging.warn("no STRING file specified !")
 

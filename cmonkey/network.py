@@ -196,6 +196,10 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """returns the name of this function"""
         return "Network"
 
+    def initialize(self, args):
+        """process additional parameters"""
+        self.args = args
+
     def run_logs(self):
         return [self.run_log]
 
