@@ -134,11 +134,10 @@ def __compute_row_scores_for_submatrix(matrix, submatrix):
 class RowScoringFunction(scoring.ScoringFunctionBase):
     """Scoring algorithm for microarray data based on genes"""
 
-    def __init__(self, organism, membership, ratios, scaling_func, config_params):
+    def __init__(self, organism, membership, ratios, config_params):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, "Rows", organism, membership,
-                                             ratios, scaling_func,
-                                             config_params)
+                                             ratios, config_params)
         self.run_log = scoring.RunLog("row_scoring", config_params)
 
     def name(self):

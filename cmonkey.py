@@ -20,14 +20,14 @@ import random
 
 
 def set_config(cmonkey_run, config):
-    def set_scaling(section, prefix):
+    def set_scaling(section):
         try:
-            cmonkey_run[prefix + 'scaling_const'] = config.getfloat(section, 'scaling_const')
+            cmonkey_run['scaling'][section] = ('scaling_const', config.getfloat(section, 'scaling_const'))
             return
         except:
             pass
         try:
-            cmonkey_run[prefix + 'scaling_rvec'] = config.get(section, 'scaling_rvec')
+            cmonkey_run['scaling'][section] = ('scaling_rvec', config.get(section, 'scaling_rvec'))
         except:
             raise Exception("no scaling found for section '%s'" % section)
 
@@ -83,9 +83,10 @@ def set_config(cmonkey_run, config):
     cmonkey_run['result_freq'] = config.getint('General', 'result_frequency')
 
     # parse the scalings
-    set_scaling('Motifs', 'motif_')
-    set_scaling('Rows', 'row_')
-    set_scaling('Networks', 'network_')
+    cmonkey_run['scaling'] = {}
+    set_scaling('Motifs')
+    set_scaling('Rows')
+    set_scaling('Networks')
 
     try:
         cmonkey_run['nmotifs_rvec'] = config.get('MEME', 'nmotifs_rvec')

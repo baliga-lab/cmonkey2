@@ -112,7 +112,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
     def __init__(self, id, organism, membership, ratios,
                  meme_suite, seqtype,
                  sequence_filters=[],
-                 scaling_func=None,
                  num_motif_func=None,
                  update_in_iteration=lambda iteration: True,
                  motif_in_iteration=lambda iteration: True,
@@ -121,8 +120,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         # run_in_iteration does not apply here, since we actually have
         # two schedules, motif_in_iteration and update_in_iteration here
         scoring.ScoringFunctionBase.__init__(self, id, organism, membership,
-                                             ratios, scaling_func,
-                                             config_params=config_params)
+                                             ratios, config_params=config_params)
         # attributes accessible by subclasses
         self.meme_suite = meme_suite
         self.seqtype = seqtype
@@ -414,7 +412,6 @@ class MemeScoringFunction(MotifScoringFunctionBase):
                  meme_suite,
                  seqtype='upstream',
                  sequence_filters=[],
-                 scaling_func=None,
                  num_motif_func=None,
                  update_in_iteration=None,
                  motif_in_iteration=None,
@@ -423,7 +420,6 @@ class MemeScoringFunction(MotifScoringFunctionBase):
         MotifScoringFunctionBase.__init__(self, "MEME", organism, membership,
                                           ratios, meme_suite, seqtype,
                                           sequence_filters,
-                                          scaling_func,
                                           num_motif_func,
                                           update_in_iteration,
                                           motif_in_iteration,
@@ -448,7 +444,6 @@ class WeederScoringFunction(MotifScoringFunctionBase):
     def __init__(self, organism, membership, ratios,
                  meme_suite, seqtype,
                  sequence_filters=[],
-                 scaling_func=None,
                  num_motif_func=None,
                  update_in_iteration=None,
                  motif_in_iteration=None,
@@ -457,7 +452,6 @@ class WeederScoringFunction(MotifScoringFunctionBase):
         MotifScoringFunctionBase.__init__(self, "Weeder", organism, membership, ratios,
                                           meme_suite, seqtype,
                                           sequence_filters,
-                                          scaling_func,
                                           num_motif_func,
                                           update_in_iteration,
                                           motif_in_iteration,

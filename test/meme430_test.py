@@ -73,11 +73,11 @@ class Meme430Test(unittest.TestCase):  # pylint: disable-msg=R0904
                          'num_clusters': 1,
                          'output_dir': 'out',
                          'debug': False,
-                         'num_iterations': 2000}
+                         'num_iterations': 2000,
+                         'scaling': {'Motifs': ('scaling_const', 1.0)}}
         func = motif.MemeScoringFunction(organism, membership, ratio_matrix,
                                          meme_suite,
                                          sequence_filters=sequence_filters,
-                                         scaling_func=lambda iter: 1.0,
                                          num_motif_func=lambda iter: 1,
                                          update_in_iteration=lambda x: True,
                                          motif_in_iteration=lambda x: True,

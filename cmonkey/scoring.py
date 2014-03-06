@@ -35,8 +35,9 @@ KEY_STRING_FILE = 'string_file'
 USE_MULTIPROCESSING = True
 
 
-def get_scaling(params, prefix):
+def get_scaling(params, id):
     """returns a scaling function for the given prefix from the configuration parameters"""
+    scaling = params[id]
     return util.get_iter_fun(params, prefix + 'scaling', params['num_iterations'])
 
 
@@ -61,14 +62,12 @@ class ScoringFunctionBase:
     """Base class for scoring functions"""
 
     def __init__(self, id, organism, membership, ratios,
-                 scaling_func,
                  config_params={}):
         """creates a function instance"""
         self.id = id
         self.organism = organism
         self.membership = membership
         self.ratios = ratios
-        self.scaling_func = scaling_func
 
         # the cache_result parameter can be used by scoring functions
         # or users to fine-tune the behavior during non-compute operations
@@ -174,8 +173,16 @@ class ScoringFunctionBase:
 
     def scaling(self, iteration):
         """returns the quantile normalization scaling for the specified iteration"""
-        if self.scaling_func is not None:
-            return self.scaling_func(iteration)
+        if self.id in self.config_params['scaling']:
+            scaling = self.config_params['scaling'][self.id]
+            if scaling[0] == 'scaling_const':
+                return scaling[1]
+            elif scaling[0] == 'scaling_rvec':
+                num_iterations = self.config_params['num_iterations']
+                return util.get_rvec_fun(scaling[1].replace('num_iterations',
+                                                            str(num_iterations)))(iteration)
+            else:
+                raise Exception("Unknown scaling: '%s'" % scaling[0])
         else:
             return 0.0
 
@@ -202,8 +209,7 @@ class ColumnScoringFunction(ScoringFunctionBase):
     def __init__(self, organism, membership, ratios, config_params):
         """create scoring function instance"""
         ScoringFunctionBase.__init__(self, "Columns", organism, membership,
-                                     ratios, scaling_func=None,
-                                     config_params=config_params)
+                                     ratios, config_params=config_params)
         self.run_log = RunLog("column_scoring", config_params)
 
     def name(self):
@@ -380,13 +386,11 @@ class ScoringFunctionCombiner:
     allow for nested scoring functions as they are used in the motif
     scoring
     """
-    def __init__(self, organism, membership, scoring_functions,
-                 scaling_func=None, schedule=None, config_params=None):
+    def __init__(self, organism, membership, scoring_functions, config_params=None):
         """creates a combiner instance"""
         self.organism = organism  # not used, but constructor interface should be the same
         self.membership = membership
         self.scoring_functions = scoring_functions
-        self.scaling_func = scaling_func
         self.config_params = config_params
 
     def compute_force(self, iteration_result, ref_matrix=None):

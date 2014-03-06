@@ -25,36 +25,6 @@ GO_FILE_PATH = 'config/proteome2taxid'
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 CACHE_DIR = 'cache'
 
-def get_default_motif_scaling(num_iterations, offset=100):
-    """this scaling function is based on the tricky default motif scaling
-    sequence in the R reference"""
-    seq = [1e-5] * offset
-    num_steps = int(round(num_iterations * 0.75))
-    step = 1.0 / (num_steps - 1)
-    seq2 = [step * i for i in range(num_steps)]
-    seq.extend(seq2)
-
-    def default_motif_scaling(iteration):
-        if iteration <= len(seq):
-            return seq[iteration - 1]
-        else:
-            return 1.0
-
-    return default_motif_scaling
-
-
-def get_default_network_scaling(num_iterations):
-    """this scaling function is based on the tricky default network scaling
-    sequence in the R reference"""
-    steps = int(round(num_iterations * 0.75))
-    step = (0.5 - 1e-5) / steps
-
-    def default_network_scaling(iteration):
-        if iteration > steps:
-            return 0.5
-        else:
-            return 1e-5 + step * (iteration - 1)
-    return default_network_scaling
 
 class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """This class tests a Halo setup which was extracted from iteration 49
@@ -112,7 +82,10 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                               'debug': False,
                               'schedule': {'Columns': lambda i: True,
                                            'Rows': lambda i: True,
-                                           'Networks': lambda i: True}}
+                                           'Networks': lambda i: True},
+                              'scaling': {'Rows': ('scaling_const', 6.0),
+                                          'Networks': ('scaling_rvec', 'seq(1e-5, 0.5, length=num_iterations*3/4)'),
+                                          'Motifs': ('scaling_rvec', 'seq(0, 1, length=num_iterations*3/4)')}}
         self.membership = self.__read_members()  # relies on config_params
         self.iteration_result = { 'iteration': 51 }
 
@@ -121,7 +94,6 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         # extreme values
         row_scoring = microarray.RowScoringFunction(self.organism,
             self.membership, self.ratio_matrix,
-            scaling_func=lambda iteration: 6.0,
             config_params=self.config_params)
         rowscores = row_scoring.compute(self.iteration_result)
         ref_rowscores = read_matrix('testdata/rowscores_fixed.tsv')
@@ -138,11 +110,9 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_net_scoring(self):
         #tests the network scoring by itself#
-        network_scaling_fun = get_default_network_scaling(2000)
         network_scoring = nw.ScoringFunction(self.organism,
                                              self.membership,
                                              self.ratio_matrix,
-                                             scaling_func=network_scaling_fun,
                                              config_params=self.config_params)
         netscores = network_scoring.compute(self.iteration_result).sorted_by_row_name()
         ref_netscores = read_matrix('testdata/netscores_fixed.tsv')
@@ -154,14 +124,12 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
             motif.unique_filter,
             motif.get_remove_low_complexity_filter(meme_suite),
             motif.get_remove_atgs_filter(self.search_distances['upstream'])]
-        motif_scaling_fun = get_default_motif_scaling(2000, offset=0)
         motif_scoring = motif.MemeScoringFunction(
             self.organism,
             self.membership,
             self.ratio_matrix,
             meme_suite,
             sequence_filters=sequence_filters,
-            scaling_func=motif_scaling_fun,
             num_motif_func=lambda iteration: 1,
             update_in_iteration=lambda x: True,
             motif_in_iteration=lambda x: True,
@@ -176,29 +144,31 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         ref_netscores = read_matrix('testdata/netscores_fixed.tsv')
         ref_motscores = read_matrix('testdata/motscores_fixed.tsv')
         ref_rowscores = read_matrix('testdata/rowscores_fixed.tsv')
+        config_params = {'quantile_normalize': True,
+                         'log_subresults': False,
+                         'num_iterations': 2000,
+                         'schedule': {'Dummy': lambda i: True},
+                         'scaling': {'Rows': ('scaling_const', 6.0),
+                                     'Networks': ('scaling_rvec', 'seq(1e-5, 0.5, length=num_iterations*3/4)'),
+                                     'Motifs': ('scaling_rvec', 'seq(0, 1, length=num_iterations*3/4)')}}
 
         class DummyNetworkScoring(scoring.ScoringFunctionBase):
             def __init__(self):
-                scaling_fun = get_default_network_scaling(2000)
-                scoring.ScoringFunctionBase.__init__(self, "Dummy", None, None, None,
-                                                     scaling_fun)
+                scoring.ScoringFunctionBase.__init__(self, "Networks", None, None, None, config_params)
 
             def compute(self, iteration_result, ref_matrix=None):
                 return ref_netscores
 
         class DummyMotifScoring(scoring.ScoringFunctionBase):
             def __init__(self):
-                scaling_fun = get_default_motif_scaling(2000, offset=0)
-                scoring.ScoringFunctionBase.__init__(self, "Dummy", None, None, None,
-                                                     scaling_fun)
+                scoring.ScoringFunctionBase.__init__(self, "Motifs", None, None, None, config_params)
 
             def compute(self, iteration_result, ref_matrix=None):
                 return ref_motscores
 
         class DummyRowScoring(scoring.ScoringFunctionBase):
             def __init__(self):
-                scoring.ScoringFunctionBase.__init__(self, "Dummy", None, None, None,
-                                                     lambda iteration: 6.0)
+                scoring.ScoringFunctionBase.__init__(self, "Rows", None, None, None, config_params)
 
             def compute(self, iteration_result, ref_matrix=None):
                 return ref_rowscores
@@ -206,9 +176,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         row_scoring_functions = [DummyRowScoring(), DummyMotifScoring(), DummyNetworkScoring()]
         combiner = scoring.ScoringFunctionCombiner(self.organism, self.membership,
                                                    row_scoring_functions,
-                                                   config_params={'quantile_normalize': True,
-                                                                  'log_subresults': False,
-                                                                  'schedule': {'Dummy': lambda i: True}})
+                                                   config_params)
         scores = combiner.compute(self.iteration_result)
         ref_scores = read_matrix('testdata/combined_scores.tsv')
         # note that the rounding error get pretty large here !!!
@@ -240,7 +208,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         rds, cds = memb.get_density_scores(self.membership, row_scores, col_scores)
         self.assertTrue(check_matrix_values(rds, ref_rowscores, eps=1e-11))
         self.assertTrue(check_matrix_values(cds, ref_colscores, eps=1e-11))
-    """
+
     def test_size_compensation(self):
         # tests the size compensation
         row_scores = read_matrix('testdata/density_rowscores.tsv')
@@ -251,7 +219,6 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                              row_scores, col_scores)
         self.assertTrue(check_matrix_values(row_scores, ref_rowscores, eps=1e-11))
         self.assertTrue(check_matrix_values(col_scores, ref_colscores, eps=1e-11))
-        """
 
 def read_matrix(filename):
     """reads a matrix file"""

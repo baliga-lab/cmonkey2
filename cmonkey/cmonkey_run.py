@@ -240,11 +240,8 @@ class CMonkeyRun:
             raise Exception('Row scoring top level must be ScoringFunctionCombiner')
 
         # Default row scoring functions
-        row_scaling_fun = scoring.get_scaling(self, 'row_')
         row_scoring = microarray.RowScoringFunction(
-            self.organism(),
-            self.membership(), self.ratio_matrix,
-            scaling_func=row_scaling_fun,
+            self.organism(), self.membership(), self.ratio_matrix,
             config_params=self.config_params)
         row_scoring_functions = [row_scoring]
 
@@ -270,7 +267,6 @@ class CMonkeyRun:
                 motif.get_remove_low_complexity_filter(meme_suite),
                 motif.get_remove_atgs_filter(self['search_distances']['upstream'])]
 
-            motif_scaling_fun = scoring.get_scaling(self, 'motif_')
             nmotif_fun = motif.num_meme_motif_fun(self)
             motif_scoring = motif.MemeScoringFunction(
                 self.organism(),
@@ -278,7 +274,6 @@ class CMonkeyRun:
                 self.ratio_matrix,
                 meme_suite,
                 sequence_filters=sequence_filters,
-                scaling_func=motif_scaling_fun,
                 num_motif_func=nmotif_fun,
                 update_in_iteration=self['schedule']['Motifs'],
                 motif_in_iteration=self['schedule']['MEME'],
@@ -286,12 +281,10 @@ class CMonkeyRun:
             row_scoring_functions.append(motif_scoring)
 
         if self['donetworks']:
-            network_scaling_fun = scoring.get_scaling(self, 'network_')
             network_scoring = nw.ScoringFunction(
                 self.organism(),
                 self.membership(),
                 self.ratio_matrix,
-                scaling_func=network_scaling_fun,
                 config_params=self.config_params)
             row_scoring_functions.append(network_scoring)
 
