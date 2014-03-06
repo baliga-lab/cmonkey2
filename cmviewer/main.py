@@ -10,11 +10,19 @@ import gzip
 import numpy as np
 import glob
 import math
+import argparse
+
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 env = Environment(loader=FileSystemLoader(os.path.join(current_dir, 'templates')))
-outdir = os.path.join(os.path.dirname(current_dir), 'out')  # make it flexible
+outdir = 'out'  # make it flexible
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--out', default=outdir, help='output directory')
+args = parser.parse_args()
+outdir = os.path.join(os.getcwd(), args.out)
 outdb = os.path.join(outdir, 'cmonkey_run.db')
+
 
 RunInfo = namedtuple('RunInfo',
                      ['species', 'orgcode', 'num_iters', 'last_iter',
