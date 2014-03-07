@@ -241,12 +241,10 @@ class CMonkeyRun:
         row_scoring_functions = [row_scoring]
 
         if self['domotifs']:
-            nmotif_fun = motif.num_meme_motif_fun(self)
             motif_scoring = motif.MemeScoringFunction(
                 self.organism(),
                 self.membership(),
                 self.ratio_matrix,
-                update_in_iteration=self['schedule']['Motifs'],
                 motif_in_iteration=self['schedule']['MEME'],
                 config_params=self.config_params)
             row_scoring_functions.append(motif_scoring)

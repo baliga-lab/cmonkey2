@@ -122,9 +122,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.__sequence_filters = [unique_filter, get_remove_low_complexity_filter(self.meme_suite),
                                    get_remove_atgs_filter(search_distance)]
         
-    def __init__(self, id, organism, membership, ratios,
-                 seqtype,
-                 update_in_iteration=lambda iteration: True,
+    def __init__(self, id, organism, membership, ratios, seqtype,
                  motif_in_iteration=lambda iteration: True,
                  config_params=None):
         """creates a ScoringFunction"""
@@ -136,7 +134,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.seqtype = seqtype
         self.__setup_meme_suite(config_params['meme_version'], config_params['global_background'],
                                 config_params['search_distances'][seqtype])
-        self.update_in_iteration = update_in_iteration
         self.motif_in_iteration = motif_in_iteration
         self.num_motif_func = util.get_iter_fun(config_params, "nmotifs",
                                                 config_params['num_iterations'])
@@ -226,13 +223,13 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             self.all_pvalues = self.compute_pvalues(self.__last_iteration_result,
                                                     num_motifs)
 
-        if self.all_pvalues is not None and (force or self.update_in_iteration(iteration)):  # mot.iter in R
+        if self.all_pvalues is not None and (force or self.run_in_iteration(iteration)):  # mot.iter in R
             logging.info("UPDATING MOTIF SCORES in iteration %d with scaling: %f",
                          iteration, self.scaling(iteration))
             self.last_result = pvalues2matrix(self.all_pvalues, self.num_clusters(),
                                               self.gene_names(), self.reverse_map)
 
-        self.update_log.log(iteration, self.update_in_iteration(iteration),
+        self.update_log.log(iteration, self.run_in_iteration(iteration),
                             self.scaling(iteration))
         self.motif_log.log(iteration, self.motif_in_iteration(iteration),
                            self.scaling(iteration))
@@ -421,13 +418,11 @@ class MemeScoringFunction(MotifScoringFunctionBase):
     """Scoring function for motifs"""
 
     def __init__(self, organism, membership, ratios,
-                 update_in_iteration=None,
                  motif_in_iteration=None,
                  config_params=None):
         """creates a ScoringFunction"""
-        MotifScoringFunctionBase.__init__(self, "MEME", organism, membership,
+        MotifScoringFunctionBase.__init__(self, "Motifs", organism, membership,
                                           ratios, 'upstream',
-                                          update_in_iteration,
                                           motif_in_iteration,
                                           config_params)
 
@@ -448,13 +443,11 @@ class WeederScoringFunction(MotifScoringFunctionBase):
     """Motif scoring function that runs Weeder instead of MEME"""
 
     def __init__(self, organism, membership, ratios,
-                 update_in_iteration=None,
                  motif_in_iteration=None,
                  config_params=None):
         """creates a scoring function"""
         MotifScoringFunctionBase.__init__(self, "Weeder", organism, membership, ratios,
                                           'upstream',
-                                          update_in_iteration,
                                           motif_in_iteration,
                                           config_params)
 

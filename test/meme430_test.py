@@ -72,24 +72,13 @@ class Meme430Test(unittest.TestCase):  # pylint: disable-msg=R0904
                          'search_distances': {'upstream': (-20, 150)},
                          'nmotifs_rvec': 'c(rep(1, num_iterations/3), rep(2, num_iterations/3))',
                          'num_iterations': 2000,
+                         'schedule': {'Motifs': lambda i: True},
                          'scaling': {'Motifs': ('scaling_const', 1.0)}}
         func = motif.MemeScoringFunction(organism, membership, ratio_matrix,
-                                         update_in_iteration=lambda x: True,
                                          motif_in_iteration=lambda x: True,
                                          config_params=config_params)
         iteration_result = { 'iteration': 100 }
         matrix = func.compute(iteration_result)
-        """
-        valid_rows = []
-        names = []
-        for row in range(matrix.num_rows()):
-            if matrix[row][0] != 0.0:
-                names.append(matrix.row_name(row))
-                valid_rows.append(matrix[row][0])
-        names.sort()
-        for name in names:
-            print name
-            """
 
 def make_halo(ratio_matrix, search_distances, scan_distances):
     """returns the organism object to work on"""

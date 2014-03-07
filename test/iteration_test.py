@@ -86,6 +86,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                               'nmotifs_rvec': 'c(rep(1, num_iterations/3), rep(2, num_iterations/3))',
                               'schedule': {'Columns': lambda i: True,
                                            'Rows': lambda i: True,
+                                           'Motifs': lambda i: True,
                                            'Networks': lambda i: True},
                               'scaling': {'Rows': ('scaling_const', 6.0),
                                           'Networks': ('scaling_rvec', 'seq(1e-5, 0.5, length=num_iterations*3/4)'),
@@ -132,7 +133,6 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
             self.organism,
             self.membership,
             self.ratio_matrix,
-            update_in_iteration=lambda x: True,
             motif_in_iteration=lambda x: True,
             config_params=self.config_params)
         motscores = motif_scoring.compute(self.iteration_result).sorted_by_row_name()
