@@ -246,7 +246,6 @@ class CMonkeyRun:
                 self.organism(),
                 self.membership(),
                 self.ratio_matrix,
-                num_motif_func=nmotif_fun,
                 update_in_iteration=self['schedule']['Motifs'],
                 motif_in_iteration=self['schedule']['MEME'],
                 config_params=self.config_params)

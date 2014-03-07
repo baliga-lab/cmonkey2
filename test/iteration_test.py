@@ -83,6 +83,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                               'meme_version': '4.3.0',
                               'global_background': False,
                               'search_distances': {'upstream': (-20, 150)},
+                              'nmotifs_rvec': 'c(rep(1, num_iterations/3), rep(2, num_iterations/3))',
                               'schedule': {'Columns': lambda i: True,
                                            'Rows': lambda i: True,
                                            'Networks': lambda i: True},
@@ -131,7 +132,6 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
             self.organism,
             self.membership,
             self.ratio_matrix,
-            num_motif_func=lambda iteration: 1,
             update_in_iteration=lambda x: True,
             motif_in_iteration=lambda x: True,
             config_params=self.config_params)

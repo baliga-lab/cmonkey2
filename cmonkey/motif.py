@@ -30,10 +30,6 @@ ComputeScoreParams = collections.namedtuple('ComputeScoreParams',
                                              'debug'])
 
 
-def num_meme_motif_fun(params):
-    """returns a function that returns the number of motifs to be returned by MEME"""
-    return util.get_iter_fun(params, "nmotifs", params['num_iterations'])
-
 
 # Applicable sequence filters
 def unique_filter(seqs, feature_ids):
@@ -128,7 +124,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         
     def __init__(self, id, organism, membership, ratios,
                  seqtype,
-                 num_motif_func=None,
                  update_in_iteration=lambda iteration: True,
                  motif_in_iteration=lambda iteration: True,
                  config_params=None):
@@ -143,7 +138,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                                 config_params['search_distances'][seqtype])
         self.update_in_iteration = update_in_iteration
         self.motif_in_iteration = motif_in_iteration
-        self.num_motif_func = num_motif_func
+        self.num_motif_func = util.get_iter_fun(config_params, "nmotifs",
+                                                config_params['num_iterations'])
 
         self.__last_motif_infos = None
         self.__last_iteration_result = {}
@@ -425,14 +421,12 @@ class MemeScoringFunction(MotifScoringFunctionBase):
     """Scoring function for motifs"""
 
     def __init__(self, organism, membership, ratios,
-                 num_motif_func=None,
                  update_in_iteration=None,
                  motif_in_iteration=None,
                  config_params=None):
         """creates a ScoringFunction"""
         MotifScoringFunctionBase.__init__(self, "MEME", organism, membership,
                                           ratios, 'upstream',
-                                          num_motif_func,
                                           update_in_iteration,
                                           motif_in_iteration,
                                           config_params)
@@ -454,14 +448,12 @@ class WeederScoringFunction(MotifScoringFunctionBase):
     """Motif scoring function that runs Weeder instead of MEME"""
 
     def __init__(self, organism, membership, ratios,
-                 num_motif_func=None,
                  update_in_iteration=None,
                  motif_in_iteration=None,
                  config_params=None):
         """creates a scoring function"""
         MotifScoringFunctionBase.__init__(self, "Weeder", organism, membership, ratios,
                                           'upstream',
-                                          num_motif_func,
                                           update_in_iteration,
                                           motif_in_iteration,
                                           config_params)
