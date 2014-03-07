@@ -29,8 +29,14 @@ USER_KEGG_FILE_PATH = 'config/KEGG_taxonomy'
 USER_GO_FILE_PATH = 'config/proteome2taxid'
 SYSTEM_KEGG_FILE_PATH = '/etc/cmonkey-python/KEGG_taxonomy'
 SYSTEM_GO_FILE_PATH = '/etc/cmonkey-python/proteome2taxid'
-USER_DEFAULT_PIPELINE_PATH = 'config/default_pipeline.json'
-SYSTEM_DEFAULT_PIPELINE_PATH = '/etc/cmonkey-python/default_pipeline.json'
+
+# pipeline paths
+PIPELINE_USER_PATHS = {
+    'default': 'config/default_pipeline.json'
+}
+PIPELINE_SYSTEM_PATHS = {
+    'default': '/etc/cmonkey-python/default_pipeline.json'
+}
 
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 STRING_URL_PATTERN = "http://networks.systemsbiology.net/string9/%s.gz"
@@ -103,10 +109,6 @@ class CMonkeyRun:
             logging.info('using MEME version %s', self['meme_version'])
         else:
             logging.error('MEME not detected - please check')
-
-        if os.path.exists(USER_DEFAULT_PIPELINE_PATH):
-            with open(USER_DEFAULT_PIPELINE_PATH) as infile:
-                self['pipeline'] = json.load(infile)
 
     def __dbconn(self, isolation_level='DEFERRED'):
         """returns an autocommit database connection"""
@@ -209,17 +211,7 @@ class CMonkeyRun:
                                       self.row_seeder, self.column_seeder,
                                       self.config_params)
 
-    def make_column_scoring(self):
-        """returns the column scoring function
-        TODO: note that this currently is mostly a transition for a more
-        ----- flexible setup in the future
-        """
-        class_ = get_function_class(self['pipeline']['column-scoring']['function'])
-        return class_(self.organism(),
-            self.membership(), self.ratio_matrix,
-            config_params=self.config_params)
-
-    def make_row_scoring(self):
+    def __make_row_scoring(self):
         """makes a row scoring function on demand
            TODO: for now, we always assume the top level or row scoring is a combiner
         """
@@ -399,6 +391,20 @@ class CMonkeyRun:
             if param not in self.config_params:
                 raise Exception("required parameter not found in config: '%s'" % param)
 
+    
+    def __setup_pipeline(self):
+        """reading pipeline setup"""
+        if os.path.exists(PIPELINE_USER_PATHS['default']):
+            with open(PIPELINE_USER_PATHS['default']) as infile:
+                self['pipeline'] = json.load(infile)
+        row_scoring = self.__make_row_scoring()
+
+        # column scoring
+        class_ = get_function_class(self['pipeline']['column-scoring']['function'])
+        col_scoring = class_(self.organism(), self.membership(), self.ratio_matrix,
+                             config_params=self.config_params)
+        return row_scoring, col_scoring
+
     def prepare_run(self, check_params=True):
         """Setup output directories and scoring functions for the scoring.
         Separating setup and actual run facilitates testing"""
@@ -421,17 +427,14 @@ class CMonkeyRun:
         self.gene_indexes = {genes[index]: index
                              for index in xrange(len(genes))}
 
-        row_scoring = self.make_row_scoring()
-        col_scoring = self.make_column_scoring()
-        return row_scoring, col_scoring
+        return self.__setup_pipeline()
 
     def run(self):
         row_scoring, col_scoring = self.prepare_run()
         self.run_iterations(row_scoring, col_scoring)
 
     def run_from_checkpoint(self, checkpoint_filename):
-        row_scoring = self.make_row_scoring()
-        col_scoring = self.make_column_scoring()
+        row_scoring, col_scoring = self.__setup_pipeline()
         self.__make_dirs_if_needed()
         self.init_from_checkpoint(checkpoint_filename, row_scoring,
                                   col_scoring)
