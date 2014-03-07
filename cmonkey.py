@@ -18,7 +18,6 @@ import cmonkey.scoring as scoring
 import random
 
 
-
 def set_config(cmonkey_run, config):
     def set_scaling(section):
         try:

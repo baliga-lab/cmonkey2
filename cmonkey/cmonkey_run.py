@@ -32,10 +32,16 @@ SYSTEM_GO_FILE_PATH = '/etc/cmonkey-python/proteome2taxid'
 
 # pipeline paths
 PIPELINE_USER_PATHS = {
-    'default': 'config/default_pipeline.json'
+    'default': 'config/default_pipeline.json',
+    'rows': 'config/rows_pipeline.json',
+    'rowsandmotifs': 'config/rows_and_motifs_pipeline.json',
+    'rowsandnetworks': 'config/rows_and_networks_pipeline.json'
 }
 PIPELINE_SYSTEM_PATHS = {
-    'default': '/etc/cmonkey-python/default_pipeline.json'
+    'default': '/etc/cmonkey-python/default_pipeline.json',
+    'rows': '/etc/cmonkey-python/rows_pipeline.json',
+    'rowsandmotifs': '/etc/cmonkey-python/rows_and_motifs_pipeline.json',
+    'rowsandnetworks': '/etc/cmonkey-python/rows_and_networks_pipeline.json'
 }
 
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
@@ -98,8 +104,8 @@ class CMonkeyRun:
         self['rsat_dir'] = rsat_dir
 
         # which scoring functions should be active
-        self['donetworks'] = True
-        self['domotifs'] = True
+        self['nonetworks'] = False
+        self['nomotifs'] = False
 
         today = date.today()
         self.__checkpoint_basename = "cmonkey-checkpoint-%d%d%d" % (
@@ -278,7 +284,7 @@ class CMonkeyRun:
         nw_factories = []
 
         # do we use STRING ?
-        if self['donetworks'] and self['use_string']:
+        if not self['nonetworks'] and self['use_string']:
             # download if not provided
             if stringfile is None:
                 if ncbi_code is None:
@@ -300,7 +306,7 @@ class CMonkeyRun:
                 self['organism_code'], stringfile, 0.5))
 
         # do we use operons ?
-        if self['donetworks'] and self['use_operons']:
+        if not self['nonetworks'] and self['use_operons']:
             logging.info('adding operon network factory')
             nw_factories.append(microbes_online.get_network_factory(
                 mo_db, max_operon_size=self.ratio_matrix.num_rows / 20,
@@ -359,6 +365,13 @@ class CMonkeyRun:
         3. user-defined pipeline
         """
         pipeline_id = 'default'
+        if self.config_params['nonetworks'] and self.config_params['nomotifs']:
+            pipeline_id = 'rows'
+        elif self.config_params['nonetworks']:
+            pipeline_ids = 'rowsandmotifs'
+        elif self.config_params['nomotifs']:
+            pipeline_ids = 'rowsandnetworks'
+
         if os.path.exists(PIPELINE_USER_PATHS[pipeline_id]):
             with open(PIPELINE_USER_PATHS[pipeline_id]) as infile:
                 self['pipeline'] = json.load(infile)
@@ -385,7 +398,7 @@ class CMonkeyRun:
         """Setup output directories and scoring functions for the scoring.
         Separating setup and actual run facilitates testing"""
         self['dummy_organism'] = (self['organism_code'] is None and
-                                  not self['donetworks'] and not self['domotifs'])
+                                  self['nonetworks'] and self['nomotifs'])
         if check_params:
             self.__check_parameters()
         self.__make_dirs_if_needed()
