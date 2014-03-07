@@ -103,7 +103,11 @@ def pvalues2matrix(all_pvalues, num_clusters, gene_names, reverse_map):
 
 
 class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
-    """Base class for motif scoring functions that use MEME"""
+    """Base class for motif scoring functions that use MEME
+    This class of scoring function has 2 schedules:
+    1. run_in_iteration(i) is the normal schedule
+    2. motif_in_iteration(i) determines when the motifing tools is run
+    """
 
     def __setup_meme_suite(self, meme_version, global_background, search_distance):
         background_file = None
@@ -122,19 +126,14 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.__sequence_filters = [unique_filter, get_remove_low_complexity_filter(self.meme_suite),
                                    get_remove_atgs_filter(search_distance)]
         
-    def __init__(self, id, organism, membership, ratios, seqtype,
-                 motif_in_iteration=lambda iteration: True,
-                 config_params=None):
+    def __init__(self, id, organism, membership, ratios, seqtype, config_params=None):
         """creates a ScoringFunction"""
-        # run_in_iteration does not apply here, since we actually have
-        # two schedules, motif_in_iteration and update_in_iteration here
         scoring.ScoringFunctionBase.__init__(self, id, organism, membership,
                                              ratios, config_params=config_params)
         # attributes accessible by subclasses
         self.seqtype = seqtype
         self.__setup_meme_suite(config_params['meme_version'], config_params['global_background'],
                                 config_params['search_distances'][seqtype])
-        self.motif_in_iteration = motif_in_iteration
         self.num_motif_func = util.get_iter_fun(config_params, "nmotifs",
                                                 config_params['num_iterations'])
 
@@ -158,6 +157,10 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
     def run_logs(self):
         return [self.update_log, self.motif_log]
+
+    def motif_in_iteration(self, i):
+        """TODO: change to an id that is not called 'MEME'"""
+        return self.config_params['schedule']['MEME'](i)
 
     def __build_reverse_map(self, ratios):
         """build a map that reconstructs the original row name from
@@ -417,14 +420,10 @@ def compute_cluster_score(cluster):
 class MemeScoringFunction(MotifScoringFunctionBase):
     """Scoring function for motifs"""
 
-    def __init__(self, organism, membership, ratios,
-                 motif_in_iteration=None,
-                 config_params=None):
+    def __init__(self, organism, membership, ratios, config_params=None):
         """creates a ScoringFunction"""
         MotifScoringFunctionBase.__init__(self, "Motifs", organism, membership,
-                                          ratios, 'upstream',
-                                          motif_in_iteration,
-                                          config_params)
+                                          ratios, 'upstream', config_params)
 
     def name(self):
         """returns the name of this scoring function"""
@@ -442,14 +441,10 @@ class MemeScoringFunction(MotifScoringFunctionBase):
 class WeederScoringFunction(MotifScoringFunctionBase):
     """Motif scoring function that runs Weeder instead of MEME"""
 
-    def __init__(self, organism, membership, ratios,
-                 motif_in_iteration=None,
-                 config_params=None):
+    def __init__(self, organism, membership, ratios, config_params=None):
         """creates a scoring function"""
         MotifScoringFunctionBase.__init__(self, "Weeder", organism, membership, ratios,
-                                          'upstream',
-                                          motif_in_iteration,
-                                          config_params)
+                                          'upstream', config_params)
 
     def name(self):
         """returns the name of this scoring function"""

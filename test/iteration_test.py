@@ -87,6 +87,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                               'schedule': {'Columns': lambda i: True,
                                            'Rows': lambda i: True,
                                            'Motifs': lambda i: True,
+                                           'MEME': lambda i: True,
                                            'Networks': lambda i: True},
                               'scaling': {'Rows': ('scaling_const', 6.0),
                                           'Networks': ('scaling_rvec', 'seq(1e-5, 0.5, length=num_iterations*3/4)'),
@@ -130,10 +131,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
             motif.get_remove_low_complexity_filter(meme_suite),
             motif.get_remove_atgs_filter(self.search_distances['upstream'])]
         motif_scoring = motif.MemeScoringFunction(
-            self.organism,
-            self.membership,
-            self.ratio_matrix,
-            motif_in_iteration=lambda x: True,
+            self.organism, self.membership, self.ratio_matrix,
             config_params=self.config_params)
         motscores = motif_scoring.compute(self.iteration_result).sorted_by_row_name()
         motscores.fix_extreme_values()
