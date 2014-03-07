@@ -202,8 +202,8 @@ See README and LICENSE for details.\n"""
     cmonkey_run['cache_dir'] = args.cachedir
     cmonkey_run['debug'] = args.debug
     cmonkey_run['keep_memeout'] = args.keep_memeout or args.debug
-    cmonkey_run['donetworks'] = not args.nonetworks
-    cmonkey_run['domotifs'] = not args.nomotifs and cmonkey_run['meme_version']
+    cmonkey_run['nonetworks'] = args.nonetworks
+    cmonkey_run['nomotifs'] = args.nomotifs or not cmonkey_run['meme_version']
     cmonkey_run['use_string'] = not args.nostring
     cmonkey_run['use_operons'] = not args.nooperons
     if args.random_seed:

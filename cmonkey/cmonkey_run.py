@@ -211,47 +211,6 @@ class CMonkeyRun:
                                       self.row_seeder, self.column_seeder,
                                       self.config_params)
 
-    def __make_row_scoring(self):
-        """makes a row scoring function on demand
-           TODO: for now, we always assume the top level or row scoring is a combiner
-        """
-        class_ = get_function_class(self['pipeline']['row-scoring']['function'])
-        if class_.__name__ == 'ScoringFunctionCombiner':
-            nested = self['pipeline']['row-scoring']['args']['functions']
-            for fun in nested:
-                scorecl = get_function_class(fun['function'])
-                print "NESTED FUNCTION: ", scorecl.__name__
-                #instance = scorecl(self.organism(), self.membership(), self.ratio_matrix,
-                #                   config_params=self.config_params)
-        else:
-            raise Exception('Row scoring top level must be ScoringFunctionCombiner')
-
-        # Default row scoring functions
-        row_scoring = microarray.RowScoringFunction(
-            self.organism(), self.membership(), self.ratio_matrix,
-            config_params=self.config_params)
-        row_scoring_functions = [row_scoring]
-
-        if self['domotifs']:
-            motif_scoring = motif.MemeScoringFunction(
-                self.organism(), self.membership(), self.ratio_matrix,
-                config_params=self.config_params)
-            row_scoring_functions.append(motif_scoring)
-
-        if self['donetworks']:
-            network_scoring = nw.ScoringFunction(
-                self.organism(),
-                self.membership(),
-                self.ratio_matrix,
-                config_params=self.config_params)
-            row_scoring_functions.append(network_scoring)
-
-        return scoring.ScoringFunctionCombiner(
-            self.organism(),
-            self.membership(),
-            row_scoring_functions,
-            config_params=self.config_params)
-
     def membership(self):
         if self.__membership is None:
             logging.info("creating and seeding memberships")
@@ -393,11 +352,28 @@ class CMonkeyRun:
 
     
     def __setup_pipeline(self):
-        """reading pipeline setup"""
-        if os.path.exists(PIPELINE_USER_PATHS['default']):
-            with open(PIPELINE_USER_PATHS['default']) as infile:
+        """reading pipeline setup
+        TODO: pipeline name should be determined by
+        1. nomotifs switch
+        2. nonetworks switch
+        3. user-defined pipeline
+        """
+        pipeline_id = 'default'
+        if os.path.exists(PIPELINE_USER_PATHS[pipeline_id]):
+            with open(PIPELINE_USER_PATHS[pipeline_id]) as infile:
                 self['pipeline'] = json.load(infile)
-        row_scoring = self.__make_row_scoring()
+
+        # TODO: for now, we always assume the top level of row scoring is a combiner
+        class_ = get_function_class(self['pipeline']['row-scoring']['function'])
+        if class_.__name__ == 'ScoringFunctionCombiner':
+            funs = [get_function_class(fun['function'])(self.organism(),
+                                                       self.membership(),
+                                                       self.ratio_matrix,
+                                                       self.config_params)
+                    for fun in self['pipeline']['row-scoring']['args']['functions']]
+            row_scoring = class_(self.organism(), self.membership(), funs, self.config_params)
+        else:
+            raise Exception('Row scoring top level must be ScoringFunctionCombiner')
 
         # column scoring
         class_ = get_function_class(self['pipeline']['column-scoring']['function'])
