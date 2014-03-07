@@ -59,12 +59,6 @@ class Meme430Test(unittest.TestCase):  # pylint: disable-msg=R0904
         infile = util.read_dfile('example_data/hal/halo_ratios5.tsv',
                                  has_header=True, quote='\"')
         ratio_matrix = matrix_factory.create_from(infile)
-        meme_suite = meme.MemeSuite430(remove_tempfiles=True)
-        sequence_filters = [
-            motif.unique_filter,
-            motif.get_remove_low_complexity_filter(meme_suite),
-            motif.get_remove_atgs_filter(search_distances['upstream'])]
-
         organism = make_halo(ratio_matrix, search_distances, scan_distances)
         membership = FakeMembership()
         config_params = {'memb.min_cluster_rows_allowed': 3,
@@ -73,11 +67,12 @@ class Meme430Test(unittest.TestCase):  # pylint: disable-msg=R0904
                          'num_clusters': 1,
                          'output_dir': 'out',
                          'debug': False,
+                         'meme_version': '4.3.0',
+                         'global_background': False,
+                         'search_distances': {'upstream': (-20, 150)},
                          'num_iterations': 2000,
                          'scaling': {'Motifs': ('scaling_const', 1.0)}}
         func = motif.MemeScoringFunction(organism, membership, ratio_matrix,
-                                         meme_suite,
-                                         sequence_filters=sequence_filters,
                                          num_motif_func=lambda iter: 1,
                                          update_in_iteration=lambda x: True,
                                          motif_in_iteration=lambda x: True,

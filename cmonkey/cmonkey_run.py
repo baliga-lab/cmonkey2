@@ -230,12 +230,7 @@ class CMonkeyRun:
                 scorecl = get_function_class(fun['function'])
                 print "NESTED FUNCTION: ", scorecl.__name__
                 #instance = scorecl(self.organism(), self.membership(), self.ratio_matrix,
-                #                   scaling_func=None,
-                #                   schedule=self['row_schedule'],
                 #                   config_params=self.config_params)
-                if 'args' in fun:
-                    print "THERE ARE ARGS: ", fun['args']
-                    #instance.initialize(fun['args'])
         else:
             raise Exception('Row scoring top level must be ScoringFunctionCombiner')
 
@@ -246,34 +241,11 @@ class CMonkeyRun:
         row_scoring_functions = [row_scoring]
 
         if self['domotifs']:
-            background_file = None
-            if self['global_background']:
-                background_file = meme.global_background_file(
-                    self.organism(), self.ratio_matrix.row_names,
-                    self['sequence_types'][0])
-
-            if self['meme_version'] == '4.3.0':
-                meme_suite = meme.MemeSuite430(background_file=background_file)
-            elif (self['meme_version'] and
-                  (self['meme_version'].startswith('4.8') or
-                   self['meme_version'].startswith('4.9'))):
-                meme_suite = meme.MemeSuite481(background_file=background_file)
-            else:
-                logging.error("MEME version %s currently not supported !", self['meme_version'])
-                raise Exception("unsupported MEME version")
-
-            sequence_filters = [
-                motif.unique_filter,
-                motif.get_remove_low_complexity_filter(meme_suite),
-                motif.get_remove_atgs_filter(self['search_distances']['upstream'])]
-
             nmotif_fun = motif.num_meme_motif_fun(self)
             motif_scoring = motif.MemeScoringFunction(
                 self.organism(),
                 self.membership(),
                 self.ratio_matrix,
-                meme_suite,
-                sequence_filters=sequence_filters,
                 num_motif_func=nmotif_fun,
                 update_in_iteration=self['schedule']['Motifs'],
                 motif_in_iteration=self['schedule']['MEME'],

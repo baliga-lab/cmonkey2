@@ -8,18 +8,10 @@
                   "function": { "module": "cmonkey.microarray", "class": "RowScoringFunction" }
                 },
                 { "id": "Networks",
-                  "function": { "module": "cmonkey.network", "class": "ScoringFunction" },
-                  "args": {
-                     "networks": [
-                         {"type": "STRING", "weight": 0.5},
-                         {"type": "MO-operons", "weight": 0.5}
-                     ]
-                 }
+                  "function": { "module": "cmonkey.network", "class": "ScoringFunction" }
                 },
                 { "id": "Motifs",
-                  "function": { "module": "cmonkey.motif", "class": "MemeScoringFunction" },
-                  "args": {
-                  }
+                  "function": { "module": "cmonkey.motif", "class": "MemeScoringFunction" }
                 }
             ]
         }

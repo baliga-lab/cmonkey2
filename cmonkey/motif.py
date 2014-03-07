@@ -109,9 +109,25 @@ def pvalues2matrix(all_pvalues, num_clusters, gene_names, reverse_map):
 class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
     """Base class for motif scoring functions that use MEME"""
 
+    def __setup_meme_suite(self, meme_version, global_background, search_distance):
+        background_file = None
+        if global_background:
+            background_file = meme.global_background_file(
+                self.organism, self.ratios.row_names, self.seqtype)
+
+        if meme_version == '4.3.0':
+            self.meme_suite = meme.MemeSuite430(background_file=background_file)
+        elif meme_version and (
+                meme_version.startswith('4.8') or meme_version.startswith('4.9')):
+            self.meme_suite = meme.MemeSuite481(background_file=background_file)
+        else:
+            logging.error("MEME version %s currently not supported !", meme_version)
+            raise Exception("unsupported MEME version: '%s'" % meme_version)
+        self.__sequence_filters = [unique_filter, get_remove_low_complexity_filter(self.meme_suite),
+                                   get_remove_atgs_filter(search_distance)]
+        
     def __init__(self, id, organism, membership, ratios,
-                 meme_suite, seqtype,
-                 sequence_filters=[],
+                 seqtype,
                  num_motif_func=None,
                  update_in_iteration=lambda iteration: True,
                  motif_in_iteration=lambda iteration: True,
@@ -122,13 +138,13 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         scoring.ScoringFunctionBase.__init__(self, id, organism, membership,
                                              ratios, config_params=config_params)
         # attributes accessible by subclasses
-        self.meme_suite = meme_suite
         self.seqtype = seqtype
+        self.__setup_meme_suite(config_params['meme_version'], config_params['global_background'],
+                                config_params['search_distances'][seqtype])
         self.update_in_iteration = update_in_iteration
         self.motif_in_iteration = motif_in_iteration
         self.num_motif_func = num_motif_func
 
-        self.__sequence_filters = sequence_filters
         self.__last_motif_infos = None
         self.__last_iteration_result = {}
         self.all_pvalues = None
@@ -409,17 +425,13 @@ class MemeScoringFunction(MotifScoringFunctionBase):
     """Scoring function for motifs"""
 
     def __init__(self, organism, membership, ratios,
-                 meme_suite,
-                 seqtype='upstream',
-                 sequence_filters=[],
                  num_motif_func=None,
                  update_in_iteration=None,
                  motif_in_iteration=None,
                  config_params=None):
         """creates a ScoringFunction"""
         MotifScoringFunctionBase.__init__(self, "MEME", organism, membership,
-                                          ratios, meme_suite, seqtype,
-                                          sequence_filters,
+                                          ratios, 'upstream',
                                           num_motif_func,
                                           update_in_iteration,
                                           motif_in_iteration,
@@ -442,16 +454,13 @@ class WeederScoringFunction(MotifScoringFunctionBase):
     """Motif scoring function that runs Weeder instead of MEME"""
 
     def __init__(self, organism, membership, ratios,
-                 meme_suite, seqtype,
-                 sequence_filters=[],
                  num_motif_func=None,
                  update_in_iteration=None,
                  motif_in_iteration=None,
                  config_params=None):
         """creates a scoring function"""
         MotifScoringFunctionBase.__init__(self, "Weeder", organism, membership, ratios,
-                                          meme_suite, seqtype,
-                                          sequence_filters,
+                                          'upstream',
                                           num_motif_func,
                                           update_in_iteration,
                                           motif_in_iteration,
