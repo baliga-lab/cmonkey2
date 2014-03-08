@@ -32,7 +32,6 @@ class Site:
     def __repr__(self):
         return self.__str__()
 
-
 def run_weeder(fasta_file):
     if not os.path.exists(fasta_file):
         logging.warning("Weeder FASTA file %s not found! Skipping")
@@ -91,7 +90,8 @@ def run_weeder(fasta_file):
 
 def __launch_weeder(fasta_file):
     """launch weeder command"""
-    command = [LAUNCHER, fasta_file, 'HS3P', 'small', 'T50']
+    #command = [LAUNCHER, fasta_file, 'HS3P', 'small', 'T50']
+    command = [LAUNCHER, fasta_file, 'ECO', 'small', 'T50']
     retcode = 1
     with open('weeder.log', 'w') as logfile:
         logging.info("running weeder on '%s'", fasta_file)

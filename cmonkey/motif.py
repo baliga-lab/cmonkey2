@@ -19,6 +19,7 @@ import util
 import os
 import cPickle
 import collections
+import sys
 
 ComputeScoreParams = collections.namedtuple('ComputeScoreParams',
                                             ['iteration',
@@ -443,7 +444,7 @@ class WeederScoringFunction(MotifScoringFunctionBase):
 
     def __init__(self, organism, membership, ratios, config_params=None):
         """creates a scoring function"""
-        MotifScoringFunctionBase.__init__(self, "Weeder", organism, membership, ratios,
+        MotifScoringFunctionBase.__init__(self, "MEME", organism, membership, ratios,
                                           'upstream', config_params)
 
     def name(self):
@@ -462,10 +463,9 @@ class WeederRunner:
     to generate a MEME run result.
     """
 
-    def __init__(self, meme_suite, background_file=None, remove_tempfiles=True):
+    def __init__(self, meme_suite, remove_tempfiles=True):
         """create a runner object"""
         self.meme_suite = meme_suite
-        self.__background_file = background_file
         self.__remove_tempfiles = remove_tempfiles
 
     def __call__(self, params):
@@ -476,31 +476,39 @@ class WeederRunner:
             logging.info("Run Weeder on FASTA file: '%s'", filename)
             st.write_sequences_to_fasta_file(outfile, params.seqs.items())
 
-        pssms = weeder.run_weeder(filename)
-        meme_outfile = '%s.meme' % filename
-        dbfile = self.meme_suite.make_sequence_file(
-            [(feature_id, locseq[1])
-             for feature_id, locseq in params.used_seqs.items()])
-        logging.info("# PSSMS created: %d %s", len(pssms), str([i.consensus_motif() for i in pssms]))
-        logging.info("run MAST on '%s'", meme_outfile)
-
-        motif_infos = []
-        for i in xrange(len(pssms)):
-            pssm = pssms[i]
-            motif_infos.append(meme.MemeMotifInfo(pssm.values, i + 1,
-                                                  pssm.sequence_length(),
-                                                  len(pssm.sites),
-                                                  None, pssm.e_value,
-                                                  pssm.sites))
-
         try:
+            dbfile = None
+            pssms = weeder.run_weeder(filename)
+            if len(pssms) == 0:
+                logging.info('no PSSMS generated, skipping cluster')
+                return meme.MemeRunResult([], {}, [])
+
+            meme_outfile = '%s.meme' % filename
+            dbfile = self.meme_suite.make_sequence_file(
+                [(feature_id, locseq[1])
+                 for feature_id, locseq in params.used_seqs.items()])
+            logging.info("# PSSMS created: %d %s", len(pssms), str([i.consensus_motif() for i in pssms]))
+            logging.info("run MAST on '%s'", meme_outfile)
+
+            motif_infos = []
+            for i in xrange(len(pssms)):
+                pssm = pssms[i]
+                motif_infos.append(meme.MemeMotifInfo(pssm.values, i + 1,
+                                                      pssm.sequence_length(),
+                                                      len(pssm.sites),
+                                                      None, pssm.e_value,
+                                                      pssm.sites))
             mast_out = self.meme_suite.mast(
                 meme_outfile, dbfile,
                 self.meme_suite.global_background_file())
-            pe_values, annotations = meme.read_mast_output(mast_out,
-                                                           params.seqs.keys())
+            # TODO: MEME version awareness !!!
+            pe_values, annotations = meme.read_mast_output_oldstyle(mast_out,
+                                                                    params.seqs.keys())
             return meme.MemeRunResult(pe_values, annotations, motif_infos)
         except:
+            e = sys.exc_info()[0]
+            print e
+            raise
             return meme.MemeRunResult([], {}, [])
         finally:
             if self.__remove_tempfiles:
@@ -512,11 +520,7 @@ class WeederRunner:
                         except:
                             logging.warn("could not remove tmp file:'%s'", tmpName)
             try:
-                os.remove(dbfile)
+                if dbfile:
+                    os.remove(dbfile)
             except:
                 logging.warn("could not remove tmp file:'%s'", dbfile)
-            #if self.__background_file==None:
-            #    try:
-            #        os.remove(bgFile)
-            #    except:
-            #        logging.warn("could not remove tmp file: '%s'", bgfile)

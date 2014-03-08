@@ -497,12 +497,13 @@ class CMonkeyRun:
                                               annotation['reverse'], annotation['pvalue']))
 
                             sites = motif_info['sites']
-                            for seqname, strand, start, pval, flank_left, seq, flank_right in sites:
-                                conn.execute('''insert into meme_motif_sites (motif_info_id, seq_name, reverse, start, pvalue, flank_left, seq, flank_right)
-                                                values (?,?,?,?,?,?,?,?)''',
-                                             (motif_info_id, seqname, strand == '-',
-                                              start, pval, flank_left, seq,
-                                              flank_right))
+                            if len(sites) > 0 and isinstance(sites[0], tuple):
+                                for seqname, strand, start, pval, flank_left, seq, flank_right in sites:
+                                    conn.execute('''insert into meme_motif_sites (motif_info_id, seq_name, reverse, start, pvalue, flank_left, seq, flank_right)
+                                                    values (?,?,?,?,?,?,?,?)''',
+                                                 (motif_info_id, seqname, strand == '-',
+                                                  start, pval, flank_left, seq,
+                                                  flank_right))
 
                         pvalues = motifs[seqtype][cluster]['pvalues']
                         for gene in pvalues:
