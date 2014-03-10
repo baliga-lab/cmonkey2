@@ -94,14 +94,11 @@ SET_SET_TYPE = None
 class ScoringFunction(scoring.ScoringFunctionBase):
     """Network scoring function"""
 
-    def __init__(self, "SetEnrichment", organism, membership, matrix,
-                 set_types,
-                 scaling_func=None,
-                 config_params=None):
+    def __init__(self, "SetEnrichment", organism, membership, ratios,
+                 set_types, config_params=None):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, organism, membership,
-                                             matrix, scaling_func,
-                                             config_params)
+                                             ratios, config_params)
         self.__set_types = set_types
         # stores (min_set, pvalue) pairs for each cluster and set type
         # for the last run of the function

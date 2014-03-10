@@ -8,6 +8,7 @@ more information and licensing details.
 import os.path
 import cmonkey.cmonkey_run as cmr
 import cmonkey.datamatrix as dm
+import cmonkey.config as conf
 import cmonkey.util as util
 import argparse
 import logging
@@ -16,81 +17,6 @@ import ConfigParser
 import tempfile
 import cmonkey.scoring as scoring
 import random
-
-
-def set_config(cmonkey_run, config):
-    def set_scaling(section):
-        try:
-            cmonkey_run['scaling'][section] = ('scaling_const', config.getfloat(section, 'scaling_const'))
-            return
-        except:
-            pass
-        try:
-            cmonkey_run['scaling'][section] = ('scaling_rvec', config.get(section, 'scaling_rvec'))
-        except:
-            raise Exception("no scaling found for section '%s'" % section)
-
-    # override directories
-    tmp_dir = config.get('General', 'tmp_dir')
-    if tmp_dir:
-        tempfile.tempdir = tmp_dir
-    cmonkey_run['output_dir'] = config.get('General', 'output_dir')
-    cmonkey_run['cache_dir'] = config.get('General', 'cache_dir')
-
-    cmonkey_run['num_iterations'] = config.getint("General", "num_iterations")
-    cmonkey_run['start_iteration'] = config.getint("General", "start_iteration")
-    cmonkey_run['out_database'] = os.path.join(cmonkey_run['output_dir'],
-                                               config.get("General", "dbfile_name"))
-    cmonkey_run['multiprocessing'] = config.getboolean('General', 'use_multiprocessing')
-    cmonkey_run['postadjust'] = config.getboolean('General', 'postadjust')
-    cmonkey_run['log_subresults'] = config.getboolean('General', 'log_subresults')
-    cmonkey_run['add_fuzz'] = config.get('General', 'add_fuzz')
-    cmonkey_run['checkpoint_interval'] = config.getint('General', 'checkpoint_interval')
-    try:
-        cmonkey_run['random_seed'] = config.getint('General', 'random_seed')
-    except:
-        cmonkey_run['random_seed'] = None
-
-    # Quantile normalization is false by default in cMonkey-R
-    cmonkey_run['quantile_normalize'] = config.getboolean('Scoring', 'quantile_normalize')
-    # membership default parameters
-    cmonkey_run['memb.min_cluster_rows_allowed'] = config.getint('Membership', 'min_cluster_rows_allowed')
-    cmonkey_run['memb.max_cluster_rows_allowed'] = config.getint('Membership', 'max_cluster_rows_allowed')
-    cmonkey_run['memb.prob_row_change'] = config.getfloat('Membership', 'probability_row_change')
-    cmonkey_run['memb.prob_col_change'] = config.getfloat('Membership', 'probability_column_change')
-    cmonkey_run['memb.max_changes_per_row'] = config.getint('Membership', 'max_changes_per_row')
-    cmonkey_run['memb.max_changes_per_col'] = config.getint('Membership', 'max_changes_per_column')
-
-    cmonkey_run['sequence_types'] = config.get('Motifs', 'sequence_types').split(',')
-    cmonkey_run['search_distances'] = {}
-    cmonkey_run['scan_distances'] = {}
-    for seqtype in cmonkey_run['sequence_types']:
-        cat = "SequenceType-%s" % seqtype
-        cmonkey_run['search_distances'][seqtype] = tuple(
-            map(int, config.get(cat, 'search_distance').split(',')))
-        cmonkey_run['scan_distances'][seqtype] = tuple(
-            map(int, config.get(cat, 'scan_distance').split(',')))
-
-    cmonkey_run['schedule'] = {}
-    cmonkey_run['schedule']['Rows'] = make_schedule(config.get("Rows", "schedule"))
-    cmonkey_run['schedule']['Columns'] = make_schedule(config.get("Columns", "schedule"))
-    cmonkey_run['schedule']['MEME'] = make_schedule(config.get("MEME", "schedule"))
-    cmonkey_run['schedule']['Motifs'] = make_schedule(config.get("Motifs", "schedule"))
-    cmonkey_run['schedule']['Networks'] = make_schedule(config.get("Networks", "schedule"))
-
-    cmonkey_run['stats_freq'] = config.getint('General', 'stats_frequency')
-    cmonkey_run['result_freq'] = config.getint('General', 'result_frequency')
-
-    # parse the scalings
-    cmonkey_run['scaling'] = {}
-    set_scaling('Motifs')
-    set_scaling('Rows')
-    set_scaling('Networks')
-
-    try:
-        cmonkey_run['nmotifs_rvec'] = config.get('MEME', 'nmotifs_rvec')
-    except:
-        raise Exception("no setting found to retrieve the MEME nmotifs function")
 
 
 # if we were installed through Debian package management, default.ini is found here
@@ -195,7 +121,7 @@ See README and LICENSE for details.\n"""
                                  num_clusters=num_clusters,
                                  operon_file=args.operons,
                                  rsat_dir=args.rsat_dir)
-    set_config(cmonkey_run, config)
+    conf.set_config(cmonkey_run, config)
 
     cmonkey_run['output_dir'] = args.out
     cmonkey_run['cache_dir'] = args.cachedir
