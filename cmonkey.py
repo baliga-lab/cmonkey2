@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # vi: sw=4 ts=4 et:
 """cmonkey.py - cMonkey top-level module
 
