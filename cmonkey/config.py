@@ -7,6 +7,7 @@ import os
 import argparse
 import ConfigParser
 import logging
+import tempfile
 
 from cmonkey.schedule import make_schedule
 import cmonkey.util as util

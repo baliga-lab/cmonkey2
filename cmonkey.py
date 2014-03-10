@@ -10,7 +10,6 @@ import cmonkey.cmonkey_run as cmr
 import cmonkey.config as conf
 import cmonkey.util as util
 import logging
-import tempfile
 import cmonkey.scoring as scoring
 import random
 
