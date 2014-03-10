@@ -6,7 +6,14 @@ more information and licensing details.
 import os
 import argparse
 import ConfigParser
+import logging
+
 from cmonkey.schedule import make_schedule
+import cmonkey.util as util
+import cmonkey.datamatrix as dm
+import meme
+
+LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 
 DESCRIPTION = """cMonkey (Python port) (c) 2011-2012,
 Institute for Systems Biology
@@ -18,7 +25,7 @@ SYSTEM_INI_PATH = '/etc/cmonkey-python/default.ini'
 USER_INI_PATH = 'config/default.ini'
 
 
-def set_config(params, config):
+def __set_config(params, config):
     def set_scaling(section):
         try:
             params['scaling'][section] = ('scaling_const', config.getfloat(section, 'scaling_const'))
@@ -116,7 +123,7 @@ def __get_arg_parser(config):
                         help="path to cache directory")
     parser.add_argument('--string', help='tab-separated STRING file for the organism',
                         default=None)
-    parser.add_argument('--operons', help='tab-separated STRING file for the organism',
+    parser.add_argument('--operons', help='tab-separated operons file for the organism',
                         default=None)
     parser.add_argument('--checkpoint', help='checkpoint-file')
     parser.add_argument('--checkratios', action="store_true",
@@ -147,6 +154,103 @@ def __get_arg_parser(config):
     return parser
 
 
-def get_arg_parsers():
+def __num_clusters(config, args, ratios):
+    """override number of clusters either on the command line or through
+    the config file"""
+    try:
+        num_clusters = config.getint("General", "num_clusters")
+    except:
+        num_clusters = args.numclusters
+    if num_clusters is None:
+        return int(round(ratios.num_rows * args.clusters_per_row / 20.0))
+    else:
+        return num_clusters
+    
+
+def setup():
+    """main configuration function - does everything. It reads and configures
+    everything that can be derived from the configuration files and input
+    parameters and returns the configuration in a dictionary as well as
+    the normalized ratios matrix"""
+
     config_parser = __get_config_parser()
-    return config_parser, __get_arg_parser(config_parser)
+    arg_parser = __get_arg_parser(config_parser)
+    args = arg_parser.parse_args()
+    logging.basicConfig(format=LOG_FORMAT, datefmt='%Y-%m-%d %H:%M:%S',
+                        level=logging.DEBUG, filename=args.logfile)
+
+    # no organism provided -> dummy organism
+    if args.organism is None:
+        print("WARNING - no organism provided - assuming that you want to score ratios only or don't use automatic download")
+        if not args.rsat_dir:
+            args.nomotifs = True
+        if not args.string and not args.operons:
+            args.nonetworks = True
+
+    # user overrides in config files
+    if args.config:
+        config.read(args.config)
+
+    # Initial configuration from default + user config
+    params = {}
+    __set_config(params, config_parser)
+
+    matrix_factory = dm.DataMatrixFactory([dm.nochange_filter,
+                                           dm.center_scale_filter])
+    matrix_filename = args.ratios
+
+    if matrix_filename.startswith('http://'):
+        indata = util.read_url(matrix_filename)
+        infile = util.dfile_from_text(indata, has_header=True, quote='\"')
+    else:
+        infile = util.read_dfile(matrix_filename, has_header=True, quote='\"')
+
+    ratios = matrix_factory.create_from(infile)
+    infile = None
+
+    args.clusters_per_row = 2
+    
+    """The overrides dictionary holds all the values that will overwrite or add
+    to the settings defined in the default and user-defined ini files
+    """
+    overrides = {'organism_code': args.organism, 'string_file': args.string,
+                 'logfile': args.logfile, 'rsat_organism': args.rsat_organism,
+                 'num_clusters': __num_clusters(config_parser, args, ratios),
+                 'memb.clusters_per_row': args.clusters_per_row,
+                 'remap_network_nodes': args.remap_network_nodes,
+                 'ncbi_code': args.ncbi_code,
+                 'operon_file': args.operons,
+                 'rsat_dir': args.rsat_dir,
+                 'use_operons': True, 'use_string': True, 'global_background': True,
+                 'nonetworks': False, 'nomotifs': False,
+                 'meme_version': meme.check_meme_version(),
+                 'output_dir': args.out, 'cache_dir': args.cachedir,
+                 'debug': args.debug,
+                 'keep_memeout': args.debug or args.keep_memeout,
+                 'nonetworks': args.nonetworks,
+                 'checkratios': args.checkratios,
+                 'checkpoint': args.checkpoint, 'random_seed': args.random_seed}
+
+    # membership update default parameters
+    # these come first, since a lot depends on clustering numbers
+    num_clusters = overrides['num_clusters']
+    if ratios.num_columns >= 60:
+        overrides['memb.clusters_per_col'] = int(round(num_clusters / 2.0))
+    else:
+        overrides['memb.clusters_per_col'] = int(round(num_clusters * 2.0 / 3.0))
+
+    overrides['nomotifs'] = args.nomotifs or not overrides['meme_version']
+    overrides['use_string'] = not args.nostring
+    overrides['use_operons'] = not args.nooperons
+
+    if overrides['random_seed']:
+        random.seed(overrides['random_seed'])
+        util.r_set_seed(overrides['random_seed'])
+
+    # Set update frequency to every iteration, so the full results are written
+    if overrides['debug']:
+        overrides['stats_freq'] = 1
+        overrides['result_freq'] = 1
+    for key, value in overrides.items():
+        params[key] = value
+    return params, ratios

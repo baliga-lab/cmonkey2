@@ -47,74 +47,29 @@ PIPELINE_SYSTEM_PATHS = {
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 STRING_URL_PATTERN = "http://networks.systemsbiology.net/string9/%s.gz"
 
-LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
-
 
 class CMonkeyRun:
-    def __init__(self, organism_code, ratio_matrix,
-                 string_file=None,
-                 num_clusters=None,
-                 rsat_organism=None,
-                 log_filename=None,
-                 remap_network_nodes=False,
-                 ncbi_code=None,
-                 operon_file=None,
-                 rsat_dir=None):
-        logging.basicConfig(format=LOG_FORMAT,
-                            datefmt='%Y-%m-%d %H:%M:%S',
-                            level=logging.DEBUG,
-                            filename=log_filename)
+    def __init__(self, ratios, args):
         self.__membership = None
         self.__organism = None
-        self.config_params = {}
-        self.ratio_matrix = ratio_matrix
-
-        # membership update default parameters
-        # these come first, since a lot depends on clustering numbers
-        self['memb.clusters_per_row'] = 2
-        if num_clusters is None:
-            num_clusters = int(round(self.ratio_matrix.num_rows *
-                                     self['memb.clusters_per_row'] / 20.0))
-        if ratio_matrix.num_columns >= 60:
-            self['memb.clusters_per_col'] = int(round(num_clusters / 2.0))
-        else:
-            self['memb.clusters_per_col'] = int(round(num_clusters * 2.0 / 3.0))
-        logging.info("# clusters/row: %d", self['memb.clusters_per_row'])
-        logging.info("# clusters/column: %d", self['memb.clusters_per_col'])
-
-        self['organism_code'] = organism_code
-        self['num_clusters'] = num_clusters
-        self['use_operons'] = True
-        self['use_string'] = True
-        self['global_background'] = True
-        self['ncbi_code'] = ncbi_code
-        self['remap_network_nodes'] = remap_network_nodes
-        logging.info("# CLUSTERS: %d", self['num_clusters'])
-        logging.info("use operons: %d", self['use_operons'])
-
-        # defaults
-        self.row_seeder = memb.make_kmeans_row_seeder(num_clusters)
+        self.config_params = args
+        self.ratios = ratios
+        self.row_seeder = memb.make_kmeans_row_seeder(args['num_clusters'])
         self.column_seeder = microarray.seed_column_members
-
-        # file overrides
-        self['string_file'] = string_file
-        self['operon_file'] = operon_file
-
-        self['rsat_organism'] = rsat_organism
-        self['rsat_dir'] = rsat_dir
-
-        # which scoring functions should be active
-        self['nonetworks'] = False
-        self['nomotifs'] = False
 
         today = date.today()
         self.__checkpoint_basename = "cmonkey-checkpoint-%d%d%d" % (
             today.year, today.month, today.day)
-        self['meme_version'] = meme.check_meme_version()
-        if self['meme_version']:
-            logging.info('using MEME version %s', self['meme_version'])
+        logging.info("# clusters/row: %d", args['memb.clusters_per_row'])
+        logging.info("# clusters/column: %d", args['memb.clusters_per_col'])
+        logging.info("# CLUSTERS: %d", args['num_clusters'])
+        logging.info("use operons: %d", args['use_operons'])
+
+        if args['meme_version']:
+            logging.info('using MEME version %s', args['meme_version'])
         else:
-            logging.error('MEME not detected - please check')
+            logging.error('MEME not detected - please check'
+)
 
     def __dbconn(self, isolation_level='DEFERRED'):
         """returns an autocommit database connection"""
@@ -186,14 +141,14 @@ class CMonkeyRun:
 
         # all cluster members are stored relative to the base ratio matrix
         with conn:
-            for index in xrange(len(self.ratio_matrix.row_names)):
+            for index in xrange(len(self.ratios.row_names)):
                 conn.execute('''insert into row_names (order_num, name) values
                                 (?,?)''',
-                             (index, self.ratio_matrix.row_names[index]))
-            for index in xrange(len(self.ratio_matrix.column_names)):
+                             (index, self.ratios.row_names[index]))
+            for index in xrange(len(self.ratios.column_names)):
                 conn.execute('''insert into column_names (order_num, name) values
                                 (?,?)''',
-                             (index, self.ratio_matrix.column_names[index]))
+                             (index, self.ratios.column_names[index]))
         logging.info("added row and column names to output database")
         conn.close()
 
@@ -213,7 +168,7 @@ class CMonkeyRun:
         if self['debug']:
             util.r_set_seed(10)
 
-        return memb.create_membership(self.ratio_matrix,
+        return memb.create_membership(self.ratios,
                                       self.row_seeder, self.column_seeder,
                                       self.config_params)
 
@@ -309,7 +264,7 @@ class CMonkeyRun:
         if not self['nonetworks'] and self['use_operons']:
             logging.info('adding operon network factory')
             nw_factories.append(microbes_online.get_network_factory(
-                mo_db, max_operon_size=self.ratio_matrix.num_rows / 20,
+                mo_db, max_operon_size=self.ratios.num_rows / 20,
                 weight=0.5))
 
         org_factory = org.MicrobeFactory(kegg_mapper,
@@ -323,7 +278,7 @@ class CMonkeyRun:
                                   self['scan_distances'],
                                   self['use_operons'],
                                   self['rsat_organism'],
-                                  self.ratio_matrix)
+                                  self.ratios)
 
     def __make_dirs_if_needed(self):
         logging.info('creating aux directories')
@@ -381,7 +336,7 @@ class CMonkeyRun:
         if class_.__name__ == 'ScoringFunctionCombiner':
             funs = [get_function_class(fun['function'])(self.organism(),
                                                        self.membership(),
-                                                       self.ratio_matrix,
+                                                       self.ratios,
                                                        self.config_params)
                     for fun in self['pipeline']['row-scoring']['args']['functions']]
             row_scoring = class_(self.organism(), self.membership(), funs, self.config_params)
@@ -390,7 +345,7 @@ class CMonkeyRun:
 
         # column scoring
         class_ = get_function_class(self['pipeline']['column-scoring']['function'])
-        col_scoring = class_(self.organism(), self.membership(), self.ratio_matrix,
+        col_scoring = class_(self.organism(), self.membership(), self.ratios,
                              config_params=self.config_params)
         return row_scoring, col_scoring
 
@@ -407,12 +362,12 @@ class CMonkeyRun:
         # write the normalized ratio matrix for stats and visualization
         output_dir = self['output_dir']
         if not os.path.exists(output_dir + '/ratios.tsv'):
-            self.ratio_matrix.write_tsv_file(output_dir + '/ratios.tsv')
+            self.ratios.write_tsv_file(output_dir + '/ratios.tsv')
 
         # gene index map is used for writing statistics
         thesaurus = self.organism().thesaurus()
         genes = [thesaurus[row_name] if row_name in thesaurus else row_name
-                 for row_name in self.ratio_matrix.row_names]
+                 for row_name in self.ratios.row_names]
         self.gene_indexes = {genes[index]: index
                              for index in xrange(len(genes))}
 
@@ -433,19 +388,18 @@ class CMonkeyRun:
         if len(column_names) <= 1 or len(row_names) <= 1:
             return 1.0
         else:
-            matrix = self.ratio_matrix.submatrix_by_name(row_names,
-                                                         column_names)
+            matrix = self.ratios.submatrix_by_name(row_names, column_names)
             return matrix.residual()
 
     def write_memberships(self, conn, iteration):
         for cluster in range(1, self['num_clusters'] + 1):
             column_names = self.membership().columns_for_cluster(cluster)
-            for order_num in self.ratio_matrix.column_indexes_for(column_names):
+            for order_num in self.ratios.column_indexes_for(column_names):
                 conn.execute('''insert into column_members (iteration,cluster,order_num)
                                 values (?,?,?)''', (iteration, cluster, order_num))
 
             row_names = self.membership().rows_for_cluster(cluster)
-            for order_num in self.ratio_matrix.row_indexes_for(row_names):
+            for order_num in self.ratios.row_indexes_for(row_names):
                 conn.execute('''insert into row_members (iteration,cluster,order_num)
                                 values (?,?,?)''', (iteration, cluster, order_num))
             try:
@@ -570,8 +524,8 @@ class CMonkeyRun:
             conn.execute('''insert into run_infos (start_time, num_iterations, organism,
                             species, num_rows, num_columns, num_clusters) values (?,?,?,?,?,?,?)''',
                          (datetime.now(), self['num_iterations'], self.organism().code,
-                          self.organism().species(), self.ratio_matrix.num_rows,
-                          self.ratio_matrix.num_columns, self['num_clusters']))
+                          self.organism().species(), self.ratios.num_rows,
+                          self.ratios.num_columns, self['num_clusters']))
         conn.close()
 
     def update_iteration(self, iteration):
@@ -599,7 +553,7 @@ class CMonkeyRun:
         if elapsed > 0.0001:
             logging.info("computed column_scores in %f s.", elapsed / 1000.0)
 
-        self.membership().update(self.ratio_matrix, rscores, cscores,
+        self.membership().update(self.ratios, rscores, cscores,
                                  self['num_iterations'], iteration_result)
 
         if (iteration > 0 and self['checkpoint_interval'] and iteration % self['checkpoint_interval'] == 0):
