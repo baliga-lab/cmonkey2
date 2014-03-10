@@ -46,8 +46,6 @@ def __set_config(params, config):
 
     params['num_iterations'] = config.getint("General", "num_iterations")
     params['start_iteration'] = config.getint("General", "start_iteration")
-    params['out_database'] = os.path.join(params['output_dir'],
-                                               config.get("General", "dbfile_name"))
     params['multiprocessing'] = config.getboolean('General', 'use_multiprocessing')
     params['postadjust'] = config.getboolean('General', 'postadjust')
     params['log_subresults'] = config.getboolean('General', 'log_subresults')
@@ -111,16 +109,14 @@ def __get_config_parser():
     return config
 
 
-def __get_arg_parser(config):
+def __get_arg_parser():
     parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument('--ratios', required=True,
                         help='tab-separated ratios matrix file')
 
     parser.add_argument('--organism', help='KEGG organism code', default=None)
-    parser.add_argument('--out', default=config.get("General", "output_dir"),
-                        help='output directory')
-    parser.add_argument('--cachedir', default=config.get("General", "cache_dir"),
-                        help="path to cache directory")
+    parser.add_argument('--out', help='output directory')
+    parser.add_argument('--cachedir', help="path to cache directory")
     parser.add_argument('--string', help='tab-separated STRING file for the organism',
                         default=None)
     parser.add_argument('--operons', help='tab-separated operons file for the organism',
@@ -174,7 +170,7 @@ def setup():
     the normalized ratios matrix"""
 
     config_parser = __get_config_parser()
-    arg_parser = __get_arg_parser(config_parser)
+    arg_parser = __get_arg_parser()
     args = arg_parser.parse_args()
     logging.basicConfig(format=LOG_FORMAT, datefmt='%Y-%m-%d %H:%M:%S',
                         level=logging.DEBUG, filename=args.logfile)
@@ -189,12 +185,11 @@ def setup():
 
     # user overrides in config files
     if args.config:
-        config.read(args.config)
+        config_parser.read(args.config)
 
     # Initial configuration from default + user config
     params = {}
     __set_config(params, config_parser)
-
     matrix_factory = dm.DataMatrixFactory([dm.nochange_filter,
                                            dm.center_scale_filter])
     matrix_filename = args.ratios
@@ -224,7 +219,6 @@ def setup():
                  'use_operons': True, 'use_string': True, 'global_background': True,
                  'nonetworks': False, 'nomotifs': False,
                  'meme_version': meme.check_meme_version(),
-                 'output_dir': args.out, 'cache_dir': args.cachedir,
                  'debug': args.debug,
                  'keep_memeout': args.debug or args.keep_memeout,
                  'nonetworks': args.nonetworks,
@@ -242,6 +236,10 @@ def setup():
     overrides['nomotifs'] = args.nomotifs or not overrides['meme_version']
     overrides['use_string'] = not args.nostring
     overrides['use_operons'] = not args.nooperons
+    if args.out:
+        overrides['output_dir'] = args.out
+    if args.cachedir:
+        overrides['cache_dir'] = args.cachedir
 
     if overrides['random_seed']:
         random.seed(overrides['random_seed'])
@@ -253,4 +251,8 @@ def setup():
         overrides['result_freq'] = 1
     for key, value in overrides.items():
         params[key] = value
+
+    params['out_database'] = os.path.join(params['output_dir'],
+                                          config_parser.get("General", "dbfile_name"))
+
     return params, ratios
