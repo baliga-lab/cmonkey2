@@ -453,7 +453,7 @@ class WeederScoringFunction(MotifScoringFunctionBase):
 
     def meme_runner(self):
         """returns the MEME runner object"""
-        return WeederRunner(self.meme_suite)
+        return WeederRunner(self.meme_suite, self.config_params)
 
 
 class WeederRunner:
@@ -463,9 +463,10 @@ class WeederRunner:
     to generate a MEME run result.
     """
 
-    def __init__(self, meme_suite, remove_tempfiles=True):
+    def __init__(self, meme_suite, config_params, remove_tempfiles=True):
         """create a runner object"""
         self.meme_suite = meme_suite
+        self.config_params = config_params
         self.__remove_tempfiles = remove_tempfiles
 
     def __call__(self, params):
@@ -478,7 +479,7 @@ class WeederRunner:
 
         try:
             dbfile = None
-            pssms = weeder.run_weeder(filename)
+            pssms = weeder.run_weeder(filename, self.config_params)
             if len(pssms) == 0:
                 logging.info('no PSSMS generated, skipping cluster')
                 return meme.MemeRunResult([], {}, [])

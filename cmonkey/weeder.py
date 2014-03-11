@@ -32,7 +32,7 @@ class Site:
     def __repr__(self):
         return self.__str__()
 
-def run_weeder(fasta_file):
+def run_weeder(fasta_file, config_params):
     if not os.path.exists(fasta_file):
         logging.warning("Weeder FASTA file %s not found! Skipping")
         return []
@@ -73,7 +73,7 @@ def run_weeder(fasta_file):
                 outfile.write(apssm.to_mast_string())
                 outfile.write('\n')
 
-    __launch_weeder(fasta_file)
+    __launch_weeder(fasta_file, config_params)
     pssms = [pssm8 for pssm8 in __read_pssms_for(fasta_file)
              if pssm8.sequence_length() == 8]
     for index in xrange(len(pssms)):
@@ -88,8 +88,13 @@ def run_weeder(fasta_file):
     return pssms
 
 
-def __launch_weeder(fasta_file, orgcode='ECO'):
+def __launch_weeder(fasta_file, config_params):
     """launch weeder command"""
+    if config_params['Weeder']['orgcode']:
+        orgcode = config_params['Weeder']['orgcode']
+    else:
+        orgcode = config_params['organism_code'].upper()
+    # TODO: more customization
     command = [LAUNCHER, fasta_file, orgcode, 'small', 'T50']
     logging.info("Running: '%s'" % ' '.join(command))
     retcode = 1
