@@ -34,12 +34,12 @@ def __set_config(config):
 
     def set_scaling(section):
         try:
-            params['scaling'][section] = ('scaling_const', config.getfloat(section, 'scaling_const'))
+            params[section]['scaling'] = ('scaling_const', config.getfloat(section, 'scaling_const'))
             return
         except:
             pass
         try:
-            params['scaling'][section] = ('scaling_rvec', config.get(section, 'scaling_rvec'))
+            params[section]['scaling'] = ('scaling_rvec', config.get(section, 'scaling_rvec'))
         except:
             raise Exception("no scaling found for section '%s'" % section)
 
@@ -82,6 +82,8 @@ def __set_config(config):
         for option, value in config.items(id):
             if option == 'schedule':
                 params[id]['schedule'] = make_schedule(value)
+            elif option.startswith('scaling_'):
+                set_scaling(id)
 
     params['sequence_types'] = config.get('Motifs', 'sequence_types').split(',')
     params['search_distances'] = {}
@@ -95,12 +97,6 @@ def __set_config(config):
 
     params['stats_freq'] = config.getint('General', 'stats_frequency')
     params['result_freq'] = config.getint('General', 'result_frequency')
-
-    # parse the scalings
-    params['scaling'] = {}
-    set_scaling('Motifs')
-    set_scaling('Rows')
-    set_scaling('Networks')
 
     try:
         params['nmotifs_rvec'] = config.get('MEME', 'nmotifs_rvec')

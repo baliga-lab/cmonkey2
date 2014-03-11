@@ -173,8 +173,8 @@ class ScoringFunctionBase:
 
     def scaling(self, iteration):
         """returns the quantile normalization scaling for the specified iteration"""
-        if self.id in self.config_params['scaling']:
-            scaling = self.config_params['scaling'][self.id]
+        if 'scaling' in self.config_params[self.id]:
+            scaling = self.config_params[self.id]['scaling']
             if scaling[0] == 'scaling_const':
                 return scaling[1]
             elif scaling[0] == 'scaling_rvec':
