@@ -135,7 +135,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.seqtype = seqtype
         self.__setup_meme_suite(config_params['meme_version'], config_params['global_background'],
                                 config_params['search_distances'][seqtype])
-        self.num_motif_func = util.get_iter_fun(config_params, "nmotifs",
+        self.num_motif_func = util.get_iter_fun(config_params['MEME'], "nmotifs",
                                                 config_params['num_iterations'])
 
         self.__last_motif_infos = None

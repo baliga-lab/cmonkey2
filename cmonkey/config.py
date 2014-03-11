@@ -84,6 +84,8 @@ def __set_config(config):
                 params[id]['schedule'] = make_schedule(value)
             elif option.startswith('scaling_'):
                 set_scaling(id)
+            else:
+                params[id][option] = value
 
     params['sequence_types'] = config.get('Motifs', 'sequence_types').split(',')
     params['search_distances'] = {}
@@ -97,11 +99,7 @@ def __set_config(config):
 
     params['stats_freq'] = config.getint('General', 'stats_frequency')
     params['result_freq'] = config.getint('General', 'result_frequency')
-
-    try:
-        params['nmotifs_rvec'] = config.get('MEME', 'nmotifs_rvec')
-    except:
-        raise Exception("no setting found to retrieve the MEME nmotifs function")
+    
     return params
 
 def __get_config_parser():
