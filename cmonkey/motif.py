@@ -161,7 +161,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
     def motif_in_iteration(self, i):
         """TODO: change to an id that is not called 'MEME'"""
-        return self.config_params['schedule']['MEME'](i)
+        return self.config_params['MEME']['schedule'](i)
 
     def __build_reverse_map(self, ratios):
         """build a map that reconstructs the original row name from

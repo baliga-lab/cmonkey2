@@ -26,7 +26,12 @@ SYSTEM_INI_PATH = '/etc/cmonkey-python/default.ini'
 USER_INI_PATH = 'config/default.ini'
 
 
-def __set_config(params, config):
+def __set_config(config):
+    """Returns a dictionary containing the configuration contained in
+    the config parser object. Note that there are only 3 fixed sections:
+    General, Membership and Scoring"""
+    params = {}
+
     def set_scaling(section):
         try:
             params['scaling'][section] = ('scaling_const', config.getfloat(section, 'scaling_const'))
@@ -59,6 +64,7 @@ def __set_config(params, config):
 
     # Quantile normalization is false by default in cMonkey-R
     params['quantile_normalize'] = config.getboolean('Scoring', 'quantile_normalize')
+
     # membership default parameters
     params['memb.min_cluster_rows_allowed'] = config.getint('Membership', 'min_cluster_rows_allowed')
     params['memb.max_cluster_rows_allowed'] = config.getint('Membership', 'max_cluster_rows_allowed')
@@ -66,6 +72,16 @@ def __set_config(params, config):
     params['memb.prob_col_change'] = config.getfloat('Membership', 'probability_column_change')
     params['memb.max_changes_per_row'] = config.getint('Membership', 'max_changes_per_row')
     params['memb.max_changes_per_col'] = config.getint('Membership', 'max_changes_per_column')
+
+    ids = [section for section in config.sections()
+           if section not in {'General', 'Scoring', 'Membership'}]
+
+    # processing scoring function specific stuff
+    for id in ids:
+        params[id] = {}
+        for option, value in config.items(id):
+            if option == 'schedule':
+                params[id]['schedule'] = make_schedule(value)
 
     params['sequence_types'] = config.get('Motifs', 'sequence_types').split(',')
     params['search_distances'] = {}
@@ -76,13 +92,6 @@ def __set_config(params, config):
             map(int, config.get(cat, 'search_distance').split(',')))
         params['scan_distances'][seqtype] = tuple(
             map(int, config.get(cat, 'scan_distance').split(',')))
-
-    params['schedule'] = {}
-    params['schedule']['Rows'] = make_schedule(config.get("Rows", "schedule"))
-    params['schedule']['Columns'] = make_schedule(config.get("Columns", "schedule"))
-    params['schedule']['MEME'] = make_schedule(config.get("MEME", "schedule"))
-    params['schedule']['Motifs'] = make_schedule(config.get("Motifs", "schedule"))
-    params['schedule']['Networks'] = make_schedule(config.get("Networks", "schedule"))
 
     params['stats_freq'] = config.getint('General', 'stats_frequency')
     params['result_freq'] = config.getint('General', 'result_frequency')
@@ -97,6 +106,7 @@ def __set_config(params, config):
         params['nmotifs_rvec'] = config.get('MEME', 'nmotifs_rvec')
     except:
         raise Exception("no setting found to retrieve the MEME nmotifs function")
+    return params
 
 def __get_config_parser():
     # read default configuration parameters
@@ -189,8 +199,7 @@ def setup():
         config_parser.read(args.config)
 
     # Initial configuration from default + user config
-    params = {}
-    __set_config(params, config_parser)
+    params = __set_config(config_parser)
     matrix_factory = dm.DataMatrixFactory([dm.nochange_filter,
                                            dm.center_scale_filter])
     matrix_filename = args.ratios

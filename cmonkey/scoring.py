@@ -80,7 +80,7 @@ class ScoringFunctionBase:
             raise Exception('NO CONFIG PARAMS !!!')
 
     def run_in_iteration(self, i):
-        return self.config_params['schedule'][self.id](i)
+        return self.config_params[self.id]['schedule'](i)
 
     def name(self):
         """returns the name of this function
