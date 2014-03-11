@@ -88,14 +88,13 @@ def run_weeder(fasta_file):
     return pssms
 
 
-def __launch_weeder(fasta_file):
+def __launch_weeder(fasta_file, orgcode='ECO'):
     """launch weeder command"""
-    #command = [LAUNCHER, fasta_file, 'HS3P', 'small', 'T50']
-    command = [LAUNCHER, fasta_file, 'ECO', 'small', 'T50']
+    command = [LAUNCHER, fasta_file, orgcode, 'small', 'T50']
+    logging.info("Running: '%s'" % ' '.join(command))
     retcode = 1
     with open('weeder.log', 'w') as logfile:
         logging.info("running weeder on '%s'", fasta_file)
-        #weederproc = sp.Popen(command, stdout=logfile, stderr=sp.STDOUT)
         weederproc = sp.Popen(command, stdout=logfile, stderr=logfile)
         retcode = weederproc.wait()
         logging.info("Weeder finished, return code: %d", retcode)

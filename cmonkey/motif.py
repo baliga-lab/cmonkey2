@@ -501,9 +501,8 @@ class WeederRunner:
             mast_out = self.meme_suite.mast(
                 meme_outfile, dbfile,
                 self.meme_suite.global_background_file())
-            # TODO: MEME version awareness !!!
-            pe_values, annotations = meme.read_mast_output_oldstyle(mast_out,
-                                                                    params.seqs.keys())
+            pe_values, annotations = self.meme_suite.read_mast_output(mast_out,
+                                                                      params.seqs.keys())
             return meme.MemeRunResult(pe_values, annotations, motif_infos)
         except:
             e = sys.exc_info()[0]
@@ -513,7 +512,7 @@ class WeederRunner:
         finally:
             if self.__remove_tempfiles:
                 for fileExtension in ['', '.wee', '.mix', '.html', '.meme', '.1.f1', '.1.f2', '.2.f1', '.2.f2']:
-                    tmpName = filename+fileExtension
+                    tmpName = filename + fileExtension
                     if os.path.exists(tmpName):
                         try:
                             os.remove(tmpName)

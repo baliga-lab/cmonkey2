@@ -313,11 +313,14 @@ class CMonkeyRun:
 
     
     def __setup_pipeline(self):
-        """reading pipeline setup
-        TODO: pipeline name should be determined by
+        """Reading pipeline setup
+        By default, this uses the default pipelines defined in config
+        The default pipeline can be modified by
         1. nomotifs switch
         2. nonetworks switch
-        3. user-defined pipeline
+        
+        User-defined pipelines can be provided using a JSON file, which is
+        specified using the --pipeline switch on the command line
         """
         pipeline_id = 'default'
         if self['nonetworks'] and self['nomotifs']:

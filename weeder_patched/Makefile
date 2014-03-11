@@ -14,7 +14,7 @@ WEEDERLAUNCHER = weederlauncher
 LOCATOR        = locator
 #LAUNCHERFLAGS  = -DADVISER_CMD="\"./$(ADVISER)\"" -DWEEDER_TFBS_CMD="\"./$(WEEDER_TFBS)\""
 LAUNCHERFLAGS  = -DADVISER_CMD="\"$(ADVISER)\"" -DWEEDER_TFBS_CMD="\"$(WEEDER_TFBS)\""
-INSTALL_DIR = /Users/wwu/local/bin
+INSTALL_DIR = /home/weiju/local/bin
 
 all: $(WEEDER_TFBS) $(ADVISER) $(LOCATOR) $(WEEDERLAUNCHER)
 
