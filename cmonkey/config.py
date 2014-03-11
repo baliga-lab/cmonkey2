@@ -154,6 +154,8 @@ def __get_arg_parser():
                         help="""RSAT override: data directory""")
     parser.add_argument('--rsat_organism', default=None,
                         help="""override the RSAT organism name""")
+    parser.add_argument('--pipeline', default=None,
+                        help="""override the scoring pipeline""")
     return parser
 
 
@@ -229,7 +231,8 @@ def setup():
                  'keep_memeout': args.debug or args.keep_memeout,
                  'nonetworks': args.nonetworks,
                  'checkratios': args.checkratios,
-                 'checkpoint': args.checkpoint, 'random_seed': args.random_seed}
+                 'checkpoint': args.checkpoint, 'random_seed': args.random_seed,
+                 'pipeline_file': args.pipeline}
 
     # membership update default parameters
     # these come first, since a lot depends on clustering numbers

@@ -320,16 +320,24 @@ class CMonkeyRun:
         3. user-defined pipeline
         """
         pipeline_id = 'default'
-        if self.config_params['nonetworks'] and self.config_params['nomotifs']:
+        if self['nonetworks'] and self['nomotifs']:
             pipeline_id = 'rows'
-        elif self.config_params['nonetworks']:
+        elif self['nonetworks']:
             pipeline_ids = 'rowsandmotifs'
-        elif self.config_params['nomotifs']:
+        elif self['nomotifs']:
             pipeline_ids = 'rowsandnetworks'
 
-        if os.path.exists(PIPELINE_USER_PATHS[pipeline_id]):
-            with open(PIPELINE_USER_PATHS[pipeline_id]) as infile:
-                self['pipeline'] = json.load(infile)
+        if self['pipeline_file']:
+            pipeline_file = self['pipeline_file']
+            if os.path.exists(pipeline_file):
+                with open(pipeline_file) as infile:
+                    self['pipeline'] = json.load(infile)
+            else:
+                raise Exception("Pipeline file '%s' does not exist" % pipeline_file)
+        else:
+            if os.path.exists(PIPELINE_USER_PATHS[pipeline_id]):
+                with open(PIPELINE_USER_PATHS[pipeline_id]) as infile:
+                    self['pipeline'] = json.load(infile)
 
         # TODO: for now, we always assume the top level of row scoring is a combiner
         class_ = get_function_class(self['pipeline']['row-scoring']['function'])
