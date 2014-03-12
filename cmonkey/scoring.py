@@ -360,6 +360,7 @@ def combine(result_matrices, score_scalings, membership, quantile_normalize):
                 #print "qqq(%d) = %f" % (i, qqq)
                 if qqq == 0:
                     logging.error("very sparse score !!!")
+                    qqq = abs(values.min())
                 values = values / qqq * abs(rs_quant)
                 in_matrices.append(values)
 

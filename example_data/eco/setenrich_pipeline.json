@@ -12,6 +12,9 @@
                 },
                 { "id": "Networks",
                   "function": { "module": "cmonkey.network", "class": "ScoringFunction" }
+                },
+                { "id": "Motifs",
+                  "function": { "module": "cmonkey.motif", "class": "MemeScoringFunction" }
                 }
             ]
         }
