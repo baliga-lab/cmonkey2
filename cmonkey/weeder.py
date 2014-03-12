@@ -9,6 +9,7 @@ import logging
 import re
 import pssm
 import os
+import weederlauncher
 
 LAUNCHER = 'weederlauncher'
 LLR_VALUE = 'NA'
@@ -94,16 +95,7 @@ def __launch_weeder(fasta_file, config_params):
         orgcode = config_params['Weeder']['orgcode']
     else:
         orgcode = config_params['organism_code'].upper()
-    # TODO: more customization
-    command = [LAUNCHER, fasta_file, orgcode, 'small', 'T50']
-    logging.info("Running: '%s'" % ' '.join(command))
-    retcode = 1
-    with open('weeder.log', 'w') as logfile:
-        logging.info("running weeder on '%s'", fasta_file)
-        weederproc = sp.Popen(command, stdout=logfile, stderr=logfile)
-        retcode = weederproc.wait()
-        logging.info("Weeder finished, return code: %d", retcode)
-    return retcode
+    weederlauncher.run_small_analysis(fasta_file, orgcode, 50, False, False, False, None)
 
 
 def __read_pssms_for(fasta_file):
