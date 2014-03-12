@@ -326,9 +326,9 @@ class CMonkeyRun:
         if self['nonetworks'] and self['nomotifs']:
             pipeline_id = 'rows'
         elif self['nonetworks']:
-            pipeline_ids = 'rowsandmotifs'
+            pipeline_id = 'rowsandmotifs'
         elif self['nomotifs']:
-            pipeline_ids = 'rowsandnetworks'
+            pipeline_id = 'rowsandnetworks'
 
         if self['pipeline_file']:
             pipeline_file = self['pipeline_file']
