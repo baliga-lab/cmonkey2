@@ -95,7 +95,9 @@ def __launch_weeder(fasta_file, config_params):
         orgcode = config_params['Weeder']['orgcode']
     else:
         orgcode = config_params['organism_code'].upper()
-    weederlauncher.run_small_analysis(fasta_file, orgcode, 50, False, False, False, None)
+
+    freqfile_dir = config_params['Weeder']['freqfile_dir']
+    weederlauncher.run_small_analysis(fasta_file, orgcode, 50, False, False, False, freqfile_dir)
 
 
 def __read_pssms_for(fasta_file):
