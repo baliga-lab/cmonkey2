@@ -127,7 +127,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         SET_MATRIX = self.ratios
         SET_MEMBERSHIP = self.membership
         REF_MIN_SCORE = ref_matrix.min()
-        logging.info('REF_MIN_SCORE: ', REF_MIN_SCORE)
+        logging.info('REF_MIN_SCORE: %f', REF_MIN_SCORE)
 
         for set_type in self.__set_types:
             SET_SET_TYPE = set_type
