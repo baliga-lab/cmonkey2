@@ -445,7 +445,7 @@ class WeederScoringFunction(MotifScoringFunctionBase):
 
     def __init__(self, organism, membership, ratios, config_params=None):
         """creates a scoring function"""
-        MotifScoringFunctionBase.__init__(self, "MEME", organism, membership, ratios,
+        MotifScoringFunctionBase.__init__(self, "Motifs", organism, membership, ratios,
                                           'upstream', config_params)
 
     def name(self):

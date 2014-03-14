@@ -117,7 +117,7 @@ class ScoringFunctionBase:
 
         if self.run_in_iteration(iteration):
             logging.info("running '%s' in iteration %d with scaling: %f",
-                         self.name(), iteration, self.scaling(iteration))
+                         self.id, iteration, self.scaling(iteration))
             computed_result = self.do_compute(iteration_result,
                                               reference_matrix)
             # store the result for later, either by pickling them
