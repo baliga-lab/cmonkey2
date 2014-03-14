@@ -379,7 +379,7 @@ class ClusterViewerApp:
             js_annotation_map[seqtype] = json.dumps(st_annots)
 
         conn.close()
-        ratios_mean = self.ratios.subratios_for(rows, columns).mean()
+        ratios_mean = normalize_js(self.ratios.subratios_for(rows, columns).mean())
         js_boxplot_ratios = self.ratios.hs_boxplot_data_for(rows, columns)
         tmpl = env.get_template('cluster.html')
         return tmpl.render(locals())

@@ -75,7 +75,8 @@ def compute_mean_score(pvalue_matrix, membership, organism):
         row_indexes = pvalue_matrix.row_indexes_for(cluster_rows)
         for row in row_indexes:
             values.append(pvalues[row][cluster - 1])
-    return np.median(values)
+    #return np.median(values)
+    return np.mean(values)  # median can result in 0 if there are a lot of 0
 
 # Readonly structure to avoid passing it to the forked child processes for efficiency.
 # non-serializable parameters go here, too
