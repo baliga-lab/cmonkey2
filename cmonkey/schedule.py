@@ -16,6 +16,11 @@ class RepeatingSchedule:
     def __call__(self, iteration):
         return iteration >= self.start and (iteration - self.start) % self.interval == 0
 
+    def __repr__(self):
+        return '%d,%d' % (self.start, self.interval)
+
+    def __str__(self):
+        return repr(self)
 
 class OneTimeSchedule:
     """A basic building block of a schedule: runs only in one iteration"""
@@ -25,6 +30,12 @@ class OneTimeSchedule:
 
     def __call__(self, iteration):
         return self.iteration == iteration
+
+    def __repr__(self):
+        return '%d' % iteration
+
+    def __str__(self):
+        return repr(self)
 
 
 class CompositeSchedule:
@@ -38,6 +49,12 @@ class CompositeSchedule:
             if schedule(iteration):
                 return True
         return False
+
+    def __repr__(self):
+        return ':'.join(map(str, self.schedules))
+
+    def __str__(self):
+        return repr(self)
 
 
 def make_schedule(schedulestr):

@@ -8,6 +8,7 @@ import argparse
 import ConfigParser
 import logging
 import tempfile
+import json
 
 from cmonkey.schedule import make_schedule
 import cmonkey.util as util
@@ -49,6 +50,8 @@ def __set_config(config):
         tempfile.tempdir = tmp_dir
     params['output_dir'] = config.get('General', 'output_dir')
     params['cache_dir'] = config.get('General', 'cache_dir')
+    params['tmp_dir'] = tmp_dir
+    params['dbfile_name'] = config.get('General', 'dbfile_name')
 
     params['num_iterations'] = config.getint("General", "num_iterations")
     params['start_iteration'] = config.getint("General", "start_iteration")
@@ -259,7 +262,54 @@ def setup():
     for key, value in overrides.items():
         params[key] = value
 
-    params['out_database'] = os.path.join(params['output_dir'],
-                                          config_parser.get("General", "dbfile_name"))
+    params['out_database'] = os.path.join(params['output_dir'], params['dbfile_name'])
 
     return params, ratios
+
+
+def write_setup(config_params):
+    def strparam(value):
+        return '' if not value else value
+
+    with open(os.path.join(config_params['output_dir'], 'final.ini'), 'w') as outfile:
+        outfile.write('[General]\n')
+        outfile.write('num_iterations = %d\n' % config_params['num_iterations'])
+        outfile.write('start_iteration = %d\n' % config_params['start_iteration'])
+        outfile.write('output_dir = %s\n' % config_params['output_dir'])
+        outfile.write('cache_dir = %s\n' % config_params['cache_dir'])
+        outfile.write('tmp_dir = %s\n' % config_params['tmp_dir'])
+        outfile.write('dbfile_name = %s\n' % config_params['dbfile_name'])
+        outfile.write('use_multiprocessing = %s\n' % str(config_params['multiprocessing']))
+        outfile.write('checkpoint_interval = %d\n' % config_params['checkpoint_interval'])        
+        outfile.write('stats_frequency = %d\n' % config_params['stats_freq'])
+        outfile.write('result_frequency = %d\n' % config_params['result_freq'])
+        outfile.write('postadjust = %s\n' % str(config_params['postadjust']))
+        outfile.write('add_fuzz = %s\n' % str(config_params['add_fuzz']))
+        outfile.write('num_clusters = %d\n' % config_params['num_clusters'])
+        outfile.write('random_seed = %s\n' % strparam(config_params['random_seed']))
+        outfile.write('log_subresults = %s\n' % str(config_params['log_subresults']))
+        
+        outfile.write('[Membership]\n')
+        outfile.write('probability_row_change = %f\n' % config_params['memb.prob_row_change'])
+        outfile.write('probability_column_change = %f\n' % config_params['memb.prob_col_change'])
+        outfile.write('max_changes_per_row = %d\n' % config_params['memb.max_changes_per_row'])
+        outfile.write('max_changes_per_column = %d\n' % config_params['memb.max_changes_per_col'])
+        outfile.write('min_cluster_rows_allowed= %d\n' % config_params['memb.min_cluster_rows_allowed'])
+        outfile.write('max_cluster_rows_allowed= %d\n' % config_params['memb.max_cluster_rows_allowed'])
+
+        outfile.write('[Scoring]\n')
+        outfile.write('quantile_normalize = %s\n' % str(config_params['quantile_normalize']))
+        for key, value in config_params.items():
+            if key != 'pipeline' and type(value) is dict:
+                outfile.write('[%s]\n' % key)
+                for setting, param in value.items():
+                    if setting == 'scaling':
+                        if param[0] == 'scaling_const':
+                            outfile.write('scaling_const = %f\n' % param[1])
+                        elif param[0] == 'scaling_rvec':
+                            outfile.write('scaling_rvec = %s\n' % param[1])
+                    else:
+                        outfile.write('%s = %s\n' % (setting, str(param)))
+
+    with open(os.path.join(config_params['output_dir'], 'pipeline.json'), 'w') as outfile:
+        outfile.write(json.dumps(config_params['pipeline']))

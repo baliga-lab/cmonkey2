@@ -24,6 +24,7 @@ import sqlite3
 from decimal import Decimal
 import cPickle
 import bz2
+import config
 
 USER_KEGG_FILE_PATH = 'config/KEGG_taxonomy'
 USER_GO_FILE_PATH = 'config/proteome2taxid'
@@ -381,8 +382,10 @@ class CMonkeyRun:
                  for row_name in self.ratios.row_names]
         self.gene_indexes = {genes[index]: index
                              for index in xrange(len(genes))}
+        row_scoring, col_scoring = self.__setup_pipeline()
 
-        return self.__setup_pipeline()
+        config.write_setup(self.config_params)
+        return row_scoring, col_scoring
 
     def run(self):
         row_scoring, col_scoring = self.prepare_run()
