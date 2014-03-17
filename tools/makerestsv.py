@@ -5,13 +5,13 @@ import os.path
 
 """
 This is a script taking a result directory from a run that was run with
---keepmemeout True
+--keep_memeout True
 and produces tsv files for validation
 """
 def meme_to_str(outpath, iteration, cluster):
     lines = ""
     try:
-        with open(os.path.join(outpath, 'meme-out-%d-%d' % (iteration, cluster))) as infile:
+        with open(os.path.join(outpath, 'meme-out-%04d-%04d' % (iteration, cluster))) as infile:
             lines = [line.replace('\n', '<<<<>>>>') for line in infile.readlines()]
     except:
         pass
