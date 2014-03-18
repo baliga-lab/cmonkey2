@@ -129,6 +129,11 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         REF_MIN_SCORE = ref_matrix.min()
         logging.info('REF_MIN_SCORE: %f', REF_MIN_SCORE)
 
+        set_filepath = os.path.join(self.config_params['output_dir'],
+                                    'setEnrichment_set.csv')
+        pval_filepath = os.path.join(self.config_params['output_dir'],
+                                     'setEnrichment_pvalue.csv')
+
         for set_type in self.__set_types:
             SET_SET_TYPE = set_type
             logging.info("PROCESSING SET TYPE '%s'", set_type.name)
@@ -150,14 +155,14 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             logging.info("ENRICHMENT SCORES COMPUTED in %f s, STORING...",
                          elapsed1 / 1000.0)
 
-            if not os.path.exists('out/setEnrichment_set.csv'):
-                setFile = open('out/setEnrichment_set.csv', 'w')
+            if not os.path.exists(set_filepath):
+                setFile = open(set_filepath, 'w')
                 setFile.write(',' + ','.join([str(i) for i in xrange(1, self.num_clusters() + 1)]))
-                pvFile = open('out/setEnrichment_pvalue.csv', 'w')
+                pvFile = open(pval_filepath, 'w')
                 pvFile.write(',' + ','.join([str(i) for i in xrange(1, self.num_clusters() + 1)]))
             else:
-                setFile = open('out/setEnrichment_set.csv', 'a')
-                pvFile = open('out/setEnrichment_pvalue.csv', 'a')
+                setFile = open(set_filepath, 'a')
+                pvFile = open(pval_filepath, 'a')
 
             minSets = []
             pValues = []
