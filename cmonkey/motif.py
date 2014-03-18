@@ -506,17 +506,16 @@ class WeederRunner:
 
         try:
             dbfile = None
-            pssms = weeder.run_weeder(filename, self.config_params)
+            meme_outfile, pssms = weeder.run_weeder(filename, self.config_params)
             if len(pssms) == 0:
                 logging.info('no PSSMS generated, skipping cluster')
                 return meme.MemeRunResult([], {}, [])
 
-            meme_outfile = '%s.meme' % filename
             dbfile = self.meme_suite.make_sequence_file(
                 [(feature_id, locseq[1])
                  for feature_id, locseq in params.used_seqs.items()])
             logging.info("# PSSMS created: %d %s", len(pssms), str([i.consensus_motif() for i in pssms]))
-            logging.info("run MAST on '%s'", meme_outfile)
+            logging.info("run MAST on '%s', dbfile: '%s'", meme_outfile, dbfile)
 
             motif_infos = []
             for i in xrange(len(pssms)):
@@ -546,8 +545,8 @@ class WeederRunner:
                             os.remove(tmpName)
                         except:
                             logging.warn("could not remove tmp file:'%s'", tmpName)
-            try:
-                if dbfile:
-                    os.remove(dbfile)
-            except:
-                logging.warn("could not remove tmp file:'%s'", dbfile)
+                try:
+                    if dbfile:
+                        os.remove(dbfile)
+                except:
+                    logging.warn("could not remove tmp file:'%s'", dbfile)
