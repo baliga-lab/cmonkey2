@@ -41,13 +41,12 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
     return column_members
 
 
-def compute_row_scores(membership, matrix, num_clusters,
-                       use_multiprocessing):
+def compute_row_scores(membership, matrix, num_clusters, config_params):
     """for each cluster 1, 2, .. num_clusters compute the row scores
     for the each row name in the input name matrix"""
     start_time = util.current_millis()
     cluster_row_scores = __compute_row_scores_for_clusters(
-        membership, matrix, num_clusters, use_multiprocessing)
+        membership, matrix, num_clusters, config_params)
     # TODO: replace the nan/inf-Values with the quantile-thingy in the R-version
 
     logging.info("__compute_row_scores_for_clusters() in %f s.",
@@ -74,7 +73,7 @@ ROW_SCORE_MEMBERSHIP = None
 
 
 def __compute_row_scores_for_clusters(membership, matrix, num_clusters,
-                                      use_multiprocessing):
+                                      config_params):
     """compute the pure row scores for the specified clusters
     without nowmalization"""
     # note that we set the data into globals before we fork it off
@@ -83,8 +82,8 @@ def __compute_row_scores_for_clusters(membership, matrix, num_clusters,
     ROW_SCORE_MATRIX = matrix
     ROW_SCORE_MEMBERSHIP = membership
 
-    if use_multiprocessing:
-        pool = mp.Pool()
+    if config_params['multiprocessing']:
+        pool = util.get_mp_pool(config_params)
         result = pool.map(compute_row_scores_for_cluster, xrange(1, num_clusters + 1))
         pool.close()
         pool.join()
@@ -149,7 +148,7 @@ class RowScoringFunction(scoring.ScoringFunctionBase):
         return compute_row_scores(self.membership,
                                   self.ratios,
                                   self.num_clusters(),
-                                  self.config_params[scoring.KEY_MULTIPROCESSING])
+                                  self.config_params)
 
     def run_logs(self):
         """return the run logs"""

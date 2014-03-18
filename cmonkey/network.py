@@ -280,7 +280,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         NETWORK_SCORE_MEMBERSHIP = self.membership
 
         if use_multiprocessing:
-            pool = mp.Pool()
+            pool = util.get_mp_pool(self.config_params)
             map_results = pool.map(compute_network_scores, xrange(1, self.num_clusters() + 1))
             pool.close()
             pool.join()

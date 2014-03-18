@@ -32,8 +32,6 @@ KEY_MULTIPROCESSING = 'multiprocessing'
 KEY_OUTPUT_DIR = 'output_dir'
 KEY_STRING_FILE = 'string_file'
 
-USE_MULTIPROCESSING = True
-
 
 def get_scaling(params, id):
     """returns a scaling function for the given prefix from the configuration parameters"""
@@ -219,12 +217,11 @@ class ColumnScoringFunction(ScoringFunctionBase):
     def do_compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
         return compute_column_scores(self.membership, self.ratios,
-                                     self.num_clusters(),
-                                     self.config_params[KEY_MULTIPROCESSING])
+                                     self.num_clusters(), self.config_params)
 
 
 def compute_column_scores(membership, matrix, num_clusters,
-                          use_multiprocessing=False):
+                          config_params):
     """Computes the column scores for the specified number of clusters"""
 
     def compute_substitution(cluster_column_scores):
@@ -247,8 +244,8 @@ def compute_column_scores(membership, matrix, num_clusters,
         else:
             return None
 
-    if use_multiprocessing:
-        pool = mp.Pool()
+    if config_params['multiprocessing']:
+        pool = util.get_mp_pool(config_params)
         cluster_column_scores = pool.map(compute_column_scores_submatrix,
                                          map(make_submatrix, xrange(1, num_clusters + 1)))
         pool.close()

@@ -80,7 +80,6 @@ def compute_mean_score(pvalue_matrix, membership, organism):
 
 # Readonly structure to avoid passing it to the forked child processes for efficiency.
 # non-serializable parameters go here, too
-MOTIF_PARAMS = None
 SEQUENCE_FILTERS = None
 ORGANISM = None
 MEMBERSIP = None
@@ -156,6 +155,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.reverse_map = self.__build_reverse_map(ratios)
         logging.info("reverse map built in %d ms.",
                      util.current_millis() - start_time)
+
+        self.__last_results = None  # caches the results of the previous meme run
 
     def run_logs(self):
         return [self.update_log, self.motif_log]
@@ -267,7 +268,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         (seqs, feature_ids, distance) -> seqs
         These filters are applied in the order they appear in the list.
         """
-        global MOTIF_PARAMS, SEQUENCE_FILTERS, ORGANISM, MEMBERSHIP
+        global SEQUENCE_FILTERS, ORGANISM, MEMBERSHIP
 
         cluster_pvalues = {}
         min_cluster_rows_allowed = self.config_params['memb.min_cluster_rows_allowed']
@@ -281,7 +282,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         ORGANISM = self.organism
         MEMBERSHIP = self.membership
 
-        pool = mp.Pool()
+        pool = util.get_mp_pool(self.config_params)
         cluster_seqs_params = [(cluster, self.seqtype)
                                for cluster in xrange(1, self.num_clusters() + 1)]
         seqs_list = pool.map(cluster_seqs, cluster_seqs_params)
@@ -292,7 +293,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
         # Make the parameters, this is fast enough
         start_time = util.current_millis()
-        params = []
+        params = {}
         for cluster in xrange(1, self.num_clusters() + 1):
             # Pass the previous run's seed if possible
             if self.__last_motif_infos is not None:
@@ -301,19 +302,19 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                 previous_motif_infos = None
 
             seqs, feature_ids = seqs_list[cluster - 1]
-            params.append(ComputeScoreParams(iteration_result['iteration'], cluster,
-                                             feature_ids,
-                                             seqs,
-                                             self.used_seqs,
-                                             self.meme_runner(),
-                                             min_cluster_rows_allowed,
-                                             max_cluster_rows_allowed,
-                                             num_motifs,
-                                             previous_motif_infos,
-                                             self.config_params.get('keep_memeout', False),
-                                             self.config_params['output_dir'],
-                                             self.config_params['num_iterations'],
-                                             self.config_params['debug']))
+            params[cluster] = ComputeScoreParams(iteration_result['iteration'], cluster,
+                                                 feature_ids,
+                                                 seqs,
+                                                 self.used_seqs,
+                                                 self.meme_runner(),
+                                                 min_cluster_rows_allowed,
+                                                 max_cluster_rows_allowed,
+                                                 num_motifs,
+                                                 previous_motif_infos,
+                                                 self.config_params.get('keep_memeout', False),
+                                                 self.config_params['output_dir'],
+                                                 self.config_params['num_iterations'],
+                                                 self.config_params['debug'])
 
         logging.info("prepared MEME parameters in %d ms.",
                      util.current_millis() - start_time)
@@ -323,33 +324,60 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             if not cluster in iteration_result:
                 iteration_result[cluster] = {}
 
+        # Optimization:
+        # if the cluster hasn't changed since last time, reuse the last results
+        # we do this by filtering out the parameters of the clusters that did not
+        # change
+        if self.__last_results is not None:
+            oldlen = len(params)
+            params = {cluster: params[cluster]
+                      for cluster in xrange(1, self.num_clusters() + 1)
+                      if params[cluster].feature_ids != self.__last_results[cluster][0]}
+            newlen = len(params)
+            if oldlen - newlen > 0:
+                logging.info("%d clusters did not change !!!", oldlen - newlen)
+
         # compute and store motif results
-        MOTIF_PARAMS = params
         self.__last_motif_infos = {}
+        if self.__last_results is None:
+            self.__last_results = {}
+
         if use_multiprocessing:
-            pool = mp.Pool()
-            results = pool.map(compute_cluster_score, xrange(1, self.num_clusters() + 1))
+            pool = util.get_mp_pool(self.config_params)
+            results = pool.map(compute_cluster_score, params.values())
+            results = {r[0]: r[1:] for r in results}  # indexed by cluster
 
             for cluster in xrange(1, self.num_clusters() + 1):
-                pvalues, run_result = results[cluster - 1]
+                if cluster in results:
+                    pvalues, run_result = results[cluster]
+                    self.__last_results[cluster] = (params[cluster].feature_ids,
+                                                    pvalues, run_result)
+                else:
+                    feature_ids, pvalues, run_result = self.__last_results[cluster]
+
                 cluster_pvalues[cluster] = pvalues
                 if run_result:
                     self.__last_motif_infos[cluster] = run_result.motif_infos
                 iteration_result[cluster]['motif-info'] = meme_json(run_result)
-                iteration_result[cluster]['pvalues'] = pvalues
+                iteration_result[cluster]['pvalues'] = pvalues                    
+
             pool.close()
             pool.join()
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
-                pvalues, run_result = compute_cluster_score(cluster)
+                if cluster in params:
+                    _, pvalues, run_result = compute_cluster_score(params[cluster])
+                    self.__last_results[cluster] = (params[cluster].feature_ids,
+                                                    pvalues, run_result)
+                else:
+                    _, pvalues, run_result = self.__last_results[cluster]
+
                 cluster_pvalues[cluster] = pvalues
                 if run_result:
                     self.__last_motif_infos[cluster] = run_result.motif_infos
                 iteration_result[cluster]['motif-info'] = meme_json(run_result)
                 iteration_result[cluster]['pvalues'] = pvalues
 
-        # cleanup
-        MOTIF_PARAMS = None
         return cluster_pvalues
 
 
@@ -400,10 +428,8 @@ def meme_json(run_result):
     return result
 
 
-def compute_cluster_score(cluster):
+def compute_cluster_score(params):
     """This function computes the MEME score for a cluster"""
-    global MOTIF_PARAMS
-    params = MOTIF_PARAMS[cluster - 1]
     pvalues = {}
     run_result = None
     nseqs = len(params.seqs)
@@ -416,7 +442,7 @@ def compute_cluster_score(cluster):
     else:
         logging.info("# seqs (= %d) outside of defined limits, "
                      "skipping cluster %d", len(params.seqs), params.cluster)
-    return pvalues, run_result
+    return params.cluster, pvalues, run_result
 
 
 class MemeScoringFunction(MotifScoringFunctionBase):

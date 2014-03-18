@@ -56,6 +56,10 @@ def __set_config(config):
     params['num_iterations'] = config.getint("General", "num_iterations")
     params['start_iteration'] = config.getint("General", "start_iteration")
     params['multiprocessing'] = config.getboolean('General', 'use_multiprocessing')
+    try:
+        params['num_cores'] = config.getint('General', 'num_cores')
+    except:
+        params['num_cores'] = None
     params['postadjust'] = config.getboolean('General', 'postadjust')
     params['log_subresults'] = config.getboolean('General', 'log_subresults')
     params['add_fuzz'] = config.get('General', 'add_fuzz')
@@ -280,6 +284,11 @@ def write_setup(config_params):
         outfile.write('tmp_dir = %s\n' % config_params['tmp_dir'])
         outfile.write('dbfile_name = %s\n' % config_params['dbfile_name'])
         outfile.write('use_multiprocessing = %s\n' % str(config_params['multiprocessing']))
+        if config_params['num_cores'] is None:
+            outfile.write('num_cores =\n')
+        else:
+            outfile.write('num_cores = %d\n' % config_params['num_cores'])
+
         outfile.write('checkpoint_interval = %d\n' % config_params['checkpoint_interval'])        
         outfile.write('stats_frequency = %d\n' % config_params['stats_freq'])
         outfile.write('result_frequency = %d\n' % config_params['result_freq'])
