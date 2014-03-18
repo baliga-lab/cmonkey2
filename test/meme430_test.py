@@ -70,10 +70,9 @@ class Meme430Test(unittest.TestCase):  # pylint: disable-msg=R0904
                          'meme_version': '4.3.0',
                          'global_background': False,
                          'search_distances': {'upstream': (-20, 150)},
-                         'nmotifs_rvec': 'c(rep(1, num_iterations/3), rep(2, num_iterations/3))',
                          'num_iterations': 2000,
-                         'schedule': {'Motifs': lambda i: True, 'MEME': lambda i: True},
-                         'scaling': {'Motifs': ('scaling_const', 1.0)}}
+                         'MEME': {'schedule': lambda i: True, 'nmotifs_rvec': 'c(rep(1, num_iterations/3), rep(2, num_iterations/3))'}
+                         'Motifs': {'schedule': lambda i: True, 'scaling': ('scaling_const', 1.0)}}
         func = motif.MemeScoringFunction(organism, membership, ratio_matrix,
                                          config_params=config_params)
         iteration_result = { 'iteration': 100 }

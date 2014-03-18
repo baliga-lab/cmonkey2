@@ -57,7 +57,8 @@ class ComputeArrayScoresTest(unittest.TestCase):
         print "(reading reference row scores...)"
         refresult = self.__read_rowscores_refresult()
         print "(compute my own row scores...)"
-        result = ma.compute_row_scores(membership, ratios, 43, True)
+        result = ma.compute_row_scores(membership, ratios, 43,
+                                       {'multiprocessing': True, 'num_cores': None})
         result.fix_extreme_values()
         print "(comparing computed with reference results...)"
         self.__compare_with_refresult(refresult, result)
@@ -68,7 +69,8 @@ class ComputeArrayScoresTest(unittest.TestCase):
         print "(reading reference row scores...)"
         refresult = self.__read_rowscores_refresult()
         print "(compute my own row scores...)"
-        result = ma.compute_row_scores(membership, ratios, 43, False)
+        result = ma.compute_row_scores(membership, ratios, 43,
+                                       {'multiprocessing': True, 'num_cores': None})
         result.fix_extreme_values()
         print "(comparing computed with reference results...)"
         self.__compare_with_refresult(refresult, result)
@@ -77,7 +79,8 @@ class ComputeArrayScoresTest(unittest.TestCase):
         membership = self.__read_members()
         ratios = self.__read_ratios()
         refresult = self.__read_colscores_refresult()
-        result = scoring.compute_column_scores(membership, ratios, 43)
+        result = scoring.compute_column_scores(membership, ratios, 43,
+                                               {'multiprocessing': True, 'num_cores': None})
         self.__compare_with_refresult(refresult, result)
 
     def __compare_with_refresult(self, refresult, result):

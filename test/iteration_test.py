@@ -73,6 +73,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.config_params = {'memb.min_cluster_rows_allowed': 3,
                               'memb.max_cluster_rows_allowed': 70,
                               'multiprocessing': False,
+                              'num_cores': None,
                               'memb.clusters_per_row': 2,
                               'memb.clusters_per_col': int(round(43 * 2.0 / 3.0)),
                               'num_clusters': 43,
@@ -83,15 +84,13 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                               'meme_version': '4.3.0',
                               'global_background': False,
                               'search_distances': {'upstream': (-20, 150)},
-                              'nmotifs_rvec': 'c(rep(1, num_iterations/3), rep(2, num_iterations/3))',
-                              'schedule': {'Columns': lambda i: True,
-                                           'Rows': lambda i: True,
-                                           'Motifs': lambda i: True,
-                                           'MEME': lambda i: True,
-                                           'Networks': lambda i: True},
-                              'scaling': {'Rows': ('scaling_const', 6.0),
-                                          'Networks': ('scaling_rvec', 'seq(1e-5, 0.5, length=num_iterations*3/4)'),
-                                          'Motifs': ('scaling_rvec', 'seq(0, 1, length=num_iterations*3/4)')}}
+                              'Columns': {'schedule': lambda i: True },
+                              'Rows': {'schedule': lambda i: True, 'scaling': ('scaling_const', 6.0) },
+                              'Motifs': {'schedule': lambda i: True,
+                                         'scaling': ('scaling_rvec', 'seq(0, 1, length=num_iterations*3/4)')},
+                              'MEME': {'schedule': lambda i: True,
+                                       'nmotifs_rvec': 'c(rep(1, num_iterations/3), rep(2, num_iterations/3))'},
+                              'Networks': {'schedule': lambda i: True, 'scaling': ('scaling_rvec', 'seq(1e-5, 0.5, length=num_iterations*3/4)')}}
         self.membership = self.__read_members()  # relies on config_params
         self.iteration_result = { 'iteration': 51 }
 
@@ -146,10 +145,9 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         config_params = {'quantile_normalize': True,
                          'log_subresults': False,
                          'num_iterations': 2000,
-                         'schedule': {'Dummy': lambda i: True},
-                         'scaling': {'Rows': ('scaling_const', 6.0),
-                                     'Networks': ('scaling_rvec', 'seq(1e-5, 0.5, length=num_iterations*3/4)'),
-                                     'Motifs': ('scaling_rvec', 'seq(0, 1, length=num_iterations*3/4)')}}
+                         'Rows': {'scaling': ('scaling_const', 6.0)},
+                         'Networks': {'scaling': ('scaling_rvec', 'seq(1e-5, 0.5, length=num_iterations*3/4)')},
+                         'Motifs': {'scaling': ('scaling_rvec', 'seq(0, 1, length=num_iterations*3/4)')}}
 
         class DummyNetworkScoring(scoring.ScoringFunctionBase):
             def __init__(self):
