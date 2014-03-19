@@ -189,7 +189,32 @@ def make_series(stats):
 class ClusterViewerApp:
 
     def __init__(self):
-        self.ratios = read_ratios()
+        self.__ratios = None
+
+    def ratios(self):
+        if self.__ratios is None:
+            self.__ratios = read_ratios()
+        return self.__ratios
+
+    @cherrypy.expose
+    def index(self):
+        conn = dbconn()
+        cursor = conn.cursor()
+        iteration = None
+        try:
+            cursor.execute('select last_iteration from run_infos')
+            iteration = cursor.fetchone()[0]
+        except:
+            tmpl = env.get_template('not_available.html')
+            return tmpl.render(locals())
+        finally:
+            cursor.close()
+            conn.close()
+        if iteration is not None:
+            raise cherrypy.HTTPRedirect('/%d' % iteration)
+        else:
+            tmpl = env.get_template('not_available.html')
+            return tmpl.render(locals())
 
     @cherrypy.expose
     def iteration(self, iteration):
@@ -315,7 +340,7 @@ class ClusterViewerApp:
         columns = [row[0] for row in cursor.fetchall()]
         cursor.close()
 
-        js_ratios = json.dumps(self.ratios.hs_subratios_for(rows, columns))
+        js_ratios = json.dumps(self.ratios().hs_subratios_for(rows, columns))
 
         # extract motif information
         conn.row_factory = motifinfo_factory
@@ -379,8 +404,8 @@ class ClusterViewerApp:
             js_annotation_map[seqtype] = json.dumps(st_annots)
 
         conn.close()
-        ratios_mean = normalize_js(self.ratios.subratios_for(rows, columns).mean())
-        js_boxplot_ratios = self.ratios.hs_boxplot_data_for(rows, columns)
+        ratios_mean = normalize_js(self.ratios().subratios_for(rows, columns).mean())
+        js_boxplot_ratios = self.ratios().hs_boxplot_data_for(rows, columns)
         tmpl = env.get_template('cluster.html')
         return tmpl.render(locals())
 
@@ -413,7 +438,8 @@ def make_motif_string(motif_infos, motif_pssm_rows):
 def setup_routes():
     d = cherrypy.dispatch.RoutesDispatcher()
     main = ClusterViewerApp()
-    d.connect('main', '/:iteration', controller=main, action="iteration")
+    d.connect('main', '/', controller=main, action="index")
+    d.connect('iteration', '/:iteration', controller=main, action="iteration")
     d.connect('clusters', '/clusters/:iteration', controller=main, action="clusters")
     d.connect('cluster', '/cluster/:iteration/:cluster', controller=main, action="view_cluster")
     return d
