@@ -157,18 +157,18 @@
          $('#cluster-list').dataTable({
            'bPaginate': false,
            'bFilter': false,
-           'bSort': false,
+           'bSort': true,
            'bInfo': false,
            'sScrollY': 300,
            'sScrollX': '100%',
            'bProcessing': true,
            'aoColumns': [
-             { 'sWidth': '30px', 'sClass': 'alignRight' },
+             { 'sWidth': '30px', 'sClass': 'alignRight', 'bSortable': false },
              { 'sWidth': '60px', 'sClass': 'alignRight' },
              { 'sWidth': '60px', 'sClass': 'alignRight' },
              { 'sWidth': '60px', 'sClass': 'alignRight' },
              { 'sWidth': '70px', 'sClass': 'alignRight' },
-             null
+             { 'bSortable': false }
            ],
            
            'sAjaxSource': '/clusters/{{current_iter}}',

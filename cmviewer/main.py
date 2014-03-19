@@ -288,6 +288,7 @@ class ClusterViewerApp:
 
     @cherrypy.expose
     def clusters(self, iteration, *args, **kw):
+        print kw
         conn = dbconn()
         conn.row_factory = motifinfo_factory
         cursor = conn.cursor()
