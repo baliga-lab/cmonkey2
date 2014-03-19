@@ -275,7 +275,8 @@ class ClusterViewerApp:
         js_runlog_series = read_runlogs()
 
         tmpl = env.get_template('index.html')
-        progress = "%.2f" % min((runinfo.last_iter / runinfo.num_iters * 100.0), 100.0)
+        progress = "%.2f" % min((float(runinfo.last_iter) / float(runinfo.num_iters) * 100.0),
+                                100.0)
         current_iter = int(iteration)
         return tmpl.render(locals())
 
