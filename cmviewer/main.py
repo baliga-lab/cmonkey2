@@ -47,6 +47,12 @@ def normalize_js(value):
         return value
     
 
+def format_float(value):
+    if value <= 1e-3:
+        return "%.2e" % value
+    else:
+        return "%.2f" % value
+
 class Ratios:
     """A helper class that provides useful functionality to generate plotting
     related information"""
@@ -311,7 +317,7 @@ class ClusterViewerApp:
                  "<a class=\"clusterlink\" id=\"%d\"  href=\"#\">%d</a>" % (stat.cluster, stat.cluster),
                  '%d' % stat.num_rows,
                  '%d' % stat.num_cols,
-                 '%.2e' % stat.residual,            
+                 format_float(stat.residual),
                  make_motif_string(motif_infos[stat.cluster],
                                    motif_pssm_rows)]
                 for i, stat in enumerate(cluster_stats)]
@@ -430,7 +436,7 @@ def make_motif_string(motif_infos, motif_pssm_rows):
     for info in motif_infos:
         byseqtype[info.seqtype].append(info)
     for seqtype in byseqtype:
-        reps = ["%s (%.2e)" % (consensus(motif_pssm_rows[motif.id]), motif.evalue)
+        reps = ["%s (%s)" % (consensus(motif_pssm_rows[motif.id]), format_float(motif.evalue))
                 for motif in byseqtype[seqtype]]
         result += "%s -> [%s]" % (seqtype, ', '.join(reps))
     result += ")"
