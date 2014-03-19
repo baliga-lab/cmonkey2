@@ -480,7 +480,8 @@ class WeederScoringFunction(MotifScoringFunctionBase):
 
     def meme_runner(self):
         """returns the MEME runner object"""
-        return WeederRunner(self.meme_suite, self.config_params)
+        remove_tempfiles = not self.config_params['debug'] and not self.config_params['keep_memeout']
+        return WeederRunner(self.meme_suite, self.config_params, remove_tempfiles)
 
 
 class WeederRunner:

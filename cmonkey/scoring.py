@@ -8,7 +8,6 @@ LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 
 import logging
 import os
-import os.path
 import datamatrix as dm
 from datetime import date
 import util
@@ -303,10 +302,16 @@ def compute_column_scores_submatrix(matrix):
     return (matrix.column_names, result)
 
 
-def combine(result_matrices, score_scalings, membership, quantile_normalize):
+def combine(result_matrices, score_scalings, membership, iteration, config_params):
     """This is  the combining function, taking n result matrices and scalings"""
-    for m in result_matrices:
+    quantile_normalize = config_params['quantile_normalize']
+    debug = config_params['debug']
+
+    for i, m in enumerate(result_matrices):
         m.fix_extreme_values()
+        # debug mode: print scoring matrices before combining
+        if debug:
+            m.write_tsv_file(os.path.join(config_params['output_dir'], 'score%d-%d.tsv' % (i, iteration)), compressed=False)
 
     if quantile_normalize:
         if len(result_matrices) > 1:
@@ -439,7 +444,7 @@ class ScoringFunctionCombiner:
                     self.log_subresult(scoring_function, matrix)
 
         return combine(result_matrices, score_scalings, self.membership,
-                       self.config_params['quantile_normalize'])
+                       iteration, self.config_params)
 
     def combine_cached(self, iteration):
         """Combine the cached results of the contained scoring function.
@@ -452,7 +457,8 @@ class ScoringFunctionCombiner:
                 result_matrices.append(matrix)
                 score_scalings.append(scoring_function.scaling(iteration))
 
-        return combine(result_matrices, score_scalings, self.membership, True)
+        return combine(result_matrices, score_scalings, self.membership,
+                       iteration, config_params)
 
 
     def log_subresult(self, score_function, matrix):
