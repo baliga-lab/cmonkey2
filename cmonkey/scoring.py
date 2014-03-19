@@ -309,6 +309,8 @@ def combine(result_matrices, score_scalings, membership, iteration, config_param
 
     for i, m in enumerate(result_matrices):
         m.fix_extreme_values()
+        m.subtract_with_quantile(0.99)
+
         # debug mode: print scoring matrices before combining
         if debug:
             funs = config_params['pipeline']['row-scoring']['args']['functions']

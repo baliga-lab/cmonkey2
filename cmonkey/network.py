@@ -263,7 +263,6 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
         # compute and store score means
         self.score_means = self.__update_score_means(network_scores)
-        matrix.subtract_with_quantile(0.99)
         return matrix
 
     def __compute_network_cluster_scores(self, network):
