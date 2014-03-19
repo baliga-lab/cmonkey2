@@ -311,7 +311,8 @@ def combine(result_matrices, score_scalings, membership, iteration, config_param
         m.fix_extreme_values()
         # debug mode: print scoring matrices before combining
         if debug:
-            m.write_tsv_file(os.path.join(config_params['output_dir'], 'score%d-%d.tsv' % (i, iteration)), compressed=False)
+            funs = config_params['pipeline']['row-scoring']['args']['functions']
+            m.write_tsv_file(os.path.join(config_params['output_dir'], 'score-%s-%d.tsv' % (funs[i]['id'], iteration)), compressed=False)
 
     if quantile_normalize:
         if len(result_matrices) > 1:
