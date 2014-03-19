@@ -360,11 +360,14 @@ def combine(result_matrices, score_scalings, membership, iteration, config_param
             for i in range(1, len(result_matrices)):
                 values = result_matrices[i].values
                 qqq = abs(util.quantile(values, 0.01))
-                #print "qqq(%d) = %f" % (i, qqq)
                 if qqq == 0:
-                    logging.error("very sparse score !!!")
+                    logging.warn('SPARSE SCORES - attempt 1: pick from sorted values')
+                    qqq = sorted(values.flatten())[9]
+                if qqq == 0:
+                    logging.warn('SPARSE SCORES - attempt 2: pick minimum value')
                     qqq = abs(values.min())
-                values = values / qqq * abs(rs_quant)
+                if qqq != 0:
+                    values = values / qqq * abs(rs_quant)
                 in_matrices.append(values)
 
     if len(result_matrices) > 0:
