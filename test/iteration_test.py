@@ -144,7 +144,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         ref_rowscores = read_matrix('testdata/rowscores_fixed.tsv')
         config_params = {'quantile_normalize': True,
                          'log_subresults': False,
-                         'num_iterations': 2000,
+                         'num_iterations': 2000, 'debug': False,
                          'Rows': {'scaling': ('scaling_const', 6.0)},
                          'Networks': {'scaling': ('scaling_rvec', 'seq(1e-5, 0.5, length=num_iterations*3/4)')},
                          'Motifs': {'scaling': ('scaling_rvec', 'seq(0, 1, length=num_iterations*3/4)')}}
