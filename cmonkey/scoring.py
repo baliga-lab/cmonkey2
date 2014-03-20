@@ -464,7 +464,7 @@ class ScoringFunctionCombiner:
                 score_scalings.append(scoring_function.scaling(iteration))
 
         return combine(result_matrices, score_scalings, self.membership,
-                       iteration, config_params)
+                       iteration, self.config_params)
 
 
     def log_subresult(self, score_function, matrix):
