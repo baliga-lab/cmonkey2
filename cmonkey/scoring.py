@@ -363,13 +363,15 @@ def combine(result_matrices, score_scalings, membership, iteration, config_param
                 values = result_matrices[i].values
                 qqq = abs(util.quantile(values, 0.01))
                 if qqq == 0:
-                    logging.warn('SPARSE SCORES - attempt 1: pick from sorted values')
+                    logging.warn('SPARSE SCORES - %d attempt 1: pick from sorted values', i)
                     qqq = sorted(values.flatten())[9]
                 if qqq == 0:
-                    logging.warn('SPARSE SCORES - attempt 2: pick minimum value')
+                    logging.warn('SPARSE SCORES - %d attempt 2: pick minimum value', i)
                     qqq = abs(values.min())
                 if qqq != 0:
                     values = values / qqq * abs(rs_quant)
+                else:
+                    logging.warn('SPARSE SCORES - %d not normalizing!', i)
                 in_matrices.append(values)
 
     if len(result_matrices) > 0:
