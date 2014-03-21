@@ -286,6 +286,9 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         cluster_seqs_params = [(cluster, self.seqtype)
                                for cluster in xrange(1, self.num_clusters() + 1)]
         seqs_list = pool.map(cluster_seqs, cluster_seqs_params)
+        pool.close()
+        pool.join()
+
         SEQUENCE_FILTERS = None
         ORGANISM = None
         MEMBERSHIP = None
