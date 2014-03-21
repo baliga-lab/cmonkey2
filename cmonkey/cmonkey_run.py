@@ -74,9 +74,7 @@ class CMonkeyRun:
 
     def __dbconn(self, isolation_level='DEFERRED'):
         """returns an autocommit database connection"""
-        conn = sqlite3.connect(self['out_database'])
-        conn.isolation_level = isolation_level
-        return conn
+        return sqlite3.connect(self['out_database'], 15, isolation_level=isolation_level)
 
     def __create_output_database(self):
         conn = self.__dbconn()

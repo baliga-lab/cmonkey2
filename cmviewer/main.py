@@ -161,7 +161,7 @@ def iterationstat_factory(cursor, row):
 
 
 def dbconn():
-    return sqlite3.connect(outdb)
+    return sqlite3.connect(outdb, timeout=10, isolation_level=None)
 
 
 def make_int_histogram(counts):
