@@ -136,7 +136,8 @@ def read_runlogs():
 
     return json.dumps([read_runlog(fname)
                        for fname in glob.glob(os.path.join(outdir, '*.runlog'))
-                       if os.path.basename(fname) != 'row_scoring.runlog'])
+                       if os.path.basename(fname) not in ['row_scoring.runlog',
+                                                          'column_scoring.runlog']])
 
 def runinfo_factory(cursor, row):
     return RunInfo(*row)
@@ -187,9 +188,14 @@ def make_float_histogram(values, nbuckets=20):
 
 def make_series(stats):
     groups = defaultdict(list)
+    scores = [stat.score for stat in stats]
+    minscore = min(scores)
+    maxscore = max(scores)
     for stat in stats:
         groups[stat.label].append(stat.score)
-    return json.dumps([{'name': label, 'data': groups[label]} for label in groups])
+    minscore = math.floor(minscore)
+    maxscore = math.ceil(maxscore)
+    return json.dumps([{'name': label, 'data': groups[label]} for label in groups]), minscore, maxscore
 
 
 class ClusterViewerApp:
@@ -266,12 +272,12 @@ class ClusterViewerApp:
         conn.row_factory = iterationstat_factory
         cursor = conn.cursor()
         cursor.execute('select iteration, seqtype, pval from motif_stats')
-        js_motif_stats = make_series([row for row in cursor.fetchall()])
+        js_motif_stats, min_motscore, max_motscore = make_series([row for row in cursor.fetchall()])
         cursor.close()
 
         cursor = conn.cursor()
         cursor.execute('select iteration, network, score from network_stats')
-        js_network_stats = make_series([row for row in cursor.fetchall()])
+        js_network_stats, min_netscore, max_netscore = make_series([row for row in cursor.fetchall()])
         cursor.close()
 
         conn.close()

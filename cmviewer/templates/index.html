@@ -118,7 +118,7 @@
              title: { text: 'Median motif scores' },
              plotOptions: { line: { marker: { enabled: false }, } },
              xAxis: {categories: iterations, tickInterval: 30},
-             yAxis: { title: { text: 'mean p-value' }, max: -0.5, min: -6 },
+             yAxis: { title: { text: 'mean p-value' }, max: {{max_motscore}}, min: {{min_motscore}} },
              series: {{js_motif_stats}}
          });
 
@@ -134,7 +134,7 @@
                  categories: iterations,
                  tickInterval: 30
              },
-             yAxis: { title: { text: 'mean net score' }, max: 0, min: -3 },
+             yAxis: { title: { text: 'mean net score' }, max: {{max_netscore}}, min: {{min_netscore}} },
              series: {{js_network_stats}}
          });
 
