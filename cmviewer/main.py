@@ -294,7 +294,15 @@ class ClusterViewerApp:
 
     @cherrypy.expose
     def clusters(self, iteration, *args, **kw):
-        print kw
+        def min_evalue(motif_infos):
+            """returns the minimum e-value of the given motif infos"""
+            if len(motif_infos) == 0:
+                return 0
+            else:
+                return min([m.evalue for m in motif_infos])
+
+        sort_col = int(kw['iSortCol_0'])
+        sort_reverse = kw['sSortDir_0'] == 'desc'
         conn = dbconn()
         conn.row_factory = motifinfo_factory
         cursor = conn.cursor()
@@ -319,6 +327,22 @@ class ClusterViewerApp:
         cursor = conn.cursor()
         cursor.execute("select iteration, cluster, num_rows, num_cols, residual from cluster_stats where iteration = ? order by residual", [iteration])
         cluster_stats = [row for row in cursor.fetchall()]
+        if sort_col == 1:
+            cluster_stats = sorted(cluster_stats, key=lambda item: item.cluster,
+                                   reverse=sort_reverse)
+        elif sort_col == 2:
+            cluster_stats = sorted(cluster_stats, key=lambda item: item.num_rows,
+                                   reverse=sort_reverse)
+        elif sort_col == 3:
+            cluster_stats = sorted(cluster_stats, key=lambda item: item.num_cols,
+                                   reverse=sort_reverse)
+        elif sort_col == 4:
+            cluster_stats = sorted(cluster_stats, key=lambda item: item.residual,
+                                   reverse=sort_reverse)
+        elif sort_col == 5:
+            cluster_stats = sorted(cluster_stats, key=lambda item: min_evalue(motif_infos[item.cluster]),
+                                   reverse=sort_reverse)
+            
 
         rows = [["%d" % (i + 1),
                  "<a class=\"clusterlink\" id=\"%d\"  href=\"#\">%d</a>" % (stat.cluster, stat.cluster),
@@ -438,6 +462,8 @@ def consensus(rows):
     return result
 
 def make_motif_string(motif_infos, motif_pssm_rows):
+    if len(motif_infos) == 0:
+        return ""
     result = "("
     byseqtype = defaultdict(list)
     for info in motif_infos:
