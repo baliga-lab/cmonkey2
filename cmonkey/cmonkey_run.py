@@ -600,9 +600,23 @@ class CMonkeyRun:
                                       self['num_clusters'], self['output_dir'])
             conn.close()
 
+    def write_mem_profile(self, outfile, row_scoring, col_scoring, iteration):
+        membsize = sizes.asizeof(self.membership()) / 1000000.0
+        orgsize = sizes.asizeof(self.organism()) / 1000000.0
+        colsize = sizes.asizeof(col_scoring) / 1000000.0
+        funs = row_scoring.scoring_functions
+        rowsize = sizes.asizeof(funs[0]) / 1000000.0
+        netsize = sizes.asizeof(funs[1]) / 1000000.0
+        motsize = sizes.asizeof(funs[2]) / 1000000.0
+        outfile.write('%d\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\n' % (iteration, membsize, orgsize, colsize, rowsize, netsize, motsize))
+
     def run_iterations(self, row_scoring, col_scoring):
         self.report_params()
         self.write_start_info()
+        if self['memprof']:
+            with open(os.path.join(self['output_dir'], 'memprofile.tsv'), 'w') as outfile:
+                outfile.write('Iteration\tMembership\tOrganism\tCol\tRow\tNetwork\tMotif\n')
+
         for iteration in range(self['start_iteration'],
                                self['num_iterations'] + 1):
             start_time = util.current_millis()
@@ -611,6 +625,11 @@ class CMonkeyRun:
             gc.collect()
             elapsed = util.current_millis() - start_time
             logging.info("performed iteration %d in %f s.", iteration, elapsed / 1000.0)
+            
+            if self['memprof'] and (iteration == 1 or iteration % 100 == 0):
+                with open(os.path.join(self['output_dir'], 'memprofile.tsv'), 'a') as outfile:
+                    self.write_mem_profile(outfile, row_scoring, col_scoring, iteration)
+
 
         """run post processing after the last iteration. We store the results in
         num_iterations + 1 to have a clean separation"""

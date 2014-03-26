@@ -152,6 +152,8 @@ def __get_arg_parser():
     parser.add_argument('--config', default=None, help="additional configuration file")
     parser.add_argument('--debug', action="store_true",
                         help="""run in debug mode""")
+    parser.add_argument('--memprof', action="store_true",
+                        help="""profile memory""")
     parser.add_argument('--random_seed', type=int)
 
     # RSAT overrides
@@ -232,6 +234,7 @@ def setup():
                  'use_operons': True, 'use_string': True, 'global_background': True,
                  'meme_version': meme.check_meme_version(),
                  'debug': args.debug,
+                 'memprof': args.memprof,
                  'keep_memeout': args.debug or args.keep_memeout,
                  'nomotifs': False,
                  'nonetworks': args.nonetworks,
