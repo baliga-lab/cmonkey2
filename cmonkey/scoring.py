@@ -182,14 +182,6 @@ class ScoringFunctionBase:
         else:
             return 0.0
 
-    def store_checkpoint_data(self, shelf):
-        """Default implementation does not store checkpoint data"""
-        pass
-
-    def restore_checkpoint_data(self, shelf):
-        """Default implementation does not store checkpoint data"""
-        pass
-
     def run_logs(self):
         """returns a list of RunLog objects, giving information about
         the last run of this function"""
@@ -482,16 +474,6 @@ class ScoringFunctionCombiner:
     def scaling(self, iteration):
         """returns the scaling for the specified iteration"""
         return self.scaling_func(iteration)
-
-    def store_checkpoint_data(self, shelf):
-        """recursively invokes store_checkpoint_data() on the children"""
-        for scoring_func in self.scoring_functions:
-            scoring_func.store_checkpoint_data(shelf)
-
-    def restore_checkpoint_data(self, shelf):
-        """recursively invokes store_checkpoint_data() on the children"""
-        for scoring_func in self.scoring_functions:
-            scoring_func.restore_checkpoint_data(shelf)
 
     def run_logs(self):
         """joins all contained function's run logs"""

@@ -63,7 +63,6 @@ def __set_config(config):
     params['postadjust'] = config.getboolean('General', 'postadjust')
     params['log_subresults'] = config.getboolean('General', 'log_subresults')
     params['add_fuzz'] = config.get('General', 'add_fuzz')
-    params['checkpoint_interval'] = config.getint('General', 'checkpoint_interval')
     try:
         params['random_seed'] = config.getint('General', 'random_seed')
     except:
@@ -133,7 +132,6 @@ def __get_arg_parser():
                         default=None)
     parser.add_argument('--operons', help='tab-separated operons file for the organism',
                         default=None)
-    parser.add_argument('--checkpoint', help='checkpoint-file')
     parser.add_argument('--checkratios', action="store_true",
                         help='check gene expression quality')
     parser.add_argument('--remap_network_nodes', action="store_true",
@@ -239,7 +237,7 @@ def setup():
                  'nomotifs': False,
                  'nonetworks': args.nonetworks,
                  'checkratios': args.checkratios,
-                 'checkpoint': args.checkpoint, 'random_seed': args.random_seed,
+                 'random_seed': args.random_seed,
                  'pipeline_file': args.pipeline}
 
     # membership update default parameters
@@ -292,7 +290,6 @@ def write_setup(config_params):
         else:
             outfile.write('num_cores = %d\n' % config_params['num_cores'])
 
-        outfile.write('checkpoint_interval = %d\n' % config_params['checkpoint_interval'])        
         outfile.write('stats_frequency = %d\n' % config_params['stats_freq'])
         outfile.write('result_frequency = %d\n' % config_params['result_freq'])
         outfile.write('postadjust = %s\n' % str(config_params['postadjust']))

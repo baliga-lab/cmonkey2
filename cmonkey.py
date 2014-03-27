@@ -34,8 +34,5 @@ if __name__ == '__main__':
         logging.error("# genes found: %d, # total: %d, %f %% - please check your ratios file",
                       num_found, total, percent)
     else:
-        if args['checkpoint']:
-            cmonkey_run.run_from_checkpoint(args['checkpoint'])
-        else:
-            cmonkey_run.run()
+        cmonkey_run.run()
     cmonkey_run.cleanup()

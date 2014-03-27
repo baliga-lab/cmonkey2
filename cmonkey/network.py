@@ -200,14 +200,6 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     def run_logs(self):
         return [self.run_log]
 
-    def store_checkpoint_data(self, shelf):
-        """Default implementation does not store checkpoint data"""
-        pass
-
-    def restore_checkpoint_data(self, shelf):
-        """Default implementation does not store checkpoint data"""
-        pass
-
     def compute(self, iteration_result, ref_matrix=None):
         """overridden compute for storing additional information"""
         result = scoring.ScoringFunctionBase.compute(self, iteration_result, ref_matrix)

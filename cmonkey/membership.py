@@ -274,21 +274,6 @@ class OrigMembership:
         elapsed = util.current_millis() - start_time
         logging.info("update_for cdscores finished in %f s.", elapsed / 1000.0)
 
-    def store_checkpoint_data(self, shelf):
-        """Save memberships into checkpoint"""
-        logging.info("Saving checkpoint data for memberships in iteration %d",
-                     shelf['iteration'])
-        shelf[KEY_ROW_IS_MEMBER_OF] = self.row_membs
-        shelf[KEY_COL_IS_MEMBER_OF] = self.col_membs
-
-    @classmethod
-    def restore_from_checkpoint(cls, config_params, shelf):
-        """Restore memberships from checkpoint information"""
-        logging.info("Restoring cluster memberships from checkpoint data")
-        row_is_member_of = shelf[KEY_ROW_IS_MEMBER_OF]
-        col_is_member_of = shelf[KEY_COL_IS_MEMBER_OF]
-        return cls(row_is_member_of, col_is_member_of, config_params)
-
 
 def create_membership(matrix, seed_row_memberships, seed_column_memberships,
                       config_params):

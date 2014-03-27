@@ -60,8 +60,6 @@ class CMonkeyRun:
         self.__conn = None
 
         today = date.today()
-        self.__checkpoint_basename = "cmonkey-checkpoint-%d%d%d" % (
-            today.year, today.month, today.day)
         logging.info("# clusters/row: %d", args['memb.clusters_per_row'])
         logging.info("# clusters/column: %d", args['memb.clusters_per_col'])
         logging.info("# CLUSTERS: %d", args['num_clusters'])
@@ -310,8 +308,7 @@ class CMonkeyRun:
                        'memb.min_cluster_rows_allowed', 'memb.max_cluster_rows_allowed',
                        'memb.prob_row_change', 'memb.prob_col_change',
                        'memb.max_changes_per_row', 'memb.max_changes_per_col',
-                       'sequence_types', 'search_distances', 'scan_distances',
-                       'checkpoint_interval']
+                       'sequence_types', 'search_distances', 'scan_distances']
 
         for param in PARAM_NAMES:
             if param not in self.config_params:
@@ -394,13 +391,6 @@ class CMonkeyRun:
 
     def run(self):
         row_scoring, col_scoring = self.prepare_run()
-        self.run_iterations(row_scoring, col_scoring)
-
-    def run_from_checkpoint(self, checkpoint_filename):
-        row_scoring, col_scoring = self.__setup_pipeline()
-        self.__make_dirs_if_needed()
-        self.init_from_checkpoint(checkpoint_filename, row_scoring,
-                                  col_scoring)
         self.run_iterations(row_scoring, col_scoring)
 
     def residual_for(self, row_names, column_names):
@@ -570,8 +560,6 @@ class CMonkeyRun:
         self.membership().update(self.ratios, rscores, cscores,
                                  self['num_iterations'], iteration_result)
 
-        if (iteration > 0 and self['checkpoint_interval'] and iteration % self['checkpoint_interval'] == 0):
-            self.save_checkpoint_data(iteration, row_scoring, col_scoring)
         mean_net_score = 0.0
         mean_mot_pvalue = 0.0
         if 'networks' in iteration_result.keys():
@@ -667,33 +655,6 @@ class CMonkeyRun:
 
         self.write_finish_info()
         logging.info("Done !!!!")
-
-    ############################################################
-    ###### CHECKPOINTING
-    ##############################
-
-    def save_checkpoint_data(self, iteration, row_scoring, col_scoring):
-        """save checkpoint data for the specified iteration"""
-        with util.open_shelf("%s.%04d" % (self.__checkpoint_basename,
-                                          iteration)) as shelf:
-            shelf['config'] = self.config_params
-            shelf['iteration'] = iteration
-            self.membership().store_checkpoint_data(shelf)
-            row_scoring.store_checkpoint_data(shelf)
-            col_scoring.store_checkpoint_data(shelf)
-
-    def init_from_checkpoint(self, checkpoint_filename, row_scoring, col_scoring):
-        """initialize this object from a checkpoint file"""
-        logging.info("Continue run using checkpoint file '%s'",
-                     checkpoint_filename)
-        with util.open_shelf(checkpoint_filename) as shelf:
-            self.config_params = shelf['config']
-            self['start_iteration'] = shelf['iteration'] + 1
-            self.__membership = memb.ClusterMembership.restore_from_checkpoint(
-                self.config_params, shelf)
-            row_scoring.restore_checkpoint_data(shelf)
-            col_scoring.restore_checkpoint_data(shelf)
-            #return row_scoring, col_scoring necessary??
 
 
 def get_function_class(scorefun):
