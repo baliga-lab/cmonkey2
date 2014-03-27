@@ -477,7 +477,7 @@ class CMonkeyRun:
                             conn.execute('''insert into motif_pvalues (iteration,cluster,gene_num,pvalue)
                                             values (?,?,?,?)''',
                                         (iteration, cluster, gene_num, pvalues[gene]))
-            conn.close()
+        conn.close()
 
     def write_stats(self, iteration_result):
         # write stats for this iteration
