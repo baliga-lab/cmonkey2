@@ -57,6 +57,7 @@ class CMonkeyRun:
         self.ratios = ratios
         self.row_seeder = memb.make_kmeans_row_seeder(args['num_clusters'])
         self.column_seeder = microarray.seed_column_members
+        self.__conn = None
 
         today = date.today()
         self.__checkpoint_basename = "cmonkey-checkpoint-%d%d%d" % (
@@ -69,12 +70,20 @@ class CMonkeyRun:
         if args['meme_version']:
             logging.info('using MEME version %s', args['meme_version'])
         else:
-            logging.error('MEME not detected - please check'
-)
+            logging.error('MEME not detected - please check')
 
-    def __dbconn(self, isolation_level='DEFERRED'):
-        """returns an autocommit database connection"""
-        return sqlite3.connect(self['out_database'], 15, isolation_level=isolation_level)
+    def cleanup(self):
+        """cleanup this run object"""
+        if self.__conn is not None:
+            self.__conn.close()
+            self.__conn = None
+
+    def __dbconn(self):
+        """Returns an autocommit database connection. We maintain a single database
+        connection throughout the life of this run objec"""
+        if self.__conn is None:
+            self.__conn = sqlite3.connect(self['out_database'], 15, isolation_level='DEFERRED')
+        return self.__conn
 
     def __create_output_database(self):
         conn = self.__dbconn()
@@ -149,7 +158,6 @@ class CMonkeyRun:
                                 (?,?)''',
                              (index, self.ratios.column_names[index]))
         logging.info("added row and column names to output database")
-        conn.close()
 
     def report_params(self):
         logging.info('cmonkey_run config_params:')
@@ -186,7 +194,6 @@ class CMonkeyRun:
                 with bz2.BZ2File(path, 'w') as outfile:
                     debug.write_iteration(conn, outfile, 0,
                                           self['num_clusters'], self['output_dir'])
-                conn.close()
 
         return self.__membership
 
@@ -477,7 +484,6 @@ class CMonkeyRun:
                             conn.execute('''insert into motif_pvalues (iteration,cluster,gene_num,pvalue)
                                             values (?,?,?,?)''',
                                         (iteration, cluster, gene_num, pvalues[gene]))
-        conn.close()
 
     def write_stats(self, iteration_result):
         # write stats for this iteration
@@ -528,7 +534,6 @@ class CMonkeyRun:
             for seqtype, pval in motif_pvalues.items():
                 conn.execute('''insert into motif_stats (iteration, seqtype, pval)
                                 values (?,?,?)''', (iteration, seqtype, pval))
-        conn.close()
 
     def write_start_info(self):
         conn = self.__dbconn()
@@ -538,19 +543,16 @@ class CMonkeyRun:
                          (datetime.now(), self['num_iterations'], self.organism().code,
                           self.organism().species(), self.ratios.num_rows,
                           self.ratios.num_columns, self['num_clusters']))
-        conn.close()
 
     def update_iteration(self, iteration):
         conn = self.__dbconn()
         with conn:
             conn.execute('''update run_infos set last_iteration = ?''', (iteration,))
-        conn.close()
 
     def write_finish_info(self):
         conn = self.__dbconn()
         with conn:
             conn.execute('''update run_infos set finish_time = ?''', (datetime.now(),))
-        conn.close()
 
     def combined_rscores_pickle_path(self):
         return "%s/combined_rscores_last.pkl" % self.config_params['output_dir']
@@ -598,7 +600,6 @@ class CMonkeyRun:
             with bz2.BZ2File(path, 'w') as outfile:
                 debug.write_iteration(conn, outfile, iteration,
                                       self['num_clusters'], self['output_dir'])
-            conn.close()
 
     def write_mem_profile(self, outfile, row_scoring, col_scoring, iteration):
         membsize = sizes.asizeof(self.membership()) / 1000000.0
@@ -662,7 +663,6 @@ class CMonkeyRun:
                     debug.write_iteration(conn, outfile,
                                           self['num_iterations'] + 1,
                                           self['num_clusters'], self['output_dir'])
-                conn.close()
 
 
         self.write_finish_info()

@@ -38,3 +38,4 @@ if __name__ == '__main__':
             cmonkey_run.run_from_checkpoint(args['checkpoint'])
         else:
             cmonkey_run.run()
+    cmonkey_run.cleanup()
