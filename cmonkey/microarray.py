@@ -11,7 +11,6 @@ import logging
 import datamatrix as dm
 import util
 import scoring
-import multiprocessing as mp
 
 
 def seed_column_members(data_matrix, row_membership, num_clusters,
@@ -83,10 +82,8 @@ def __compute_row_scores_for_clusters(membership, matrix, num_clusters,
     ROW_SCORE_MEMBERSHIP = membership
 
     if config_params['multiprocessing']:
-        pool = util.get_mp_pool(config_params)
-        result = pool.map(compute_row_scores_for_cluster, xrange(1, num_clusters + 1))
-        pool.close()
-        pool.join()
+        with util.get_mp_pool(config_params) as pool:
+            result = pool.map(compute_row_scores_for_cluster, xrange(1, num_clusters + 1))
     else:
         result = []
         for cluster in range(1, num_clusters + 1):

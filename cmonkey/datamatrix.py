@@ -10,7 +10,6 @@ import operator
 import util
 import logging
 import gzip
-import multiprocessing as mp
 import os
 import random
 
@@ -455,12 +454,10 @@ def qm_result_matrices(matrices, tmp_mean, multiprocessing=True):
     original values and retrieving the means at the specified position"""
     if multiprocessing:
         # parallelized ranking
-        pool = mp.Pool()
-        results = pool.map(rank_fun,
-                           [(matrix.values, matrix.row_names, matrix.column_names, tmp_mean)
-                            for matrix in matrices])
-        pool.close()
-        pool.join()
+        with util.get_mp_pool() as pool:
+            results = pool.map(rank_fun,
+                               [(matrix.values, matrix.row_names, matrix.column_names, tmp_mean)
+                                for matrix in matrices])
         return results
     else:
         # non-parallelized

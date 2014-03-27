@@ -11,7 +11,6 @@ import os
 import datamatrix as dm
 from datetime import date
 import util
-import multiprocessing as mp
 import membership as memb
 import numpy as np
 import cPickle
@@ -244,11 +243,9 @@ def compute_column_scores(membership, matrix, num_clusters,
             return None
 
     if config_params['multiprocessing']:
-        pool = util.get_mp_pool(config_params)
-        cluster_column_scores = pool.map(compute_column_scores_submatrix,
-                                         map(make_submatrix, xrange(1, num_clusters + 1)))
-        pool.close()
-        pool.join()
+        with util.get_mp_pool(config_params) as pool:
+            cluster_column_scores = pool.map(compute_column_scores_submatrix,
+                                             map(make_submatrix, xrange(1, num_clusters + 1)))
     else:
         cluster_column_scores = []
         for cluster in xrange(1, num_clusters + 1):

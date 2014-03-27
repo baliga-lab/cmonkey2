@@ -139,12 +139,10 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             logging.info("PROCESSING SET TYPE '%s'", set_type.name)
             start1 = util.current_millis()
             if use_multiprocessing:
-                pool = util.get_mp_pool(self.config_params)
-                results = pool.map(compute_cluster_score,
-                                   [(cluster, self.bonferroni_cutoff())
-                                    for cluster in xrange(1, self.num_clusters() + 1)])
-                pool.close()
-                pool.join()
+                with util.get_mp_pool(self.config_params) as pool:
+                    results = pool.map(compute_cluster_score,
+                                       [(cluster, self.bonferroni_cutoff())
+                                        for cluster in xrange(1, self.num_clusters() + 1)])
             else:
                 results = []
                 for cluster in xrange(1, self.num_clusters() + 1):

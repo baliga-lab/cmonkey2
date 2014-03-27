@@ -7,7 +7,6 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import logging
-import multiprocessing as mp
 import numpy as np
 import scoring
 import datamatrix as dm
@@ -282,12 +281,10 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         ORGANISM = self.organism
         MEMBERSHIP = self.membership
 
-        pool = util.get_mp_pool(self.config_params)
-        cluster_seqs_params = [(cluster, self.seqtype)
-                               for cluster in xrange(1, self.num_clusters() + 1)]
-        seqs_list = pool.map(cluster_seqs, cluster_seqs_params)
-        pool.close()
-        pool.join()
+        with util.get_mp_pool(self.config_params) as pool:
+            cluster_seqs_params = [(cluster, self.seqtype)
+                                   for cluster in xrange(1, self.num_clusters() + 1)]
+            seqs_list = pool.map(cluster_seqs, cluster_seqs_params)
 
         SEQUENCE_FILTERS = None
         ORGANISM = None
@@ -346,26 +343,23 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             self.__last_results = {}
 
         if use_multiprocessing:
-            pool = util.get_mp_pool(self.config_params)
-            results = pool.map(compute_cluster_score, params.values())
-            results = {r[0]: r[1:] for r in results}  # indexed by cluster
+            with util.get_mp_pool(self.config_params) as pool:
+                results = pool.map(compute_cluster_score, params.values())
+                results = {r[0]: r[1:] for r in results}  # indexed by cluster
 
-            for cluster in xrange(1, self.num_clusters() + 1):
-                if cluster in results:
-                    pvalues, run_result = results[cluster]
-                    self.__last_results[cluster] = (params[cluster].feature_ids,
-                                                    pvalues, run_result)
-                else:
-                    feature_ids, pvalues, run_result = self.__last_results[cluster]
+                for cluster in xrange(1, self.num_clusters() + 1):
+                    if cluster in results:
+                        pvalues, run_result = results[cluster]
+                        self.__last_results[cluster] = (params[cluster].feature_ids,
+                                                        pvalues, run_result)
+                    else:
+                        feature_ids, pvalues, run_result = self.__last_results[cluster]
 
-                cluster_pvalues[cluster] = pvalues
-                if run_result:
-                    self.__last_motif_infos[cluster] = run_result.motif_infos
-                iteration_result[cluster]['motif-info'] = meme_json(run_result)
-                iteration_result[cluster]['pvalues'] = pvalues                    
-
-            pool.close()
-            pool.join()
+                    cluster_pvalues[cluster] = pvalues
+                    if run_result:
+                        self.__last_motif_infos[cluster] = run_result.motif_infos
+                    iteration_result[cluster]['motif-info'] = meme_json(run_result)
+                    iteration_result[cluster]['pvalues'] = pvalues                    
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
                 if cluster in params:

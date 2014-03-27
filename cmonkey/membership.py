@@ -14,7 +14,6 @@ import logging
 import sys
 import numpy as np
 import rpy2.robjects as robjects
-import multiprocessing as mp
 import cPickle
 import array
 

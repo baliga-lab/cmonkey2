@@ -513,14 +513,23 @@ def current_millis():
     return int(math.floor(time.time() * 1000))
 
 
-def get_mp_pool(config_params):
-    """use the configuration to return a pool with user-defined number of cores
-    if possible"""
-    if 'num_cores' in config_params:
-        return mp.Pool(config_params['num_cores'])
-    else:
-        return mp.Pool()
-    
+class get_mp_pool:
+    """pool manager"""
+    def __init__(self, config_params={}):
+        """use the configuration to return a pool with user-defined number of cores
+        if possible"""
+        if 'num_cores' in config_params:
+            self.pool = mp.Pool(config_params['num_cores'])
+        else:
+            self.pool = mp.Pool()
+        
+    def __enter__(self):
+        return self.pool
+
+    def __exit__(self, type, value, tb):
+        self.pool.close()
+        self.pool.join()
+
 __all__ = ['DelimitedFile', 'best_matching_links', 'quantile',
            'DocumentNotFound', 'CMonkeyURLopener', 'read_url',
            'read_url_cached', 'ThesaurusBasedMap', 'trim_mean']

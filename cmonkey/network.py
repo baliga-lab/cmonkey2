@@ -9,7 +9,6 @@ import logging
 import util
 import datamatrix as dm
 import scoring
-import multiprocessing as mp
 import cPickle
 import os.path
 
@@ -279,10 +278,8 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         NETWORK_SCORE_MEMBERSHIP = self.membership
 
         if use_multiprocessing:
-            pool = util.get_mp_pool(self.config_params)
-            map_results = pool.map(compute_network_scores, xrange(1, self.num_clusters() + 1))
-            pool.close()
-            pool.join()
+            with util.get_mp_pool(self.config_params) as pool:
+                map_results = pool.map(compute_network_scores, xrange(1, self.num_clusters() + 1))
             for cluster in xrange(1, self.num_clusters() + 1):
                 result[cluster] = map_results[cluster - 1]
         else:
