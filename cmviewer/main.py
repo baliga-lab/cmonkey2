@@ -210,18 +210,23 @@ class ClusterViewerApp:
 
     @cherrypy.expose
     def index(self):
-        conn = dbconn()
-        cursor = conn.cursor()
         iteration = None
+        conn = None
+        cursor = None
         try:
+            conn = dbconn()
+            cursor = conn.cursor()
             cursor.execute('select last_iteration from run_infos')
             iteration = cursor.fetchone()[0]
         except:
             tmpl = env.get_template('not_available.html')
             return tmpl.render(locals())
         finally:
-            cursor.close()
-            conn.close()
+            if cursor is not None:
+                cursor.close()
+            if conn is not None:
+                conn.close()
+
         if iteration is not None:
             raise cherrypy.HTTPRedirect('/%d' % iteration)
         else:
