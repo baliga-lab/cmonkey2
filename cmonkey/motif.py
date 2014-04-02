@@ -523,9 +523,11 @@ class WeederRunner:
                                                       len(pssm.sites),
                                                       None, pssm.e_value,
                                                       pssm.sites))
-            mast_out = self.meme_suite.mast(
-                meme_outfile, dbfile,
-                self.meme_suite.global_background_file())
+            mast_out = self.meme_suite.mast(meme_outfile, dbfile,
+                                            self.meme_suite.global_background_file())
+            if self.config_params['debug']:
+                with open('%s.mast' % meme_outfile, 'w') as outfile:
+                    outfile.write(mast_out)
             pe_values, annotations = self.meme_suite.read_mast_output(mast_out,
                                                                       params.seqs.keys())
             return meme.MemeRunResult(pe_values, annotations, motif_infos)
