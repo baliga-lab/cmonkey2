@@ -19,6 +19,7 @@ import os
 import cPickle
 import collections
 import sys
+import subprocess
 
 ComputeScoreParams = collections.namedtuple('ComputeScoreParams',
                                             ['iteration',
@@ -474,6 +475,21 @@ class WeederScoringFunction(MotifScoringFunctionBase):
     def name(self):
         """returns the name of this scoring function"""
         return "Weeder"
+
+    def check_requirements(self):
+        freqfile_dir = self.config_params['Weeder']['freqfile_dir']
+        if freqfile_dir is None or freqfile_dir == '':
+            freqfile_dir = "FreqFiles"
+        if not os.path.exists(freqfile_dir):
+            raise Exception("Weeder requirements: directory '%s' does not exist" % freqfile_dir)
+        try:
+            command = ['weederTFBS']
+            output = subprocess.check_output(command)
+        except OSError:
+            raise("Weeder is not installed properly on this system")
+        except subprocess.CalledProcessError:
+            # this is actually ok
+            pass
 
     def meme_runner(self):
         """returns the MEME runner object"""

@@ -385,6 +385,8 @@ class CMonkeyRun:
         self.gene_indexes = {genes[index]: index
                              for index in xrange(len(genes))}
         row_scoring, col_scoring = self.__setup_pipeline()
+        row_scoring.check_requirements()
+        col_scoring.check_requirements()
 
         config.write_setup(self.config_params)
         return row_scoring, col_scoring

@@ -75,6 +75,11 @@ class ScoringFunctionBase:
         if config_params is None:
             raise Exception('NO CONFIG PARAMS !!!')
 
+    def check_requirements(self):
+        """Give the scoring module an opportunity to check whether the
+        requirements to run are all met"""
+        pass
+
     def run_in_iteration(self, i):
         return self.config_params[self.id]['schedule'](i)
 
@@ -392,6 +397,12 @@ class ScoringFunctionCombiner:
         self.membership = membership
         self.scoring_functions = scoring_functions
         self.config_params = config_params
+
+    def check_requirements(self):
+        """Give the scoring module an opportunity to check whether the
+        requirements to run are all met"""
+        for fun in self.scoring_functions:
+            fun.check_requirements()
 
     def compute_force(self, iteration_result, ref_matrix=None):
         """compute scores for one iteration, recursive force"""
