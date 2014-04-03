@@ -105,10 +105,6 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             self.__last_min_enriched_set[set_type] = {}"""
         self.run_log = scoring.RunLog('set_enrichment', config_params)
 
-    def name(self):
-        """name of the function"""
-        return "Set Enrichment"
-
     def bonferroni_cutoff(self):
         """Bonferroni cutoff value"""
         return float(self.num_clusters()) / 0.05

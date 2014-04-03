@@ -188,10 +188,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             logging.warn("%d genes not found in synonyms.", num_not_found)
         return result
 
-    def name(self):
-        """returns the name of this scoring function"""
-        return "Motif"""
-
     def compute(self, iteration_result, ref_matrix=None):
         """override base class compute() method, behavior is more complicated,
         since it nests Motif and MEME runs"""
@@ -451,10 +447,6 @@ class MemeScoringFunction(MotifScoringFunctionBase):
         MotifScoringFunctionBase.__init__(self, "Motifs", organism, membership,
                                           ratios, 'upstream', config_params)
 
-    def name(self):
-        """returns the name of this scoring function"""
-        return "MEME"
-
     def initialize(self, args):
         """process additional parameters"""
         pass
@@ -471,10 +463,6 @@ class WeederScoringFunction(MotifScoringFunctionBase):
         """creates a scoring function"""
         MotifScoringFunctionBase.__init__(self, "Motifs", organism, membership, ratios,
                                           'upstream', config_params)
-
-    def name(self):
-        """returns the name of this scoring function"""
-        return "Weeder"
 
     def check_requirements(self):
         freqfile_dir = self.config_params['Weeder']['freqfile_dir']

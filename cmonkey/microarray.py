@@ -136,10 +136,6 @@ class RowScoringFunction(scoring.ScoringFunctionBase):
                                              ratios, config_params)
         self.run_log = scoring.RunLog("row_scoring", config_params)
 
-    def name(self):
-        """returns the name of this scoring function"""
-        return "Row"
-
     def do_compute(self, iteration_result, ref_matrix=None):
         """the row scoring function"""
         return compute_row_scores(self.membership,

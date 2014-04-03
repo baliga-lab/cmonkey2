@@ -83,18 +83,9 @@ class ScoringFunctionBase:
     def run_in_iteration(self, i):
         return self.config_params[self.id]['schedule'](i)
 
-    def name(self):
-        """returns the name of this function
-        Note to function implementers: make sure the name is
-        unique for each used scoring function, since pickle paths
-        are dependend on the name, non-unique function names will
-        overwrite each other
-        """
-        raise Exception("please implement me")
-
     def pickle_path(self):
         """returns the function-specific pickle-path"""
-        return '%s/%s_last.pkl' % (self.config_params['output_dir'], self.name())
+        return '%s/%s_last.pkl' % (self.config_params['output_dir'], self.id)
 
     def last_cached(self):
         if self.cache_result:
@@ -204,10 +195,6 @@ class ColumnScoringFunction(ScoringFunctionBase):
         ScoringFunctionBase.__init__(self, "Columns", organism, membership,
                                      ratios, config_params=config_params)
         self.run_log = RunLog("column_scoring", config_params)
-
-    def name(self):
-        """returns the name of this scoring function"""
-        return "Column"
 
     def do_compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
@@ -479,7 +466,7 @@ class ScoringFunctionCombiner:
                 if matrix.row_names[row] in cluster_rows:
                     scores.append(mvalues[row][cluster - 1])
         logging.info("function '%s', trim mean score: %f",
-                     score_function.name(),
+                     score_function.id,
                      util.trim_mean(scores, 0.05))
 
     def scaling(self, iteration):

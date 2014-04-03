@@ -188,10 +188,6 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         self.__networks = None
         self.run_log = scoring.RunLog("network", config_params)
 
-    def name(self):
-        """returns the name of this function"""
-        return "Network"
-
     def initialize(self, args):
         """process additional parameters"""
         self.weights = {nw['type']: nw['weight'] for nw in args['networks']}
