@@ -38,7 +38,7 @@ class Pssm(object):
         def log_odds(pvalue, freq):
             """returns the log-odds value"""
             if pvalue == 0.0:
-                return int(round(math.log(1e-300 / freq, 2)))
+                return int(round(math.log(1e-2 / freq, 2)))  # was 1e-300
             else:
                 return int(round(math.log(pvalue / freq, 2)))
 
