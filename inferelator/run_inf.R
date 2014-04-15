@@ -48,6 +48,7 @@ run.inferelator <- function(outfile, tfsfile=NULL, json=NULL, ratios=NULL,
   source('cmonkey-python.R')
   library('cMonkeyNwInf')
   library('RJSONIO')
+  library('parallel')
 
   ge <- globalenv()
 
@@ -92,6 +93,17 @@ run.inferelator <- function(outfile, tfsfile=NULL, json=NULL, ratios=NULL,
   fileConn <- file(outfile)
   writeLines(toJSON(influences), fileConn)
   close(fileConn)
+
+  # conditions x clusters
+  pred.ss <- sapply(coeffs, function(c) { c$pred.ss })
+  colnames(pred.ss) <- 1:ncol(pred.ss)
+  rownames(pred.ss) <- colnames(ge$ratios)
+  write.table(pred.ss, paste(c(outfile, 'pred_ss.tsv'), collapse='-'), sep='\t', quote=F)
+
+  # (ss, ts, ts.out) x clusters
+  rmsd <- sapply(coeffs, function(c) { c$rmsd })
+  colnames(rmsd) <- 1:ncol(rmsd)
+  write.table(rmsd, paste(c(outfile, 'rmsd.tsv'), collapse='-'), sep='\t', quote=F)
 }
 
 spec = matrix(c(
