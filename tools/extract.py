@@ -29,6 +29,9 @@ def create_database(conn):
                     iteration int, gene_num int,
                     position int, reverse boolean, pvalue decimal)''')
 
+        conn.execute('''create table cluster_residuals (iteration int,
+                        cluster int, residual decimal)''')
+
 def dbconn(filename):
     return sqlite3.connect(filename, 15, isolation_level='DEFERRED')
 
@@ -101,8 +104,20 @@ def copy_rowcols(src, dest, iter):
 
 def copy_essentials(src, dest):
     cur = src.cursor()
+    cur.execute('select start_time, finish_time, num_iterations, last_iteration, organism, species, num_rows, num_columns, num_clusters from run_infos')
+    stime, ftime, niter, lastiter, organism, species, nrows, ncols, nclust = cur.fetchone()
+    with dest:
+        dest.execute("insert into run_infos (start_time,finish_time,num_iterations,last_iteration,organism,species,num_rows,num_columns,num_clusters) values(?,?,?,?,?,?,?,?,?)",
+                     [stime,ftime,niter,lastiter,organism,species,nrows,ncols,nclust])
     cur.execute('select max(iteration) from row_members')
     lastiter = cur.fetchone()[0]
+
+    print "copying residuals..."
+    cur.execute('select cluster, residual from cluster_residuals where iteration=?', [lastiter])
+    with dest:
+        for cluster, residual in cur.fetchall():
+            dest.execute('insert into cluster_residuals (iteration, cluster, residual) values (?,?,?)',
+                         [lastiter, cluster, residual])
     cur.close()
     copy_rowcols(src, dest, lastiter)
     copy_motifs(src, dest, lastiter)

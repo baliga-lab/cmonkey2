@@ -33,11 +33,11 @@ class Site:
     def __repr__(self):
         return self.__str__()
 
-def run_weeder(fasta_file, config_params):
+def run_weeder(fasta_file, params, config_params):
     if not os.path.exists(fasta_file):
         logging.warning("Weeder FASTA file %s not found! Skipping")
         return []
-    meme_outfile = '%s.meme' % fasta_file
+    meme_outfile = '%s/meme-out-%04d-%04d' % (params.outdir, params.iteration, params.cluster)
 
     """run the weeder command and interpret its result"""
     def write_f1_file(pssm_num, apssm, num_sites):

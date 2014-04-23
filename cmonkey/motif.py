@@ -508,7 +508,7 @@ class WeederRunner:
 
         try:
             dbfile = None
-            meme_outfile, pssms = weeder.run_weeder(filename, self.config_params)
+            meme_outfile, pssms = weeder.run_weeder(filename, params, self.config_params)
             if len(pssms) == 0:
                 logging.info('no PSSMS generated, skipping cluster')
                 return meme.MemeRunResult([], {}, [])
