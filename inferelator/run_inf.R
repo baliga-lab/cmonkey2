@@ -1,6 +1,11 @@
 #!/usr/bin/Rscript
 library('getopt')
 
+initial.options <- commandArgs(trailingOnly = FALSE)
+file.arg.name <- "--file="
+script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
+script.dir <- dirname(script.name)
+
 #####################################################################
 #### run_inf.R - a command line script for Inferelator
 ####
@@ -43,9 +48,9 @@ init.env <- function(clusterStack) {
   e
 }
 
-run.inferelator <- function(outfile, tfsfile=NULL, json=NULL, ratios=NULL,
+run.inferelator <- function(tfsfile=NULL, json=NULL, ratios=NULL,
                             resultdir=NULL, rdata=NULL) {
-  source('cmonkey-python.R')
+  source(file.path(script.dir, 'cmonkey-python.R'))
   library('cMonkeyNwInf')
   library('RJSONIO')
   library('parallel')
@@ -82,6 +87,10 @@ run.inferelator <- function(outfile, tfsfile=NULL, json=NULL, ratios=NULL,
   coeffs <- runnit.wrapper.halo(e, cv.choose="min+4se", tf.groups=999, alpha=0.8,
                                 n.boot=1, tau=10,
                                 r.cutoff=Inf, r.filter=Inf, weighted=T, aic.filter=Inf, plot=F)
+  coeffs=coeffs
+}
+
+write.influences <- function(coeffs, outfile) {
   influences <- sapply(coeffs,
                        function(c) { if (class(c) != 'character') c$coeffs else emptyNamedList })
   names(influences) <- 1:length(influences)
@@ -93,17 +102,22 @@ run.inferelator <- function(outfile, tfsfile=NULL, json=NULL, ratios=NULL,
   fileConn <- file(outfile)
   writeLines(toJSON(influences), fileConn)
   close(fileConn)
+}
 
-  # conditions x clusters
-  pred.ss <- sapply(coeffs, function(c) { c$pred.ss })
-  colnames(pred.ss) <- 1:ncol(pred.ss)
-  rownames(pred.ss) <- colnames(ge$ratios)
-  write.table(pred.ss, paste(c(outfile, 'pred_ss.tsv'), collapse='-'), sep='\t', quote=F)
+# conditions x clusters
+write.conditions.clusters <- function(coeffs) {
+    ge <- globalenv()
+    pred.ss <- sapply(coeffs, function(c) { c$pred.ss })
+    colnames(pred.ss) <- 1:ncol(pred.ss)
+    rownames(pred.ss) <- colnames(ge$ratios)
+    write.table(pred.ss, paste(c(outfile, 'pred_ss.tsv'), collapse='-'), sep='\t', quote=F)
+}
 
-  # (ss, ts, ts.out) x clusters
-  rmsd <- sapply(coeffs, function(c) { c$rmsd })
-  colnames(rmsd) <- 1:ncol(rmsd)
-  write.table(rmsd, paste(c(outfile, 'rmsd.tsv'), collapse='-'), sep='\t', quote=F)
+# (ss, ts, ts.out) x clusters
+write.ss.ts.tsout.clusters <- function(coeffs) {
+    rmsd <- sapply(coeffs, function(c) { c$rmsd })
+    colnames(rmsd) <- 1:ncol(rmsd)
+    write.table(rmsd, paste(c(outfile, 'rmsd.tsv'), collapse='-'), sep='\t', quote=F)
 }
 
 spec = matrix(c(
@@ -124,8 +138,11 @@ if (!is.null(opt$outfile) &&
     (!is.null(opt$rdata) ||
     !is.null(opt$tfsfile) && !is.null(opt$resultdir) ||
     !is.null(opt$tfsfile) && !is.null(opt$json) && !is.null(opt$ratios))) {
-  run.inferelator(opt$outfile, opt$tfsfile,
-                  opt$json, opt$ratios, opt$resultdir, opt$rdata)
+    coeffs <- run.inferelator(opt$tfsfile,
+                              opt$json, opt$ratios, opt$resultdir, opt$rdata)
+    write.influences(coeffs, opt$outfile)
+    #write.conditions.clusters(coeffs)
+    #write.ss.ts.tsout.clusters(coeffs)
 } else {
   print(getopt(spec, usage=TRUE))
 }

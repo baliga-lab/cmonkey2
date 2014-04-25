@@ -29,8 +29,8 @@ def create_database(conn):
                     iteration int, gene_num int,
                     position int, reverse boolean, pvalue decimal)''')
 
-        conn.execute('''create table cluster_residuals (iteration int,
-                        cluster int, residual decimal)''')
+    conn.execute('''create table cluster_residuals (iteration int,
+                    cluster int, residual decimal)''')
 
 def dbconn(filename):
     return sqlite3.connect(filename, 15, isolation_level='DEFERRED')
@@ -80,7 +80,7 @@ def copy_rowcols(src, dest, iter):
         dcur = dest.cursor()
         for cluster, ordernum in scur.fetchall():
             dcur.execute("insert into row_members (iteration,cluster,order_num) values (?,?,?)",
-                         [iter,ordernum,name])
+                         [iter,cluster,ordernum])
         dcur.close()
 
     # columns
@@ -97,7 +97,7 @@ def copy_rowcols(src, dest, iter):
         dcur = dest.cursor()
         for cluster, ordernum in scur.fetchall():
             dcur.execute("insert into column_members (iteration,cluster,order_num) values (?,?,?)",
-                         [iter,ordernum,name])
+                         [iter,cluster,ordernum])
         dcur.close()
     scur.close()
 
