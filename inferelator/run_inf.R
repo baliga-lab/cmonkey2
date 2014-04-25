@@ -141,8 +141,8 @@ if (!is.null(opt$outfile) &&
     coeffs <- run.inferelator(opt$tfsfile,
                               opt$json, opt$ratios, opt$resultdir, opt$rdata)
     write.influences(coeffs, opt$outfile)
-    #write.conditions.clusters(coeffs)
-    #write.ss.ts.tsout.clusters(coeffs)
+    write.conditions.clusters(coeffs)
+    write.ss.ts.tsout.clusters(coeffs)
 } else {
   print(getopt(spec, usage=TRUE))
 }

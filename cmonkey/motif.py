@@ -205,10 +205,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
     def last_cached(self):
         return self.last_result
 
-    def matrix_pickle_path(self):
-        return "%s/%s_matrix_last.pkl" % (self.config_params['output_dir'],
-                                          self.name())
-
     def __compute(self, iteration_result, force, ref_matrix=None):
         """compute method for the specified iteration
         Note: will return None if not computed yet and the result of a previous
@@ -224,6 +220,10 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             self.__last_iteration_result = {'iteration': iteration}
             self.all_pvalues = self.compute_pvalues(self.__last_iteration_result,
                                                     num_motifs)
+            with open(os.path.join(self.config_params['output_dir'],
+                                   'motif_pvalues_last.pkl'), 'w') as outfile:
+                cPickle.dump(self.__last_iteration_result, outfile)
+            
 
         if self.all_pvalues is not None and (force or self.run_in_iteration(iteration)):  # mot.iter in R
             logging.info("UPDATING MOTIF SCORES in iteration %d with scaling: %f",

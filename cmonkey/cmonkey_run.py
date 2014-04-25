@@ -135,8 +135,6 @@ class CMonkeyRun:
         conn.execute('''create table motif_annotations (motif_info_id int,
                         iteration int, gene_num int,
                         position int, reverse boolean, pvalue decimal)''')
-        conn.execute('''create table motif_pvalues (iteration int, cluster int,
-                        gene_num int, pvalue decimal)''')
         conn.execute('''create index if not exists colmemb_iter_index
                         on column_members (iteration)''')
         conn.execute('''create index if not exists rowmemb_iter_index
@@ -469,13 +467,6 @@ class CMonkeyRun:
                                                  (motif_info_id, seqname, strand == '-',
                                                   start, pval, flank_left, seq,
                                                   flank_right))
-
-                        pvalues = motifs[seqtype][cluster]['pvalues']
-                        for gene in pvalues:
-                            gene_num = self.gene_indexes[gene]
-                            conn.execute('''insert into motif_pvalues (iteration,cluster,gene_num,pvalue)
-                                            values (?,?,?,?)''',
-                                        (iteration, cluster, gene_num, pvalues[gene]))
 
     def write_stats(self, iteration_result):
         # write stats for this iteration
