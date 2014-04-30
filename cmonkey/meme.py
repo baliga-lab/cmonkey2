@@ -11,7 +11,6 @@ import tempfile
 import logging
 import seqtools as st
 import os
-import os.path
 import util
 import shutil
 import re
@@ -126,9 +125,9 @@ class MemeSuite:
 
         # run mast
         meme_outfile = None
-        if params.debug or params.keep_memeout and params.iteration > params.num_iterations:
-            meme_outfile = '%s/meme-out-%04d-%04d' % (params.outdir,
-                                                      params.iteration, params.cluster)
+        if 'keep_memeout' in params.debug:
+            meme_outfile = os.path.join(params.outdir,
+                                        'meme-out-%04d-%04d' % (params.iteration, params.cluster))
             with open(meme_outfile, 'w') as outfile:
                 outfile.write(output)
         else:
@@ -144,7 +143,7 @@ class MemeSuite:
         #logging.info('created mast database in %s', dbfile)
         try:
             mast_output = self.mast(meme_outfile, dbfile, bgfile)
-            if params.debug:
+            if len(params.debug) > 0:
                 with open('%s.mast' % meme_outfile, 'w') as outfile:
                     outfile.write(mast_output)
             pe_values, annotations = self.read_mast_output(mast_output,
@@ -165,8 +164,7 @@ class MemeSuite:
                 except:
                     logging.warn("could not remove tmp file: '%s'", seqfile)
                 try:
-                    #if params.iteration <= params.num_iterations or not params.keep_memeout:
-                    if not params.keep_memeout:
+                    if 'keep_memeout' not in params.debug:
                         os.remove(meme_outfile)
                 except:
                     logging.warn("could not remove tmp file: '%s'", meme_outfile)

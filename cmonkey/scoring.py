@@ -286,14 +286,14 @@ def compute_column_scores_submatrix(matrix):
 def combine(result_matrices, score_scalings, membership, iteration, config_params):
     """This is  the combining function, taking n result matrices and scalings"""
     quantile_normalize = config_params['quantile_normalize']
-    debug = config_params['debug']
 
     for i, m in enumerate(result_matrices):
         m.fix_extreme_values()
         m.subtract_with_quantile(0.99)
 
         # debug mode: print scoring matrices before combining
-        if debug:
+        if ('dump_scores' in config_params['debug'] and
+            (iteration == 1 or (iteration % config_params['debug_freq'] == 0))):
             funs = config_params['pipeline']['row-scoring']['args']['functions']
             m.write_tsv_file(os.path.join(config_params['output_dir'], 'score-%s-%04d.tsv' % (funs[i]['id'], iteration)), compressed=False)
 

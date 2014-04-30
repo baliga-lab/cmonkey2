@@ -26,6 +26,19 @@ See README and LICENSE for details.\n"""
 SYSTEM_INI_PATH = '/etc/cmonkey-python/default.ini'
 USER_INI_PATH = 'config/default.ini'
 
+"""
+supported debug options:
+
+  - all: all options turned on
+  - keep_memeout: keeps meme output files
+  - dump_results: dump results into cmresults files, implies keep_memeout
+  - dump_scores: dumps score matrices as received from the individual scoring functions
+  - profile_mem: write memory profile
+  - random_seed: fixed random seed
+"""
+ALL_DEBUG_OPTIONS = {'keep_memeout', 'dump_results', 'dump_scores', 'profile_mem',
+                     'random_seed'}
+
 
 def __set_config(config):
     """Returns a dictionary containing the configuration contained in
@@ -105,6 +118,7 @@ def __set_config(config):
 
     params['stats_freq'] = config.getint('General', 'stats_frequency')
     params['result_freq'] = config.getint('General', 'result_frequency')
+    params['debug_freq'] = config.getint('General', 'debug_frequency')
     
     return params
 
@@ -137,8 +151,6 @@ def __get_arg_parser():
     parser.add_argument('--remap_network_nodes', action="store_true",
                         help='network nodes are not named to RSAT primary names')
     parser.add_argument('--logfile', default=None, help="""path to log file""")
-    parser.add_argument('--keep_memeout', action="store_true",
-                        help="""keep MEME output files""")
     parser.add_argument('--ncbi_code', default=None, help="NCBI taxonomy id")
     parser.add_argument('--numclusters', type=int,
                         default=None, help="override the number of clusters")
@@ -148,10 +160,7 @@ def __get_arg_parser():
     parser.add_argument('--nostring', action="store_true", help="deactivate STRING network scoring")
     parser.add_argument('--nooperons', action="store_true", help="deactivate operon network scoring")
     parser.add_argument('--config', default=None, help="additional configuration file")
-    parser.add_argument('--debug', action="store_true",
-                        help="""run in debug mode""")
-    parser.add_argument('--memprof', action="store_true",
-                        help="""profile memory""")
+    parser.add_argument('--debug', default=None,  help="""run in debug mode""")
     parser.add_argument('--random_seed', type=int)
 
     # RSAT overrides
@@ -217,6 +226,13 @@ def setup():
     infile = None
 
     args.clusters_per_row = 2
+
+    # debug options
+    debug_options = set(args.debug.split(',')) if args.debug is not None else set()
+    if 'dump_results' in debug_options:
+        debug_options.add('keep_memeout')
+    if debug_options == {'all'}:
+        debug_options = ALL_DEBUG_OPTIONS
     
     """The overrides dictionary holds all the values that will overwrite or add
     to the settings defined in the default and user-defined ini files
@@ -231,9 +247,7 @@ def setup():
                  'rsat_dir': args.rsat_dir,
                  'use_operons': True, 'use_string': True, 'global_background': True,
                  'meme_version': meme.check_meme_version(),
-                 'debug': args.debug,
-                 'memprof': args.memprof,
-                 'keep_memeout': args.debug or args.keep_memeout,
+                 'debug': debug_options,
                  'nomotifs': False,
                  'nonetworks': args.nonetworks,
                  'checkratios': args.checkratios,
@@ -260,10 +274,6 @@ def setup():
         random.seed(overrides['random_seed'])
         util.r_set_seed(overrides['random_seed'])
 
-    # Set update frequency to every iteration, so the full results are written
-    if overrides['debug']:
-        overrides['stats_freq'] = 1
-        overrides['result_freq'] = 1
     for key, value in overrides.items():
         params[key] = value
 
@@ -292,6 +302,7 @@ def write_setup(config_params):
 
         outfile.write('stats_frequency = %d\n' % config_params['stats_freq'])
         outfile.write('result_frequency = %d\n' % config_params['result_freq'])
+        outfile.write('debug_frequency = %d\n' % config_params['debug_freq'])
         outfile.write('postadjust = %s\n' % str(config_params['postadjust']))
         outfile.write('add_fuzz = %s\n' % str(config_params['add_fuzz']))
         outfile.write('num_clusters = %d\n' % config_params['num_clusters'])

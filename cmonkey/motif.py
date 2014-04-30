@@ -27,7 +27,7 @@ ComputeScoreParams = collections.namedtuple('ComputeScoreParams',
                                              'meme_runner', 'min_cluster_rows',
                                              'max_cluster_rows', 'num_motifs',
                                              'previous_motif_infos',
-                                             'keep_memeout', 'outdir', 'num_iterations',
+                                             'outdir', 'num_iterations',
                                              'debug'])
 
 
@@ -222,8 +222,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                                                     num_motifs)
             with open(os.path.join(self.config_params['output_dir'],
                                    'motif_pvalues_last.pkl'), 'w') as outfile:
-                cPickle.dump(self.__last_iteration_result, outfile)
-            
+                cPickle.dump(self.__last_iteration_result, outfile)            
 
         if self.all_pvalues is not None and (force or self.run_in_iteration(iteration)):  # mot.iter in R
             logging.info("UPDATING MOTIF SCORES in iteration %d with scaling: %f",
@@ -308,7 +307,6 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                                                  max_cluster_rows_allowed,
                                                  num_motifs,
                                                  previous_motif_infos,
-                                                 self.config_params.get('keep_memeout', False),
                                                  self.config_params['output_dir'],
                                                  self.config_params['num_iterations'],
                                                  self.config_params['debug'])
@@ -481,7 +479,7 @@ class WeederScoringFunction(MotifScoringFunctionBase):
 
     def meme_runner(self):
         """returns the MEME runner object"""
-        remove_tempfiles = not self.config_params['debug'] and not self.config_params['keep_memeout']
+        remove_tempfiles = 'keep_memeout' not in self.config_params['debug']
         return WeederRunner(self.meme_suite, self.config_params, remove_tempfiles)
 
 
@@ -529,7 +527,7 @@ class WeederRunner:
                                                       pssm.sites))
             mast_out = self.meme_suite.mast(meme_outfile, dbfile,
                                             self.meme_suite.global_background_file())
-            if self.config_params['debug']:
+            if 'keep_memeout' in self.config_params['debug']:
                 with open('%s.mast' % meme_outfile, 'w') as outfile:
                     outfile.write(mast_out)
             pe_values, annotations = self.meme_suite.read_mast_output(mast_out,

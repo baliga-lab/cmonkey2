@@ -168,7 +168,7 @@ class CMonkeyRun:
 
     def __make_membership(self):
         """returns the seeded membership on demand"""
-        if self['debug']:
+        if 'random_seed' in self['debug']:
             util.r_set_seed(10)
 
         return memb.create_membership(self.ratios,
@@ -181,7 +181,7 @@ class CMonkeyRun:
             self.__membership = self.__make_membership()
 
             # debug: write seed into an analytical file for iteration 0
-            if self['debug']:
+            if 'random_seed' in self['debug']:
                 conn = self.__dbconn()
                 with conn:
                     self.write_memberships(conn, 0)
@@ -302,7 +302,7 @@ class CMonkeyRun:
     def __check_parameters(self):
         """ensure that we all required parameters before we start running"""
         PARAM_NAMES = ['num_iterations', 'start_iteration', 'multiprocessing',
-                       'quantile_normalize', 'keep_memeout',
+                       'quantile_normalize',
                        'memb.min_cluster_rows_allowed', 'memb.max_cluster_rows_allowed',
                        'memb.prob_row_change', 'memb.prob_col_change',
                        'memb.max_changes_per_row', 'memb.max_changes_per_col',
@@ -574,7 +574,8 @@ class CMonkeyRun:
             self.write_stats(iteration_result)
             self.update_iteration(iteration)
 
-        if self['debug']:
+        if 'dump_results' in self['debug'] and (iteration == 1 or
+                                                (iteration % self['debug_freq'] == 0)):
             # write complete result into a cmresults.tsv
             conn = self.__dbconn()
             path =  os.path.join(self['output_dir'], 'cmresults-%04d.tsv.bz2' % iteration)
@@ -595,7 +596,7 @@ class CMonkeyRun:
     def run_iterations(self, row_scoring, col_scoring):
         self.report_params()
         self.write_start_info()
-        if self['memprof']:
+        if 'profile_mem' in self['debug']:
             with open(os.path.join(self['output_dir'], 'memprofile.tsv'), 'w') as outfile:
                 outfile.write('Iteration\tMembership\tOrganism\tCol\tRow\tNetwork\tMotif\n')
 
@@ -608,7 +609,7 @@ class CMonkeyRun:
             elapsed = util.current_millis() - start_time
             logging.info("performed iteration %d in %f s.", iteration, elapsed / 1000.0)
             
-            if self['memprof'] and (iteration == 1 or iteration % 100 == 0):
+            if 'profile_mem' in self['debug'] and (iteration == 1 or iteration % 100 == 0):
                 with open(os.path.join(self['output_dir'], 'memprofile.tsv'), 'a') as outfile:
                     self.write_mem_profile(outfile, row_scoring, col_scoring, iteration)
 
@@ -636,7 +637,7 @@ class CMonkeyRun:
             self.write_stats(iteration_result)
             self.update_iteration(iteration)
 
-            if self['debug']:
+            if 'dump_results' in self['debug']:
                 # write complete result into a cmresults.tsv
                 conn = self.__dbconn()
                 path =  os.path.join(self['output_dir'], 'cmresults-postproc.tsv.bz2')

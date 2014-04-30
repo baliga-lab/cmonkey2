@@ -66,7 +66,7 @@ class Meme430Test(unittest.TestCase):  # pylint: disable-msg=R0904
                          'multiprocessing': False,
                          'num_clusters': 1,
                          'output_dir': 'out',
-                         'debug': False,
+                         'debug': {},
                          'meme_version': '4.3.0',
                          'global_background': False,
                          'search_distances': {'upstream': (-20, 150)},

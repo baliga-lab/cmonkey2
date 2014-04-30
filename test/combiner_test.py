@@ -13,5 +13,5 @@ class CombinerTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_combine_single(self):
         """Test combine with a single matrix"""
         m = dm.DataMatrix(2, 2, [[0.1, 0.2], [0.1, 0.2]])
-        result = s.combine([m], [1.0], None, 1, {'quantile_normalize': True, 'debug': False,
+        result = s.combine([m], [1.0], None, 1, {'quantile_normalize': True, 'debug': {},
                                                  'num_clusters': 42})
