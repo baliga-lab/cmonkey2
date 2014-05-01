@@ -479,7 +479,7 @@ class WeederScoringFunction(MotifScoringFunctionBase):
 
     def meme_runner(self):
         """returns the MEME runner object"""
-        remove_tempfiles = 'keep_memeout' not in self.config_params['debug']
+        remove_tempfiles = True  #'keep_memeout' not in self.config_params['debug']
         return WeederRunner(self.meme_suite, self.config_params, remove_tempfiles)
 
 
@@ -527,7 +527,7 @@ class WeederRunner:
                                                       pssm.sites))
             mast_out = self.meme_suite.mast(meme_outfile, dbfile,
                                             self.meme_suite.global_background_file())
-            if 'keep_memeout' in self.config_params['debug']:
+            if 'keep_mastout' in self.config_params['debug']:
                 with open('%s.mast' % meme_outfile, 'w') as outfile:
                     outfile.write(mast_out)
             pe_values, annotations = self.meme_suite.read_mast_output(mast_out,

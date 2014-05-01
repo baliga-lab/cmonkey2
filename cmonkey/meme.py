@@ -143,7 +143,7 @@ class MemeSuite:
         #logging.info('created mast database in %s', dbfile)
         try:
             mast_output = self.mast(meme_outfile, dbfile, bgfile)
-            if len(params.debug) > 0:
+            if 'keep_mastout' in params.debug > 0:
                 with open('%s.mast' % meme_outfile, 'w') as outfile:
                     outfile.write(mast_output)
             pe_values, annotations = self.read_mast_output(mast_output,

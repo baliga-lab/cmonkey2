@@ -37,7 +37,7 @@ supported debug options:
   - random_seed: fixed random seed
 """
 ALL_DEBUG_OPTIONS = {'keep_memeout', 'dump_results', 'dump_scores', 'profile_mem',
-                     'random_seed'}
+                     'random_seed', 'keep_mastout'}
 
 
 def __set_config(config):
