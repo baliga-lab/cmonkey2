@@ -65,6 +65,7 @@ def __set_config(config):
     params['cache_dir'] = config.get('General', 'cache_dir')
     params['tmp_dir'] = tmp_dir
     params['dbfile_name'] = config.get('General', 'dbfile_name')
+    params['normalize_ratios'] = config.getboolean('General', 'normalize_ratios')
 
     params['num_iterations'] = config.getint("General", "num_iterations")
     params['start_iteration'] = config.getint("General", "start_iteration")
@@ -212,8 +213,13 @@ def setup():
 
     # Initial configuration from default + user config
     params = __set_config(config_parser)
-    matrix_factory = dm.DataMatrixFactory([dm.nochange_filter,
-                                           dm.center_scale_filter])
+
+    if params['normalize_ratios']:
+        ratio_filters = [dm.nochange_filter, dm.center_scale_filter]
+    else:
+        ratio_filters = []
+
+    matrix_factory = dm.DataMatrixFactory(ratio_filters)
     matrix_filename = args.ratios
 
     if matrix_filename.startswith('http://'):
