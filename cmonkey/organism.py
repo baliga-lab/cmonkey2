@@ -68,17 +68,12 @@ KEGGExceptions = {'Pseudomonas aeruginosa PAO1': 'Pseudomonas aeruginosa',
                   'Campylobacter jejuni NCTC11168': 'Campylobacter jejuni'}
 
 
+"""
 def make_rsat_organism_mapper(rsatdb):
-    """return a function that maps from a KEGG organism name to
-    related RSAT information
-    """
     def mapper_fun(kegg_organism, rsat_organism, ncbi_code=None):
-        """Mapper function to return basic information about an organism
-        stored in the RSAT database. Only the genes in gene_names will
-        be considered in the construction"""
         return RsatSpeciesInfo(rsatdb, kegg_organism, rsat_organism, ncbi_code)
     return mapper_fun
-
+"""
 
 class OrganismBase:
     """The organism base class contains functionality that is likely to
@@ -321,5 +316,4 @@ class Microbe(RSATOrganism):
 
 
 __all__ = ['make_kegg_code_mapper', 'make_go_taxonomy_mapper',
-           'make_rsat_organism_mapper',
            'Organism', 'OrganismFactory']

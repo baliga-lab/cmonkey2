@@ -37,7 +37,6 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ut.Order2StringTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ot.KeggOrganismCodeMapperTest))
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ot.RsatOrganismMapperTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ot.GoTaxonomyMapperTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ot.MicrobeTest))
 

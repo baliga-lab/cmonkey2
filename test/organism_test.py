@@ -90,34 +90,6 @@ class MockRsatDatabase:
         return "ACGTTTAAAAGAGAGAGAGACACAGTATATATTTTTTTAAAA"
 
 
-class RsatOrganismMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904
-    """Tests the RsatOrganismMapper class"""
-
-    def setUp(self):  # pylint: disable-msg=C0103
-        """test fixture"""
-        with open(RSAT_LIST_FILE_PATH) as inputfile:
-            html = inputfile.read()
-        self.mapper = org.make_rsat_organism_mapper(MockRsatDatabase(html))
-
-    def test_mapper(self):
-        """tests the get_organism method for an existing organism"""
-        info = self.mapper('Halobacterium', None)
-        self.assertEquals('Halobacterium_sp', info.species)
-        self.assertEquals('4711', info.taxonomy_id)
-
-
-class MockRsatOrganismMapper:
-    """mock RSAT organism mapper"""
-
-    def __init__(self, is_eukaryotic):  # pylint: disable-msg=R0201
-        """create an instance of this mock mapper"""
-        self.is_eukaryotic = is_eukaryotic
-
-    def get_organism(self, _):  # pylint: disable-msg=R0201
-        """returns an organism for a KEGG organism"""
-        return "RSAT organism"
-
-
 def mock_go_mapper(rsat_organism):
     """A simple GO mock mapper to test whether the underscore is replaced
     in the factory"""

@@ -69,7 +69,7 @@ if __name__ == '__main__':
                                                                              has_header=True,
                                                                              comment='#'))
         kegg_org = kegg_mapper(sys.argv[2])
-        rsat_info = organism.make_rsat_organism_mapper(rsatdb)(kegg_org)
+        rsat_info = organism.RsatSpeciesInfo(rsatdb, kegg_org, None, None)
         print "RSAT SPECIES: ", rsat_info.species
         print "TAX ID: ", rsat_info.taxonomy_id
         feature_names = rsatdb.get_feature_names(rsat_info.species)
