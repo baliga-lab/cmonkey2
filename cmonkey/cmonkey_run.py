@@ -48,6 +48,9 @@ PIPELINE_SYSTEM_PATHS = {
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 STRING_URL_PATTERN = "http://networks.systemsbiology.net/string9/%s.gz"
 
+# We support non-microbes the easy way for now, until we have a working
+# database scheme
+VERTEBRATES = {'hsa', 'mmu', 'rno'}
 
 class CMonkeyRun:
     def __init__(self, ratios, args):
@@ -198,10 +201,10 @@ class CMonkeyRun:
         if self['dummy_organism']:
             self.__organism = org.DummyOrganism()
         elif self.__organism is None:
-            self.__organism = self.make_microbe()
+            self.__organism = self.make_organism()
         return self.__organism
 
-    def make_microbe(self):
+    def make_organism(self):
         """returns the organism object to work on"""
         self.__make_dirs_if_needed()
 
@@ -239,6 +242,7 @@ class CMonkeyRun:
         rsat_mapper = org.make_rsat_organism_mapper(rsatdb)
         ncbi_code = self['ncbi_code']
         nw_factories = []
+        is_microbe = self['organism_code'] not in VERTEBRATES
 
         # do we use STRING ?
         if not self['nonetworks'] and self['use_string']:

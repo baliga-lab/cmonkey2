@@ -28,8 +28,38 @@ def make_go_taxonomy_mapper(dfile):
     return util.DelimitedFileMapper(dfile, 0, 1).__getitem__
 
 
-RsatSpeciesInfo = collections.namedtuple('RsatSpeciesInfo',
-                                         ['rsatdb', 'species', 'taxonomy_id'])
+class RsatSpeciesInfo:
+    """RSAT description of the organism"""
+    def __init__(self, rsatdb, kegg_organism, species, taxonomy_id):
+        """determine RSAT information using the RSAT database object"""
+        self.__rsatdb = rsatdb
+
+        # in many cases, the fuzzy match delivers the correct RSAT organism
+        # name, but there are exceptions
+        if kegg_organism in patches.KEGG_EXCEPTIONS:
+            kegg_organism = patches.KEGG_EXCEPTIONS[kegg_organism]
+
+        if species is None:
+            self.species = rsatdb.get_rsat_organism(kegg_organism)
+        else:
+            self.species = species
+
+        logging.info("KEGG = '%s' -> RSAT = '%s'", kegg_organism, self.species)
+
+        if taxonomy_id is None:
+            self.taxonomy_id = rsatdb.get_taxonomy_id(self.species)
+        else:
+            self.taxonomy_id = taxonomy_id
+
+    def get_features(self):
+        return self.__rsatdb.get_features(self.species)
+
+    def get_feature_names(self):
+        return self.__rsatdb.get_feature_names(self.species)
+
+    def get_contig_sequence(self, contig):
+        return self.__rsatdb.get_contig_sequence(self.species, contig)
+
 
 KEGGExceptions = {'Pseudomonas aeruginosa PAO1': 'Pseudomonas aeruginosa',
                   'Campylobacter jejuni NCTC11168': 'Campylobacter jejuni'}
@@ -39,26 +69,11 @@ def make_rsat_organism_mapper(rsatdb):
     """return a function that maps from a KEGG organism name to
     related RSAT information
     """
-    def get_taxonomy_id(rsat_organism):
-        """Determine the taxonomy data from the RSAT database"""
-        return rsatdb.get_taxonomy_id(rsat_organism)
-
     def mapper_fun(kegg_organism, rsat_organism, ncbi_code=None):
         """Mapper function to return basic information about an organism
         stored in the RSAT database. Only the genes in gene_names will
         be considered in the construction"""
-        # in many cases, the fuzzy match delivers the correct RSAT organism
-        # name, but there are exceptions
-        if kegg_organism in patches.KEGG_EXCEPTIONS:
-            kegg_organism = patches.KEGG_EXCEPTIONS[kegg_organism]
-
-        if not rsat_organism:
-            rsat_organism = rsatdb.get_rsat_organism(kegg_organism)
-
-        print "mapper_fun(), kegg org = '%s', rsat org = '%s'" % (kegg_organism, rsat_organism)
-        if ncbi_code is None:
-            ncbi_code = get_taxonomy_id(rsat_organism)
-        return RsatSpeciesInfo(rsatdb, rsat_organism, ncbi_code)
+        return RsatSpeciesInfo(rsatdb, kegg_organism, rsat_organism, ncbi_code)
     return mapper_fun
 
 
@@ -279,7 +294,7 @@ class Microbe(OrganismBase):
         """
         if not self.__synonyms:
             feature_names_dfile = util.dfile_from_text(
-                self.__rsatdb().get_feature_names(self.species()),
+                self.__rsat_info.get_feature_names(),
                 comment='--')
             self.__synonyms = thesaurus.create_from_rsat_feature_names(
                 feature_names_dfile, [thesaurus.strip_vng_modification])
@@ -306,17 +321,13 @@ class Microbe(OrganismBase):
                                           is_reverse))
 
         features = {}
-        dfile = util.dfile_from_text(
-            self.__rsatdb().get_features(self.species()), comment='--')
+        dfile = util.dfile_from_text(self.__rsat_info.get_features(), comment='--')
         for line in dfile.lines:
             feature_id = line[0]
             if feature_id in feature_ids:
                 features[feature_id] = read_feature(line)
         return features
 
-    def __rsatdb(self):
-        """internal method to return the RSAT db link"""
-        return self.__rsat_info.rsatdb
 
     def __read_sequences(self, features, distance, extractor):
         """for each feature, extract and set its sequence"""
@@ -329,7 +340,7 @@ class Microbe(OrganismBase):
             return result
 
         sequences = {}
-        contig_seqs = {contig: self.__rsatdb().get_contig_sequence(self.species(), contig)
+        contig_seqs = {contig: self.__rsat_info.get_contig_sequence(contig)
                        for contig in unique_contigs()}
 
         for key, feature in features.items():
@@ -344,7 +355,7 @@ class Microbe(OrganismBase):
         result = "Organism Type: %s\n" % self.__class__.__name__
         result += (("Code: '%s'\nKEGG: '%s'\nRSAT: '%s'\nCOG: '%s'\n" +
                    "GO Taxonomy Id: %s\n") %
-                   (self.code, self.kegg_organism, self.__rsat_info.species,
+                   (self.code, self.kegg_organism, self.species(),
                     self.cog_organism(), self.go_taxonomy_id))
         return result
 

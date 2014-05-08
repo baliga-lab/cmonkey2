@@ -140,7 +140,8 @@ class MicrobeFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """tests creating a Prokaryote"""
         factory = org.MicrobeFactory(
             lambda _: 'KEGG organism',
-            lambda x, y, z: org.RsatSpeciesInfo(MockRsatDatabase(''), 'RSAT_organism',
+            lambda x, y, z: org.RsatSpeciesInfo(MockRsatDatabase(''), 'dum',
+                                                'RSAT_organism',
                                                 4711),
             mock_go_mapper,
             MockMicrobesOnline(),
@@ -162,6 +163,7 @@ class MicrobeTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.mockFactory = MockNetworkFactory()
         self.organism = org.Microbe('hal', 'Halobacterium SP',
                                     org.RsatSpeciesInfo(MockRsatDatabase(''),
+                                                        'hal',
                                                         'Halobacterium_SP',
                                                         12345),
                                     12345,

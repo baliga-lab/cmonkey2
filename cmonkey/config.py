@@ -169,6 +169,10 @@ def __get_arg_parser():
                         help="""RSAT override: data directory""")
     parser.add_argument('--rsat_organism', default=None,
                         help="""override the RSAT organism name""")
+
+    # Synonym override
+    parser.add_argument('--synonym_file', default=None, help="synonyms file")
+
     parser.add_argument('--pipeline', default=None,
                         help="""override the scoring pipeline""")
     return parser

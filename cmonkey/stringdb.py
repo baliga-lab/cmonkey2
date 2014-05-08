@@ -25,7 +25,7 @@ def normalize_edges_to_max_score(edges, max_score):
 
 
 def get_network_factory(organism_code, filename, weight, sep='\t',
-                         normalized=False):
+                        normalized=False):
     """STRING network factory from preprocessed edge file
     (protein1, protein2, combined_score), scores are already
     normalized to 1000.

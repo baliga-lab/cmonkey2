@@ -28,18 +28,27 @@ class RsatFiles:
     def get_rsat_organism(self, kegg_organism):
         return self.basename
 
-    def get_features(self, organism):
-        path = os.path.join(self.dirname, organism + '_features')
+    def get_features(self, organism, original=True):
+        if original:
+            path = os.path.join(self.dirname, 'features.tab')
+        else:
+            path = os.path.join(self.dirname, organism + '_features')
         with open(path) as infile:
             return infile.read()
 
-    def get_feature_names(self, organism):
-        path = os.path.join(self.dirname, organism + '_feature_names')
+    def get_feature_names(self, organism, original=True):
+        if original:
+            path = os.path.join(self.dirname, 'feature_names.tab')
+        else:
+            path = os.path.join(self.dirname, organism + '_feature_names')
         with open(path) as infile:
             return infile.read()
 
-    def get_contig_sequence(self, organism, contig):
-        path = os.path.join(self.dirname, organism + '_' + contig)
+    def get_contig_sequence(self, organism, contig, original=True):
+        if original:
+            path = os.path.join(self.dirname, contig + '.tab')
+        else:
+            path = os.path.join(self.dirname, organism + '_' + contig)
         with open(path) as infile:
             seqstr = infile.read().upper()
             return join_contig_sequence(seqstr)
