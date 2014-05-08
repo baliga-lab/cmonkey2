@@ -7,18 +7,11 @@ import meme
 import motif
 import unittest
 import util
-import rsat
 import organism as org
-import microbes_online
-import stringdb
 import datamatrix as dm
 import os, os.path
 
-
-KEGG_FILE_PATH = 'config/KEGG_taxonomy'
-GO_FILE_PATH = 'config/proteome2taxid'
-COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
-CACHE_DIR = 'cache'
+import testutil
 
 class FakeMembership:
     def num_clusters(self):
@@ -59,7 +52,7 @@ class Meme430Test(unittest.TestCase):  # pylint: disable-msg=R0904
         infile = util.read_dfile('example_data/hal/halo_ratios5.tsv',
                                  has_header=True, quote='\"')
         ratio_matrix = matrix_factory.create_from(infile)
-        organism = make_halo(ratio_matrix, search_distances, scan_distances)
+        organism = testutil.make_halo(search_distances, scan_distances, ratio_matrix)
         membership = FakeMembership()
         config_params = {'memb.min_cluster_rows_allowed': 3,
                          'memb.max_cluster_rows_allowed': 70,
@@ -78,25 +71,3 @@ class Meme430Test(unittest.TestCase):  # pylint: disable-msg=R0904
         iteration_result = { 'iteration': 100 }
         matrix = func.compute(iteration_result)
 
-def make_halo(ratio_matrix, search_distances, scan_distances):
-    """returns the organism object to work on"""
-    keggfile = util.read_dfile(KEGG_FILE_PATH, comment='#')
-    gofile = util.read_dfile(GO_FILE_PATH)
-    rsatdb = rsat.RsatDatabase(rsat.RSAT_BASE_URL, CACHE_DIR)
-    mo_db = microbes_online.MicrobesOnline(CACHE_DIR)
-    stringfile = 'testdata/string_links_64091.tab'
-
-    nw_factories = []
-    if stringfile != None:
-        nw_factories.append(stringdb.get_network_factory('hal', stringfile, 0.5))
-    else:
-        logging.warn("no STRING file specified !")
-
-    nw_factories.append(microbes_online.get_network_factory(
-            mo_db, max_operon_size=ratio_matrix.num_rows / 20, weight=0.5))
-
-    keggorg = org.make_kegg_code_mapper(keggfile)('hal')
-    rsat_info = org.RsatSpeciesInfo(rsatdb, keggorg, None, None)
-    gotax = org.make_go_taxonomy_mapper(gofile)(rsat_info.go_species())
-    return org.Microbe('hal', keggorg, rsat_info, gotax, mo_db, nw_factories,
-                       search_distances, scan_distances, True, None)

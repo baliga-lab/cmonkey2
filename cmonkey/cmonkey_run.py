@@ -238,7 +238,7 @@ class CMonkeyRun:
             mo_db = microbes_online.MicrobesOnline(self['cache_dir'])
 
         stringfile = self['string_file']
-        kegg_mapper = org.make_kegg_code_mapper(keggfile)
+        kegg_map = util.make_dfile_map(keggfile, 1, 3)
         ncbi_code = self['ncbi_code']
         nw_factories = []
         is_microbe = self['organism_code'] not in VERTEBRATES
@@ -249,7 +249,7 @@ class CMonkeyRun:
             if stringfile is None:
                 if ncbi_code is None:
                     rsat_info = org.RsatSpeciesInfo(rsatdb,
-                                                    kegg_mapper(self['organism_code']),
+                                                    kegg_map[self['organism_code']],
                                                     self['rsat_organism'], None)
                     ncbi_code = rsat_info.taxonomy_id
 
@@ -276,10 +276,10 @@ class CMonkeyRun:
         if is_microbe:
             orgcode = self['organism_code']
             logging.info("Creating Microbe object for '%s'", orgcode)
-            keggorg = kegg_mapper(orgcode)
+            keggorg = kegg_map[orgcode]
             rsat_info = org.RsatSpeciesInfo(rsatdb, keggorg, self['rsat_organism'],
                                             self['ncbi_code'])
-            gotax = org.make_go_taxonomy_mapper(gofile)(rsat_info.go_species())
+            gotax = util.make_dfile_map(gofile, 0, 1)[rsat_info.go_species()]
             return org.Microbe(orgcode, keggorg, rsat_info, gotax, mo_db, nw_factories,
                                self['search_distances'], self['scan_distances'],
                                self['use_operons'], self.ratios)

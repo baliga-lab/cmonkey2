@@ -11,49 +11,8 @@ import organism as org
 import seqtools as st
 
 
-TAXONOMY_FILE_PATH = "config/KEGG_taxonomy"
-PROT2TAXID_FILE_PATH = "config/proteome2taxid"
-RSAT_LIST_FILE_PATH = "testdata/RSAT_genomes_listing.txt"
-
 SEARCH_DISTANCES = {'upstream':(-20, 150)}
 SCAN_DISTANCES = {'upstream':(-30, 250)}
-
-
-# pylint: disable-msg=R0904
-class KeggOrganismCodeMapperTest(unittest.TestCase):
-    """Test class for KeggCodeMapper"""
-
-    def test_get_existing_organism(self):
-        """retrieve existing organism"""
-        dfile = util.read_dfile(TAXONOMY_FILE_PATH, sep='\t',
-                                has_header=True, comment='#')
-        mapper = org.make_kegg_code_mapper(dfile)
-        self.assertEquals('Helicobacter pylori 26695', mapper('hpy'))
-
-    def test_get_non_existing_organism(self):
-        """retrieve non-existing organism"""
-        dfile = util.read_dfile(TAXONOMY_FILE_PATH, sep='\t',
-                                has_header=True, comment='#')
-        mapper = org.make_kegg_code_mapper(dfile)
-        self.assertIsNone(mapper('nope'))
-
-
-class GoTaxonomyMapperTest(unittest.TestCase):  # pylint: disable-msg=R0904
-    """Test class for get_go_taxonomy_id"""
-
-    def test_get_existing(self):
-        """retrieve an existing id"""
-        dfile = util.read_dfile(PROT2TAXID_FILE_PATH, sep='\t',
-                                has_header=False)
-        mapper = org.make_go_taxonomy_mapper(dfile)
-        self.assertEquals('64091', mapper('Halobacterium salinarium'))
-
-    def test_get_non_existing(self):
-        """retrieve None for a non-existing organism"""
-        dfile = util.read_dfile(PROT2TAXID_FILE_PATH, sep='\t',
-                                has_header=False)
-        mapper = org.make_go_taxonomy_mapper(dfile)
-        self.assertIsNone(mapper('does not exist'))
 
 
 class MockRsatDatabase:
@@ -88,15 +47,6 @@ class MockRsatDatabase:
     def get_contig_sequence(self, organism, contig):
         """return a contig sequence"""
         return "ACGTTTAAAAGAGAGAGAGACACAGTATATATTTTTTTAAAA"
-
-
-def mock_go_mapper(rsat_organism):
-    """A simple GO mock mapper to test whether the underscore is replaced
-    in the factory"""
-    if rsat_organism == 'RSAT organism':
-        return 'GO taxonomy id'
-    else:
-        return None
 
 
 class MockMicrobesOnline:

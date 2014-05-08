@@ -105,30 +105,10 @@ def read_dfile(filepath, sep='\t', has_header=False, comment=None,
                                           comment, quote)
 
 
-class DelimitedFileMapper:
-    """A class that linearly searches a key in a DelimitedFile and for
-    the first row found, returns the value in the specified column"""
-
-    def __init__(self, delimited_file, key_column, value_column):
-        """Creates an instance of the mapper class using a DelimitedFile"""
-        self.__values = {}
-        for line in delimited_file.lines:
-            self.__values[line[key_column]] = line[value_column]
-
-    def __getitem__(self, key):
-        """looks for the key in the key column"""
-        return self.__values.get(key, None)
-
-    def items(self):
-        """returns the key, value pairs"""
-        return self.__values.items()
-
-    def keys(self):
-        """returns the keys"""
-        return self.__values.keys()
-
-    def __str__(self):
-        return str(self.__values)
+def make_dfile_map(dfile, key_column, value_column):
+    return collections.defaultdict(lambda : None,
+                                   [(line[key_column], line[value_column])
+                                    for line in dfile.lines])
 
 
 def levenshtein_distance(str1, str2):

@@ -8,11 +8,7 @@ import microbes_online
 import unittest
 import util
 import rsat
-
-KEGG_FILE_PATH = 'config/KEGG_taxonomy'
-GO_FILE_PATH = 'config/proteome2taxid'
-COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
-CACHE_DIR = 'cache'
+import testutil
 
 class HaloGeneTest(unittest.TestCase):
     """Tests for retrieving gene sequences in Halo"""
@@ -20,7 +16,7 @@ class HaloGeneTest(unittest.TestCase):
         """get one simple sequence"""
         search_distances = {'upstream': (-20, 150)}
         scan_distances = {'upstream': (-30, 250)}
-        halo = make_halo(search_distances, scan_distances)
+        halo = testutil.make_halo(search_distances, scan_distances)
         print "------"
         print "VNG1551G: ", halo.features_for_genes(['VNG1551G'])
         print "VNG1550G: ", halo.features_for_genes(['VNG1550G'])
@@ -37,17 +33,3 @@ class HaloGeneTest(unittest.TestCase):
         """
         self.assertEquals('GTGATTCGACCATTACTGCAAGTTCAGACGACCCCAATTCAAGTAGTTTTGTGTAACCGCCGGCGTCGGGGGCGCTCGCGCCCATCTAAGAAAGCTCACTTTCCCTAATACAATCAAAATTGTTTTGGGTGCTTCTGACGTTGTGCCACCGATGGCACAGACACAGCTCC',
                           seq['NP_280354.1'][1])
-
-    
-def make_halo(search_distances, scan_distances):
-    """returns the organism object to work on"""
-    keggfile = util.read_dfile(KEGG_FILE_PATH, comment='#')
-    gofile = util.read_dfile(GO_FILE_PATH)
-    rsatdb = rsat.RsatDatabase(rsat.RSAT_BASE_URL, CACHE_DIR)
-    mo_db = microbes_online.MicrobesOnline(CACHE_DIR)
-
-    keggorg = org.make_kegg_code_mapper(keggfile)('hal')
-    rsat_info = org.RsatSpeciesInfo(rsatdb, keggorg, None, None)
-    gotax = org.make_go_taxonomy_mapper(gofile)(rsat_info.go_species())
-    return org.Microbe('hal', keggorg, rsat_info, gotax, mo_db, [],
-                       search_distances, scan_distances, True, None)

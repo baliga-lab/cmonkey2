@@ -16,18 +16,6 @@ import collections
 import patches
 
 
-def make_kegg_code_mapper(dfile):
-    """returns a function that maps an organism code to a KEGG organism
-    name"""
-    return util.DelimitedFileMapper(dfile, 1, 3).__getitem__
-
-
-def make_go_taxonomy_mapper(dfile):
-    """returns a function that maps an RSAT organism name to a GO
-    taxonomy id"""
-    return util.DelimitedFileMapper(dfile, 0, 1).__getitem__
-
-
 class RsatSpeciesInfo:
     """RSAT description of the organism"""
     def __init__(self, rsatdb, kegg_organism, species, taxonomy_id):
@@ -67,13 +55,6 @@ class RsatSpeciesInfo:
 KEGGExceptions = {'Pseudomonas aeruginosa PAO1': 'Pseudomonas aeruginosa',
                   'Campylobacter jejuni NCTC11168': 'Campylobacter jejuni'}
 
-
-"""
-def make_rsat_organism_mapper(rsatdb):
-    def mapper_fun(kegg_organism, rsat_organism, ncbi_code=None):
-        return RsatSpeciesInfo(rsatdb, kegg_organism, rsat_organism, ncbi_code)
-    return mapper_fun
-"""
 
 class OrganismBase:
     """The organism base class contains functionality that is likely to
@@ -315,5 +296,4 @@ class Microbe(RSATOrganism):
         return self.__operon_mappings
 
 
-__all__ = ['make_kegg_code_mapper', 'make_go_taxonomy_mapper',
-           'Organism', 'OrganismFactory']
+__all__ = ['RSATOrganism', 'Microbe']
