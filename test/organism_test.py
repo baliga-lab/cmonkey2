@@ -133,28 +133,6 @@ class MockMicrobesOnline:
             return infile.read()
 
 
-class MicrobeFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
-    """Test class for OrganismFactory"""
-
-    def test_create(self):
-        """tests creating a Prokaryote"""
-        factory = org.MicrobeFactory(
-            lambda _: 'KEGG organism',
-            lambda x, y, z: org.RsatSpeciesInfo(MockRsatDatabase(''), 'dum',
-                                                'RSAT_organism',
-                                                4711),
-            mock_go_mapper,
-            MockMicrobesOnline(),
-            [])
-        organism = factory.create('hpy', SEARCH_DISTANCES, SCAN_DISTANCES)
-        self.assertEquals('hpy', organism.code)
-        self.assertEquals('Hpy', organism.cog_organism())
-        self.assertEquals('KEGG organism', organism.kegg_organism)
-        self.assertEquals('RSAT_organism', organism.species())
-        self.assertEquals('GO taxonomy id', organism.go_taxonomy_id)
-        self.assertIsNotNone(str(organism))
-
-
 class MicrobeTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for Organism"""
 

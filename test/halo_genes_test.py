@@ -46,9 +46,8 @@ def make_halo(search_distances, scan_distances):
     rsatdb = rsat.RsatDatabase(rsat.RSAT_BASE_URL, CACHE_DIR)
     mo_db = microbes_online.MicrobesOnline(CACHE_DIR)
 
-    org_factory = org.MicrobeFactory(org.make_kegg_code_mapper(keggfile),
-                                     org.make_rsat_organism_mapper(rsatdb),
-                                     org.make_go_taxonomy_mapper(gofile),
-                                     mo_db, [])
-
-    return org_factory.create('hal', search_distances, scan_distances)
+    keggorg = org.make_kegg_code_mapper(keggfile)('hal')
+    rsat_info = org.make_rsat_organism_mapper(rsatdb)(keggorg, None, None)
+    gotax = org.make_go_taxonomy_mapper(gofile)(rsat_info.go_species())
+    return org.Microbe('hal', keggorg, rsat_info, gotax, mo_db, [],
+                       search_distances, scan_distances, True, None)

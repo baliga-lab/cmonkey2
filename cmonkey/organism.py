@@ -60,6 +60,9 @@ class RsatSpeciesInfo:
     def get_contig_sequence(self, contig):
         return self.__rsatdb.get_contig_sequence(self.species, contig)
 
+    def go_species(self):
+        return self.species.replace('_', ' ')
+
 
 KEGGExceptions = {'Pseudomonas aeruginosa PAO1': 'Pseudomonas aeruginosa',
                   'Campylobacter jejuni NCTC11168': 'Campylobacter jejuni'}
@@ -75,60 +78,6 @@ def make_rsat_organism_mapper(rsatdb):
         be considered in the construction"""
         return RsatSpeciesInfo(rsatdb, kegg_organism, rsat_organism, ncbi_code)
     return mapper_fun
-
-
-class MicrobeFactory:
-    """Factory to create an organism. Construction of an organism
-    instance is relatively complex and costly, so it is coordinated
-    here. Information has to be pulled together from various databases
-    which are provided to the factory as configuration parameters.
-    Note: this factory is biased towards microbial organisms and
-    pulls information from
-    - RSAT
-    - STRING
-    - GO
-    - Microbes Online
-    For other types of organisms, a different factory should be used
-    """
-
-    # pylint: disable-msg=R0913
-    def __init__(self, code2kegg_organism,
-                 rsat_mapper,
-                 get_go_taxonomy_id,
-                 microbes_online_db,
-                 network_factories,
-                 ncbi_code=None):
-        """create a OrganismFactory instance"""
-        self.__code2kegg_organism = code2kegg_organism
-        self.__rsat_mapper = rsat_mapper
-        self.__get_taxonomy_id = get_go_taxonomy_id
-        self.__microbes_online_db = microbes_online_db
-        self.__network_factories = network_factories
-        self.__ncbi_code = ncbi_code
-
-    def create(self, organism_code, search_distances,
-               scan_distances, use_operons=True,
-               rsat_organism=None,
-               ratios=None):
-        """factory method to create an organism from a code"""
-        logging.info("Creating organism object for code '%s'...",
-                     organism_code)
-        kegg_organism = self.__code2kegg_organism(organism_code)
-        logging.info('KEGG organism: %s', kegg_organism)
-        rsat_info = self.__rsat_mapper(kegg_organism, rsat_organism,
-                                       self.__ncbi_code)
-        logging.info('RSAT info retrieved: %s', rsat_info.species)
-        go_taxonomy_id = self.__get_taxonomy_id(
-            rsat_info.species.replace('_', ' '))
-        logging.info('GO taxonomy id: %s', str(go_taxonomy_id))
-        return Microbe(organism_code, kegg_organism, rsat_info,
-                       go_taxonomy_id,
-                       self.__microbes_online_db,
-                       self.__network_factories,
-                       search_distances,
-                       scan_distances,
-                       use_operons,
-                       ratios)
 
 
 class OrganismBase:

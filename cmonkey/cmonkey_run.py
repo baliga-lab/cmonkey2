@@ -273,18 +273,15 @@ class CMonkeyRun:
                 mo_db, max_operon_size=self.ratios.num_rows / 20,
                 weight=0.5))
 
-        org_factory = org.MicrobeFactory(kegg_mapper,
-                                         rsat_mapper,
-                                         org.make_go_taxonomy_mapper(gofile),
-                                         mo_db,
-                                         nw_factories,
-                                         self['ncbi_code'])
-        return org_factory.create(self['organism_code'],
-                                  self['search_distances'],
-                                  self['scan_distances'],
-                                  self['use_operons'],
-                                  self['rsat_organism'],
-                                  self.ratios)
+        if is_microbe:
+            orgcode = self['organism_code']
+            logging.info("Creating Microbe object for '%s'", orgcode)
+            keggorg = kegg_mapper(orgcode)
+            rsat_info = rsat_mapper(keggorg, self['rsat_organism'], self['ncbi_code'])
+            gotax = org.make_go_taxonomy_mapper(gofile)(rsat_info.go_species())
+            return org.Microbe(orgcode, keggorg, rsat_info, gotax, mo_db, nw_factories,
+                               self['search_distances'], self['scan_distances'],
+                               self['use_operons'], self.ratios)
 
     def __make_dirs_if_needed(self):
         logging.info('creating aux directories')
