@@ -495,4 +495,5 @@ if __name__ == '__main__':
                         'tools.staticdir.dir': os.path.join(current_dir, 'static')}}
     cherrypy.config.update(conf)
     app = cherrypy.tree.mount(None, config=conf)
+    cherrypy.server.socket_host = '0.0.0.0'
     cherrypy.quickstart(app)
