@@ -189,8 +189,13 @@ def make_float_histogram(values, nbuckets=20):
 def make_series(stats):
     groups = defaultdict(list)
     scores = [stat.score for stat in stats]
-    minscore = min(scores)
-    maxscore = max(scores)
+    if len(scores) > 0:
+        minscore = min(scores)
+        maxscore = max(scores)
+    else:
+        minscore = 0.0
+        maxscore = 0.0
+
     for stat in stats:
         groups[stat.label].append(stat.score)
     minscore = math.floor(minscore)
