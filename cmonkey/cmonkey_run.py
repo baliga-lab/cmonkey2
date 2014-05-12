@@ -245,6 +245,18 @@ class CMonkeyRun:
         nw_factories = []
         is_microbe = self['organism_code'] not in VERTEBRATES
 
+        # determine the final weights. note: for now, we will just check whether
+        # we have 1 or 2 networks
+        num_networks = 0
+        if not self['nonetworks'] and self['use_string']:
+            num_networks += 1
+        if is_microbe and not self['nonetworks'] and self['use_operons']:
+            num_networks += 1
+        network_weight = 0.0
+        if num_networks > 0:
+            network_weight = 1.0 / num_networks
+        
+        
         # do we use STRING ?
         if not self['nonetworks'] and self['use_string']:
             # download if not provided
@@ -266,14 +278,14 @@ class CMonkeyRun:
 
             # create and add network
             nw_factories.append(stringdb.get_network_factory(
-                self['organism_code'], stringfile, 0.5))
+                self['organism_code'], stringfile, network_weight))
 
         # do we use operons ?
         if is_microbe and not self['nonetworks'] and self['use_operons']:
             logging.info('adding operon network factory')
             nw_factories.append(microbes_online.get_network_factory(
                 mo_db, max_operon_size=self.ratios.num_rows / 20,
-                weight=0.5))
+                weight=network_weight))
 
         orgcode = self['organism_code']
         logging.info("Creating Microbe object for '%s'", orgcode)
