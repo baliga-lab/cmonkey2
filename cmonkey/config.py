@@ -262,7 +262,8 @@ def setup():
                  'nonetworks': args.nonetworks,
                  'checkratios': args.checkratios,
                  'random_seed': args.random_seed,
-                 'pipeline_file': args.pipeline}
+                 'pipeline_file': args.pipeline,
+                 'synonym_file': args.synonym_file}
 
     # membership update default parameters
     # these come first, since a lot depends on clustering numbers

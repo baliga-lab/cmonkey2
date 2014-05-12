@@ -1,6 +1,18 @@
 # vi: sw=4 ts=4 et:
+import os
+from datetime import date, datetime
+import json
+import numpy as np
+import gc
 import re
 import logging
+import gzip
+import sqlite3
+from decimal import Decimal
+import cPickle
+import bz2
+import config
+
 import microarray
 import membership as memb
 import meme
@@ -13,18 +25,8 @@ import scoring
 import network as nw
 import stringdb
 import debug
-import os
-from datetime import date, datetime
-import json
-import numpy as np
-import gc
 import sizes
-import gzip
-import sqlite3
-from decimal import Decimal
-import cPickle
-import bz2
-import config
+import thesaurus
 
 USER_KEGG_FILE_PATH = 'config/KEGG_taxonomy'
 USER_GO_FILE_PATH = 'config/proteome2taxid'
@@ -267,22 +269,31 @@ class CMonkeyRun:
                 self['organism_code'], stringfile, 0.5))
 
         # do we use operons ?
-        if not self['nonetworks'] and self['use_operons']:
+        if is_microbe and not self['nonetworks'] and self['use_operons']:
             logging.info('adding operon network factory')
             nw_factories.append(microbes_online.get_network_factory(
                 mo_db, max_operon_size=self.ratios.num_rows / 20,
                 weight=0.5))
 
+        orgcode = self['organism_code']
+        logging.info("Creating Microbe object for '%s'", orgcode)
+        keggorg = kegg_map[orgcode]
+        rsat_info = org.RsatSpeciesInfo(rsatdb, keggorg, self['rsat_organism'],
+                                        self['ncbi_code'])
+        gotax = util.make_dfile_map(gofile, 0, 1)[rsat_info.go_species()]
+        synonyms = None
+        if self['synonym_file'] is not None:
+            synonyms = thesaurus.create_from_delimited_file2(self['synonym_file'])
+
         if is_microbe:
-            orgcode = self['organism_code']
-            logging.info("Creating Microbe object for '%s'", orgcode)
-            keggorg = kegg_map[orgcode]
-            rsat_info = org.RsatSpeciesInfo(rsatdb, keggorg, self['rsat_organism'],
-                                            self['ncbi_code'])
-            gotax = util.make_dfile_map(gofile, 0, 1)[rsat_info.go_species()]
             return org.Microbe(orgcode, keggorg, rsat_info, gotax, mo_db, nw_factories,
                                self['search_distances'], self['scan_distances'],
-                               self['use_operons'], self.ratios)
+                               self['use_operons'], self.ratios, synonyms)
+        else:
+            return org.RSATOrganism(orgcode, keggorg, rsat_info, gotax, nw_factories,
+                                    self['search_distances'], self['scan_distances'],
+                                    self.ratios, synonyms)
+            
 
     def __make_dirs_if_needed(self):
         logging.info('creating aux directories')

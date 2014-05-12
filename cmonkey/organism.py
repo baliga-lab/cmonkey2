@@ -104,14 +104,13 @@ class RSATOrganism(OrganismBase):
     # pylint: disable-msg=R0913,R0902
     def __init__(self, code, kegg_organism, rsat_info, go_taxonomy_id,
                  network_factories, search_distances, scan_distances,
-                 use_operons=True, ratios=None):
+                 ratios=None, synonyms=None):
         """create an Organism instance"""
         # microbe-specific network factories need access to synonyms
         # and rsat info, so initialize them here before the base class
         # init
-        self.__synonyms = None  # lazy loaded
+        self.__synonyms = synonyms
         self.__rsat_info = rsat_info
-        self.use_operons = use_operons
         OrganismBase.__init__(self, code, network_factories, ratios=ratios)
         self.kegg_organism = kegg_organism
         self.go_taxonomy_id = go_taxonomy_id
@@ -218,11 +217,12 @@ class Microbe(RSATOrganism):
                  go_taxonomy_id, microbes_online_db,
                  network_factories,
                  search_distances, scan_distances,
-                 use_operons=True, ratios=None):
+                 use_operons=True, ratios=None, synonyms=None):
         """create an Organism instance"""
         RSATOrganism.__init__(self, code, kegg_organism,
                               rsat_info, go_taxonomy_id, network_factories,
-                              search_distances, scan_distances, use_operons, ratios)
+                              search_distances, scan_distances, ratios, synonyms)
+        self.use_operons = use_operons
         self.__microbes_online_db = microbes_online_db
         self.__operon_mappings = None  # lazy loaded
 
