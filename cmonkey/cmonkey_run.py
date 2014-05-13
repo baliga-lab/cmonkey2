@@ -103,15 +103,13 @@ class CMonkeyRun:
         # ----- I measured the cost for creating those on the fly and
         #       it is more expensive
         #       than I expected, so I left the tables in-place
-        conn.execute('''create table iteration_stats (iteration int,
-                        median_residual decimal,
-                        fuzzy_coeff decimal)''')
         conn.execute('''create table cluster_stats (iteration int, cluster int,
                         num_rows int, num_cols int, residual decimal)''')
-        conn.execute('''create table network_stats (iteration int, network text,
-                        score decimal)''')
-        conn.execute('''create table motif_stats (iteration int, seqtype text,
-                        pval decimal)''')
+        conn.execute('create table statstypes (category text, name text)')
+        conn.execute("insert into statstypes values ('main', 'fuzzy_coeff')")
+        conn.execute("insert into statstypes values ('main', 'median_residual')")
+        conn.execute('''create table iteration_stats (statstype int, iteration int, score decimal)''')
+        
         conn.execute('''create table row_names (order_num int, name text)''')
         conn.execute('''create table column_names (order_num int, name text)''')
 
@@ -298,13 +296,23 @@ class CMonkeyRun:
             synonyms = thesaurus.create_from_delimited_file2(self['synonym_file'])
 
         if is_microbe:
-            return org.Microbe(orgcode, keggorg, rsat_info, gotax, mo_db, nw_factories,
-                               self['search_distances'], self['scan_distances'],
-                               self['use_operons'], self.ratios, synonyms)
+            organism = org.Microbe(orgcode, keggorg, rsat_info, gotax, mo_db, nw_factories,
+                                   self['search_distances'], self['scan_distances'],
+                                   self['use_operons'], self.ratios, synonyms)
         else:
-            return org.RSATOrganism(orgcode, keggorg, rsat_info, gotax, nw_factories,
-                                    self['search_distances'], self['scan_distances'],
-                                    self.ratios, synonyms)
+            organism = org.RSATOrganism(orgcode, keggorg, rsat_info, gotax, nw_factories,
+                                        self['search_distances'], self['scan_distances'],
+                                        self.ratios, synonyms)
+        
+        conn = self.__dbconn()
+        with conn:
+            for network in organism.networks():
+                conn.execute("insert into statstypes values ('network',?)", [network.name])
+            for sequence_type in self['sequence_types']:
+                conn.execute("insert into statstypes values ('seqtype',?)", [sequence_type])
+            
+        return organism
+        
             
 
     def __make_dirs_if_needed(self):
@@ -523,25 +531,29 @@ class CMonkeyRun:
                                   1.0))
 
             median_residual = np.median(residuals)
+            conn.execute("insert into iteration_stats (statstype,iteration,score) values (?,?,?)",
+                         (1, iteration, fuzzy_coeff))
+
             try:
-                conn.execute('''insert into iteration_stats (iteration, median_residual,
-                                fuzzy_coeff) values (?,?,?)''',
-                             (iteration, median_residual, fuzzy_coeff))
+                conn.execute("insert into iteration_stats (statstype,iteration,score) values (?,?,?)", (2, iteration, median_residual))
             except:
                 logging.warn('STATS: median was messed up, insert with 1.0')
-                conn.execute('''insert into iteration_stats (iteration, median_residual,
-                                fuzzy_coeff) values (?,?,?)''',
-                             (iteration, 1.0, fuzzy_coeff))
+                conn.execute("insert into iteration_stats (statstype,iteration,score) values (?,?,?)", (2, iteration, 1.0))
 
+        cur = conn.cursor()
         with conn:
             for network, score in network_scores.items():
-                conn.execute('''insert into network_stats (iteration, network, score)
-                                values (?,?,?)''', (iteration, network, score))
-
+                cur.execute("select rowid from statstypes where category='network' and name=?", [network])
+                typeid = cur.fetchone()[0]
+                conn.execute("insert into iteration_stats values (?,?,?)",
+                             (typeid, iteration, score))
         with conn:
             for seqtype, pval in motif_pvalues.items():
-                conn.execute('''insert into motif_stats (iteration, seqtype, pval)
-                                values (?,?,?)''', (iteration, seqtype, pval))
+                cur.execute("select rowid from statstypes where category='seqtype' and name=?", [seqtype])
+                typeid = cur.fetchone()[0]
+                conn.execute("insert into iteration_stats values (?,?,?)",
+                             (typeid, iteration, pval))
+        cur.close()
 
     def write_start_info(self):
         conn = self.__dbconn()

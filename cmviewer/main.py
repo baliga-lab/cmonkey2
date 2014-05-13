@@ -248,10 +248,12 @@ class ClusterViewerApp:
         cursor.close()
 
         cursor = conn.cursor()
-        cursor.execute('select median_residual, fuzzy_coeff from iteration_stats')
-        res = [(resid, fuzzy) for resid, fuzzy in cursor.fetchall()]
-        js_mean_residuals = json.dumps([row[0] for row in res])
-        js_fuzzy_coeff = json.dumps([row[1] for row in res])
+        cursor.execute("select score from iteration_stats its join statstypes st on its.statstype = st.rowid where st.name = 'median_residual' order by iteration")
+        resids = [row[0] for row in cursor.fetchall()]
+        cursor.execute("select score from iteration_stats its join statstypes st on its.statstype = st.rowid where st.name = 'fuzzy_coeff' order by iteration")
+        fuzzys = [row[0] for row in cursor.fetchall()]
+        js_mean_residuals = json.dumps(resids)
+        js_fuzzy_coeff = json.dumps(fuzzys)
         cursor.close()
 
         conn.row_factory = clusterstat_factory
@@ -281,12 +283,14 @@ class ClusterViewerApp:
 
         conn.row_factory = iterationstat_factory
         cursor = conn.cursor()
-        cursor.execute('select iteration, seqtype, pval from motif_stats')
+        #cursor.execute('select iteration, seqtype, pval from motif_stats')
+        cursor.execute("select iteration, name, score from iteration_stats its join statstypes st on its.statstype = st.rowid where category = 'seqtype'")
         js_motif_stats, min_motscore, max_motscore = make_series([row for row in cursor.fetchall()])
         cursor.close()
 
         cursor = conn.cursor()
-        cursor.execute('select iteration, network, score from network_stats')
+        #cursor.execute('select iteration, network, score from network_stats')
+        cursor.execute("select iteration, name, score from iteration_stats its join statstypes st on its.statstype = st.rowid where category = 'network'")
         js_network_stats, min_netscore, max_netscore = make_series([row for row in cursor.fetchall()])
         cursor.close()
 
