@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import sys
 import argparse
-import util
+import toolsutil as util
 
 
 def compare(file1, file2, rnames=False):

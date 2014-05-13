@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import argparse
 import math
-import util
+import toolsutil as util
 
 EPS = 0.0001
 def compare(file1, file2, verbose, rnames, mapheaders, eps=EPS):
