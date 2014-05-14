@@ -297,7 +297,7 @@ class DataMatrixFactory:
             for col in xrange(ncols):
                 strval = lines[row][col + 1]
                 value = np.nan if len(strval) == 0 or strval == 'NA' else float(strval)
-                values[row][col] = value
+                values[row, col] = value
 
         data_matrix = DataMatrix(nrows, ncols, rownames, colnames,
                                  values=values)
@@ -323,7 +323,7 @@ def nochange_filter(matrix):
         for row_index in xrange(data_matrix.num_rows):
             count = 0
             for col_index in xrange(data_matrix.num_columns):
-                value = dmvalues[row_index][col_index]
+                value = dmvalues[row_index, col_index]
                 if np.isnan(value) or abs(value) <= ROW_THRESHOLD:
                     count += 1
             mean = float(count) / data_matrix.num_columns
@@ -338,7 +338,7 @@ def nochange_filter(matrix):
         for col_index in xrange(data_matrix.num_columns):
             count = 0
             for row_index in xrange(data_matrix.num_rows):
-                value = dmvalues[row_index][col_index]
+                value = dmvalues[row_index, col_index]
                 if np.isnan(value) or abs(value) <= COLUMN_THRESHOLD:
                     count += 1
             mean = float(count) / data_matrix.num_rows
@@ -358,8 +358,8 @@ def nochange_filter(matrix):
     mvalues = matrix.values
     for row_index in xrange(numrows):
         for col_index in xrange(numcols):
-            value = mvalues[rows_to_keep[row_index]][cols_to_keep[col_index]]
-            rvalues[row_index][col_index] = value
+            value = mvalues[rows_to_keep[row_index], cols_to_keep[col_index]]
+            rvalues[row_index, col_index] = value
     return result
 
 

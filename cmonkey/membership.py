@@ -430,24 +430,20 @@ def adjust_cluster(membership, cluster, rowscores, cutoff, limit):
         max_score = -sys.float_info.max
         for row in range(sm.num_rows):
             if sm_values[row][0] > max_score:
-                max_score = sm_values[row][0]
+                max_score = sm_values[row, 0]
                 max_row = row
         return sm.row_names[max_row]
 
     old_rows = membership.rows_for_cluster(cluster)
     not_in = [(i, row) for i, row in enumerate(rowscores.row_names)
               if row not in old_rows]
-    #print old_rows
     threshold = rowscores.submatrix_by_name(old_rows,
                                             [rowscores.column_names[cluster - 1]]).quantile(cutoff)
     wh = []
     rs_values = rowscores.values
     for row, row_name in not_in:
-        if rs_values[row][cluster - 1] < threshold:
-            #print "Appending %s with score: %f" % (row_name, rs_values[row][cluster - 1])
+        if rs_values[row, cluster - 1] < threshold:
             wh.append(row_name)
-    #print "THRESHOLD: ", threshold
-    #print "WH: ", wh
     if len(wh) == 0 or len(wh) > limit:
         return {}  # return unmodified row membership
 
@@ -455,12 +451,6 @@ def adjust_cluster(membership, cluster, rowscores, cutoff, limit):
     result = {}
     while len(wh) > 0 and tries < MAX_ADJUST_TRIES:
         wh2 = max_row_in_column(rowscores, cluster - 1)
-        wh2_index = rowscores.row_names.index(wh2)
-        clusters = membership.clusters_for_row(wh2)
-        wh2_scores = []
-        for c in clusters:
-            wh2_scores.append(rs_values[wh2_index][c - 1])
-        #print "WH2: ", wh2, " CLUSTERS: ", clusters, " WH2_SCORES: ", wh2_scores
         result[wh2] = cluster
         wh.remove(wh2)
         tries += 1
@@ -728,7 +718,7 @@ def fuzzify(membership, row_scores, column_scores, num_iterations, iteration_res
             cluster_rows = membership.rows_for_cluster(col + 1)
             for row in xrange(row_scores.num_rows):
                 if row_names[row] in cluster_rows:
-                    row_sd_values.append(row_score_values[row][col])
+                    row_sd_values.append(row_score_values[row, col])
 
         # Note: If there are no non-NaN values in row_sd_values, row_rnorm
         # will have all NaNs
@@ -745,7 +735,7 @@ def fuzzify(membership, row_scores, column_scores, num_iterations, iteration_res
             cluster_cols = membership.columns_for_cluster(col + 1)
             for row in xrange(column_scores.num_rows):
                 if row_names[row] in cluster_cols:
-                    col_sd_values.append(col_score_values[row][col])
+                    col_sd_values.append(col_score_values[row, col])
 
         # Note: If there are no non-NaN values in col_sd_values, col_rnorm
         # will have all NaNs

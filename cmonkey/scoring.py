@@ -252,10 +252,10 @@ def compute_column_scores(membership, matrix, num_clusters,
 
         for row_index in xrange(matrix.num_columns):
             if column_scores is None:
-                rvalues[row_index][cluster] = substitution
+                rvalues[row_index, cluster] = substitution
             else:
                 _, scores = column_scores
-                rvalues[row_index][cluster] = scores[row_index]
+                rvalues[row_index, cluster] = scores[row_index]
     result.fix_extreme_values()
     return result
 
@@ -318,8 +318,7 @@ def combine(result_matrices, score_scalings, membership, iteration, config_param
         rsm = []
         for cluster in range(1, num_clusters + 1):
             row_members = sorted(membership.rows_for_cluster(cluster))
-            rsm.extend([mat.values[index_map[row]][cluster - 1]
-                        for row in row_members])
+            rsm.extend([mat.values[index_map[row], cluster - 1] for row in row_members])
         scale = util.mad(rsm)
         if scale == 0:  # avoid that we are dividing by 0
             scale = util.r_stddev(rsm)

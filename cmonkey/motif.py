@@ -73,9 +73,7 @@ def compute_mean_score(pvalue_matrix, membership, organism):
     for cluster in xrange(1, membership.num_clusters() + 1):
         cluster_rows = membership.rows_for_cluster(cluster)
         row_indexes = pvalue_matrix.row_indexes_for(cluster_rows)
-        for row in row_indexes:
-            values.append(pvalues[row][cluster - 1])
-    #return np.median(values)
+        values.extend(pvalues[row_indexes, cluster - 1])
     return np.mean(values)  # median can result in 0 if there are a lot of 0
 
 # Readonly structure to avoid passing it to the forked child processes for efficiency.
@@ -97,7 +95,7 @@ def pvalues2matrix(all_pvalues, num_clusters, gene_names, reverse_map):
     for cluster, feature_pvals in all_pvalues.items():
         for feature_id, pval in feature_pvals.items():
             ridx = row_map[reverse_map[feature_id]]
-            mvalues[ridx][cluster - 1] = pval
+            mvalues[ridx, cluster - 1] = pval
 
     matrix.apply_log()
     return matrix
@@ -428,9 +426,7 @@ def compute_cluster_score(params):
     logging.info('Cluster %d, # sequences: %d', params.cluster, nseqs)
     if (nseqs >= params.min_cluster_rows and nseqs <= params.max_cluster_rows):
         run_result = params.meme_runner(params)
-        pe_values = run_result.pe_values
-        for feature_id, pvalue, evalue in pe_values:
-            pvalues[feature_id] = pvalue
+        pvalues = {feature_id: pvalue for feature_id, pvalue, evalue in run_result.pe_values}
     else:
         logging.info("# seqs (= %d) outside of defined limits, "
                      "skipping cluster %d", len(params.seqs), params.cluster)

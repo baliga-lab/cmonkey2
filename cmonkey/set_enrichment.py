@@ -78,7 +78,6 @@ class SetType:
 SET_MATRIX = None
 SET_MEMBERSHIP = None
 SET_SET_TYPE = None
-REF_MIN_SCORE = None
 
 def read_set_types(config_params):
     """Reads sets from a JSON file"""
@@ -110,7 +109,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         Note: will return None if not computed yet and the result of a previous
         scoring if the function is not supposed to actually run in this iteration
         """
-        global SET_MATRIX, SET_MEMBERSHIP, REF_MIN_SCORE, SET_SET_TYPE
+        global SET_MATRIX, SET_MEMBERSHIP, SET_SET_TYPE
         logging.info("Compute scores for set enrichment...")
         start_time = util.current_millis()
         matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
@@ -118,8 +117,8 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         use_multiprocessing = self.config_params[scoring.KEY_MULTIPROCESSING]
         SET_MATRIX = self.ratios
         SET_MEMBERSHIP = self.membership
-        REF_MIN_SCORE = ref_matrix.min()
-        logging.info('REF_MIN_SCORE: %f', REF_MIN_SCORE)
+        ref_min_score = ref_matrix.min()
+        logging.info('REF_MIN_SCORE: %f', ref_min_score)
 
         set_filepath = os.path.join(self.config_params['output_dir'],
                                     'setEnrichment_set.csv')
@@ -133,13 +132,12 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             if use_multiprocessing:
                 with util.get_mp_pool(self.config_params) as pool:
                     results = pool.map(compute_cluster_score,
-                                       [(cluster, self.bonferroni_cutoff())
+                                       [(cluster, self.bonferroni_cutoff(), ref_min_score)
                                         for cluster in xrange(1, self.num_clusters() + 1)])
             else:
                 results = []
                 for cluster in xrange(1, self.num_clusters() + 1):
-                    results.append(compute_cluster_score((cluster, self.bonferroni_cutoff())))
-                    print results[cluster - 1]
+                    results.append(compute_cluster_score((cluster, self.bonferroni_cutoff(), ref_min_score)))
 
             elapsed1 = util.current_millis() - start1
             logging.info("ENRICHMENT SCORES COMPUTED in %f s, STORING...",
@@ -180,35 +178,35 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
 def compute_cluster_score(args):
     """Computes the cluster score for a given set type"""
-    cluster, cutoff = args
+    cluster, cutoff, ref_min_score = args
     set_type = SET_SET_TYPE
     matrix = SET_MATRIX
-    ref_min_score = REF_MIN_SCORE
     cluster_rows = sorted(SET_MEMBERSHIP.rows_for_cluster(cluster))
-    cluster_genes = [gene for gene in cluster_rows
-                     if gene in set_type.genes()]
+    cluster_genes = [gene for gene in cluster_rows if gene in set_type.genes()]
     overlap_sizes = []
     set_sizes = []
 
-    for set_name, eset in set_type.sets.items():
+    for set_name in sorted(set_type.sets.keys()):
+        eset = set_type.sets[set_name]
         set_genes = eset.genes_above_cutoff()
-        intersect = set(cluster_genes).intersection(set_genes)
-        overlap_sizes.append(len(intersect))
         set_sizes.append(len(set_genes))
 
+        intersect = set(cluster_genes).intersection(set_genes)
+        overlap_sizes.append(len(intersect))
+
     num_sets = len(set_type.sets)
-    phyper_n = (np.array([len(set_type.genes()) for _ in xrange(num_sets)]) - np.array(set_sizes))
-    phyper_n = [value for value in phyper_n]
-    phyper_k = [len(cluster_genes) for _ in xrange(num_sets)]
-    enrichment_pvalues = list(util.phyper(overlap_sizes, set_sizes,
-                                          phyper_n, phyper_k))
-    min_pvalue = min(enrichment_pvalues)
-    min_index = enrichment_pvalues.index(min_pvalue)
-    min_set = set_type.sets.keys()[min_index]
+    num_genes = len(set_type.genes())
+    phyper_n = list(np.array([num_genes] * num_sets) - np.array(set_sizes))
+    phyper_k = [len(cluster_genes)] * num_sets
+
+    enrichment_pvalues = np.array(util.phyper(overlap_sizes, set_sizes, phyper_n, phyper_k))
+    min_pvalue = min(enrichment_pvalues[np.isfinite(enrichment_pvalues)])
+    min_index = np.where(enrichment_pvalues == min_pvalue)[0][0]
+    min_set = sorted(set_type.sets.keys())[min_index]
     min_set_overlap = overlap_sizes[min_index]
-    # TODO: optimization: scores should be numpy array
+
+    scores = np.zeros(matrix.num_rows)
     if min_set_overlap > 0:
-        scores = [0.0 for _ in xrange(matrix.num_rows)]
         min_genes = set_type.sets[min_set].genes()
         min_genes = [gene for gene in min_genes
                      if gene in matrix.row_names]
@@ -217,30 +215,24 @@ def compute_cluster_score(args):
         if set_type.sets[min_set].cutoff == 'discrete':
             overlap_genes = set(cluster_genes).intersection(set(min_genes))
             overlap_indexes = matrix.row_indexes_for(overlap_genes)
-            for index in min_indexes:
-                scores[index] = 0.5
-            for index in overlap_indexes:
-                scores[index] = 1.0
+            scores[min_indexes] = 0.5
+            scores[overlap_indexes] = 1.0
         else:
-            min_set_weights = []
+            # scaling
             for index in min_indexes:
-                min_set_weights.append(
-                    set_type.sets[min_set].weights[index])
+                scores[index] = set_type.sets[min_set].weights[index]
             min_weight = min(min_set_weights)
             max_weight = max(min_set_weights)
-            for index in min_indexes:
-                scores[index] = min_set_weights[index] - min_weight
-                scores[index] = min_set_weights[index] / max_weight
+            weight_range = max_weight - min_weight
+            scores[min_indexes] -= min_weight
+            scores[min_indexes] /= weight_range
 
-        dampened_pvalue = enrichment_pvalues[min_index]
-        if dampened_pvalue <= cutoff:
+        if min_pvalue <= cutoff:
             dampened_pvalue = 1
         else:
-            dampened_pvalue = (math.log10(dampened_pvalue) /
-                               math.log10(cutoff))
-        scores = [dampened_pvalue / score if score != 0.0 else score
-                  for score in scores]
-        scores = [score * ref_min_score for score in scores]
-    else:
-        scores = [0.0 for _ in xrange(matrix.num_rows)]
+            dampened_pvalue = math.log10(min_pvalue) / math.log10(cutoff)
+
+        scores[scores != 0.0] = dampened_pvalue / scores[scores != 0.0]
+        scores *= ref_min_score
+
     return scores, min_set, min_pvalue

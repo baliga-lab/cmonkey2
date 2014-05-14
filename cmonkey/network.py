@@ -167,15 +167,6 @@ def compute_network_scores(cluster):
     return final_gene_scores
 
 
-def compute_mean(score_means):
-    means = {}
-    for network, cluster_score_means in score_means.items():
-        total = 0.0
-        for score in cluster_score_means.values():
-            total = total + score
-            means[network] = total / len(cluster_score_means)
-    return means
-
 
 class ScoringFunction(scoring.ScoringFunctionBase):
     """Network scoring function. Note that even though there are several
@@ -226,12 +217,12 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """returns the score means, adjusted to the current cluster setup"""
         # a dictionary that holds the network score means for
         # each cluster, separated for each network
-        score_means = {}
         if network_scores:
-            for network in self.networks():
-                score_means[network.name] = self.__compute_cluster_score_means(
-                    network_scores[network.name])
-        return compute_mean(score_means)
+            score_means = {network.name: self.__compute_cluster_score_means(network_scores[network.name])
+                           for network in self.networks()}
+            return {network: np.average(np.array(cluster_score_means.values()))
+                    for network, cluster_score_means in score_means.items()}
+        return {}
 
     def do_compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""

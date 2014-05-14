@@ -70,10 +70,7 @@ class MemeSuite:
             seqpairs = st.read_sequences_from_fasta_string(
                 self.dust(dust_tmp_file))
             os.remove(dust_tmp_file)
-            result = {}
-            for feature_id, seq in seqpairs:
-                result[feature_id] = seq
-            return result
+            return {feature_id: seq for feature_id, seq in seqpairs}
 
         seqs_for_dust = {}
         for feature_id, seq in seqs.items():
