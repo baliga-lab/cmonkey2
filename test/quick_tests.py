@@ -1,12 +1,10 @@
-"""all_tests.py - run all unit tests in the project
+"""quick_tests.py - run all unit tests in the project
 
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import sys
 import unittest
 import xmlrunner
-
 import orig_membership_test as omembtest
 import datamatrix_test as dmtest
 import util_test as ut
@@ -20,13 +18,8 @@ import meme_test as met
 import pssm_test as pt
 import combiner_test as ct
 import read_wee_test as rwt
+import sys
 
-import rsat_test
-import meme430_test
-import halo_genes_test
-import microbes_online_test as mo_test
-import iteration_test
-import postproc_test
 
 # pylint: disable-msg=C0301
 if __name__ == '__main__':
@@ -63,25 +56,8 @@ if __name__ == '__main__':
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(pt.PssmTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ct.CombinerTest))
+
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(rwt.ReadWeeTest))
-
-    # web based tests
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
-        rsat_test.RsatDatabaseTest))
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
-        mo_test.MicrobesOnlineTest))
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
-        meme430_test.Meme430Test))
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
-        halo_genes_test.HaloGeneTest))
-
-    # iteration_test
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
-        iteration_test.IterationTest))
-
-    # postproc_test
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
-        postproc_test.PostprocTest))
 
     if len(sys.argv) > 1 and sys.argv[1] == 'xml':
       xmlrunner.XMLTestRunner(output='test-reports').run(unittest.TestSuite(SUITE))

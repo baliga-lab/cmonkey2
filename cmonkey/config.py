@@ -205,7 +205,7 @@ def setup():
 
     # no organism provided -> dummy organism
     if args.organism is None:
-        print("WARNING - no organism provided - assuming that you want to score ratios only or don't use automatic download")
+        logging.warn("no organism provided - assuming that you want to score ratios only or don't use automatic download")
         if not args.rsat_dir:
             args.nomotifs = True
         if not args.string and not args.operons:

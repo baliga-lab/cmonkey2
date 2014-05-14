@@ -99,10 +99,6 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         self.__set_types = read_set_types(config_params)
         # stores (min_set, pvalue) pairs for each cluster and set type
         # for the last run of the function
-        """
-        self.__last_min_enriched_set = {}
-        for set_type in set_types:
-            self.__last_min_enriched_set[set_type] = {}"""
         self.run_log = scoring.RunLog('set_enrichment', config_params)
 
     def bonferroni_cutoff(self):
@@ -163,7 +159,6 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             for cluster in xrange(1, self.num_clusters() + 1):
                 # store the best enriched set determined
                 scores, min_set, min_pvalue = results[cluster - 1]
-                #self.__last_min_enriched_set[set_type][cluster] = (min_set, min_pvalue)
                 minSets.append(min_set)
                 pValues.append(min_pvalue)
 
@@ -211,6 +206,7 @@ def compute_cluster_score(args):
     min_index = enrichment_pvalues.index(min_pvalue)
     min_set = set_type.sets.keys()[min_index]
     min_set_overlap = overlap_sizes[min_index]
+    # TODO: optimization: scores should be numpy array
     if min_set_overlap > 0:
         scores = [0.0 for _ in xrange(matrix.num_rows)]
         min_genes = set_type.sets[min_set].genes()

@@ -148,6 +148,8 @@ def compute_network_scores(cluster):
     genes = sorted(NETWORK_SCORE_MEMBERSHIP.rows_for_cluster(cluster))
     gene_scores = {}
     for gene in genes:
+        # TODO: optimization: we can use numpy arrays for the scores array
+        # and then sum
         edges = network.edges_with_node(gene)
         for edge in edges:
             other_gene = edge[0]
