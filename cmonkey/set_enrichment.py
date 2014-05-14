@@ -22,23 +22,19 @@ class EnrichmentSet:
         """instance creation"""
         self.elems = elems  # pairs of gene, weight
         self.cutoff = cutoff
-        self.__genes_above_cutoff = None
         self.__genes = None
 
     def genes(self):
         if self.__genes is None:
-            self.__genes = [elem[0] for elem in self.elems]
+            self.__genes = {elem[0] for elem in self.elems}
         return self.__genes
 
     def genes_above_cutoff(self):
         """returns the genes that have a weight above the cutoff"""
-        if self.__genes_above_cutoff is None:
-            if self.cutoff == 'discrete':
-                self.__genes_above_cutoff = [elem[0] for elem in self.elems]
-            else:
-                self.__genes_above_cutoff = [elem[0] for elem in self.elems
-                                             if elem[1] >= self.cutoff]            
-        return self.__genes_above_cutoff
+        if self.cutoff == 'discrete':
+            return self.genes()
+        else:
+            return {elem[0] for elem in self.elems if elem[1] >= self.cutoff}
 
     def __repr__(self):
         return ("Enrichment set: Cutoff = %s, # genes: %d # above cutoff: %d" %
@@ -58,8 +54,8 @@ class SetType:
     def genes(self):
         """All genes contained in the sets"""
         if self.__genes is None:
-            self.__genes = {elem[0] for enrichment_set in self.sets.values()
-                            for elem in enrichment_set.elems}
+            all_genes = [enrichment_set.genes() for enrichment_set in self.sets.values()]
+            self.__genes = set.union(*all_genes)
         return self.__genes
 
     def __repr__(self):
@@ -182,7 +178,9 @@ def compute_cluster_score(args):
     set_type = SET_SET_TYPE
     matrix = SET_MATRIX
     cluster_rows = sorted(SET_MEMBERSHIP.rows_for_cluster(cluster))
-    cluster_genes = [gene for gene in cluster_rows if gene in set_type.genes()]
+    set_type_genes = set_type.genes()
+
+    cluster_genes = [gene for gene in cluster_rows if gene in set_type_genes]
     overlap_sizes = []
     set_sizes = []
 
@@ -195,7 +193,7 @@ def compute_cluster_score(args):
         overlap_sizes.append(len(intersect))
 
     num_sets = len(set_type.sets)
-    num_genes = len(set_type.genes())
+    num_genes = len(set_type_genes)
     phyper_n = list(np.array([num_genes] * num_sets) - np.array(set_sizes))
     phyper_k = [len(cluster_genes)] * num_sets
 
@@ -208,8 +206,7 @@ def compute_cluster_score(args):
     scores = np.zeros(matrix.num_rows)
     if min_set_overlap > 0:
         min_genes = set_type.sets[min_set].genes()
-        min_genes = [gene for gene in min_genes
-                     if gene in matrix.row_names]
+        min_genes = [gene for gene in min_genes if gene in matrix.row_names]
         min_indexes = matrix.row_indexes_for(min_genes)
 
         if set_type.sets[min_set].cutoff == 'discrete':

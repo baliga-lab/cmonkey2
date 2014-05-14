@@ -121,7 +121,7 @@ class Network:
 
         for edge in edges:
             # we ignore self-edges, and edges with nodes not in the final nodes
-            if edge[0] != edge[1] and (edge[0] in nodes or edge[1] in nodes):
+            if edge[0] != edge[1] and edge[0] in nodes and edge[1] in nodes:
                 key = "%s:%s" % (edge[0], edge[1])
                 key_rev = "%s:%s" % (edge[1], edge[0])
                 if key not in added and key_rev not in added:
@@ -184,7 +184,6 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     def initialize(self, args):
         """process additional parameters"""
         self.weights = {nw['type']: nw['weight'] for nw in args['networks']}
-        print "WEIGHTS: ", self.weights
 
     def run_logs(self):
         return [self.run_log]
