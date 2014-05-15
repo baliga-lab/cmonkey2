@@ -198,7 +198,7 @@ def compute_cluster_score(args):
     phyper_k = [len(cluster_genes)] * num_sets
 
     enrichment_pvalues = np.array(util.phyper(overlap_sizes, set_sizes, phyper_n, phyper_k))
-    min_pvalue = min(enrichment_pvalues[np.isfinite(enrichment_pvalues)])
+    min_pvalue = enrichment_pvalues[np.isfinite(enrichment_pvalues)].min()
     min_index = np.where(enrichment_pvalues == min_pvalue)[0][0]
     min_set = sorted(set_type.sets.keys())[min_index]
     min_set_overlap = overlap_sizes[min_index]
@@ -218,8 +218,8 @@ def compute_cluster_score(args):
             # scaling
             for index in min_indexes:
                 scores[index] = set_type.sets[min_set].weights[index]
-            min_weight = min(min_set_weights)
-            max_weight = max(min_set_weights)
+            min_weight = min_set_weights.min()
+            max_weight = min_set_weights.max()
             weight_range = max_weight - min_weight
             scores[min_indexes] -= min_weight
             scores[min_indexes] /= weight_range
