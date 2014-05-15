@@ -375,6 +375,9 @@ class CMonkeyRun:
             if os.path.exists(PIPELINE_USER_PATHS[pipeline_id]):
                 with open(PIPELINE_USER_PATHS[pipeline_id]) as infile:
                     self['pipeline'] = json.load(infile)
+            else:
+                with open(PIPELINE_SYSTEM_PATHS[pipeline_id]) as infile:
+                    self['pipeline'] = json.load(infile)
 
         # TODO: for now, we always assume the top level of row scoring is a combiner
         class_ = get_function_class(self['pipeline']['row-scoring']['function'])
