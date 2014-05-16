@@ -18,6 +18,7 @@ export PATH=/tools/bin:${PATH}
 #$ -S /bin/bash
 #$ -m be
 #$ -q baliga
+#$ -P Baliga
 #$ -M wwu@systemsbiology.org
 #$ -cwd
 #$ -pe serial 8
