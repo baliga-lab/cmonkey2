@@ -31,8 +31,8 @@ if __name__ == '__main__':
     parser.add_argument('--organism', required=True)
     parser.add_argument('--ratios', required=True)
     parser.add_argument('--targetdir', required=True)
-    parser.add_argument('--numfiles', default=4)
-    parser.add_argument('--numcols', default=8)
+    parser.add_argument('--numfiles', type=int, default=4)
+    parser.add_argument('--numcols', type=int, default=8)
 
     args = parser.parse_args()
     dm.prepare_ensemble_matrix(args.ratios, args.targetdir, args.numfiles, args.numcols)
