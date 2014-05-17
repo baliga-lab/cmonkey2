@@ -75,12 +75,14 @@ SET_MATRIX = None
 SET_MEMBERSHIP = None
 SET_SET_TYPE = None
 
-def read_set_types(config_params):
+def read_set_types(config_params, thesaurus):
     """Reads sets from a JSON file"""
     setfile = config_params['SetEnrichment']['set_file']
     with open(setfile) as infile:
         json_sets = json.load(infile)
-        sets = {setname: EnrichmentSet('discrete', zip(genes, [1] * len(genes)))
+        sets = {setname: EnrichmentSet('discrete',
+                                       zip(filter(lambda g: g in thesaurus, genes),
+                                           [1] * len(genes)))
                 for setname, genes in json_sets.items()}
     return [SetType('default', sets)]
 
@@ -91,7 +93,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, "SetEnrichment", organism, membership,
                                              ratios, config_params)
-        self.__set_types = read_set_types(config_params)
+        self.__set_types = read_set_types(config_params, organism.thesaurus())
         # stores (min_set, pvalue) pairs for each cluster and set type
         # for the last run of the function
         self.run_log = scoring.RunLog('set_enrichment', config_params)
