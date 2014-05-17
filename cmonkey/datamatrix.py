@@ -289,9 +289,15 @@ class DataMatrixFactory:
         else:
             colnames = header[1:len(header)]
 
+        # optimization: internalize column names
+        for col in colnames:
+            intern(col)
+
         rownames = []
         for row in xrange(nrows):
-            rownames.append(lines[row][0])
+            # optimization: intern gene names
+            rownames.append(intern(lines[row][0]))
+
         values = np.empty([nrows, ncols])
         for row in xrange(nrows):
             for col in xrange(ncols):
