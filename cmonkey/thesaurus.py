@@ -43,13 +43,13 @@ def create_from_rsat_feature_names(dfile, key_transforms=None):
     result = {}
     for line in dfile.lines:
         key = intern(line[1])  # intern the key
-        intern(line[0])  # and the alternative
+        alternative = intern(line[0])  # and the alternative
         if key_transforms:
             for transform in key_transforms:
                 for transform_key in transform(key):
-                    result[transform_key] = line[0]
+                    result[transform_key] = alternative
         else:
-            result[key] = line[0]
+            result[key] = alternative
     return result
 
 
