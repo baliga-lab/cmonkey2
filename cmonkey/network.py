@@ -125,7 +125,7 @@ class Network:
                 key = "%s:%s" % (edge[0], edge[1])
                 key_rev = "%s:%s" % (edge[1], edge[0])
                 if key not in added and key_rev not in added:
-                    network_edges.append(edge)
+                    network_edges.append((intern(edge[0]), intern(edge[1]), edge[2]))
                 added.add(key)
                 added.add(key_rev)
 

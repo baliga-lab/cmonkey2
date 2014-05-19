@@ -16,7 +16,25 @@ import datamatrix as dm
 import multiprocessing as mp
 
 
-class EnrichmentSet:
+class DiscreteEnrichmentSet:
+    def __init__(self, genes):
+        """instance creation"""
+        self.__genes = genes
+        self.cutoff = "discrete"
+
+    def genes(self):
+        return self.__genes
+
+    def genes_above_cutoff(self):
+        """returns the genes that have a weight above the cutoff"""
+        return self.genes()
+
+    def __repr__(self):
+        return ("Enrichment set: Cutoff = discrete, # genes: %d # above cutoff: %d" %
+                (len(self.__genes), len(self.__genes)))
+
+    
+class CutoffEnrichmentSet:
     """Enrichment set representation"""
     def __init__(self, cutoff, elems):
         """instance creation"""
@@ -31,10 +49,7 @@ class EnrichmentSet:
 
     def genes_above_cutoff(self):
         """returns the genes that have a weight above the cutoff"""
-        if self.cutoff == 'discrete':
-            return self.genes()
-        else:
-            return {elem[0] for elem in self.elems if elem[1] >= self.cutoff}
+        return {elem[0] for elem in self.elems if elem[1] >= self.cutoff}
 
     def __repr__(self):
         return ("Enrichment set: Cutoff = %s, # genes: %d # above cutoff: %d" %
@@ -80,10 +95,14 @@ def read_set_types(config_params, thesaurus):
     setfile = config_params['SetEnrichment']['set_file']
     with open(setfile) as infile:
         json_sets = json.load(infile)
-        sets = {setname: EnrichmentSet('discrete',
-                                       zip(filter(lambda g: g in thesaurus, genes),
-                                           [1] * len(genes)))
-                for setname, genes in json_sets.items()}
+        sets = {}
+        thrown_out = 0
+        for setname, genes in json_sets.items():
+            filtered = map(lambda s: intern(str(s)), filter(lambda g: g in thesaurus, genes))
+            thrown_out += len(genes) - len(filtered)
+            sets[setname] = DiscreteEnrichmentSet(set(filtered))
+        json_sets = None
+        logging.info("SET_ENRICHMENT REMOVED  %d ELEMENTS FROM INPUT", thrown_out)
     return [SetType('default', sets)]
 
 
