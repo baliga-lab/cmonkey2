@@ -140,6 +140,7 @@ def __get_arg_parser():
     parser.add_argument('--ratios', required=True,
                         help='tab-separated ratios matrix file')
 
+    parser.add_argument('--verbose', action="store_true")
     parser.add_argument('--organism', help='KEGG organism code', default=None)
     parser.add_argument('--out', help='output directory')
     parser.add_argument('--cachedir', help="path to cache directory")
@@ -202,8 +203,13 @@ def setup():
     config_parser = __get_config_parser()
     arg_parser = __get_arg_parser()
     args = arg_parser.parse_args()
+    if args.verbose:
+        loglevel = logging.DEBUG
+    else:
+        loglevel = logging.INFO
+
     logging.basicConfig(format=LOG_FORMAT, datefmt='%Y-%m-%d %H:%M:%S',
-                        level=logging.INFO, filename=args.logfile)
+                        level=loglevel, filename=args.logfile)
 
     # no organism provided -> dummy organism
     if args.organism is None:
