@@ -26,7 +26,8 @@ outdb = os.path.join(outdir, 'cmonkey_run.db')
 
 RunInfo = namedtuple('RunInfo',
                      ['species', 'orgcode', 'num_iters', 'last_iter',
-                      'num_rows', 'num_cols', 'num_clusters', 'start_time', 'finish_time'])
+                      'num_rows', 'num_cols', 'num_clusters', 'start_time', 'finish_time',
+                      'run_secs'])
 
 ClusterStat = namedtuple('ClusterStat',
                          ['iter', 'cluster', 'num_rows', 'num_cols', 'residual'])
@@ -175,14 +176,18 @@ def make_int_histogram(counts):
     
 
 def make_float_histogram(values, nbuckets=20):
-    minval = min(values)
-    maxval = max(values)
-    interval = (maxval - minval) / nbuckets
-    xvals = ["%.2f" % (minval + interval * i) for i in range(nbuckets)]
-    yvals = [0.0] * nbuckets
-    for value in values:
-        bucketnum = min(nbuckets - 1, int((value - minval) / interval))
-        yvals[bucketnum] += 1
+    if len(values) > 0:
+        minval = min(values)
+        maxval = max(values)
+        interval = (maxval - minval) / nbuckets
+        xvals = ["%.2f" % (minval + interval * i) for i in range(nbuckets)]
+        yvals = [0.0] * nbuckets
+        for value in values:
+            bucketnum = min(nbuckets - 1, int((value - minval) / interval))
+            yvals[bucketnum] += 1
+    else:
+        xvals = []
+        yvals = []
     return json.dumps(xvals), json.dumps(yvals)
 
 
@@ -221,7 +226,7 @@ class ClusterViewerApp:
         try:
             conn = dbconn()
             cursor = conn.cursor()
-            cursor.execute('select last_iteration from run_infos')
+            cursor.execute('select max(iteration) from row_members')
             iteration = cursor.fetchone()[0]
         except:
             tmpl = env.get_template('not_available.html')
@@ -277,8 +282,13 @@ class ClusterViewerApp:
 
         conn.row_factory = runinfo_factory
         cursor = conn.cursor()
-        cursor.execute('select species, organism, num_iterations, last_iteration, num_rows, num_columns, num_clusters, start_time, finish_time from run_infos')
+        cursor.execute("select species, organism, num_iterations, last_iteration, num_rows, num_columns, num_clusters, start_time, finish_time, (strftime('%s', finish_time) - strftime('%s', start_time)) from run_infos")
         runinfo = cursor.fetchone()
+        if runinfo.finish_time:
+            elapsed_hours = runinfo.run_secs / 3600
+            elapsed_mins = (runinfo.run_secs - (elapsed_hours * 3600)) / 60
+            elapsed_time = "(%d hours %d minutes)" % (elapsed_hours, elapsed_mins)
+
         cursor.close()
 
         conn.row_factory = iterationstat_factory

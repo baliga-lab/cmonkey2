@@ -224,7 +224,7 @@
        {% if not runinfo.finish_time %}
        <div class="inprogress-info">Run in progress...</div>
        {% else %}
-       <div class="finish-info">Run finished at {{runinfo.finish_time}}</div>
+       <div class="finish-info">Run finished at {{runinfo.finish_time}} {{elapsed_time}}</div>
        {% endif %}
        <div style="height: 10px;">&nbsp;</div>
      </div>
