@@ -198,7 +198,7 @@ class OrigMembership:
         free_slots = np.where(self.row_membs[rowidx] == 0)[0]
         if len(free_slots > 0):
             index = free_slots[0]
-            self.row_membs[rowidx][index] = cluster
+            self.row_membs[rowidx, index] = cluster
         elif not force:
             raise Exception(("add_cluster_to_row() - exceeded clusters/row " +
                              "limit for row: '%s'" % str(row)))
@@ -213,7 +213,7 @@ class OrigMembership:
         free_slots = np.where(self.col_membs[colidx] == 0)[0]
         if len(free_slots) > 0:
             index = free_slots[0]
-            self.col_membs[colidx][index] = cluster
+            self.col_membs[colidx, index] = cluster
         elif not force:
             raise Exception(("add_cluster_to_column() - exceeded clusters/col " +
                              "limit for column: '%s'" % str(col)))
@@ -224,10 +224,10 @@ class OrigMembership:
             self.col_membs[colidx][-1] = cluster
 
     def replace_row_cluster(self, row, index, new):
-        self.row_membs[self.rowidx[row]][index] = new
+        self.row_membs[self.rowidx[row], index] = new
 
     def replace_column_cluster(self, col, index, new):
-        self.col_membs[self.colidx[col]][index] = new
+        self.col_membs[self.colidx[col], index] = new
 
     def pickle_path(self):
         """returns the function-specific pickle-path"""
@@ -324,18 +324,19 @@ def update_for_rows(membership, rd_scores, multiprocessing):
                         if take_cluster not in membership.clusters_for_row(row):
                             membership.add_cluster_to_row(row, take_cluster)
                     else:
-                        replace_delta_row_member2(membership, row, clusters, rd_scores)
+                        replace_delta_row_member(membership, row, clusters, rd_scores)
 
 
-def replace_delta_row_member2(membership, row, rm, rd_scores):
+def replace_delta_row_member(membership, row, rm, rd_scores):
     index = rd_scores.row_indexes_for([row])[0]
     rds_values = rd_scores.values
     # Since Python is 0-based, we adjust the clusters by -1 to access the
     # arrays. This a little confusing, so we need to pay attention to this
     # function
-    curr_clusters = [c - 1 for c in membership.row_membs[membership.rowidx[row]]]
-    rm_clusters = [c - 1 for c in rm]
-    deltas = rds_values[index][rm_clusters] - rds_values[index][curr_clusters]
+    curr_clusters = membership.row_membs[membership.rowidx[row]] - 1
+    rm_clusters = np.array(rm)
+    rm_clusters -= 1
+    deltas = rds_values[index, rm_clusters] - rds_values[index, curr_clusters]
 
     # ignore the positions in curr_cluster that are also in rm_clusters
     # delta 0 is a non-replacement
@@ -381,7 +382,7 @@ def update_for_cols(membership, cd_scores, multiprocessing):
                                     membership.replace_column_cluster(col, i, clusters[i])
                                     break
                         else:
-                            replace_delta_column_member2(membership, col, clusters, cd_scores)
+                            replace_delta_column_member(membership, col, clusters, cd_scores)
 
 
 def which_multiple(clusters):
@@ -393,12 +394,13 @@ def which_multiple(clusters):
     return {cluster for cluster, count in result.items() if count > 1}
 
 
-def replace_delta_column_member2(membership, col, cm, cd_scores):
+def replace_delta_column_member(membership, col, cm, cd_scores):
     index = cd_scores.row_indexes_for([col])[0]
     cds_values = cd_scores.values
-    curr_clusters = [c - 1 for c in membership.col_membs[membership.colidx[col]]]
-    cm_clusters = [c - 1 for c in cm]
-    deltas = cds_values[index][cm_clusters] - cds_values[index][curr_clusters]
+    curr_clusters = membership.col_membs[membership.colidx[col]] - 1
+    cm_clusters = np.array(cm)
+    cm_clusters -= 1
+    deltas = cds_values[index, cm_clusters] - cds_values[index, curr_clusters]
 
     if len(deltas[deltas != 0.0]) > 0:
         maxidx = deltas.argmax(axis=0)
