@@ -148,11 +148,11 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.used_seqs = organism.sequences_for_genes_scan(
             used_genes, seqtype=self.seqtype)
 
-        logging.info("building reverse map...")
+        logging.debug("building reverse map...")
         start_time = util.current_millis()
         self.reverse_map = self.__build_reverse_map(ratios)
-        logging.info("reverse map built in %d ms.",
-                     util.current_millis() - start_time)
+        logging.debug("reverse map built in %d ms.",
+                      util.current_millis() - start_time)
 
         self.__last_results = None  # caches the results of the previous meme run
 
@@ -210,7 +210,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         """
         iteration = iteration_result['iteration']
         if force or self.motif_in_iteration(iteration):  # meme.iter in R
-            logging.info("Running Motifing for sequence type '%s'...", self.seqtype)
+            logging.debug("Running Motifing for sequence type '%s'...", self.seqtype)
             # running MEME and store the result for the non-motifing iterations
             # to reuse
             # Note: currently, iteration results are only computed here
@@ -223,8 +223,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                 cPickle.dump(self.__last_iteration_result, outfile)            
 
         if self.all_pvalues is not None and (force or self.run_in_iteration(iteration)):  # mot.iter in R
-            logging.info("UPDATING MOTIF SCORES in iteration %d with scaling: %f",
-                         iteration, self.scaling(iteration))
+            logging.debug("UPDATING MOTIF SCORES in iteration %d with scaling: %f",
+                          iteration, self.scaling(iteration))
             self.last_result = pvalues2matrix(self.all_pvalues, self.num_clusters(),
                                               self.gene_names(), self.reverse_map)
 
@@ -283,7 +283,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         SEQUENCE_FILTERS = None
         ORGANISM = None
         MEMBERSHIP = None
-        logging.info("prepared sequences in %d ms.", util.current_millis() - start_time)
+        logging.debug("prepared sequences in %d ms.", util.current_millis() - start_time)
 
         # Make the parameters, this is fast enough
         start_time = util.current_millis()
@@ -309,8 +309,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                                                  self.config_params['num_iterations'],
                                                  self.config_params['debug'])
 
-        logging.info("prepared MEME parameters in %d ms.",
-                     util.current_millis() - start_time)
+        logging.debug("prepared MEME parameters in %d ms.",
+                      util.current_millis() - start_time)
 
         # create motif result map if necessary
         for cluster in xrange(1, self.num_clusters() + 1):
@@ -328,7 +328,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                       if params[cluster].feature_ids != self.__last_results[cluster][0]}
             newlen = len(params)
             if oldlen - newlen > 0:
-                logging.info("%d clusters did not change !!!", oldlen - newlen)
+                logging.debug("%d clusters did not change !!!", oldlen - newlen)
 
         # compute and store motif results
         self.__last_motif_infos = {}
@@ -423,13 +423,13 @@ def compute_cluster_score(params):
     pvalues = {}
     run_result = None
     nseqs = len(params.seqs)
-    logging.info('Cluster %d, # sequences: %d', params.cluster, nseqs)
+    logging.debug('Cluster %d, # sequences: %d', params.cluster, nseqs)
     if (nseqs >= params.min_cluster_rows and nseqs <= params.max_cluster_rows):
         run_result = params.meme_runner(params)
         pvalues = {feature_id: pvalue for feature_id, pvalue, evalue in run_result.pe_values}
     else:
-        logging.info("# seqs (= %d) outside of defined limits, "
-                     "skipping cluster %d", len(params.seqs), params.cluster)
+        logging.debug("# seqs (= %d) outside of defined limits, "
+                      "skipping cluster %d", len(params.seqs), params.cluster)
     return params.cluster, pvalues, run_result
 
 
@@ -497,21 +497,21 @@ class WeederRunner:
         with tempfile.NamedTemporaryFile(prefix='weeder.fasta',
                                          delete=False) as outfile:
             filename = outfile.name
-            logging.info("Run Weeder on FASTA file: '%s'", filename)
+            logging.debug("Run Weeder on FASTA file: '%s'", filename)
             st.write_sequences_to_fasta_file(outfile, params.seqs.items())
 
         try:
             dbfile = None
             meme_outfile, pssms = weeder.run_weeder(filename, params, self.config_params)
             if len(pssms) == 0:
-                logging.info('no PSSMS generated, skipping cluster')
+                logging.debug('no PSSMS generated, skipping cluster')
                 return meme.MemeRunResult([], {}, [])
 
             dbfile = self.meme_suite.make_sequence_file(
                 [(feature_id, locseq[1])
                  for feature_id, locseq in params.used_seqs.items()])
-            logging.info("# PSSMS created: %d %s", len(pssms), str([i.consensus_motif() for i in pssms]))
-            logging.info("run MAST on '%s', dbfile: '%s'", meme_outfile, dbfile)
+            logging.debug("# PSSMS created: %d %s", len(pssms), str([i.consensus_motif() for i in pssms]))
+            logging.debug("run MAST on '%s', dbfile: '%s'", meme_outfile, dbfile)
 
             motif_infos = []
             for i in xrange(len(pssms)):

@@ -163,6 +163,8 @@ def __get_arg_parser():
     parser.add_argument('--config', default=None, help="additional configuration file")
     parser.add_argument('--debug', default=None,  help="""run in debug mode""")
     parser.add_argument('--random_seed', type=int)
+    parser.add_argument('--minimize_io', action="store_true",
+                        help='minimal io setting')
 
     # RSAT overrides
     parser.add_argument('--rsat_dir', default=None,
@@ -201,7 +203,7 @@ def setup():
     arg_parser = __get_arg_parser()
     args = arg_parser.parse_args()
     logging.basicConfig(format=LOG_FORMAT, datefmt='%Y-%m-%d %H:%M:%S',
-                        level=logging.DEBUG, filename=args.logfile)
+                        level=logging.INFO, filename=args.logfile)
 
     # no organism provided -> dummy organism
     if args.organism is None:
@@ -259,6 +261,7 @@ def setup():
                  'meme_version': meme.check_meme_version(),
                  'debug': debug_options,
                  'nomotifs': False,
+                 'minimize_io': args.minimize_io,
                  'nonetworks': args.nonetworks,
                  'checkratios': args.checkratios,
                  'random_seed': args.random_seed,

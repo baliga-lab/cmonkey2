@@ -108,8 +108,8 @@ class ScoringFunctionBase:
         iteration = iteration_result['iteration']
 
         if self.run_in_iteration(iteration):
-            logging.info("running '%s' in iteration %d with scaling: %f",
-                         self.id, iteration, self.scaling(iteration))
+            logging.debug("running '%s' in iteration %d with scaling: %f",
+                          self.id, iteration, self.scaling(iteration))
             computed_result = self.do_compute(iteration_result,
                                               reference_matrix)
             # store the result for later, either by pickling them
@@ -118,7 +118,7 @@ class ScoringFunctionBase:
                 self.cached_result = computed_result
             else:
                 # pickle the result for future use
-                logging.info("pickle result to %s", self.pickle_path())
+                logging.debug("pickle result to %s", self.pickle_path())
                 with open(self.pickle_path(), 'w') as outfile:
                     cPickle.dump(computed_result, outfile)
 
@@ -303,7 +303,7 @@ def combine(result_matrices, score_scalings, membership, iteration, config_param
             result_matrices = dm.quantile_normalize_scores(result_matrices,
                                                            score_scalings)
             elapsed = util.current_millis() - start_time
-            logging.info("quantile normalize in %f s.", elapsed / 1000.0)
+            logging.debug("quantile normalize in %f s.", elapsed / 1000.0)
 
         in_matrices = [m.values for m in result_matrices]
 
@@ -338,7 +338,7 @@ def combine(result_matrices, score_scalings, membership, iteration, config_param
 
         if len(result_matrices) > 1:
             rs_quant = util.quantile(rscores.values, 0.01)
-            logging.info("RS_QUANT = %f", rs_quant)
+            logging.debug("RS_QUANT = %f", rs_quant)
             for i in range(1, len(result_matrices)):
                 values = result_matrices[i].values
                 qqq = abs(util.quantile(values, 0.01))
@@ -362,7 +362,7 @@ def combine(result_matrices, score_scalings, membership, iteration, config_param
             combined_score += in_matrices[i] * score_scalings[i]
 
         elapsed = util.current_millis() - start_time
-        logging.info("combined score in %f s.", elapsed / 1000.0)
+        logging.debug("combined score in %f s.", elapsed / 1000.0)
         matrix0 = result_matrices[0]  # as reference for names
         return dm.DataMatrix(matrix0.num_rows, matrix0.num_columns,
                              matrix0.row_names, matrix0.column_names,
@@ -464,9 +464,9 @@ class ScoringFunctionCombiner:
             for row in xrange(matrix.num_rows):
                 if matrix.row_names[row] in cluster_rows:
                     scores.append(mvalues[row][cluster - 1])
-        logging.info("function '%s', trim mean score: %f",
-                     score_function.id,
-                     util.trim_mean(scores, 0.05))
+        logging.debug("function '%s', trim mean score: %f",
+                      score_function.id,
+                      util.trim_mean(scores, 0.05))
 
     def scaling(self, iteration):
         """returns the scaling for the specified iteration"""

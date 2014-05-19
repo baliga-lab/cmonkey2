@@ -91,7 +91,7 @@ class Network:
     def create(cls, name, edges, weight, organism=None, ratios=None,
                check_size=True):
         """standard Factory method"""
-        logging.info("Network.create() called with %d edges", len(edges))
+        logging.debug("Network.create() called with %d edges", len(edges))
         if edges is None:
             raise Exception("no edges specified in network '%s'" % name)
         added = set([])
@@ -117,7 +117,7 @@ class Network:
                 probes_in = [gene for gene in cano_genes if gene in cano_nodes]
                 nodes = {n for n in nodes if thesaurus[n] in probes_in}
 
-        logging.info("# nodes in network '%s': %d (of %d)", name, len(nodes), num_nodes_orig)
+        logging.debug("# nodes in network '%s': %d (of %d)", name, len(nodes), num_nodes_orig)
 
         for edge in edges:
             # we ignore self-edges, and edges with nodes not in the final nodes
@@ -131,7 +131,7 @@ class Network:
 
         if check_size and len(network_edges) < 10:
             raise Exception("Error: only %d edges in network '%s'" % (len(network_edges), name))
-        logging.info("Created network '%s' with %d edges", name, len(network_edges))
+        logging.debug("Created network '%s' with %d edges", name, len(network_edges))
         return Network(name, network_edges, weight, 0)
 
 
@@ -230,15 +230,15 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                                self.gene_names())
         network_scores = {}
         for network in self.networks():
-            logging.info("Compute scores for network '%s', WEIGHT: %f",
-                         network.name, network.weight)
+            logging.debug("Compute scores for network '%s', WEIGHT: %f",
+                          network.name, network.weight)
             start_time = util.current_millis()
             network_score = self.__compute_network_cluster_scores(network)
             network_scores[network.name] = network_score
             self.__update_score_matrix(matrix, network_score, network.weight)
             elapsed = util.current_millis() - start_time
-            logging.info("NETWORK '%s' SCORING TIME: %f s.",
-                         network.name, (elapsed / 1000.0))
+            logging.debug("NETWORK '%s' SCORING TIME: %f s.",
+                          network.name, (elapsed / 1000.0))
 
         # compute and store score means
         self.score_means = self.__update_score_means(network_scores)
@@ -302,8 +302,8 @@ def retrieve_networks(organism):
     networks = organism.networks()
     max_score = 0
     for network in networks:
-        #logging.info("Network '%s' with %d edges", network.name(),
-        #             network.num_edges())
+        #logging.debug("Network '%s' with %d edges", network.name(),
+        #              network.num_edges())
         nw_total = network.total_score()
         if nw_total > max_score:
             max_score = nw_total
