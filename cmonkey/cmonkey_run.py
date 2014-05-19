@@ -144,7 +144,7 @@ class CMonkeyRun:
                         on row_members (iteration)''')
         conn.execute('''create index if not exists clustresid_iter_index
                         on cluster_residuals (iteration)''')
-        logging.info("created output database schema")
+        logging.debug("created output database schema")
 
         # all cluster members are stored relative to the base ratio matrix
         with conn:
@@ -156,7 +156,7 @@ class CMonkeyRun:
                 conn.execute('''insert into column_names (order_num, name) values
                                 (?,?)''',
                              (index, self.ratios.column_names[index]))
-        logging.info("added row and column names to output database")
+        logging.debug("added row and column names to output database")
 
     def report_params(self):
         logging.info('cmonkey_run config_params:')
@@ -180,7 +180,7 @@ class CMonkeyRun:
 
     def membership(self):
         if self.__membership is None:
-            logging.info("creating and seeding memberships")
+            logging.debug("creating and seeding memberships")
             self.__membership = self.__make_membership()
 
             # debug: write seed into an analytical file for iteration 0
@@ -280,13 +280,13 @@ class CMonkeyRun:
 
         # do we use operons ?
         if is_microbe and not self['nonetworks'] and self['use_operons']:
-            logging.info('adding operon network factory')
+            logging.debug('adding operon network factory')
             nw_factories.append(microbes_online.get_network_factory(
                 mo_db, max_operon_size=self.ratios.num_rows / 20,
                 weight=network_weight))
 
         orgcode = self['organism_code']
-        logging.info("Creating Microbe object for '%s'", orgcode)
+        logging.debug("Creating Microbe object for '%s'", orgcode)
         keggorg = kegg_map[orgcode]
         rsat_info = org.RsatSpeciesInfo(rsatdb, keggorg, self['rsat_organism'],
                                         self['ncbi_code'])
@@ -316,7 +316,7 @@ class CMonkeyRun:
             
 
     def __make_dirs_if_needed(self):
-        logging.info('creating aux directories')
+        logging.debug('creating aux directories')
         output_dir = self['output_dir']
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
@@ -588,7 +588,7 @@ class CMonkeyRun:
         cscores = col_scoring.compute(iteration_result)
         elapsed = util.current_millis() - start_time
         if elapsed > 0.0001:
-            logging.info("computed column_scores in %f s.", elapsed / 1000.0)
+            logging.debug("computed column_scores in %f s.", elapsed / 1000.0)
 
         self.membership().update(self.ratios, rscores, cscores,
                                  self['num_iterations'], iteration_result)
@@ -605,14 +605,16 @@ class CMonkeyRun:
             for seqtype in mean_mot_pvalues.keys():
                 mean_mot_pvalue = mean_mot_pvalue + (" '%s' = %f" % (seqtype, mean_mot_pvalues[seqtype]))
 
-        logging.info('mean net = %s | mean mot = %s', str(mean_net_score), mean_mot_pvalue)
+        logging.debug('mean net = %s | mean mot = %s', str(mean_net_score), mean_mot_pvalue)
 
-        if iteration == 1 or (iteration % self['result_freq'] == 0):
-            self.write_results(iteration_result)
+        # Reduce I/O, will write the results to database only on a debug run
+        if not self['minimize_io']:
+            if iteration == 1 or (iteration % self['result_freq'] == 0):
+                self.write_results(iteration_result)
 
-        if iteration == 1 or (iteration % self['stats_freq'] == 0):
-            self.write_stats(iteration_result)
-            self.update_iteration(iteration)
+            if iteration == 1 or (iteration % self['stats_freq'] == 0):
+                self.write_stats(iteration_result)
+                self.update_iteration(iteration)
 
         if 'dump_results' in self['debug'] and (iteration == 1 or
                                                 (iteration % self['debug_freq'] == 0)):
@@ -647,7 +649,7 @@ class CMonkeyRun:
             # garbage collection after everything in iteration went out of scope
             gc.collect()
             elapsed = util.current_millis() - start_time
-            logging.info("performed iteration %d in %f s.", iteration, elapsed / 1000.0)
+            logging.debug("performed iteration %d in %f s.", iteration, elapsed / 1000.0)
             
             if 'profile_mem' in self['debug'] and (iteration == 1 or iteration % 100 == 0):
                 with open(os.path.join(self['output_dir'], 'memprofile.tsv'), 'a') as outfile:

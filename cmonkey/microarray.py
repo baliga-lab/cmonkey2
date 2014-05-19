@@ -36,7 +36,7 @@ def seed_column_members(data_matrix, row_membership, num_clusters,
     column_members = [util.rorder(cscores[i], num_clusters_per_column)
                       for i in xrange(num_cols)]
     elapsed = util.current_millis() - start_time
-    logging.info("seed column members in %f s.", elapsed % 1000.0)
+    logging.debug("seed column members in %f s.", elapsed % 1000.0)
     return column_members
 
 
@@ -48,8 +48,8 @@ def compute_row_scores(membership, matrix, num_clusters, config_params):
         membership, matrix, num_clusters, config_params)
     # TODO: replace the nan/inf-Values with the quantile-thingy in the R-version
 
-    logging.info("__compute_row_scores_for_clusters() in %f s.",
-                 (util.current_millis() - start_time) / 1000.0)
+    logging.debug("__compute_row_scores_for_clusters() in %f s.",
+                  (util.current_millis() - start_time) / 1000.0)
 
     # rearrange result into a DataMatrix, where rows are indexed by gene
     # and columns represent clusters
@@ -63,8 +63,8 @@ def compute_row_scores(membership, matrix, num_clusters, config_params):
     result = dm.DataMatrix(matrix.num_rows, num_clusters,
                            row_names=matrix.row_names,
                            values=values)
-    logging.info("made result matrix in %f s.",
-                 (util.current_millis() - start_time) / 1000.0)
+    logging.debug("made result matrix in %f s.",
+                  (util.current_millis() - start_time) / 1000.0)
     return result
 
 ROW_SCORE_MATRIX = None

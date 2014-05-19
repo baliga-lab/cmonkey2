@@ -241,7 +241,7 @@ class OrigMembership:
                                             num_iterations, iteration_result,
                                             self.__config_params['add_fuzz'])
         elapsed = util.current_millis() - start
-        logging.info("fuzzify took %f s.", elapsed / 1000.0)
+        logging.debug("fuzzify took %f s.", elapsed / 1000.0)
 
         # pickle the (potentially fuzzed) row scores to use them
         # in the post adjustment step. We only need to do that in the last
@@ -255,22 +255,22 @@ class OrigMembership:
         rd_scores, cd_scores = get_density_scores(self, row_scores,
                                                   column_scores)
         elapsed = util.current_millis() - start
-        logging.info("GET_DENSITY_SCORES() took %f s.", elapsed / 1000.0)
+        logging.debug("GET_DENSITY_SCORES() took %f s.", elapsed / 1000.0)
 
         start = util.current_millis()
         compensate_size(self, matrix, rd_scores, cd_scores)
         elapsed = util.current_millis() - start
-        logging.info("COMPENSATE_SIZE() took %f s.", elapsed / 1000.0)
+        logging.debug("COMPENSATE_SIZE() took %f s.", elapsed / 1000.0)
 
         start_time = util.current_millis()
         update_for_rows(self, rd_scores, self.__config_params['multiprocessing'])
         elapsed = util.current_millis() - start_time
-        logging.info("update_for rdscores finished in %f s.", elapsed / 1000.0)
+        logging.debug("update_for rdscores finished in %f s.", elapsed / 1000.0)
 
         start_time = util.current_millis()
         update_for_cols(self, cd_scores, self.__config_params['multiprocessing'])
         elapsed = util.current_millis() - start_time
-        logging.info("update_for cdscores finished in %f s.", elapsed / 1000.0)
+        logging.debug("update_for cdscores finished in %f s.", elapsed / 1000.0)
 
 
 def create_membership(matrix, seed_row_memberships, seed_column_memberships,
@@ -457,8 +457,8 @@ def adjust_cluster(membership, cluster, rowscores, cutoff, limit):
         wh.remove(wh2)
         tries += 1
     old_num = len(membership.rows_for_cluster(cluster))
-    logging.info("CLUSTER %d, # ROWS BEFORE: %d, AFTER: %d",
-                 cluster, old_num, old_num + len(result))
+    logging.debug("CLUSTER %d, # ROWS BEFORE: %d, AFTER: %d",
+                  cluster, old_num, old_num + len(result))
     return result
 
 ######################################################################
@@ -504,7 +504,7 @@ def get_row_density_scores(membership, row_scores):
                                                   cluster)
 
     elapsed = util.current_millis() - start_time
-    logging.info("RR_SCORES IN %f s.", elapsed / 1000.0)
+    logging.debug("RR_SCORES IN %f s.", elapsed / 1000.0)
     return rd_scores
 
 
@@ -527,7 +527,7 @@ def get_col_density_scores(membership, col_scores):
                                                   cluster)
 
     elapsed = util.current_millis() - start_time
-    logging.info("CC_SCORES IN %f s.", elapsed / 1000.0)
+    logging.debug("CC_SCORES IN %f s.", elapsed / 1000.0)
     return cd_scores
 
 
@@ -696,7 +696,7 @@ def fuzzify(membership, row_scores, column_scores, num_iterations, iteration_res
             add_fuzz):
     """Provide an iteration-specific fuzzification"""
     if add_fuzz == 'none':
-        logging.info('DO NOT FUZZIFY !!')
+        logging.debug('DO NOT FUZZIFY !!')
         return row_scores, column_scores
 
     # truth table maps from add_fuzz parameter to where fuzz should be added
@@ -704,7 +704,7 @@ def fuzzify(membership, row_scores, column_scores, num_iterations, iteration_res
     fuzz_rows, fuzz_cols = fuzz_vals[add_fuzz]
 
     iteration = iteration_result['iteration']
-    #logging.info("__fuzzify(), setup...")
+    #logging.debug("__fuzzify(), setup...")
     #start_time = util.current_millis()
     fuzzy_coeff = old_fuzzy_coefficient(iteration, num_iterations)
     iteration_result['fuzzy-coeff'] = fuzzy_coeff
@@ -747,5 +747,5 @@ def fuzzify(membership, row_scores, column_scores, num_iterations, iteration_res
                                                         column_scores.num_columns)
 
     #elapsed = util.current_millis() - start_time
-    #logging.info("fuzzify() finished in %f s.", elapsed / 1000.0)
+    #logging.debug("fuzzify() finished in %f s.", elapsed / 1000.0)
     return row_scores, column_scores
