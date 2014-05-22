@@ -10,21 +10,24 @@ import datamatrix as dm
 
 DESCRIPTION = """ensemble.py - prepare cluster runs"""
 
-QSUB_TEMPLATE = """#!/bin/bash
+QSUB_TEMPLATE_HEADER = """#!/bin/bash
 
 export LD_LIBRARY_PATH=/tools/lib:/tools/R-3.0.3/lib64/R/lib
 export PATH=/tools/bin:${PATH}
+export BATCHNUM=`printf "%03d" $SGE_TASK_ID`
+"""
 
-#$ -S /bin/bash
+QSUB_TEMPLATE = """#$ -S /bin/bash
 #$ -m be
 #$ -q baliga
-#$ -P Baliga
+#$ -P Bal_wwu
+#$ -t 1-%d
 #$ -M wwu@systemsbiology.org
 #$ -cwd
-#$ -pe serial 8
+#$ -pe serial %d
 #$ -l mem_free=32G
 
-python cmonkey.py --organism %s --ratios %s --out %s"""
+python cmonkey.py --organism %s --ratios %s --out %s --num_cores %d"""
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=DESCRIPTION)
@@ -33,11 +36,15 @@ if __name__ == '__main__':
     parser.add_argument('--targetdir', required=True)
     parser.add_argument('--numfiles', type=int, default=4)
     parser.add_argument('--numcols', type=int, default=8)
-
+    parser.add_argument('--num_cores', type=int, default=1)
     args = parser.parse_args()
+
     dm.prepare_ensemble_matrix(args.ratios, args.targetdir, args.numfiles, args.numcols)
-    for i in range(1, args.numfiles + 1):
-        with open(os.path.join(args.targetdir, "%s-%03d.sh" % (args.organism, i)), 'w') as outfile:
-            outfile.write(QSUB_TEMPLATE % (args.organism,
-                                           os.path.join(args.targetdir, "ratios-%03d.tsv.gz" % i),
-                                           "%s-out-%03d" % (args.organism, i)))
+    with open(os.path.join(args.targetdir, "%s.sh" % args.organism), 'w') as outfile:
+        outfile.write(QSUB_TEMPLATE_HEADER)
+        outfile.write(QSUB_TEMPLATE % (args.numfiles,
+                                       args.num_cores,
+                                       args.organism,
+                                       os.path.join(args.targetdir, "ratios-$BATCHNUM.tsv.gz"),
+                                       "%s-out-$BATCHNUM" % (args.organism),
+                                       args.num_cores))

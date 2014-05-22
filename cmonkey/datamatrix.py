@@ -490,7 +490,7 @@ def split_matrix(matrix, outdir, n, k):
 
     for i, column_names in enumerate(column_sets):
         m = matrix.submatrix_by_name(column_names=column_names)
-        path = '%s/ratios-%03d.tsv' % (outdir, i)
+        path = '%s/ratios-%03d.tsv' % (outdir, i + 1)
         m.write_tsv_file(path)
 
 

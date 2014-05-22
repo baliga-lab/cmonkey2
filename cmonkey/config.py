@@ -164,6 +164,7 @@ def __get_arg_parser():
     parser.add_argument('--config', default=None, help="additional configuration file")
     parser.add_argument('--debug', default=None,  help="""run in debug mode""")
     parser.add_argument('--random_seed', type=int)
+    parser.add_argument('--num_cores', type=int, default=None)
     parser.add_argument('--minimize_io', action="store_true",
                         help='minimal io setting')
 
@@ -285,6 +286,8 @@ def setup():
     overrides['nomotifs'] = args.nomotifs or not overrides['meme_version']
     overrides['use_string'] = not args.nostring
     overrides['use_operons'] = not args.nooperons
+    if args.num_cores is not None:
+        overrides['num_cores'] = args.num_cores
     if args.out:
         overrides['output_dir'] = args.out
     if args.cachedir:
