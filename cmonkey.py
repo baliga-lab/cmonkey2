@@ -16,12 +16,12 @@ import random
 
 if __name__ == '__main__':
     """process configuration"""
-    args, ratios = conf.setup()
-    cmonkey_run = cmr.CMonkeyRun(ratios, args)
+    args, params, ratios = conf.setup()
+    cmonkey_run = cmr.CMonkeyRun(ratios, params)
 
     proceed = True
 
-    if args['checkratios']:
+    if params['checkratios']:
         thesaurus = cmonkey_run.organism().thesaurus()
         logging.info("Checking the quality of the input matrix names...")
         found = [name for name in matrix.row_names if name in thesaurus]

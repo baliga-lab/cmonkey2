@@ -112,13 +112,16 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         background_file = None
         if global_background:
             background_file = meme.global_background_file(
-                self.organism, self.ratios.row_names, self.seqtype)
+                self.organism, self.ratios.row_names, self.seqtype,
+                bgorder=int(self.config_params['MEME']['background_order']))
 
         if meme_version == '4.3.0':
-            self.meme_suite = meme.MemeSuite430(background_file=background_file)
+            self.meme_suite = meme.MemeSuite430(self.config_params,
+                                                background_file=background_file)
         elif meme_version and (
                 meme_version.startswith('4.8') or meme_version.startswith('4.9')):
-            self.meme_suite = meme.MemeSuite481(background_file=background_file)
+            self.meme_suite = meme.MemeSuite481(self.config_params,
+                                                background_file=background_file)
         else:
             logging.error("MEME version %s currently not supported !", meme_version)
             raise Exception("unsupported MEME version: '%s'" % meme_version)

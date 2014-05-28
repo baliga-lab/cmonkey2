@@ -34,11 +34,11 @@ class MemeSuite:
     meme - discover motifs in a set of sequences
     mast - search for a group of motifs in a set of sequences
     """
-    def __init__(self, max_width=24, use_revcomp=True, background_file=None,
-                 remove_tempfiles=True):
+    def __init__(self, config_params, background_file=None, remove_tempfiles=True):
         """Create MemeSuite instance"""
-        self.__max_width = max_width
-        self.__use_revcomp = use_revcomp
+        self.max_width = int(config_params['MEME']['max_width'])
+        self.background_order = int(config_params['MEME']['background_order'])
+        self.__use_revcomp = config_params['MEME']['use_revcomp'] == 'True'
         self.__background_file = background_file
         self.__remove_tempfiles = remove_tempfiles
 
@@ -46,10 +46,6 @@ class MemeSuite:
         """returns the global background file used with this meme suite
         instance"""
         return self.__background_file
-
-    def max_width(self):
-        """returns the max_width attribute"""
-        return self.__max_width
 
     def remove_low_complexity(self, seqs):
         """send sequences through dust filter, send only those
@@ -75,10 +71,10 @@ class MemeSuite:
         seqs_for_dust = {}
         for feature_id, seq in seqs.items():
             if isinstance(seq, str):
-                if len(seq) > self.__max_width:
+                if len(seq) > self.max_width:
                     seqs_for_dust[feature_id] = seq
             else:
-                if len(seq[1]) > self.__max_width:
+                if len(seq[1]) > self.max_width:
                     seqs_for_dust[feature_id] = seq[1]
         # only non-empty-input gets into dust, dust can not
         # handle empty input
@@ -108,7 +104,8 @@ class MemeSuite:
                 bgseqs = {feature_id: all_seqs[feature_id]
                           for feature_id in all_seqs
                           if feature_id not in feature_ids}
-                return make_background_file(bgseqs, self.__use_revcomp)
+                return make_background_file(bgseqs, self.__use_revcomp,
+                                            self.background_order)
 
         #logging.info("run_meme() - # seqs = %d", len(input_seqs))
         bgfile = background_file()
@@ -221,7 +218,7 @@ class MemeSuite430(MemeSuite):
         command = ['meme', infile_path, '-bfile', bgfile_path,
                    '-time', '600', '-dna', '-revcomp',
                    '-maxsize', '9999999', '-nmotifs', str(num_motifs),
-                   '-evt', '1e9', '-minw', '6', '-maxw', str(self.max_width()),
+                   '-evt', '1e9', '-minw', '6', '-maxw', str(self.max_width),
                    '-mod',  'zoops', '-nostatus', '-text']
         # if determine the seed sequence (-cons parameter) for this MEME run
         # uses the PSSM with the smallest score that has an e-value lower
@@ -277,7 +274,7 @@ class MemeSuite481(MemeSuite):
         command = ['meme', infile_path, '-bfile', bgfile_path,
                    '-time', '600', '-dna', '-revcomp',
                    '-maxsize', '9999999', '-nmotifs', str(num_motifs),
-                   '-evt', '1e9', '-minw', '6', '-maxw', str(self.max_width()),
+                   '-evt', '1e9', '-minw', '6', '-maxw', str(self.max_width),
                    '-mod',  'zoops', '-nostatus', '-text']
 
         ### NOTE: There is a bug in current MEME 4.9.0, that can cause the
@@ -692,7 +689,7 @@ def __next_regex_index(pat, start_index, lines):
     return line_index
 
 
-def make_background_file(bgseqs, use_revcomp, bgorder=3):
+def make_background_file(bgseqs, use_revcomp, bgorder):
     """create a meme background file and returns its name"""
     def make_seqs(seqs):
         """prepare the input sequences for feeding into meme.

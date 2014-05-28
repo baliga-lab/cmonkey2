@@ -135,7 +135,7 @@ def __get_config_parser():
     return config
 
 
-def __get_arg_parser():
+def __get_arg_parser(arg_ext):
     parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument('--ratios', required=True,
                         help='tab-separated ratios matrix file')
@@ -179,6 +179,9 @@ def __get_arg_parser():
 
     parser.add_argument('--pipeline', default=None,
                         help="""override the scoring pipeline""")
+
+    if arg_ext is not None:
+        arg_ext(parser)
     return parser
 
 
@@ -195,14 +198,16 @@ def __num_clusters(config, args, ratios):
         return num_clusters
     
 
-def setup():
+def setup(arg_ext=None):
     """main configuration function - does everything. It reads and configures
     everything that can be derived from the configuration files and input
     parameters and returns the configuration in a dictionary as well as
-    the normalized ratios matrix"""
+    the normalized ratios matrix.
+    The arg_ext parameter can be used to add additional argements to the
+    argparser that can be processed outside of the core application."""
 
     config_parser = __get_config_parser()
-    arg_parser = __get_arg_parser()
+    arg_parser = __get_arg_parser(arg_ext)
     args = arg_parser.parse_args()
     if args.verbose:
         loglevel = logging.DEBUG
@@ -302,7 +307,9 @@ def setup():
 
     params['out_database'] = os.path.join(params['output_dir'], params['dbfile_name'])
 
-    return params, ratios
+    # we return the args here, too, in case we have some parameters not
+    # processed
+    return args, params, ratios
 
 
 def write_setup(config_params):
