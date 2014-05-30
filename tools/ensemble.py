@@ -27,7 +27,7 @@ QSUB_TEMPLATE = """#$ -S /bin/bash
 #$ -pe serial %d
 #$ -l mem_free=32G
 
-python cmonkey.py --organism %s --ratios %s --out %s --num_cores %d"""
+python cmonkey_ensemble.py --organism %s --ratios %s --out %s --num_cores %d"""
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=DESCRIPTION)
@@ -35,11 +35,13 @@ if __name__ == '__main__':
     parser.add_argument('--ratios', required=True)
     parser.add_argument('--targetdir', required=True)
     parser.add_argument('--numfiles', type=int, default=4)
-    parser.add_argument('--numcols', type=int, default=8)
+    parser.add_argument('--mincols', type=int, default=8)
+    parser.add_argument('--maxcols', type=int, default=8)
     parser.add_argument('--num_cores', type=int, default=1)
     args = parser.parse_args()
 
-    dm.prepare_ensemble_matrix(args.ratios, args.targetdir, args.numfiles, args.numcols)
+    dm.prepare_ensemble_matrix(args.ratios, args.targetdir, args.numfiles,
+                               args.mincols, args.maxcols)
     with open(os.path.join(args.targetdir, "%s.sh" % args.organism), 'w') as outfile:
         outfile.write(QSUB_TEMPLATE_HEADER)
         outfile.write(QSUB_TEMPLATE % (args.numfiles,
