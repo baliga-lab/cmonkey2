@@ -3,6 +3,10 @@
 This is a tool to prepare a directory for ensemble runs. Given an organism code
 and the ratios, matrix, split up the matrix into sub matrices and create
 SGE qsub shell scripts
+
+Example:
+
+PYTHONPATH=cmonkey tools/ensemble.py --organism eco --ratios ecoli.tsv.gz --targetdir eco-ens-20140602 --numfiles 20 --mincols 50 --num_cores 1
 """
 import argparse
 import os
@@ -27,7 +31,7 @@ QSUB_TEMPLATE = """#$ -S /bin/bash
 #$ -pe serial %d
 #$ -l mem_free=32G
 
-python cmonkey_ensemble.py --organism %s --ratios %s --out %s --num_cores %d"""
+python cmonkey_ensemble.py --organism %s --ratios %s --out %s --num_cores %d --ensemble_run_id $SGE_TASK_ID"""
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=DESCRIPTION)
@@ -36,12 +40,11 @@ if __name__ == '__main__':
     parser.add_argument('--targetdir', required=True)
     parser.add_argument('--numfiles', type=int, default=4)
     parser.add_argument('--mincols', type=int, default=8)
-    parser.add_argument('--maxcols', type=int, default=8)
     parser.add_argument('--num_cores', type=int, default=1)
     args = parser.parse_args()
 
     dm.prepare_ensemble_matrix(args.ratios, args.targetdir, args.numfiles,
-                               args.mincols, args.maxcols)
+                               args.mincols)
     with open(os.path.join(args.targetdir, "%s.sh" % args.organism), 'w') as outfile:
         outfile.write(QSUB_TEMPLATE_HEADER)
         outfile.write(QSUB_TEMPLATE % (args.numfiles,

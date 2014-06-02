@@ -25,6 +25,7 @@ BGORDER = [None, 0, 1, 2, 3, 4, 5]
 if __name__ == '__main__':
     """process configuration"""
     args, params, ratios = conf.setup(arg_ext)
+
     if args.ensemble_run_id is not None:
         # setup for ensemble run
         params['random_seed'] = args.ensemble_run_id
@@ -33,12 +34,15 @@ if __name__ == '__main__':
 
         # these currently are experimental and very eco-centric
         params['num_clusters'] = random.randint(150, 550)
+        # row, net scaling
+        params['Rows']['scaling'] = ('scaling_const', random.uniform(0.0, 3.0))
+        params['Networks']['scaling'] = ('scaling_const', random.uniform(0.0, 1.0))
 
         # MEME parameters
         maxw = random.randint(12, 30)  # meme parameter
         mmotifs = random.randint(1, 3)
-        motif_upstream_scan = (ramdom.randint(-50, 0), random.randint(150, 250))
-        motif_upstream_search = (ramdom.randint(-20, 0), random.randint(100, 200))
+        motif_upstream_scan = (random.randint(-50, 0), random.randint(150, 250))
+        motif_upstream_search = (random.randint(-20, 0), random.randint(100, 200))
         string_weight = random.uniform(0.0, 1.0) * 0.5 + 0.2
         operon_weight = random.uniform(0.0, 1.0) * 0.5 + 0.2
 
@@ -47,7 +51,7 @@ if __name__ == '__main__':
         params['use_operons'] = random.randint(0, 1) == 1
 
         # background order None -> no background order
-        bgorder = BGORDER[random.randint(0, 6)
+        bgorder = BGORDER[random.randint(0, 6)]
 
     cmonkey_run = cmr.CMonkeyRun(ratios, params)
     cmonkey_run.run()
