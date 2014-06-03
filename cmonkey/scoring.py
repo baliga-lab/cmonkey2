@@ -344,7 +344,7 @@ def combine(result_matrices, score_scalings, membership, iteration, config_param
                 qqq = abs(util.quantile(values, 0.01))
                 if qqq == 0:
                     logging.warn('SPARSE SCORES - %d attempt 1: pick from sorted values', i)
-                    qqq = sorted(values.flatten())[9]
+                    qqq = sorted(values.ravel())[9]
                 if qqq == 0:
                     logging.warn('SPARSE SCORES - %d attempt 2: pick minimum value', i)
                     qqq = abs(values.min())

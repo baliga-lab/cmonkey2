@@ -62,6 +62,11 @@ class OrigMembership:
         else:
             self.colidx = {name: i for i, name in enumerate(self.col_names)}
 
+        """
+        main representation:
+        A matrix that has genes/conditions as their row, in the order of row_names/col_names.
+        Each row in the matrix has num_per_X slots, each cell contains a cluster number.
+        """
         self.row_membs = np.zeros((len(row_is_member_of), num_per_row), dtype='int32')
         self.col_membs = np.zeros((len(col_is_member_of), num_per_col), dtype='int32')
 
@@ -368,7 +373,15 @@ def update_for_cols(membership, cd_scores, multiprocessing):
                 if len(clusters) > 0:
                     free_slots = membership.free_slots_for_column(col)
                     if len(free_slots) > 0:
-                        take_cluster = clusters[free_slots[0]]
+                        slot = free_slots[0]
+                        """
+                        the slot can be out of bounds for the clusters array when
+                        the setting for clusters_per_row/clusters_per_col is too
+                        large, in this case pick a spot inside the array to avoid
+                        the exception"""
+                        if slot > len(clusters) - 1:
+                            slot = len(clusters) - 1
+                        take_cluster = clusters[slot]
                         #print "ii = ", c, ", add cluster ", take_cluster, " at ", free_slots[0]
                         membership.add_cluster_to_column(col, take_cluster)
                     else:
