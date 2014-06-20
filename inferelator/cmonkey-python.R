@@ -22,6 +22,14 @@ library('RSQLite')
 # 8. $resid cluster residual
 #      vector of number, 1 element, named 'ratios'
 #
+cmonkey.organism <- function(db.filename) {
+  sqlite <- dbDriver("SQLite")
+  con <- dbConnect(sqlite, dbname=db.filename)
+  run.info <- dbGetQuery(con, "select organism from run_infos")[1,]
+  dbDisconnect(con)
+  run.info
+}
+
 read.cmonkey.sqlite <- function(db.filename, iteration=0) {
   sqlite <- dbDriver("SQLite")
   con <- dbConnect(sqlite, dbname=db.filename)
@@ -64,4 +72,3 @@ read.cmonkey.sqlite <- function(db.filename, iteration=0) {
   dbDisconnect(con)
   result
 }
-

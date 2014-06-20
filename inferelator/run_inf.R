@@ -59,6 +59,13 @@ run.inferelator <- function(tfsfile=NULL, json=NULL, ratios=NULL,
 
   if (!is.null(tfsfile)) {
     ge$predictors <- readLines(tfsfile)
+  } else {
+    result.filename <- paste(resultdir, 'cmonkey_run.db', sep='/')
+    orgcode <- cmonkey.organism(result.filename)
+    message(paste(c('Downloading transcription factors for ', orgcode,'...'), collapse=''))
+    ge$predictors <- as.character(read.delim(paste(c('http://condor:5000/tfs/', orgcode),
+                                                   collapse=''))[[1]])
+    message(paste(c('done (',  length(ge$predictors), ' predictors).'), collapse=''))
   }
 
   if (!is.null(resultdir)) {
@@ -136,13 +143,16 @@ if (is.null(opt$help)) opt$help = FALSE
 
 if (!is.null(opt$outfile) &&
     (!is.null(opt$rdata) ||
-    !is.null(opt$tfsfile) && !is.null(opt$resultdir) ||
-    !is.null(opt$tfsfile) && !is.null(opt$json) && !is.null(opt$ratios))) {
+     !is.null(opt$resultdir) ||
+     !is.null(opt$json) && !is.null(opt$ratios))) {
     coeffs <- run.inferelator(opt$tfsfile,
                               opt$json, opt$ratios, opt$resultdir, opt$rdata)
+    message('writing influences...')
     write.influences(coeffs, opt$outfile)
-    write.conditions.clusters(coeffs)
-    write.ss.ts.tsout.clusters(coeffs)
+    message('writing conditions...')
+    #write.conditions.clusters(coeffs)
+    message('writing ss.ts.tsouts...')
+    #write.ss.ts.tsout.clusters(coeffs)
 } else {
   print(getopt(spec, usage=TRUE))
 }
