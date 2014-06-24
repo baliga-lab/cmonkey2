@@ -1,4 +1,4 @@
-#!/usr/bin/Rscript
+#!/usr/bin/env Rscript
 library('getopt')
 
 initial.options <- commandArgs(trailingOnly = FALSE)
@@ -50,7 +50,11 @@ init.env <- function(clusterStack) {
 
 run.inferelator <- function(tfsfile=NULL, json=NULL, ratios=NULL,
                             resultdir=NULL, rdata=NULL) {
-  source(file.path(script.dir, 'cmonkey-python.R'))
+  if (length(script.dir) == 0) {
+    source('cmonkey-python.R')
+  } else {
+    source(file.path(script.dir, 'cmonkey-python.R'))
+  }
   library('cMonkeyNwInf')
   library('RJSONIO')
   library('parallel')
@@ -72,12 +76,12 @@ run.inferelator <- function(tfsfile=NULL, json=NULL, ratios=NULL,
     message('Creating cluster stack from result directory...')
     ratio.filename <- paste(resultdir, 'ratios.tsv.gz', sep='/')
     result.filename <- paste(resultdir, 'cmonkey_run.db', sep='/')
-    ge$ratios <- read.table(gzfile(ratio.filename), header=T, as.is=T, row.names=1, check.names=F)
+    ge$ratios <- data.matrix(read.delim(gzfile(ratio.filename), header=T, row.names=1, as.is=T, check.names=F))
     ge$e <- init.env(read.cmonkey.sqlite(result.filename))
     message('done.')
   } else if (!is.null(json)) {
     message('Creating cluster stack from JSON...')
-    ge$ratios <- read.table(gzfile(ratios), header=T, as.is=T, row.names=1, check.names=F)
+    ge$ratios <- data.matrix(read.delim(gzfile(ratios), header=T, row.names=1, as.is=T, check.names=F))
     ge$e <- init.env(fromJSON(json))
     message('done.')    
   } else {
