@@ -31,7 +31,7 @@ QSUB_TEMPLATE = """#$ -S /bin/bash
 #$ -pe serial %d
 #$ -l mem_free=32G
 
-python cmonkey_ensemble.py --organism %s --ratios %s --out %s --num_cores %d --ensemble_run_id $SGE_TASK_ID"""
+python cmonkey_ensemble.py --organism %s --ratios %s --out %s --num_cores %d --ensemble_run_id $SGE_TASK_ID --minimize_io"""
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=DESCRIPTION)

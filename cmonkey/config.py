@@ -9,6 +9,7 @@ import ConfigParser
 import logging
 import tempfile
 import json
+import random
 
 from cmonkey.schedule import make_schedule
 import cmonkey.util as util
@@ -81,6 +82,10 @@ def __set_config(config):
         params['random_seed'] = config.getint('General', 'random_seed')
     except:
         params['random_seed'] = None
+
+    if params['random_seed'] is None:
+        # python can have large seeds, R, however has a 32 bit limit it seems
+        params['random_seed'] = util.current_millis() % 2147483647
 
     # Quantile normalization is false by default in cMonkey-R
     params['quantile_normalize'] = config.getboolean('Scoring', 'quantile_normalize')
@@ -280,6 +285,9 @@ def setup(arg_ext=None):
                  'pipeline_file': args.pipeline,
                  'synonym_file': args.synonym_file}
 
+    if overrides['random_seed'] is None:
+        del overrides['random_seed']
+
     # membership update default parameters
     # these come first, since a lot depends on clustering numbers
     num_clusters = overrides['num_clusters']
@@ -298,12 +306,12 @@ def setup(arg_ext=None):
     if args.cachedir:
         overrides['cache_dir'] = args.cachedir
 
-    if overrides['random_seed']:
-        random.seed(overrides['random_seed'])
-        util.r_set_seed(overrides['random_seed'])
-
     for key, value in overrides.items():
         params[key] = value
+
+    if params['random_seed'] is not None:
+        random.seed(params['random_seed'])
+        util.r_set_seed(params['random_seed'])
 
     params['out_database'] = os.path.join(params['output_dir'], params['dbfile_name'])
 
