@@ -190,7 +190,7 @@ class RSATOrganism(OrganismBase):
         contig_seqs = {contig: self.__rsat_info.get_contig_sequence(contig)
                        for contig in unique_contigs()}
 
-        for key, feature in features.items():
+        for key, feature in features.iteritems():
             location = feature.location
             sequences[key] = extractor(
                 contig_seqs[location.contig], location, distance)

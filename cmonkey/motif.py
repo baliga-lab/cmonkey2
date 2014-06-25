@@ -92,8 +92,8 @@ def pvalues2matrix(all_pvalues, num_clusters, gene_names, reverse_map):
     matrix = dm.DataMatrix(len(gene_names), num_clusters,
                            gene_names)
     mvalues = matrix.values
-    for cluster, feature_pvals in all_pvalues.items():
-        for feature_id, pval in feature_pvals.items():
+    for cluster, feature_pvals in all_pvalues.iteritems():
+        for feature_id, pval in feature_pvals.iteritems():
             ridx = row_map[reverse_map[feature_id]]
             mvalues[ridx, cluster - 1] = pval
 
@@ -501,7 +501,7 @@ class WeederRunner:
                                          delete=False) as outfile:
             filename = outfile.name
             logging.debug("Run Weeder on FASTA file: '%s'", filename)
-            st.write_sequences_to_fasta_file(outfile, params.seqs.items())
+            st.write_sequences_to_fasta_file(outfile, params.seqs.iteritems())
 
         try:
             dbfile = None
@@ -512,7 +512,7 @@ class WeederRunner:
 
             dbfile = self.meme_suite.make_sequence_file(
                 [(feature_id, locseq[1])
-                 for feature_id, locseq in params.used_seqs.items()])
+                 for feature_id, locseq in params.used_seqs.iteritems()])
             logging.debug("# PSSMS created: %d %s", len(pssms), str([i.consensus_motif() for i in pssms]))
             logging.debug("run MAST on '%s', dbfile: '%s'", meme_outfile, dbfile)
 

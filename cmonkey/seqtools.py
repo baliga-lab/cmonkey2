@@ -142,7 +142,7 @@ def subseq_frequencies(seqs, subseq_len):
     result = {}
     counts = subseq_counts(seqs, subseq_len)
     total = sum([count for count in counts.values()])
-    for subseq, count in counts.items():
+    for subseq, count in counts.iteritems():
         result[subseq] = float(count) / float(total)
     return result
 

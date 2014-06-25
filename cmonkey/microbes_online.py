@@ -80,7 +80,7 @@ def make_operon_pairs(operon, features):
         """determine reverse head of the operon"""
         max_gene = None
         max_end = 0
-        for (gene, feature) in feature_map.items():
+        for (gene, feature) in feature_map.iteritems():
             if feature.location.end > max_end:
                 max_end = feature.location.end
                 max_gene = gene
@@ -90,7 +90,7 @@ def make_operon_pairs(operon, features):
         """determine forward head of the operon"""
         min_gene = None
         min_start = sys.maxint
-        for (gene, feature) in feature_map.items():
+        for (gene, feature) in feature_map.iteritems():
             if feature.location.start < min_start:
                 min_start = feature.location.start
                 min_gene = gene

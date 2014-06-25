@@ -70,12 +70,12 @@ class OrigMembership:
         self.row_membs = np.zeros((len(row_is_member_of), num_per_row), dtype='int32')
         self.col_membs = np.zeros((len(col_is_member_of), num_per_col), dtype='int32')
 
-        for row, clusters in row_is_member_of.items():
+        for row, clusters in row_is_member_of.iteritems():
             tmp = row_is_member_of[row][:num_per_row]
             for i in range(len(tmp)):
                 self.row_membs[self.rowidx[row]][i] = tmp[i]
 
-        for col, clusters in col_is_member_of.items():
+        for col, clusters in col_is_member_of.iteritems():
             tmp = col_is_member_of[col][:num_per_col]
             for i in range(len(tmp)):
                 self.col_membs[self.colidx[col]][i] = tmp[i]
@@ -386,7 +386,7 @@ def update_for_cols(membership, cd_scores, multiprocessing):
                         membership.add_cluster_to_column(col, take_cluster)
                     else:
                         col_clusters = membership.col_membs[membership.colidx[col]]
-                        multi = which_multiple(col_clusters)
+                        multi = util.which_multiple(col_clusters)
                         if len(multi) > 0:
                             # indexes of col_clusters that are in multiple
                             for i, cluster in enumerate(col_clusters):
@@ -396,15 +396,6 @@ def update_for_cols(membership, cd_scores, multiprocessing):
                                     break
                         else:
                             replace_delta_column_member(membership, col, clusters, cd_scores)
-
-
-def which_multiple(clusters):
-    result = {}
-    for cluster in clusters:
-        if cluster not in result:
-            result[cluster] = 0
-        result[cluster] += 1
-    return {cluster for cluster, count in result.items() if count > 1}
 
 
 def replace_delta_column_member(membership, col, cm, cd_scores):
@@ -431,7 +422,7 @@ def postadjust(membership, rowscores, cutoff=0.33, limit=100):
         assign_list.append(assign)
 
     for assign in assign_list:
-        for row, cluster in assign.items():
+        for row, cluster in assign.iteritems():
             membership.add_cluster_to_row(row, cluster, force=True)
 
 

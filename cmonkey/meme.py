@@ -55,7 +55,7 @@ class MemeSuite:
             dust_tmp_file = None
             with tempfile.NamedTemporaryFile(prefix='dust',
                                              delete=False) as dust_input:
-                for feature_id, seq in seqs.items():
+                for feature_id, seq in seqs.iteritems():
                     dust_input.write(">%s\n" % feature_id)
                     if isinstance(seq, str):
                         dust_input.write("%s\n" % seq)
@@ -69,7 +69,7 @@ class MemeSuite:
             return {feature_id: seq for feature_id, seq in seqpairs}
 
         seqs_for_dust = {}
-        for feature_id, seq in seqs.items():
+        for feature_id, seq in seqs.iteritems():
             if isinstance(seq, str):
                 if len(seq) > self.max_width:
                     seqs_for_dust[feature_id] = seq
@@ -133,7 +133,7 @@ class MemeSuite:
         #logging.info('wrote meme output to %s', meme_outfile)
         dbfile = self.make_sequence_file(
             [(feature_id, locseq[1])
-             for feature_id, locseq in all_seqs.items()])
+             for feature_id, locseq in all_seqs.iteritems()])
         #logging.info('created mast database in %s', dbfile)
         try:
             mast_output = self.mast(meme_outfile, dbfile, bgfile)
@@ -715,7 +715,7 @@ def make_background_file(bgseqs, use_revcomp, bgorder):
         outfile.write("# %s order Markov background model\n" %
                       util.order2string(len(bgmodel) - 1))
         for order_row in bgmodel:
-            for seq, frequency in order_row.items():
+            for seq, frequency in order_row.iteritems():
                 outfile.write('%s %10s\n' %
                               (seq, str(round(frequency, 8))))
     return filename

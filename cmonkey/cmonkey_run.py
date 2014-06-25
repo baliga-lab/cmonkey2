@@ -160,7 +160,7 @@ class CMonkeyRun:
 
     def report_params(self):
         logging.info('cmonkey_run config_params:')
-        for param, value in self.config_params.items():
+        for param, value in self.config_params.iteritems():
             logging.info('%s=%s' % (param, str(value)))
 
     def __getitem__(self, key):
@@ -545,13 +545,13 @@ class CMonkeyRun:
 
         cur = conn.cursor()
         with conn:
-            for network, score in network_scores.items():
+            for network, score in network_scores.iteritems():
                 cur.execute("select rowid from statstypes where category='network' and name=?", [network])
                 typeid = cur.fetchone()[0]
                 conn.execute("insert into iteration_stats values (?,?,?)",
                              (typeid, iteration, score))
         with conn:
-            for seqtype, pval in motif_pvalues.items():
+            for seqtype, pval in motif_pvalues.iteritems():
                 cur.execute("select rowid from statstypes where category='seqtype' and name=?", [seqtype])
                 typeid = cur.fetchone()[0]
                 conn.execute("insert into iteration_stats values (?,?,?)",

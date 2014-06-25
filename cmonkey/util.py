@@ -6,6 +6,7 @@ more information and licensing details.
 """
 import operator
 import collections
+from collections import defaultdict
 import math
 import numpy as np
 import scipy.stats
@@ -491,6 +492,13 @@ class open_shelf:
 def current_millis():
     """returns the current time in milliseconds"""
     return int(math.floor(time.time() * 1000))
+
+
+def which_multiple(elems):
+    result = defaultdict(int)
+    for elem in elems:
+        result[elem] += 1
+    return {elem for elem, count in result.iteritems() if count > 1}
 
 
 class get_mp_pool:

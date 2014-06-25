@@ -161,7 +161,7 @@ def compute_network_scores(cluster):
                 gene_scores[other_gene].append(edge[2])
 
     final_gene_scores = {}
-    for gene, scores in gene_scores.items():
+    for gene, scores in gene_scores.iteritems():
         final_gene_scores[gene] = sum(scores) / len(genes)
         final_gene_scores[gene] = -np.log(final_gene_scores[gene] + 1)
     return final_gene_scores
@@ -220,7 +220,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             score_means = {network.name: self.__compute_cluster_score_means(network_scores[network.name])
                            for network in self.networks()}
             return {network: np.average(np.array(cluster_score_means.values()))
-                    for network, cluster_score_means in score_means.items()}
+                    for network, cluster_score_means in score_means.iteritems()}
         return {}
 
     def do_compute(self, iteration_result, ref_matrix=None):

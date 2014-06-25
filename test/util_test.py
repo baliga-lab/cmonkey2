@@ -266,6 +266,21 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEqual(11.0, result[1][0])
         self.assertAlmostEqual(14.0, result[1][1])
 
+    def test_which_multiple_none(self):
+        """tests the which_multiple() function"""
+        self.assertEquals(0, len(util.which_multiple([])))
+
+    def test_which_multiple_all_unique(self):
+        """tests the which_multiple() function"""
+        self.assertEquals(0, len(util.which_multiple([1, 2, 3])))
+
+    def test_which_multiple_some_multiple(self):
+        """tests the which_multiple() function"""
+        multiple = util.which_multiple([1, 2, 3, 1, 2])
+        self.assertEquals(2, len(multiple))
+        self.assertTrue(1 in multiple)
+        self.assertTrue(2 in multiple)
+
 
 class Order2StringTest(unittest.TestCase):  # pylint: disable-msg=R09042
     """Test class for order2string"""

@@ -302,7 +302,7 @@ def setup(arg_ext=None):
         random.seed(overrides['random_seed'])
         util.r_set_seed(overrides['random_seed'])
 
-    for key, value in overrides.items():
+    for key, value in overrides.iteritems():
         params[key] = value
 
     params['out_database'] = os.path.join(params['output_dir'], params['dbfile_name'])
@@ -349,10 +349,10 @@ def write_setup(config_params):
 
         outfile.write('[Scoring]\n')
         outfile.write('quantile_normalize = %s\n' % str(config_params['quantile_normalize']))
-        for key, value in config_params.items():
+        for key, value in config_params.iteritems():
             if key != 'pipeline' and type(value) is dict:
                 outfile.write('[%s]\n' % key)
-                for setting, param in value.items():
+                for setting, param in value.iteritems():
                     if setting == 'scaling':
                         if param[0] == 'scaling_const':
                             outfile.write('scaling_const = %f\n' % param[1])

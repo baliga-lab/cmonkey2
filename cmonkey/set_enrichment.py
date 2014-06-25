@@ -76,7 +76,7 @@ class SetType:
     def __repr__(self):
         """string representation"""
         result = "SetType['%s'] = {\n" % self.name
-        for key, value in self.sets.items():
+        for key, value in self.sets.iteritems():
             result += "%s -> %s\n" % (key, value)
         result += "}"
         return result
@@ -97,7 +97,7 @@ def read_set_types(config_params, thesaurus):
         json_sets = json.load(infile)
         sets = {}
         thrown_out = 0
-        for setname, genes in json_sets.items():
+        for setname, genes in json_sets.iteritems():
             filtered = map(lambda s: intern(str(s)), filter(lambda g: g in thesaurus, genes))
             thrown_out += len(genes) - len(filtered)
             sets[setname] = DiscreteEnrichmentSet(set(filtered))
