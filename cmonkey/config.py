@@ -306,10 +306,6 @@ def setup(arg_ext=None):
     if args.cachedir:
         overrides['cache_dir'] = args.cachedir
 
-    if overrides['random_seed']:
-        random.seed(overrides['random_seed'])
-        util.r_set_seed(overrides['random_seed'])
-
     for key, value in overrides.iteritems():
         params[key] = value
 
