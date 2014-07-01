@@ -220,7 +220,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             num_motifs = int(self.num_motif_func(iteration))
             self.__last_iteration_result = {'iteration': iteration}
             self.all_pvalues = self.compute_pvalues(self.__last_iteration_result,
-                                                    num_motifs)
+                                                    num_motifs, force)
             with open(os.path.join(self.config_params['output_dir'],
                                    'motif_pvalues_last.pkl'), 'w') as outfile:
                 cPickle.dump(self.__last_iteration_result, outfile)            
@@ -253,7 +253,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             self.last_result, self.membership, self.organism)
         return self.last_result
 
-    def compute_pvalues(self, iteration_result, num_motifs):
+    def compute_pvalues(self, iteration_result, num_motifs, force):
         """Compute motif scores.
         The result is a dictionary from cluster -> (feature_id, pvalue)
         containing a sparse gene-to-pvalue mapping for each cluster
@@ -324,7 +324,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         # if the cluster hasn't changed since last time, reuse the last results
         # we do this by filtering out the parameters of the clusters that did not
         # change
-        if self.__last_results is not None:
+        if not force and self.__last_results is not None:
             oldlen = len(params)
             params = {cluster: params[cluster]
                       for cluster in xrange(1, self.num_clusters() + 1)
