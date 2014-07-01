@@ -43,14 +43,14 @@ def write_iteration(conn, outfile, iteration, num_clusters, outdir):
         cursor.close()
 
         cursor = conn.cursor()
-        cursor.execute('select score from network_stats where network = \'STRING\' and iteration = ?',
+        cursor.execute("select score from iteration_stats its join statstypes st on st.rowid=its.statstype where category='network' and name='STRING' and iteration=?",
                        [iteration])
         row = cursor.fetchone()
         string_dens = row[0] if row != None else 1.0
         cursor.close()
 
         cursor = conn.cursor()
-        cursor.execute('select pval from motif_stats where seqtype = \'upstream\' and iteration = ?',
+        cursor.execute("select score from iteration_stats its join statstypes st on st.rowid=its.statstype where category='seqtype' and name='upstream' and iteration=?",
                        [iteration])
         row = cursor.fetchone()
         meme_pval = row[0] if row != None else 1.0
