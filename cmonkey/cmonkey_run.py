@@ -679,14 +679,15 @@ class CMonkeyRun:
             self.write_stats(iteration_result)
             self.update_iteration(iteration)
 
-            if 'dump_results' in self['debug']:
-                # write complete result into a cmresults.tsv
-                conn = self.__dbconn()
-                path =  os.path.join(self['output_dir'], 'cmresults-postproc.tsv.bz2')
-                with bz2.BZ2File(path, 'w') as outfile:
-                    debug.write_iteration(conn, outfile,
-                                          self['num_iterations'] + 1,
-                                          self['num_clusters'], self['output_dir'])
+            # default behaviour:
+            # always write complete result into a cmresults.tsv for R/cmonkey
+            # compatibility
+            conn = self.__dbconn()
+            path =  os.path.join(self['output_dir'], 'cmresults-postproc.tsv.bz2')
+            with bz2.BZ2File(path, 'w') as outfile:
+                debug.write_iteration(conn, outfile,
+                                      self['num_iterations'] + 1,
+                                      self['num_clusters'], self['output_dir'])
 
 
         self.write_finish_info()
