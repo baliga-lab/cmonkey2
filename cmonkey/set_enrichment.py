@@ -15,6 +15,8 @@ import scoring
 import datamatrix as dm
 import multiprocessing as mp
 
+from collections import defaultdict
+
 
 class DiscreteEnrichmentSet:
     def __init__(self, genes):
@@ -90,9 +92,42 @@ SET_MATRIX = None
 SET_MEMBERSHIP = None
 SET_SET_TYPE = None
 
-def read_set_types(config_params, thesaurus):
+def reverse_map(entrez_ids, synonyms, row_names):
+    """Special feature:
+    assuming that we have entrez ids in the sets and USCSD ids in the
+    ratios matrix rows, we map the set members to names that are
+    compatible to the ones in the ratios matrix
+    Precondition: every element in entrez_ids is in synonyms
+    """
+    # a row class is the primary identifier in the synonyms for each row    
+    # row_classes contains all the synonyms a primary identifier maps to
+    row_classes = defaultdict(list)
+    for key, value in synonyms.iteritems():
+        row_classes[value].append(key)        
+    
+    result = set()
+    not_found = 0
+    found = 0
+    for entrez_id in entrez_ids:
+        primary = synonyms[entrez_id]
+        if entrez_id in row_classes[primary]:
+            result.add(primary)
+            found += 1
+        else:
+            result.add(entrez_id)
+            not_found += 1
+    if not_found > 0:
+        logging.warn('%d set members could not be reverse mapped', not_found)
+
+    return result
+
+def read_set_types(config_params, thesaurus, ratios):
     """Reads sets from a JSON file"""
     setfile = config_params['SetEnrichment']['set_file']
+    map_to_ratio_genes = config_params['SetEnrichment']['map_to_ratio_genes'] == 'True'
+    if map_to_ratio_genes:
+        logging.info('reverse mapping of set element names to row names requested')
+
     with open(setfile) as infile:
         json_sets = json.load(infile)
         sets = {}
@@ -100,7 +135,9 @@ def read_set_types(config_params, thesaurus):
         for setname, genes in json_sets.iteritems():
             filtered = map(lambda s: intern(str(s)), filter(lambda g: g in thesaurus, genes))
             thrown_out += len(genes) - len(filtered)
-            sets[setname] = DiscreteEnrichmentSet(set(filtered))
+            if map_to_ratio_genes:
+                filtered = reverse_map(filtered, thesaurus, set(ratios.row_names))
+            sets[setname] = DiscreteEnrichmentSet(filtered)
         json_sets = None
         logging.info("SET_ENRICHMENT REMOVED  %d ELEMENTS FROM INPUT", thrown_out)
     return [SetType('default', sets)]
@@ -112,7 +149,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, "SetEnrichment", organism, membership,
                                              ratios, config_params)
-        self.__set_types = read_set_types(config_params, organism.thesaurus())
+        self.__set_types = read_set_types(config_params, organism.thesaurus(), ratios)
         # stores (min_set, pvalue) pairs for each cluster and set type
         # for the last run of the function
         self.run_log = scoring.RunLog('set_enrichment', config_params)
