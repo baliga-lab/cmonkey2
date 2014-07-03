@@ -96,6 +96,12 @@ class ScoringFunctionBase:
         else:
             return None
 
+    def set_score_means(self, iteration_result, matrix):
+        score_means = 0.0
+        if matrix is not None:
+            score_means = matrix.mean()
+        iteration_result['score_means'][self.id] = score_means        
+
     def compute(self, iteration_result, reference_matrix=None):
         """general compute method,
         iteration_result is a dictionary that contains the
@@ -133,6 +139,7 @@ class ScoringFunctionBase:
         self.run_log.log(iteration,
                          self.run_in_iteration(iteration),
                          self.scaling(iteration_result['iteration']))
+        self.set_score_means(iteration_result, computed_result)
         return computed_result
 
     def compute_force(self, iteration_result, reference_matrix=None):
@@ -146,6 +153,7 @@ class ScoringFunctionBase:
         self.run_log.log(iteration,
                          self.run_in_iteration(iteration),
                          self.scaling(iteration_result['iteration']))
+        self.set_score_means(iteration_result, computed_result)
         return computed_result
 
     def do_compute(self, iteration_result, ref_matrix=None):

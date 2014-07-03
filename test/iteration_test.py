@@ -91,7 +91,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                        'background_order': 3, 'use_revcomp': 'True'},
                               'Networks': {'schedule': lambda i: True, 'scaling': ('scaling_rvec', 'seq(1e-5, 0.5, length=num_iterations*3/4)')}}
         self.membership = self.__read_members()  # relies on config_params
-        self.iteration_result = { 'iteration': 51 }
+        self.iteration_result = { 'iteration': 51, 'score_means': {} }
 
     def test_row_scoring(self):
         # tests the row scoring by itself, which combines scoring and fixing

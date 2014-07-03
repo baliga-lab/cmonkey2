@@ -65,6 +65,7 @@ class CMonkeyRun:
         self.__conn = None
 
         today = date.today()
+        logging.info('Input matrix has # rows: %d, # columns: %d', ratios.num_rows, ratios.num_columns)
         logging.info("# clusters/row: %d", args['memb.clusters_per_row'])
         logging.info("# clusters/column: %d", args['memb.clusters_per_col'])
         logging.info("# CLUSTERS: %d", args['num_clusters'])
@@ -514,6 +515,7 @@ class CMonkeyRun:
 
         residuals = []
         conn = self.__dbconn()
+        cur = conn.cursor()
         with conn:
             for cluster in range(1, self['num_clusters'] + 1):
                 row_names = self.membership().rows_for_cluster(cluster)
@@ -543,7 +545,13 @@ class CMonkeyRun:
                 logging.warn('STATS: median was messed up, insert with 1.0')
                 conn.execute("insert into iteration_stats (statstype,iteration,score) values (?,?,?)", (2, iteration, 1.0))
 
-        cur = conn.cursor()
+            # insert the score means
+            for fun_id in iteration_result['score_means']:
+                cur.execute("select rowid from statstypes where category='scoring' and name=?", [fun_id])
+                type_id = cur.fetchone()[0]
+                conn.execute('insert into iteration_stats (statstype,iteration,score) values (?,?,?)',
+                             [type_id, iteration, iteration_result['score_means'][fun_id]])
+
         with conn:
             for network, score in network_scores.iteritems():
                 cur.execute("select rowid from statstypes where category='network' and name=?", [network])
@@ -582,7 +590,7 @@ class CMonkeyRun:
 
     def run_iteration(self, row_scoring, col_scoring, iteration):
         logging.info("Iteration # %d", iteration)
-        iteration_result = {'iteration': iteration}
+        iteration_result = {'iteration': iteration, 'score_means': {}}
         rscores = row_scoring.compute(iteration_result)
         start_time = util.current_millis()
         cscores = col_scoring.compute(iteration_result)
@@ -638,6 +646,13 @@ class CMonkeyRun:
     def run_iterations(self, row_scoring, col_scoring):
         self.report_params()
         self.write_start_info()
+
+        conn = self.__dbconn()
+        with conn:
+            for scoring_function in row_scoring.scoring_functions:
+                conn.execute("insert into statstypes values ('scoring',?)", [scoring_function.id])
+            conn.execute("insert into statstypes values ('scoring',?)", [col_scoring.id])
+
         if 'profile_mem' in self['debug']:
             with open(os.path.join(self['output_dir'], 'memprofile.tsv'), 'w') as outfile:
                 outfile.write('Iteration\tMembership\tOrganism\tCol\tRow\tNetwork\tMotif\n')
@@ -668,7 +683,8 @@ class CMonkeyRun:
             logging.info("Adjusted. Now re-run scoring (iteration: %d)",
                          self['num_iterations'])
 
-            iteration_result = {'iteration': self['num_iterations'] + 1}
+            iteration_result = {'iteration': self['num_iterations'] + 1,
+                                'score_means': {}}
             combined_scores = row_scoring.compute_force(iteration_result)
 
             # write the combined scores for benchmarking/diagnostics
