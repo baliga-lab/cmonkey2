@@ -176,7 +176,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         scores = combiner.compute(self.iteration_result)
         ref_scores = read_matrix('testdata/combined_scores.tsv')
         # note that the rounding error get pretty large here !!!
-        self.assertTrue(check_matrix_values(scores, ref_scores))
+        self.assertTrue(check_matrix_values(scores, ref_scores, eps=0.0001))
 
     def test_quantile_normalize(self):
         row_scores = read_matrix('testdata/rowscores_fixed.tsv')
