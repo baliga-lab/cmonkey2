@@ -71,6 +71,7 @@ def __set_config(config):
     params['num_iterations'] = config.getint("General", "num_iterations")
     params['start_iteration'] = config.getint("General", "start_iteration")
     params['multiprocessing'] = config.getboolean('General', 'use_multiprocessing')
+    params['case_sensitive'] = config.getboolean('General', 'case_sensitive')
     try:
         params['num_cores'] = config.getint('General', 'num_cores')
     except:
@@ -185,6 +186,10 @@ def __get_arg_parser(arg_ext):
     parser.add_argument('--pipeline', default=None,
                         help="""override the scoring pipeline""")
 
+    parser.add_argument('--case_sensitive', action='store_true',
+                        help="""override the case sensitive default""")
+
+
     if arg_ext is not None:
         arg_ext(parser)
     return parser
@@ -283,10 +288,13 @@ def setup(arg_ext=None):
                  'checkratios': args.checkratios,
                  'random_seed': args.random_seed,
                  'pipeline_file': args.pipeline,
-                 'synonym_file': args.synonym_file}
+                 'synonym_file': args.synonym_file,
+                 'case_sensitive': args.case_sensitive}
 
     if overrides['random_seed'] is None:
         del overrides['random_seed']
+    if overrides['case_sensitive'] is None:
+        del overrides['case_sensitive']
 
     # membership update default parameters
     # these come first, since a lot depends on clustering numbers
@@ -333,6 +341,7 @@ def write_setup(config_params):
         outfile.write('tmp_dir = %s\n' % config_params['tmp_dir'])
         outfile.write('dbfile_name = %s\n' % config_params['dbfile_name'])
         outfile.write('use_multiprocessing = %s\n' % str(config_params['multiprocessing']))
+        outfile.write('case_sensitive = %s\n' % str(config_params['case_sensitive']))
         if config_params['num_cores'] is None:
             outfile.write('num_cores =\n')
         else:

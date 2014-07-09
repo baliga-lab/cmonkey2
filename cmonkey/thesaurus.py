@@ -15,18 +15,21 @@ def create_from_delimited_file1(dfile):
     return {intern(line[0]): intern(line[1]) for line in dfile.lines}
 
 
-def create_from_delimited_file2(dfile):
+def create_from_delimited_file2(dfile, case_sensitive):
     """creates a thesaurus from a delimited file where the format is
     <original>SEPARATOR<alt1>;<alt2>;...
     ..."""
+    def fix_case(s):
+        return s if case_sensitive else s.upper()
+
     if isinstance(dfile, str):
         dfile = util.read_dfile(dfile, sep=',', has_header=False)
     result = {}
     for line in dfile.lines:
-        original = intern(line[0].upper())  # original should map to itself
+        original = intern(fix_case(line[0]))  # original should map to itself
         result[original] = original
         for alternative in line[1].split(';'):
-            result[intern(alternative.upper())] = original
+            result[intern(fix_case(alternative))] = original
     return result
 
 

@@ -294,7 +294,8 @@ class CMonkeyRun:
         gotax = util.make_dfile_map(gofile, 0, 1)[rsat_info.go_species()]
         synonyms = None
         if self['synonym_file'] is not None:
-            synonyms = thesaurus.create_from_delimited_file2(self['synonym_file'])
+            synonyms = thesaurus.create_from_delimited_file2(self['synonym_file'],
+                                                             self['case_sensitive'])
 
         if is_microbe:
             organism = org.Microbe(orgcode, keggorg, rsat_info, gotax, mo_db, nw_factories,
