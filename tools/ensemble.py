@@ -14,6 +14,7 @@ import datamatrix as dm
 
 DESCRIPTION = """ensemble.py - prepare cluster runs"""
 
+# Templates for Bourne Shell
 QSUB_TEMPLATE_HEADER = """#!/bin/bash
 
 export LD_LIBRARY_PATH=/tools/lib:/tools/R-3.0.3/lib64/R/lib
@@ -24,14 +25,36 @@ export BATCHNUM=`printf "%03d" $SGE_TASK_ID`
 QSUB_TEMPLATE = """#$ -S /bin/bash
 #$ -m be
 #$ -q baliga
-#$ -P Bal_wwu
+#$ -P Bal_%s
 #$ -t 1-%d
-#$ -M wwu@systemsbiology.org
+#$ -M %s@systemsbiology.org
 #$ -cwd
 #$ -pe serial %d
 #$ -l mem_free=32G
 
 python cmonkey_ensemble.py --organism %s --ratios %s --out %s --num_cores %d --ensemble_run_id $SGE_TASK_ID --minimize_io"""
+
+
+# Templates for csh
+
+QSUB_TEMPLATE_HEADER_CSH = """#!/bin/csh
+
+setenv LD_LIBRARY_PATH /tools/lib:/tools/R-3.0.3/lib64/R/lib
+setenv PATH /tools/bin:${PATH}
+setenv BATCHNUM `printf "%03d" $SGE_TASK_ID`
+"""
+
+QSUB_TEMPLATE_CSH = """#$ -S /bin/csh
+#$ -m be
+#$ -q baliga
+#$ -P Bal_%s
+#$ -t 1-%d
+#$ -M %s@systemsbiology.org
+#$ -cwd
+#$ -pe serial %d
+#$ -l mem_free=32G
+
+python cmonkey_ensemble.py --organism %s --ratios %s --out %s --num_cores %d --ensemble_run_id $SGE_TASK_ID"""
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=DESCRIPTION)
@@ -41,15 +64,29 @@ if __name__ == '__main__':
     parser.add_argument('--numfiles', type=int, default=4)
     parser.add_argument('--mincols', type=int, default=8)
     parser.add_argument('--num_cores', type=int, default=1)
+    parser.add_argument('--user', default=None)
+    parser.add_argument('--csh', action='store_true')
     args = parser.parse_args()
+
+    if args.csh:
+        header = QSUB_TEMPLATE_HEADER_CSH
+        template = QSUB_TEMPLATE_CSH
+    else:
+        header = QSUB_TEMPLATE_HEADER
+        template = QSUB_TEMPLATE
 
     dm.prepare_ensemble_matrix(args.ratios, args.targetdir, args.numfiles,
                                args.mincols)
     with open(os.path.join(args.targetdir, "%s.sh" % args.organism), 'w') as outfile:
-        outfile.write(QSUB_TEMPLATE_HEADER)
-        outfile.write(QSUB_TEMPLATE % (args.numfiles,
-                                       args.num_cores,
-                                       args.organism,
-                                       os.path.join(args.targetdir, "ratios-$BATCHNUM.tsv.gz"),
-                                       "%s-out-$BATCHNUM" % (args.organism),
-                                       args.num_cores))
+        if args.user is not None:
+            login = args.user
+        else:
+            login = os.getlogin()
+
+        outfile.write(header)
+        outfile.write(template % (login, args.numfiles, login,
+                                  args.num_cores,
+                                  args.organism,
+                                  os.path.join(args.targetdir, "ratios-$BATCHNUM.tsv.gz"),
+                                  "%s-out-$BATCHNUM" % (args.organism),
+                                  args.num_cores))
