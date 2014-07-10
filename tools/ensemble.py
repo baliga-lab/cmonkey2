@@ -41,7 +41,7 @@ QSUB_TEMPLATE_HEADER_CSH = """#!/bin/csh
 
 setenv LD_LIBRARY_PATH /tools/lib:/tools/R-3.0.3/lib64/R/lib
 setenv PATH /tools/bin:${PATH}
-set BATCHNUM="`printf '%03d' ${SGE_TASK_ID}`"
+setenv BATCHNUM `printf "%03d" $SGE_TASK_ID`
 """
 
 QSUB_TEMPLATE_CSH = """#$ -S /bin/csh
@@ -54,7 +54,7 @@ QSUB_TEMPLATE_CSH = """#$ -S /bin/csh
 #$ -pe serial %d
 #$ -l mem_free=32G
 
-python cmonkey_ensemble.py --organism %s --ratios %s --out %s --num_cores %d --ensemble_run_id ${SGE_TASK_ID}"""
+python cmonkey_ensemble.py --organism %s --ratios %s --out %s --num_cores %d --ensemble_run_id $SGE_TASK_ID"""
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=DESCRIPTION)
@@ -87,6 +87,6 @@ if __name__ == '__main__':
         outfile.write(template % (login, args.numfiles, login,
                                   args.num_cores,
                                   args.organism,
-                                  os.path.join(args.targetdir, "ratios-${BATCHNUM}.tsv.gz"),
-                                  "%s-out-${BATCHNUM}" % (args.organism),
+                                  os.path.join(args.targetdir, "ratios-$BATCHNUM.tsv.gz"),
+                                  "%s-out-$BATCHNUM" % (args.organism),
                                   args.num_cores))
