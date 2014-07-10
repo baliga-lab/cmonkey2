@@ -275,7 +275,7 @@ class DataMatrixFactory:
         """create a reader instance with the specified filters"""
         self.filters = filters
 
-    def create_from(self, delimited_file):
+    def create_from(self, delimited_file, case_sensitive=False):
         """creates and returns an initialized, filtered DataMatrix instance"""
         lines = delimited_file.lines
         header = delimited_file.header
@@ -291,7 +291,10 @@ class DataMatrixFactory:
 
         # optimization: internalize row and column names
         colnames = map(intern, colnames)
-        rownames = map(intern, [line[0] for line in lines])
+        if case_sensitive:
+            rownames = [intern(line[0]) for line in lines]
+        else:
+            rownames = [intern(line[0].upper()) for line in lines]
 
         values = np.empty([nrows, ncols])
         for row in xrange(nrows):
