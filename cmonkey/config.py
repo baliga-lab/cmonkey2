@@ -167,7 +167,7 @@ def __get_arg_parser(arg_ext):
     parser.add_argument('--nonetworks', action="store_true", help="deactivate network scoring")
     parser.add_argument('--nostring', action="store_true", help="deactivate STRING network scoring")
     parser.add_argument('--nooperons', action="store_true", help="deactivate operon network scoring")
-    parser.add_argument('--config', default=None, help="additional configuration file")
+    parser.add_argument('--config', default=None, nargs='*', help="additional configuration file(s)")
     parser.add_argument('--debug', default=None,  help="""run in debug mode""")
     parser.add_argument('--random_seed', type=int)
     parser.add_argument('--num_cores', type=int, default=None)
@@ -236,8 +236,10 @@ def setup(arg_ext=None):
             args.nonetworks = True
 
     # user overrides in config files
-    if args.config:
+    if args.config is not None:
         config_parser.read(args.config)
+    else:
+        raise Exception('NO config')
 
     # Initial configuration from default + user config
     params = __set_config(config_parser)
