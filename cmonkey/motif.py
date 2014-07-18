@@ -20,6 +20,8 @@ import cPickle
 import collections
 import sys
 import subprocess
+import sqlite3
+
 
 ComputeScoreParams = collections.namedtuple('ComputeScoreParams',
                                             ['iteration',
@@ -108,12 +110,24 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
     2. motif_in_iteration(i) determines when the motifing tools is run
     """
 
-    def __setup_meme_suite(self, meme_version, global_background, search_distance):
+    def __setup_meme_suite(self, config_params):
         background_file = None
-        if global_background:
-            background_file = meme.global_background_file(
+        meme_version = config_params['meme_version']
+        search_distance = config_params['search_distances'][self.seqtype]
+
+        if config_params['global_background']:
+            background_file, bgmodel = meme.global_background_file(
                 self.organism, self.ratios.row_names, self.seqtype,
                 bgorder=int(self.config_params['MEME']['background_order']))
+
+            # store background in results database
+            conn = sqlite3.connect(config_params['out_database'], 15, isolation_level='DEFERRED')
+            for order in bgmodel:
+                for subseq, pvalue in order.items():
+                    conn.execute('insert into global_background (subsequence, pvalue) values (?,?)',
+                                 (subseq, pvalue))
+                conn.commit()
+            conn.close()
 
         if meme_version == '4.3.0':
             self.meme_suite = meme.MemeSuite430(self.config_params,
@@ -134,8 +148,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                                              ratios, config_params=config_params)
         # attributes accessible by subclasses
         self.seqtype = seqtype
-        self.__setup_meme_suite(config_params['meme_version'], config_params['global_background'],
-                                config_params['search_distances'][seqtype])
+        self.__setup_meme_suite(config_params)
         self.num_motif_func = util.get_iter_fun(config_params['MEME'], "nmotifs",
                                                 config_params['num_iterations'])
 

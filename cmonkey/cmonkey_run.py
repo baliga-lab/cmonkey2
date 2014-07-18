@@ -121,6 +121,7 @@ class CMonkeyRun:
                         order_num int)''')
         conn.execute('''create table cluster_residuals (iteration int,
                         cluster int, residual decimal)''')
+        conn.execute('create table global_background (subsequence text, pvalue decimal)')
 
         # in case you are wondering about the redundant iteration field here -
         # it allows for much faster database access when selecting by iteration

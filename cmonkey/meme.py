@@ -104,8 +104,9 @@ class MemeSuite:
                 bgseqs = {feature_id: all_seqs[feature_id]
                           for feature_id in all_seqs
                           if feature_id not in feature_ids}
+                # note: the result of make_background_file is a tuple !!
                 return make_background_file(bgseqs, self.__use_revcomp,
-                                            self.background_order)
+                                            self.background_order)[0]
 
         #logging.info("run_meme() - # seqs = %d", len(input_seqs))
         bgfile = background_file()
@@ -691,7 +692,8 @@ def __next_regex_index(pat, start_index, lines):
 
 
 def make_background_file(bgseqs, use_revcomp, bgorder):
-    """create a meme background file and returns its name"""
+    """create a meme background file and returns its name and the model itself as
+    a tuple"""
     def make_seqs(seqs):
         """prepare the input sequences for feeding into meme.
         This means only taking the unique sequences and their reverse
@@ -719,7 +721,7 @@ def make_background_file(bgseqs, use_revcomp, bgorder):
             for seq, frequency in order_row.iteritems():
                 outfile.write('%s %10s\n' %
                               (seq, str(round(frequency, 8))))
-    return filename
+    return (filename, bgmodel)
 
 
 def global_background_file(organism, gene_aliases, seqtype, bgorder=3,
