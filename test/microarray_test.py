@@ -39,17 +39,17 @@ class ComputeArrayScoresTest(unittest.TestCase):
     def __read_ratios(self):
         dfile = util.read_dfile('testdata/row_scores_testratios.tsv',
                                 has_header=True)
-        return dm.DataMatrixFactory([]).create_from(dfile)
+        return dm.DataMatrixFactory([]).create_from(dfile, case_sensitive=True)
 
     def __read_rowscores_refresult(self):
         dfile = util.read_dfile('testdata/row_scores_refresult.tsv',
                                 has_header=True, quote='"')
-        return dm.DataMatrixFactory([]).create_from(dfile)
+        return dm.DataMatrixFactory([]).create_from(dfile, case_sensitive=True)
 
     def __read_colscores_refresult(self):
         dfile = util.read_dfile('testdata/column_scores_refresult.tsv',
                                 has_header=True, quote='"')
-        return dm.DataMatrixFactory([]).create_from(dfile)
+        return dm.DataMatrixFactory([]).create_from(dfile, case_sensitive=True)
 
     def test_compute_row_scores_multiprocessing(self):
         membership = self.__read_members()

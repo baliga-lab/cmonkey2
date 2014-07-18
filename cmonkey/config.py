@@ -256,7 +256,11 @@ def setup(arg_ext=None):
     else:
         infile = util.read_dfile(matrix_filename, has_header=True, quote='\"')
 
-    ratios = matrix_factory.create_from(infile)
+    if params['case_sensitive'] or args.case_sensitive:
+        ratios = matrix_factory.create_from(infile, True)
+    else:
+        ratios = matrix_factory.create_from(infile, False)
+        
     infile = None
 
     args.clusters_per_row = 2

@@ -219,7 +219,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
 def read_matrix(filename):
     """reads a matrix file"""
     infile = util.read_dfile(filename, has_header=True, quote='\"')
-    return dm.DataMatrixFactory([]).create_from(infile).sorted_by_row_name()
+    return dm.DataMatrixFactory([]).create_from(infile, case_sensitive=True).sorted_by_row_name()
 
 
 EPS = 1.0e-5
