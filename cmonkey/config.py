@@ -41,7 +41,7 @@ ALL_DEBUG_OPTIONS = {'keep_memeout', 'dump_results', 'dump_scores', 'profile_mem
                      'random_seed', 'keep_mastout'}
 
 
-def __set_config(config):
+def set_config(config):
     """Returns a dictionary containing the configuration contained in
     the config parser object. Note that there are only 3 fixed sections:
     General, Membership and Scoring"""
@@ -238,11 +238,9 @@ def setup(arg_ext=None):
     # user overrides in config files
     if args.config is not None:
         config_parser.read(args.config)
-    else:
-        raise Exception('NO config')
 
     # Initial configuration from default + user config
-    params = __set_config(config_parser)
+    params = set_config(config_parser)
 
     if params['normalize_ratios']:
         ratio_filters = [dm.nochange_filter, dm.center_scale_filter]
