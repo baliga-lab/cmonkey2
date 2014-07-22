@@ -430,9 +430,9 @@ class CMonkeyRun:
 
     def run(self):
         row_scoring, col_scoring = self.prepare_run()
-        if not self.config_params['interactive']:
-            self.run_iterations(row_scoring, col_scoring)
-        return row_scoring, col_scoring
+        self.row_scoring = row_scoring
+        self.column_scoring = col_scoring
+        self.run_iterations()
 
     def residual_for(self, row_names, column_names):
         if len(column_names) <= 1 or len(row_names) <= 1:
@@ -592,12 +592,12 @@ class CMonkeyRun:
     def combined_rscores_pickle_path(self):
         return "%s/combined_rscores_last.pkl" % self.config_params['output_dir']
 
-    def run_iteration(self, row_scoring, col_scoring, iteration):
+    def run_iteration(self, iteration):
         logging.info("Iteration # %d", iteration)
         iteration_result = {'iteration': iteration, 'score_means': {}}
-        rscores = row_scoring.compute(iteration_result)
+        rscores = self.row_scoring.compute(iteration_result)
         start_time = util.current_millis()
-        cscores = col_scoring.compute(iteration_result)
+        cscores = self.column_scoring.compute(iteration_result)
         elapsed = util.current_millis() - start_time
         if elapsed > 0.0001:
             logging.debug("computed column_scores in %f s.", elapsed / 1000.0)
@@ -637,34 +637,37 @@ class CMonkeyRun:
                 debug.write_iteration(conn, outfile, iteration,
                                       self['num_clusters'], self['output_dir'])
 
-    def write_mem_profile(self, outfile, row_scoring, col_scoring, iteration):
+    def write_mem_profile(self, outfile, iteration):
         membsize = sizes.asizeof(self.membership()) / 1000000.0
         orgsize = sizes.asizeof(self.organism()) / 1000000.0
-        colsize = sizes.asizeof(col_scoring) / 1000000.0
-        funs = row_scoring.scoring_functions
+        colsize = sizes.asizeof(self.column_scoring) / 1000000.0
+        funs = self.row_scoring.scoring_functions
         rowsize = sizes.asizeof(funs[0]) / 1000000.0
         netsize = sizes.asizeof(funs[1]) / 1000000.0
         motsize = sizes.asizeof(funs[2]) / 1000000.0
         outfile.write('%d\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\n' % (iteration, membsize, orgsize, colsize, rowsize, netsize, motsize))
 
-    def run_iterations(self, row_scoring, col_scoring):
+    def run_iterations(self):
         self.report_params()
         self.write_start_info()
 
         conn = self.__dbconn()
         with conn:
-            for scoring_function in row_scoring.scoring_functions:
+            for scoring_function in self.row_scoring.scoring_functions:
                 conn.execute("insert into statstypes values ('scoring',?)", [scoring_function.id])
-            conn.execute("insert into statstypes values ('scoring',?)", [col_scoring.id])
+            conn.execute("insert into statstypes values ('scoring',?)", [self.column_scoring.id])
 
         if 'profile_mem' in self['debug']:
             with open(os.path.join(self['output_dir'], 'memprofile.tsv'), 'w') as outfile:
                 outfile.write('Iteration\tMembership\tOrganism\tCol\tRow\tNetwork\tMotif\n')
 
+        if self.config_params['interactive']:  # stop here in interactive mode
+            return
+
         for iteration in range(self['start_iteration'],
                                self['num_iterations'] + 1):
             start_time = util.current_millis()
-            self.run_iteration(row_scoring, col_scoring, iteration)
+            self.run_iteration(iteration)
             # garbage collection after everything in iteration went out of scope
             gc.collect()
             elapsed = util.current_millis() - start_time
@@ -672,7 +675,7 @@ class CMonkeyRun:
             
             if 'profile_mem' in self['debug'] and (iteration == 1 or iteration % 100 == 0):
                 with open(os.path.join(self['output_dir'], 'memprofile.tsv'), 'a') as outfile:
-                    self.write_mem_profile(outfile, row_scoring, col_scoring, iteration)
+                    self.write_mem_profile(outfile, iteration)
 
 
         """run post processing after the last iteration. We store the results in
@@ -680,7 +683,7 @@ class CMonkeyRun:
         if self['postadjust']:
             logging.info("Postprocessing: Adjusting the clusters....")
             # run combiner using the weights of the last iteration
-            rscores = row_scoring.combine_cached(self['num_iterations'])
+            rscores = self.row_scoring.combine_cached(self['num_iterations'])
             rd_scores = memb.get_row_density_scores(self.membership(), rscores)
             logging.info("Recomputed combined + density scores.")
             memb.postadjust(self.membership(), rd_scores)
@@ -689,7 +692,7 @@ class CMonkeyRun:
 
             iteration_result = {'iteration': self['num_iterations'] + 1,
                                 'score_means': {}}
-            combined_scores = row_scoring.compute_force(iteration_result)
+            combined_scores = self.row_scoring.compute_force(iteration_result)
 
             # write the combined scores for benchmarking/diagnostics
             with open(self.combined_rscores_pickle_path(), 'w') as outfile:
