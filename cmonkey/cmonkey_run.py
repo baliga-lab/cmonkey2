@@ -430,7 +430,9 @@ class CMonkeyRun:
 
     def run(self):
         row_scoring, col_scoring = self.prepare_run()
-        self.run_iterations(row_scoring, col_scoring)
+        if not self.config_params['interactive']:
+            self.run_iterations(row_scoring, col_scoring)
+        return row_scoring, col_scoring
 
     def residual_for(self, row_names, column_names):
         if len(column_names) <= 1 or len(row_names) <= 1:

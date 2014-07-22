@@ -188,6 +188,8 @@ def __get_arg_parser(arg_ext):
 
     parser.add_argument('--case_sensitive', action='store_true',
                         help="""override the case sensitive default""")
+    parser.add_argument('--interactive', action='store_true',
+                        help="""initialize, but don't run""")
 
 
     if arg_ext is not None:
@@ -293,6 +295,7 @@ def setup(arg_ext=None):
                  'random_seed': args.random_seed,
                  'pipeline_file': args.pipeline,
                  'synonym_file': args.synonym_file,
+                 'interactive': args.interactive,
                  'case_sensitive': args.case_sensitive}
 
     if overrides['random_seed'] is None:

@@ -34,5 +34,6 @@ if __name__ == '__main__':
         logging.error("# genes found: %d, # total: %d, %f %% - please check your ratios file",
                       num_found, total, percent)
     else:
-        cmonkey_run.run()
-    cmonkey_run.cleanup()
+        row_scoring, column_scoring = cmonkey_run.run()
+    if not args.interactive:
+        cmonkey_run.cleanup()
