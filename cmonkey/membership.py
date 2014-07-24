@@ -16,6 +16,8 @@ import numpy as np
 import rpy2.robjects as robjects
 import cPickle
 import array
+from collections import defaultdict
+import sqlite3
 
 
 # Default values for membership creation
@@ -695,6 +697,56 @@ def make_file_column_seeder(filename, sep=' '):
 
     return seed
 
+
+def make_db_row_seeder(outdb):
+    def seed(row_membership, matrix):
+        row_map = {name: idx
+                   for idx, name in enumerate(matrix.row_names)}
+        conn = sqlite3.connect(outdb)
+        cursor = conn.cursor()
+        try:
+            cursor.execute('select max(iteration) from row_members')
+            iteration = cursor.fetchone()[0]
+            cursor.execute('select cluster, name from row_members rm join row_names rn on rm.order_num=rn.order_num where iteration=?', [iteration])
+            row_clusters = defaultdict(list)
+            for cluster, row_name in cursor.fetchall():
+                row_clusters[row_name].append(cluster)
+
+            # copy memberships
+            for row_name in matrix.row_names:
+                for i, cluster in enumerate(row_clusters[row_name]):
+                    row_membership[row_map[row_name]][i] = cluster
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+    return seed
+
+
+def make_db_column_seeder(outdb):
+    def seed(matrix, row_membership, num_clusters,
+             num_clusters_per_column):
+        column_map = {name: idx
+                      for idx, name in enumerate(matrix.column_names)}
+        conn = sqlite3.connect(outdb)
+        cursor = conn.cursor()
+        try:
+            cursor.execute('select max(iteration) from column_members')
+            iteration = cursor.fetchone()[0]
+            cursor.execute('select cluster, name from column_members cm join column_names cn on cm.order_num=cn.order_num where iteration=?', [iteration])
+            col_clusters = defaultdict(list)
+            for cluster, col_name in cursor.fetchall():
+                col_clusters[col_name].append(cluster)
+            result = [[0] * num_clusters_per_column for col in matrix.column_names]
+            for col_name in matrix.column_names:
+                for i, cluster in enumerate(col_clusters[col_name]):
+                    result[column_map[col_name]][i] = cluster
+            return result
+        finally:
+            if conn:
+                conn.close()
+    return seed
 
 def fuzzify(membership, row_scores, column_scores, num_iterations, iteration_result,
             add_fuzz):
