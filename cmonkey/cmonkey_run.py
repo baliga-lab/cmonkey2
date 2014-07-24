@@ -204,7 +204,7 @@ class CMonkeyRun:
 
     def organism(self):
         """returns the organism object to work on"""
-        if self['dummy_organism']:
+        if self.use_dummy_organism():
             self.__organism = org.DummyOrganism()
         elif self.__organism is None:
             self.__organism = self.make_organism()
@@ -404,11 +404,14 @@ class CMonkeyRun:
                              config_params=self.config_params)
         return row_scoring, col_scoring
 
+    def use_dummy_organism(self):
+        """check whether we use a dummy organism"""
+        return (self['organism_code'] is None and
+                self['nonetworks'] and self['nomotifs'])
+
     def prepare_run(self, check_params=True):
         """Setup output directories and scoring functions for the scoring.
         Separating setup and actual run facilitates testing"""
-        self['dummy_organism'] = (self['organism_code'] is None and
-                                  self['nonetworks'] and self['nomotifs'])
         if check_params:
             self.__check_parameters()
 

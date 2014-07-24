@@ -24,9 +24,9 @@ if __name__ == '__main__':
     if params['checkratios']:
         thesaurus = cmonkey_run.organism().thesaurus()
         logging.info("Checking the quality of the input matrix names...")
-        found = [name for name in matrix.row_names if name in thesaurus]
+        found = [name for name in ratios.row_names if name in thesaurus]
         num_found = len(found)
-        total = len(matrix.row_names)
+        total = len(ratios.row_names)
         percent = (float(num_found) / float(total)) * 100.0
         proceed = percent > 50.0
 
