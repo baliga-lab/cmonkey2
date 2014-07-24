@@ -60,8 +60,12 @@ class CMonkeyRun:
         self.__organism = None
         self.config_params = args
         self.ratios = ratios
-        self.row_seeder = memb.make_kmeans_row_seeder(args['num_clusters'])
-        self.column_seeder = microarray.seed_column_members
+        if args['resume']:
+            self.row_seeder = memb.make_db_row_seeder(args['out_database'])
+            self.column_seeder = memb.make_db_column_seeder(args['out_database'])
+        else:
+            self.row_seeder = memb.make_kmeans_row_seeder(args['num_clusters'])
+            self.column_seeder = microarray.seed_column_members
         self.__conn = None
 
         today = date.today()
@@ -407,13 +411,16 @@ class CMonkeyRun:
                                   self['nonetworks'] and self['nomotifs'])
         if check_params:
             self.__check_parameters()
-        self.__make_dirs_if_needed()
-        self.__clear_output_dir()
-        self.__create_output_database()
-        # write the normalized ratio matrix for stats and visualization
-        output_dir = self['output_dir']
-        if not os.path.exists(output_dir + '/ratios.tsv'):
-            self.ratios.write_tsv_file(output_dir + '/ratios.tsv')
+
+        if not self['resume']:
+            self.__make_dirs_if_needed()
+            self.__clear_output_dir()
+            self.__create_output_database()
+
+            # write the normalized ratio matrix for stats and visualization
+            output_dir = self['output_dir']
+            if not os.path.exists(output_dir + '/ratios.tsv'):
+                self.ratios.write_tsv_file(output_dir + '/ratios.tsv')
 
         # gene index map is used for writing statistics
         thesaurus = self.organism().thesaurus()
