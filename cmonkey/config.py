@@ -4,6 +4,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import os
+import sys
 import argparse
 import ConfigParser
 import logging
@@ -232,6 +233,8 @@ def __get_arg_parser(arg_ext):
                         help="""initialize, but don't run""")
     parser.add_argument('--resume', action='store_true',
                         help="""initialize from out directory""")
+    parser.add_argument('--num_iterations', type=int, default=None,
+                        help="""specify number of iterations""")
 
 
     if arg_ext is not None:
@@ -262,6 +265,7 @@ def setup(arg_ext=None):
     config_parser = __get_config_parser()
     arg_parser = __get_arg_parser(arg_ext)
     args = arg_parser.parse_args()
+    args.command_line = ' '.join(sys.argv)
     if args.verbose:
         loglevel = logging.DEBUG
     else:
@@ -357,7 +361,8 @@ def setup_default(args, config_parser):
                  'synonym_file': args.synonym_file,
                  'interactive': args.interactive,
                  'resume': args.resume,
-                 'case_sensitive': args.case_sensitive}
+                 'case_sensitive': args.case_sensitive,
+                 'command_line': args.command_line}
 
     if overrides['random_seed'] is None:
         del overrides['random_seed']
@@ -376,12 +381,16 @@ def setup_default(args, config_parser):
     overrides['nomotifs'] = args.nomotifs or not params['MEME']['version']
     overrides['use_string'] = not args.nostring
     overrides['use_operons'] = not args.nooperons
+
     if args.num_cores is not None:
         overrides['num_cores'] = args.num_cores
     if args.out:
         overrides['output_dir'] = args.out
     if args.cachedir:
         overrides['cache_dir'] = args.cachedir
+
+    if args.num_iterations is not None:
+        overrides['num_iterations'] = args.num_iterations
 
     for key, value in overrides.iteritems():
         params[key] = value
@@ -441,6 +450,7 @@ def write_general_settings(outfile, config_params):
         return '' if not value else value
 
     outfile.write('[General]\n')
+    outfile.write('command_line = %s\n' % config_params['command_line'])
     outfile.write('num_iterations = %d\n' % config_params['num_iterations'])
     outfile.write('start_iteration = %d\n' % config_params['start_iteration'])
     outfile.write('output_dir = %s\n' % config_params['output_dir'])
