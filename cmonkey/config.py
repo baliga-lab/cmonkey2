@@ -41,15 +41,99 @@ ALL_DEBUG_OPTIONS = {'keep_memeout', 'dump_results', 'dump_scores', 'profile_mem
                      'random_seed', 'keep_mastout'}
 
 
+def get_config_boolean(config, section, option, default_value):
+    """tries to retrieve a boolean value from config or returns the default"""
+    try:
+        return config.getboolean(section, option)
+    except:
+        return default_value
+
+
+def get_config_int(config, section, option, default_value=None):
+    """tries to retrieve an int value from config or returns the default"""
+    try:
+        return config.getint(section, option)
+    except:
+        return default_value
+
+def get_config_str(config, section, option, default_value=None):
+    """tries to retrieve a str value from config or returns the default"""
+    try:
+        return config.get(section, option)
+    except:
+        return default_value
+
+
 def set_config(config):
     """Returns a dictionary containing the configuration contained in
     the config parser object. Note that there are only 3 fixed sections:
     General, Membership and Scoring"""
     params = {}
+    set_config_general(config, params)
+    params['quantile_normalize'] = config.getboolean('Scoring', 'quantile_normalize')
+    set_config_membership(config, params)
+    set_config_scoring_functions(config, params)
+    set_config_motifs(config, params)
+    return params
 
+
+def set_config_general(config, params):
+    """Process General section"""
+    # override directories
+    tmp_dir = config.get('General', 'tmp_dir')
+    if tmp_dir:
+        tempfile.tempdir = tmp_dir
+        
+    params['output_dir'] = config.get('General', 'output_dir')
+    params['cache_dir'] = config.get('General', 'cache_dir')
+    params['tmp_dir'] = tmp_dir
+    params['dbfile_name'] = config.get('General', 'dbfile_name')
+    params['normalize_ratios'] = config.getboolean('General', 'normalize_ratios')
+    params['num_iterations'] = config.getint("General", "num_iterations")
+    params['start_iteration'] = config.getint("General", "start_iteration")
+    params['multiprocessing'] = config.getboolean('General', 'use_multiprocessing')
+    params['case_sensitive'] = config.getboolean('General', 'case_sensitive')
+    params['num_cores'] = get_config_int('General', 'num_cores', None)
+    params['postadjust'] = config.getboolean('General', 'postadjust')
+    params['log_subresults'] = config.getboolean('General', 'log_subresults')
+    params['add_fuzz'] = config.get('General', 'add_fuzz')
+
+    # python can have large seeds, R, however has a 32 bit limit it seems
+    params['random_seed'] = get_config_int(config, 'General', 'random_seed',
+                                           util.current_millis() % 2147483647)
+    params['stats_freq'] = config.getint('General', 'stats_frequency')
+    params['result_freq'] = config.getint('General', 'result_frequency')
+    params['debug_freq'] = config.getint('General', 'debug_frequency')
+
+    # implicit parameters for compatibility
+    params['use_operons'] = get_config_boolean(config, 'General', 'use_operons', True)
+    params['use_string'] = get_config_boolean(config, 'General', 'use_string', True)
+    params['checkratios'] = get_config_boolean(config, 'General', 'checkratios', False)
+    params['organism_code'] = get_config_str(config, 'General', 'organism_code', None)
+
+
+def set_config_membership(config, params):
+    """membership default parameters"""
+    params['memb.min_cluster_rows_allowed'] = config.getint('Membership',
+                                                            'min_cluster_rows_allowed')
+    params['memb.max_cluster_rows_allowed'] = config.getint('Membership',
+                                                            'max_cluster_rows_allowed')
+    params['memb.prob_row_change'] = config.getfloat('Membership', 'probability_row_change')
+    params['memb.prob_col_change'] = config.getfloat('Membership', 'probability_column_change')
+    params['memb.max_changes_per_row'] = config.getint('Membership', 'max_changes_per_row')
+    params['memb.max_changes_per_col'] = config.getint('Membership', 'max_changes_per_column')
+    params['memb.clusters_per_row'] = get_config_int(config, 'Membership',
+                                                     'clusters_per_row')
+    params['memb.clusters_per_col'] = get_config_int(config, 'Membership',
+                                                     'clusters_per_column')
+
+
+def set_config_scoring_functions(config, params):
+    """processing scoring function specific stuff"""
     def set_scaling(section):
         try:
-            params[section]['scaling'] = ('scaling_const', config.getfloat(section, 'scaling_const'))
+            params[section]['scaling'] = ('scaling_const',
+                                          config.getfloat(section, 'scaling_const'))
             return
         except:
             pass
@@ -58,51 +142,9 @@ def set_config(config):
         except:
             raise Exception("no scaling found for section '%s'" % section)
 
-    # override directories
-    tmp_dir = config.get('General', 'tmp_dir')
-    if tmp_dir:
-        tempfile.tempdir = tmp_dir
-    params['output_dir'] = config.get('General', 'output_dir')
-    params['cache_dir'] = config.get('General', 'cache_dir')
-    params['tmp_dir'] = tmp_dir
-    params['dbfile_name'] = config.get('General', 'dbfile_name')
-    params['normalize_ratios'] = config.getboolean('General', 'normalize_ratios')
-
-    params['num_iterations'] = config.getint("General", "num_iterations")
-    params['start_iteration'] = config.getint("General", "start_iteration")
-    params['multiprocessing'] = config.getboolean('General', 'use_multiprocessing')
-    params['case_sensitive'] = config.getboolean('General', 'case_sensitive')
-    try:
-        params['num_cores'] = config.getint('General', 'num_cores')
-    except:
-        params['num_cores'] = None
-    params['postadjust'] = config.getboolean('General', 'postadjust')
-    params['log_subresults'] = config.getboolean('General', 'log_subresults')
-    params['add_fuzz'] = config.get('General', 'add_fuzz')
-    try:
-        params['random_seed'] = config.getint('General', 'random_seed')
-    except:
-        params['random_seed'] = None
-
-    if params['random_seed'] is None:
-        # python can have large seeds, R, however has a 32 bit limit it seems
-        params['random_seed'] = util.current_millis() % 2147483647
-
-    # Quantile normalization is false by default in cMonkey-R
-    params['quantile_normalize'] = config.getboolean('Scoring', 'quantile_normalize')
-
-    # membership default parameters
-    params['memb.min_cluster_rows_allowed'] = config.getint('Membership', 'min_cluster_rows_allowed')
-    params['memb.max_cluster_rows_allowed'] = config.getint('Membership', 'max_cluster_rows_allowed')
-    params['memb.prob_row_change'] = config.getfloat('Membership', 'probability_row_change')
-    params['memb.prob_col_change'] = config.getfloat('Membership', 'probability_column_change')
-    params['memb.max_changes_per_row'] = config.getint('Membership', 'max_changes_per_row')
-    params['memb.max_changes_per_col'] = config.getint('Membership', 'max_changes_per_column')
-
     ids = [section for section in config.sections()
            if section not in {'General', 'Scoring', 'Membership'}]
 
-    # processing scoring function specific stuff
     for id in ids:
         params[id] = {}
         for option, value in config.items(id):
@@ -113,6 +155,9 @@ def set_config(config):
             else:
                 params[id][option] = value
 
+
+def set_config_motifs(config, params):
+    """process the Motifs section"""
     params['sequence_types'] = config.get('Motifs', 'sequence_types').split(',')
     params['search_distances'] = {}
     params['scan_distances'] = {}
@@ -123,11 +168,6 @@ def set_config(config):
         params['scan_distances'][seqtype] = tuple(
             map(int, config.get(cat, 'scan_distance').split(',')))
 
-    params['stats_freq'] = config.getint('General', 'stats_frequency')
-    params['result_freq'] = config.getint('General', 'result_frequency')
-    params['debug_freq'] = config.getint('General', 'debug_frequency')
-    
-    return params
 
 def __get_config_parser():
     # read default configuration parameters
@@ -143,7 +183,7 @@ def __get_config_parser():
 
 def __get_arg_parser(arg_ext):
     parser = argparse.ArgumentParser(description=DESCRIPTION)
-    parser.add_argument('--ratios', required=True,
+    parser.add_argument('--ratios',
                         help='tab-separated ratios matrix file')
 
     parser.add_argument('--verbose', action="store_true")
@@ -190,6 +230,8 @@ def __get_arg_parser(arg_ext):
                         help="""override the case sensitive default""")
     parser.add_argument('--interactive', action='store_true',
                         help="""initialize, but don't run""")
+    parser.add_argument('--resume', action='store_true',
+                        help="""initialize from out directory""")
 
 
     if arg_ext is not None:
@@ -217,7 +259,6 @@ def setup(arg_ext=None):
     the normalized ratios matrix.
     The arg_ext parameter can be used to add additional argements to the
     argparser that can be processed outside of the core application."""
-
     config_parser = __get_config_parser()
     arg_parser = __get_arg_parser(arg_ext)
     args = arg_parser.parse_args()
@@ -229,6 +270,47 @@ def setup(arg_ext=None):
     logging.basicConfig(format=LOG_FORMAT, datefmt='%Y-%m-%d %H:%M:%S',
                         level=loglevel, filename=args.logfile)
 
+    if args.resume:
+        return setup_resume(args, config_parser)
+    else:
+        return setup_default(args, config_parser)
+
+def setup_resume(args, config_parser):
+    """setup from out directory"""
+    outdir = config_parser.get('General', 'output_dir')
+    if args.out is not None:
+        outdir = args.out
+    logging.info("Reading configuration from '%s'...", outdir)
+    config_parser.read(os.path.join(outdir, 'final.ini'))
+    logging.info('done.')
+    params = set_config(config_parser)
+    args.ratios = os.path.join(outdir, 'ratios.tsv.gz')
+    ratios = read_ratios(params, args)
+
+    params['resume'] = True
+    params['out_database'] = os.path.join(params['output_dir'], params['dbfile_name'])
+    params['num_clusters'] = config_parser.getint('General', 'num_clusters')
+    num_clusters = params['num_clusters']
+
+    # TODO: these need to be restored or it will crash, need to move stuff around
+    # needs rework
+    params['rsat_dir'] = None
+    params['rsat_organism'] = None
+    params['operon_file'] = None
+    params['string_file'] = None
+    params['ncbi_code'] = None
+    params['nonetworks'] = False
+    params['nomotifs'] = False
+    params['synonym_file'] = None
+    params['pipeline_file'] = None
+    params['debug'] = []
+    params['interactive'] = True
+    # TODO END
+
+    return args, params, ratios
+
+def setup_default(args, config_parser):
+    """default configuration method"""
     # no organism provided -> dummy organism
     if args.organism is None:
         logging.warn("no organism provided - assuming that you want to score ratios only or don't use automatic download")
@@ -243,28 +325,7 @@ def setup(arg_ext=None):
 
     # Initial configuration from default + user config
     params = set_config(config_parser)
-
-    if params['normalize_ratios']:
-        ratio_filters = [dm.nochange_filter, dm.center_scale_filter]
-    else:
-        ratio_filters = []
-
-    matrix_factory = dm.DataMatrixFactory(ratio_filters)
-    matrix_filename = args.ratios
-
-    if matrix_filename.startswith('http://'):
-        indata = util.read_url(matrix_filename)
-        infile = util.dfile_from_text(indata, has_header=True, quote='\"')
-    else:
-        infile = util.read_dfile(matrix_filename, has_header=True, quote='\"')
-
-    if params['case_sensitive'] or args.case_sensitive:
-        ratios = matrix_factory.create_from(infile, True)
-    else:
-        ratios = matrix_factory.create_from(infile, False)
-        
-    infile = None
-
+    ratios = read_ratios(params, args)
     args.clusters_per_row = 2
 
     # debug options
@@ -285,8 +346,7 @@ def setup(arg_ext=None):
                  'ncbi_code': args.ncbi_code,
                  'operon_file': args.operons,
                  'rsat_dir': args.rsat_dir,
-                 'use_operons': True, 'use_string': True, 'global_background': True,
-                 'meme_version': meme.check_meme_version(),
+                 'use_operons': True, 'use_string': True,
                  'debug': debug_options,
                  'nomotifs': False,
                  'minimize_io': args.minimize_io,
@@ -296,6 +356,7 @@ def setup(arg_ext=None):
                  'pipeline_file': args.pipeline,
                  'synonym_file': args.synonym_file,
                  'interactive': args.interactive,
+                 'resume': args.resume,
                  'case_sensitive': args.case_sensitive}
 
     if overrides['random_seed'] is None:
@@ -311,7 +372,8 @@ def setup(arg_ext=None):
     else:
         overrides['memb.clusters_per_col'] = int(round(num_clusters * 2.0 / 3.0))
 
-    overrides['nomotifs'] = args.nomotifs or not overrides['meme_version']
+    params['MEME']['version'] = meme.check_meme_version()
+    overrides['nomotifs'] = args.nomotifs or not params['MEME']['version']
     overrides['use_string'] = not args.nostring
     overrides['use_operons'] = not args.nooperons
     if args.num_cores is not None:
@@ -335,55 +397,100 @@ def setup(arg_ext=None):
     return args, params, ratios
 
 
+def read_ratios(params, args):
+    """reading ratios matrix"""
+    if params['normalize_ratios']:
+        ratio_filters = [dm.nochange_filter, dm.center_scale_filter]
+    else:
+        ratio_filters = []
+
+    matrix_factory = dm.DataMatrixFactory(ratio_filters)
+    matrix_filename = args.ratios
+
+    if matrix_filename.startswith('http://'):
+        indata = util.read_url(matrix_filename)
+        infile = util.dfile_from_text(indata, has_header=True, quote='\"')
+    else:
+        infile = util.read_dfile(matrix_filename, has_header=True, quote='\"')
+
+    if params['case_sensitive'] or args.case_sensitive:
+        ratios = matrix_factory.create_from(infile, True)
+    else:
+        ratios = matrix_factory.create_from(infile, False)
+    return ratios
+
+
 def write_setup(config_params):
-    def strparam(value):
-        return '' if not value else value
-
+    """Write all active configuration settings to <outputdir>/final.ini"""
     with open(os.path.join(config_params['output_dir'], 'final.ini'), 'w') as outfile:
-        outfile.write('[General]\n')
-        outfile.write('num_iterations = %d\n' % config_params['num_iterations'])
-        outfile.write('start_iteration = %d\n' % config_params['start_iteration'])
-        outfile.write('output_dir = %s\n' % config_params['output_dir'])
-        outfile.write('cache_dir = %s\n' % config_params['cache_dir'])
-        outfile.write('tmp_dir = %s\n' % config_params['tmp_dir'])
-        outfile.write('dbfile_name = %s\n' % config_params['dbfile_name'])
-        outfile.write('use_multiprocessing = %s\n' % str(config_params['multiprocessing']))
-        outfile.write('case_sensitive = %s\n' % str(config_params['case_sensitive']))
-        if config_params['num_cores'] is None:
-            outfile.write('num_cores =\n')
-        else:
-            outfile.write('num_cores = %d\n' % config_params['num_cores'])
-
-        outfile.write('stats_frequency = %d\n' % config_params['stats_freq'])
-        outfile.write('result_frequency = %d\n' % config_params['result_freq'])
-        outfile.write('debug_frequency = %d\n' % config_params['debug_freq'])
-        outfile.write('postadjust = %s\n' % str(config_params['postadjust']))
-        outfile.write('add_fuzz = %s\n' % str(config_params['add_fuzz']))
-        outfile.write('num_clusters = %d\n' % config_params['num_clusters'])
-        outfile.write('random_seed = %s\n' % strparam(config_params['random_seed']))
-        outfile.write('log_subresults = %s\n' % str(config_params['log_subresults']))
-        
-        outfile.write('[Membership]\n')
-        outfile.write('probability_row_change = %f\n' % config_params['memb.prob_row_change'])
-        outfile.write('probability_column_change = %f\n' % config_params['memb.prob_col_change'])
-        outfile.write('max_changes_per_row = %d\n' % config_params['memb.max_changes_per_row'])
-        outfile.write('max_changes_per_column = %d\n' % config_params['memb.max_changes_per_col'])
-        outfile.write('min_cluster_rows_allowed= %d\n' % config_params['memb.min_cluster_rows_allowed'])
-        outfile.write('max_cluster_rows_allowed= %d\n' % config_params['memb.max_cluster_rows_allowed'])
-
-        outfile.write('[Scoring]\n')
+        write_general_settings(outfile, config_params)
+        write_membership_settings(outfile, config_params)
+        outfile.write('\n[Scoring]\n')
         outfile.write('quantile_normalize = %s\n' % str(config_params['quantile_normalize']))
         for key, value in config_params.iteritems():
             if key != 'pipeline' and type(value) is dict:
-                outfile.write('[%s]\n' % key)
-                for setting, param in value.iteritems():
-                    if setting == 'scaling':
-                        if param[0] == 'scaling_const':
-                            outfile.write('scaling_const = %f\n' % param[1])
-                        elif param[0] == 'scaling_rvec':
-                            outfile.write('scaling_rvec = %s\n' % param[1])
-                    else:
-                        outfile.write('%s = %s\n' % (setting, str(param)))
+                write_section(outfile, key, value)
 
     with open(os.path.join(config_params['output_dir'], 'pipeline.json'), 'w') as outfile:
         outfile.write(json.dumps(config_params['pipeline']))
+
+
+def write_general_settings(outfile, config_params):
+    """Writes the General section of the final.ini file"""
+    def strparam(value):
+        return '' if not value else value
+
+    outfile.write('[General]\n')
+    outfile.write('num_iterations = %d\n' % config_params['num_iterations'])
+    outfile.write('start_iteration = %d\n' % config_params['start_iteration'])
+    outfile.write('output_dir = %s\n' % config_params['output_dir'])
+    outfile.write('cache_dir = %s\n' % config_params['cache_dir'])
+    outfile.write('tmp_dir = %s\n' % config_params['tmp_dir'])
+    outfile.write('dbfile_name = %s\n' % config_params['dbfile_name'])
+    outfile.write('use_multiprocessing = %s\n' % str(config_params['multiprocessing']))
+    outfile.write('case_sensitive = %s\n' % str(config_params['case_sensitive']))
+    if config_params['num_cores'] is None:
+        outfile.write('num_cores =\n')
+    else:
+        outfile.write('num_cores = %d\n' % config_params['num_cores'])
+
+    outfile.write('stats_frequency = %d\n' % config_params['stats_freq'])
+    outfile.write('result_frequency = %d\n' % config_params['result_freq'])
+    outfile.write('debug_frequency = %d\n' % config_params['debug_freq'])
+    outfile.write('postadjust = %s\n' % str(config_params['postadjust']))
+    outfile.write('add_fuzz = %s\n' % str(config_params['add_fuzz']))
+    outfile.write('num_clusters = %d\n' % config_params['num_clusters'])
+    outfile.write('random_seed = %s\n' % strparam(config_params['random_seed']))
+    outfile.write('log_subresults = %s\n' % str(config_params['log_subresults']))
+
+    # compatibility
+    outfile.write('organism_code = %s\n' % str(config_params['organism_code']))
+    outfile.write('use_operons = %s\n' % str(config_params['use_operons']))
+    outfile.write('use_string = %s\n' % str(config_params['use_string']))
+    outfile.write('checkratios = %s\n' % str(config_params['checkratios']))
+
+
+def write_membership_settings(outfile, config_params):
+    """Writes the Membership section of the final.ini file"""
+    outfile.write('\n[Membership]\n')
+    outfile.write('probability_row_change = %f\n' % config_params['memb.prob_row_change'])
+    outfile.write('probability_column_change = %f\n' % config_params['memb.prob_col_change'])
+    outfile.write('max_changes_per_row = %d\n' % config_params['memb.max_changes_per_row'])
+    outfile.write('max_changes_per_column = %d\n' % config_params['memb.max_changes_per_col'])
+    outfile.write('min_cluster_rows_allowed = %d\n' % config_params['memb.min_cluster_rows_allowed'])
+    outfile.write('max_cluster_rows_allowed = %d\n' % config_params['memb.max_cluster_rows_allowed'])
+    outfile.write('clusters_per_row = %d\n' % config_params['memb.clusters_per_row'])
+    outfile.write('clusters_per_column = %d\n' % config_params['memb.clusters_per_col'])
+
+
+def write_section(outfile, section, settings):
+    """Writes a scoring function specific section to the final.ini file"""
+    outfile.write('\n[%s]\n' % section)
+    for setting, param in settings.iteritems():
+        if setting == 'scaling':
+            if param[0] == 'scaling_const':
+                outfile.write('scaling_const = %f\n' % param[1])
+            elif param[0] == 'scaling_rvec':
+                outfile.write('scaling_rvec = %s\n' % param[1])
+        else:
+            outfile.write('%s = %s\n' % (setting, str(param)))

@@ -69,14 +69,15 @@ class CMonkeyRun:
         self.__conn = None
 
         today = date.today()
-        logging.info('Input matrix has # rows: %d, # columns: %d', ratios.num_rows, ratios.num_columns)
+        logging.info('Input matrix has # rows: %d, # columns: %d',
+                     ratios.num_rows, ratios.num_columns)
         logging.info("# clusters/row: %d", args['memb.clusters_per_row'])
         logging.info("# clusters/column: %d", args['memb.clusters_per_col'])
         logging.info("# CLUSTERS: %d", args['num_clusters'])
         logging.info("use operons: %d", args['use_operons'])
 
-        if args['meme_version']:
-            logging.info('using MEME version %s', args['meme_version'])
+        if args['MEME']['version']:
+            logging.info('using MEME version %s', args['MEME']['version'])
         else:
             logging.error('MEME not detected - please check')
 
