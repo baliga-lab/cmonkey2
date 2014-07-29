@@ -27,6 +27,7 @@ import halo_genes_test
 import microbes_online_test as mo_test
 import iteration_test
 import postproc_test
+import setenrichment_test as se_test
 
 # pylint: disable-msg=C0301
 if __name__ == '__main__':
@@ -64,6 +65,9 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(pt.PssmTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ct.CombinerTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(rwt.ReadWeeTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(se_test.DiscreteEnrichmentSetTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(se_test.CutoffEnrichmentSetTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(se_test.SetTypeTest))
 
     # web based tests
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(

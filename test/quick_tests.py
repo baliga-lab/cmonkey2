@@ -18,6 +18,7 @@ import meme_test as met
 import pssm_test as pt
 import combiner_test as ct
 import read_wee_test as rwt
+import setenrichment_test as se_test
 import sys
 
 
@@ -58,6 +59,9 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(ct.CombinerTest))
 
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(rwt.ReadWeeTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(se_test.DiscreteEnrichmentSetTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(se_test.CutoffEnrichmentSetTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(se_test.SetTypeTest))
 
     if len(sys.argv) > 1 and sys.argv[1] == 'xml':
       xmlrunner.XMLTestRunner(output='test-reports').run(unittest.TestSuite(SUITE))

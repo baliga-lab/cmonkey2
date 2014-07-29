@@ -37,7 +37,7 @@ class DiscreteEnrichmentSet:
 
     
 class CutoffEnrichmentSet:
-    """Enrichment set representation"""
+    """Enrichment set representation constructed with a cutoff"""
     def __init__(self, cutoff, elems):
         """instance creation"""
         self.elems = elems  # pairs of gene, weight
@@ -45,6 +45,7 @@ class CutoffEnrichmentSet:
         self.__genes = None
 
     def genes(self):
+        """returns all genes"""
         if self.__genes is None:
             self.__genes = {elem[0] for elem in self.elems}
         return self.__genes
@@ -91,67 +92,36 @@ class SetType:
 SET_MATRIX = None
 SET_MEMBERSHIP = None
 SET_SET_TYPE = None
+SET_SYNONYMS = None
+CANONICAL_ROWNAMES = None
 
-def reverse_map(entrez_ids, synonyms, row_names):
-    """Special feature:
-    assuming that we have entrez ids in the sets and USCSD ids in the
-    ratios matrix rows, we map the set members to names that are
-    compatible to the ones in the ratios matrix
-    Precondition: every element in entrez_ids is in synonyms
-    """
-    # a row class is the primary identifier in the synonyms for each row    
-    # row_classes contains all the synonyms a primary identifier maps to
-    row_classes = defaultdict(list)
-    for key, value in synonyms.iteritems():
-        row_classes[value].append(key)        
-    
-    result = set()
-    not_found = 0
-    found = 0
-    for entrez_id in entrez_ids:
-        primary = synonyms[entrez_id]
-        if entrez_id in row_classes[primary]:
-            result.add(primary)
-            found += 1
-        else:
-            result.add(entrez_id)
-            not_found += 1
-    if not_found > 0:
-        logging.warn('%d set members could not be reverse mapped', not_found)
-
-    return result
 
 def read_set_types(config_params, thesaurus, ratios):
-    """Reads sets from a JSON file"""
+    """Reads sets from a JSON file. We also ensure that genes
+    are stored in canonical form in the set, so that set operations based on
+    gene names will succeed"""
     setfile = config_params['SetEnrichment']['set_file']
-    map_to_ratio_genes = config_params['SetEnrichment']['map_to_ratio_genes'] == 'True'
-    if map_to_ratio_genes:
-        logging.info('reverse mapping of set element names to row names requested')
-
     with open(setfile) as infile:
         json_sets = json.load(infile)
         sets = {}
         thrown_out = 0
         for setname, genes in json_sets.iteritems():
             filtered = map(lambda s: intern(str(s)), filter(lambda g: g in thesaurus, genes))
-            thrown_out += len(genes) - len(filtered)
-            if map_to_ratio_genes:
-                filtered = reverse_map(filtered, thesaurus, set(ratios.row_names))
-            sets[setname] = DiscreteEnrichmentSet(filtered)
+            canonic_genes = {thesaurus[gene] for gene in filtered}
+            thrown_out += len(genes) - len(canonic_genes)
+            sets[setname] = DiscreteEnrichmentSet(canonic_genes)
         json_sets = None
         logging.info("SET_ENRICHMENT REMOVED  %d ELEMENTS FROM INPUT", thrown_out)
     return [SetType('default', sets)]
 
 
 class ScoringFunction(scoring.ScoringFunctionBase):
-    """Network scoring function"""
+    """Set enrichment scoring function"""
     def __init__(self, organism, membership, ratios, config_params=None):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, "SetEnrichment", organism, membership,
                                              ratios, config_params)
         self.__set_types = read_set_types(config_params, organism.thesaurus(), ratios)
-        # stores (min_set, pvalue) pairs for each cluster and set type
-        # for the last run of the function
         self.run_log = scoring.RunLog('set_enrichment', config_params)
 
     def bonferroni_cutoff(self):
@@ -163,7 +133,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         Note: will return None if not computed yet and the result of a previous
         scoring if the function is not supposed to actually run in this iteration
         """
-        global SET_MATRIX, SET_MEMBERSHIP, SET_SET_TYPE
+        global SET_MATRIX, SET_MEMBERSHIP, SET_SET_TYPE, SET_SYNONYMS, CANONICAL_ROWNAMES
         logging.info("Compute scores for set enrichment...")
         start_time = util.current_millis()
         matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
@@ -171,6 +141,11 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         use_multiprocessing = self.config_params[scoring.KEY_MULTIPROCESSING]
         SET_MATRIX = self.ratios
         SET_MEMBERSHIP = self.membership
+        SET_SYNONYMS = self.organism.thesaurus()
+        if CANONICAL_ROWNAMES is None:
+            CANONICAL_ROWNAMES = set(map(lambda n: SET_SYNONYMS[n] if n in SET_SYNONYMS else n,
+                                         self.ratios.row_names))
+
         ref_min_score = ref_matrix.min()
         logging.info('REF_MIN_SCORE: %f', ref_min_score)
 
@@ -223,6 +198,12 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
         logging.info("SET ENRICHMENT FINISHED IN %f s.\n",
                      (util.current_millis() - start_time) / 1000.0)
+        # cleanup
+        SET_SET_TYPE = None
+        SET_MATRIX = None
+        SET_MEMBERSHIP = None
+        SET_SYNONYMS = None
+
         return matrix
 
     def run_logs(self):
@@ -232,13 +213,20 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
 def compute_cluster_score(args):
     """Computes the cluster score for a given set type"""
+    global SET_MATRIX, SET_MEMBERSHIP, SET_SET_TYPE, SET_SYNONYMS, CANONICAL_ROWNAMES
+
     cluster, cutoff, ref_min_score = args
     set_type = SET_SET_TYPE
     matrix = SET_MATRIX
-    cluster_rows = sorted(SET_MEMBERSHIP.rows_for_cluster(cluster))
+    cluster_rows = set()
+    for gene in SET_MEMBERSHIP.rows_for_cluster(cluster):
+        if gene in SET_SYNONYMS:
+            cluster_rows.add(SET_SYNONYMS[gene])
+        else:
+            cluster_rows.add(gene)
     set_type_genes = set_type.genes()
 
-    cluster_genes = [gene for gene in cluster_rows if gene in set_type_genes]
+    cluster_genes = {gene for gene in cluster_rows if gene in set_type_genes}
     overlap_sizes = []
     set_sizes = []
 
@@ -246,8 +234,7 @@ def compute_cluster_score(args):
         eset = set_type.sets[set_name]
         set_genes = eset.genes_above_cutoff()
         set_sizes.append(len(set_genes))
-
-        intersect = set(cluster_genes).intersection(set_genes)
+        intersect = cluster_genes.intersection(set_genes)
         overlap_sizes.append(len(intersect))
 
     num_sets = len(set_type.sets)
@@ -264,11 +251,12 @@ def compute_cluster_score(args):
     scores = np.zeros(matrix.num_rows)
     if min_set_overlap > 0:
         min_genes = set_type.sets[min_set].genes()
-        min_genes = [gene for gene in min_genes if gene in matrix.row_names]
+        # ensure all row names are in canonical form
+        min_genes = [gene for gene in min_genes if gene in CANONICAL_ROWNAMES]
         min_indexes = matrix.row_indexes_for(min_genes)
 
         if set_type.sets[min_set].cutoff == 'discrete':
-            overlap_genes = set(cluster_genes).intersection(set(min_genes))
+            overlap_genes = cluster_genes.intersection(set(min_genes))
             overlap_indexes = matrix.row_indexes_for(overlap_genes)
             scores[min_indexes] = 0.5
             scores[overlap_indexes] = 1.0
