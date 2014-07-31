@@ -94,6 +94,7 @@ SET_MEMBERSHIP = None
 SET_SET_TYPE = None
 SET_SYNONYMS = None
 CANONICAL_ROWNAMES = None
+CANONICAL_ROW_INDEXES = None
 
 
 def read_set_types(config_params, thesaurus, ratios):
@@ -133,7 +134,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         Note: will return None if not computed yet and the result of a previous
         scoring if the function is not supposed to actually run in this iteration
         """
-        global SET_MATRIX, SET_MEMBERSHIP, SET_SET_TYPE, SET_SYNONYMS, CANONICAL_ROWNAMES
+        global SET_MATRIX, SET_MEMBERSHIP, SET_SET_TYPE, SET_SYNONYMS, CANONICAL_ROWNAMES, CANONICAL_ROW_INDEXES
         logging.info("Compute scores for set enrichment...")
         start_time = util.current_millis()
         matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
@@ -142,9 +143,18 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         SET_MATRIX = self.ratios
         SET_MEMBERSHIP = self.membership
         SET_SYNONYMS = self.organism.thesaurus()
+
         if CANONICAL_ROWNAMES is None:
             CANONICAL_ROWNAMES = set(map(lambda n: SET_SYNONYMS[n] if n in SET_SYNONYMS else n,
                                          self.ratios.row_names))
+
+        if CANONICAL_ROW_INDEXES is None:
+            CANONICAL_ROW_INDEXES = {}
+            for index, row in enumerate(self.ratios.row_names):
+                if row in SET_SYNONYMS:
+                    CANONICAL_ROW_INDEXES[SET_SYNONYMS[row]] = index
+                else:
+                    CANONICAL_ROW_INDEXES[row] = index
 
         ref_min_score = ref_matrix.min()
         logging.info('REF_MIN_SCORE: %f', ref_min_score)
@@ -213,7 +223,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
 def compute_cluster_score(args):
     """Computes the cluster score for a given set type"""
-    global SET_MATRIX, SET_MEMBERSHIP, SET_SET_TYPE, SET_SYNONYMS, CANONICAL_ROWNAMES
+    global SET_MATRIX, SET_MEMBERSHIP, SET_SET_TYPE, SET_SYNONYMS, CANONICAL_ROWNAMES, CANONICAL_ROW_INDEXES
 
     cluster, cutoff, ref_min_score = args
     set_type = SET_SET_TYPE
@@ -253,11 +263,11 @@ def compute_cluster_score(args):
         min_genes = set_type.sets[min_set].genes()
         # ensure all row names are in canonical form
         min_genes = [gene for gene in min_genes if gene in CANONICAL_ROWNAMES]
-        min_indexes = matrix.row_indexes_for(min_genes)
+        min_indexes = [CANONICAL_ROW_INDEXES[gene] for gene in min_genes]
 
         if set_type.sets[min_set].cutoff == 'discrete':
             overlap_genes = cluster_genes.intersection(set(min_genes))
-            overlap_indexes = matrix.row_indexes_for(overlap_genes)
+            overlap_indexes = [CANONICAL_ROW_INDEXES[gene] for gene in overlap_genes]
             scores[min_indexes] = 0.5
             scores[overlap_indexes] = 1.0
         else:
