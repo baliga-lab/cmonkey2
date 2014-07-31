@@ -1,5 +1,6 @@
 #!/usr/bin/env Rscript
 library('getopt')
+library('parallel')
 
 initial.options <- commandArgs(trailingOnly = FALSE)
 file.arg.name <- "--file="
