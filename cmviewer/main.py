@@ -192,6 +192,10 @@ def make_float_histogram(values, nbuckets=20):
 
 
 def make_series(stats):
+    """Creates a data series for Highcharts and returns a triple of the
+    series data and minimum and maximum score
+    The input is a list of IterationStat objects
+    """
     groups = defaultdict(list)
     scores = [stat.score for stat in stats]
     if len(scores) > 0:
@@ -205,7 +209,7 @@ def make_series(stats):
         groups[stat.label].append(stat.score)
     minscore = math.floor(minscore)
     maxscore = math.ceil(maxscore)
-    return json.dumps([{'name': label, 'data': groups[label]} for label in groups]), minscore, maxscore
+    return [{'name': label, 'data': groups[label]} for label in groups], minscore, maxscore
 
 
 class ClusterViewerApp:
@@ -291,19 +295,31 @@ class ClusterViewerApp:
 
         cursor.close()
 
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("select rowid,name from statstypes where (category='scoring' or category='seqtype') and name not in ('Rows', 'Columns', 'Networks')")
+        types = [row[1] for row in cursor.fetchall()]
+
         conn.row_factory = iterationstat_factory
         cursor = conn.cursor()
-        #cursor.execute('select iteration, seqtype, pval from motif_stats')
-        cursor.execute("select iteration, name, score from iteration_stats its join statstypes st on its.statstype = st.rowid where category = 'seqtype'")
-        js_motif_stats, min_motscore, max_motscore = make_series([row for row in cursor.fetchall()])
-        cursor.close()
 
-        cursor = conn.cursor()
-        #cursor.execute('select iteration, network, score from network_stats')
-        cursor.execute("select iteration, name, score from iteration_stats its join statstypes st on its.statstype = st.rowid where category = 'network'")
+        stats_scores = []
+        stats = []
+        for statstype in types:
+            cursor.execute("select iteration, name, score from iteration_stats its join statstypes st on its.statstype = st.rowid where st.name=?", [statstype])
+            mean_stats, min_score, max_score = make_series([row for row in cursor.fetchall()])
+            stats_scores.append(min_score)
+            stats_scores.append(max_score)
+            stats.extend(mean_stats)
+        min_stats_score = min(stats_scores)
+        max_stats_score = max(stats_scores)
+        js_stats = json.dumps(stats)
+
+        cursor.execute("select iteration,name,score from iteration_stats its join statstypes st on its.statstype=st.rowid where category='network'")
         js_network_stats, min_netscore, max_netscore = make_series([row for row in cursor.fetchall()])
-        cursor.close()
+        js_network_stats = json.dumps(js_network_stats)
 
+        cursor.close()
         conn.close()
         cursor= None
         conn = None

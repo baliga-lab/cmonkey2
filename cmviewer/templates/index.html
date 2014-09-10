@@ -113,13 +113,13 @@
              series: {{js_runlog_series}}
          });
 
-         var motifScoreChart = new Highcharts.Chart({
+         var meanScoreChart = new Highcharts.Chart({
              chart: {renderTo: 'motif-score-graph', type: 'line', width: 300, height: 200},
-             title: { text: 'Median motif scores' },
+             title: { text: 'Median scores' },
              plotOptions: { line: { marker: { enabled: false }, } },
              xAxis: {categories: iterations, tickInterval: 30},
-             yAxis: { title: { text: 'mean p-value' }, max: {{max_motscore}}, min: {{min_motscore}} },
-             series: {{js_motif_stats}}
+             yAxis: { title: { text: 'mean p-value' }, max: {{max_stats_score}}, min: {{min_stats_score}} },
+             series: {{js_stats}}
          });
 
          var networkScoreChart = new Highcharts.Chart({
