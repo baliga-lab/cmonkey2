@@ -275,7 +275,7 @@ class DataMatrixFactory:
         """create a reader instance with the specified filters"""
         self.filters = filters
 
-    def create_from(self, delimited_file, case_sensitive=False):
+    def create_from(self, delimited_file, case_sensitive=True):
         """creates and returns an initialized, filtered DataMatrix instance"""
         lines = delimited_file.lines
         header = delimited_file.header
