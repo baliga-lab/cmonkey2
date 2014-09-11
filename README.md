@@ -2,7 +2,11 @@
 
 ### Description
 
-This is the Python implementation of the cMonkey algorithm based on the original R implementation by David Reiss, Institute for Systems Biology
+This is the Python implementation of the cMonkey algorithm based on the original R implementation by David J. Reiss, Institute for Systems Biology.
+
+### Documentation
+
+A complete set of documentation for installation and running of cMonkey [is available](https://github.com/weiju/cmonkey-python/wiki)
 
 ### System requirements
 
@@ -27,7 +31,6 @@ for running the monitoring application (optional):
 
     ./run_tests.sh
 
-
 ### Running cMonkey
 
 In general, you should be able to run cmonkey-python on microbial gene
@@ -42,14 +45,12 @@ can see all available options with
 
     ./cmonkey.py --help
 
-
 ### Test Run with Halobacterium Salinarum
 
 There is a startup script for cMonkey to run the current integrated
 system
 
     ./cmonkey.py --organism hal --ratios example_data/hal/halo_ratios5.tsv
-
 
 ### Start the python based monitoring application
 
