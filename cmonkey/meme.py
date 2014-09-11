@@ -41,6 +41,7 @@ class MemeSuite:
         self.__use_revcomp = config_params['MEME']['use_revcomp'] == 'True'
         self.__background_file = background_file
         self.__remove_tempfiles = remove_tempfiles
+        self.arg_mod = config_params['MEME']['arg_mod']
 
     def global_background_file(self):
         """returns the global background file used with this meme suite
@@ -221,7 +222,7 @@ class MemeSuite430(MemeSuite):
                    '-time', '600', '-dna', '-revcomp',
                    '-maxsize', '9999999', '-nmotifs', str(num_motifs),
                    '-evt', '1e9', '-minw', '6', '-maxw', str(self.max_width),
-                   '-mod',  'zoops', '-nostatus', '-text']
+                   '-mod',  self.arg_mod, '-nostatus', '-text']
         # if determine the seed sequence (-cons parameter) for this MEME run
         # uses the PSSM with the smallest score that has an e-value lower
         # than 0.1
@@ -277,7 +278,7 @@ class MemeSuite481(MemeSuite):
                    '-time', '600', '-dna', '-revcomp',
                    '-maxsize', '9999999', '-nmotifs', str(num_motifs),
                    '-evt', '1e9', '-minw', '6', '-maxw', str(self.max_width),
-                   '-mod',  'zoops', '-nostatus', '-text']
+                   '-mod',  self.arg_mod, '-nostatus', '-text']
 
         ### NOTE: There is a bug in current MEME 4.9.0, that can cause the
         ### -cons option to crash
