@@ -87,7 +87,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                        'global_background': False,
                                        'schedule': lambda i: True,
                                        'nmotifs_rvec': 'c(rep(1, num_iterations/3), rep(2, num_iterations/3))',
-                                       'max_width': 24,
+                                       'max_width': 24, 'arg_mod': 'zoops',
                                        'background_order': 3, 'use_revcomp': 'True'},
                               'Networks': {'schedule': lambda i: True, 'scaling': ('scaling_rvec', 'seq(1e-5, 0.5, length=num_iterations*3/4)')}}
         self.membership = self.__read_members()  # relies on config_params
@@ -123,7 +123,8 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertTrue(check_matrix_values(netscores, ref_netscores))
 
     def test_motif_scoring(self):
-        meme_suite = meme.MemeSuite430({'MEME': {'max_width': 24, 'background_order': 3, 'use_revcomp': 'True'}})
+        meme_suite = meme.MemeSuite430({'MEME': {'max_width': 24, 'background_order': 3,
+                                                 'use_revcomp': 'True', 'arg_mod': 'zoops'}})
         sequence_filters = [
             motif.unique_filter,
             motif.get_remove_low_complexity_filter(meme_suite),

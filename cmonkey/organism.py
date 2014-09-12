@@ -225,18 +225,36 @@ class Microbe(RSATOrganism):
         self.use_operons = use_operons
         self.__microbes_online_db = microbes_online_db
         self.__operon_mappings = None  # lazy loaded
+        self.sequence_source = RSATOrganismSequenceSource(self)
 
     def sequences_for_genes_search(self, genes, seqtype='upstream'):
         """The default sequence retrieval for microbes is to
         fetch their operon sequences"""
-        return self.operon_shifted_seqs_for(genes,
-                                            self.search_distances[seqtype])
+        return self.sequence_source.operon_shifted_seqs_for(genes,
+                                                            self.search_distances[seqtype])
 
     def sequences_for_genes_scan(self, genes, seqtype='upstream'):
         """The default sequence retrieval for microbes is to
         fetch their operon sequences"""
-        return self.operon_shifted_seqs_for(genes,
-                                            self.scan_distances[seqtype])
+        return self.sequence_source.operon_shifted_seqs_for(genes,
+                                                            self.scan_distances[seqtype])
+
+    def operon_map(self):
+        """Returns the operon map for this particular organism.
+        Microbes Online works on VNG names, but RSAT is working on
+        feature ids, so this function also maps VNG names to feature ids"""
+        if not self.__operon_mappings:
+            pairs = mo.get_operon_pairs(self.__microbes_online_db, self)
+            synonyms = self.thesaurus()
+            self.__operon_mappings = {synonyms[gene]: synonyms[head] for head, gene in pairs}
+        return self.__operon_mappings
+
+
+class RSATOrganismSequenceSource:
+    """Default sequence source for Microbes"""
+
+    def __init__(self, organism):
+        self.organism = organism
 
     def operon_shifted_seqs_for(self, gene_aliases, distance):
         """returns a map of the gene_aliases to the feature-
@@ -244,8 +262,8 @@ class Microbe(RSATOrganism):
         """
         def do_operon_shift():
             """Extract the (gene, head) pairs that are actually used"""
-            operon_map = self.operon_map()
-            synonyms = self.thesaurus()
+            operon_map = self.organism.operon_map()
+            synonyms = self.organism.thesaurus()
             shifted_pairs = []
             aliases_not_found = []
             operons_not_found = []
@@ -268,32 +286,22 @@ class Microbe(RSATOrganism):
             for _, head in operon_pairs:
                 if head not in unique_feature_ids:
                     unique_feature_ids.append(head)
-            features = self.read_features(unique_feature_ids)
-            return self.read_sequences(features, distance,
-                                         st.extract_upstream)
+            features = self.organism.read_features(unique_feature_ids)
+            return self.organism.read_sequences(features, distance,
+                                                st.extract_upstream)
 
-        if self.use_operons:
+        if self.organism.use_operons:
             shifted_pairs = do_operon_shift()
         else:
             # if operons should not be used, we simply map
             # the gene heads to themselves
-            synonyms = self.thesaurus()
+            synonyms = self.organism.thesaurus()
             valid_genes = [synonyms[alias]
                            for alias in gene_aliases if alias in synonyms]
             shifted_pairs = [(gene, gene) for gene in valid_genes]
 
         unique_seqs = unique_sequences(shifted_pairs)
         return {gene: unique_seqs[head] for gene, head in shifted_pairs}
-
-    def operon_map(self):
-        """Returns the operon map for this particular organism.
-        Microbes Online works on VNG names, but RSAT is working on
-        feature ids, so this function also maps VNG names to feature ids"""
-        if not self.__operon_mappings:
-            pairs = mo.get_operon_pairs(self.__microbes_online_db, self)
-            synonyms = self.thesaurus()
-            self.__operon_mappings = {synonyms[gene]: synonyms[head] for head, gene in pairs}
-        return self.__operon_mappings
 
 
 __all__ = ['RSATOrganism', 'Microbe']

@@ -34,7 +34,7 @@ class Meme430Test(unittest.TestCase):  # pylint: disable-msg=R0904
         """simplest of all: just run meme and parse the output, just tests
         if there will be appropriate output for the input"""
         meme_suite = meme.MemeSuite430({'MEME': {'max_width': 24, 'background_order': 3,
-                                                 'use_revcomp': 'True'}})
+                                                 'use_revcomp': 'True', 'arg_mod': 'zoops'}})
         motif_infos, out = meme_suite.meme('testdata/meme_input1.fasta',
                                            'testdata/meme1.bg',
                                            num_motifs=1)
@@ -66,6 +66,7 @@ class Meme430Test(unittest.TestCase):  # pylint: disable-msg=R0904
                          'MEME': {'schedule': lambda i: True,
                                   'version': '4.3.0',
                                   'global_background': False,
+                                  'arg_mod': 'zoops',
                                   'nmotifs_rvec': 'c(rep(1, num_iterations/3), rep(2, num_iterations/3))',
                                   'use_revcomp': 'True', 'max_width': 24, 'background_order': 3},
                          'Motifs': {'schedule': lambda i: True, 'scaling': ('scaling_const', 1.0)}}
