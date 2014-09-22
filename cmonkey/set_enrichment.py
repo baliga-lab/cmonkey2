@@ -107,7 +107,7 @@ def read_set_types(config_params, thesaurus):
             read_sets_csv(infile, thesaurus)
     else:
         with open(setfile) as infile:
-            process_sets(json.load(infile))
+            process_sets(json.load(infile), thesaurus)
     return [SetType('default', sets)]
 
 
