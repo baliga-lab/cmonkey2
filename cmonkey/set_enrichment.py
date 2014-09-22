@@ -97,23 +97,56 @@ CANONICAL_ROWNAMES = None
 CANONICAL_ROW_INDEXES = None
 
 
-def read_set_types(config_params, thesaurus, ratios):
+def read_set_types(config_params, thesaurus):
     """Reads sets from a JSON file. We also ensure that genes
     are stored in canonical form in the set, so that set operations based on
     gene names will succeed"""
     setfile = config_params['SetEnrichment']['set_file']
-    with open(setfile) as infile:
-        json_sets = json.load(infile)
-        sets = {}
-        thrown_out = 0
-        for setname, genes in json_sets.iteritems():
-            filtered = map(lambda s: intern(str(s)), filter(lambda g: g in thesaurus, genes))
-            canonic_genes = {thesaurus[gene] for gene in filtered}
-            thrown_out += len(genes) - len(canonic_genes)
-            sets[setname] = DiscreteEnrichmentSet(canonic_genes)
-        json_sets = None
-        logging.info("SET_ENRICHMENT REMOVED  %d ELEMENTS FROM INPUT", thrown_out)
+    if setfile.endswith('csv'):
+        with open(setfile) as infile:
+            read_sets_csv(infile, thesaurus)
+    else:
+        with open(setfile) as infile:
+            process_sets(json.load(infile))
     return [SetType('default', sets)]
+
+
+def process_sets(input_sets, thesaurus):
+    """Reusable function that maps a dictionary {name: [genes]}
+    to a set of DiscretenEnrichmentSet objects"""
+    sets = {}
+    thrown_out = 0
+    for setname, genes in input_sets.iteritems():
+        filtered = map(lambda s: intern(str(s)), filter(lambda g: g in thesaurus, genes))
+        canonic_genes = {thesaurus[gene] for gene in filtered}
+        thrown_out += len(genes) - len(canonic_genes)
+        sets[setname] = DiscreteEnrichmentSet(canonic_genes)
+    logging.info("SET_ENRICHMENT REMOVED  %d ELEMENTS FROM INPUT", thrown_out)
+    return sets
+
+
+def read_sets_csv(infile, thesaurus, sep=','):
+    """Reads sets from a CSV file
+    We support 2-column and 3 column formats:
+
+    2 column files have the format
+
+    <set name><separator><gene>
+
+    3 column files have the format
+
+    <set name><separator><gene><weight>
+    """
+    line1 = infile.readline().strip().split(sep)
+    if len(line1) == 2:
+        sets = defaultdict(list)
+        set[line1[0]].append([line1[1]])
+        for line in infile:
+            row = line.strip().split(sep)
+            set[row[0]].append(row[1])
+        return process_sets(sets, thesaurus)
+    else:
+        raise Exception("3 column set files not supported yet")
 
 
 class ScoringFunction(scoring.ScoringFunctionBase):
@@ -122,7 +155,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, "SetEnrichment", organism, membership,
                                              ratios, config_params)
-        self.__set_types = read_set_types(config_params, organism.thesaurus(), ratios)
+        self.__set_types = read_set_types(config_params, organism.thesaurus())
         self.run_log = scoring.RunLog('set_enrichment', config_params)
 
     def bonferroni_cutoff(self):
