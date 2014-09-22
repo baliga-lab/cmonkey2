@@ -104,10 +104,10 @@ def read_set_types(config_params, thesaurus):
     setfile = config_params['SetEnrichment']['set_file']
     if setfile.endswith('csv'):
         with open(setfile) as infile:
-            read_sets_csv(infile, thesaurus)
+            sets = read_sets_csv(infile, thesaurus)
     else:
         with open(setfile) as infile:
-            process_sets(json.load(infile), thesaurus)
+            sets = process_sets(json.load(infile), thesaurus)
     return [SetType('default', sets)]
 
 
