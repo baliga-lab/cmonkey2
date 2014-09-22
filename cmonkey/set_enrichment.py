@@ -140,10 +140,10 @@ def read_sets_csv(infile, thesaurus, sep=','):
     line1 = infile.readline().strip().split(sep)
     if len(line1) == 2:
         sets = defaultdict(list)
-        set[line1[0]].append([line1[1]])
+        sets[line1[0]].append(line1[1])
         for line in infile:
             row = line.strip().split(sep)
-            set[row[0]].append(row[1])
+            sets[row[0]].append(row[1])
         return process_sets(sets, thesaurus)
     else:
         raise Exception("3 column set files not supported yet")
