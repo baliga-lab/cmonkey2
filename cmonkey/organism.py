@@ -15,6 +15,9 @@ import microbes_online as mo
 import collections
 import patches
 
+# requires biopython
+from Bio import SeqIO
+
 
 class RsatSpeciesInfo:
     """RSAT description of the organism"""
@@ -104,7 +107,7 @@ class RSATOrganism(OrganismBase):
     # pylint: disable-msg=R0913,R0902
     def __init__(self, code, kegg_organism, rsat_info, go_taxonomy_id,
                  network_factories, search_distances, scan_distances,
-                 ratios=None, synonyms=None):
+                 ratios=None, synonyms=None, fasta_file=None):
         """create an Organism instance"""
         # microbe-specific network factories need access to synonyms
         # and rsat info, so initialize them here before the base class
@@ -116,6 +119,7 @@ class RSATOrganism(OrganismBase):
         self.go_taxonomy_id = go_taxonomy_id
         self.search_distances = search_distances
         self.scan_distances = scan_distances
+        self.fasta_file = fasta_file
 
     def species(self):
         """Retrieves the species of this object"""
@@ -217,15 +221,19 @@ class Microbe(RSATOrganism):
                  go_taxonomy_id, microbes_online_db,
                  network_factories,
                  search_distances, scan_distances,
-                 use_operons=True, ratios=None, synonyms=None):
+                 use_operons=True, ratios=None, synonyms=None, fasta_file=None):
         """create an Organism instance"""
         RSATOrganism.__init__(self, code, kegg_organism,
                               rsat_info, go_taxonomy_id, network_factories,
-                              search_distances, scan_distances, ratios, synonyms)
+                              search_distances, scan_distances, ratios, synonyms,
+                              fasta_file)
         self.use_operons = use_operons
         self.__microbes_online_db = microbes_online_db
         self.__operon_mappings = None  # lazy loaded
-        self.sequence_source = RSATOrganismSequenceSource(self)
+        if self.fasta_file is not None:
+            self.sequence_source = FASTASequenceSource(self, self.fasta_file)
+        else:
+            self.sequence_source = RSATOrganismSequenceSource(self)
 
     def sequences_for_genes_search(self, genes, seqtype='upstream'):
         """The default sequence retrieval for microbes is to
@@ -248,6 +256,33 @@ class Microbe(RSATOrganism):
             synonyms = self.thesaurus()
             self.__operon_mappings = {synonyms[gene]: synonyms[head] for head, gene in pairs}
         return self.__operon_mappings
+
+
+class FASTASequenceSource:
+    """FASTA file based sequence source"""
+
+    def __init__(self, organism, filepath):
+        self.organism = organism
+        self.seqmap = None
+        with open(filepath) as infile:
+            self.fasta_records = [r for r in SeqIO.parse(infile, 'fasta')]
+
+    def operon_shifted_seqs_for(self, gene_aliases, distances):
+        def seq2str(seq):
+            return str(seq.upper()).replace('X', 'N')
+
+        synonyms = self.organism.thesaurus()
+        if self.seqmap is None:
+            self.seqmap = {synonyms[r.id]: r for r in self.fasta_records if r.id in synonyms}
+        result = {}
+        for gene in gene_aliases:
+            if gene in synonyms and synonyms[gene] in self.seqmap:
+                fasta_record = self.seqmap[synonyms[gene]]
+                result[synonyms[gene]] = (st.Location('', 0, 0, False),
+                                          seq2str(fasta_record.seq.upper()))
+            else:
+                logging.warn("'%s' not in the sequences !!!!", gene)
+        return result
 
 
 class RSATOrganismSequenceSource:

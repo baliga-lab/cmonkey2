@@ -223,6 +223,7 @@ def __get_arg_parser(arg_ext):
 
     # Synonym override
     parser.add_argument('--synonym_file', default=None, help="synonyms file")
+    parser.add_argument('--fasta_file', default=None, help="take sequences from here instead")
 
     parser.add_argument('--pipeline', default=None,
                         help="""override the scoring pipeline""")
@@ -306,6 +307,7 @@ def setup_resume(args, config_parser):
     params['nonetworks'] = False
     params['nomotifs'] = False
     params['synonym_file'] = None
+    params['fasta_file'] = None
     params['pipeline_file'] = None
     params['debug'] = []
     params['interactive'] = True
@@ -359,6 +361,7 @@ def setup_default(args, config_parser):
                  'random_seed': args.random_seed,
                  'pipeline_file': args.pipeline,
                  'synonym_file': args.synonym_file,
+                 'fasta_file': args.fasta_file,
                  'interactive': args.interactive,
                  'resume': args.resume,
                  'case_sensitive': args.case_sensitive,

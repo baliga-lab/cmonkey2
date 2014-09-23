@@ -306,11 +306,13 @@ class CMonkeyRun:
         if is_microbe:
             organism = org.Microbe(orgcode, keggorg, rsat_info, gotax, mo_db, nw_factories,
                                    self['search_distances'], self['scan_distances'],
-                                   self['use_operons'], self.ratios, synonyms)
+                                   self['use_operons'], self.ratios, synonyms,
+                                   self['fasta_file'])
         else:
             organism = org.RSATOrganism(orgcode, keggorg, rsat_info, gotax, nw_factories,
                                         self['search_distances'], self['scan_distances'],
-                                        self.ratios, synonyms)
+                                        self.ratios, synonyms,
+                                        self['fasta_file'])
         
         conn = self.__dbconn()
         with conn:
