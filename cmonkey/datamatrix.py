@@ -192,6 +192,10 @@ class DataMatrix:
         """returns the mean value"""
         return util.mean(self.values)
 
+    def median(self):
+        """returns the mean value"""
+        return util.median(self.values)
+
     def row_variance(self):
         if self.__row_variance is None:
             self.__row_variance = util.max_row_var(self.values)

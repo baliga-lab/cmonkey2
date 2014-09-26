@@ -600,14 +600,17 @@ def read_mast_output_oldstyle(output_text, genes):
 
     def read_pvalues(pvalue_line, indexes):
         """reads the p-values contained in a p-value line"""
+        def make_float(s):
+          """unfortunately, MEME result lines can have weird float formats"""
+          return float(s.replace(' ', ''))
         pvalues = []
         for index_num in xrange(len(indexes)):
             if index_num < len(indexes) - 1:
                 pvalues.append(
-                    float(pvalue_line[indexes[index_num]:
+                    make_float(pvalue_line[indexes[index_num]:
                                       indexes[index_num + 1]]))
             else:
-                pvalues.append(float(pvalue_line[indexes[index_num]:]))
+                pvalues.append(make_float(pvalue_line[indexes[index_num]:]))
         return pvalues
 
     def read_positions(motifnum_line, seqline):
