@@ -209,7 +209,8 @@ def __get_arg_parser(arg_ext):
     parser.add_argument('--nostring', action="store_true", help="deactivate STRING network scoring")
     parser.add_argument('--nooperons', action="store_true", help="deactivate operon network scoring")
     parser.add_argument('--config', default=None, nargs='*', help="additional configuration file(s)")
-    parser.add_argument('--debug', default=None,  help="""run in debug mode""")
+    parser.add_argument('--debug', default=None,  help="""run in debug mode, can be keep_memeout,
+dump_results, dump_scores, profile_mem, random_seed, keep_mastout, all or a combination""")
     parser.add_argument('--random_seed', type=int)
     parser.add_argument('--num_cores', type=int, default=None)
     parser.add_argument('--minimize_io', action="store_true",
