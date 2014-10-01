@@ -102,7 +102,7 @@ class CMonkeyRun:
                         finish_time timestamp,
                         num_iterations int, last_iteration int,
                         organism text, species text, num_rows int,
-                        num_columns int, num_clusters int, git_sha)''')
+                        num_columns int, num_clusters int, git_sha text)''')
 
         # stats tables
         # Note: there is some redundancy with the result tables here.
