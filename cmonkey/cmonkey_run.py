@@ -102,7 +102,7 @@ class CMonkeyRun:
                         finish_time timestamp,
                         num_iterations int, last_iteration int,
                         organism text, species text, num_rows int,
-                        num_columns int, num_clusters int)''')
+                        num_columns int, num_clusters int, git_sha)''')
 
         # stats tables
         # Note: there is some redundancy with the result tables here.
@@ -587,10 +587,10 @@ class CMonkeyRun:
         conn = self.__dbconn()
         with conn:
             conn.execute('''insert into run_infos (start_time, num_iterations, organism,
-                            species, num_rows, num_columns, num_clusters) values (?,?,?,?,?,?,?)''',
+                            species, num_rows, num_columns, num_clusters, git_sha) values (?,?,?,?,?,?,?,?)''',
                          (datetime.now(), self['num_iterations'], self.organism().code,
                           self.organism().species(), self.ratios.num_rows,
-                          self.ratios.num_columns, self['num_clusters']))
+                          self.ratios.num_columns, self['num_clusters'], '$Id$'))
 
     def update_iteration(self, iteration):
         conn = self.__dbconn()
