@@ -133,7 +133,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             self.meme_suite = meme.MemeSuite430(self.config_params,
                                                 background_file=background_file)
         elif meme_version and (
-                meme_version.startswith('4.8') or meme_version.startswith('4.9')):
+                meme_version.startswith('4.8') or meme_version.startswith('4.9') or
+                meme_version.startswith('4.10')):
             self.meme_suite = meme.MemeSuite481(self.config_params,
                                                 background_file=background_file)
         else:
