@@ -342,21 +342,6 @@ class CMonkeyRun:
             for filename in outfiles:
                 os.remove('/'.join([output_dir, filename]))
 
-<<<<<<< HEAD
-    def run(self):
-        self.__make_dirs_if_needed()
-        self.__clear_output_dir()
-        # write the normalized ratio matrix for stats and visualization
-        output_dir = self['output_dir']
-        if not os.path.exists(output_dir + '/ratios.tsv'):
-            self.ratio_matrix.write_tsv_file(output_dir + '/ratios.tsv')
-
-    def run(self):
-        self.__make_dirs_if_needed()
-        row_scoring = self.make_row_scoring()
-        col_scoring = self.make_column_scoring()
-        self.run_iterations(row_scoring, col_scoring)
-=======
     def __check_parameters(self):
         """ensure that we all required parameters before we start running"""
         PARAM_NAMES = ['num_iterations', 'start_iteration', 'multiprocessing',
@@ -455,7 +440,6 @@ class CMonkeyRun:
 
         config.write_setup(self.config_params)
         return row_scoring, col_scoring
->>>>>>> upstream/master
 
     def run(self):
         row_scoring, col_scoring = self.prepare_run()
