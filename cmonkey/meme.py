@@ -12,16 +12,14 @@ import logging
 import seqtools as st
 import os
 import util
+import shutil
 import re
+import collections
+import xml.etree.ElementTree as ET
 
 
-class MemeRunResult:
-    """Result data for a single MEME run"""
-    def __init__(self, pe_values, annotations, motif_infos):
-        """constructor"""
-        self.pe_values = pe_values
-        self.annotations = annotations
-        self.motif_infos = motif_infos
+MemeRunResult = collections.namedtuple('MemeRunResult',
+                                       ['pe_values', 'annotations', 'motif_infos'])
 
 
 class MemeSuite:
@@ -36,22 +34,19 @@ class MemeSuite:
     meme - discover motifs in a set of sequences
     mast - search for a group of motifs in a set of sequences
     """
-    def __init__(self, max_width=24, use_revcomp=True, background_file=None,
-            remove_tempfiles=True):
+    def __init__(self, config_params, background_file=None, remove_tempfiles=True):
         """Create MemeSuite instance"""
-        self.__max_width = max_width
-        self.__use_revcomp = use_revcomp
+        self.max_width = int(config_params['MEME']['max_width'])
+        self.background_order = int(config_params['MEME']['background_order'])
+        self.__use_revcomp = config_params['MEME']['use_revcomp'] == 'True'
         self.__background_file = background_file
         self.__remove_tempfiles = remove_tempfiles
+        self.arg_mod = config_params['MEME']['arg_mod']
 
     def global_background_file(self):
         """returns the global background file used with this meme suite
         instance"""
         return self.__background_file
-
-    def max_width(self):
-        """returns the max_width attribute"""
-        return self.__max_width
 
     def remove_low_complexity(self, seqs):
         """send sequences through dust filter, send only those
@@ -61,23 +56,27 @@ class MemeSuite:
             dust_tmp_file = None
             with tempfile.NamedTemporaryFile(prefix='dust',
                                              delete=False) as dust_input:
-                for feature_id, seq in seqs.items():
+                for feature_id, seq in seqs.iteritems():
                     dust_input.write(">%s\n" % feature_id)
-                    dust_input.write("%s\n" % seq[1])
+                    if isinstance(seq, str):
+                        dust_input.write("%s\n" % seq)
+                    else:
+                        dust_input.write("%s\n" % seq)
                 dust_tmp_file = dust_input.name
                 #logging.info("DUST input written to: %s", dust_input.name)
             seqpairs = st.read_sequences_from_fasta_string(
                 self.dust(dust_tmp_file))
             os.remove(dust_tmp_file)
-            result = {}
-            for feature_id, seq in seqpairs:
-                result[feature_id] = seq
-            return result
+            return {feature_id: seq for feature_id, seq in seqpairs}
 
         seqs_for_dust = {}
-        for feature_id, seq in seqs.items():
-            if len(seq[1]) > self.__max_width:
-                seqs_for_dust[feature_id] = seq
+        for feature_id, seq in seqs.iteritems():
+            if isinstance(seq, str):
+                if len(seq) > self.max_width:
+                    seqs_for_dust[feature_id] = seq
+            else:
+                if len(seq[1]) > self.max_width:
+                    seqs_for_dust[feature_id] = seq[1]
         # only non-empty-input gets into dust, dust can not
         # handle empty input
         if len(seqs_for_dust) > 0:
@@ -96,17 +95,19 @@ class MemeSuite:
         feature_ids = set(params.feature_ids)  # optimization: reduce lookup time
         input_seqs = params.seqs
         all_seqs = params.used_seqs
-        
+
         def background_file():
             """decide whether to use global or specific background file"""
-            if self.__background_file != None:
-                logging.info("using global background")
+            if self.__background_file is not None:
+                #logging.info("using global background: '%s'", self.__background_file)
                 return self.__background_file
             else:
                 bgseqs = {feature_id: all_seqs[feature_id]
                           for feature_id in all_seqs
                           if feature_id not in feature_ids}
-                return make_background_file(bgseqs, self.__use_revcomp)
+                # note: the result of make_background_file is a tuple !!
+                return make_background_file(bgseqs, self.__use_revcomp,
+                                            self.background_order)[0]
 
         #logging.info("run_meme() - # seqs = %d", len(input_seqs))
         bgfile = background_file()
@@ -116,26 +117,42 @@ class MemeSuite:
              for feature_id in params.feature_ids if feature_id in input_seqs])
         #logging.info("created sequence file in %s", seqfile)
         motif_infos, output = self.meme(seqfile, bgfile, params.num_motifs,
-                                        params.previous_motif_infos)
+                                        previous_motif_infos=params.previous_motif_infos)
 
         # run mast
         meme_outfile = None
-        with tempfile.NamedTemporaryFile(prefix='meme.out.',
-                                         delete=False) as outfile:
-            meme_outfile = outfile.name
-            outfile.write(output)
-        logging.info('wrote meme output to %s', meme_outfile)
+        is_last_iteration = params.iteration > params.num_iterations
+        if 'keep_memeout' in params.debug or is_last_iteration:
+            meme_outfile = os.path.join(params.outdir,
+                                        'meme-out-%04d-%04d' % (params.iteration, params.cluster))
+            with open(meme_outfile, 'w') as outfile:
+                outfile.write(output)
+        else:
+            with tempfile.NamedTemporaryFile(prefix='meme.out.',
+                                             delete=False) as outfile:
+                meme_outfile = outfile.name
+                outfile.write(output)
+
+        #logging.info('wrote meme output to %s', meme_outfile)
         dbfile = self.make_sequence_file(
             [(feature_id, locseq[1])
-             for feature_id, locseq in all_seqs.items()])
-        logging.info('created mast database in %s', dbfile)
+             for feature_id, locseq in all_seqs.iteritems()])
+        #logging.info('created mast database in %s', dbfile)
         try:
             mast_output = self.mast(meme_outfile, dbfile, bgfile)
-            pe_values, annotations = read_mast_output(mast_output,
-                                                      input_seqs.keys())
+            if 'keep_mastout' in params.debug:
+                with open('%s.mast' % meme_outfile, 'w') as outfile:
+                    outfile.write(mast_output)
+            pe_values, annotations = self.read_mast_output(mast_output,
+                                                           input_seqs.keys())
             return MemeRunResult(pe_values, annotations, motif_infos)
-        except:
-            return MemeRunResult([], {}, [])
+        except subprocess.CalledProcessError, e:
+            if e.output.startswith('No input motifs pass the E-value'):
+                logging.warn("no input motifs pass the e-value, ignoring result")
+                return MemeRunResult([], [], [])
+            else:
+                print "Unknown error in MAST:\n ", e.__dict__
+                raise
         finally:
             if self.__remove_tempfiles:
                 #logging.info("DELETING ALL TMP FILES...")
@@ -144,7 +161,8 @@ class MemeSuite:
                 except:
                     logging.warn("could not remove tmp file: '%s'", seqfile)
                 try:
-                    os.remove(meme_outfile)
+                    if 'keep_memeout' not in params.debug and not is_last_iteration:
+                        os.remove(meme_outfile)
                 except:
                     logging.warn("could not remove tmp file: '%s'", meme_outfile)
                 try:
@@ -152,12 +170,15 @@ class MemeSuite:
                 except:
                     logging.warn("could not remove tmp file: '%s'", dbfile)
 
-                if self.__background_file == None:
+                if self.__background_file is None:
                     try:
                         os.remove(bgfile)
                     except:
                         logging.warn("could not remove tmp file: '%s'", bgfile)
 
+    def read_mast_output(self, mast_output, genes):
+        """Please implement me"""
+        logging.error("MemeSuite.read_mast_output() - please implement me")
 
     def make_sequence_file(self, seqs):
         """Creates a FASTA file from a list of(feature_id, sequence)
@@ -177,7 +198,8 @@ class MemeSuite:
         return output
 
     # pylint: disable-msg=W0613,R0201
-    def meme(self, infile_path, bgfile_path, num_motifs, pspfile_path=None):
+    def meme(self, infile_path, bgfile_path, num_motifs,
+             previous_motif_infos=None, pspfile_path=None):
         """Please implement me"""
         logging.error("MemeSuite.meme() - please implement me")
 
@@ -199,12 +221,12 @@ class MemeSuite430(MemeSuite):
         command = ['meme', infile_path, '-bfile', bgfile_path,
                    '-time', '600', '-dna', '-revcomp',
                    '-maxsize', '9999999', '-nmotifs', str(num_motifs),
-                   '-evt', '1e9', '-minw', '6', '-maxw', str(self.max_width()),
-                   '-mod',  'zoops', '-nostatus', '-text']
+                   '-evt', '1e9', '-minw', '6', '-maxw', str(self.max_width),
+                   '-mod',  self.arg_mod, '-nostatus', '-text']
         # if determine the seed sequence (-cons parameter) for this MEME run
         # uses the PSSM with the smallest score that has an e-value lower
         # than 0.1
-        if previous_motif_infos != None:
+        if previous_motif_infos is not None:
             max_evalue = 0.1
             min_evalue = 10000000.0
             min_motif_info = None
@@ -212,7 +234,7 @@ class MemeSuite430(MemeSuite):
                 if motif_info.evalue < min_evalue:
                     min_evalue = motif_info.evalue
                     min_motif_info = motif_info
-            if min_motif_info != None and min_motif_info.evalue < max_evalue:
+            if min_motif_info is not None and min_motif_info.evalue < max_evalue:
                 cons = min_motif_info.consensus_string().upper()
                 logging.info("seeding MEME with good motif %s", cons)
                 command.extend(['-cons', cons])
@@ -231,16 +253,23 @@ class MemeSuite430(MemeSuite):
         # memory errors
         command = ['mast', meme_outfile_path, '-d', database_file_path,
                    '-bfile', bgfile_path, '-nostatus', '-stdout', '-text',
-                   '-brief', '-ev', '99999', '-mev', '99999', '-mt', '0.99',
+                   '-brief', '-ev', '999999', '-mev', '9999999', '-mt', '0.99',
                    '-seqp', '-remcorr']
-        output = subprocess.check_output(command)
+        #logging.info("running: %s", " ".join(command))
+        output = subprocess.check_output(command, stderr=subprocess.STDOUT)
         return output
+
+    def read_mast_output(self, mast_output, genes):
+        """old-style MAST output"""
+        return read_mast_output_oldstyle(mast_output, genes)
 
 
 class MemeSuite481(MemeSuite):
     """Version 4.8.1 of MEME"""
 
-    def meme(self, infile_path, bgfile_path, num_motifs, pspfile_path=None):
+    def meme(self, infile_path, bgfile_path, num_motifs,
+             previous_motif_infos=None,
+             pspfile_path=None):
         """runs the meme command on the specified input file, background file
         and positional priors file. Returns a tuple of
         (list of MemeMotifInfo objects, meme output)
@@ -248,28 +277,71 @@ class MemeSuite481(MemeSuite):
         command = ['meme', infile_path, '-bfile', bgfile_path,
                    '-time', '600', '-dna', '-revcomp',
                    '-maxsize', '9999999', '-nmotifs', str(num_motifs),
-                   '-evt', '1e9', '-minw', '6', '-maxw', str(self.max_width()),
-                   '-mod',  'zoops', '-nostatus', '-text']
+                   '-evt', '1e9', '-minw', '6', '-maxw', str(self.max_width),
+                   '-mod',  self.arg_mod, '-nostatus', '-text']
 
+        ### NOTE: There is a bug in current MEME 4.9.0, that can cause the
+        ### -cons option to crash
+        ### ----- We leave it out here for now
+        """
+        # if determine the seed sequence (-cons parameter) for this MEME run
+        # uses the PSSM with the smallest score that has an e-value lower
+        # than 0.1
+        if previous_motif_infos != None:
+            max_evalue = 0.1
+            min_evalue = 10000000.0
+            min_motif_info = None
+            for motif_info in previous_motif_infos:
+                if motif_info.evalue < min_evalue:
+                    min_evalue = motif_info.evalue
+                    min_motif_info = motif_info
+            if min_motif_info != None and min_motif_info.evalue < max_evalue:
+                cons = min_motif_info.consensus_string().upper()
+                logging.info("seeding MEME with good motif %s", cons)
+                command.extend(['-cons', cons])
+        """
         if pspfile_path:
-            command.append(['-psp', pspfile_path])
+            command.extend(['-psp', pspfile_path])
 
         #logging.info("running: %s", " ".join(command))
-        output = subprocess.check_output(command)
-        return (read_meme_output(output, num_motifs), output)
+        try:
+            output = subprocess.check_output(command)
+            return (read_meme_output(output, num_motifs), output)
+        except:
+            print command
+            raise
 
     def mast(self, meme_outfile_path, database_file_path,
              bgfile_path):
-        """runs the mast command"""
+        """runs the mast command. Version 4.81 and above behave differently
+        than 4.30: The output will be generated in an output directory
+        So, here we'll generate a temporary directory
+        """
         # note: originally run with -ev 99999, but MAST will crash with
         # memory errors
-        command = ['mast', meme_outfile_path, database_file_path,
-                   '-bfile', bgfile_path, '-nostatus', '-hit_list',
-                   '-ev', '1500', '-mev', '99999', '-mt', '0.99',
-                   '-seqp', '-remcorr']
-        #logging.info("running: %s", " ".join(command))
-        output = subprocess.check_output(command)
-        return output
+        dirname = tempfile.mkdtemp(prefix="mastout")
+        try:
+            command = ['mast', meme_outfile_path, database_file_path,
+                       '-bfile', bgfile_path, '-nostatus',
+                       '-ev', '1500', '-mev', '99999', '-mt', '0.99', '-nohtml',
+                       '-notext', '-seqp', '-remcorr', '-oc', dirname]
+            logging.info("running: %s", " ".join(command))
+            output = subprocess.check_output(command, stderr=subprocess.STDOUT)
+            with open(os.path.join(dirname, "mast.xml")) as infile:
+                result = infile.read()
+            return result
+        except subprocess.CalledProcessError, e:
+            logging.warn("there is an exception thrown in MAST: %s",
+                         e.output)
+            return None  # return nothing if there was an error
+        finally:
+            print "removing %s..." % dirname
+            shutil.rmtree(dirname)
+            print "done."
+
+    def read_mast_output(self, mast_output, genes):
+        """XML MAST output"""
+        return read_mast_output_xml(mast_output, genes)
 
 
 class MemeMotifInfo:
@@ -344,16 +416,17 @@ def read_meme_output(output_text, num_motifs):
         """reads the sites"""
         sites_index = next_sites_index(start_index, lines)
         pattern = re.compile(
-            "(\S+)\s+([+-])\s+(\d+)\s+(\S+)\s+\S+ (\S+) (\S+)?")
+            "(\S+)\s+([+-])\s+(\d+)\s+(\S+)\s+(\S+) (\S+) (\S+)?")
         current_index = sites_index + 4
         line = lines[current_index]
         sites = []
         while not line.startswith('----------------------'):
             match = pattern.match(line)
-            if match == None:
+            if match is None:
                 logging.error("ERROR in read_sites(), line(#%d) is: '%s'", current_index, line)
             sites.append((match.group(1), match.group(2), int(match.group(3)),
-                          float(match.group(4)), match.group(5)))
+                          float(match.group(4)),
+                          match.group(5), match.group(6), match.group(7)))
             current_index += 1
             line = lines[current_index]
         return sites
@@ -368,7 +441,7 @@ def read_meme_output(output_text, num_motifs):
         rows = []
         while not line.startswith('----------------------'):
             match = pattern.match(line)
-            if match == None:
+            if match is None:
                 logging.error("ERROR in read_pssm(), line(#%d) is: '%s'", current_index, line)
             rows.append([float(match.group(1)), float(match.group(2)),
                          float(match.group(3)), float(match.group(4))])
@@ -400,9 +473,48 @@ def read_meme_output(output_text, num_motifs):
     return result
 
 
-def read_mast_output(output_text, genes):
+def read_mast_output_xml(output_text, genes):
+    """Reads p/e values and gene annotations from a MAST output file
+    in XML format.
+    Inputs: - output_text: a string in MAST XML output format
+    ------- - genes: a list of genes that were used as input to
+              the previous MEME run
+    Returns: a pair (pevalues, annotations)
+    -------- - pevalues is [(gene, pval, eval)]
+             - annotations is a dictionary gene -> [(pval, pos, motifnum)]"""
+    pevalues = []
+    annotations = {}
+    if output_text is None:  # there was an error in mast, ignore its output
+        return pevalues, annotations
+
+    root = ET.fromstring(output_text)
+    for sequence in root.iter('sequence'):
+        score = sequence.find('score')
+        seqname = sequence.get('name')
+        if not seqname in annotations:
+            annotations[seqname] = []
+        pevalues.append((seqname,
+                         float(score.get('combined_pvalue')),
+                         float(score.get('evalue'))))
+        if seqname in genes:
+            for hit in sequence.iter('hit'):
+                strand = hit.get('strand')
+                motifnum = int(hit.get('motif').replace('motif_', ''))
+                if strand == 'reverse':
+                    motifnum = -motifnum
+                annot = (float(hit.get('pvalue')),
+                         int(hit.get('pos')) + 2,  # like R cmonkey
+                         motifnum)
+                annotations[seqname].append(annot)
+    return pevalues, annotations
+
+
+def read_mast_output_oldstyle(output_text, genes):
     """Reads out the p-values and e-values and the gene annotations
-    from a mast output file"""
+    from a mast output file. This format is generated by
+    MAST 4.30 and is only here to support the legacy format.
+    Use the XML version instead, it is more reliable.
+    """
     def next_pe_value_line(start_index, lines):
         """Find the next combined p-value and e-value line"""
         return __next_regex_index('.*COMBINED P-VALUE.*',
@@ -477,7 +589,7 @@ def read_mast_output(output_text, genes):
             return ((len(seqline) - seq_start) + seqstart_index >= seqlen or
                     not re.match('(\d+).*', lines[index + 10]))
         except:
-            if seqline != None:
+            if seqline is not None:
                 print "ERROR IN SEQLINE: [%s]" % seqline
 
     def read_motif_numbers(motifnum_line):
@@ -488,15 +600,17 @@ def read_mast_output(output_text, genes):
 
     def read_pvalues(pvalue_line, indexes):
         """reads the p-values contained in a p-value line"""
+        def make_float(s):
+          """unfortunately, MEME result lines can have weird float formats"""
+          return float(s.replace(' ', ''))
         pvalues = []
         for index_num in xrange(len(indexes)):
             if index_num < len(indexes) - 1:
                 pvalues.append(
-                    float(pvalue_line[indexes[index_num]:
-                                          indexes[index_num + 1]]))
+                    make_float(pvalue_line[indexes[index_num]:
+                                      indexes[index_num + 1]]))
             else:
-                pvalues.append(float(
-                        pvalue_line[indexes[index_num]:]))
+                pvalues.append(make_float(pvalue_line[indexes[index_num]:]))
         return pvalues
 
     def read_positions(motifnum_line, seqline):
@@ -523,7 +637,7 @@ def read_mast_output(output_text, genes):
                 has_seqalign_block = True
                 diagram_match = re.match('^\s+DIAGRAM:\s+(\d+)$',
                                          lines[current_index + 1])
-                if diagram_match != None:
+                if diagram_match is not None:
                     diagram = int(diagram_match.group(1))
                     if diagram == length:
                         has_seqalign_block = False
@@ -581,8 +695,9 @@ def __next_regex_index(pat, start_index, lines):
     return line_index
 
 
-def make_background_file(bgseqs, use_revcomp, bgorder=3):
-    """create a meme background file and returns its name"""
+def make_background_file(bgseqs, use_revcomp, bgorder):
+    """create a meme background file and returns its name and the model itself as
+    a tuple"""
     def make_seqs(seqs):
         """prepare the input sequences for feeding into meme.
         This means only taking the unique sequences and their reverse
@@ -590,9 +705,12 @@ def make_background_file(bgseqs, use_revcomp, bgorder=3):
         meme_input_seqs = []
         for locseq in seqs.values():
             seq = locseq[1]
-            util.add_if_unique(meme_input_seqs, seq)
+            if seq not in meme_input_seqs:
+                meme_input_seqs.append(seq)
             if use_revcomp:
-                util.add_if_unique(meme_input_seqs, st.revcomp(seq))
+                revseq = st.revcomp(seq)
+                if revseq not in meme_input_seqs:
+                    meme_input_seqs.append(revseq)
         return meme_input_seqs
 
     filename = None
@@ -604,10 +722,10 @@ def make_background_file(bgseqs, use_revcomp, bgorder=3):
         outfile.write("# %s order Markov background model\n" %
                       util.order2string(len(bgmodel) - 1))
         for order_row in bgmodel:
-            for seq, frequency in order_row.items():
+            for seq, frequency in order_row.iteritems():
                 outfile.write('%s %10s\n' %
                               (seq, str(round(frequency, 8))))
-    return filename
+    return (filename, bgmodel)
 
 
 def global_background_file(organism, gene_aliases, seqtype, bgorder=3,
@@ -619,5 +737,30 @@ def global_background_file(organism, gene_aliases, seqtype, bgorder=3,
     logging.info("Computing global background file on seqtype '%s' " +
                  "(%d sequences)", seqtype, len(global_seqs))
     return make_background_file(global_seqs, use_revcomp, bgorder)
+
+
+USER_TEST_FASTA_PATH = 'config/fasta_test.fa'
+SYSTEM_TEST_FASTA_PATH = '/etc/cmonkey-python/fasta_test.fa'
+
+
+def check_meme_version():
+    logging.info('checking MEME...')
+    if os.path.exists(USER_TEST_FASTA_PATH):
+        test_fasta = USER_TEST_FASTA_PATH
+    elif os.path.exists(SYSTEM_TEST_FASTA_PATH):
+        test_fasta = SYSTEM_TEST_FASTA_PATH
+    else:
+        raise Exception('fasta_test.fa not found !')
+
+    try:
+        command = ['meme', '-nostatus', '-text', test_fasta]
+        output = subprocess.check_output(command).split('\n')
+        for line in output:
+            if line.startswith('MEME version'):
+                return line.split(' ')[2]
+    except OSError:
+        logging.error("MEME does not exist")
+        return None
+
 
 __all__ = ['read_meme_output']

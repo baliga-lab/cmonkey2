@@ -9,7 +9,7 @@ import organism as org
 import microbes_online as mo
 import util
 import thesaurus as th
-
+    
 
 class MockMicrobesOnline:
     """mock class for MicrobesOnline"""
@@ -30,6 +30,7 @@ class MockOrganism:
         self.__taxonomy_id = taxonomy_id
         self.__feature_map = feature_map
         self.__synonyms = synonyms
+        self.code = 'hal'
 
     def taxonomy_id(self):
         return self.__taxonomy_id
@@ -40,6 +41,9 @@ class MockOrganism:
     def feature_id_for(self, gene_alias):
         return gene_alias
 
+    def thesaurus(self):
+        return self.__synonyms
+
 
 class MockOrganismWithSynonyms:
     """mock organism class with synonyms"""
@@ -47,6 +51,7 @@ class MockOrganismWithSynonyms:
         self.__taxonomy_id = taxonomy_id
         self.__feature_map = feature_map
         self.__synonyms = synonyms
+        self.code = 'hal'
 
     def taxonomy_id(self):
         return self.__taxonomy_id
@@ -139,7 +144,9 @@ class ReadOperonNetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                       st.Location('contig1', 15, 21, False)),
                   'gene3': st.Feature('feature3', 'typ2', 'feature_name3',
                                       st.Location('contig1', 100, 154, False))
-                  }))
+                  },
+                {'gene1': 'gene1', 'gene2': 'gene2', 'gene3': 'gene3'}
+                ), check_size=False)
         self.assertEquals(3, network.num_edges())
         self.assertEquals(6000, network.total_score())
         self.assertEquals(123, network.weight)
@@ -151,25 +158,25 @@ class GetOperonPairsTest(unittest.TestCase):
     def __make_organism(self):
         """makes a mock organism with almost real data"""
         features = {}
-        dfile = util.DelimitedFile.read('testdata/Halobacterium_sp_features',
-                                        comment='--')
-        for line in dfile.lines():
+        dfile = util.read_dfile('testdata/Halobacterium_sp_features',
+                                comment='--')
+        for line in dfile.lines:
             features[line[0]] = st.Feature(line[0], line[1], line[2],
                                            st.Location(line[3],
                                                        int(line[4]),
                                                        int(line[5]),
                                                        line[6] == 'R'))
-        tfile = util.DelimitedFile.read(
+        tfile = util.read_dfile(
             'testdata/Halobacterium_sp_feature_names', comment='--')
         synonyms = th.create_from_rsat_feature_names(tfile)
         return MockOrganismWithSynonyms('64091', features, synonyms)
 
     def __make_ref_operon_pairs(self):
         """returns reference operon pairs for comparison"""
-        reffile = util.DelimitedFile.read(
-            'testdata/operon_reftable.tsv', has_header=True, quote='"')
+        reffile = util.read_dfile('testdata/operon_reftable.tsv',
+                                  has_header=True, quote='"')
         refpairs = []
-        for line in reffile.lines():
+        for line in reffile.lines:
             refpairs.append((line[1], line[2]))
         return refpairs
 

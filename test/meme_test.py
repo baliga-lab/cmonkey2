@@ -46,17 +46,17 @@ class MemeTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEquals(3.54e-09, sites0[3][3])
         self.assertAlmostEquals(5.81e-09, sites0[4][3])
 
-        self.assertEquals('ACAGCGACAGCTTCCCGTCGATCT', sites0[0][4])
-        self.assertEquals('AGATTGACATTTTCCCCTAAATTC', sites0[1][4])
-        self.assertEquals('ACAGCAAAATCTACGTCTCGGACT', sites0[2][4])
-        self.assertEquals('TGATAAAACACTTTATCTCTGTAT', sites0[3][4])
-        self.assertEquals('ACGTAGACCGTATCGCGGAGATCT', sites0[4][4])
+        self.assertEquals('ACAGCGACAGCTTCCCGTCGATCT', sites0[0][5])
+        self.assertEquals('AGATTGACATTTTCCCCTAAATTC', sites0[1][5])
+        self.assertEquals('ACAGCAAAATCTACGTCTCGGACT', sites0[2][5])
+        self.assertEquals('TGATAAAACACTTTATCTCTGTAT', sites0[3][5])
+        self.assertEquals('ACGTAGACCGTATCGCGGAGATCT', sites0[4][5])
 
-    def test_read_mast_output(self):
+    def test_read_mast_output_oldstyle(self):
         """tests the read_mast_output function"""
         with open('testdata/mast.out') as inputfile:
-            pevalues, annotations = meme.read_mast_output(inputfile.read(),
-                                                          ['VNG6198H', 'VNG0117H'])
+            pevalues, annotations = meme.read_mast_output_oldstyle(
+                inputfile.read(), ['VNG6198H', 'VNG0117H'])
         self.assertEquals('VNG6198H', pevalues[0][0])
         self.assertEquals('VNG0117H', pevalues[1][0])
 
@@ -78,31 +78,40 @@ class MemeTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEquals(223, annot2[5][1])
         self.assertAlmostEquals(-2, annot2[5][2])
 
-    def test_read_mast_output2(self):
+    def test_read_mast_output_oldstyle2(self):
         """tests the read_mast_output function, this one has some
         more silly blank line placements"""
         with open('testdata/mast2.out') as inputfile:
-            pevalues, annotations = meme.read_mast_output(inputfile.read(),
-                                                          ['NP_279634.1', 'NP_279286.1'])
+            pevalues, annotations = meme.read_mast_output_oldstyle(
+                inputfile.read(), ['NP_279634.1', 'NP_279286.1'])
         self.assertTrue('NP_279634.1' in annotations)
         self.assertTrue('NP_279286.1' in annotations)
 
-    def test_read_mast_output3(self):
+    def test_read_mast_output_oldstyle3(self):
         """tests the read_mast_output function, this one has an incomplete block"""
         with open('testdata/mast3.out') as inputfile:
-            pevalues, annotations = meme.read_mast_output(inputfile.read(),
-                                                          ['NP_279608.1'])
+            pevalues, annotations = meme.read_mast_output_oldstyle(
+                inputfile.read(), ['NP_279608.1'])
         pev = [pevalue for pevalue in pevalues if pevalue[0] == 'NP_279608.1']
         self.assertAlmostEquals(3.9e-08, pev[0][1])
         self.assertAlmostEquals(9.61e-11, pev[0][2])
         self.assertTrue('NP_279608.1' in annotations)
 
-    def test_read_mast_output4(self):
+    def test_read_mast_output_oldstyle4(self):
         """tests the read_mast_output function, this has on sequence/annotation block"""
         with open('testdata/mast4.out') as inputfile:
-            pevalues, annotations = meme.read_mast_output(inputfile.read(),
-                                                          ['NP_280363.1', 'NP_280692.1'])
+            pevalues, annotations = meme.read_mast_output_oldstyle(
+                inputfile.read(), ['NP_280363.1', 'NP_280692.1'])
         pev = [pevalue for pevalue in pevalues if pevalue[0] == 'NP_280363.1']
         self.assertAlmostEquals(1.0, pev[0][1])
         self.assertAlmostEquals(4.0e02, pev[0][2])
         self.assertTrue('NP_280363.1' not in annotations)
+
+    def test_read_mast_output_xml(self):
+        with open('testdata/mast-481.xml') as inputfile:
+            pevalues, annotations = meme.read_mast_output_xml(
+                inputfile.read(), ['NP_280363.1', 'NP_280692.1'])
+        pev = [pevalue for pevalue in pevalues if pevalue[0] == 'NP_280363.1']
+        self.assertAlmostEquals(0.322, pev[0][1])
+        self.assertAlmostEquals(130.0, pev[0][2])
+        self.assertTrue('NP_280363.1' in annotations)

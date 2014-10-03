@@ -10,26 +10,26 @@ import thesaurus
 class MockDelimitedFile1:
     """just a mocked DelimitedFile"""
 
-    def lines(self):
+    def __init__(self):
         """mocked lines() method"""
-        return [['alt1', 'gene1'], ['alt2', 'gene1'], ['alt3', 'gene2']]
+        self.lines = [['alt1', 'gene1'], ['alt2', 'gene1'], ['alt3', 'gene2']]
 
 
 class MockDelimitedFile2:
     """just a mocked DelimitedFile"""
 
-    def lines(self):
+    def __init__(self):
         """mocked lines() method"""
-        return [['gene1', 'alt1;alt2'], ['gene2', 'alt3']]
+        self.lines = [['gene1', 'alt1;alt2'], ['gene2', 'alt3']]
 
 
 class MockRsatFeatureNameFile:
     """a mocked RSAT feature names delimited file"""
 
-    def lines(self):
+    def __init__(self):
         """mocked lines() method"""
-        return [['NAME1', 'PRIME1', 'primary'], ['NAME1', 'ALT1', 'alternate'],
-                ['NAME2', 'PRIME2', 'primary'], ['NAME2', 'VNG2664Gm']]
+        self.lines = [['NAME1', 'PRIME1', 'primary'], ['NAME1', 'ALT1', 'alternate'],
+                      ['NAME2', 'PRIME2', 'primary'], ['NAME2', 'VNG2664Gm']]
 
 
 class DelimitedFileFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -44,10 +44,20 @@ class DelimitedFileFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_create_from_delimited_file2(self):
         """test the delimited file second version"""
-        thes = thesaurus.create_from_delimited_file2(MockDelimitedFile2())
+        thes = thesaurus.create_from_delimited_file2(MockDelimitedFile2(),
+                                                     case_sensitive=False)
         self.assertEquals('GENE1', thes['ALT1'])
         self.assertEquals('GENE1', thes['ALT2'])
         self.assertEquals('GENE2', thes['ALT3'])
+
+    def test_create_from_delimited_file2_case_sensitive(self):
+        """test the delimited file second version"""
+        thes = thesaurus.create_from_delimited_file2(MockDelimitedFile2(),
+                                                     case_sensitive=True)
+        self.assertEquals('gene1', thes['alt1'])
+        self.assertEquals('gene1', thes['alt2'])
+        self.assertEquals('gene2', thes['alt3'])
+
 
     def test_create_from_rsat_feature_names_no_transform(self):
         """test the creation from RSAT feature names file"""

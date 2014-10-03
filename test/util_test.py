@@ -14,63 +14,63 @@ class DelimitedFileTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_read_with_tabs(self):
         """Reads a tab delimited file"""
-        dfile = util.DelimitedFile.read("testdata/simple.tsv")
-        lines = dfile.lines()
+        dfile = util.read_dfile("testdata/simple.tsv")
+        lines = dfile.lines
         self.assertEquals(["value11", "value12"], lines[0])
         self.assertEquals(["value21", "value22"], lines[1])
-        self.assertIsNone(dfile.header())
+        self.assertIsNone(dfile.header)
 
     def test_read_with_tabs_and_header(self):
         """Reads a tab delimited file with a header"""
-        dfile = util.DelimitedFile.read("testdata/simple.tsv", has_header=True)
-        lines = dfile.lines()
+        dfile = util.read_dfile("testdata/simple.tsv", has_header=True)
+        lines = dfile.lines
         self.assertEquals(1, len(lines))
-        self.assertEquals(["value11", "value12"], dfile.header())
+        self.assertEquals(["value11", "value12"], dfile.header)
 
     def test_read_with_semicolon_header_and_comments(self):
         """Reads a semicolon delimited file with a header and comments"""
-        dfile = util.DelimitedFile.read("testdata/withcomments.ssv", sep=';',
-                                        has_header=True, comment='#')
-        lines = dfile.lines()
+        dfile = util.read_dfile("testdata/withcomments.ssv", sep=';',
+                                has_header=True, comment='#')
+        lines = dfile.lines
         self.assertEquals(2, len(lines))
-        self.assertEquals(["header1", "header2"], dfile.header())
+        self.assertEquals(["header1", "header2"], dfile.header)
 
     def test_read_with_quotes(self):
         """Reads a semicolon delimited file with quotes"""
-        dfile = util.DelimitedFile.read("testdata/withquotes.ssv", sep=';',
-                                        has_header=False, comment='#', quote='"')
-        lines = dfile.lines()
+        dfile = util.read_dfile("testdata/withquotes.ssv", sep=';',
+                                has_header=False, comment='#', quote='"')
+        lines = dfile.lines
         self.assertEquals(["value11", "value12"], lines[0])
         self.assertEquals(["value21", "value22"], lines[1])
 
     def test_read_with_empty_lines(self):
         """Reads a semicolon delimited file containing emptylines"""
-        dfile = util.DelimitedFile.read("testdata/withemptylines.ssv", sep=';',
-                                        has_header=True, comment='#', quote='"')
-        lines = dfile.lines()
-        self.assertEquals(["header1", "header2"], dfile.header())
+        dfile = util.read_dfile("testdata/withemptylines.ssv", sep=';',
+                                has_header=True, comment='#', quote='"')
+        lines = dfile.lines
+        self.assertEquals(["header1", "header2"], dfile.header)
         self.assertEquals(2, len(lines))
         self.assertEquals(["value11", "value12"], lines[0])
         self.assertEquals(["value21", "value22"], lines[1])
 
     def test_create_from_text(self):
         """Reads a tab delimited file from a text"""
-        dfile = util.DelimitedFile.create_from_text(
+        dfile = util.dfile_from_text(
             "value11\tvalue12\nvalue21\tvalue22")
-        lines = dfile.lines()
+        lines = dfile.lines
         self.assertEquals(["value11", "value12"], lines[0])
         self.assertEquals(["value21", "value22"], lines[1])
-        self.assertIsNone(dfile.header())
+        self.assertIsNone(dfile.header)
 
     def test_create_from_text_empty_line_at_end(self):
         """Reads a tab delimited file from a text"""
-        dfile = util.DelimitedFile.create_from_text(
+        dfile = util.dfile_from_text(
             "value11\tvalue12\nvalue21\tvalue22\n")
-        lines = dfile.lines()
+        lines = dfile.lines
         self.assertEquals(2, len(lines))
         self.assertEquals(["value11", "value12"], lines[0])
         self.assertEquals(["value21", "value22"], lines[1])
-        self.assertIsNone(dfile.header())
+        self.assertIsNone(dfile.header)
 
 
 class LevenshteinDistanceTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -111,6 +111,12 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertEquals(3, util.quantile(data, 0.5))
         self.assertEquals(4, util.quantile(data, 0.75))
         self.assertEquals(5, util.quantile(data, 1))
+        self.assertTrue(np.isnan(util.quantile([], 0.99)))
+
+    def test_quantile_nan(self):
+        """tests the quantile function with NaN"""
+        data = [0.2, 0.1, np.nan, 0.3]
+        self.assertAlmostEqual(0.102, util.quantile(data, 0.01))
 
     def test_r_stddev(self):
         """tests the standard deviation function"""
@@ -206,6 +212,12 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         result = util.mean(array)
         self.assertAlmostEqual(2.0, result)
 
+    def test_median_with_nans(self):
+        """tests the mean() function"""
+        array = np.array([2.0, 3.0, np.nan, 1.0])
+        result = util.median(array)
+        self.assertAlmostEqual(2.0, result)
+
     def test_density(self):
         kvalues = [3.4268700450682301, 3.3655160468930152, -8.0654569044842539,
                    2.0762815314005487, 4.8537715329554203, 1.2374476248622075]
@@ -253,6 +265,21 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEqual(13.0, result[0][1])
         self.assertAlmostEqual(11.0, result[1][0])
         self.assertAlmostEqual(14.0, result[1][1])
+
+    def test_which_multiple_none(self):
+        """tests the which_multiple() function"""
+        self.assertEquals(0, len(util.which_multiple([])))
+
+    def test_which_multiple_all_unique(self):
+        """tests the which_multiple() function"""
+        self.assertEquals(0, len(util.which_multiple([1, 2, 3])))
+
+    def test_which_multiple_some_multiple(self):
+        """tests the which_multiple() function"""
+        multiple = util.which_multiple([1, 2, 3, 1, 2])
+        self.assertEquals(2, len(multiple))
+        self.assertTrue(1 in multiple)
+        self.assertTrue(2 in multiple)
 
 
 class Order2StringTest(unittest.TestCase):  # pylint: disable-msg=R09042

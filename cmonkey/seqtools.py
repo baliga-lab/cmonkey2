@@ -48,7 +48,7 @@ def read_features_from_file(filename):
     features = {}
     dfile = DelimitedFile.read(filename, comment='--')
     for line in dfile.lines():
-        features[ line[0] ] = read_feature(line)
+        features[line[0]] = read_feature(line)
     return features
 
 
@@ -67,6 +67,7 @@ def extract_upstream(source, location, distance):
                               location.reverse)
     return (final_location,
             subsequence(source, winstart, winend, location.reverse))
+
 
 def extract_downstream(source, location, distance):
     """Extract a subsequence of the specified  size from the source sequence
@@ -93,16 +94,20 @@ def subsequence(sequence, start, stop, reverse=False):
     calculated. Not that the start/stop positions are shifted to comply with
     the original cMonkey's behavior
     """
-    if start < 1: start = 1
+    if start < 1:
+        start = 1
     lseq = len(sequence)
-    if stop > lseq: stop = lseq+1
+    if stop > lseq:
+        stop = lseq + 1
     result = sequence[start - 1:stop - 1]
     if reverse:
         result = revcomp(result)
     return result
 
 
-REV_DICT = { 'A': 'T', 'G': 'C', 'C': 'G', 'T': 'A' }
+REV_DICT = {'A': 'T', 'G': 'C', 'C': 'G', 'T': 'A'}
+
+
 def revcomp(sequence):
     """compute the reverse complement of the input string"""
     return "".join([__revchar(c) for c in sequence[::-1]])
@@ -137,7 +142,7 @@ def subseq_frequencies(seqs, subseq_len):
     result = {}
     counts = subseq_counts(seqs, subseq_len)
     total = sum([count for count in counts.values()])
-    for subseq, count in counts.items():
+    for subseq, count in counts.iteritems():
         result[subseq] = float(count) / float(total)
     return result
 
@@ -154,79 +159,20 @@ def markov_background(seqs, order):
     return result
 
 
-def all_kmers(length, seqs, seq=[], pos=0, choices=['A','C','G','T'] ):
+def all_kmers(length, seqs, seq=[], pos=0, choices=['A', 'C', 'G', 'T']):
     """works with lists intead of strings as this is believed to be faster"""
     #logger.debug(pos)
     if seq == []:
-        for i in range(length): seq.append('')
+        for i in range(length):
+            seq.append('')
     for choice in choices:
         seq[pos] = choice
-        if pos == length-1:
+        if pos == length - 1:
             kmer = string.join(seq, '')
             #logger.debug('added kmer %s' %kmer)
             seqs.append(kmer)
-        else: all_kmers(length, seqs, seq, pos+1, choices)
-
-
-class KMerCounts:
-    """class to tally total K-mers (1-dimensional)"""
-    def __init__(self,seqs,kmers=[],klen=6):
-        self.counts = {}
-        self.init_kmers(kmers)
-        self.count_kmers(seqs,klen)
-
-    def init_kmers(self,kmers,fill=False):
-        if kmers == []: all_kmers(klen, kmers)
-        if fill:
-            """ensure a value for all expected K-mers (not always required)"""
-            for kmer in kmers: self.counts[kmer] = 0
-
-    def count_kmers(self,seqs,klen=6):
-        """this is written for O(n) where n is the number of sequences.
-           No K-mer loop, for speed."""
-        for seq in seqs:
-            logger.debug('seq: %s...' %seq[:10])
-            lseq = len(seq)
-            i = 0
-            while i < lseq:
-                if i+klen >= lseq: break
-                subseq = seq[i:i+klen].upper()
-                if not self.counts.has_key(subseq): self.counts[subseq] = 0
-                self.counts[subseq] += 1
-                # reverse complement k-mers?
-                i += 1
-
-    def __str__(self):
-        return self.string_output()
-
-    def string_output(self,sep=' '):
-        out = []
-        keys = self.counts.keys()
-        keys.sort()
-        for kmer in keys:
-            out.append('%s%s%i' %(kmer,sep,self.counts[kmer]))
-        return string.join(out,'\n')
-
-
-class KMersPerSequence:
-    """class to contain number of K-mers per sequence
-       (2-dimensional sparse dictionary/hash"""
-    def __init__(self,seqs,kmers=[],klen=6):
-        self.counts = {}
-        self.kmers = kmers
-        self.klen = klen
-
-        if self.kmers == []: all_kmers(self.klen, self.kmers)
-        logger.debug('%s K-mers of length %i created' %(len(self.kmers),self.klen))
-        logger.info("computing K-mer counts for %s sequences" %len(seqs))
-        self.count_kmers(seqs)
-
-    def count_kmers(self,seqs):
-        for seq in seqs:
-            logger.info('counting K-mers for seq %s... (%ibp)' %(seq[:10],len(seq)))
-            counter = KMerCounts([seq],self.kmers,self.klen)
-            for kmer,count in counter.counts.items():
-                self.counts[ (seq,kmer) ] = count
+        else:
+            all_kmers(length, seqs, seq, pos + 1, choices)
 
 
 def replace_degenerate_residues(seqs):
@@ -244,7 +190,7 @@ def replace_degenerate_residues(seqs):
         for match in pat.finditer(seq):
             replace_chars = replacements[seq[match.start(1)]]
             replace_char = replace_chars[random.randint(
-                    0, len(replace_chars) - 1)]
+                0, len(replace_chars) - 1)]
             seq = seq[:match.start(1)] + replace_char + seq[match.end(1):]
         result.append(seq)
     return result
@@ -281,7 +227,8 @@ def read_sequences_from_fasta_file(filepath):
 def write_sequences_to_fasta_file(outputfile, seqs):
     """Write a list of sequence tuples to the specified outputfile"""
     for seq in seqs:
-        if len(seq[1]) == 0: continue       # do not allow 0 length sequences
+        if len(seq[1]) == 0:
+            continue  # do not allow 0 length sequences
         outputfile.write('>%s\n' % seq[0])
         outputfile.write('%s\n' % seq[1])
 

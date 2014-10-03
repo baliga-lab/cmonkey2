@@ -1,0 +1,22 @@
+{
+    "row-scoring": {
+        "id": "combiner",
+        "function": { "module": "cmonkey.scoring", "class": "ScoringFunctionCombiner" },
+        "args": {
+            "functions": [
+                { "id": "Rows",
+                  "function": { "module": "cmonkey.microarray", "class": "RowScoringFunction" }
+                },
+                { "id": "Networks",
+                  "function": { "module": "cmonkey.network", "class": "ScoringFunction" }
+                },
+                { "id": "Motifs",
+                  "function": { "module": "cmonkey.motif", "class": "MemeScoringFunction" }
+                }
+            ]
+        }
+    },
+    "column-scoring": { "id": "Columns",
+                        "function": { "module": "cmonkey.scoring",
+                                      "class": "ColumnScoringFunction"} }
+}

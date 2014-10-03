@@ -1,3 +1,4 @@
+*~
 *.pyc
 lintlog
 *.log
@@ -13,3 +14,9 @@ tags
 diff
 log
 out
+precisionrecall
+tmp
+pipeline_organisms
+*.txt
+checktools
+toport

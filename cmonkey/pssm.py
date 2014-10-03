@@ -11,59 +11,40 @@ TWO_BASE_LETTERS = ['Y', 'R', 'W', 'S', 'K', 'M']
 THREE_BASE_LETTERS = ['V', 'H', 'D', 'B']
 
 
-class Pssm:
+class Pssm(object):
     """A PSSM class to interface with Weeder"""
+    __slots__ = ('name', 'values', 'sites', 'e_value')
 
     def __init__(self, name, values=None, e_value=None, sites=None):
         """Create a PSSM object"""
-        self.__name = name
+        self.name = name
         if values:
-            self.__values = values
+            self.values = values
         else:
-            self.__values = []
-        self.__sites = sites
-        self.__e_value = e_value
+            self.values = []
+        self.sites = sites
+        self.e_value = e_value
 
     def __getitem__(self, row):
         """accesses the row at the specified index"""
-        return self.__values[row]
-
-    def values(self):
-        """returns the PSSM as an array"""
-        return self.__values
-
-    def evalue(self):
-        """returns the evalue"""
-        return self.__e_value
+        return self.values[row]
 
     def sequence_length(self):
         """returns the sequence length this PSSM is based on"""
-        return len(self.__values)
+        return len(self.values)
 
-    def name(self):
-        """returns the name"""
-        return self.__name
-
-    def sites(self):
-        """returns the number of sites"""
-        return self.__sites
-
-    def e_value(self):
-        """returns the e-value"""
-        return self.__e_value
-
-    def to_mast_string(self, at_freq=0.25, cg_freq=0.25):
-        """returns a string representation in MAST format"""
+    def to_logodds_string(self, at_freq=0.25, cg_freq=0.25):
+        """returns a motif representation in log-odds format"""
         def log_odds(pvalue, freq):
             """returns the log-odds value"""
             if pvalue == 0.0:
-                return int(round(math.log(float(1e-300) / freq, 2), 0))
+                return int(round(math.log(1e-2 / freq, 2)))  # was 1e-300
             else:
-                return int(round(math.log(pvalue / freq, 2), 0))
+                return int(round(math.log(pvalue / freq, 2)))
 
         result = ('log-odds matrix: alength= 4 w= %d\n' %
                   self.sequence_length())
-        for row in self.__values:
+        for row in self.values:
             result += ('%7d %7d %7d %7d\n' %
                        (log_odds(row[0], at_freq),
                         log_odds(row[1], cg_freq),
@@ -75,13 +56,13 @@ class Pssm:
         """returns the consensus motif"""
         def column_consensus(row):
             """returns the column consensus"""
-            if self.__values[row][0] >= limit1:
+            if self.values[row][0] >= limit1:
                 return 'A'
-            elif self.__values[row][1] >= limit1:
+            elif self.values[row][1] >= limit1:
                 return 'C'
-            elif self.__values[row][2] >= limit1:
+            elif self.values[row][2] >= limit1:
                 return 'G'
-            elif self.__values[row][3] >= limit1:
+            elif self.values[row][3] >= limit1:
                 return 'T'
             else:
                 return compute_column_consensus(row)
@@ -89,22 +70,22 @@ class Pssm:
         def compute_column_consensus(row):
             """computes column consensus"""
             two_base = [
-                self.__values[row][1] + self.__values[row][3],
-                self.__values[row][0] + self.__values[row][2],
-                self.__values[row][0] + self.__values[row][3],
-                self.__values[row][1] + self.__values[row][2],
-                self.__values[row][2] + self.__values[row][3],
-                self.__values[row][0] + self.__values[row][1]]
+                self.values[row][1] + self.values[row][3],
+                self.values[row][0] + self.values[row][2],
+                self.values[row][0] + self.values[row][3],
+                self.values[row][1] + self.values[row][2],
+                self.values[row][2] + self.values[row][3],
+                self.values[row][0] + self.values[row][1]]
 
             three_base = [
-                self.__values[row][0] + self.__values[row][1] +
-                self.__values[row][2],
-                self.__values[row][0] + self.__values[row][1] +
-                self.__values[row][3],
-                self.__values[row][0] + self.__values[row][2] +
-                self.__values[row][3],
-                self.__values[row][1] + self.__values[row][2] +
-                self.__values[row][3]]
+                self.values[row][0] + self.values[row][1] +
+                self.values[row][2],
+                self.values[row][0] + self.values[row][1] +
+                self.values[row][3],
+                self.values[row][0] + self.values[row][2] +
+                self.values[row][3],
+                self.values[row][1] + self.values[row][2] +
+                self.values[row][3]]
 
             pmax = 0.0
             max_letter = 'N'
@@ -122,7 +103,7 @@ class Pssm:
             return max_letter
 
         result = ""
-        for col in range(len(self.__values)):
+        for col in range(len(self.values)):
             result += column_consensus(col)
         return result
 
@@ -165,6 +146,6 @@ def read_fasta(infile):
     result = []
     while next_index >= 0 and next_index < len(lines):
         pssm, next_index = read_pssm(lines, next_index)
-        if pssm != None:
+        if pssm is not None:
             result.append(pssm)
     return result

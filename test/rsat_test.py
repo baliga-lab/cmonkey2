@@ -22,41 +22,16 @@ class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """test fixture"""
         if not os.path.exists('testcache'):
             os.mkdir('testcache')
-        self.database = rsat.RsatDatabase('http://rsat.ccb.sickkids.ca',
-                                          'testcache')
+        self.database = rsat.RsatDatabase(rsat.RSAT_BASE_URL, 'testcache')
 
     def tearDown(self):  # pylint: disable-msg=C0103
         """test cleanup"""
         if os.path.exists('testcache'):
             shutil.rmtree('testcache')
 
-    def test_get_directory(self):
-        """test get_directory method"""
-        html = self.database.get_directory()
-        self.assertIsNotNone(html)
-
-    def test_get_organism(self):
-        """test get_organism method"""
-        text = self.database.get_organism('Helicobacter_pylori_26695')
-        self.assertIsNotNone(text)
-
     def test_get_organism_names(self):
         """test get_organism_names method"""
-        text = self.database.get_organism_names(
-            'Helicobacter_pylori_26695')
-        self.assertIsNotNone(text)
-
-    def test_get_ensembl_organism_names(self):
-        """test get_ensembl_organism_names method"""
-        text = self.database.get_ensembl_organism_names(
-            'Saccharomyces_cerevisiae')
-        self.assertIsNotNone(text)
-
-    def test_get_ensembl_organism_names_404(self):
-        """test get_ensembl_organism_names method with not found"""
-        self.assertRaises(util.DocumentNotFound,
-                          self.database.get_ensembl_organism_names,
-                          'nonexist')
+        self.assertEquals("85962", self.database.get_taxonomy_id('Helicobacter_pylori_26695'))
 
     def test_get_features(self):
         """test get_features method"""

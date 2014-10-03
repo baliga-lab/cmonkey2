@@ -1,0 +1,269 @@
+<!doctype html>
+<html>
+  <head>
+    <title>cMonkey/Python - Cluster View</title>
+    <link rel="stylesheet" media="screen" href="/static/stylesheets/main.css">
+    <link rel="stylesheet" media="screen" href="/static/stylesheets/ui-progress-bar.css">
+    <link rel="stylesheet" media="screen" href="/static/stylesheets/jquery.dataTables.css">
+    <link rel="shortcut icon" type="image/png" href="/static/images/favicon.png">
+    <script src="/static/javascripts/jquery-1.9.1.min.js" type="text/javascript"></script>
+    <script src="/static/javascripts/jquery.dataTables.min.js" type="text/javascript"></script>
+    <script src="/static/javascripts/highcharts-3.0-beta.js" type="text/javascript"></script>
+    <script src="/static/javascripts/highcharts-more-3.0-beta.js" type="text/javascript"></script>
+    <script src="/static/javascripts/isblogo.js" type="text/javascript"></script>
+    <script src="/static/javascripts/raphael-min.js"></script>
+    <script src="/static/javascripts/gene_annotations.js" type="text/javascript"></script>
+    <style media="all" type="text/css">
+      .alignRight { text-align: right; }
+    </style>
+    <script type="text/javascript">
+      $(document).ready(function() {
+         $('#select_iteration').change(function (event) {
+             window.location.href = "/" + $(this).val();
+         });
+         var iterations = {{js_iterations}};
+
+         // residual graph
+         var residualChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'residual-graph',
+                 type: 'line',
+                 width: 300, height: 200
+             },
+             title: { text: 'Mean Residual' },
+             plotOptions: { line: { marker: { enabled: false }, } },
+             xAxis: {
+                 categories: iterations,
+                 tickInterval: 30
+             },
+             yAxis: { title: { text: 'mean resids' } },
+             series: [{name: 'mean resid', data: {{js_mean_residuals}} }]
+         });
+
+         // cluster member graph
+         var clusterMemberChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'cluster-member-graph',
+                 type: 'line',
+                 width: 300, height: 200
+             },
+             title: { text: 'Mean nrow, ncol/iter' },
+             plotOptions: { line: { marker: { enabled: false }, } },
+             xAxis: {
+                 categories: iterations,
+                 tickInterval: 30
+             },
+             yAxis: { title: { text: 'mean nrow, ncol/iter' } },
+             series: [{name: 'columns', data: {{js_mean_ncol}} },
+                      {name: 'rows', data: {{js_mean_nrow}} }]
+         });
+         // cluster nrows graph
+         var clusterRowsChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'cluster-row-graph',
+                 type: 'column',
+                 width: 300, height: 200
+             },
+             title: { text: '# clusters -> # rows' },
+             xAxis: {
+                 categories: {{js_nrows_x}},
+                 tickInterval: 5
+             },
+             yAxis: { title: { text: '# clusters' } },
+             series: [ { name: '# rows', data: {{js_nrows_y}} } ]
+         });
+
+         // cluster ncols graph
+         var clusterColumnsChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'cluster-column-graph',
+                 type: 'column',
+                 width: 300, height: 200
+             },
+             title: { text: '# clusters -> # columns' },
+             xAxis: {
+                 categories: {{js_ncols_x}},
+                 tickInterval: 2
+             },
+             yAxis: { title: { text: '# clusters' } },
+             series: [ { name: '# columns', data: {{js_ncols_y}} } ]
+         });
+
+         // cluster residual graph
+         var clusterResidualChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'cluster-residual-graph',
+                 type: 'column',
+                 width: 300, height: 200
+             },
+             title: { text: 'cluster residuals' },
+             xAxis: {
+                 categories: {{js_resids_x}},
+                 tickInterval: 3
+             },
+             yAxis: { title: { text: '# clusters' } },
+             series: [ { name: 'residual', data: {{js_resids_y}} } ]
+         });
+
+         var runlogChart = new Highcharts.Chart({
+             chart: {renderTo: 'runlog-graph', type: 'line', width: 300, height: 200},
+             title: {text: 'Run parameters'},
+             plotOptions: { line: { marker: { enabled: false }, } },
+             yAxis: { title: { text: 'scaling' }, min: 0 },
+             series: {{js_runlog_series}}
+         });
+
+         var meanScoreChart = new Highcharts.Chart({
+             chart: {renderTo: 'motif-score-graph', type: 'line', width: 300, height: 200},
+             title: { text: 'Median scores' },
+             plotOptions: { line: { marker: { enabled: false }, } },
+             xAxis: {categories: iterations, tickInterval: 30},
+             yAxis: { title: { text: 'mean p-value' }, max: {{max_stats_score}}, min: {{min_stats_score}} },
+             series: {{js_stats}}
+         });
+
+         var networkScoreChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'network-score-graph',
+                 type: 'line',
+                 width: 300, height: 200
+             },
+             title: { text: 'Mean network scores' },
+             plotOptions: { line: { marker: { enabled: false }, } },
+             xAxis: {
+                 categories: iterations,
+                 tickInterval: 30
+             },
+             yAxis: { title: { text: 'mean net score' }, max: {{max_netscore}}, min: {{min_netscore}} },
+             series: {{js_network_stats}}
+         });
+
+         var fuzzyCoeffChart = new Highcharts.Chart({
+             chart: {
+                 renderTo: 'fuzzy-graph',
+                 type: 'line',
+                 width: 300, height: 200
+             },
+             title: { text: 'Fuzzy coefficient' },
+             plotOptions: { line: { marker: { enabled: false }, } },
+             xAxis: {
+                 categories: iterations,
+                 tickInterval: 30
+             },
+             yAxis: { title: { text: 'fuzzy coeff' } },
+             series: [{name: 'fuzzy coeff', data: {{js_fuzzy_coeff}}}]
+         });
+
+         $('#cluster-list').dataTable({
+           'bPaginate': false,
+           'bFilter': false,
+           'bSort': true,
+           'bInfo': false,
+           'bServerSide': true,
+           'sScrollY': 300,
+           'sScrollX': '100%',
+           'bProcessing': true,
+           'aoColumns': [
+             { 'sWidth': '30px', 'sClass': 'alignRight', 'bSortable': false },
+             { 'sWidth': '60px', 'sClass': 'alignRight' },
+             { 'sWidth': '60px', 'sClass': 'alignRight' },
+             { 'sWidth': '60px', 'sClass': 'alignRight' },
+             { 'sWidth': '70px', 'sClass': 'alignRight' },
+             { 'bSortable': true }
+           ],
+           
+           'sAjaxSource': '/clusters/{{current_iter}}',
+           'fnInitComplete': function() {
+              $('a.clusterlink').click(function () {
+                var cluster = $(this).attr('id');
+                $.get('/cluster/{{current_iter}}/' + cluster,
+                   function(html) {
+                       // we need the trim() call in order for jQuery 1.9.x to
+                       // recognize the output as valid HTML
+                       $(html.trim()).replaceAll('#cluster-view');
+                       // notify Firegoose to rescan the page
+                       var ev = document.createEvent("Events");
+                       ev.initEvent("gaggleDataEvent", true, false);
+                       document.dispatchEvent(ev);
+                   });
+                return false;
+              });
+            }
+         });
+
+      });
+    </script>
+  </head>
+  <body>
+   <div id="maincontainer">
+     <div id="topsection">
+       <div><img style="float: right" alt="Institute for Systems Biology" src="/static/images/isb_logo.png"></div>
+       <h2>cMonkey/Python</h2>
+       <div class="start-info">
+         {{runinfo.species}} ({{runinfo.orgcode}}): {{runinfo.num_rows}} genes, {{runinfo.num_cols}} conditions, {{runinfo.num_clusters}} clusters
+       </div>
+       <div>&nbsp;</div>
+       <div>Iteration <select id="select_iteration">
+       {% for iter in iterations %}{% if iter == current_iter %}
+         <option value="{{iter}}" selected>{{iter}}</option>
+       {% else %}<option value="{{iter}}">{{iter}}</option>{% endif %}{% endfor %}
+       </select>/{{runinfo.num_iters}}
+       </div>
+
+       <div style="height: 10px;">&nbsp;</div>
+       <div class="ui-progress-bar ui-container" id="progress_bar" style="width: 20%; height: 15px;">
+         <div class="ui-progress" style="height: 12px; width: {{progress}}%;">
+           <span class="ui-label" style="display:none;">
+             Loading Resources
+             <b class="value">7%</b>
+           </span>
+         </div>
+       </div>
+       <div style="font-size: smaller">Progress: {{progress}} %</div>
+       <div class="start-info">Run started at {{runinfo.start_time}}</div>
+       {% if not runinfo.finish_time %}
+       <div class="inprogress-info">Run in progress...</div>
+       {% else %}
+       <div class="finish-info">Run finished at {{runinfo.finish_time}} {{elapsed_time}}</div>
+       {% endif %}
+       <div style="height: 10px;">&nbsp;</div>
+     </div>
+
+     <h3>Statistics</h3>
+     <div id="statssection">
+       <div id="leftcolumn">
+         <div class="innertube">
+           <div id="cluster-row-graph"></div><div id="cluster-column-graph"></div><div id="motif-score-graph"></div>
+         </div>
+       </div>
+       <div id="rightcolumn">
+         <div class="innertube">
+           <div id="residual-graph"></div><div id="cluster-member-graph"></div><div id="network-score-graph"></div>
+         </div>
+       </div>
+       <div id="contentcolumn">
+         <div class="innertube">
+           <div id="cluster-residual-graph"></div><div id="runlog-graph"></div><div id="fuzzy-graph"></div>
+         </div>
+       </div>
+     </div>
+     <div style="clear: both"></div>
+     <h3>Clusters</h3>
+     <div id="clustersection">
+       <table class="item-list" id="cluster-list">
+         <thead>
+           <tr><th>#</th><th>Cluster</th><th># rows</th><th># columns</th><th>residual</th><th>motif/e-value</th></tr>
+         </thead>
+         <tbody>
+         </tbody>
+       </table>
+
+       <div class="spacer">&nbsp;</div>
+       <div class="details-box">
+         <span id="cluster-view">Please select a cluster</span>
+       </div>
+     </div>
+   </div>
+
+  </body>
+</html>

@@ -9,6 +9,7 @@ import logging
 import re
 import pssm
 import os
+import weederlauncher
 
 LAUNCHER = 'weederlauncher'
 LLR_VALUE = 'NA'
@@ -32,11 +33,11 @@ class Site:
     def __repr__(self):
         return self.__str__()
 
-
-def run_weeder(fasta_file):
+def run_weeder(fasta_file, params, config_params):
     if not os.path.exists(fasta_file):
         logging.warning("Weeder FASTA file %s not found! Skipping")
         return []
+    meme_outfile = '%s/meme-out-%04d-%04d' % (params.outdir, params.iteration, params.cluster)
 
     """run the weeder command and interpret its result"""
     def write_f1_file(pssm_num, apssm, num_sites):
@@ -44,7 +45,7 @@ def run_weeder(fasta_file):
         with open('%s.%d.f1' % (fasta_file, pssm_num), 'w') as outfile:
             outfile.write('%d,%s,%f,%d\n' % (apssm.sequence_length(),
                                              LLR_VALUE,
-                                             apssm.e_value(),
+                                             apssm.e_value,
                                              num_sites))
             for row in xrange(apssm.sequence_length()):
                 outfile.write('%f,%f,%f,%f\n' % (apssm[row][0],
@@ -56,8 +57,8 @@ def run_weeder(fasta_file):
         """writes the pssm to the .f2 file"""
         with open('%s.%d.f2' % (fasta_file, pssm_num), 'w') as outfile:
             outfile.write(',gene,strand,start,p.value,site\n')
-            for index in xrange(len(apssm.sites())):
-                site = apssm.sites()[index]
+            for index in xrange(len(apssm.sites)):
+                site = apssm.sites[index]
                 strand = '+'
                 if site.is_reverse:
                     strand = '-'
@@ -68,38 +69,40 @@ def run_weeder(fasta_file):
 
     def write_meme_file(pssms):
         """writes a PSSM file to be read by meme"""
-        with open('%s.meme' % fasta_file, 'w') as outfile:
+        with open(meme_outfile, 'w') as outfile:
             outfile.write('ALPHABET= ACGT\n')
             for apssm in pssms:
-                outfile.write(apssm.to_mast_string())
+                outfile.write(apssm.to_logodds_string())
                 outfile.write('\n')
 
-    __launch_weeder(fasta_file)
+    __launch_weeder(fasta_file, config_params)
     pssms = [pssm8 for pssm8 in __read_pssms_for(fasta_file)
              if pssm8.sequence_length() == 8]
     for index in xrange(len(pssms)):
         unique_target_sites = []
-        for site in pssms[index].sites():
+        for site in pssms[index].sites:
             if site.gene not in unique_target_sites:
                 unique_target_sites.append(site.gene)
         num_sites = len(unique_target_sites)
         write_f1_file(index + 1, pssms[index], num_sites)
         write_f2_file(index + 1, pssms[index])
     write_meme_file(pssms)
-    return pssms
+    return meme_outfile, pssms
 
 
-def __launch_weeder(fasta_file):
+def __launch_weeder(fasta_file, config_params):
     """launch weeder command"""
-    command = [LAUNCHER, fasta_file, 'HS3P', 'small', 'T50']
-    retcode = 1
-    with open('weeder.log', 'w') as logfile:
-        logging.info("running weeder on '%s'", fasta_file)
-        #weederproc = sp.Popen(command, stdout=logfile, stderr=sp.STDOUT)
-        weederproc = sp.Popen(command, stdout=logfile, stderr=logfile)
-        retcode = weederproc.wait()
-        logging.info("Weeder finished, return code: %d", retcode)
-    return retcode
+    if config_params['Weeder']['orgcode']:
+        orgcode = config_params['Weeder']['orgcode']
+    else:
+        orgcode = config_params['organism_code'].upper()
+
+    freqfile_dir = config_params['Weeder']['freqfile_dir']
+    weederlauncher.run_small_analysis(fasta_file, orgcode, 50,
+                                      reverse=True,
+                                      multi=False,
+                                      allseqs=False,
+                                      ffdir=freqfile_dir)
 
 
 def __read_pssms_for(fasta_file):
@@ -199,8 +202,7 @@ class WeederReader:
         while (not self.__input_end_reached() and
                not self.__current_line().startswith('**** MY ADVICE ****')):
             comps = self.__current_line().strip().split(' ')
-            if (len(comps) == 4 and
-                not self.__current_line().startswith('****')):
+            if len(comps) == 4 and not self.__current_line().startswith('****'):
                 result.append(comps[3][1:])
             self.__current_index += 1
         return result

@@ -5,6 +5,8 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import operator
+import collections
+from collections import defaultdict
 import math
 import numpy as np
 import scipy.stats
@@ -15,13 +17,26 @@ import gzip
 import shelve
 import time
 import logging
+import multiprocessing as mp
 
 # RSAT organism finding is an optional feature, which we can skip in case that
 # the user imports all the features through own text files
 try:
     import BeautifulSoup as bs
 except ImportError:
-    logging.warn("could not import BeautifulSoup, RSAT organism finding won't work")
+    try:
+        print "BeautifulSoup 3 not available, trying BeautifulSoup 4..."
+        import bs4 as bs
+        print "Found."
+    except ImportError:
+        # do not use the logging system here !!!
+        # this would lead to the logging.basicConfig() call being
+        # ignored !!!
+        print "WARN: could not import BeautifulSoup, RSAT organism finding won't work"
+
+
+# this tuple structure holds data of a delimited file
+DelimitedFile = collections.namedtuple('DelimitedFile', ['lines', 'header'])
 
 
 def make_delimited_file_from_lines(lines, sep, has_header, comment, quote):
@@ -60,7 +75,7 @@ def make_delimited_file_from_lines(lines, sep, has_header, comment, quote):
     while line_index < num_lines:
         line_index = next_non_comment_index(lines, comment, line_index)
         if line_index < num_lines:
-            stripped_line = lines[line_index].rstrip()
+            stripped_line = lines[line_index].rstrip('\r\n')
             if len(stripped_line) > 0:  # to catch newline at the end of file
                 line = stripped_line.split(sep)
                 line = [remove_quotes(elem, quote) for elem in line]
@@ -70,70 +85,31 @@ def make_delimited_file_from_lines(lines, sep, has_header, comment, quote):
     return DelimitedFile(file_lines, file_header)
 
 
-class DelimitedFile:  # pylint: disable-msg=R0913
-    """A file class to read text files that are delimited with certain
-    separators. This class offers some flexibility over regular csv
-    reading mechanisms by allowing for comments and storing optional
-    headers.
-    Create a DelimitedFile instance by calling DelimitedFile.read()."""
-    def __init__(self, lines, header):
-        self.__lines = lines
-        self.__header = header
-
-    @classmethod
-    def create_from_text(cls, text, sep='\t', has_header=False,
-                         comment=None, quote=None):
-        """creates a DelimitedFile instance from a text"""
-        return make_delimited_file_from_lines(text.split('\n'), sep,
-                                              has_header, comment, quote)
-
-    @classmethod
-    def read(cls, filepath, sep='\t', has_header=False, comment=None,
-             quote=None):
-        """Creates the reader object"""
-        lines = None
-        if filepath.endswith('.gz'):
-            with gzip.open(filepath) as inputfile:
-                lines = inputfile.readlines()
-        else:
-            with open(filepath) as inputfile:
-                lines = inputfile.readlines()
-        return make_delimited_file_from_lines(lines, sep, has_header,
-                                              comment, quote)
-
-    def lines(self):
-        """returns the lines in the file"""
-        return self.__lines
-
-    def header(self):
-        """returns the header in the file"""
-        return self.__header
+def dfile_from_text(text, sep='\t', has_header=False,
+                    comment=None, quote=None):
+    """creates a DelimitedFile instance from a text"""
+    return make_delimited_file_from_lines(text.split('\n'), sep,
+                                          has_header, comment, quote)
 
 
-class DelimitedFileMapper:
-    """A class that linearly searches a key in a DelimitedFile and for
-    the first row found, returns the value in the specified column"""
+def read_dfile(filepath, sep='\t', has_header=False, comment=None,
+               quote=None):
+    """Creates the reader object"""
+    lines = None
+    if filepath.endswith('.gz'):
+        with gzip.open(filepath) as inputfile:
+            lines = inputfile.readlines()
+    else:
+        with open(filepath) as inputfile:
+            lines = inputfile.readlines()
+    return make_delimited_file_from_lines(lines, sep, has_header,
+                                          comment, quote)
 
-    def __init__(self, delimited_file, key_column, value_column):
-        """Creates an instance of the mapper class using a DelimitedFile"""
-        self.__values = {}
-        for line in delimited_file.lines():
-            self.__values[line[key_column]] = line[value_column]
 
-    def __getitem__(self, key):
-        """looks for the key in the key column"""
-        return self.__values.get(key, None)
-
-    def items(self):
-        """returns the key, value pairs"""
-        return self.__values.items()
-
-    def keys(self):
-        """returns the keys"""
-        return self.__values.keys()
-
-    def __str__(self):
-        return str(self.__values)
+def make_dfile_map(dfile, key_column, value_column):
+    return collections.defaultdict(lambda : None,
+                                   [(line[key_column], line[value_column])
+                                    for line in dfile.lines])
 
 
 def levenshtein_distance(str1, str2):
@@ -159,19 +135,8 @@ def levenshtein_distance(str1, str2):
     return dist[strlen1][strlen2]
 
 
-class RankedAnchor:  # pylint: disable-msg=R0903
-    """A hyperlink with a Levenshtein score"""
-    def __init__(self, score, anchor):
-        """Creates a GenomeListEntry with a given Levenshtein distance
-        and a BeautifulSoup anchor tag"""
-        self.score = score
-        self.anchor = anchor
-
-    def __str__(self):
-        return "(score: %d, %s)" % (self.score, str(self.anchor))
-
-    def __repr__(self):
-        return str(self)
+# A hyperlink with a Levenshtein score and BeautifulSoup anchor tag
+RankedAnchor = collections.namedtuple('RankedAnchor', ['score', 'anchor'])
 
 
 def best_matching_links(search_string, html):
@@ -197,7 +162,12 @@ def quantile(values, probability):
     values a list of numeric values
     probability a value in the range between 0 and 1
     """
-    return scipy.stats.scoreatpercentile(values, probability * 100)
+    values = np.array(values)
+    values = values[np.isfinite(values)]
+    if len(values):
+        return scipy.stats.scoreatpercentile(values, probability * 100)
+    else:
+        return np.nan
 
 
 def r_stddev(values):
@@ -225,6 +195,7 @@ def max_row_var(matrix):
     masked = np.ma.masked_array(matrix, np.isnan(matrix))
     return np.mean(np.var(masked, 1, ddof=1))
 
+
 def r_outer(x, y, f):
     """emulates the R "outer" function, calculating the outer product
     with a user-defined function"""
@@ -232,21 +203,29 @@ def r_outer(x, y, f):
     y = np.array(y)
     return f(x[:, np.newaxis], y)
 
+
 def mean(nparray):
     """computes the mean of a numpy array, ignoring NaN values"""
     return np.mean(np.ma.masked_array(nparray, np.isnan(nparray)))
 
 
+def median(values):
+    """computes the mean of a numpy array, ignoring NaN values"""
+    values = np.array(values)
+    values = values[np.isfinite(values)]
+    return np.median(values)
+
+
 def column_means(matrix):
     """computes the column means of a matrix"""
-    return np.mean(np.ma.masked_array(matrix, np.isnan(matrix)),
-                   axis=0)
+    return np.ma.filled(np.mean(np.ma.masked_array(matrix, np.isnan(matrix)),
+                                axis=0), np.nan)
 
 
 def row_means(matrix):
     """computes the row means of a matrix"""
-    return np.mean(np.ma.masked_array(matrix, np.isnan(matrix)),
-                   axis=1)
+    return np.ma.filled(np.mean(np.ma.masked_array(matrix, np.isnan(matrix)),
+                                axis=1), np.nan)
 
 
 class DocumentNotFound(Exception):
@@ -281,6 +260,9 @@ def read_url_cached(url, cache_filename):
     """convenience method to read a document from a URL using the
     CMonkeyURLopener, cached version"""
     if not os.path.exists(cache_filename):
+        cache_dir = os.path.dirname(cache_filename)
+        if not os.path.isdir(cache_dir):
+            os.makedirs(cache_dir)
         CMonkeyURLopener().retrieve(url, cache_filename)
     with open(cache_filename) as cached_file:
         return cached_file.read()
@@ -343,9 +325,10 @@ def kcombinations(alist, k):
 
 def trim_mean(values, trim):
     """returns the trim mean"""
-    values = sorted(values, reverse=True)
     if not values or len(values) == 0:
         return 0
+
+    values = sorted(values, reverse=True)
     if trim == 0.5:
         return np.median(values)
 
@@ -360,7 +343,6 @@ def trim_mean(values, trim):
 ######################################################################
 def density(kvalues, cluster_values, bandwidth, dmin, dmax):
     """generic function to compute density scores"""
-    r_density = robjects.r['density']
     kwargs = {'bw': bandwidth, 'adjust': 2, 'from': dmin,
               'to': dmax, 'n': 256, 'na.rm': True}
     rdens = robjects.r("""
@@ -371,6 +353,18 @@ def density(kvalues, cluster_values, bandwidth, dmin, dmax):
       }""")
     return rdens(robjects.FloatVector(cluster_values),
                  robjects.FloatVector(kvalues), **kwargs)
+
+
+def r_set_seed(value):
+    """calls R's set.seed()"""
+    set_seed = robjects.r['set.seed']
+    set_seed(value)
+
+
+def r_runif(value):
+    """calls R's set.seed()"""
+    runif = robjects.r['runif']
+    return runif(value)
 
 
 def rnorm(num_values, std_deviation):
@@ -397,6 +391,13 @@ def rrank(values):
     return r_rank(robjects.FloatVector(values), **kwargs)
 
 
+def mad(values):
+    """invokes the R function mad"""
+    r_mad = robjects.r['mad']
+    kwargs = {'na.rm': False}
+    return r_mad(robjects.FloatVector(values), **kwargs)
+
+
 def sd_rnorm(values, num_rnorm_values, fuzzy_coeff):
     """computes standard deviation on values and then calls rnorm to
     generate the num_rnorm_values. This combines stddev and rnorm
@@ -410,16 +411,63 @@ def sd_rnorm(values, num_rnorm_values, fuzzy_coeff):
     return func(robjects.FloatVector(values), num_rnorm_values,
                 fuzzy_coeff)
 
+
+def rrank_matrix(npmatrix):
+    func = robjects.r("""
+      rank_mat <- function(values, nrow, ncol) {
+        xr <- t(matrix(values, nrow=nrow, ncol=ncol, byrow=T))
+        return (rank(xr, ties='min', na='keep') - 1)
+      }
+    """)
+    num_rows, num_cols = npmatrix.shape
+    xvec = robjects.FloatVector(npmatrix.ravel())
+    res = func(xvec, num_rows, num_cols)
+    # Converting the result to an NumPy in array results in a
+    # surprisingly nice speedup
+    return np.array(res, dtype=np.int32)
+
+
+def order_fast(values, result_size, reverse=True):
+    ranked = zip(values, xrange(1, len(values) + 1))
+    ranked.sort(key=operator.itemgetter(0), reverse=reverse)
+    return [ranked[i][1] for i in xrange(result_size)]
+
+
+def rorder(values, result_size):
+    """call the R version of order"""
+    r_order = robjects.r['order']
+    kwargs = {'decreasing': True}
+    res = r_order(robjects.FloatVector(values), **kwargs)
+    return res[:result_size]
+
+
+def get_rvec_fun(rvecstr):
+    """make scaling function based on an R vector expression string"""
+    def scale(iteration):
+        rvec = robjects.r(rvecstr)
+        if iteration > len(rvec):
+            return rvec[-1]
+        else:
+            return rvec[iteration - 1]
+    return scale
+        
+
+def get_iter_fun(params, prefix, num_iterations):
+    """returns an iteration function for the given prefix from the configuration parameters"""
+    try:
+        constval = params[prefix + '_const']
+        return lambda i: constval
+    except:
+        pass
+    try:
+        rvec = params[prefix + '_rvec']
+        return get_rvec_fun(rvec.replace('num_iterations', str(num_iterations)))
+    except:
+        raise Exception("no rvec found for prefix '%s'" % prefix)
+
 ######################################################################
 ### Misc functionality
 ######################################################################
-
-
-def add_if_unique(sequence, item):
-    """add the item to the Python sequence only if it does not exist"""
-    if item not in sequence:
-        sequence.append(item)
-
 
 class open_shelf:
     """A shelf content manager, so the user does not have to care about
@@ -445,6 +493,30 @@ def current_millis():
     """returns the current time in milliseconds"""
     return int(math.floor(time.time() * 1000))
 
+
+def which_multiple(elems):
+    result = defaultdict(int)
+    for elem in elems:
+        result[elem] += 1
+    return {elem for elem, count in result.iteritems() if count > 1}
+
+
+class get_mp_pool:
+    """pool manager"""
+    def __init__(self, config_params={}):
+        """use the configuration to return a pool with user-defined number of cores
+        if possible"""
+        if 'num_cores' in config_params:
+            self.pool = mp.Pool(config_params['num_cores'])
+        else:
+            self.pool = mp.Pool()
+        
+    def __enter__(self):
+        return self.pool
+
+    def __exit__(self, type, value, tb):
+        self.pool.close()
+        self.pool.join()
 
 __all__ = ['DelimitedFile', 'best_matching_links', 'quantile',
            'DocumentNotFound', 'CMonkeyURLopener', 'read_url',

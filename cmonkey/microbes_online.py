@@ -13,13 +13,7 @@ import sys
 import logging
 import util
 import network
-
-# most people won't need MicrobesOnline integration, so we'll make the
-# import optional
-try:
-    import MySQLdb as mysql
-except ImportError:
-    logging.warn("Could not import MySQLdb - Microbes Online MySQL integration will not work")
+import patches
 
 MICROBES_ONLINE_BASE_URL = 'http://www.microbesonline.org'
 MYSQL_HOST = 'pub.microbesonline.org'
@@ -28,11 +22,22 @@ MYSQL_PASSWD = 'guest'
 MYSQL_DB = 'genomics'
 
 
+class MicrobesOnlineOperonFile:
+    """access to Microbes online operon prediction by providing a file"""
+
+    def __init__(self, path):
+        self.path = path
+
+    def get_operon_predictions_for(self, organism_id):
+        with open(self.path) as infile:
+            return infile.read()
+
+
 class MicrobesOnline:
     """Interface to Microbes Online web service"""
 
-    def __init__(self, base_url=MICROBES_ONLINE_BASE_URL,
-                 cache_dir='cache'):
+    def __init__(self, cache_dir,
+                 base_url=MICROBES_ONLINE_BASE_URL):
         """creates a MicrobesOnline service instance"""
         self.base_url = base_url
         self.cache_dir = cache_dir
@@ -45,28 +50,6 @@ class MicrobesOnline:
                        'gnc%s.named' % str(organism_id)])
         cache_file = '/'.join([self.cache_dir,
                               'gnc%s.named' % str(organism_id)])
-        return util.read_url_cached(url, cache_file)
-
-    def get_genome_info_for(self, organism_id):
-        """Returns the Genome info from Microbes Online"""
-        logging.info('MicrobesOnline.get_genome_info_for(%s)',
-                     str(organism_id))
-        url = '/'.join([self.base_url, 'cgi-bin',
-                        'genomeInfo.cgi?tId=%s;export=tab' %
-                        str(organism_id)])
-        cache_file = '/'.join([self.cache_dir,
-                              'mo_%s.genome_info' % str(organism_id)])
-        return util.read_url_cached(url, cache_file)
-
-    def get_genome_for(self, organism_id):
-        """Returns the genome from Microbes Online, stored in FASTA format"""
-        logging.info('MicrobesOnline.get_genome_for(%s)',
-                     str(organism_id))
-        url = '/'.join([self.base_url, 'cgi-bin',
-                        'genomeInfo.cgi?tId=%s;export=genome' %
-                        str(organism_id)])
-        cache_file = '/'.join([self.cache_dir,
-                              'mo_genome_%s.fasta' % str(organism_id)])
         return util.read_url_cached(url, cache_file)
 
 
@@ -97,7 +80,7 @@ def make_operon_pairs(operon, features):
         """determine reverse head of the operon"""
         max_gene = None
         max_end = 0
-        for (gene, feature) in feature_map.items():
+        for (gene, feature) in feature_map.iteritems():
             if feature.location.end > max_end:
                 max_end = feature.location.end
                 max_gene = gene
@@ -107,7 +90,7 @@ def make_operon_pairs(operon, features):
         """determine forward head of the operon"""
         min_gene = None
         min_start = sys.maxint
-        for (gene, feature) in feature_map.items():
+        for (gene, feature) in feature_map.iteritems():
             if feature.location.start < min_start:
                 min_start = feature.location.start
                 min_gene = gene
@@ -123,7 +106,7 @@ def make_operon_pairs(operon, features):
         if gene in features.keys():
             available_operon_genes.append(gene)
         else:
-            logging.warn("Microbles Online operon gene '%s' not found in " +
+            logging.warn("Microbes Online operon gene '%s' not found in " +
                          "RSAT features", gene)
 
     for gene in available_operon_genes:
@@ -213,10 +196,11 @@ def __get_predictions(microbes_online, organism):
     """reads the operon predictions for a given organism from MicrobesOnline"""
     preds_text = microbes_online.get_operon_predictions_for(
         organism.taxonomy_id())
-    dfile = util.DelimitedFile.create_from_text(preds_text,
-                                                has_header=True)
-    preds = [(line[2], line[3]) for line in dfile.lines()
-             if line[6] == 'TRUE']
+    dfile = util.dfile_from_text(preds_text, has_header=True)
+    code = organism.code
+    preds = [(patches.patch_mo_gene(code, line[2]),
+              patches.patch_mo_gene(code, line[3]))
+             for line in dfile.lines if line[6] == 'TRUE']
     logging.info("%d prediction pairs read", len(preds))
     return preds
 
@@ -232,20 +216,21 @@ def get_network_factory(microbes_online, max_operon_size, weight):
         for operon in operons:
             if len(operon) <= max_operon_size:
                 combs = util.kcombinations(operon, 2)
-                edges.extend([[comb[0], comb[1], 1000.0]
+                edges.extend([(comb[0], comb[1], 1000.0)
                               for comb in combs if comb[0] != comb[1]])
             else:
                 logging.warn("dropped operon from network (max_operon_size " +
                              "exceeded): %s", str(operon))
         return edges
 
-    def make_network(organism):
+    def make_network(organism, ratios=None, check_size=True):
         """factory method to create a network from operon predictions"""
 
         logging.info("MicrobesOnline - make_network()")
         edges = get_operon_edges(microbes_online, organism)
         logging.info("%d edges computed", len(edges))
-        return network.Network.create('operons', edges, weight)
+        return network.Network.create('operons', edges, weight, organism,
+                                      ratios, check_size)
 
     return make_network
 

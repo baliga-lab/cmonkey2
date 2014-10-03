@@ -9,7 +9,6 @@ import logging
 import util
 import datamatrix as dm
 import scoring
-import multiprocessing as mp
 import cPickle
 import os.path
 
@@ -25,14 +24,38 @@ class Network:
         self.name = name
         self.edges = edges
         self.weight = weight
+        self.__compute_edges_with_source()
+
+    def __compute_edges_with_source(self):
         self.edges_with_source = {}
-        for edge in edges:
+        for edge in self.edges:
             if edge[0] not in self.edges_with_source:
                 self.edges_with_source[edge[0]] = []
             if edge[1] not in self.edges_with_source:
                 self.edges_with_source[edge[1]] = []
             self.edges_with_source[edge[0]].append(edge)
             self.edges_with_source[edge[1]].append(edge)
+
+    def validate(self, synonyms, genes):
+        # remap first
+        new_edges = []
+        for n0, n1, score in self.edges:
+            n0 = synonyms[n0] if n0 in synonyms else n0
+            n1 = synonyms[n1] if n1 in synonyms else n1
+            new_edges.append((n0, n1, score))
+        self.edges = new_edges
+        self.__compute_edges_with_source()
+
+        # then validate
+        found = []
+        for g in genes:
+            primary = synonyms.get(g, g)
+            for n0, n1, score in self.edges:
+                if primary == n0 or primary == n1:
+                    found.append(primary)
+        if len(found) < len(genes) / 2:
+            print edges
+            raise(Exception("only %d genes found in edges" % len(found)))
 
     def num_edges(self):
         """returns the number of edges in this graph"""
@@ -50,8 +73,8 @@ class Network:
             # score_e / score_total * score == score_e * (score_total / score)
             # we use this to save a division per loop iteration
             scale = float(score) / float(total)
-            for edge in self.edges:
-                edge[2] = edge[2] * scale
+            self.edges = [(edge[0], edge[1], edge[2] * scale) for edge in self.edges]
+        self.__compute_edges_with_source()
 
     def edges_with_node(self, node):
         """returns the edges where node is a node of"""
@@ -65,19 +88,50 @@ class Network:
                                                len(self.edges))
 
     @classmethod
-    def create(cls, name, edges, weight):
+    def create(cls, name, edges, weight, organism=None, ratios=None,
+               check_size=True):
         """standard Factory method"""
-        added = {}
+        logging.debug("Network.create() called with %d edges", len(edges))
+        if edges is None:
+            raise Exception("no edges specified in network '%s'" % name)
+        added = set([])
         network_edges = []
+        nodes = set()
+        for edge in edges:
+            nodes.add(edge[0])
+            nodes.add(edge[1])
+        """Shrink the number of edges to the ones that are actually usable. These
+        are selected by the following considerations:
+        # 1. check nodes that are in the thesaurus
+        # 2. check gene names that are in the ratios matrix, but not in the network
+        # 3. keep the nodes that are in the ratios and are in the thesaurus
+        """
+        num_nodes_orig = len(nodes)
+        if organism:
+            thesaurus = organism.thesaurus()
+            nodes = {n for n in nodes if n in thesaurus}
+            if ratios:
+                cano_nodes = {thesaurus[n] for n in nodes}
+                cano_genes = {thesaurus[row] for row in ratios.row_names
+                              if row in thesaurus}
+                probes_in = [gene for gene in cano_genes if gene in cano_nodes]
+                nodes = {n for n in nodes if thesaurus[n] in probes_in}
+
+        logging.debug("# nodes in network '%s': %d (of %d)", name, len(nodes), num_nodes_orig)
 
         for edge in edges:
-            key = "%s:%s" % (edge[0], edge[1])
-            key_rev = "%s:%s" % (edge[1], edge[0])
-            if key not in added and key_rev not in added:
-                network_edges.append(edge)
-            added[key] = True
-            added[key_rev] = True
+            # we ignore self-edges, and edges with nodes not in the final nodes
+            if edge[0] != edge[1] and edge[0] in nodes and edge[1] in nodes:
+                key = "%s:%s" % (edge[0], edge[1])
+                key_rev = "%s:%s" % (edge[1], edge[0])
+                if key not in added and key_rev not in added:
+                    network_edges.append((intern(edge[0]), intern(edge[1]), edge[2]))
+                added.add(key)
+                added.add(key_rev)
 
+        if check_size and len(network_edges) < 10:
+            raise Exception("Error: only %d edges in network '%s'" % (len(network_edges), name))
+        logging.debug("Created network '%s' with %d edges", name, len(network_edges))
         return Network(name, network_edges, weight, 0)
 
 
@@ -85,14 +139,17 @@ COMPUTE_NETWORK = None
 ALL_GENES = None
 NETWORK_SCORE_MEMBERSHIP = None
 
+
 def compute_network_scores(cluster):
     """Generic method to compute network scores"""
     global COMPUTE_NETWORK, ALL_GENES, NETWORK_SCORE_MEMBERSHIP
     network = COMPUTE_NETWORK
 
-    genes = NETWORK_SCORE_MEMBERSHIP.rows_for_cluster(cluster)
+    genes = sorted(NETWORK_SCORE_MEMBERSHIP.rows_for_cluster(cluster))
     gene_scores = {}
     for gene in genes:
+        # TODO: optimization: we can use numpy arrays for the scores array
+        # and then sum
         edges = network.edges_with_node(gene)
         for edge in edges:
             other_gene = edge[0]
@@ -103,22 +160,12 @@ def compute_network_scores(cluster):
                     gene_scores[other_gene] = []
                 gene_scores[other_gene].append(edge[2])
 
-
     final_gene_scores = {}
-    for gene, scores in gene_scores.items():
+    for gene, scores in gene_scores.iteritems():
         final_gene_scores[gene] = sum(scores) / len(genes)
         final_gene_scores[gene] = -np.log(final_gene_scores[gene] + 1)
     return final_gene_scores
 
-
-def compute_mean(score_means):
-    means = {}
-    for network, cluster_score_means in score_means.items():
-        total = 0.0
-        for score in cluster_score_means.values():
-            total = total + score
-            means[network] = total / len(cluster_score_means)
-    return means
 
 
 class ScoringFunction(scoring.ScoringFunctionBase):
@@ -127,98 +174,75 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     since the scores are computed through weighted addition rather than
     quantile normalization"""
 
-    def __init__(self, organism, membership, matrix, scaling_func=None,
-                 run_in_iteration=scoring.default_network_iterations,
-                 config_params=None):
+    def __init__(self, organism, membership, ratios, config_params):
         """Create scoring function instance"""
-        scoring.ScoringFunctionBase.__init__(self, membership,
-                                             matrix, scaling_func,
-                                             run_in_iteration,
-                                             config_params)
-        self.__organism = organism
+        scoring.ScoringFunctionBase.__init__(self, "Networks", organism, membership,
+                                             ratios, config_params)
         self.__networks = None
-        self.__last_computed_result = None
-        self.run_log = scoring.RunLog("network")
+        self.run_log = scoring.RunLog("network", config_params)
 
-    def name(self):
-        """returns the name of this function"""
-        return "Network"
+    def initialize(self, args):
+        """process additional parameters"""
+        self.weights = {nw['type']: nw['weight'] for nw in args['networks']}
 
     def run_logs(self):
         return [self.run_log]
 
-    def network_scores_pickle_path(self):
-        return "%s/%s_scores_last.pkl" % (self.config_params['output_dir'],
-                                          self.name())
-
-    def current_network_scores(self):
-        if self.network_scores != None:
-            return self.network_scores
-        else:
-            with open(self.network_scores_pickle_path()) as infile:
-                result = cPickle.load(infile)
-            return result
-
     def compute(self, iteration_result, ref_matrix=None):
         """overridden compute for storing additional information"""
         result = scoring.ScoringFunctionBase.compute(self, iteration_result, ref_matrix)
-        iteration_result['networks'] = self.__update_score_means(
-            self.current_network_scores())
-        self.network_scores = None
+        iteration_result['networks'] = self.score_means
         return result
 
     def compute_force(self, iteration_result, ref_matrix=None):
         """overridden compute for storing additional information"""
         result = scoring.ScoringFunctionBase.compute_force(self, iteration_result, ref_matrix)
-        iteration_result['networks'] = self.__update_score_means(
-            self.current_network_scores())
-        self.network_scores = None
+        iteration_result['networks'] = self.score_means
         return result
+
+    def networks(self):
+        """networks are cached"""
+        if self.__networks is None:
+            self.__networks = retrieve_networks(self.organism)
+            if self.config_params['remap_network_nodes']:
+                # network names are non-primary, this can happen
+                # when the user makes up their own data
+                for network in self.__networks:
+                    network.validate(self.organism.thesaurus(),
+                                     self.gene_names())
+        return self.__networks
 
     def __update_score_means(self, network_scores):
         """returns the score means, adjusted to the current cluster setup"""
         # a dictionary that holds the network score means for
         # each cluster, separated for each network
-        score_means = {}
-        for network in self.__networks:
-            score_means[network.name] = self.__compute_cluster_score_means(
-                network_scores[network.name])
-        return compute_mean(score_means)
+        if network_scores:
+            score_means = {network.name: self.__compute_cluster_score_means(network_scores[network.name])
+                           for network in self.networks()}
+            return {network: np.average(np.array(cluster_score_means.values()))
+                    for network, cluster_score_means in score_means.iteritems()}
+        return {}
 
     def do_compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
-        # networks are cached
-        if self.__networks == None:
-            self.__networks = retrieve_networks(self.__organism)
 
         matrix = dm.DataMatrix(len(self.gene_names()), self.num_clusters(),
                                self.gene_names())
-
-        # a dictionary that holds the scores of each gene in a given cluster
-        network_iteration_scores = {cluster: {}
-                                    for cluster in xrange(1, self.num_clusters() + 1)}
         network_scores = {}
-        for network in self.__networks:
-            logging.info("Compute scores for network '%s', WEIGHT: %f",
-                         network.name, network.weight)
+        for network in self.networks():
+            logging.debug("Compute scores for network '%s', WEIGHT: %f",
+                          network.name, network.weight)
             start_time = util.current_millis()
             network_score = self.__compute_network_cluster_scores(network)
             network_scores[network.name] = network_score
             self.__update_score_matrix(matrix, network_score, network.weight)
             elapsed = util.current_millis() - start_time
-            logging.info("NETWORK '%s' SCORING TIME: %f s.",
-                         network.name, (elapsed / 1000.0))
-            # additional scoring information, not used for the actual clustering
-            self.__update_network_iteration_scores(network_iteration_scores,
-                                                   network_score, network.weight)
-            iteration_scores = compute_iteration_scores(network_iteration_scores)
+            logging.debug("NETWORK '%s' SCORING TIME: %f s.",
+                          network.name, (elapsed / 1000.0))
 
-        with open(self.network_scores_pickle_path(), 'w') as outfile:
-            cPickle.dump(network_scores, outfile)
-        # immediately use in means computation
-        self.network_scores = network_scores
-
-        return matrix - matrix.quantile(0.99)
+        # compute and store score means
+        self.score_means = self.__update_score_means(network_scores)
+        return matrix
 
     def __compute_network_cluster_scores(self, network):
         """computes the cluster scores for the given network"""
@@ -231,13 +255,11 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         # similar brings this down to a crawl
         COMPUTE_NETWORK = network
         ALL_GENES = set(self.gene_names())  # optimization: O(1) lookup
-        NETWORK_SCORE_MEMBERSHIP = self.membership()
+        NETWORK_SCORE_MEMBERSHIP = self.membership
 
         if use_multiprocessing:
-            pool = mp.Pool()
-            map_results = pool.map(compute_network_scores, xrange(1, self.num_clusters() + 1))
-            pool.close()
-            pool.join()
+            with util.get_mp_pool(self.config_params) as pool:
+                map_results = pool.map(compute_network_scores, xrange(1, self.num_clusters() + 1))
             for cluster in xrange(1, self.num_clusters() + 1):
                 result[cluster] = map_results[cluster - 1]
         else:
@@ -252,10 +274,12 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     def __update_score_matrix(self, matrix, network_score, weight):
         """add values into the result score matrix"""
         mvalues = matrix.values
+        gene_names = self.gene_names()
         for cluster in xrange(1, self.num_clusters() + 1):
-            for row_index in xrange(self.matrix().num_rows()):
-                gene = self.gene_at(row_index)
-                if gene in network_score[cluster].keys():
+            cluster_genes = set(network_score[cluster].keys())
+            for row_index in xrange(self.ratios.num_rows):
+                gene = gene_names[row_index]
+                if gene in cluster_genes:
                     weighted_score = network_score[cluster][gene] * weight
                     mvalues[row_index][cluster - 1] += weighted_score
 
@@ -263,36 +287,11 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """compute the score means on the given network score"""
         result = {}
         for cluster in xrange(1, self.num_clusters() + 1):
-            cluster_scores = []
-            for gene in sorted(self.rows_for_cluster(cluster)):
-                if gene in network_score[cluster].keys():
-                    cluster_scores.append(network_score[cluster][gene])
-                else:
-                    cluster_scores.append(0.0)
+            cluster_scores = [network_score[cluster][gene]
+                              if gene in network_score[cluster] else 0.0
+                              for gene in self.rows_for_cluster(cluster)]
             result[cluster] = util.trim_mean(cluster_scores, 0.05)
         return result
-
-    def __update_network_iteration_scores(self, result, network_score, weight):
-        """compute network iteration scores"""
-        for cluster in xrange(1, self.num_clusters() + 1):
-            for gene in sorted(self.rows_for_cluster(cluster)):
-                if gene not in result[cluster].keys():
-                    result[cluster][gene] = 0.0
-                if gene in network_score[cluster].keys():
-                    weighted_score = network_score[cluster][gene] * weight
-                    result[cluster][gene] += weighted_score
-        return result
-
-
-def compute_iteration_scores(network_iteration_scores):
-    """called 'cluster.ns' in the original cMonkey"""
-    result = {}
-    for cluster in network_iteration_scores:
-        cluster_scores = []
-        for _, score in network_iteration_scores[cluster].items():
-            cluster_scores.append(score)
-        result[cluster] = util.trim_mean(cluster_scores, 0.05)
-    return result
 
 
 def retrieve_networks(organism):
@@ -303,8 +302,8 @@ def retrieve_networks(organism):
     networks = organism.networks()
     max_score = 0
     for network in networks:
-        #logging.info("Network '%s' with %d edges", network.name(),
-        #             network.num_edges())
+        #logging.debug("Network '%s' with %d edges", network.name(),
+        #              network.num_edges())
         nw_total = network.total_score()
         if nw_total > max_score:
             max_score = nw_total

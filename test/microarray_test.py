@@ -29,23 +29,27 @@ class ComputeArrayScoresTest(unittest.TestCase):
             row = line.strip().split('\t')
             column_members[row[0]] = [int(cluster)
                                       for cluster in row[1].split(':')]
-        return memb.ClusterMembership(row_members, column_members,
-                                      {'memb.num_clusters': 43})
+        return memb.OrigMembership(sorted(row_members.keys()),
+                                   sorted(column_members.keys()),
+                                   row_members, column_members,
+                                   {'memb.num_clusters': 43,
+                                    'memb.clusters_per_row': 2,
+                                    'memb.clusters_per_col': 29 })
 
     def __read_ratios(self):
-        dfile = util.DelimitedFile.read('testdata/row_scores_testratios.tsv',
-                                        has_header=True)
-        return dm.DataMatrixFactory([]).create_from(dfile)
+        dfile = util.read_dfile('testdata/row_scores_testratios.tsv',
+                                has_header=True)
+        return dm.DataMatrixFactory([]).create_from(dfile, case_sensitive=True)
 
     def __read_rowscores_refresult(self):
-        dfile = util.DelimitedFile.read('testdata/row_scores_refresult.tsv',
-                                        has_header=True, quote='"')
-        return dm.DataMatrixFactory([]).create_from(dfile)
+        dfile = util.read_dfile('testdata/row_scores_refresult.tsv',
+                                has_header=True, quote='"')
+        return dm.DataMatrixFactory([]).create_from(dfile, case_sensitive=True)
 
     def __read_colscores_refresult(self):
-        dfile = util.DelimitedFile.read('testdata/column_scores_refresult.tsv',
-                                        has_header=True, quote='"')
-        return dm.DataMatrixFactory([]).create_from(dfile)
+        dfile = util.read_dfile('testdata/column_scores_refresult.tsv',
+                                has_header=True, quote='"')
+        return dm.DataMatrixFactory([]).create_from(dfile, case_sensitive=True)
 
     def test_compute_row_scores_multiprocessing(self):
         membership = self.__read_members()
@@ -53,7 +57,9 @@ class ComputeArrayScoresTest(unittest.TestCase):
         print "(reading reference row scores...)"
         refresult = self.__read_rowscores_refresult()
         print "(compute my own row scores...)"
-        result = ma.compute_row_scores(membership, ratios, 43, True)
+        result = ma.compute_row_scores(membership, ratios, 43,
+                                       {'multiprocessing': True, 'num_cores': None})
+        result.fix_extreme_values()
         print "(comparing computed with reference results...)"
         self.__compare_with_refresult(refresult, result)
 
@@ -63,7 +69,9 @@ class ComputeArrayScoresTest(unittest.TestCase):
         print "(reading reference row scores...)"
         refresult = self.__read_rowscores_refresult()
         print "(compute my own row scores...)"
-        result = ma.compute_row_scores(membership, ratios, 43, False)
+        result = ma.compute_row_scores(membership, ratios, 43,
+                                       {'multiprocessing': True, 'num_cores': None})
+        result.fix_extreme_values()
         print "(comparing computed with reference results...)"
         self.__compare_with_refresult(refresult, result)
 
@@ -71,15 +79,16 @@ class ComputeArrayScoresTest(unittest.TestCase):
         membership = self.__read_members()
         ratios = self.__read_ratios()
         refresult = self.__read_colscores_refresult()
-        result = scoring.compute_column_scores(membership, ratios, 43)
+        result = scoring.compute_column_scores(membership, ratios, 43,
+                                               {'multiprocessing': True, 'num_cores': None})
         self.__compare_with_refresult(refresult, result)
 
     def __compare_with_refresult(self, refresult, result):
-        self.assertEquals(refresult.num_rows(), result.num_rows())
-        self.assertEquals(refresult.num_columns(), result.num_columns())
+        self.assertEquals(refresult.num_rows, result.num_rows)
+        self.assertEquals(refresult.num_columns, result.num_columns)
         self.assertEquals(result.row_names, refresult.row_names)
-        for row_index in range(result.num_rows()):
-            for col_index in range(result.num_columns()):
+        for row_index in range(result.num_rows):
+            for col_index in range(result.num_columns):
                 # note that we reduced the comparison's number of places
                 # That's because the input matrix was created with some
                 # rounding, so we have a slightly higher rounding difference

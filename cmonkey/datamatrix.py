@@ -9,7 +9,9 @@ import numpy as np
 import operator
 import util
 import logging
-import rpy2.robjects as robj
+import gzip
+import os
+import random
 
 
 class DataMatrix:
@@ -37,51 +39,50 @@ class DataMatrix:
                                       "%d (was %d)")
                                      % (row_index, ncols, len(inrow)))
 
-        if row_names == None:
+        if row_names is None:
             self.row_names = ["Row " + str(i) for i in range(nrows)]
         else:
             if len(row_names) != nrows:
                 raise ValueError("number of row names should be %d" % nrows)
-            self.row_names = list(row_names)
+            self.row_names = row_names
 
-        if col_names == None:
+        if col_names is None:
             self.column_names = ["Col " + str(i) for i in xrange(ncols)]
         else:
             if len(col_names) != ncols:
                 raise ValueError("number of column names should be %d" % ncols)
-            self.column_names = list(col_names)
+            self.column_names = col_names
 
-        if values != None:
+        if values is not None:
             check_values()
             self.values = np.array(values, dtype=np.float64)
         else:
             self.values = np.zeros((nrows, ncols))
-            if init_value != None:
+            if init_value is not None:
                 self.values.fill(init_value)
+
         self.__row_variance = None
+        self.row_indexes = None
+        self.column_indexes = None
 
-    def num_rows(self):
-        """returns the number of rows"""
-        return len(self.row_names)
+        # store the number of rows/columns as an attribute, so we do not have
+        # to recalculate them
+        self.num_rows = nrows
+        self.num_columns = 0 if nrows == 0 else ncols
 
-    def num_columns(self):
-        """returns the number of columns"""
-        if self.num_rows() == 0:
-            return 0
-        else:
-            return len(self.column_names)
-
-    def row_indexes(self, row_names):
+    def row_indexes_for(self, row_names):
         """returns the row indexes with the matching names"""
-        return [self.row_names.index(name) for name in row_names]
+        if self.row_indexes is None:
+            self.row_indexes = {row: index for index, row in enumerate(self.row_names)}
+        return [self.row_indexes[name] if name in self.row_indexes else -1
+                for name in row_names]
 
-    def column_indexes(self, column_names):
+    def column_indexes_for(self, column_names):
         """returns the column indexes with the matching names"""
-        return [self.column_names.index(name) for name in column_names]
-
-    def flat_values(self):
-        """returns all values as a single sequence"""
-        return self.values.flatten()
+        if self.column_indexes is None:
+            self.column_indexes = {col: index for index, col in enumerate(self.column_names)}
+        return [self.column_indexes[name] if name in self.column_indexes else -1
+                for name in column_names]
 
     def row_values(self, row):
         """returns the values in the specified row"""
@@ -95,7 +96,7 @@ class DataMatrix:
         """extract a submatrix with the specified rows.
         row_indexes needs to be sorted"""
         new_values = self.values[[row_indexes]]
-        return DataMatrix(len(row_indexes), self.num_columns(),
+        return DataMatrix(len(row_indexes), self.num_columns,
                           row_names=[self.row_names[index] for index in row_indexes],
                           col_names=self.column_names,
                           values=new_values)
@@ -113,30 +114,30 @@ class DataMatrix:
         """
         def make_values(row_indexes, column_indexes):
             """creates an array from the selected rows and columns"""
-            if row_indexes == None and column_indexes == None:
+            if row_indexes is None and column_indexes is None:
                 return self.values
-            elif row_indexes == None:
+            elif row_indexes is None:
                 return self.values[:, column_indexes]
-            elif column_indexes == None:
+            elif column_indexes is None:
                 return self.values[row_indexes]
             else:
                 return self.values[row_indexes][:, column_indexes]
 
-        if row_names == None:
+        if row_names is None:
             row_names = self.row_names
             row_indexes = None
         else:
-            row_names = [name for name in row_names
-                         if name in self.row_names]
-            row_indexes = self.row_indexes(row_names)
+            row_names = [name for name in sorted(row_names)
+                         if name in set(self.row_names)]
+            row_indexes = self.row_indexes_for(row_names)
 
-        if column_names == None:
+        if column_names is None:
             column_names = self.column_names
             col_indexes = None
         else:
-            column_names = [name for name in column_names
-                            if name in self.column_names]
-            col_indexes = self.column_indexes(column_names)
+            column_names = [name for name in sorted(column_names)
+                            if name in set(self.column_names)]
+            col_indexes = self.column_indexes_for(column_names)
 
         new_values = make_values(row_indexes, col_indexes)
         return DataMatrix(len(row_names), len(column_names), row_names,
@@ -147,19 +148,11 @@ class DataMatrix:
         row_names = self.row_names
         row_pairs = [(row_names[row], row) for row in xrange(len(self.row_names))]
         row_pairs.sort()
-        new_row_names = [row_pair[0] for row_pair in row_pairs] 
+        new_row_names = [row_pair[0] for row_pair in row_pairs]
         new_rows = [self.values[row_pair[1]] for row_pair in row_pairs]
-        return DataMatrix(self.num_rows(), self.num_columns(),
+        return DataMatrix(self.num_rows, self.num_columns,
                           new_row_names, self.column_names,
                           values=new_rows)
-
-    def column_means(self):
-        """Returns a numpy array, containing the column means"""
-        return util.column_means(self.values)
-
-    def row_means(self):
-        """Returns a numpy array, containing the column means"""
-        return util.row_means(self.values)
 
     ######################################################################
     #### Operations on the matrix values
@@ -169,6 +162,10 @@ class DataMatrix:
         """Mulitplies the specified column by a certain factor"""
         self.values[:, column] *= factor
         return self
+
+    def subtract_with_quantile(self, quantile):
+        """subtracts this matrix's values with the specified quantile of its values"""
+        self.values - self.quantile(quantile)
 
     def max(self):
         """return the maximum value in this matrix"""
@@ -191,56 +188,28 @@ class DataMatrix:
         """applies np.log to all values"""
         self.values[self.values != 0.0] = np.log(self.values[self.values != 0.0])
 
-    def __neg__(self):
-        """returns a new DataMatrix with the values in the matrix negated"""
-        return DataMatrix(self.num_rows(), self.num_columns(),
-                          self.row_names, self.column_names,
-                          -self.values)
-
-    def __add__(self, value):
-        """adding a value to this matrix can be either a scalar or a matrix"""
-        if isinstance(value, DataMatrix):
-            return DataMatrix(self.num_rows(), self.num_columns(),
-                              self.row_names, self.column_names,
-                              self.values + value.values)
-        else:
-            return DataMatrix(self.num_rows(), self.num_columns(),
-                              self.row_names, self.column_names,
-                              self.values + value)
-
-    def __sub__(self, value):
-        """subtract a value from the matrix"""
-        if value != 0.0:
-            return DataMatrix(self.num_rows(), self.num_columns(),
-                              self.row_names, self.column_names,
-                              self.values - value)
-        else:
-            return self
-
-    def __mul__(self, factor):
-        """returns a new DataMatrix with the values in the matrix negated"""
-        return DataMatrix(self.num_rows(), self.num_columns(),
-                          self.row_names, self.column_names,
-                          self.values * factor)
-
     def mean(self):
         """returns the mean value"""
         return util.mean(self.values)
 
+    def median(self):
+        """returns the mean value"""
+        return util.median(self.values)
+
     def row_variance(self):
-        if self.__row_variance == None:
+        if self.__row_variance is None:
             self.__row_variance = util.max_row_var(self.values)
         return self.__row_variance
 
     def residual(self, max_row_variance=None):
         """computes the residual for this matrix, if max_row_variance is given,
         result is normalized by the row variance"""
-        d_rows = self.row_means()
-        d_cols = self.column_means()
+        d_rows = util.row_means(self.values)
+        d_cols = util.column_means(self.values)
         d_all = util.mean(d_rows)
         tmp = self.values + d_all - util.r_outer(d_rows, d_cols, operator.add)
         average = util.mean(np.abs(tmp))
-        if max_row_variance != None:
+        if max_row_variance is not None:
             row_var = self.row_variance()
             if np.isnan(row_var) or row_var > max_row_variance:
                 row_var = max_row_variance
@@ -267,24 +236,23 @@ class DataMatrix:
         result = "%10s" % 'Row'
         result += ' '.join([("%10s" % name)
                             for name in self.column_names]) + '\n'
-        for row_index in xrange(self.num_rows()):
+        for row_index in xrange(self.num_rows):
             result += ("%10s" % self.row_names[row_index]) + ' '
             result += ' '.join([("%10f" % value)
-                                 for value in self.values[row_index]])
+                                for value in self.values[row_index]])
             result += '\n'
         return result
 
-    def write_tsv_file(self, path):
+    def write_tsv_file(self, path, compressed=True):
         """writes this matrix to tab-separated file"""
-        with open(path, 'w') as outfile:
-            title = ['GENE']
-            title.extend(self.column_names)
-            titlerow = '\t'.join(title)
+        def write_data(outfile):
+            titlerow = '\t'.join(self.column_names)
             outfile.write(titlerow + '\n')
             for row_index in range(len(self.row_names)):
                 row = [self.row_names[row_index]]
-                row.extend([('%f' % value) for value in self.values[row_index]])
+                row.extend([('%.17f' % value) for value in self.values[row_index]])
                 outfile.write('\t'.join(row) + '\n')
+<<<<<<< HEAD
             outfile.flush()
 
 class DataMatrixCollection:
@@ -328,6 +296,17 @@ class DataMatrixCollection:
     def unique_column_names(self):
         """returns the unique column names"""
         return self.__unique_column_names
+=======
+        if compressed:
+            if not path.endswith('.gz'):
+                path = path + '.gz'
+            with gzip.open(path, 'wb') as zipfile:
+                write_data(zipfile)
+        else:
+            with open(path, 'w') as outfile:
+                write_data(outfile)
+                outfile.flush()
+>>>>>>> upstream/master
 
 
 class DataMatrixFactory:
@@ -346,31 +325,40 @@ class DataMatrixFactory:
         """create a reader instance with the specified filters"""
         self.filters = filters
 
-    def create_from(self, delimited_file):
+    def create_from(self, delimited_file, case_sensitive=True):
         """creates and returns an initialized, filtered DataMatrix instance"""
-        lines = delimited_file.lines()
-        header = delimited_file.header()
+        lines = delimited_file.lines
+        header = delimited_file.header
         nrows = len(lines)
         ncols = len(header) - 1
-        colnames = header[1:len(header)]
-        rownames = []
-        for row in xrange(nrows):
-            rownames.append(lines[row][0])
+
+        # This handles header formats that omit the 0-column
+        if len(lines) > 0 and len(lines[0]) - 1 > ncols:
+            ncols = len(lines[0]) - 1
+            colnames = header
+        else:
+            colnames = header[1:len(header)]
+
+        # optimization: internalize row and column names
+        colnames = map(intern, colnames)
+        if case_sensitive:
+            rownames = [intern(line[0]) for line in lines]
+        else:
+            rownames = [intern(line[0].upper()) for line in lines]
+
         values = np.empty([nrows, ncols])
         for row in xrange(nrows):
             for col in xrange(ncols):
                 strval = lines[row][col + 1]
-                if strval == 'NA':
-                    value = np.nan
-                else:
-                    value = float(strval)
-                values[row][col] = value
+                value = np.nan if len(strval) == 0 or strval == 'NA' else float(strval)
+                values[row, col] = value
+
         data_matrix = DataMatrix(nrows, ncols, rownames, colnames,
                                  values=values)
 
         for matrix_filter in self.filters:
             data_matrix = matrix_filter(data_matrix)
-        return data_matrix
+        return data_matrix.sorted_by_row_name()
 
 
 FILTER_THRESHOLD = 0.98
@@ -386,13 +374,13 @@ def nochange_filter(matrix):
         """subfunction of nochange_filter to filter row-wise"""
         keep = []
         dmvalues = data_matrix.values
-        for row_index in xrange(data_matrix.num_rows()):
+        for row_index in xrange(data_matrix.num_rows):
             count = 0
-            for col_index in xrange(data_matrix.num_columns()):
-                value = dmvalues[row_index][col_index]
+            for col_index in xrange(data_matrix.num_columns):
+                value = dmvalues[row_index, col_index]
                 if np.isnan(value) or abs(value) <= ROW_THRESHOLD:
                     count += 1
-            mean = float(count) / data_matrix.num_columns()
+            mean = float(count) / data_matrix.num_columns
             if mean < FILTER_THRESHOLD:
                 keep.append(row_index)
         return keep
@@ -401,13 +389,13 @@ def nochange_filter(matrix):
         """subfunction of nochange_filter to filter column-wise"""
         keep = []
         dmvalues = data_matrix.values
-        for col_index in xrange(data_matrix.num_columns()):
+        for col_index in xrange(data_matrix.num_columns):
             count = 0
-            for row_index in xrange(data_matrix.num_rows()):
-                value = dmvalues[row_index][col_index]
+            for row_index in xrange(data_matrix.num_rows):
+                value = dmvalues[row_index, col_index]
                 if np.isnan(value) or abs(value) <= COLUMN_THRESHOLD:
                     count += 1
-            mean = float(count) / data_matrix.num_rows()
+            mean = float(count) / data_matrix.num_rows
             if mean < FILTER_THRESHOLD:
                 keep.append(col_index)
         return keep
@@ -424,17 +412,17 @@ def nochange_filter(matrix):
     mvalues = matrix.values
     for row_index in xrange(numrows):
         for col_index in xrange(numcols):
-            value = mvalues[rows_to_keep[row_index]][cols_to_keep[col_index]]
-            rvalues[row_index][col_index] = value
+            value = mvalues[rows_to_keep[row_index], cols_to_keep[col_index]]
+            rvalues[row_index, col_index] = value
     return result
 
 
 def row_filter(matrix, fun):
     """generalize a matrix filter that is applying a function for each row"""
     values = []
-    for row_index in xrange(matrix.num_rows()):
+    for row_index in xrange(matrix.num_rows):
         values.append(fun(matrix.values[row_index]))
-    result = DataMatrix(matrix.num_rows(), matrix.num_columns(),
+    result = DataMatrix(matrix.num_rows, matrix.num_columns,
                         matrix.row_names, matrix.column_names,
                         values=values)
     return result
@@ -450,7 +438,7 @@ def center_scale_filter(matrix):
         center = scipy.median(filtered)
         scale = util.r_stddev(filtered)
         nurow = [((value - center) / scale)
-                if not np.isnan(value) else value for value in row]
+                 if not np.isnan(value) else value for value in row]
         return nurow
 
     return row_filter(matrix, center_scale)
@@ -459,10 +447,20 @@ def center_scale_filter(matrix):
 def quantile_normalize_scores(matrices, weights=None):
     """quantile normalize scores against each other"""
 
-    flat_values = as_sorted_flat_values(matrices)
-    #logging.info("COMPUTING WEIGHTED MEANS...")
-    #start_time = util.current_millis()
-    if weights != None:
+    logging.info("COMPUTING WEIGHTED MEANS...")
+    start_time = util.current_millis()
+
+    # rearranges the scores in the input matrices into a matrix
+    # with |matrices| columns where the columns contain the values
+    # of each matrix in sorted order
+    flat_values = np.transpose(np.asarray([np.sort(matrix.values.flatten())
+                                           for matrix in matrices]))
+
+    elapsed = util.current_millis() - start_time
+    logging.info("flattened/sorted score matrices in %f s.", elapsed / 1000.0)
+
+    start_time = util.current_millis()
+    if weights is not None:
         # multiply each column of matrix with each component of the
         # weight vector: Using matrix multiplication resulted in speedup
         # from 125 s. to 0.125 seconds over apply_along_axis() (1000x faster)!
@@ -471,53 +469,91 @@ def quantile_normalize_scores(matrices, weights=None):
         tmp_mean = util.row_means(scaled) / scale
     else:
         tmp_mean = util.row_means(flat_values)
-    #elapsed = util.current_millis() - start_time
-    #logging.info("weighted means in %f s.", elapsed / 1000.0)
-    #start_time = util.current_millis()
+    elapsed = util.current_millis() - start_time
+    logging.info("weighted means in %f s.", elapsed / 1000.0)
+    start_time = util.current_millis()
+
     result = qm_result_matrices(matrices, tmp_mean)
-    #elapsed = util.current_millis() - start_time
-    #logging.info("result matrices built in %f s.", elapsed / 1000.0)
+
+    elapsed = util.current_millis() - start_time
+    logging.info("result matrices built in %f s.", elapsed / 1000.0)
     return result
-
-
-def as_sorted_flat_values(matrices):
-    """rearranges the scores in the input matrices into a matrix
-    with |matrices| columns where the columns contain the values
-    of each matrix in sorted order"""
-    return np.transpose(np.asarray([np.sort(matrix.flat_values())
-                                    for matrix in matrices]))
 
 
 def ranks(values):
     """optimization: write a map from value to first index in
-    sorted_values"""
+    sorted_values
+    This used to be the original ranking, unfortunately, it is not close enough
+    to the behaviour of the R function, but we keep it around here as a reference
+    and base for potentially faster ranking.
+    """
     values = values.argsort()
     ranks = np.empty(len(values), int)
     ranks[values] = np.arange(len(values))
     return ranks
 
 
-def qm_result_matrices(matrices, tmp_mean):
+def rank_fun(mat_mean):
+    """ranking function that is run within Pool.map()"""
+    values, row_names, column_names, tmp_mean = mat_mean
+    num_rows, num_cols = values.shape
+    rankvals = util.rrank_matrix(values)
+    values = np.reshape(tmp_mean[rankvals], (num_rows, num_cols))
+    return DataMatrix(num_rows, num_cols, row_names, column_names,
+                      values=values)
+
+
+def qm_result_matrices(matrices, tmp_mean, multiprocessing=True):
     """builds the resulting matrices by looking at the rank of their
     original values and retrieving the means at the specified position"""
-    result = []
-    for i in range(len(matrices)):
-        matrix = matrices[i]
-        values = matrix.values
-        num_rows, num_cols = values.shape
-        xvec = robj.FloatVector(values.reshape(values.size))
-        xr = robj.r.t(robj.r.matrix(xvec, nrow=num_rows, ncol=num_cols, byrow=True))
-        rankvals = [value - 1 for value in util.rrank(xr)]  # adjust to be 0-based
-        values = np.reshape(tmp_mean[rankvals], (matrix.num_rows(),
-                                                 matrix.num_columns()))
-        outmatrix = DataMatrix(matrix.num_rows(),
-                               matrix.num_columns(),
-                               matrix.row_names,
-                               matrix.column_names,
-                               values=values)
-        result.append(outmatrix)
-    return result
+    if multiprocessing:
+        # parallelized ranking
+        with util.get_mp_pool() as pool:
+            results = pool.map(rank_fun,
+                               [(matrix.values, matrix.row_names, matrix.column_names, tmp_mean)
+                                for matrix in matrices])
+        return results
+    else:
+        # non-parallelized
+        result = []
+        for i in range(len(matrices)):
+            matrix = matrices[i]
+            values = matrix.values
+            num_rows, num_cols = values.shape
+            rankvals = util.rrank_matrix(values)
+            values = np.reshape(tmp_mean[rankvals], (num_rows, num_cols))
+            outmatrix = DataMatrix(num_rows,
+                                   num_cols,
+                                   matrix.row_names,
+                                   matrix.column_names,
+                                   values=values)
+            result.append(outmatrix)
+        return result
 
 
-__all__ = ['DataMatrix', 'DataMatrixCollection', 'DataMatrixFactory',
-           'nochange_filter', 'center_scale_filter']
+# Ensemble functionality
+def split_matrix(matrix, outdir, n, kmin, kmax):
+    """Split the input matrix into n matrices with the original
+    number of rows and k columns. Write the resulting matrix to
+    the specified output directory"""
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
+
+    for i in range(n):
+        k = random.randint(kmin, kmax)
+        column_names = random.sample(matrix.column_names, k)
+        m = matrix.submatrix_by_name(column_names=column_names)
+        path = '%s/ratios-%03d.tsv' % (outdir, i + 1)
+        m.write_tsv_file(path)
+
+
+def prepare_ensemble_matrix(ratiofile, outdir, n, kmin):
+    matrix_factory = DataMatrixFactory([nochange_filter,
+                                        center_scale_filter])
+    if os.path.exists(ratiofile):
+        infile = util.read_dfile(ratiofile, has_header=True, quote='\"')
+        matrix = matrix_factory.create_from(infile)
+        split_matrix(matrix, outdir, n, kmin, matrix.num_columns)
+
+
+__all__ = ['DataMatrix', 'DataMatrixFactory', 'nochange_filter', 'center_scale_filter']
