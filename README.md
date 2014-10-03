@@ -19,6 +19,7 @@ A complete set of documentation for installation and running of cMonkey is on th
 * rpy2 >= 2.2.1
 * MEME 4.3.0 or >= 4.8.1
 * csh (for running MEME)
+* Biopython >= 1.6.4 (earlier may work)
 for the human setup, Weeder 1.4.2 is needed
 
 for running the monitoring application (optional):
