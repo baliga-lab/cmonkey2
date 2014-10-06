@@ -221,6 +221,10 @@ dump_results, dump_scores, profile_mem, random_seed, keep_mastout, all or a comb
                         help="""RSAT override: data directory""")
     parser.add_argument('--rsat_organism', default=None,
                         help="""override the RSAT organism name""")
+    parser.add_argument('--rsat_features', default='feature',
+                        help="""Gene look up table.  Aternative 'protein_coding' or 'gene' """)
+    parser.add_argument('--rsat_URL', default='http://rsat.bigre.ulb.ac.be/rsat/',
+                        help="""RSAT mirror. Alternative 'http://embnet.ccg.unam.mx/rsa-tools'""")
 
     # Synonym override
     parser.add_argument('--synonym_file', default=None, help="synonyms file")
@@ -353,6 +357,8 @@ def setup_default(args, config_parser):
                  'ncbi_code': args.ncbi_code,
                  'operon_file': args.operons,
                  'rsat_dir': args.rsat_dir,
+                 'rsat_URL': args.rsat_URL,
+                 'rsat_features': args.rsat_features,
                  'use_operons': True, 'use_string': True,
                  'debug': debug_options,
                  'nomotifs': False,

@@ -233,9 +233,9 @@ class CMonkeyRun:
             if not self['rsat_organism']:
                 raise Exception('override RSAT loading: please specify --rsat_organism')
             logging.info("using RSAT files for '%s'", self['rsat_organism'])
-            rsatdb = rsat.RsatFiles(self['rsat_dir'], self['rsat_organism'], self['ncbi_code'])
+            rsatdb = rsat.RsatFiles(self['rsat_dir'], self['rsat_organism'], self['ncbi_code'], self['rsat_features'], self['rsat_URL'])
         else:
-            rsatdb = rsat.RsatDatabase(rsat.RSAT_BASE_URL, self['cache_dir'])
+            rsatdb = rsat.RsatDatabase(self['rsat_URL'], self['cache_dir'], self['rsat_features'])
 
         if self['operon_file']:
             logging.info("using operon file at '%s'", self['operon_file'])
