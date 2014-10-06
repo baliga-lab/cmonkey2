@@ -13,6 +13,7 @@ A complete set of documentation for installation and running of cMonkey is on th
 * Developed and tested with Python 2.7.2
 * scipy >= 0.9.0
 * numpy >= 1.6.0
+* biopython >= 1.63
 * MySQLdb >= 1.2.3
 * BeautifulSoup >= 3.2.0
 * R >= 2.14.1
