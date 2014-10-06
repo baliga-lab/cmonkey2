@@ -124,8 +124,6 @@ class CMonkeyRun:
                         order_num int)''')
         conn.execute('''create table column_members (iteration int, cluster int,
                         order_num int)''')
-        conn.execute('''create table cluster_residuals (iteration int,
-                        cluster int, residual decimal)''')
         conn.execute('create table global_background (subsequence text, pvalue decimal)')
 
         # in case you are wondering about the redundant iteration field here -
@@ -149,8 +147,8 @@ class CMonkeyRun:
                         on column_members (iteration)''')
         conn.execute('''create index if not exists rowmemb_iter_index
                         on row_members (iteration)''')
-        conn.execute('''create index if not exists clustresid_iter_index
-                        on cluster_residuals (iteration)''')
+        conn.execute('''create index if not exists cluststat_iter_index
+                        on cluster_stats (iteration)''')
         logging.debug("created output database schema")
 
         # all cluster members are stored relative to the base ratio matrix
@@ -465,15 +463,6 @@ class CMonkeyRun:
             for order_num in self.ratios.row_indexes_for(row_names):
                 conn.execute('''insert into row_members (iteration,cluster,order_num)
                                 values (?,?,?)''', (iteration, cluster, order_num))
-            try:
-                residual = self.residual_for(row_names, column_names)
-                conn.execute('''insert into cluster_residuals (iteration,cluster,residual)
-                           values (?,?,?)''', (iteration, cluster, residual))
-            except:
-                # apparently computing the mean residual led to a numpy masked
-                # value. We set it to 1.0 to avoid crashing out
-                conn.execute('''insert into cluster_residuals (iteration,cluster,residual)
-                           values (?,?,?)''', (iteration, cluster, 1.0))
 
     def write_results(self, iteration_result):
         """write iteration results to database"""

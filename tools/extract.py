@@ -28,9 +28,8 @@ def create_database(conn):
     conn.execute('''create table motif_annotations (motif_info_id int,
                     iteration int, gene_num int,
                     position int, reverse boolean, pvalue decimal)''')
-
-    conn.execute('''create table cluster_residuals (iteration int,
-                    cluster int, residual decimal)''')
+    conn.execute('''create table cluster_stats (iteration int, cluster int,
+                    num_rows int, num_cols int, residual decimal)''')
 
 def dbconn(filename):
     return sqlite3.connect(filename, 15, isolation_level='DEFERRED')
@@ -113,11 +112,11 @@ def copy_essentials(src, dest):
     lastiter = cur.fetchone()[0]
 
     print "copying residuals..."
-    cur.execute('select cluster, residual from cluster_residuals where iteration=?', [lastiter])
+    cur.execute('select cluster,num_rows,num_cols,residual from cluster_stats where iteration=?', [lastiter])
     with dest:
-        for cluster, residual in cur.fetchall():
-            dest.execute('insert into cluster_residuals (iteration, cluster, residual) values (?,?,?)',
-                         [lastiter, cluster, residual])
+        for cluster, num_rows, num_cols, residual in cur.fetchall():
+            dest.execute('insert into cluster_stats (iteration,cluster,num_rows,num_cols,residual) values (?,?,?,?,?)',
+                         [lastiter, cluster, num_rows, num_cols, residual])
     cur.close()
     copy_rowcols(src, dest, lastiter)
     copy_motifs(src, dest, lastiter)

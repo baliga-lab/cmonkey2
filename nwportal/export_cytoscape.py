@@ -34,7 +34,7 @@ def export_cmonkey_results(resultdir, org):
                    [iteration])
     clusters = sorted([row[0] for row in cursor.fetchall()])
 
-    cursor.execute('select distinct cluster, residual from cluster_residuals where iteration = ?',
+    cursor.execute('select distinct cluster, residual from cluster_stats where iteration = ?',
                    [iteration])
     cluster_residuals = { cluster: residual for cluster, residual in cursor.fetchall() }
 
