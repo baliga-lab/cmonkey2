@@ -236,8 +236,8 @@ class DataMatrix:
         result = "%10s" % 'Row'
         result += ' '.join([("%10s" % name)
                             for name in self.column_names]) + '\n'
-        for row_index in xrange(self.num_rows):
-            result += ("%10s" % self.row_names[row_index]) + ' '
+        for row_index, rowname in enumerate(self.row_names):
+            result += ("%10s" % rowname) + ' '
             result += ' '.join([("%10f" % value)
                                 for value in self.values[row_index]])
             result += '\n'
@@ -248,8 +248,8 @@ class DataMatrix:
         def write_data(outfile):
             titlerow = '\t'.join(self.column_names)
             outfile.write(titlerow + '\n')
-            for row_index in range(len(self.row_names)):
-                row = [self.row_names[row_index]]
+            for row_index, rowname in enumerate(self.row_names):
+                row = [rowname]
                 row.extend([('%.17f' % value) for value in self.values[row_index]])
                 outfile.write('\t'.join(row) + '\n')
         if compressed:
