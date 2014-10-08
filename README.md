@@ -70,5 +70,3 @@ Running cMonkey on Human data is somewhat difficult because neither the string d
 1.  Make a gene interaction file.  The example data file mentioned above was generated from Biogrid around 10/6/14.
 2.  Find an RSAT mirror that has .raw chromose files and feature files.  In the above example, we use Homo\_sapiens\_ensembl\_74\_GRCh37 from the main RSAT database.  To annotate these we use 'protein\_coding.tab' and 'protein\_coding\_names.tab'.  In principal, other annotation files such as 'processed\_transcript' would work just as well.
 3.  Adjust the upstream region searched, and perhaps modify the code to search for know TF and miRNA motifs rather than de-novo motifs.  NOTE: Modiyfing the motif search step is non-trivial.
-
-    python cmviewer/main.py
