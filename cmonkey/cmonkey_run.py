@@ -276,6 +276,7 @@ class CMonkeyRun:
                 url = STRING_URL_PATTERN % ncbi_code
                 stringfile = "%s/%s.gz" % (self['cache_dir'], ncbi_code)
                 self['string_file'] = stringfile
+		#Around here it could download a biogrid file instead
                 logging.info("Automatically using STRING file in '%s'", stringfile)
                 util.get_url_cached(url, stringfile)
             else:
