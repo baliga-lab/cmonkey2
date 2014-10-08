@@ -222,7 +222,7 @@ dump_results, dump_scores, profile_mem, random_seed, keep_mastout, all or a comb
     parser.add_argument('--rsat_organism', default=None,
                         help="""override the RSAT organism name""")
     parser.add_argument('--rsat_features', default='feature',
-                        help="""Gene look up table.  Aternative 'protein_coding' or 'gene' """)
+                        help="""Gene look up table.  Aternative 'cds', 'protein_coding' or 'gene' """)
     parser.add_argument('--rsat_URL', default='http://rsat.bigre.ulb.ac.be/rsat/',
                         help="""RSAT mirror. Alternative 'http://embnet.ccg.unam.mx/rsa-tools'""")
 

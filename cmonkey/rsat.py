@@ -105,32 +105,79 @@ class RsatDatabase:
         if that fails
         """
         #logging.info('RSAT - get_features(%s)', organism)
+	import pdb
+	#pdb.set_trace()
         cache_file = "/".join([self.cache_dir, organism + '_' + self.feature_name])
-        return util.read_url_cached("/".join([self.base_url,
-                                              RsatDatabase.DIR_PATH,
-                                              organism,
-                                              self.feature_path]),
-                                    cache_file)
+        uCache = util.read_url_cached("/".join([self.base_url, RsatDatabase.DIR_PATH, organism, self.feature_path]), cache_file)
+
+	#Make sure that the fields are in the correct order
+        #Later parts assume that the features file will have the following columns
+        fieldOrder = ['id', 'type', 'name', 'contig', 'start_pos', 'end_pos', 'strand']
+
+        uCache = uCache.split('\n')
+	#Remove any blank lines
+	while "" in uCache:
+		uCache.remove("")
+
+        idxs = {} #Dictionary to store field idxs
+        targIdx = [] #The ordered list of columns for output
+        outString = "" #This will be the new data
+        for line in uCache:
+		try:
+			line = line + '\n'
+                except:
+                        #pdb.set_trace()
+			continue
+                lineParts = line.split()
+                if lineParts[0] == '--':
+                        if lineParts[1] == 'field':
+                                idxs[lineParts[3]] = lineParts[2]
+                                if lineParts[3] in fieldOrder:
+                                        newIdx = str(fieldOrder.index(lineParts[3]) + 1)
+                                        outString = outString + lineParts[0] + " " + lineParts[1] + " " + newIdx + '\t' + lineParts[3] + '\n'
+                        else:
+                                outString = outString + line
+                else:
+                        if (len(targIdx) == 0):
+                                #Create the targIdx
+                                for curField in fieldOrder:
+                                        targIdx.append(int(idxs[curField])-1)
+                        outline = ""
+                        for curTarg in targIdx:
+                                outline = outline + lineParts[curTarg] + '\t'
+                        #Some RSAT files have a contig with ':'s instead of '_'s
+                        outline = outline.replace(':','_')
+                        #Now strip trailing \t
+                        outline = ''.join(outline.rsplit('\t', 1))
+                        outString = outString + outline + '\n'
+
+	#To Do: Overwrite cache file & add early check to see if we need the sub
+        return outString
 
     def get_feature_names(self, organism):
         """returns the specified organism's feature name file contents"""
         #logging.info('RSAT - get_feature_names(%s)', organism)
         cache_file = "/".join([self.cache_dir, organism + '_' + self.feature_name + '_names'])
-        return util.read_url_cached(
+        uCach = util.read_url_cached(
             "/".join([self.base_url,
                       RsatDatabase.DIR_PATH,
                       organism,
                       self.feature_names_path]),
             cache_file)
+	return uCach
 
     def get_contig_sequence(self, organism, contig):
         """returns the specified contig sequence"""
-        #logging.info('RSAT - get_contig_sequence(%s, %s)',
-        #             organism, contig)
+        logging.info('RSAT - get_contig_sequence(%s, %s)',
+                    organism, contig)
         cache_file = "/".join([self.cache_dir, organism + '_' + contig])
         url = "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
                         'genome', contig + '.raw'])
         seqstr = util.read_url_cached(url, cache_file).upper()
+	#Can I read in the indexes (default) for '0:id', '1:type', '2:name', 
+	#	'3:contig', '4:start_pos', '5:end_pos', '6:strand'
+	# Can I just store it in 'self'.  Is that a good idea?
+	#  NO!  But I should make sure that the order is correct here
         return join_contig_sequence(seqstr)
 
 

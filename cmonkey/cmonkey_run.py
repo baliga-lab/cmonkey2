@@ -303,6 +303,10 @@ class CMonkeyRun:
             synonyms = thesaurus.create_from_delimited_file2(self['synonym_file'],
                                                              self['case_sensitive'])
 
+	#New logic: test to see if there's a fastafile.  If not, then
+	#Download it from rsat, process it, and then return the new file name
+	
+	is_microbe = True
         if is_microbe:
             organism = org.Microbe(orgcode, keggorg, rsat_info, gotax, mo_db, nw_factories,
                                    self['search_distances'], self['scan_distances'],
@@ -434,7 +438,9 @@ class CMonkeyRun:
                  for row_name in self.ratios.row_names]
         self.gene_indexes = {genes[index]: index
                              for index in xrange(len(genes))}
-        row_scoring, col_scoring = self.__setup_pipeline()
+        #import pdb
+	#pdb.set_trace()
+	row_scoring, col_scoring = self.__setup_pipeline()
         row_scoring.check_requirements()
         col_scoring.check_requirements()
 
