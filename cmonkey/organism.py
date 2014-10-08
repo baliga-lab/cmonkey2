@@ -159,7 +159,13 @@ class RSATOrganism(OrganismBase):
         def read_feature(line):
             """Creates and adds a feature and associated contig from current
             DelimitedFile line"""
+            #import pdb
+	    #pdb.set_trace()
             contig = line[3]
+            # contig is sometimes badly formed with ':'s instead of '_'s
+	    #  Fixed in 'get_features'
+            #contig = contig.replace(':', '_')
+
             is_reverse = False
             if line[6] == 'R':
                 is_reverse = True
