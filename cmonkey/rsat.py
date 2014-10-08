@@ -173,11 +173,18 @@ class RsatDatabase:
         cache_file = "/".join([self.cache_dir, organism + '_' + contig])
         url = "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
                         'genome', contig + '.raw'])
-        seqstr = util.read_url_cached(url, cache_file).upper()
-	#Can I read in the indexes (default) for '0:id', '1:type', '2:name', 
-	#	'3:contig', '4:start_pos', '5:end_pos', '6:strand'
-	# Can I just store it in 'self'.  Is that a good idea?
-	#  NO!  But I should make sure that the order is correct here
+	#import pdb
+	#pdb.set_trace()
+	#10-07-14 Crashed here with URL timeout.  Maybe RSAT limits downloads?
+	#  On 10-08-14 I could download the other files with pdb.set_trace()
+	#  Maybe all I will need is a pause between files?
+        try:
+		seqstr = util.read_url_cached(url, cache_file).upper()
+	except:
+		print "Error downloading file: " + url
+		print "RSAT occasionally has connectivity problems."
+		print "Try again later, or try a different RSAT mirror"
+		print "useing the parameter --rsat_URL"
         return join_contig_sequence(seqstr)
 
 
