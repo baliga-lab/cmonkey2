@@ -89,6 +89,7 @@ def set_config_general(config, params):
     params['cache_dir'] = config.get('General', 'cache_dir')
     params['tmp_dir'] = tmp_dir
     params['dbfile_name'] = config.get('General', 'dbfile_name')
+    params['rsat_base_url'] = config.get('General', 'rsat_base_url')
     params['normalize_ratios'] = config.getboolean('General', 'normalize_ratios')
     params['num_iterations'] = config.getint("General", "num_iterations")
     params['start_iteration'] = config.getint("General", "start_iteration")
@@ -460,6 +461,7 @@ def write_general_settings(outfile, config_params):
     outfile.write('output_dir = %s\n' % config_params['output_dir'])
     outfile.write('cache_dir = %s\n' % config_params['cache_dir'])
     outfile.write('tmp_dir = %s\n' % config_params['tmp_dir'])
+    outfile.write('rsat_base_url = %s\n' % config_params['rsat_base_url'])
     outfile.write('dbfile_name = %s\n' % config_params['dbfile_name'])
     outfile.write('use_multiprocessing = %s\n' % str(config_params['multiprocessing']))
     outfile.write('case_sensitive = %s\n' % str(config_params['case_sensitive']))

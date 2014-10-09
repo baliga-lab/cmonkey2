@@ -8,12 +8,13 @@ import organism as org
 KEGG_FILE_PATH = 'config/KEGG_taxonomy'
 GO_FILE_PATH = 'config/proteome2taxid'
 CACHE_DIR = 'cache'
+RSAT_BASE_URL = 'http://embnet.ccg.unam.mx/rsa-tools'
 
 def make_halo(search_distances, scan_distances, ratios=None):
     """returns the organism object to work on"""
     keggfile = util.read_dfile(KEGG_FILE_PATH, comment='#')
     gofile = util.read_dfile(GO_FILE_PATH)
-    rsatdb = rsat.RsatDatabase(rsat.RSAT_BASE_URL, CACHE_DIR)
+    rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
     mo_db = microbes_online.MicrobesOnline(CACHE_DIR)
     stringfile = 'testdata/string_links_64091.tab'
 

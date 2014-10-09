@@ -11,8 +11,6 @@ import re
 import patches
 import os
 
-RSAT_BASE_URL = 'http://embnet.ccg.unam.mx/rsa-tools'
-
 
 class RsatFiles:
     """This class implements the same service functions as RsatDatabase, but

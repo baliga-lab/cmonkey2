@@ -233,7 +233,7 @@ class CMonkeyRun:
             logging.info("using RSAT files for '%s'", self['rsat_organism'])
             rsatdb = rsat.RsatFiles(self['rsat_dir'], self['rsat_organism'], self['ncbi_code'])
         else:
-            rsatdb = rsat.RsatDatabase(rsat.RSAT_BASE_URL, self['cache_dir'])
+            rsatdb = rsat.RsatDatabase(self['rsat_base_url'], self['cache_dir'])
 
         if self['operon_file']:
             logging.info("using operon file at '%s'", self['operon_file'])
