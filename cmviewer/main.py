@@ -248,7 +248,7 @@ class ClusterViewerApp:
             return tmpl.render(locals())
 
     @cherrypy.expose
-    def view_network(self):
+    def view_network(self, iteration):
         conn = dbconn()
         cursor = conn.cursor()
 
@@ -257,8 +257,6 @@ class ClusterViewerApp:
         num_clusters, species = cursor.fetchone()
 
         # used genes
-        cursor.execute('select max(iteration) from row_members')
-        iteration = cursor.fetchone()[0]
         cursor.execute("select distinct name from row_names rn join row_members rm on rn.order_num = rm.order_num where iteration=? order by name", [iteration])
         genes = [row[0] for row in cursor.fetchall()]
 
@@ -555,7 +553,7 @@ def setup_routes():
     d = cherrypy.dispatch.RoutesDispatcher()
     main = ClusterViewerApp()
     d.connect('main', '/', controller=main, action="index")
-    d.connect('network', '/network', controller=main, action="view_network")
+    d.connect('network', '/network/:iteration', controller=main, action="view_network")
     d.connect('iteration', '/:iteration', controller=main, action="iteration")
     d.connect('clusters', '/clusters/:iteration', controller=main, action="clusters")
     d.connect('cluster', '/cluster/:iteration/:cluster', controller=main, action="view_cluster")
