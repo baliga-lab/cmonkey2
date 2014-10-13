@@ -466,6 +466,19 @@ class ClusterViewerApp:
         js_motif_pssms = {motif_id: json.dumps({'alphabet':['A','C','G','T'],
                                                 'values':motif_pssm_rows[motif_id]})
                           for motif_id in motif_pssm_rows}
+        motif_ids = sorted(js_motif_pssms.keys())
+
+        if len(motif_ids) > 0:
+            motif1_length = len(motif_pssm_rows[motif_ids[0]])
+            motif1_pssm_tsv = "A\tC\tG\tT\n"
+            for a, c, g, t in motif_pssm_rows[motif_ids[0]]:
+                motif1_pssm_tsv += "%.4f\t%.4f\t%.4f\t%.4f\n" % (a, c, g, t)
+        if len(motif_ids) > 1:
+            motif2_length = len(motif_pssm_rows[motif_ids[1]])
+            motif2_pssm_tsv = "A\tC\tG\tT\n"
+            for a, c, g, t in motif_pssm_rows[motif_ids[1]]:
+                motif2_pssm_tsv += "%.4f\t%.4f\t%.4f\t%.4f\n" % (a, c, g, t)
+
         cursor.close()
 
         # annotations

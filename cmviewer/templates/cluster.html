@@ -147,4 +147,20 @@
     <ol>{% for name in columns %}<li>{{name}}</li>{% endfor %}</ol>
   </span>
 </div>
+<div class="gaggle-data" style="display:none">
+  <span class="gaggle-name">PSSM motif 1</span>
+  <span class="gaggle-species">{{species}}</span>
+  <span class="gaggle-size">{{motif1_length}}x4</span>
+  <span class="gaggle-matrix-tsv">
+    {{motif1_pssm_tsv}}
+  </span>
+</div>
+<div class="gaggle-data" style="display:none">
+  <span class="gaggle-name">PSSM motif 2</span>
+  <span class="gaggle-species">{{species}}</span>
+  <span class="gaggle-size">{{motif2_length}}x4</span>
+  <span class="gaggle-matrix-tsv">
+    {{motif2_pssm_tsv}}
+  </span>
+</div>
 
