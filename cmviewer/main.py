@@ -19,6 +19,7 @@ outdir = 'out'  # make it flexible
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--out', default=outdir, help='output directory')
+parser.add_argument('--port', type=int, default=8080, help='port to listen to web requests')
 args = parser.parse_args()
 outdir = os.path.join(os.getcwd(), args.out)
 outdb = os.path.join(outdir, 'cmonkey_run.db')
@@ -566,4 +567,5 @@ if __name__ == '__main__':
     cherrypy.config.update(conf)
     app = cherrypy.tree.mount(None, config=conf)
     cherrypy.server.socket_host = '0.0.0.0'
+    cherrypy.server.socket_port = args.port
     cherrypy.quickstart(app)
