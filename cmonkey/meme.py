@@ -837,8 +837,10 @@ def run_tomtom(conn, targetdir, q_thresh=Q_THRESHOLD, dist_method=DIST_METHOD,
                 row = line.strip().split('\t')            
                 motif1 = int(row[0])
                 motif2 = int(row[1])
-                pvalue = float(row[3])
-                conn.execute('insert into tomtom_results (motif_info_id1,motif_info_id2,pvalue) values (?,?,?)', [motif1, motif2, pvalue])
+                if motif1 != motif2:
+                    pvalue = float(row[3])
+                    conn.execute('insert into tomtom_results (motif_info_id1,motif_info_id2,pvalue) values (?,?,?)',
+                                 [motif1, motif2, pvalue])
     except:
         raise
 

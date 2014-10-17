@@ -271,7 +271,12 @@ class ClusterViewerApp:
         edges = [(row[0], row[1]) for row in cursor.fetchall()]
         # add the edges to the motifs
         for motif in motifs:
-            edges.append((motif[0], motif[1]))
+            edges.append(("m%d" % motif[0], motif[1]))
+
+        # tomtom
+        cursor.execute("select motif_info_id1, motif_info_id2 from tomtom_results where motif_info_id1 <> motif_info_id2")
+        for mid1, mid2 in cursor.fetchall():
+            edges.append(("m%d" % mid1, "m%d" % mid2))
 
         cursor.close()
         conn.close()

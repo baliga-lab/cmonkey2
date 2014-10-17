@@ -32,7 +32,7 @@
         nodeData = nodeData.concat(genes);
         var motifs = [
           {% for motif in motifs %}
-          { classes: 'motifs', data: { id: '{{motif[0]}}', name: '{{motif[1]}}_{{motif[2]}}' } },
+          { classes: 'motifs', data: { id: 'm{{motif[0]}}', name: '{{motif[1]}}_{{motif[2]}}' } },
           {% endfor %}
         ];
         nodeData = nodeData.concat(motifs);
