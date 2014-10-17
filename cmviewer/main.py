@@ -261,9 +261,18 @@ class ClusterViewerApp:
         cursor.execute("select distinct name from row_names rn join row_members rm on rn.order_num = rm.order_num where iteration=? order by name", [iteration])
         genes = [row[0] for row in cursor.fetchall()]
 
+        # motifs
+        cursor.execute("select rowid,cluster,motif_num from motif_infos where iteration=?",
+                       [iteration])
+        motifs = [(mid, cluster, motif_num) for mid,cluster,motif_num in cursor.fetchall()]
+
         # edges
         cursor.execute("select name, cluster from row_members rm join row_names rn on rm.order_num = rn.order_num where iteration=?", [iteration])
         edges = [(row[0], row[1]) for row in cursor.fetchall()]
+        # add the edges to the motifs
+        for motif in motifs:
+            edges.append((motif[0], motif[1]))
+
         cursor.close()
         conn.close()
         tmpl = env.get_template('network.html')
