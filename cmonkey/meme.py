@@ -762,5 +762,84 @@ def check_meme_version():
         logging.error("MEME does not exist")
         return None
 
+######################################################################
+### Export
+###############################3
+
+MEME_FILE_HEADER = """MEME version 3.0
+
+ALPHABET= ACGT
+
+strands: + -
+
+Background letter frequencies (from dataset with add-one prior applied):
+A %.3f C %.3f G %.3f T %.3f
+"""
+
+def write_pssm(outfile, cursor, motif_info_id, evalue, num_sites):
+    """writes a single PSSM to the given file"""
+    outfile.write('\nMOTIF %d\n' % motif_info_id)
+    outfile.write('BL   MOTIF %s width=0 seqs=0\n' % motif_info_id)
+
+    cursor.execute('select a,c,g,t from motif_pssm_rows where motif_info_id=? order by row',
+                   [motif_info_id])
+    pssm_rows = [(a, c, g, t) for a, c, g, t in cursor.fetchall()]
+    outfile.write('letter-probability matrix: alength= 4 w= %d nsites= %d E= %.3e\n' % (len(pssm_rows), num_sites, evalue))
+    for a, c, g, t in pssm_rows:
+        outfile.write('%5.3f %5.3f %5.3f %5.3f\n' % (a, c, g, t))
+
+def write_motifs2meme(conn, filepath):
+    cursor = conn.cursor()
+    cursor2 = conn.cursor()
+
+    cursor.execute("select subsequence,pvalue from global_background where subsequence in ('A','C','G','T')")
+    freqs = {base: pvalue for base, pvalue in cursor.fetchall()}
+
+    with open(filepath, 'w') as outfile:
+        outfile.write(MEME_FILE_HEADER % (freqs['A'], freqs['C'], freqs['G'], freqs['T']))
+        cursor.execute('select max(iteration) from motif_infos')
+        iteration = cursor.fetchone()[0]
+        cursor.execute('select mi.rowid,evalue,count(mms.rowid) from motif_infos mi join meme_motif_sites mms on mi.rowid=mms.motif_info_id where iteration=? group by mi.rowid',
+                       [iteration])
+        for motif_info_id, evalue, num_sites in cursor.fetchall():
+            write_pssm(outfile, cursor2, motif_info_id, evalue, num_sites)
+
+
+EVALUE_CUTOFF = 100
+RESID_CUTOFF  = 0.8
+DIST_METHOD   = "ed"
+Q_THRESHOLD   = 0.5
+MIN_OVERLAP   = 4
+Q_PSEUDO      = 0
+T_PSEUDO      = 0
+
+
+def run_tomtom(conn, targetdir, q_thresh=Q_THRESHOLD, dist_method=DIST_METHOD,
+               min_overlap=MIN_OVERLAP, q_pseudo=Q_PSEUDO, t_pseudo=T_PSEUDO):
+    """a wrapper around the tomtom script"""
+    targetfile = os.path.join(targetdir, 'post.tomtom.meme')
+    queryfile = targetfile
+    write_motifs2meme(conn, targetfile)
+    command = ['tomtom',
+               '-verbosity', '1',
+               '-q-thresh', '%.3f' % q_thresh,
+               '-dist', dist_method,
+               '-min-overlap', '%d' % min_overlap,
+               '-text',
+               '-query-pseudo', '%.3f' % q_pseudo,
+               '-target-pseudo', '%.3f' % t_pseudo,
+               '-target', targetfile, '-query', queryfile]
+    try:
+        output = subprocess.check_output(command)
+        lines = output.split('\n')[1:]
+        for line in lines:
+            if len(line.strip()) > 0:
+                row = line.strip().split('\t')            
+                motif1 = int(row[0])
+                motif2 = int(row[1])
+                pvalue = float(row[3])
+                conn.execute('insert into tomtom_results (motif_info_id1,motif_info_id2,pvalue) values (?,?,?)', [motif1, motif2, pvalue])
+    except:
+        raise
 
 __all__ = ['read_meme_output']

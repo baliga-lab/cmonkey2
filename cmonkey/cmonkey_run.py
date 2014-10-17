@@ -139,6 +139,9 @@ class CMonkeyRun:
                         seq_name text,
                         reverse boolean, start int, pvalue decimal,
                         flank_left text, seq text, flank_right text)''')
+        # Additional TomTom step
+        conn.execute('''create table tomtom_results (motif_info_id1 int,
+                        motif_info_id2 int, pvalue decimal)''')
 
         conn.execute('''create table motif_annotations (motif_info_id int,
                         iteration int, gene_num int,
@@ -713,6 +716,9 @@ class CMonkeyRun:
                 debug.write_iteration(conn, outfile,
                                       self['num_iterations'] + 1,
                                       self['num_clusters'], self['output_dir'])
+
+            # additionally: run tomtom on the motifs
+            meme.run_tomtom(conn, self['output_dir'])
 
 
         self.write_finish_info()
