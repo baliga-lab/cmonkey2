@@ -6,7 +6,6 @@ from Microbes Online and RSAT
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import re
 import string
 import logging
 import thesaurus
@@ -16,116 +15,48 @@ import microbes_online as mo
 import collections
 import patches
 
-
-def make_kegg_code_mapper(dfile):
-    """returns a function that maps an organism code to a KEGG organism
-    name"""
-    return util.DelimitedFileMapper(dfile, 1, 3).__getitem__
+# requires biopython
+from Bio import SeqIO
 
 
-def make_go_taxonomy_mapper(dfile):
-    """returns a function that maps an RSAT organism name to a GO
-    taxonomy id"""
-    return util.DelimitedFileMapper(dfile, 0, 1).__getitem__
+class RsatSpeciesInfo:
+    """RSAT description of the organism"""
+    def __init__(self, rsatdb, kegg_organism, species, taxonomy_id):
+        """determine RSAT information using the RSAT database object"""
+        self.__rsatdb = rsatdb
 
-
-RsatSpeciesInfo = collections.namedtuple('RsatSpeciesInfo',
-                                         ['rsatdb', 'species', 'is_eukaryote',
-                                          'taxonomy_id'])
-
-KEGGExceptions = { 'Pseudomonas aeruginosa PAO1': 'Pseudomonas aeruginosa',
-                   'Campylobacter jejuni NCTC11168': 'Campylobacter jejuni' }
-
-
-def make_rsat_organism_mapper(rsatdb):
-    """return a function that maps from a KEGG organism name to
-    related RSAT information
-    """
-    def is_eukaryote(rsat_organism):
-        """determine whether this organism is an eukaryote"""
-        organism_text = rsatdb.get_organism(rsat_organism)
-        return re.search('Eukaryota', organism_text) != None
-
-    def get_taxonomy_id(rsat_organism):
-        """Determine the taxonomy data from the RSAT database"""
-        organism_names_dfile = util.dfile_from_text(
-            rsatdb.get_organism_names(rsat_organism), comment='--')
-        return patches.patch_ncbi_taxonomy(organism_names_dfile.lines[0][0])
-
-    def mapper_fun(kegg_organism, rsat_organism, ncbi_code=None):
-        """Mapper function to return basic information about an organism
-        stored in the RSAT database. Only the genes in gene_names will
-        be considered in the construction"""
         # in many cases, the fuzzy match delivers the correct RSAT organism
         # name, but there are exceptions
         if kegg_organism in patches.KEGG_EXCEPTIONS:
             kegg_organism = patches.KEGG_EXCEPTIONS[kegg_organism]
 
-        if not rsat_organism:
-            rsat_organism = util.best_matching_links(
-                kegg_organism,
-                rsatdb.get_directory())[0].rstrip('/')
+        if species is None:
+            self.species = rsatdb.get_rsat_organism(kegg_organism)
+        else:
+            self.species = species
 
-        print "mapper_fun(), kegg org = '%s', rsat org = '%s'" % (kegg_organism, rsat_organism)
-        if ncbi_code == None:
-            ncbi_code = get_taxonomy_id(rsat_organism)
-        return RsatSpeciesInfo(rsatdb, rsat_organism, is_eukaryote(rsat_organism),
-                               ncbi_code)
-    return mapper_fun
+        logging.info("KEGG = '%s' -> RSAT = '%s'", kegg_organism, self.species)
+
+        if taxonomy_id is None:
+            self.taxonomy_id = rsatdb.get_taxonomy_id(self.species)
+        else:
+            self.taxonomy_id = taxonomy_id
+
+    def get_features(self):
+        return self.__rsatdb.get_features(self.species)
+
+    def get_feature_names(self):
+        return self.__rsatdb.get_feature_names(self.species)
+
+    def get_contig_sequence(self, contig):
+        return self.__rsatdb.get_contig_sequence(self.species, contig)
+
+    def go_species(self):
+        return self.species.replace('_', ' ')
 
 
-class MicrobeFactory:
-    """Factory to create an organism. Construction of an organism
-    instance is relatively complex and costly, so it is coordinated
-    here. Information has to be pulled together from various databases
-    which are provided to the factory as configuration parameters.
-    Note: this factory is biased towards microbial organisms and
-    pulls information from
-    - RSAT
-    - STRING
-    - GO
-    - Microbes Online
-    For other types of organisms, a different factory should be used
-    """
-
-    # pylint: disable-msg=R0913
-    def __init__(self, code2kegg_organism,
-                 rsat_mapper,
-                 get_go_taxonomy_id,
-                 microbes_online_db,
-                 network_factories,
-                 ncbi_code=None):
-        """create a OrganismFactory instance"""
-        self.__code2kegg_organism = code2kegg_organism
-        self.__rsat_mapper = rsat_mapper
-        self.__get_taxonomy_id = get_go_taxonomy_id
-        self.__microbes_online_db = microbes_online_db
-        self.__network_factories = network_factories
-        self.__ncbi_code = ncbi_code
-
-    def create(self, organism_code, search_distances,
-               scan_distances, use_operons=True,
-               rsat_organism=None,
-               ratios=None):
-        """factory method to create an organism from a code"""
-        logging.info("Creating organism object for code '%s'...",
-                     organism_code)
-        kegg_organism = self.__code2kegg_organism(organism_code)
-        logging.info('KEGG organism: %s', kegg_organism)
-        rsat_info = self.__rsat_mapper(kegg_organism, rsat_organism,
-                                       self.__ncbi_code)
-        logging.info('RSAT info retrieved: %s', rsat_info.species)
-        go_taxonomy_id = self.__get_taxonomy_id(
-            rsat_info.species.replace('_', ' '))
-        logging.info('GO taxonomy id: %s', str(go_taxonomy_id))
-        return Microbe(organism_code, kegg_organism, rsat_info,
-                       go_taxonomy_id,
-                       self.__microbes_online_db,
-                       self.__network_factories,
-                       search_distances,
-                       scan_distances,
-                       use_operons,
-                       ratios)
+KEGGExceptions = {'Pseudomonas aeruginosa PAO1': 'Pseudomonas aeruginosa',
+                  'Campylobacter jejuni NCTC11168': 'Campylobacter jejuni'}
 
 
 class OrganismBase:
@@ -155,7 +86,9 @@ class OrganismBase:
         synonyms = self.thesaurus()
         return [synonyms[alias] for alias in gene_aliases if alias in synonyms]
 
+
 class DummyOrganism(OrganismBase):
+    """minimal organism class for gene expression-only runs"""
 
     def __init__(self):
         OrganismBase.__init__(self, 0, [])
@@ -166,34 +99,27 @@ class DummyOrganism(OrganismBase):
     def species(self):
         return "Dummy organism"
 
-class Microbe(OrganismBase):
-    """Abstraction of a microbial organism in cMonkey. It captures all
-    organism-specific aspects. For now, we assume microbes only, but
-    keep the interface generic so the algorithm will work on any type
-    of organism"""
+
+class RSATOrganism(OrganismBase):
+    """An organism class that does most things automatically by relying on information
+    stored retrieved from RSAT."""
 
     # pylint: disable-msg=R0913,R0902
-    def __init__(self, code, kegg_organism, rsat_info,
-                 go_taxonomy_id, microbes_online_db,
-                 network_factories,
-                 search_distances, scan_distances,
-                 use_operons=True, ratios=None):
+    def __init__(self, code, kegg_organism, rsat_info, go_taxonomy_id,
+                 network_factories, search_distances, scan_distances,
+                 ratios=None, synonyms=None, fasta_file=None):
         """create an Organism instance"""
         # microbe-specific network factories need access to synonyms
         # and rsat info, so initialize them here before the base class
         # init
-        self.__synonyms = None  # lazy loaded
+        self.__synonyms = synonyms
         self.__rsat_info = rsat_info
-        self.use_operons = use_operons
-        logging.info("RSAT taxonomy id = %s" % rsat_info.taxonomy_id)
-
         OrganismBase.__init__(self, code, network_factories, ratios=ratios)
         self.kegg_organism = kegg_organism
-        self.__microbes_online_db = microbes_online_db
         self.go_taxonomy_id = go_taxonomy_id
-        self.__search_distances = search_distances
-        self.__scan_distances = scan_distances
-        self.__operon_mappings = None  # lazy loaded
+        self.search_distances = search_distances
+        self.scan_distances = scan_distances
+        self.fasta_file = fasta_file
 
     def species(self):
         """Retrieves the species of this object"""
@@ -203,32 +129,167 @@ class Microbe(OrganismBase):
         """Returns the taxonomy id"""
         return self.__rsat_info.taxonomy_id
 
-    def is_eukaryote(self):
-        """Determines whether this object is an eukaryote"""
-        return self.__rsat_info.is_eukaryote
-
     def cog_organism(self):
         """returns the COG organism name"""
         return self.code.capitalize()
+
+    def thesaurus(self):
+        """reads the thesaurus from a feature_names file. The thesaurus
+        is also cached, because it is used many times
+        """
+        if not self.__synonyms:
+            feature_names_dfile = util.dfile_from_text(
+                self.__rsat_info.get_feature_names(),
+                comment='--')
+            self.__synonyms = thesaurus.create_from_rsat_feature_names(
+                feature_names_dfile, [thesaurus.strip_vng_modification])
+        return self.__synonyms
 
     def features_for_genes(self, genes):
         """returns a map of features for the specified list of genes aliases
         used for operon information"""
         return util.ThesaurusBasedMap(
             self.thesaurus(),
-            self.__read_features(self.feature_ids_for(genes)))
+            self.read_features(self.feature_ids_for(genes)))
+
+    def read_features(self, feature_ids):
+        """Returns a list containing the features for the specified feature
+        ids"""
+
+        def read_feature(line):
+            """Creates and adds a feature and associated contig from current
+            DelimitedFile line"""
+            contig = line[3]
+            is_reverse = False
+            if line[6] == 'R':
+                is_reverse = True
+
+            # note that feature positions can sometimes start with a '>'
+            # or '<', so make sure it is stripped away
+            return st.Feature(line[0], line[1], line[2],
+                              st.Location(contig,
+                                          int(string.lstrip(line[4], '<>')),
+                                          int(string.lstrip(line[5], '<>')),
+                                          is_reverse))
+
+        features = {}
+        dfile = util.dfile_from_text(self.__rsat_info.get_features(), comment='--')
+        for line in dfile.lines:
+            feature_id = line[0]
+            if feature_id in feature_ids:
+                features[feature_id] = read_feature(line)
+        return features
+
+    def read_sequences(self, features, distance, extractor):
+        """for each feature, extract and set its sequence"""
+        def unique_contigs():
+            """extract the unique contigs from the input features"""
+            result = []
+            for feature in features.values():
+                if feature.location.contig not in result:
+                    result.append(feature.location.contig)
+            return result
+
+        sequences = {}
+        contig_seqs = {contig: self.__rsat_info.get_contig_sequence(contig)
+                       for contig in unique_contigs()}
+
+        for key, feature in features.iteritems():
+            location = feature.location
+            sequences[key] = extractor(
+                contig_seqs[location.contig], location, distance)
+        if len(sequences) == 0:
+            logging.error('No sequences read for %s!' % self.code)
+        return sequences
+
+    def __str__(self):
+        result = "Organism Type: %s\n" % self.__class__.__name__
+        result += (("Code: '%s'\nKEGG: '%s'\nRSAT: '%s'\nCOG: '%s'\n" +
+                   "GO Taxonomy Id: %s\n") %
+                   (self.code, self.kegg_organism, self.species(),
+                    self.cog_organism(), self.go_taxonomy_id))
+        return result
+
+
+class Microbe(RSATOrganism):
+    """The standard organism in cmonkey is Microbe. It builds on the
+    data dependencies established in RSATOrganism and adds a Microbes Online
+    dependency to retrieve possible operon information """
+
+    # pylint: disable-msg=R0913,R0902
+    def __init__(self, code, kegg_organism, rsat_info,
+                 go_taxonomy_id, microbes_online_db,
+                 network_factories,
+                 search_distances, scan_distances,
+                 use_operons=True, ratios=None, synonyms=None, fasta_file=None):
+        """create an Organism instance"""
+        RSATOrganism.__init__(self, code, kegg_organism,
+                              rsat_info, go_taxonomy_id, network_factories,
+                              search_distances, scan_distances, ratios, synonyms,
+                              fasta_file)
+        self.use_operons = use_operons
+        self.__microbes_online_db = microbes_online_db
+        self.__operon_mappings = None  # lazy loaded
+        if self.fasta_file is not None:
+            self.sequence_source = FASTASequenceSource(self, self.fasta_file)
+        else:
+            self.sequence_source = RSATOrganismSequenceSource(self)
 
     def sequences_for_genes_search(self, genes, seqtype='upstream'):
         """The default sequence retrieval for microbes is to
         fetch their operon sequences"""
-        return self.operon_shifted_seqs_for(genes,
-                                            self.__search_distances[seqtype])
+        return self.sequence_source.operon_shifted_seqs_for(genes,
+                                                            self.search_distances[seqtype])
 
     def sequences_for_genes_scan(self, genes, seqtype='upstream'):
         """The default sequence retrieval for microbes is to
         fetch their operon sequences"""
-        return self.operon_shifted_seqs_for(genes,
-                                            self.__scan_distances[seqtype])
+        return self.sequence_source.operon_shifted_seqs_for(genes,
+                                                            self.scan_distances[seqtype])
+
+    def operon_map(self):
+        """Returns the operon map for this particular organism.
+        Microbes Online works on VNG names, but RSAT is working on
+        feature ids, so this function also maps VNG names to feature ids"""
+        if not self.__operon_mappings:
+            pairs = mo.get_operon_pairs(self.__microbes_online_db, self)
+            synonyms = self.thesaurus()
+            self.__operon_mappings = {synonyms[gene]: synonyms[head] for head, gene in pairs}
+        return self.__operon_mappings
+
+
+class FASTASequenceSource:
+    """FASTA file based sequence source"""
+
+    def __init__(self, organism, filepath):
+        self.organism = organism
+        self.seqmap = None
+        with open(filepath) as infile:
+            self.fasta_records = [r for r in SeqIO.parse(infile, 'fasta')]
+
+    def operon_shifted_seqs_for(self, gene_aliases, distances):
+        def seq2str(seq):
+            return str(seq.upper()).replace('X', 'N')
+
+        synonyms = self.organism.thesaurus()
+        if self.seqmap is None:
+            self.seqmap = {synonyms[r.id]: r for r in self.fasta_records if r.id in synonyms}
+        result = {}
+        for gene in gene_aliases:
+            if gene in synonyms and synonyms[gene] in self.seqmap:
+                fasta_record = self.seqmap[synonyms[gene]]
+                result[synonyms[gene]] = (st.Location('', 0, 0, False),
+                                          seq2str(fasta_record.seq.upper()))
+            else:
+                logging.warn("'%s' not in the sequences !!!!", gene)
+        return result
+
+
+class RSATOrganismSequenceSource:
+    """Default sequence source for Microbes"""
+
+    def __init__(self, organism):
+        self.organism = organism
 
     def operon_shifted_seqs_for(self, gene_aliases, distance):
         """returns a map of the gene_aliases to the feature-
@@ -236,8 +297,8 @@ class Microbe(OrganismBase):
         """
         def do_operon_shift():
             """Extract the (gene, head) pairs that are actually used"""
-            operon_map = self.operon_map()
-            synonyms = self.thesaurus()
+            operon_map = self.organism.operon_map()
+            synonyms = self.organism.thesaurus()
             shifted_pairs = []
             aliases_not_found = []
             operons_not_found = []
@@ -260,16 +321,16 @@ class Microbe(OrganismBase):
             for _, head in operon_pairs:
                 if head not in unique_feature_ids:
                     unique_feature_ids.append(head)
-            features = self.__read_features(unique_feature_ids)
-            return self.__read_sequences(features, distance,
-                                         st.extract_upstream)
+            features = self.organism.read_features(unique_feature_ids)
+            return self.organism.read_sequences(features, distance,
+                                                st.extract_upstream)
 
-        if self.use_operons:
+        if self.organism.use_operons:
             shifted_pairs = do_operon_shift()
         else:
             # if operons should not be used, we simply map
             # the gene heads to themselves
-            synonyms = self.thesaurus()
+            synonyms = self.organism.thesaurus()
             valid_genes = [synonyms[alias]
                            for alias in gene_aliases if alias in synonyms]
             shifted_pairs = [(gene, gene) for gene in valid_genes]
@@ -277,163 +338,5 @@ class Microbe(OrganismBase):
         unique_seqs = unique_sequences(shifted_pairs)
         return {gene: unique_seqs[head] for gene, head in shifted_pairs}
 
-    def operon_map(self):
-        """Returns the operon map for this particular organism.
-        Microbes Online works on VNG names, but RSAT is working on
-        feature ids, so this function also maps VNG names to feature ids"""
-        if not self.__operon_mappings:
-            pairs = mo.get_operon_pairs(self.__microbes_online_db, self)
-            synonyms = self.thesaurus()
-            self.__operon_mappings = {synonyms[gene]: synonyms[head] for head, gene in pairs}
-        return self.__operon_mappings
 
-    def thesaurus(self):
-        """reads the thesaurus from a feature_names file. The thesaurus
-        is also cached, because it is used many times
-        """
-        if not self.__synonyms:
-            feature_names_dfile = util.dfile_from_text(
-                self.__rsatdb().get_feature_names(self.species()),
-                comment='--')
-            self.__synonyms = thesaurus.create_from_rsat_feature_names(
-                feature_names_dfile, [thesaurus.strip_vng_modification])
-        return self.__synonyms
-
-    def __read_features(self, feature_ids):
-        """Returns a list containing the features for the specified feature
-        ids"""
-
-        def read_feature(line):
-            """Creates and adds a feature and associated contig from current
-            DelimitedFile line"""
-            contig = line[3]
-            is_reverse = False
-            if line[6] == 'R':
-                is_reverse = True
-
-            # note that feature positions can sometimes start with a '>'
-            # or '<', so make sure it is stripped away
-            return st.Feature(line[0], line[1], line[2],
-                              st.Location(contig,
-                                          int(string.lstrip(line[4], '<>')),
-                                          int(string.lstrip(line[5], '<>')),
-                                          is_reverse))
-
-        features = {}
-        dfile = util.dfile_from_text(
-            self.__rsatdb().get_features(self.species()), comment='--')
-        for line in dfile.lines:
-            feature_id = line[0]
-            if feature_id in feature_ids:
-                features[feature_id] = read_feature(line)
-        return features
-
-    def __rsatdb(self):
-        """internal method to return the RSAT db link"""
-        return self.__rsat_info.rsatdb
-
-    def __read_sequences(self, features, distance, extractor):
-        """for each feature, extract and set its sequence"""
-        def unique_contigs():
-            """extract the unique contigs from the input features"""
-            result = []
-            for feature in features.values():
-                if feature.location.contig not in result:
-                    result.append(feature.location.contig)
-            return result
-
-        sequences = {}
-        contig_seqs = {contig: self.__rsatdb().get_contig_sequence(self.species(), contig)
-                       for contig in unique_contigs()}
-
-        for key, feature in features.items():
-            location = feature.location
-            sequences[key] = extractor(
-                contig_seqs[location.contig], location, distance)
-        if len(sequences) == 0:
-            logging.error('No sequences read for %s!' %self.code)
-        return sequences
-
-    def __str__(self):
-        result = "Organism Type: %s\n" % self.__class__.__name__
-        result += (("Code: '%s'\nKEGG: '%s'\nRSAT: '%s'\nCOG: '%s'\n" +
-                   "GO Taxonomy Id: %s\n") %
-                   (self.code, self.kegg_organism, self.__rsat_info.species,
-                    self.cog_organism(), self.go_taxonomy_id))
-        return result
-
-
-class GenericOrganism(OrganismBase):
-    """Implementation of a generic organism that retrieves all of its data
-    through data files"""
-
-    def __init__(self, species_code,
-                 thesaurus_filename, nw_factories,
-                 seq_filenames,
-                 search_distances, scan_distances):
-        """Creates the organism"""
-        OrganismBase.__init__(self, species_code, nw_factories)
-        self.__seq_filenames = seq_filenames
-        self.__thesaurus_filename = thesaurus_filename
-        self.__search_distances = search_distances
-        self.__scan_distances = scan_distances
-
-        # lazy-loaded values
-        self.__synonyms = None
-        self.__seqs = {}
-
-    def species(self):
-        """Retrieves the species of this object"""
-        return self.code
-
-    def is_eukaryote(self):
-        """Determines whether this object is an eukaryote"""
-        return False
-
-    def sequences_for_genes_search(self, genes, seqtype):
-        """retrieve the sequences for the specified"""
-        distance = self.__search_distances[seqtype]
-        return self.__sequences_for_genes(seqtype, genes, distance)
-
-    def sequences_for_genes_scan(self, genes, seqtype):
-        """retrieve the sequences for the specified"""
-        distance = self.__scan_distances[seqtype]
-        return self.__sequences_for_genes(seqtype, genes, distance)
-
-    def __sequences_for_genes(self, seqtype, genes, distance):
-        """retrieves the specified sequences from the supplied genomic data"""
-        if not seqtype in self.__seqs:
-            logging.info('loading %s sequences' %seqtype)
-            dfile = util.read_dfile(self.__seq_filenames[seqtype], sep=',')
-            self.__seqs[seqtype] = {}
-            for line in dfile.lines:
-                self.__seqs[seqtype][line[0].upper()] = line[1].upper()
-            logging.info('loaded %i %s sequences' \
-                          %( len(self.__seqs[seqtype]), seqtype))
-        result = {}
-        for alias in genes:
-            if alias in self.thesaurus():
-                gene = self.thesaurus()[alias]
-                if gene in self.__seqs[seqtype]:
-                    # note that we have to return the sequence as a (location, sequence)
-                    # pair even if we do not actually use the Location
-                    result[gene] = (st.Location(gene, 0, 0, False), self.__seqs[seqtype][gene])
-                else:
-                    #logging.warn("Gene '%s' not found in 3' UTRs", gene)
-                    pass
-            else:
-                #logging.warn("Alias '%s' not in thesaurus !", alias)
-                pass
-        return result
-
-    def thesaurus(self):
-        """Reads the synonyms from the provided CSV file"""
-        if not self.__synonyms:
-            self.__synonyms = thesaurus.create_from_delimited_file2(
-                self.__thesaurus_filename)
-        return self.__synonyms
-
-
-__all__ = ['make_kegg_code_mapper', 'make_go_taxonomy_mapper',
-           'make_rsat_organism_mapper',
-           'Organism', 'OrganismFactory']
+__all__ = ['RSATOrganism', 'Microbe']

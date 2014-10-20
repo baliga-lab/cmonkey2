@@ -1,14 +1,18 @@
 import re
 
-# These are patches for inconsistencies in KEGG, RSAT, Microbes Online and STRING
-# This can be regarded as a database of inconsistencies which was obtained by
-# creating concrete cMonkey runs on various microbial organisms
+"""
+These are patches for inconsistencies in KEGG, RSAT, Microbes Online and STRING
+This can be regarded as a database of inconsistencies which was obtained by
+creating concrete cMonkey runs on various microbial organisms
+"""
 
-KEGG_EXCEPTIONS = { 'Pseudomonas aeruginosa PAO1': 'Pseudomonas aeruginosa',
-                    'Campylobacter jejuni NCTC11168': 'Campylobacter jejuni' }
+KEGG_EXCEPTIONS = {'Pseudomonas aeruginosa PAO1': 'Pseudomonas aeruginosa',
+                   'Campylobacter jejuni NCTC11168': 'Campylobacter jejuni'}
+
 
 def patch_mo_gene(code, gene):
-    """Microbes Online genes names that differ from RSAT names are renamed here"""    
+    """Microbes Online genes names that differ from RSAT names are
+    renamed here"""
     if code == 'bth':
         if gene.startswith('p'):
             # p5482_01 -> BT_p548201
@@ -20,8 +24,9 @@ def patch_mo_gene(code, gene):
         if re.compile('SO\d+').match(gene):
             # SO1234 -> SO_1234
             return gene.replace('SO', 'SO_')
-            
+
     return gene
+
 
 def patch_string_gene(code, gene):
     """STRING names unfortunately can differ from RSAT as well"""
@@ -29,6 +34,7 @@ def patch_string_gene(code, gene):
         if gene.startswith('CA_'):
             return gene.replace('CA_', 'CA')
     return gene
+
 
 def patch_ncbi_taxonomy(taxonomy_id):
     """patch for NCBI overrides:

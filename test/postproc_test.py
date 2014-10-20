@@ -6,6 +6,7 @@ more information and licensing details.
 import meme
 import motif
 import unittest
+import xmlrunner
 import util
 import rsat
 import organism as org
@@ -17,12 +18,8 @@ import microarray
 import scoring
 import network as nw
 import logging
-
-KEGG_FILE_PATH = 'config/KEGG_taxonomy'
-GO_FILE_PATH = 'config/proteome2taxid'
-RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
-COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
-CACHE_DIR = 'cache'
+import sys
+import testutil
 
 
 class PostprocTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -54,8 +51,10 @@ class PostprocTest(unittest.TestCase):  # pylint: disable-msg=R0904
                     column_members[cond] = []
                 column_members[cond].append(int(row[col]))
 
-        return memb.ClusterMembership(row_members, column_members,
-                                      self.config_params)
+        return memb.OrigMembership(sorted(row_members.keys()),
+                                   sorted(column_members.keys()),
+                                   row_members, column_members,
+                                   self.config_params)
 
     def setUp(self):  # pylint; disable-msg=C0103
         """test fixture"""
@@ -66,7 +65,8 @@ class PostprocTest(unittest.TestCase):  # pylint: disable-msg=R0904
         infile = util.read_dfile('example_data/hal/halo_ratios5.tsv',
                                  has_header=True, quote='\"')
         self.ratio_matrix = matrix_factory.create_from(infile)
-        self.organism = make_halo(self.ratio_matrix, self.search_distances, self.scan_distances)
+        self.organism = testutil.make_halo(self.search_distances, self.scan_distances,
+                                           self.ratio_matrix)
         self.config_params = {'memb.min_cluster_rows_allowed': 3,
                               'memb.max_cluster_rows_allowed': 70,
                               'multiprocessing': False,
@@ -81,12 +81,18 @@ class PostprocTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """tests the row scoring by itself, which combines scoring and fixing
         extreme values"""
         rowscores = read_matrix('testdata/rowscores-43-before-postproc.tsv')
-        assign1 = self.membership.adjust_cluster(1, rowscores, cutoff=0.33, limit=100)
+        assign1 = memb.adjust_cluster(self.membership,
+                                      1, rowscores, cutoff=0.33,
+                                      limit=100)
         self.assertEquals(0, len(assign1))
-        assign2 = self.membership.adjust_cluster(2, rowscores, cutoff=0.33, limit=100)
+        assign2 = memb.adjust_cluster(self.membership,
+                                      2, rowscores, cutoff=0.33,
+                                      limit=100)
         self.assertEquals(1, len(assign2))
         self.assertEquals(2, assign2['VNG6210G'])
-        assign5 = self.membership.adjust_cluster(5, rowscores, cutoff=0.33, limit=100)
+        assign5 = memb.adjust_cluster(self.membership,
+                                      5, rowscores, cutoff=0.33,
+                                      limit=100)
         self.assertEquals(3, len(assign5))
         self.assertEquals(5, assign5['VNG1182H'])
         self.assertEquals(5, assign5['VNG2259C'])
@@ -96,7 +102,7 @@ class PostprocTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """tests the row scoring by itself, which combines scoring and fixing
         extreme values"""
         rowscores = read_matrix('testdata/rowscores-43-before-postproc.tsv')
-        self.membership.postadjust(rowscores)
+        memb.postadjust(self.membership, rowscores)
 
 
 def read_matrix(filename):
@@ -120,32 +126,6 @@ def check_matrix_values(matrix1, matrix2, eps=EPS):
     return result
 
 
-def make_halo(ratio_matrix, search_distances, scan_distances):
-    """returns the organism object to work on"""
-    keggfile = util.read_dfile(KEGG_FILE_PATH, comment='#')
-    gofile = util.read_dfile(GO_FILE_PATH)
-    rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
-    mo_db = microbes_online.MicrobesOnline(CACHE_DIR)
-    stringfile = 'testdata/string_links_64091.tab'
-
-    nw_factories = []
-    if stringfile != None:
-        nw_factories.append(stringdb.get_network_factory2('hal', stringfile, 0.5))
-    else:
-        logging.warn("no STRING file specified !")
-
-    nw_factories.append(microbes_online.get_network_factory(
-            mo_db, max_operon_size=ratio_matrix.num_rows / 20, weight=0.5))
-
-    org_factory = org.MicrobeFactory(org.make_kegg_code_mapper(keggfile),
-                                     org.make_rsat_organism_mapper(rsatdb),
-                                     org.make_go_taxonomy_mapper(gofile),
-                                     mo_db,
-                                     nw_factories)
-
-    return org_factory.create('hal', search_distances, scan_distances)
-
-
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 
 if __name__ == '__main__':
@@ -155,4 +135,7 @@ if __name__ == '__main__':
     SUITE = []
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
             PostprocTest))
-    unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))
+    if len(sys.argv) > 1 and sys.argv[1] == 'xml':
+      xmlrunner.XMLTestRunner(output='test-reports').run(unittest.TestSuite(SUITE))
+    else:
+      unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))

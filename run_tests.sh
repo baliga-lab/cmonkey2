@@ -1,4 +1,4 @@
 #!/bin/bash
 
-PYTHONPATH=`pwd`/cmonkey python test/all_tests.py
+PYTHONPATH=`pwd`/cmonkey python test/quick_tests.py $@
 

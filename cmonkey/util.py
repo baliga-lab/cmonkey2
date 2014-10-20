@@ -6,6 +6,7 @@ more information and licensing details.
 """
 import operator
 import collections
+from collections import defaultdict
 import math
 import numpy as np
 import scipy.stats
@@ -16,6 +17,7 @@ import gzip
 import shelve
 import time
 import logging
+import multiprocessing as mp
 
 # RSAT organism finding is an optional feature, which we can skip in case that
 # the user imports all the features through own text files
@@ -65,7 +67,7 @@ def make_delimited_file_from_lines(lines, sep, has_header, comment, quote):
     file_lines = []
     line_index = next_non_comment_index(lines, comment, 0)
     if has_header:
-        file_header = lines[line_index].rstrip('\r\n').split(sep)
+        file_header = lines[line_index].rstrip().split(sep)
         file_header = [remove_quotes(elem, quote) for elem in file_header]
         line_index += 1
 
@@ -84,7 +86,7 @@ def make_delimited_file_from_lines(lines, sep, has_header, comment, quote):
 
 
 def dfile_from_text(text, sep='\t', has_header=False,
-                     comment=None, quote=None):
+                    comment=None, quote=None):
     """creates a DelimitedFile instance from a text"""
     return make_delimited_file_from_lines(text.split('\n'), sep,
                                           has_header, comment, quote)
@@ -104,30 +106,10 @@ def read_dfile(filepath, sep='\t', has_header=False, comment=None,
                                           comment, quote)
 
 
-class DelimitedFileMapper:
-    """A class that linearly searches a key in a DelimitedFile and for
-    the first row found, returns the value in the specified column"""
-
-    def __init__(self, delimited_file, key_column, value_column):
-        """Creates an instance of the mapper class using a DelimitedFile"""
-        self.__values = {}
-        for line in delimited_file.lines:
-            self.__values[line[key_column]] = line[value_column]
-
-    def __getitem__(self, key):
-        """looks for the key in the key column"""
-        return self.__values.get(key, None)
-
-    def items(self):
-        """returns the key, value pairs"""
-        return self.__values.items()
-
-    def keys(self):
-        """returns the keys"""
-        return self.__values.keys()
-
-    def __str__(self):
-        return str(self.__values)
+def make_dfile_map(dfile, key_column, value_column):
+    return collections.defaultdict(lambda : None,
+                                   [(line[key_column], line[value_column])
+                                    for line in dfile.lines])
 
 
 def levenshtein_distance(str1, str2):
@@ -187,6 +169,7 @@ def quantile(values, probability):
     else:
         return np.nan
 
+
 def r_stddev(values):
     """This is a standard deviation function, adjusted so it will
     return approximately the same value as R's sd() function would"""
@@ -211,6 +194,7 @@ def max_row_var(matrix):
     """computes the maximum row variance of a matrix"""
     masked = np.ma.masked_array(matrix, np.isnan(matrix))
     return np.mean(np.var(masked, 1, ddof=1))
+
 
 def r_outer(x, y, f):
     """emulates the R "outer" function, calculating the outer product
@@ -359,7 +343,6 @@ def trim_mean(values, trim):
 ######################################################################
 def density(kvalues, cluster_values, bandwidth, dmin, dmax):
     """generic function to compute density scores"""
-    r_density = robjects.r['density']
     kwargs = {'bw': bandwidth, 'adjust': 2, 'from': dmin,
               'to': dmax, 'n': 256, 'na.rm': True}
     rdens = robjects.r("""
@@ -370,6 +353,18 @@ def density(kvalues, cluster_values, bandwidth, dmin, dmax):
       }""")
     return rdens(robjects.FloatVector(cluster_values),
                  robjects.FloatVector(kvalues), **kwargs)
+
+
+def r_set_seed(value):
+    """calls R's set.seed()"""
+    set_seed = robjects.r['set.seed']
+    set_seed(value)
+
+
+def r_runif(value):
+    """calls R's set.seed()"""
+    runif = robjects.r['runif']
+    return runif(value)
 
 
 def rnorm(num_values, std_deviation):
@@ -417,7 +412,7 @@ def sd_rnorm(values, num_rnorm_values, fuzzy_coeff):
                 fuzzy_coeff)
 
 
-def rrank_matrix(npmatrix):    
+def rrank_matrix(npmatrix):
     func = robjects.r("""
       rank_mat <- function(values, nrow, ncol) {
         xr <- t(matrix(values, nrow=nrow, ncol=ncol, byrow=T))
@@ -438,16 +433,41 @@ def order_fast(values, result_size, reverse=True):
     return [ranked[i][1] for i in xrange(result_size)]
 
 
+def rorder(values, result_size):
+    """call the R version of order"""
+    r_order = robjects.r['order']
+    kwargs = {'decreasing': True}
+    res = r_order(robjects.FloatVector(values), **kwargs)
+    return res[:result_size]
+
+
+def get_rvec_fun(rvecstr):
+    """make scaling function based on an R vector expression string"""
+    def scale(iteration):
+        rvec = robjects.r(rvecstr)
+        if iteration > len(rvec):
+            return rvec[-1]
+        else:
+            return rvec[iteration - 1]
+    return scale
+        
+
+def get_iter_fun(params, prefix, num_iterations):
+    """returns an iteration function for the given prefix from the configuration parameters"""
+    try:
+        constval = params[prefix + '_const']
+        return lambda i: constval
+    except:
+        pass
+    try:
+        rvec = params[prefix + '_rvec']
+        return get_rvec_fun(rvec.replace('num_iterations', str(num_iterations)))
+    except:
+        raise Exception("no rvec found for prefix '%s'" % prefix)
+
 ######################################################################
 ### Misc functionality
 ######################################################################
-
-
-def add_if_unique(sequence, item):
-    """add the item to the Python sequence only if it does not exist"""
-    if item not in sequence:
-        sequence.append(item)
-
 
 class open_shelf:
     """A shelf content manager, so the user does not have to care about
@@ -473,6 +493,30 @@ def current_millis():
     """returns the current time in milliseconds"""
     return int(math.floor(time.time() * 1000))
 
+
+def which_multiple(elems):
+    result = defaultdict(int)
+    for elem in elems:
+        result[elem] += 1
+    return {elem for elem, count in result.iteritems() if count > 1}
+
+
+class get_mp_pool:
+    """pool manager"""
+    def __init__(self, config_params={}):
+        """use the configuration to return a pool with user-defined number of cores
+        if possible"""
+        if 'num_cores' in config_params:
+            self.pool = mp.Pool(config_params['num_cores'])
+        else:
+            self.pool = mp.Pool()
+        
+    def __enter__(self):
+        return self.pool
+
+    def __exit__(self, type, value, tb):
+        self.pool.close()
+        self.pool.join()
 
 __all__ = ['DelimitedFile', 'best_matching_links', 'quantile',
            'DocumentNotFound', 'CMonkeyURLopener', 'read_url',

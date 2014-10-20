@@ -22,6 +22,14 @@ library('RSQLite')
 # 8. $resid cluster residual
 #      vector of number, 1 element, named 'ratios'
 #
+cmonkey.organism <- function(db.filename) {
+  sqlite <- dbDriver("SQLite")
+  con <- dbConnect(sqlite, dbname=db.filename)
+  run.info <- dbGetQuery(con, "select organism from run_infos")[1,]
+  dbDisconnect(con)
+  run.info
+}
+
 read.cmonkey.sqlite <- function(db.filename, iteration=0) {
   sqlite <- dbDriver("SQLite")
   con <- dbConnect(sqlite, dbname=db.filename)
@@ -37,13 +45,13 @@ read.cmonkey.sqlite <- function(db.filename, iteration=0) {
 
   cat('Reading cluster information...\n')
   for (cluster in 1:num.clusters) {
-    cat('cluster', cluster, '\n')
+    cat('.')
     cluster.data <- list()
     row.members <- dbGetPreparedQuery(con, "select order_num from row_members where iteration = :iteration and cluster = :cluster",
                                       data.frame(iteration=iteration, cluster=cluster))[,]
     col.members <- dbGetPreparedQuery(con, "select order_num from column_members where iteration = :iteration and cluster = :cluster",
                                       data.frame(iteration=iteration, cluster=cluster))[,]
-    cluster.residual <- dbGetPreparedQuery(con, "select residual from cluster_residuals where iteration = :iteration and cluster = :cluster",
+    cluster.residual <- dbGetPreparedQuery(con, "select residual from cluster_stats where iteration = :iteration and cluster = :cluster",
                                       data.frame(iteration=iteration, cluster=cluster))[1,]
 
     # indexes in the database are 0-based, correct by 1 to use R indexing
@@ -60,8 +68,7 @@ read.cmonkey.sqlite <- function(db.filename, iteration=0) {
     cluster.data$resid <- cluster.residual
     result[[cluster]] <- cluster.data
   }
-  cat('done.\n')
+  cat('\ndone.\n')
   dbDisconnect(con)
   result
 }
-

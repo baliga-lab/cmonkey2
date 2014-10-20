@@ -33,8 +33,7 @@ def make_microbe(code):
     keggfile = util.read_dfile(KEGG_FILE_PATH, comment='#')
     rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
     kegg_mapper = org.make_kegg_code_mapper(keggfile)
-    rsat_mapper = org.make_rsat_organism_mapper(rsatdb)
-    rsat_info = rsat_mapper(kegg_mapper(code))
+    rsat_info = org.RsatSpeciesInfo(rsatdb, kegg_mapper(code), None, None)
     microbedb = MicrobeDB(keggfile, rsatdb, rsat_info)
     print "NCBI CODE IS: ", rsat_info.taxonomy_id
     gofile = util.read_dfile(GO_FILE_PATH)
@@ -153,7 +152,7 @@ def add_biclusters(pgconn, sqliteconn, network_id, iteration):
     else:
         print "adding biclusters..."
         sqlite_cur = sqliteconn.cursor()
-        sqlite_cur.execute('select cluster, residual from cluster_residuals where iteration = ?', [iteration])
+        sqlite_cur.execute('select cluster, residual from cluster_stats where iteration = ?', [iteration])
         resids = [(row[0], row[1]) for row in sqlite_cur.fetchall()]
         result = []
         for cluster, residual in resids:

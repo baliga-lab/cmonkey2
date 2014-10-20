@@ -15,21 +15,22 @@ import util
 import network
 import patches
 
-# most people won't need MicrobesOnline integration, so we'll make the
-# import optional
-try:
-    import MySQLdb as mysql
-except ImportError:
-    # do not use the logging system here !!!
-    # this would lead to the logging.basicConfig() call being
-    # ignored !!!
-    print "WARNINGY Could not import MySQLdb - Microbes Online MySQL integration will not work"
-
 MICROBES_ONLINE_BASE_URL = 'http://www.microbesonline.org'
 MYSQL_HOST = 'pub.microbesonline.org'
 MYSQL_USER = 'guest'
 MYSQL_PASSWD = 'guest'
 MYSQL_DB = 'genomics'
+
+
+class MicrobesOnlineOperonFile:
+    """access to Microbes online operon prediction by providing a file"""
+
+    def __init__(self, path):
+        self.path = path
+
+    def get_operon_predictions_for(self, organism_id):
+        with open(self.path) as infile:
+            return infile.read()
 
 
 class MicrobesOnline:
@@ -49,28 +50,6 @@ class MicrobesOnline:
                        'gnc%s.named' % str(organism_id)])
         cache_file = '/'.join([self.cache_dir,
                               'gnc%s.named' % str(organism_id)])
-        return util.read_url_cached(url, cache_file)
-
-    def get_genome_info_for(self, organism_id):
-        """Returns the Genome info from Microbes Online"""
-        logging.info('MicrobesOnline.get_genome_info_for(%s)',
-                     str(organism_id))
-        url = '/'.join([self.base_url, 'cgi-bin',
-                        'genomeInfo.cgi?tId=%s;export=tab' %
-                        str(organism_id)])
-        cache_file = '/'.join([self.cache_dir,
-                              'mo_%s.genome_info' % str(organism_id)])
-        return util.read_url_cached(url, cache_file)
-
-    def get_genome_for(self, organism_id):
-        """Returns the genome from Microbes Online, stored in FASTA format"""
-        logging.info('MicrobesOnline.get_genome_for(%s)',
-                     str(organism_id))
-        url = '/'.join([self.base_url, 'cgi-bin',
-                        'genomeInfo.cgi?tId=%s;export=genome' %
-                        str(organism_id)])
-        cache_file = '/'.join([self.cache_dir,
-                              'mo_genome_%s.fasta' % str(organism_id)])
         return util.read_url_cached(url, cache_file)
 
 
@@ -101,7 +80,7 @@ def make_operon_pairs(operon, features):
         """determine reverse head of the operon"""
         max_gene = None
         max_end = 0
-        for (gene, feature) in feature_map.items():
+        for (gene, feature) in feature_map.iteritems():
             if feature.location.end > max_end:
                 max_end = feature.location.end
                 max_gene = gene
@@ -111,7 +90,7 @@ def make_operon_pairs(operon, features):
         """determine forward head of the operon"""
         min_gene = None
         min_start = sys.maxint
-        for (gene, feature) in feature_map.items():
+        for (gene, feature) in feature_map.iteritems():
             if feature.location.start < min_start:
                 min_start = feature.location.start
                 min_gene = gene

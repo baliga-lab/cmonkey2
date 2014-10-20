@@ -7,19 +7,11 @@ import meme
 import motif
 import unittest
 import util
-import rsat
 import organism as org
-import microbes_online
-import stringdb
 import datamatrix as dm
 import os, os.path
 
-
-KEGG_FILE_PATH = 'config/KEGG_taxonomy'
-GO_FILE_PATH = 'config/proteome2taxid'
-RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
-COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
-CACHE_DIR = 'cache'
+import testutil
 
 class FakeMembership:
     def num_clusters(self):
@@ -41,7 +33,8 @@ class Meme430Test(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_meme_simple(self):
         """simplest of all: just run meme and parse the output, just tests
         if there will be appropriate output for the input"""
-        meme_suite = meme.MemeSuite430()
+        meme_suite = meme.MemeSuite430({'MEME': {'max_width': 24, 'background_order': 3,
+                                                 'use_revcomp': 'True', 'arg_mod': 'zoops'}})
         motif_infos, out = meme_suite.meme('testdata/meme_input1.fasta',
                                            'testdata/meme1.bg',
                                            num_motifs=1)
@@ -60,63 +53,25 @@ class Meme430Test(unittest.TestCase):  # pylint: disable-msg=R0904
         infile = util.read_dfile('example_data/hal/halo_ratios5.tsv',
                                  has_header=True, quote='\"')
         ratio_matrix = matrix_factory.create_from(infile)
-        meme_suite = meme.MemeSuite430(remove_tempfiles=True)
-        sequence_filters = [
-            motif.unique_filter,
-            motif.get_remove_low_complexity_filter(meme_suite),
-            motif.get_remove_atgs_filter(search_distances['upstream'])]
-
-        organism = make_halo(ratio_matrix, search_distances, scan_distances)
+        organism = testutil.make_halo(search_distances, scan_distances, ratio_matrix)
         membership = FakeMembership()
         config_params = {'memb.min_cluster_rows_allowed': 3,
                          'memb.max_cluster_rows_allowed': 70,
                          'multiprocessing': False,
                          'num_clusters': 1,
                          'output_dir': 'out',
-                         'num_iterations': 2000}
+                         'debug': {},
+                         'search_distances': {'upstream': (-20, 150)},
+                         'num_iterations': 2000,
+                         'MEME': {'schedule': lambda i: True,
+                                  'version': '4.3.0',
+                                  'global_background': False,
+                                  'arg_mod': 'zoops',
+                                  'nmotifs_rvec': 'c(rep(1, num_iterations/3), rep(2, num_iterations/3))',
+                                  'use_revcomp': 'True', 'max_width': 24, 'background_order': 3},
+                         'Motifs': {'schedule': lambda i: True, 'scaling': ('scaling_const', 1.0)}}
         func = motif.MemeScoringFunction(organism, membership, ratio_matrix,
-                                         meme_suite,
-                                         sequence_filters=sequence_filters,
-                                         scaling_func=lambda iter: 1.0,
-                                         num_motif_func=motif.default_nmotif_fun,
-                                         update_in_iteration=lambda x: True,
-                                         motif_in_iteration=lambda x: True,
                                          config_params=config_params)
         iteration_result = { 'iteration': 100 }
         matrix = func.compute(iteration_result)
-        """
-        valid_rows = []
-        names = []
-        for row in range(matrix.num_rows()):
-            if matrix[row][0] != 0.0:
-                names.append(matrix.row_name(row))
-                valid_rows.append(matrix[row][0])
-        names.sort()
-        for name in names:
-            print name
-            """
 
-def make_halo(ratio_matrix, search_distances, scan_distances):
-    """returns the organism object to work on"""
-    keggfile = util.read_dfile(KEGG_FILE_PATH, comment='#')
-    gofile = util.read_dfile(GO_FILE_PATH)
-    rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
-    mo_db = microbes_online.MicrobesOnline(CACHE_DIR)
-    stringfile = 'testdata/string_links_64091.tab'
-
-    nw_factories = []
-    if stringfile != None:
-        nw_factories.append(stringdb.get_network_factory2('hal', stringfile, 0.5))
-    else:
-        logging.warn("no STRING file specified !")
-
-    nw_factories.append(microbes_online.get_network_factory(
-            mo_db, max_operon_size=ratio_matrix.num_rows / 20, weight=0.5))
-
-    org_factory = org.MicrobeFactory(org.make_kegg_code_mapper(keggfile),
-                                     org.make_rsat_organism_mapper(rsatdb),
-                                     org.make_go_taxonomy_mapper(gofile),
-                                     mo_db,
-                                     nw_factories)
-
-    return org_factory.create('hal', search_distances, scan_distances)

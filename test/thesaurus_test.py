@@ -44,10 +44,20 @@ class DelimitedFileFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_create_from_delimited_file2(self):
         """test the delimited file second version"""
-        thes = thesaurus.create_from_delimited_file2(MockDelimitedFile2())
+        thes = thesaurus.create_from_delimited_file2(MockDelimitedFile2(),
+                                                     case_sensitive=False)
         self.assertEquals('GENE1', thes['ALT1'])
         self.assertEquals('GENE1', thes['ALT2'])
         self.assertEquals('GENE2', thes['ALT3'])
+
+    def test_create_from_delimited_file2_case_sensitive(self):
+        """test the delimited file second version"""
+        thes = thesaurus.create_from_delimited_file2(MockDelimitedFile2(),
+                                                     case_sensitive=True)
+        self.assertEquals('gene1', thes['alt1'])
+        self.assertEquals('gene1', thes['alt2'])
+        self.assertEquals('gene2', thes['alt3'])
+
 
     def test_create_from_rsat_feature_names_no_transform(self):
         """test the creation from RSAT feature names file"""

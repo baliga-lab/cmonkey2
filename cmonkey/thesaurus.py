@@ -12,24 +12,24 @@ def create_from_delimited_file1(dfile):
     """creates a thesaurus from a delimited file where the format is
     <alternative>SEPARATOR<original>
     ..."""
-    result = {}
-    for line in dfile.lines:
-        result[line[0]] = line[1]
-    return result
+    return {intern(line[0]): intern(line[1]) for line in dfile.lines}
 
 
-def create_from_delimited_file2(dfile):
+def create_from_delimited_file2(dfile, case_sensitive):
     """creates a thesaurus from a delimited file where the format is
     <original>SEPARATOR<alt1>;<alt2>;...
     ..."""
+    def fix_case(s):
+        return s if case_sensitive else s.upper()
+
     if isinstance(dfile, str):
         dfile = util.read_dfile(dfile, sep=',', has_header=False)
     result = {}
     for line in dfile.lines:
-        original = line[0].upper()  # original should map to itself
+        original = intern(fix_case(line[0]))  # original should map to itself
         result[original] = original
         for alternative in line[1].split(';'):
-            result[alternative.upper()] = original
+            result[intern(fix_case(alternative))] = original
     return result
 
 
@@ -45,13 +45,14 @@ def create_from_rsat_feature_names(dfile, key_transforms=None):
     """
     result = {}
     for line in dfile.lines:
-        key = line[1]
+        key = intern(line[1])  # intern the key
+        alternative = intern(line[0])  # and the alternative
         if key_transforms:
             for transform in key_transforms:
-                for tranform_key in transform(key):
-                    result[tranform_key] = line[0]
+                for transform_key in transform(key):
+                    result[transform_key] = alternative
         else:
-            result[key] = line[0]
+            result[key] = alternative
     return result
 
 

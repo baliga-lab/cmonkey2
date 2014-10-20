@@ -6,6 +6,7 @@ more information and licensing details.
 import meme
 import motif
 import unittest
+import xmlrunner
 import util
 import rsat
 import organism as org
@@ -17,12 +18,8 @@ import microarray
 import scoring
 import network as nw
 import logging
-
-KEGG_FILE_PATH = 'config/KEGG_taxonomy'
-GO_FILE_PATH = 'config/proteome2taxid'
-RSAT_BASE_URL = 'http://rsat.ccb.sickkids.ca'
-COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
-CACHE_DIR = 'cache'
+import sys
+import testutil
 
 
 class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -54,8 +51,10 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                     column_members[cond] = []
                 column_members[cond].append(int(row[col]))
 
-        return memb.ClusterMembership(row_members, column_members,
-                                      self.config_params)
+        return memb.OrigMembership(sorted(row_members.keys()),
+                                   sorted(column_members.keys()),
+                                   row_members, column_members,
+                                   self.config_params)
 
     def setUp(self):  # pylint; disable-msg=C0103
         """test fixture"""
@@ -66,26 +65,39 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         infile = util.read_dfile('example_data/hal/halo_ratios5.tsv',
                                  has_header=True, quote='\"')
         self.ratio_matrix = matrix_factory.create_from(infile)
-        self.organism = make_halo(self.ratio_matrix, self.search_distances, self.scan_distances)
+        self.organism = testutil.make_halo(self.search_distances, self.scan_distances,
+                                           self.ratio_matrix)
         self.config_params = {'memb.min_cluster_rows_allowed': 3,
                               'memb.max_cluster_rows_allowed': 70,
                               'multiprocessing': False,
+                              'num_cores': None,
                               'memb.clusters_per_row': 2,
                               'memb.clusters_per_col': int(round(43 * 2.0 / 3.0)),
                               'num_clusters': 43,
                               'output_dir': 'out',
                               'remap_network_nodes': False,
-                              'num_iterations': 2000}
+                              'num_iterations': 2000,
+                              'debug': {},
+                              'search_distances': {'upstream': (-20, 150)},
+                              'Columns': {'schedule': lambda i: True },
+                              'Rows': {'schedule': lambda i: True, 'scaling': ('scaling_const', 6.0) },
+                              'Motifs': {'schedule': lambda i: True,
+                                         'scaling': ('scaling_rvec', 'seq(0, 1, length=num_iterations*3/4)')},
+                              'MEME': {'version': '4.3.0',
+                                       'global_background': False,
+                                       'schedule': lambda i: True,
+                                       'nmotifs_rvec': 'c(rep(1, num_iterations/3), rep(2, num_iterations/3))',
+                                       'max_width': 24, 'arg_mod': 'zoops',
+                                       'background_order': 3, 'use_revcomp': 'True'},
+                              'Networks': {'schedule': lambda i: True, 'scaling': ('scaling_rvec', 'seq(1e-5, 0.5, length=num_iterations*3/4)')}}
         self.membership = self.__read_members()  # relies on config_params
-        self.iteration_result = { 'iteration': 51 }
+        self.iteration_result = { 'iteration': 51, 'score_means': {} }
 
     def test_row_scoring(self):
         # tests the row scoring by itself, which combines scoring and fixing
         # extreme values
-        row_scoring = microarray.RowScoringFunction(
+        row_scoring = microarray.RowScoringFunction(self.organism,
             self.membership, self.ratio_matrix,
-            scaling_func=lambda iteration: 6.0,
-            schedule=lambda x: True,
             config_params=self.config_params)
         rowscores = row_scoring.compute(self.iteration_result)
         ref_rowscores = read_matrix('testdata/rowscores_fixed.tsv')
@@ -93,9 +105,8 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_col_scoring(self):
         # tests the column scoring by itself
-        colscoring = scoring.ColumnScoringFunction(
+        colscoring = scoring.ColumnScoringFunction(self.organism,
             self.membership, self.ratio_matrix,
-            schedule=lambda x: True,
             config_params=self.config_params)
         colscores = colscoring.compute(self.iteration_result)
         ref_colscores = read_matrix('testdata/colscores_fixed.tsv')
@@ -103,34 +114,23 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_net_scoring(self):
         #tests the network scoring by itself#
-        network_scaling_fun = scoring.get_default_network_scaling(2000)
         network_scoring = nw.ScoringFunction(self.organism,
                                              self.membership,
                                              self.ratio_matrix,
-                                             scaling_func=network_scaling_fun,
-                                             schedule=lambda x: True,
                                              config_params=self.config_params)
         netscores = network_scoring.compute(self.iteration_result).sorted_by_row_name()
         ref_netscores = read_matrix('testdata/netscores_fixed.tsv')
         self.assertTrue(check_matrix_values(netscores, ref_netscores))
 
     def test_motif_scoring(self):
-        meme_suite = meme.MemeSuite430()
+        meme_suite = meme.MemeSuite430({'MEME': {'max_width': 24, 'background_order': 3,
+                                                 'use_revcomp': 'True', 'arg_mod': 'zoops'}})
         sequence_filters = [
             motif.unique_filter,
             motif.get_remove_low_complexity_filter(meme_suite),
             motif.get_remove_atgs_filter(self.search_distances['upstream'])]
-        motif_scaling_fun = scoring.get_default_motif_scaling(2000, offset=0)
         motif_scoring = motif.MemeScoringFunction(
-            self.organism,
-            self.membership,
-            self.ratio_matrix,
-            meme_suite,
-            sequence_filters=sequence_filters,
-            scaling_func=motif_scaling_fun,
-            num_motif_func=motif.default_nmotif_fun,
-            update_in_iteration=lambda x: True,
-            motif_in_iteration=lambda x: True,
+            self.organism, self.membership, self.ratio_matrix,
             config_params=self.config_params)
         motscores = motif_scoring.compute(self.iteration_result).sorted_by_row_name()
         motscores.fix_extreme_values()
@@ -142,40 +142,42 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         ref_netscores = read_matrix('testdata/netscores_fixed.tsv')
         ref_motscores = read_matrix('testdata/motscores_fixed.tsv')
         ref_rowscores = read_matrix('testdata/rowscores_fixed.tsv')
+        config_params = {'quantile_normalize': True,
+                         'log_subresults': False,
+                         'num_iterations': 2000, 'debug': {},
+                         'Rows': {'scaling': ('scaling_const', 6.0)},
+                         'Networks': {'scaling': ('scaling_rvec', 'seq(1e-5, 0.5, length=num_iterations*3/4)')},
+                         'Motifs': {'scaling': ('scaling_rvec', 'seq(0, 1, length=num_iterations*3/4)')}}
 
         class DummyNetworkScoring(scoring.ScoringFunctionBase):
             def __init__(self):
-                scaling_fun = scoring.get_default_network_scaling(2000)
-                scoring.ScoringFunctionBase.__init__(self, None, None, scaling_fun)
+                scoring.ScoringFunctionBase.__init__(self, "Networks", None, None, None, config_params)
 
             def compute(self, iteration_result, ref_matrix=None):
                 return ref_netscores
 
         class DummyMotifScoring(scoring.ScoringFunctionBase):
             def __init__(self):
-                scaling_fun = scoring.get_default_motif_scaling(2000, offset=0)
-                scoring.ScoringFunctionBase.__init__(self, None, None, scaling_fun)
+                scoring.ScoringFunctionBase.__init__(self, "Motifs", None, None, None, config_params)
 
             def compute(self, iteration_result, ref_matrix=None):
                 return ref_motscores
 
         class DummyRowScoring(scoring.ScoringFunctionBase):
             def __init__(self):
-                scoring.ScoringFunctionBase.__init__(self, None, None,
-                                                     lambda iteration: 6.0)
+                scoring.ScoringFunctionBase.__init__(self, "Rows", None, None, None, config_params)
 
             def compute(self, iteration_result, ref_matrix=None):
                 return ref_rowscores
 
         row_scoring_functions = [DummyRowScoring(), DummyMotifScoring(), DummyNetworkScoring()]
-        combiner = scoring.ScoringFunctionCombiner(self.membership,
+        combiner = scoring.ScoringFunctionCombiner(self.organism, self.membership,
                                                    row_scoring_functions,
-                                                   config_params={'quantile_normalize': True},
-                                                   log_subresults=False)
+                                                   config_params)
         scores = combiner.compute(self.iteration_result)
         ref_scores = read_matrix('testdata/combined_scores.tsv')
         # note that the rounding error get pretty large here !!!
-        self.assertTrue(check_matrix_values(scores, ref_scores))
+        self.assertTrue(check_matrix_values(scores, ref_scores, eps=0.0001))
 
     def test_quantile_normalize(self):
         row_scores = read_matrix('testdata/rowscores_fixed.tsv')
@@ -203,7 +205,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         rds, cds = memb.get_density_scores(self.membership, row_scores, col_scores)
         self.assertTrue(check_matrix_values(rds, ref_rowscores, eps=1e-11))
         self.assertTrue(check_matrix_values(cds, ref_colscores, eps=1e-11))
-    """
+
     def test_size_compensation(self):
         # tests the size compensation
         row_scores = read_matrix('testdata/density_rowscores.tsv')
@@ -214,12 +216,11 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                              row_scores, col_scores)
         self.assertTrue(check_matrix_values(row_scores, ref_rowscores, eps=1e-11))
         self.assertTrue(check_matrix_values(col_scores, ref_colscores, eps=1e-11))
-        """
 
 def read_matrix(filename):
     """reads a matrix file"""
     infile = util.read_dfile(filename, has_header=True, quote='\"')
-    return dm.DataMatrixFactory([]).create_from(infile).sorted_by_row_name()
+    return dm.DataMatrixFactory([]).create_from(infile, case_sensitive=True).sorted_by_row_name()
 
 
 EPS = 1.0e-5
@@ -239,33 +240,6 @@ def check_matrix_values(matrix1, matrix2, eps=EPS):
     return result
 
 
-def make_halo(ratio_matrix, search_distances, scan_distances):
-    """returns the organism object to work on"""
-    keggfile = util.read_dfile(KEGG_FILE_PATH, comment='#')
-    gofile = util.read_dfile(GO_FILE_PATH)
-    rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
-    mo_db = microbes_online.MicrobesOnline(CACHE_DIR)
-    stringfile = 'testdata/string_links_64091.tab'
-
-    nw_factories = []
-    if stringfile != None:
-        nw_factories.append(stringdb.get_network_factory2('hal', stringfile, 0.5,
-                                                          normalized=True))
-    else:
-        logging.warn("no STRING file specified !")
-
-    nw_factories.append(microbes_online.get_network_factory(
-            mo_db, max_operon_size=ratio_matrix.num_rows / 20, weight=0.5))
-
-    org_factory = org.MicrobeFactory(org.make_kegg_code_mapper(keggfile),
-                                     org.make_rsat_organism_mapper(rsatdb),
-                                     org.make_go_taxonomy_mapper(gofile),
-                                     mo_db,
-                                     nw_factories)
-
-    return org_factory.create('hal', search_distances, scan_distances)
-
-
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 
 if __name__ == '__main__':
@@ -275,4 +249,7 @@ if __name__ == '__main__':
     SUITE = []
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(
             IterationTest))
-    unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))
+    if len(sys.argv) > 1 and sys.argv[1] == 'xml':
+      xmlrunner.XMLTestRunner(output='test-reports').run(unittest.TestSuite(SUITE))
+    else:
+      unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))

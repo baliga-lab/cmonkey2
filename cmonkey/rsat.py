@@ -7,6 +7,49 @@ more information and licensing details.
 import logging
 import util
 import StringIO
+import re
+import patches
+import os
+
+
+class RsatFiles:
+    """This class implements the same service functions as RsatDatabase, but
+    takes the data from files"""
+    def __init__(self, dirname, basename, taxonomy_id):
+        self.dirname = dirname
+        self.taxonomy_id = taxonomy_id
+        self.basename = basename
+
+    def get_taxonomy_id(self, organism):
+        return self.taxonomy_id
+
+    def get_rsat_organism(self, kegg_organism):
+        return self.basename
+
+    def get_features(self, organism, original=True):
+        if original:
+            path = os.path.join(self.dirname, 'features.tab')
+        else:
+            path = os.path.join(self.dirname, organism + '_features')
+        with open(path) as infile:
+            return infile.read()
+
+    def get_feature_names(self, organism, original=True):
+        if original:
+            path = os.path.join(self.dirname, 'feature_names.tab')
+        else:
+            path = os.path.join(self.dirname, organism + '_feature_names')
+        with open(path) as infile:
+            return infile.read()
+
+    def get_contig_sequence(self, organism, contig, original=True):
+        if original:
+            path = os.path.join(self.dirname, contig + '.tab')
+        else:
+            path = os.path.join(self.dirname, organism + '_' + contig)
+        with open(path) as infile:
+            seqstr = infile.read().upper()
+            return join_contig_sequence(seqstr)
 
 
 class RsatDatabase:
@@ -22,37 +65,24 @@ class RsatDatabase:
         self.base_url = base_url
         self.cache_dir = cache_dir.rstrip('/')
 
-    def get_directory(self):
+    def get_rsat_organism(self, kegg_organism):
         """returns the HTML page for the directory listing"""
         logging.info('RSAT - get_directory()')
         cache_file = "/".join([self.cache_dir, 'rsat_dir.html'])
-        return util.read_url_cached("/".join([self.base_url,
+        text = util.read_url_cached("/".join([self.base_url,
                                               RsatDatabase.DIR_PATH]),
                                     cache_file)
+        return util.best_matching_links(kegg_organism, text)[0].rstrip('/')
 
-    def get_organism(self, organism):
-        """returns the file contents for the specified organism"""
-        logging.info('RSAT - get_organism(%s)', organism)
-        cache_file = "/".join([self.cache_dir, 'rsat_' + organism])
-        return util.read_url_cached(
-            "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
-                      RsatDatabase.ORGANISM_PATH]), cache_file)
-
-    def get_organism_names(self, organism):
+    def get_taxonomy_id(self, organism):
         """returns the specified organism name file contents"""
         logging.info('RSAT - get_organism_names(%s)', organism)
         cache_file = "/".join([self.cache_dir, 'rsatnames_' + organism])
-        return util.read_url_cached(
+        text = util.read_url_cached(
             "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
                       RsatDatabase.ORGANISM_NAMES_PATH]), cache_file)
-
-    def get_ensembl_organism_names(self, organism):
-        """returns the specified organism name file contents, using
-        the EnsEMBL path"""
-        logging.info('RSAT - get_ensembl_organism_names(%s)', organism)
-        return util.read_url("/".join([self.base_url, RsatDatabase.DIR_PATH,
-                                       organism + '_EnsEMBL',
-                                       RsatDatabase.ORGANISM_NAMES_PATH]))
+        organism_names_dfile = util.dfile_from_text(text, comment='--')
+        return patches.patch_ncbi_taxonomy(organism_names_dfile.lines[0][0])
 
     def get_features(self, organism):
         """returns the specified organism's feature file contents
@@ -66,7 +96,7 @@ class RsatDatabase:
                                               RsatDatabase.DIR_PATH,
                                               organism,
                                               RsatDatabase.FEATURE_PATH]),
-                               cache_file)
+                                    cache_file)
 
     def get_feature_names(self, organism):
         """returns the specified organism's feature name file contents"""
@@ -86,14 +116,17 @@ class RsatDatabase:
         cache_file = "/".join([self.cache_dir, organism + '_' + contig])
         url = "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
                         'genome', contig + '.raw'])
-        # we take the safer route and assume that the input could
-        # be separated out into lines
         seqstr = util.read_url_cached(url, cache_file).upper()
-        buf = StringIO.StringIO(seqstr)
-        result = ''
-        for line in buf:
-            result += line.strip()
-        return result
+        return join_contig_sequence(seqstr)
 
+
+def join_contig_sequence(seqstr):
+    """we take the safer route and assume that the input could
+    be separated out into lines"""
+    buf = StringIO.StringIO(seqstr)
+    result = ''
+    for line in buf:
+        result += line.strip()
+    return result
 
 __all__ = ['RsatDatabase']

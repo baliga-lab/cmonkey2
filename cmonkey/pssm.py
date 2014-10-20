@@ -33,14 +33,14 @@ class Pssm(object):
         """returns the sequence length this PSSM is based on"""
         return len(self.values)
 
-    def to_mast_string(self, at_freq=0.25, cg_freq=0.25):
-        """returns a string representation in MAST format"""
+    def to_logodds_string(self, at_freq=0.25, cg_freq=0.25):
+        """returns a motif representation in log-odds format"""
         def log_odds(pvalue, freq):
             """returns the log-odds value"""
             if pvalue == 0.0:
-                return int(round(math.log(float(1e-300) / freq, 2), 0))
+                return int(round(math.log(1e-2 / freq, 2)))  # was 1e-300
             else:
-                return int(round(math.log(pvalue / freq, 2), 0))
+                return int(round(math.log(pvalue / freq, 2)))
 
         result = ('log-odds matrix: alength= 4 w= %d\n' %
                   self.sequence_length())
@@ -146,6 +146,6 @@ def read_fasta(infile):
     result = []
     while next_index >= 0 and next_index < len(lines):
         pssm, next_index = read_pssm(lines, next_index)
-        if pssm != None:
+        if pssm is not None:
             result.append(pssm)
     return result
