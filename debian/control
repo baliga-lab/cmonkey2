@@ -8,5 +8,5 @@ Homepage: http://github.com/weiju/cmonkey-python
 
 Package: cmonkey-python
 Architecture: all
-Depends: python (>= 2.7), python-numpy, python-scipy, python-rpy2, python-beautifulsoup, python-mysqldb, csh
+Depends: python (>= 2.7), python-numpy, python-scipy, python-rpy2, python-beautifulsoup, python-mysqldb, csh, python-biopython
 Description: This is the cmonkey-python package

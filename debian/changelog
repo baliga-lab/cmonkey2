@@ -1,3 +1,9 @@
+cmonkey-python (1.0.2-1) unstable; urgency=low
+
+  * switched to new cmviewer frontend, database changes, tomtom postprocessing
+
+ -- Wei-ju Wu <wwu@systemsbiology.org>  Mon, 20 Oct 2014 15:02:00 -0800
+
 cmonkey-python (1.0.1-1) unstable; urgency=low
 
   * motif sites found in MEME are now stored in the database.
