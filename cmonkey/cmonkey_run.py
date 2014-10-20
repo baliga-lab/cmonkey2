@@ -718,7 +718,7 @@ class CMonkeyRun:
                                       self['num_clusters'], self['output_dir'])
 
             # additionally: run tomtom on the motifs
-            meme.run_tomtom(conn, self['output_dir'])
+            meme.run_tomtom(conn, self['output_dir'], self['MEME']['version'])
 
 
         self.write_finish_info()

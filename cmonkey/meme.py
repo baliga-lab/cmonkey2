@@ -814,7 +814,7 @@ Q_PSEUDO      = 0
 T_PSEUDO      = 0
 
 
-def run_tomtom(conn, targetdir, q_thresh=Q_THRESHOLD, dist_method=DIST_METHOD,
+def run_tomtom(conn, targetdir, version, q_thresh=Q_THRESHOLD, dist_method=DIST_METHOD,
                min_overlap=MIN_OVERLAP, q_pseudo=Q_PSEUDO, t_pseudo=T_PSEUDO):
     """a wrapper around the tomtom script"""
     targetfile = os.path.join(targetdir, 'post.tomtom.meme')
@@ -827,8 +827,13 @@ def run_tomtom(conn, targetdir, q_thresh=Q_THRESHOLD, dist_method=DIST_METHOD,
                '-min-overlap', '%d' % min_overlap,
                '-text',
                '-query-pseudo', '%.3f' % q_pseudo,
-               '-target-pseudo', '%.3f' % t_pseudo,
-               '-target', targetfile, '-query', queryfile]
+               '-target-pseudo', '%.3f' % t_pseudo]
+    # Tomtom versions > 4.8.x drop the target and query switches
+    if version == '4.3.0':
+        command.extend(['-target', targetfile, '-query', queryfile])
+    else:
+        command.extend([targetfile, queryfile])
+        
     try:
         output = subprocess.check_output(command)
         lines = output.split('\n')[1:]
