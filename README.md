@@ -1,4 +1,4 @@
-## cMonkey Python (now know as cMonkey<sub>2</sub>) - Python port of the [cMonkey biclustering algorithm](cmonkey.systemsbiology.net)
+## cMonkey Python (now know as cMonkey<sub>2</sub>) - Python port of the [cMonkey biclustering algorithm](http://cmonkey.systemsbiology.net)
 
 ### Description
 
