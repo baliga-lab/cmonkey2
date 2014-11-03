@@ -22,6 +22,10 @@ A complete set of documentation for installation and running of cMonkey is on th
 * csh (for running MEME)
 for the human setup, Weeder 1.4.2 is needed
 
+for running the unit tests (optional):
+
+* python-xmlrunner 
+
 for running the monitoring application (optional):
 
 * CherryPy 3
