@@ -633,9 +633,10 @@ class CMonkeyRun:
             if iteration == 1 or (iteration % self['result_freq'] == 0):
                 self.write_results(iteration_result)
 
-            if iteration == 1 or (iteration % self['stats_freq'] == 0):
-                self.write_stats(iteration_result)
-                self.update_iteration(iteration)
+        # This should not be too much writing, so we can keep it OUT of minimize_io option...?
+        if iteration == 1 or (iteration % self['stats_freq'] == 0):
+            self.write_stats(iteration_result)
+            self.update_iteration(iteration)
 
         if 'dump_results' in self['debug'] and (iteration == 1 or
                                                 (iteration % self['debug_freq'] == 0)):
