@@ -794,15 +794,15 @@ def write_motifs2meme(conn, filepath):
 
     cursor.execute("select subsequence,pvalue from global_background where subsequence in ('A','C','G','T')")
     freqs = {base: pvalue for base, pvalue in cursor.fetchall()}
-
-    with open(filepath, 'w') as outfile:
-        outfile.write(MEME_FILE_HEADER % (freqs['A'], freqs['C'], freqs['G'], freqs['T']))
-        cursor.execute('select max(iteration) from motif_infos')
-        iteration = cursor.fetchone()[0]
-        cursor.execute('select mi.rowid,evalue,count(mms.rowid) from motif_infos mi join meme_motif_sites mms on mi.rowid=mms.motif_info_id where iteration=? group by mi.rowid',
-                       [iteration])
-        for motif_info_id, evalue, num_sites in cursor.fetchall():
-            write_pssm(outfile, cursor2, motif_info_id, evalue, num_sites)
+    if len(freqs) >= 4 and 'A' in freqs and 'C' in freqs and 'G' in freqs and 'T' in freqs:
+        with open(filepath, 'w') as outfile:
+            outfile.write(MEME_FILE_HEADER % (freqs['A'], freqs['C'], freqs['G'], freqs['T']))
+            cursor.execute('select max(iteration) from motif_infos')
+            iteration = cursor.fetchone()[0]
+            cursor.execute('select mi.rowid,evalue,count(mms.rowid) from motif_infos mi join meme_motif_sites mms on mi.rowid=mms.motif_info_id where iteration=? group by mi.rowid',
+                           [iteration])
+            for motif_info_id, evalue, num_sites in cursor.fetchall():
+                write_pssm(outfile, cursor2, motif_info_id, evalue, num_sites)
 
 
 EVALUE_CUTOFF = 100
