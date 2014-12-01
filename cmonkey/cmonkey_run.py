@@ -1,5 +1,6 @@
 # vi: sw=4 ts=4 et:
 import os
+import shutil
 from datetime import date, datetime
 import json
 import numpy as np
@@ -430,8 +431,17 @@ class CMonkeyRun:
 
             # write the normalized ratio matrix for stats and visualization
             output_dir = self['output_dir']
-            if not os.path.exists(output_dir + '/ratios.tsv'):
+            if not os.path.exists(os.path.join(output_dir, '/ratios.tsv')):
                 self.ratios.write_tsv_file(output_dir + '/ratios.tsv')
+            # also copy the input matrix to the output
+            if (os.path.exists(self['ratios_file'])):
+                if self['ratios_file'].endswith('.gz'):
+                    copy_name = 'ratios.original.tsv.gz'
+                else:
+                    copy_name = 'ratios.original.tsv'
+
+                shutil.copyfile(self['ratios_file'],
+                                os.path.join(output_dir, 'ratios.original.tsv'))
 
         # gene index map is used for writing statistics
         thesaurus = self.organism().thesaurus()
