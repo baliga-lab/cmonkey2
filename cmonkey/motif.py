@@ -115,7 +115,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         meme_version = config_params['MEME']['version']
         search_distance = config_params['search_distances'][self.seqtype]
 
-        if config_params['MEME']['global_background']:
+        if config_params['MEME']['global_background'] == 'True':
             background_file, bgmodel = meme.global_background_file(
                 self.organism, self.ratios.row_names, self.seqtype,
                 bgorder=int(self.config_params['MEME']['background_order']))
