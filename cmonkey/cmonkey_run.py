@@ -102,7 +102,9 @@ class CMonkeyRun:
         conn.execute('''create table run_infos (start_time timestamp,
                         finish_time timestamp,
                         num_iterations int, last_iteration int,
-                        organism text, species text, num_rows int,
+                        organism text, species text,
+                        ncbi_code int,
+                        num_rows int,
                         num_columns int, num_clusters int, git_sha text)''')
 
         # stats tables
@@ -252,6 +254,9 @@ class CMonkeyRun:
 
         stringfile = self['string_file']
         kegg_map = util.make_dfile_map(keggfile, 1, 3)
+        kegg2ncbi = util.make_dfile_map(keggfile, 1, 2)
+        if self['ncbi_code'] is None and self['organism_code'] in kegg2ncbi:
+            self['ncbi_code'] = kegg2ncbi[self['organism_code']]
         ncbi_code = self['ncbi_code']
         nw_factories = []
         is_microbe = self['organism_code'] not in VERTEBRATES
@@ -593,10 +598,12 @@ class CMonkeyRun:
         conn = self.__dbconn()
         with conn:
             conn.execute('''insert into run_infos (start_time, num_iterations, organism,
-                            species, num_rows, num_columns, num_clusters, git_sha) values (?,?,?,?,?,?,?,?)''',
+                            species, ncbi_code, num_rows, num_columns, num_clusters, git_sha) values (?,?,?,?,?,?,?,?,?)''',
                          (datetime.now(), self['num_iterations'], self.organism().code,
-                          self.organism().species(), self.ratios.num_rows,
-                          self.ratios.num_columns, self['num_clusters'], '$Id$'))
+                          self.organism().species(), int(self['ncbi_code']),
+                          self.ratios.num_rows,
+                          self.ratios.num_columns, self['num_clusters'],
+                          '$Id$'))
 
     def update_iteration(self, iteration):
         conn = self.__dbconn()
