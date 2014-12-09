@@ -239,7 +239,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                 pValues.append(min_pvalue)
 
                 for row in xrange(len(self.gene_names())):
-                    matrix.values[row][cluster - 1] = scores[row]
+                    matrix.values[row][cluster - 1] += scores[row] * set_type.weight
             setFile.write('\n'+str(iteration_result['iteration'])+','+','.join([str(i) for i in minSets]))
             pvFile.write('\n'+str(iteration_result['iteration'])+','+','.join([str(i) for i in pValues]))
             setFile.close()
