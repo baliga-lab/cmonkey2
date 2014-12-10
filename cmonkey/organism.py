@@ -209,14 +209,12 @@ class RSATOrganism(OrganismBase):
     def sequences_for_genes_search(self, genes, seqtype='upstream'):
         """The default sequence retrieval for microbes is to
         fetch their operon sequences"""
-        return self.sequence_source.operon_shifted_seqs_for(genes,
-                                                            self.search_distances[seqtype])
+        return self.sequence_source.seqs_for(genes, self.search_distances[seqtype])
 
     def sequences_for_genes_scan(self, genes, seqtype='upstream'):
         """The default sequence retrieval for microbes is to
         fetch their operon sequences"""
-        return self.sequence_source.operon_shifted_seqs_for(genes,
-                                                            self.scan_distances[seqtype])
+        return self.sequence_source.seqs_for(genes, self.scan_distances[seqtype])
 
 
     def __str__(self):
@@ -268,10 +266,7 @@ class FASTASequenceSource:
         with open(filepath) as infile:
             self.fasta_records = [r for r in SeqIO.parse(infile, 'fasta')]
 
-    def operon_shifted_seqs_for(self, gene_aliases, distances):
-        """
-        TODO: don't call this method "operon-shifted"
-        """
+    def seqs_for(self, gene_aliases, distances):
         def seq2str(seq):
             return str(seq.upper()).replace('X', 'N')
 
@@ -295,10 +290,9 @@ class RSATOrganismSequenceSource:
     def __init__(self, organism):
         self.organism = organism
 
-    def operon_shifted_seqs_for(self, gene_aliases, distance):
+    def seqs_for(self, gene_aliases, distance):
         """returns a map of the gene_aliases to the feature-
         sequence tuple that they are actually mapped to.
-        TODO: don't call this method "operon-shifted"
         """
         def do_operon_shift():
             """Extract the (gene, head) pairs that are actually used"""
