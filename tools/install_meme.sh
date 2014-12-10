@@ -2,8 +2,9 @@
 
 #sudo apt-get install build-essential csh
 
-memeVersion="4.3.0"
-url="ftp://ftp.ebi.edu.au/pub/software/MEME/${memeVersion}/meme_${memeVersion}.tar.gz"
+memeVersion="4.10.0"
+memePatch="_2"
+url="http://ebi.edu.au/ftp/software/MEME/${memeVersion}/meme_${memeVersion}${memePatch}.tar.gz"
 mkdir progs
 cd progs
 wget "$url"
