@@ -112,6 +112,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
     def __setup_meme_suite(self, config_params):
         background_file = None
+        bgmodel = None
         meme_version = config_params['MEME']['version']
         search_distance = config_params['search_distances'][self.seqtype]
 
@@ -131,12 +132,14 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
         if meme_version == '4.3.0':
             self.meme_suite = meme.MemeSuite430(self.config_params,
-                                                background_file=background_file)
+                                                background_file=background_file,
+                                                bgmodel=bgmodel)
         elif meme_version and (
                 meme_version.startswith('4.8') or meme_version.startswith('4.9') or
                 meme_version.startswith('4.10')):
             self.meme_suite = meme.MemeSuite481(self.config_params,
-                                                background_file=background_file)
+                                                background_file=background_file,
+                                                bgmodel=bgmodel)
         else:
             logging.error("MEME version %s currently not supported !", meme_version)
             raise Exception("unsupported MEME version: '%s'" % meme_version)
@@ -283,8 +286,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         cluster_pvalues = {}
         min_cluster_rows_allowed = self.config_params['memb.min_cluster_rows_allowed']
         max_cluster_rows_allowed = self.config_params['memb.max_cluster_rows_allowed']
-        use_multiprocessing = self.config_params[
-            scoring.KEY_MULTIPROCESSING]
+        use_multiprocessing = self.config_params[scoring.KEY_MULTIPROCESSING]
 
         # extract the sequences for each cluster, slow
         start_time = util.current_millis()
@@ -519,7 +521,8 @@ class WeederRunner:
 
         try:
             dbfile = None
-            meme_outfile, pssms = weeder.run_weeder(filename, params, self.config_params)
+            meme_outfile, pssms = weeder.run_weeder(filename, params, self.config_params,
+                                                    self.meme_suite.bgmodel)
             if len(pssms) == 0:
                 logging.debug('no PSSMS generated, skipping cluster')
                 return meme.MemeRunResult([], {}, [])

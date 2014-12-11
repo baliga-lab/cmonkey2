@@ -33,11 +33,12 @@ class Site:
     def __repr__(self):
         return self.__str__()
 
-def run_weeder(fasta_file, params, config_params):
+def run_weeder(fasta_file, params, config_params, bgmodel):
     if not os.path.exists(fasta_file):
         logging.warning("Weeder FASTA file %s not found! Skipping")
         return []
-    meme_outfile = '%s/meme-out-%04d-%04d' % (params.outdir, params.iteration, params.cluster)
+    meme_outfile = '%s/meme-out-%04d-%04d.txt' % (params.outdir, params.iteration,
+                                                  params.cluster)
 
     """run the weeder command and interpret its result"""
     def write_f1_file(pssm_num, apssm, num_sites):
@@ -70,8 +71,18 @@ def run_weeder(fasta_file, params, config_params):
     def write_meme_file(pssms):
         """writes a PSSM file to be read by meme"""
         with open(meme_outfile, 'w') as outfile:
-            outfile.write('ALPHABET= ACGT\n')
-            for apssm in pssms:
+            outfile.write("""MEME version 4
+
+ALPHABET= ACGT
+
+strands: + -
+
+Background letter frequencies
+A %.3f C %.3f G %.3f T %.3f
+
+""" % (bgmodel[0]['A'], bgmodel[0]['C'], bgmodel[0]['G'], bgmodel[0]['T']))
+            for motif_num, apssm in enumerate(pssms):
+                outfile.write('MOTIF m%d\n' % motif_num)
                 outfile.write(apssm.to_logodds_string())
                 outfile.write('\n')
 

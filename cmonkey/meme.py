@@ -34,12 +34,14 @@ class MemeSuite:
     meme - discover motifs in a set of sequences
     mast - search for a group of motifs in a set of sequences
     """
-    def __init__(self, config_params, background_file=None, remove_tempfiles=True):
+    def __init__(self, config_params, background_file=None, bgmodel=None,
+                 remove_tempfiles=True):
         """Create MemeSuite instance"""
         self.max_width = int(config_params['MEME']['max_width'])
         self.background_order = int(config_params['MEME']['background_order'])
         self.__use_revcomp = config_params['MEME']['use_revcomp'] == 'True'
         self.__background_file = background_file
+        self.bgmodel = bgmodel
         self.__remove_tempfiles = remove_tempfiles
         self.arg_mod = config_params['MEME']['arg_mod']
 
@@ -335,7 +337,7 @@ class MemeSuite481(MemeSuite):
                          e.output)
             return None  # return nothing if there was an error
         finally:
-            print "removing %s..." % dirname
+            logging.info("removing %s...", dirname)
             shutil.rmtree(dirname)
             print "done."
 
