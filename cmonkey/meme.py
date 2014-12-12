@@ -847,6 +847,8 @@ def run_tomtom(conn, targetdir, version, q_thresh=Q_THRESHOLD, dist_method=DIST_
                    '-text',
                    '-query-pseudo', '%.3f' % q_pseudo,
                    '-target-pseudo', '%.3f' % t_pseudo]
+        logging.info(" ".join(command))
+
         # Tomtom versions > 4.8.x drop the target and query switches
         if version == '4.3.0':
             command.extend(['-target', targetfile, '-query', queryfile])
