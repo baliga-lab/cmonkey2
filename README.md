@@ -1,4 +1,4 @@
-## cMonkey Python - Python port of the cMonkey biclustering algorithm
+## cMonkey<sub>2</sub> - Python port of the [cMonkey biclustering algorithm](http://cmonkey.systemsbiology.net)
 
 ### Description
 
@@ -21,6 +21,10 @@ A complete set of documentation for installation and running of cMonkey is on th
 * MEME 4.3.0 or >= 4.8.1
 * csh (for running MEME)
 for the human setup, Weeder 1.4.2 is needed
+
+for running the unit tests (optional):
+
+* python-xmlrunner 
 
 for running the monitoring application (optional):
 

@@ -34,7 +34,7 @@ class SetTypeTest(unittest.TestCase):  # pylint: disable-msg=R0904
         aset1 = se.DiscreteEnrichmentSet(genes1)
         genes2 = {'gene3', 'gene4'}
         aset2 = se.DiscreteEnrichmentSet(genes2)
-        set_type = se.SetType('mysettype', {'set1': aset1, 'set2': aset2})
+        set_type = se.SetType('mysettype', {'set1': aset1, 'set2': aset2}, 1.0)
         self.assertEquals('mysettype', set_type.name)
         self.assertEquals({'gene1', 'gene2', 'gene3', 'gene4'},
                           set_type.genes())

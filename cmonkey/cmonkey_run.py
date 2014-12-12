@@ -1,5 +1,6 @@
 # vi: sw=4 ts=4 et:
 import os
+import shutil
 from datetime import date, datetime
 import json
 import numpy as np
@@ -101,7 +102,9 @@ class CMonkeyRun:
         conn.execute('''create table run_infos (start_time timestamp,
                         finish_time timestamp,
                         num_iterations int, last_iteration int,
-                        organism text, species text, num_rows int,
+                        organism text, species text,
+                        ncbi_code int,
+                        num_rows int,
                         num_columns int, num_clusters int, git_sha text)''')
 
         # stats tables
@@ -152,6 +155,10 @@ class CMonkeyRun:
                         on row_members (iteration)''')
         conn.execute('''create index if not exists cluststat_iter_index
                         on cluster_stats (iteration)''')
+        conn.execute("create index if not exists rowmemb_order_index on row_members (order_num)")
+        conn.execute("create index if not exists rowmemb_clust_index on row_members (cluster)")
+        conn.execute("create index if not exists motinf_clust_index on motif_infos (cluster)")
+
         logging.debug("created output database schema")
 
         # all cluster members are stored relative to the base ratio matrix
@@ -247,6 +254,9 @@ class CMonkeyRun:
 
         stringfile = self['string_file']
         kegg_map = util.make_dfile_map(keggfile, 1, 3)
+        kegg2ncbi = util.make_dfile_map(keggfile, 1, 2)
+        if self['ncbi_code'] is None and self['organism_code'] in kegg2ncbi:
+            self['ncbi_code'] = kegg2ncbi[self['organism_code']]
         ncbi_code = self['ncbi_code']
         nw_factories = []
         is_microbe = self['organism_code'] not in VERTEBRATES
@@ -426,8 +436,17 @@ class CMonkeyRun:
 
             # write the normalized ratio matrix for stats and visualization
             output_dir = self['output_dir']
-            if not os.path.exists(output_dir + '/ratios.tsv'):
+            if not os.path.exists(os.path.join(output_dir, '/ratios.tsv')):
                 self.ratios.write_tsv_file(output_dir + '/ratios.tsv')
+            # also copy the input matrix to the output
+            if (os.path.exists(self['ratios_file'])):
+                if self['ratios_file'].endswith('.gz'):
+                    copy_name = 'ratios.original.tsv.gz'
+                else:
+                    copy_name = 'ratios.original.tsv'
+
+                shutil.copyfile(self['ratios_file'],
+                                os.path.join(output_dir, 'ratios.original.tsv'))
 
         # gene index map is used for writing statistics
         thesaurus = self.organism().thesaurus()
@@ -579,10 +598,12 @@ class CMonkeyRun:
         conn = self.__dbconn()
         with conn:
             conn.execute('''insert into run_infos (start_time, num_iterations, organism,
-                            species, num_rows, num_columns, num_clusters, git_sha) values (?,?,?,?,?,?,?,?)''',
+                            species, ncbi_code, num_rows, num_columns, num_clusters, git_sha) values (?,?,?,?,?,?,?,?,?)''',
                          (datetime.now(), self['num_iterations'], self.organism().code,
-                          self.organism().species(), self.ratios.num_rows,
-                          self.ratios.num_columns, self['num_clusters'], '$Id$'))
+                          self.organism().species(), int(self['ncbi_code']),
+                          self.ratios.num_rows,
+                          self.ratios.num_columns, self['num_clusters'],
+                          '$Id$'))
 
     def update_iteration(self, iteration):
         conn = self.__dbconn()
@@ -629,9 +650,10 @@ class CMonkeyRun:
             if iteration == 1 or (iteration % self['result_freq'] == 0):
                 self.write_results(iteration_result)
 
-            if iteration == 1 or (iteration % self['stats_freq'] == 0):
-                self.write_stats(iteration_result)
-                self.update_iteration(iteration)
+        # This should not be too much writing, so we can keep it OUT of minimize_io option...?
+        if iteration == 1 or (iteration % self['stats_freq'] == 0):
+            self.write_stats(iteration_result)
+            self.update_iteration(iteration)
 
         if 'dump_results' in self['debug'] and (iteration == 1 or
                                                 (iteration % self['debug_freq'] == 0)):
@@ -718,8 +740,8 @@ class CMonkeyRun:
                                       self['num_clusters'], self['output_dir'])
 
             # additionally: run tomtom on the motifs
-            meme.run_tomtom(conn, self['output_dir'], self['MEME']['version'])
-
+            if self['MEME']['global_background'] == 'True':
+                meme.run_tomtom(conn, self['output_dir'], self['MEME']['version'])
 
         self.write_finish_info()
         logging.info("Done !!!!")

@@ -34,12 +34,14 @@ class MemeSuite:
     meme - discover motifs in a set of sequences
     mast - search for a group of motifs in a set of sequences
     """
-    def __init__(self, config_params, background_file=None, remove_tempfiles=True):
+    def __init__(self, config_params, background_file=None, bgmodel=None,
+                 remove_tempfiles=True):
         """Create MemeSuite instance"""
         self.max_width = int(config_params['MEME']['max_width'])
         self.background_order = int(config_params['MEME']['background_order'])
         self.__use_revcomp = config_params['MEME']['use_revcomp'] == 'True'
         self.__background_file = background_file
+        self.bgmodel = bgmodel
         self.__remove_tempfiles = remove_tempfiles
         self.arg_mod = config_params['MEME']['arg_mod']
 
@@ -335,7 +337,7 @@ class MemeSuite481(MemeSuite):
                          e.output)
             return None  # return nothing if there was an error
         finally:
-            print "removing %s..." % dirname
+            logging.info("removing %s...", dirname)
             shutil.rmtree(dirname)
             print "done."
 
@@ -789,20 +791,37 @@ def write_pssm(outfile, cursor, motif_info_id, evalue, num_sites):
         outfile.write('%5.3f %5.3f %5.3f %5.3f\n' % (a, c, g, t))
 
 def write_motifs2meme(conn, filepath):
+    """Write the motifs to a MEME file and returns True if successful
+    Currently, this only works if there is global background data in the database
+    """
     cursor = conn.cursor()
     cursor2 = conn.cursor()
 
     cursor.execute("select subsequence,pvalue from global_background where subsequence in ('A','C','G','T')")
     freqs = {base: pvalue for base, pvalue in cursor.fetchall()}
+    if len(freqs) >= 4 and 'A' in freqs and 'C' in freqs and 'G' in freqs and 'T' in freqs:
+        logging.info('retrieving letter frequency from global background distribution')
+        with open(filepath, 'w') as outfile:
+            outfile.write(MEME_FILE_HEADER % (freqs['A'], freqs['C'], freqs['G'], freqs['T']))
+            cursor.execute('select max(iteration) from motif_infos')
+            iteration = cursor.fetchone()[0]
+            cursor.execute('select mi.rowid,evalue,count(mms.rowid) from motif_infos mi join meme_motif_sites mms on mi.rowid=mms.motif_info_id where iteration=? group by mi.rowid',
+                           [iteration])
+            num_pssms_written = 0
+            for motif_info_id, evalue, num_sites in cursor.fetchall():
+                write_pssm(outfile, cursor2, motif_info_id, evalue, num_sites)
 
-    with open(filepath, 'w') as outfile:
-        outfile.write(MEME_FILE_HEADER % (freqs['A'], freqs['C'], freqs['G'], freqs['T']))
-        cursor.execute('select max(iteration) from motif_infos')
-        iteration = cursor.fetchone()[0]
-        cursor.execute('select mi.rowid,evalue,count(mms.rowid) from motif_infos mi join meme_motif_sites mms on mi.rowid=mms.motif_info_id where iteration=? group by mi.rowid',
-                       [iteration])
-        for motif_info_id, evalue, num_sites in cursor.fetchall():
-            write_pssm(outfile, cursor2, motif_info_id, evalue, num_sites)
+            # no pssms were written, this can happen when we did not
+            # run MEME, but weeder, so we retrieve the number of sites from MAST instead
+            if num_pssms_written == 0:
+                cursor.execute("select mi.rowid,evalue,count(ann.rowid) from motif_infos mi join motif_annotations ann on mi.rowid=ann.motif_info_id where mi.iteration=? group by mi.rowid",
+                               [iteration])
+                for motif_info_id, evalue, num_sites in cursor.fetchall():
+                    write_pssm(outfile, cursor2, motif_info_id, evalue, num_sites)
+        return True
+    else:
+        logging.warn('no global background distribution found')
+        return False
 
 
 EVALUE_CUTOFF = 100
@@ -819,34 +838,36 @@ def run_tomtom(conn, targetdir, version, q_thresh=Q_THRESHOLD, dist_method=DIST_
     """a wrapper around the tomtom script"""
     targetfile = os.path.join(targetdir, 'post.tomtom.meme')
     queryfile = targetfile
-    write_motifs2meme(conn, targetfile)
-    command = ['tomtom',
-               '-verbosity', '1',
-               '-q-thresh', '%.3f' % q_thresh,
-               '-dist', dist_method,
-               '-min-overlap', '%d' % min_overlap,
-               '-text',
-               '-query-pseudo', '%.3f' % q_pseudo,
-               '-target-pseudo', '%.3f' % t_pseudo]
-    # Tomtom versions > 4.8.x drop the target and query switches
-    if version == '4.3.0':
-        command.extend(['-target', targetfile, '-query', queryfile])
-    else:
-        command.extend([targetfile, queryfile])
-        
-    try:
-        output = subprocess.check_output(command)
-        lines = output.split('\n')[1:]
-        for line in lines:
-            if len(line.strip()) > 0:
-                row = line.strip().split('\t')            
-                motif1 = int(row[0])
-                motif2 = int(row[1])
-                if motif1 != motif2:
-                    pvalue = float(row[3])
-                    conn.execute('insert into tomtom_results (motif_info_id1,motif_info_id2,pvalue) values (?,?,?)',
-                                 [motif1, motif2, pvalue])
-    except:
-        raise
+    if write_motifs2meme(conn, targetfile):
+        command = ['tomtom',
+                   '-verbosity', '1',
+                   '-q-thresh', '%.3f' % q_thresh,
+                   '-dist', dist_method,
+                   '-min-overlap', '%d' % min_overlap,
+                   '-text',
+                   '-query-pseudo', '%.3f' % q_pseudo,
+                   '-target-pseudo', '%.3f' % t_pseudo]
+        logging.info(" ".join(command))
+
+        # Tomtom versions > 4.8.x drop the target and query switches
+        if version == '4.3.0':
+            command.extend(['-target', targetfile, '-query', queryfile])
+        else:
+            command.extend([targetfile, queryfile])
+
+        try:
+            output = subprocess.check_output(command)
+            lines = output.split('\n')[1:]
+            for line in lines:
+                if len(line.strip()) > 0:
+                    row = line.strip().split('\t')            
+                    motif1 = int(row[0])
+                    motif2 = int(row[1])
+                    if motif1 != motif2:
+                        pvalue = float(row[3])
+                        conn.execute('insert into tomtom_results (motif_info_id1,motif_info_id2,pvalue) values (?,?,?)',
+                                     [motif1, motif2, pvalue])
+        except:
+            raise
 
 __all__ = ['read_meme_output']

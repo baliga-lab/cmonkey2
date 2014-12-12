@@ -63,10 +63,11 @@ class SetType:
     """Set type representation. This is just a grouping from name to a number of sets
     and providing access to all contained genes"""
 
-    def __init__(self, name, sets):
+    def __init__(self, name, sets, weight):
         """instance creation"""
         self.name = name
         self.sets = sets
+        self.weight = weight
         self.__genes = None
 
     def genes(self):
@@ -101,14 +102,19 @@ def read_set_types(config_params, thesaurus):
     """Reads sets from a JSON file. We also ensure that genes
     are stored in canonical form in the set, so that set operations based on
     gene names will succeed"""
-    setfile = config_params['SetEnrichment']['set_file']
-    if setfile.endswith('csv'):
-        with open(setfile) as infile:
-            sets = read_sets_csv(infile, thesaurus)
-    else:
-        with open(setfile) as infile:
-            sets = process_sets(json.load(infile), thesaurus)
-    return [SetType('default', sets)]
+    result = []
+    set_types = config_params['SetEnrichment']['set_types'].split(',')
+    for set_type in set_types:
+        setfile = config_params['SetEnrichment-%s' % set_type]['set_file']
+        weight = float(config_params['SetEnrichment-%s' % set_type]['weight'])
+        if setfile.endswith('csv'):
+            with open(setfile) as infile:
+                sets = read_sets_csv(infile, thesaurus)
+        else:
+            with open(setfile) as infile:
+                sets = process_sets(json.load(infile), thesaurus)
+        result.append(SetType(set_type, sets, weight))
+    return result
 
 
 def process_sets(input_sets, thesaurus):
@@ -233,7 +239,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                 pValues.append(min_pvalue)
 
                 for row in xrange(len(self.gene_names())):
-                    matrix.values[row][cluster - 1] = scores[row]
+                    matrix.values[row][cluster - 1] += scores[row] * set_type.weight
             setFile.write('\n'+str(iteration_result['iteration'])+','+','.join([str(i) for i in minSets]))
             pvFile.write('\n'+str(iteration_result['iteration'])+','+','.join([str(i) for i in pValues]))
             setFile.close()

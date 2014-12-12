@@ -346,7 +346,9 @@ def setup_default(args, config_parser):
     """The overrides dictionary holds all the values that will overwrite or add
     to the settings defined in the default and user-defined ini files
     """
-    overrides = {'organism_code': args.organism, 'string_file': args.string,
+    overrides = {'organism_code': args.organism,
+                 'ratios_file': args.ratios,
+                 'string_file': args.string,
                  'logfile': args.logfile, 'rsat_organism': args.rsat_organism,
                  'num_clusters': __num_clusters(config_parser, args, ratios),
                  'memb.clusters_per_row': args.clusters_per_row,
