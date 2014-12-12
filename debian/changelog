@@ -2,6 +2,8 @@ cmonkey2 (1.0.3-1) unstable; urgency=low
 
   * bug fixes in weeder-meme integration, rename from cmonkey-python to cmonkey2
 
+ -- Wei-ju Wu <wwu@systemsbiology.org>  Mon, 20 Oct 2014 15:02:00 -0800
+
 cmonkey2 (1.0.2-1) unstable; urgency=low
 
   * switched to new cmviewer frontend, database changes, tomtom postprocessing
