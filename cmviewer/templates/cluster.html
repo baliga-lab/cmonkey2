@@ -12,8 +12,8 @@
     }
 
     $(document).ready(function() {
-      var chart1 = new Highcharts.Chart({
-        chart: {renderTo: 'expression-graph', type: 'line', height: 250 },
+      $('#expression-graph').highcharts({
+        chart: {type: 'line'},
         title: {text: 'Gene Expressions'},
         plotOptions: {line: {marker: {enabled: false}}},
         xAxis: {
@@ -30,8 +30,8 @@
         series: {{js_ratios}}
       });
 
-      var chart2 = new Highcharts.Chart({
-        chart: {renderTo: 'expression-graph2', type: 'boxplot', height: 250},
+      $('#expression-graph2').highcharts({
+        chart: {type: 'boxplot'},
         legend: {enabled: false},
         title: {text: 'Gene Expressions (Box Plot)'},
         xAxis: {
@@ -104,10 +104,10 @@
     <div id="column-members" style="display:none">{{columns|join(", ")}}</div>
   </div>
   <br>
-  <div id="expression-graph"></div>
+  <div id="expression-graph" style="height: 250px"></div>
   <a href="#" id="deselect-all-series">Deselect All</a>
   <a href="#" id="select-all-series">Select All</a>
-  <div id="expression-graph2"></div>
+  <div id="expression-graph2" style="height: 250px"></div>
   <div>&nbsp;</div><br>
   <h3>Motifs</h3>
   {% if seqtypes|length == 0 %}

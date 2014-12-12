@@ -6,10 +6,11 @@
     <link rel="stylesheet" media="screen" href="/static/stylesheets/ui-progress-bar.css">
     <link rel="stylesheet" media="screen" href="/static/stylesheets/jquery.dataTables.css">
     <link rel="shortcut icon" type="image/png" href="/static/images/favicon.png">
-    <script src="/static/javascripts/jquery-1.9.1.min.js" type="text/javascript"></script>
+    <script src="/static/javascripts/jquery-2.1.1.min.js" type="text/javascript"></script>
     <script src="/static/javascripts/jquery.dataTables.min.js" type="text/javascript"></script>
     <script src="/static/javascripts/highcharts.js" type="text/javascript"></script>
     <script src="/static/javascripts/highcharts-more.js" type="text/javascript"></script>
+    <script src="/static/javascripts/modules/exporting.js" type="text/javascript"></script>
     <script src="/static/javascripts/isblogo.js" type="text/javascript"></script>
     <script src="/static/javascripts/raphael-min.js"></script>
     <script src="/static/javascripts/gene_annotations.js" type="text/javascript"></script>
@@ -24,9 +25,8 @@
          var iterations = {{js_iterations}};
 
          // residual graph
-         var residualChart = new Highcharts.Chart({
+         $('#residual-graph').highcharts({
              chart: {
-                 renderTo: 'residual-graph',
                  type: 'line',
                  width: 300, height: 200
              },
@@ -41,9 +41,8 @@
          });
 
          // cluster member graph
-         var clusterMemberChart = new Highcharts.Chart({
+         $('#cluster-member-graph').highcharts({
              chart: {
-                 renderTo: 'cluster-member-graph',
                  type: 'line',
                  width: 300, height: 200
              },
@@ -58,9 +57,8 @@
                       {name: 'rows', data: {{js_mean_nrow}} }]
          });
          // cluster nrows graph
-         var clusterRowsChart = new Highcharts.Chart({
+         $('#cluster-row-graph').highcharts({
              chart: {
-                 renderTo: 'cluster-row-graph',
                  type: 'column',
                  width: 300, height: 200
              },
@@ -74,9 +72,8 @@
          });
 
          // cluster ncols graph
-         var clusterColumnsChart = new Highcharts.Chart({
+         $('#cluster-column-graph').highcharts({
              chart: {
-                 renderTo: 'cluster-column-graph',
                  type: 'column',
                  width: 300, height: 200
              },
@@ -90,9 +87,8 @@
          });
 
          // cluster residual graph
-         var clusterResidualChart = new Highcharts.Chart({
+         $('#cluster-residual-graph').highcharts({
              chart: {
-                 renderTo: 'cluster-residual-graph',
                  type: 'column',
                  width: 300, height: 200
              },
@@ -105,16 +101,16 @@
              series: [ { name: 'residual', data: {{js_resids_y}} } ]
          });
 
-         var runlogChart = new Highcharts.Chart({
-             chart: {renderTo: 'runlog-graph', type: 'line', width: 300, height: 200},
+         $('#runlog-graph').highcharts({
+             chart: {type: 'line', width: 300, height: 200},
              title: {text: 'Run parameters'},
              plotOptions: { line: { marker: { enabled: false }, } },
              yAxis: { title: { text: 'scaling' }, min: 0 },
              series: {{js_runlog_series}}
          });
 
-         var meanScoreChart = new Highcharts.Chart({
-             chart: {renderTo: 'motif-score-graph', type: 'line', width: 300, height: 200},
+         $('#motif-score-graph').highcharts({
+             chart: {type: 'line', width: 300, height: 200},
              title: { text: 'Median scores' },
              plotOptions: { line: { marker: { enabled: false }, } },
              xAxis: {categories: iterations, tickInterval: 30},
@@ -122,9 +118,8 @@
              series: {{js_stats}}
          });
 
-         var networkScoreChart = new Highcharts.Chart({
+         $('#network-score-graph').highcharts({
              chart: {
-                 renderTo: 'network-score-graph',
                  type: 'line',
                  width: 300, height: 200
              },
@@ -138,9 +133,8 @@
              series: {{js_network_stats}}
          });
 
-         var fuzzyCoeffChart = new Highcharts.Chart({
+         $('#fuzzy-graph').highcharts({
              chart: {
-                 renderTo: 'fuzzy-graph',
                  type: 'line',
                  width: 300, height: 200
              },
