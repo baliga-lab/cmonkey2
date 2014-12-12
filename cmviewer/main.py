@@ -421,7 +421,7 @@ class ClusterViewerApp:
             
 
         rows = [["%d" % (i + 1),
-                 "<a class=\"clusterlink\" id=\"%d\"  href=\"#\">%d</a>" % (stat.cluster, stat.cluster),
+                 "<a class=\"clusterlink\" id=\"%d\"  href=\"javascript:void(0)\">%d</a>" % (stat.cluster, stat.cluster),
                  '%d' % stat.num_rows,
                  '%d' % stat.num_cols,
                  format_float(stat.residual),

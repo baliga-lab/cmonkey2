@@ -18,6 +18,22 @@
       .alignRight { text-align: right; }
     </style>
     <script type="text/javascript">
+      function assignClusterClickHandlers() {
+        console.debug('click');
+        var cluster = $(this).attr('id');
+        $.get('/cluster/{{current_iter}}/' + cluster,
+              function(html) {
+                // we need the trim() call in order for jQuery 1.9.x to
+                // recognize the output as valid HTML
+                $(html.trim()).replaceAll('#cluster-view');
+                // notify Firegoose to rescan the page
+                var ev = document.createEvent("Events");
+                ev.initEvent("gaggleDataEvent", true, false);
+                document.dispatchEvent(ev);
+              });
+        return false;
+      }
+
       $(document).ready(function() {
          $('#select_iteration').change(function (event) {
              window.location.href = "/" + $(this).val();
@@ -168,20 +184,9 @@
            
            'sAjaxSource': '/clusters/{{current_iter}}',
            'fnInitComplete': function() {
-              $('a.clusterlink').click(function () {
-                var cluster = $(this).attr('id');
-                $.get('/cluster/{{current_iter}}/' + cluster,
-                   function(html) {
-                       // we need the trim() call in order for jQuery 1.9.x to
-                       // recognize the output as valid HTML
-                       $(html.trim()).replaceAll('#cluster-view');
-                       // notify Firegoose to rescan the page
-                       var ev = document.createEvent("Events");
-                       ev.initEvent("gaggleDataEvent", true, false);
-                       document.dispatchEvent(ev);
-                   });
-                return false;
-              });
+              // TODO: after a sort, the link handlers are all invalid
+              // so we need to reassign the handlers
+              $('a.clusterlink').click(assignClusterClickHandlers);
             }
          });
 
