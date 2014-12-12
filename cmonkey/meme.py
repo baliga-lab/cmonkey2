@@ -807,8 +807,17 @@ def write_motifs2meme(conn, filepath):
             iteration = cursor.fetchone()[0]
             cursor.execute('select mi.rowid,evalue,count(mms.rowid) from motif_infos mi join meme_motif_sites mms on mi.rowid=mms.motif_info_id where iteration=? group by mi.rowid',
                            [iteration])
+            num_pssms_written = 0
             for motif_info_id, evalue, num_sites in cursor.fetchall():
                 write_pssm(outfile, cursor2, motif_info_id, evalue, num_sites)
+
+            # no pssms were written, this can happen when we did not
+            # run MEME, but weeder, so we retrieve the number of sites from MAST instead
+            if num_pssms_written == 0:
+                cursor.execute("select mi.rowid,evalue,count(ann.rowid) from motif_infos mi join motif_annotations ann on mi.rowid=ann.motif_info_id where mi.iteration=? group by mi.rowid",
+                               [iteration])
+                for motif_info_id, evalue, num_sites in cursor.fetchall():
+                    write_pssm(outfile, cursor2, motif_info_id, evalue, num_sites)
         return True
     else:
         logging.warn('no global background distribution found')
