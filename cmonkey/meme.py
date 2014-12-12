@@ -742,7 +742,7 @@ def global_background_file(organism, gene_aliases, seqtype, bgorder=3,
 
 
 USER_TEST_FASTA_PATH = 'config/fasta_test.fa'
-SYSTEM_TEST_FASTA_PATH = '/etc/cmonkey-python/fasta_test.fa'
+SYSTEM_TEST_FASTA_PATH = '/etc/cmonkey2/fasta_test.fa'
 
 
 def check_meme_version():

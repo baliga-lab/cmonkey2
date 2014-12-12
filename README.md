@@ -6,7 +6,7 @@ This is the Python implementation of the cMonkey algorithm based on the original
 
 ### Documentation
 
-A complete set of documentation for installation and running of cMonkey is on the [wiki](https://github.com/weiju/cmonkey-python/wiki). There are also [developer](https://groups.google.com/d/forum/cmonkey-dev) and [user](https://groups.google.com/d/forum/cmonkey-users) discussion groups. 
+A complete set of documentation for installation and running of cMonkey is on the [wiki](https://github.com/baliga-lab/cmonkey2/wiki). There are also [developer](https://groups.google.com/d/forum/cmonkey-dev) and [user](https://groups.google.com/d/forum/cmonkey-users) discussion groups. 
 
 ### System requirements
 
@@ -36,9 +36,9 @@ for running the monitoring application (optional):
 
     ./run_tests.sh
 
-### Running cMonkey
+### Running cmonkey2
 
-In general, you should be able to run cmonkey-python on microbial gene
+In general, you should be able to run cmonkey2 on microbial gene
 expressions with
 
     ./cmonkey.py --organism <organism-code> --ratios <tab separated file of gene expressions>

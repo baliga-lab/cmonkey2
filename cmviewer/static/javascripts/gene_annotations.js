@@ -1,6 +1,6 @@
 /*
   gene_annotations.js - Javascript visualization library for MEME scores in
-  a cMonkey cluster. This library is part of cmonkey-python. See LICENSE for
+  a cMonkey cluster. This library is part of cmonkey2. See LICENSE for
   licensing details.
 */
 var annot;
