@@ -31,8 +31,8 @@ import thesaurus
 
 USER_KEGG_FILE_PATH = 'config/KEGG_taxonomy'
 USER_GO_FILE_PATH = 'config/proteome2taxid'
-SYSTEM_KEGG_FILE_PATH = '/etc/cmonkey-python/KEGG_taxonomy'
-SYSTEM_GO_FILE_PATH = '/etc/cmonkey-python/proteome2taxid'
+SYSTEM_KEGG_FILE_PATH = '/etc/cmonkey2/KEGG_taxonomy'
+SYSTEM_GO_FILE_PATH = '/etc/cmonkey2/proteome2taxid'
 
 # pipeline paths
 PIPELINE_USER_PATHS = {
@@ -42,10 +42,10 @@ PIPELINE_USER_PATHS = {
     'rowsandnetworks': 'config/rows_and_networks_pipeline.json'
 }
 PIPELINE_SYSTEM_PATHS = {
-    'default': '/etc/cmonkey-python/default_pipeline.json',
-    'rows': '/etc/cmonkey-python/rows_pipeline.json',
-    'rowsandmotifs': '/etc/cmonkey-python/rows_and_motifs_pipeline.json',
-    'rowsandnetworks': '/etc/cmonkey-python/rows_and_networks_pipeline.json'
+    'default': '/etc/cmonkey2/default_pipeline.json',
+    'rows': '/etc/cmonkey2/rows_pipeline.json',
+    'rowsandmotifs': '/etc/cmonkey2/rows_and_motifs_pipeline.json',
+    'rowsandnetworks': '/etc/cmonkey2/rows_and_networks_pipeline.json'
 }
 
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This is a shell script to cleanup a cmonkey-python result archive or directory
+# This is a shell script to cleanup a cmonkey2 result archive or directory
 # If directory:
 #   - removing unnecessary pkl/runlog files and data from database
 #
