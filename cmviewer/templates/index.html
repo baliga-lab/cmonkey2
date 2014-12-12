@@ -19,7 +19,6 @@
     </style>
     <script type="text/javascript">
       function assignClusterClickHandlers() {
-        console.debug('click');
         var cluster = $(this).attr('id');
         $.get('/cluster/{{current_iter}}/' + cluster,
               function(html) {
@@ -183,11 +182,8 @@
            ],
            
            'sAjaxSource': '/clusters/{{current_iter}}',
-           'fnInitComplete': function() {
-              // TODO: after a sort, the link handlers are all invalid
-              // so we need to reassign the handlers
-              $('a.clusterlink').click(assignClusterClickHandlers);
-            }
+         }).on('order.dt', function() {
+            $('a.clusterlink').click(assignClusterClickHandlers);
          });
 
       });
