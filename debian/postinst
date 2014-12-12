@@ -3,12 +3,12 @@ set -e
 case "$1" in
     configure)
     ln -s /usr/share/pyshared/cmonkey /usr/lib/python2.7/dist-packages/
-    ln -s /var/cmonkey-python /etc/
+    ln -s /var/cmonkey2 /etc/
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
-    rm -f /usr/lib/python2.7/dist-packages/cmonkey
-    rm -f /etc/cmonkey-python
+    rm -f /usr/lib/python2.7/dist-packages/cmonkey2
+    rm -f /etc/cmonkey2
     ;;
 
     *)
