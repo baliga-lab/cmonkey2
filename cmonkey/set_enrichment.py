@@ -131,7 +131,7 @@ def process_sets(input_sets, thesaurus):
     return sets
 
 
-def read_sets_csv(infile, thesaurus, sep=','):
+def read_sets_csv(infile, thesaurus, sep1=',', sep2=';'):
     """Reads sets from a CSV file
     We support 2-column and 3 column formats:
 
@@ -143,13 +143,16 @@ def read_sets_csv(infile, thesaurus, sep=','):
 
     <set name><separator><gene><weight>
     """
-    line1 = infile.readline().strip().split(sep)
+    line1 = infile.readline().strip().split(sep1)
     if len(line1) == 2:
         sets = defaultdict(list)
-        sets[line1[0]].append(line1[1])
+        for gene in line1[1].split(sep2):
+            sets[line1[0]].append(gene)
+
         for line in infile:
-            row = line.strip().split(sep)
-            sets[row[0]].append(row[1])
+            row = line.strip().split(sep1)
+            for gene in row[1].split(sep2):
+                sets[row[0]].append(gene)
         return process_sets(sets, thesaurus)
     else:
         raise Exception("3 column set files not supported yet")
