@@ -13,8 +13,8 @@
         height: 100%;
         width: 100%;
         position: absolute;
-        left: 0;
-        top: 0;
+        left: 10;
+        top: 10;
       }
     </style>
     <script>
@@ -45,10 +45,12 @@
             .selector('node').css({
               'content': 'data(name)',
               'text-valign': 'center',
-              'color': 'black'
+              'color': 'black',
+              'min-zoomed-font-size': 7
             })
             .selector('edge').css({
-              'target-arrow-shape': 'none'
+              'target-arrow-shape': 'none',
+              'curve-style': 'haystack'
             })
             .selector('.clusters').css({
               'color': 'green', 'background-color': 'red',
@@ -88,7 +90,11 @@
                 cy.elements().removeClass('faded');
               }
             });
-          }
+          },
+          pixelRatio: 1.0,
+          hideEdgesOnViewport: true,
+          hideLabelsOnViewport: true,
+          textureOnViewport: true
         });
       }); // on dom ready
 </script>
