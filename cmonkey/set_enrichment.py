@@ -295,12 +295,13 @@ def compute_cluster_score(args):
     cluster_genes = {gene for gene in cluster_rows if gene in set_type_genes}
     overlap_sizes = []
     set_sizes = []
-
+    set_names = []
     for set_name in sorted(set_type.sets.keys()):
         eset = set_type.sets[set_name]
         set_genes = eset.genes_above_cutoff()
         intersect = len(cluster_genes.intersection(set_genes))
         if intersect > 0:
+            set_names.append(set_name)
             set_sizes.append(len(set_genes))
             overlap_sizes.append(intersect)
 
@@ -314,7 +315,7 @@ def compute_cluster_score(args):
         enrichment_pvalues = np.array(util.phyper(overlap_sizes, set_sizes, phyper_n, phyper_k))
         min_pvalue = enrichment_pvalues[np.isfinite(enrichment_pvalues)].min()
         min_index = np.where(enrichment_pvalues == min_pvalue)[0][0]
-        min_set = sorted(set_type.sets.keys())[min_index]
+        min_set = set_names[min_index]
         min_set_overlap = overlap_sizes[min_index]
 
         min_genes = set_type.sets[min_set].genes()
