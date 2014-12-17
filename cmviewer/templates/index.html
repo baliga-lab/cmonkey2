@@ -16,9 +16,24 @@
     <script src="/static/javascripts/isblogo.js" type="text/javascript"></script>
     <script src="/static/javascripts/raphael-min.js"></script>
     <script src="/static/javascripts/gene_annotations.js" type="text/javascript"></script>
+    <script src="/static/javascripts/cytoscape.min.js" type="text/javascript"></script>
+    <script src="/static/javascripts/springy.js" type="text/javascript"></script>
+
     <style media="all" type="text/css">
       .alignRight { text-align: right; }
+
+      body {
+        font: 14px helvetica neue, helvetica, arial, sans-serif;
+      }
+      #cy {
+        height: 500px;
+        width: 100%;
+        position: absolute;
+        left: 10;
+        top: 10;
+      }
     </style>
+
     <script type="text/javascript">
       function assignClusterClickHandlers() {
         var cluster = $(this).attr('id');
@@ -227,12 +242,12 @@
        {% endif %}
        <div style="height: 10px;">&nbsp;</div>
      </div>
-     <a href="/network/{{iteration}}">View Network</a>
 
      <div id="tabs">
        <ul>
          <li><a href="#stats-tab">Statistics</a></li>
          <li><a href="#cluster-tab">Clusters</a></li>
+         <li><a href="/network/{{iteration}}">Network</a></li>
        </ul>
 
        <div id="stats-tab">
@@ -273,8 +288,8 @@
            </div>
          </div>
        </div>
-     </div>
 
+     </div>
    </div>
 
   </body>

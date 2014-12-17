@@ -1,23 +1,4 @@
-<!doctype html>
-<html>
-  <head>
-    <title>CMViewer - Network view for {{species}}</title>
-    <script src="/static/javascripts/jquery-2.1.1.min.js" type="text/javascript"></script>
-    <script src="/static/javascripts/cytoscape.min.js" type="text/javascript"></script>
-    <script src="/static/javascripts/springy.js" type="text/javascript"></script>
-    <style id="jsbin-css">
-      body {
-        font: 14px helvetica neue, helvetica, arial, sans-serif;
-      }
-      #cy {
-        height: 100%;
-        width: 100%;
-        position: absolute;
-        left: 10;
-        top: 10;
-      }
-    </style>
-    <script>
+<script>
       $(document).ready(function() {
         var nodeData = [];
         for (var i = 0; i < {{num_clusters}}; i++) {
@@ -75,6 +56,7 @@
             var cy = this;
             cy.load({ nodes: nodeData, edges: edgeData}, function() {
               cy.layout({name: 'springy', animate: false, fit: true});
+              cy.fit();
             });
             /*
             cy.elements().unselectify();
@@ -98,12 +80,6 @@
         });
       }); // on dom ready
 </script>
-
-  </head>
-<body>
-  <h2>Network view of {{species}} at iteration {{iteration}}</h2>
-  <div id="container">
-    <div id="cy"></div>
-  </div>
-</body>
-</html>
+<div id="nw-container">
+  <div id="cy"></div>
+</div>
