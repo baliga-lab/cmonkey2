@@ -285,6 +285,7 @@ class ClusterViewerApp:
 
     @cherrypy.expose
     def iteration(self, iteration):
+        current_iter = int(iteration)
         conn = dbconn()
         cursor = conn.cursor()
         cursor.execute('select distinct iteration from row_members')
@@ -315,9 +316,9 @@ class ClusterViewerApp:
                                    for iter in sorted(row_stats.keys())])
         js_mean_ncol = json.dumps([float(sum(col_stats[iter])) / len(col_stats[iter])
                                    for iter in sorted(col_stats.keys())])
-        js_nrows_x, js_nrows_y = make_int_histogram(row_stats[int(iteration)])
-        js_ncols_x, js_ncols_y = make_int_histogram(col_stats[int(iteration)])
-        js_resids_x, js_resids_y = make_float_histogram(resid_stats[int(iteration)])
+        js_nrows_x, js_nrows_y = make_int_histogram(row_stats[current_iter])
+        js_ncols_x, js_ncols_y = make_int_histogram(col_stats[current_iter])
+        js_resids_x, js_resids_y = make_float_histogram(resid_stats[current_iter])
         cursor.close()
 
         conn.row_factory = runinfo_factory
@@ -365,7 +366,6 @@ class ClusterViewerApp:
         tmpl = env.get_template('index.html')
         progress = "%.2f" % min((float(runinfo.last_iter) / float(runinfo.num_iters) * 100.0),
                                 100.0)
-        current_iter = int(iteration)
         return tmpl.render(locals())
 
     @cherrypy.expose

@@ -40,7 +40,7 @@
           {% endfor %}
         ];
 
-        $('#cy').cytoscape({
+        var cy = $('#cy').cytoscape({
           style: cytoscape.stylesheet()
             .selector('node').css({
               'content': 'data(name)',
@@ -71,13 +71,12 @@
               'opacity': 0.25,
               'text-opacity': 0
             }),
-          elements: {
-            nodes: nodeData,
-            edges: edgeData
-          },
-          layout: { name: 'springy', animate: false, fit: true },
           ready: function() {
-            window.cy = this;
+            var cy = this;
+            cy.load({ nodes: nodeData, edges: edgeData}, function() {
+              cy.layout({name: 'springy', animate: false, fit: true});
+            });
+            /*
             cy.elements().unselectify();
             cy.on('tap', 'node', function(e) {
               var node = e.cyTarget;
@@ -89,9 +88,10 @@
               if (e.cyTarget === cy) {
                 cy.elements().removeClass('faded');
               }
-            });
+            }); */
           },
           pixelRatio: 1.0,
+          motionBlur: true,
           hideEdgesOnViewport: true,
           hideLabelsOnViewport: true,
           textureOnViewport: true
