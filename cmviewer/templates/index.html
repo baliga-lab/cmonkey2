@@ -139,12 +139,13 @@
          var iterations = {{js_iterations}};
 
          // residual graph
+         var titleSize = '11pt';
          $('#residual-graph').highcharts({
              chart: {
                  type: 'line',
                  width: 300, height: 200
              },
-             title: { text: 'Mean Residual' },
+             title: { text: 'Mean Residual', style: {'fontSize': titleSize} },
              plotOptions: { line: { marker: { enabled: false }, } },
              xAxis: {
                  categories: iterations,
@@ -160,7 +161,7 @@
                  type: 'line',
                  width: 300, height: 200
              },
-             title: { text: 'Mean nrow, ncol/iter' },
+             title: { text: 'Mean nrow, ncol/iter', style: {'fontSize': titleSize} },
              plotOptions: { line: { marker: { enabled: false }, } },
              xAxis: {
                  categories: iterations,
@@ -176,7 +177,7 @@
                  type: 'column',
                  width: 300, height: 200
              },
-             title: { text: '# clusters -> # rows' },
+             title: { text: '# clusters -> # rows', style: {'fontSize': titleSize} },
              xAxis: {
                  categories: {{js_nrows_x}},
                  tickInterval: 5
@@ -191,7 +192,7 @@
                  type: 'column',
                  width: 300, height: 200
              },
-             title: { text: '# clusters -> # columns' },
+             title: { text: '# clusters -> # columns', style: {'fontSize': titleSize} },
              xAxis: {
                  categories: {{js_ncols_x}},
                  tickInterval: 2
@@ -206,7 +207,7 @@
                  type: 'column',
                  width: 300, height: 200
              },
-             title: { text: 'cluster residuals' },
+             title: { text: 'cluster residuals', style: {'fontSize': titleSize} },
              xAxis: {
                  categories: {{js_resids_x}},
                  tickInterval: 3
@@ -217,7 +218,7 @@
 
          $('#runlog-graph').highcharts({
              chart: {type: 'line', width: 300, height: 200},
-             title: {text: 'Run parameters'},
+             title: {text: 'Run parameters', style: {'fontSize': titleSize}},
              plotOptions: { line: { marker: { enabled: false }, } },
              yAxis: { title: { text: 'scaling' }, min: 0 },
              series: {{js_runlog_series}}
@@ -225,7 +226,7 @@
 
          $('#motif-score-graph').highcharts({
              chart: {type: 'line', width: 300, height: 200},
-             title: { text: 'Median scores' },
+             title: { text: 'Median scores', style: {'fontSize': titleSize} },
              plotOptions: { line: { marker: { enabled: false }, } },
              xAxis: {categories: iterations, tickInterval: 30},
              yAxis: { title: { text: 'mean p-value' }, max: {{max_stats_score}}, min: {{min_stats_score}} },
@@ -237,7 +238,7 @@
                  type: 'line',
                  width: 300, height: 200
              },
-             title: { text: 'Mean network scores' },
+             title: { text: 'Mean network scores', style: {'fontSize': titleSize} },
              plotOptions: { line: { marker: { enabled: false }, } },
              xAxis: {
                  categories: iterations,
@@ -252,7 +253,7 @@
                  type: 'line',
                  width: 300, height: 200
              },
-             title: { text: 'Fuzzy coefficient' },
+             title: { text: 'Fuzzy coefficient', style: {'fontSize': titleSize} },
              plotOptions: { line: { marker: { enabled: false }, } },
              xAxis: {
                  categories: iterations,
