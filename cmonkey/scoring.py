@@ -96,11 +96,14 @@ class ScoringFunctionBase:
         else:
             return None
 
-    def set_score_means(self, iteration_result, matrix):
-        score_means = 0.0
-        if matrix is not None:
-            score_means = matrix.mean()
-        iteration_result['score_means'][self.id] = score_means        
+    def current_score_means(self, result_matrix):
+        """This function can be overridden by custom functions to provide their
+        own score means. The default version computes the means of the result
+        matrix, but feel free to provide your own"""
+        if result_matrix is None:
+            return 0.0
+        else:
+            return result_matrix.mean()
 
     def compute(self, iteration_result, reference_matrix=None):
         """general compute method,
@@ -139,7 +142,7 @@ class ScoringFunctionBase:
         self.run_log.log(iteration,
                          self.run_in_iteration(iteration),
                          self.scaling(iteration_result['iteration']))
-        self.set_score_means(iteration_result, computed_result)
+        iteration_result['score_means'][self.id] = self.current_score_means(computed_result)
         return computed_result
 
     def compute_force(self, iteration_result, reference_matrix=None):
@@ -153,11 +156,13 @@ class ScoringFunctionBase:
         self.run_log.log(iteration,
                          self.run_in_iteration(iteration),
                          self.scaling(iteration_result['iteration']))
-        self.set_score_means(iteration_result, computed_result)
+        iteration_result['score_means'][self.id] = self.current_score_means(computed_result)
         return computed_result
 
     def do_compute(self, iteration_result, ref_matrix=None):
-        raise Execption("implement me")
+        """this function is the location of the actual computation, derived scoring
+        functions must implement this"""
+        raise Exception("implement me")
 
     def num_clusters(self):
         """returns the number of clusters"""
