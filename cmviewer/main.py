@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import cherrypy
+from cherrypy import tools
 from jinja2 import Environment, FileSystemLoader
 import os
 import sqlite3
@@ -248,8 +249,10 @@ class ClusterViewerApp:
             tmpl = env.get_template('not_available.html')
             return tmpl.render(locals())
 
+
     @cherrypy.expose
-    def view_network(self, iteration):
+    @cherrypy.tools.json_out()
+    def cytoscape_nodes(self, iteration):
         conn = dbconn()
         cursor = conn.cursor()
 
@@ -271,30 +274,48 @@ class ClusterViewerApp:
         cursor.execute("select rowid,cluster,motif_num from motif_infos where iteration=?",
                        [iteration])
         motifs = [(mid, cluster, motif_num) for mid,cluster,motif_num in cursor.fetchall()]
+        cursor.close()
+        conn.close()
+
         motifs_json = [{'classes': 'motifs',
                         'data': {'id': 'm%d' % m[0],
                                  'name': '%d_%d' % (m[1], m[2])}}
                        for m in motifs]
-        nodedata_json = json.dumps(clusters_json + genes_json + motifs_json)
+        return {'nodes': clusters_json + genes_json + motifs_json }
 
-        # edges
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def cytoscape_edges(self, iteration):
+        conn = dbconn()
+        cursor = conn.cursor()
+        # motifs
+        cursor.execute("select rowid,cluster,motif_num from motif_infos where iteration=?",
+                       [iteration])
+        motifs = [(mid, cluster, motif_num) for mid,cluster,motif_num in cursor.fetchall()]
+
+        # edges between clusters and genes
         cursor.execute("select name, cluster from row_members rm join row_names rn on rm.order_num = rn.order_num where iteration=?", [iteration])
         edges = [(row[0], row[1]) for row in cursor.fetchall()]
-        # add the edges to the motifs
+
+        # add the edges between motifs and clusters
         for motif in motifs:
             edges.append(("m%d" % motif[0], motif[1]))
 
-        # tomtom
+        # tomtom (motif-motif) edges
         cursor.execute("select motif_info_id1, motif_info_id2 from tomtom_results where motif_info_id1 <> motif_info_id2")
         for mid1, mid2 in cursor.fetchall():
             edges.append(("m%d" % mid1, "m%d" % mid2))
-
-        edgedata_json = json.dumps([
-            {'data': {'source': '%s' % id1, 'target': '%s' % id2} }
-            for id1, id2 in edges])
-
         cursor.close()
         conn.close()
+
+        return {'edges': [{'data': {'source': '%s' % id1, 'target': '%s' % id2} }
+                          for id1, id2 in edges]}
+
+
+    @cherrypy.expose
+    def view_network(self, iteration):
+        current_iter = int(iteration)
         tmpl = env.get_template('network.html')
         return tmpl.render(locals())
 
@@ -584,6 +605,10 @@ def setup_routes():
     main = ClusterViewerApp()
     d.connect('main', '/', controller=main, action="index")
     d.connect('network', '/network/:iteration', controller=main, action="view_network")
+    d.connect('cytonodes', '/cytoscape_nodes/:iteration', controller=main,
+              action="cytoscape_nodes")
+    d.connect('cytoedges', '/cytoscape_edges/:iteration', controller=main,
+              action="cytoscape_edges")
     d.connect('iteration', '/:iteration', controller=main, action="iteration")
     d.connect('clusters', '/clusters/:iteration', controller=main, action="clusters")
     d.connect('cluster', '/cluster/:iteration/:cluster', controller=main, action="view_cluster")

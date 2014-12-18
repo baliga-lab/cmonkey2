@@ -1,8 +1,5 @@
 <script>
       $(document).ready(function() {
-        var nodeData = {{nodedata_json}};
-        var edgeData = {{edgedata_json}};
-
         var cy = $('#cy').cytoscape({
           style: cytoscape.stylesheet()
             .selector('node').css({
@@ -36,10 +33,18 @@
             }),
           ready: function() {
             var cy = this;
-            cy.load({ nodes: nodeData, edges: edgeData}, function() {
-              cy.layout({name: 'springy', animate: false, fit: true});
-              cy.fit();
-            });
+            cy.startBatch();
+            jQuery.getJSON('/cytoscape_nodes/{{current_iter}}',
+                           function(nodes) {
+                             cy.add(nodes);
+                             jQuery.getJSON('/cytoscape_edges/{{current_iter}}',
+                                            function(edges) {
+                               cy.add(edges);
+                               cy.endBatch();
+                               cy.layout({name: 'springy', animate: false, fit: true});
+                               cy.fit();
+                             });
+                           });
             /*
             cy.elements().unselectify();
             cy.on('tap', 'node', function(e) {
