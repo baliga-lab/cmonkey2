@@ -260,7 +260,8 @@ class ClusterViewerApp:
         cursor.execute('select num_clusters, species from run_infos')
         num_clusters, species = cursor.fetchone()
         clusters_json = [{'classes': 'clusters',
-                          'data': {'id': '%d' % cluster, 'name': '%d' % cluster}}
+                          'data': {'id': '%d' % cluster, 'name': '%d' % cluster,
+                          'href': '/%d?viewcluster=%d' % (int(iteration), cluster)}}
                          for cluster in range(1, num_clusters + 1)]
 
         # used genes
@@ -303,7 +304,7 @@ class ClusterViewerApp:
             edges.append(("m%d" % motif[0], motif[1]))
 
         # tomtom (motif-motif) edges
-        cursor.execute("select motif_info_id1, motif_info_id2 from tomtom_results where motif_info_id1 <> motif_info_id2")
+        cursor.execute("select motif_info_id1, motif_info_id2 from tomtom_results ttr join motif_infos mi on ttr.motif_info_id1=mi.rowid where motif_info_id1 <> motif_info_id2 and iteration=?", [iteration])
         for mid1, mid2 in cursor.fetchall():
             edges.append(("m%d" % mid1, "m%d" % mid2))
         cursor.close()
@@ -320,7 +321,7 @@ class ClusterViewerApp:
         return tmpl.render(locals())
 
     @cherrypy.expose
-    def iteration(self, iteration):
+    def iteration(self, iteration, viewcluster=None):
         current_iter = int(iteration)
         conn = dbconn()
         cursor = conn.cursor()
