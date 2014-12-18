@@ -112,6 +112,9 @@
             activate: function(event, ui) {
               var active = $('#tabs').tabs("option", "active");
               if (active == 2) initCytoweb();
+              else if (active == 1) {
+                $('#cluster-list').dataTable().fnAdjustColumnSizing();
+              }
             }
          });
 
@@ -313,7 +316,6 @@
        </ul>
 
        <div id="stats-tab">
-         <h3>Statistics</h3>
          <div id="statssection">
            <div id="leftcolumn">
              <div class="innertube">
@@ -335,7 +337,6 @@
        </div>
 
        <div id="cluster-tab">
-         <h3>Clusters</h3>
          <div id="clustersection">
            <table class="item-list" id="cluster-list">
              <thead>
