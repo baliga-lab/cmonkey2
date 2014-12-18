@@ -256,15 +256,26 @@ class ClusterViewerApp:
         # used clusters
         cursor.execute('select num_clusters, species from run_infos')
         num_clusters, species = cursor.fetchone()
+        clusters_json = [{'classes': 'clusters',
+                          'data': {'id': '%d' % cluster, 'name': '%d' % cluster}}
+                         for cluster in range(1, num_clusters + 1)]
 
         # used genes
         cursor.execute("select distinct name from row_names rn join row_members rm on rn.order_num = rm.order_num where iteration=? order by name", [iteration])
         genes = [row[0] for row in cursor.fetchall()]
+        genes_json = [{'classes': 'genes',
+                       'data': {'id': '%s' % gene, 'name': '%s' % gene}}
+                      for gene in genes]
 
         # motifs
         cursor.execute("select rowid,cluster,motif_num from motif_infos where iteration=?",
                        [iteration])
         motifs = [(mid, cluster, motif_num) for mid,cluster,motif_num in cursor.fetchall()]
+        motifs_json = [{'classes': 'motifs',
+                        'data': {'id': 'm%d' % m[0],
+                                 'name': '%d_%d' % (m[1], m[2])}}
+                       for m in motifs]
+        nodedata_json = json.dumps(clusters_json + genes_json + motifs_json)
 
         # edges
         cursor.execute("select name, cluster from row_members rm join row_names rn on rm.order_num = rn.order_num where iteration=?", [iteration])
@@ -277,6 +288,10 @@ class ClusterViewerApp:
         cursor.execute("select motif_info_id1, motif_info_id2 from tomtom_results where motif_info_id1 <> motif_info_id2")
         for mid1, mid2 in cursor.fetchall():
             edges.append(("m%d" % mid1, "m%d" % mid2))
+
+        edgedata_json = json.dumps([
+            {'data': {'source': '%s' % id1, 'target': '%s' % id2} }
+            for id1, id2 in edges])
 
         cursor.close()
         conn.close()

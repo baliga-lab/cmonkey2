@@ -1,25 +1,7 @@
 <script>
       $(document).ready(function() {
-        var nodeData = [];
-        for (var i = 0; i < {{num_clusters}}; i++) {
-          var cluster = i + 1;
-          nodeData[i] = { classes: 'clusters', data: { id: cluster.toString(), name: cluster.toString() } };
-        };
-        var genes = [
-          {% for gene in genes %}{ classes: 'genes', data: { id: '{{gene}}', name: '{{gene}}' } },
-          {% endfor %}
-        ];
-        nodeData = nodeData.concat(genes);
-        var motifs = [
-          {% for motif in motifs %}{ classes: 'motifs', data: { id: 'm{{motif[0]}}', name: '{{motif[1]}}_{{motif[2]}}' } },
-          {% endfor %}
-        ];
-        nodeData = nodeData.concat(motifs);
-
-        var edgeData = [
-          {% for gene, cluster in edges %}{ data: { source: '{{gene}}', target: '{{cluster}}' } },
-          {% endfor %}
-        ];
+        var nodeData = {{nodedata_json}};
+        var edgeData = {{edgedata_json}};
 
         var cy = $('#cy').cytoscape({
           style: cytoscape.stylesheet()
