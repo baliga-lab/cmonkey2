@@ -32,6 +32,7 @@
         left: 10;
         top: 10;
       }
+      #network-tab { height: 500px}
     </style>
 
     <script type="text/javascript">
@@ -50,8 +51,69 @@
         return false;
       }
 
+      function initCytoweb() {
+        var cy = $('#cy').cytoscape({
+          style: cytoscape.stylesheet()
+            .selector('node').css({
+              'content': 'data(name)',
+              'text-valign': 'center',
+              'color': 'black',
+              'min-zoomed-font-size': 7
+            })
+            .selector('edge').css({
+              'target-arrow-shape': 'none',
+              'curve-style': 'haystack'
+            })
+            .selector('.clusters').css({
+              'color': 'green', 'background-color': 'red',
+              'width': 10, 'height': 10, 'font-size': '8'
+            })
+            .selector('.genes').css({
+              'width': 5, 'height': 5, 'font-size': '3'
+            })
+            .selector('.motifs').css({
+              'width': 5, 'height': 5, 'font-size': '3', 'shape': 'triangle',
+              'background-color': 'green'
+            })
+            .selector(':selected').css({
+              'background-color': 'black',
+              'line-color': 'black',
+            })
+            .selector('.faded').css({
+              'opacity': 0.25,
+              'text-opacity': 0
+            }),
+          ready: function() {
+            var cy = this;
+                cy.startBatch();
+                jQuery.getJSON('/cytoscape_nodes/{{current_iter}}',
+                               function(nodes) {
+                                 cy.add(nodes);
+                                 jQuery.getJSON('/cytoscape_edges/{{current_iter}}',
+                                                function(edges) {
+                                   cy.add(edges);
+                                   cy.endBatch();
+                                   cy.layout({name: 'springy', animate: false, fit: true});
+                                   cy.fit();
+                                 });
+                               });
+
+          },
+          pixelRatio: 1.0,
+          motionBlur: true,
+          hideEdgesOnViewport: true,
+          hideLabelsOnViewport: true,
+          textureOnViewport: true
+        });
+      }
+
       $(document).ready(function() {
-         $('#tabs').tabs();
+         $('#tabs').tabs({
+            activate: function(event, ui) {
+              var active = $('#tabs').tabs("option", "active");
+              if (active == 2) initCytoweb();
+            }
+         });
 
          $('#select_iteration').change(function (event) {
              window.location.href = "/" + $(this).val();
@@ -247,7 +309,7 @@
        <ul>
          <li><a href="#stats-tab">Statistics</a></li>
          <li><a href="#cluster-tab">Clusters</a></li>
-         <li><a href="/network/{{iteration}}">Network</a></li>
+         <li><a href="#network-tab">Network</a></li>
        </ul>
 
        <div id="stats-tab">
@@ -288,6 +350,10 @@
            </div>
          </div>
        </div>
+
+       <div id="network-tab">
+         <div id="cy"></div>
+       </div> <!-- network tab -->
 
      </div>
    </div>

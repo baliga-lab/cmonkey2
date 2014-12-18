@@ -604,7 +604,6 @@ def setup_routes():
     d = cherrypy.dispatch.RoutesDispatcher()
     main = ClusterViewerApp()
     d.connect('main', '/', controller=main, action="index")
-    d.connect('network', '/network/:iteration', controller=main, action="view_network")
     d.connect('cytonodes', '/cytoscape_nodes/:iteration', controller=main,
               action="cytoscape_nodes")
     d.connect('cytoedges', '/cytoscape_edges/:iteration', controller=main,
