@@ -1,3 +1,5 @@
+![cMonkey2 Logo](https://github.com/baliga-lab/cmonkey2/blob/master/graphics/cmonkey2_logo_100px.png "cMonkey2 Logo")
+
 ## cMonkey<sub>2</sub> - Python port of the [cMonkey biclustering algorithm](http://cmonkey.systemsbiology.net)
 
 ### Description
