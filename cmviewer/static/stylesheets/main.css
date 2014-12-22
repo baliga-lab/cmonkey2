@@ -76,7 +76,6 @@ table.item-list th {
 
 .run-info {
     font-size: 14pt;
-    font-weight: bold;
 }
 
 .start-info {
@@ -96,4 +95,17 @@ table.item-list th {
 label {
     font-size: 10pt;
     font-weight: bold;
+}
+
+.ui-progressbar {
+    position: relative;
+    width: 30%;
+}
+
+.progress-label {
+    position: absolute;
+    left: 45%;
+    top: 5px;
+    font-weight: bold;
+    text-shadow: 1px 1px 0 #fff;
 }

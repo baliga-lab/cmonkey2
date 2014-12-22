@@ -3,7 +3,6 @@
   <head>
     <title>cMonkey2 Viewer</title>
     <link rel="stylesheet" media="screen" href="/static/stylesheets/main.css">
-    <link rel="stylesheet" media="screen" href="/static/stylesheets/ui-progress-bar.css">
     <link rel="stylesheet" media="screen" href="/static/stylesheets/jquery.dataTables.css">
     <link rel="stylesheet" media="screen" href="/static/javascripts/jquery-ui-1.11.2.custom/jquery-ui.min.css">
     <link rel="shortcut icon" type="image/png" href="/static/images/favicon.png">
@@ -112,6 +111,8 @@
       }
 
       $(document).ready(function() {
+         $('#progressbar').progressbar({value: {{progress}}});
+         $('.progress-label').text("{{progress}}%");
          $('#tabs').tabs({
             activate: function(event, ui) {
               var active = $('#tabs').tabs("option", "active");
@@ -300,27 +301,9 @@
      <div id="topsection">
        <div><img style="float: right" alt="Institute for Systems Biology" src="/static/images/isb_logo.png"></div>
        <a href="/"><img src="/static/images/cmonkey2_logo.png" style="width:80px" title="cMonkey 2 Viewer"></a>
-       <div class="run-info">
-         {{runinfo.species}} ({{runinfo.orgcode}}): {{runinfo.num_rows}} genes, {{runinfo.num_cols}} conditions, {{runinfo.num_clusters}} clusters
-       </div>
-       <div>&nbsp;</div>
-       <div>Iteration <select id="select_iteration">
-       {% for iter in iterations %}{% if iter == current_iter %}
-         <option value="{{iter}}" selected>{{iter}}</option>
-       {% else %}<option value="{{iter}}">{{iter}}</option>{% endif %}{% endfor %}
-       </select>/{{runinfo.num_iters}}
-       </div>
-
+       <div id="progressbar"><div class="progress-label">Running...</div></div>
        <div style="height: 10px;">&nbsp;</div>
-       <div class="ui-progress-bar ui-container" id="progress_bar" style="width: 20%; height: 15px;">
-         <div class="ui-progress" style="height: 12px; width: {{progress}}%;">
-           <span class="ui-label" style="display:none;">
-             Loading Resources
-             <b class="value">7%</b>
-           </span>
-         </div>
-       </div>
-       <div style="font-size: smaller; margin-top: 5px; margin-bottom: 5px;">Progress: {{progress}} %</div>
+
        <div class="start-info">Run started at {{runinfo.start_time}}</div>
        {% if not runinfo.finish_time %}
        <div class="inprogress-info">Run in progress...</div>
@@ -328,6 +311,20 @@
        <div class="finish-info">Run finished at {{runinfo.finish_time}} {{elapsed_time}}</div>
        {% endif %}
        <div style="height: 10px;">&nbsp;</div>
+
+       <div class="run-info">
+         {{runinfo.species}} ({{runinfo.orgcode}}): {{runinfo.num_rows}} genes, {{runinfo.num_cols}} conditions, {{runinfo.num_clusters}} clusters
+       </div>
+       <div>&nbsp;</div>
+
+       <div>Iteration <select id="select_iteration">
+       {% for iter in iterations %}{% if iter == current_iter %}
+         <option value="{{iter}}" selected>{{iter}}</option>
+       {% else %}<option value="{{iter}}">{{iter}}</option>{% endif %}{% endfor %}
+       </select>/{{runinfo.num_iters}}
+       </div>
+       <div style="height: 10px;">&nbsp;</div>
+
      </div>
 
      <div id="tabs">
