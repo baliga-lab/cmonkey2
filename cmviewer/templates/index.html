@@ -22,10 +22,8 @@
     <style media="all" type="text/css">
       .alignRight { text-align: right; }
 
-      body {
-        font: 14px helvetica neue, helvetica, arial, sans-serif;
-      }
       #cy {
+        font-family: helvetica neue, helvetica, arial, sans-serif;
         height: 500px;
         width: 100%;
         position: absolute;
@@ -301,8 +299,8 @@
    <div id="maincontainer">
      <div id="topsection">
        <div><img style="float: right" alt="Institute for Systems Biology" src="/static/images/isb_logo.png"></div>
-       <h2>cMonkey<sub>2</sub> Viewer</h2>
-       <div class="start-info">
+       <a href="/"><img src="/static/images/cmonkey2_logo.png" style="width:80px" title="cMonkey 2 Viewer"></a>
+       <div class="run-info">
          {{runinfo.species}} ({{runinfo.orgcode}}): {{runinfo.num_rows}} genes, {{runinfo.num_cols}} conditions, {{runinfo.num_clusters}} clusters
        </div>
        <div>&nbsp;</div>
@@ -322,7 +320,7 @@
            </span>
          </div>
        </div>
-       <div style="font-size: smaller">Progress: {{progress}} %</div>
+       <div style="font-size: smaller; margin-top: 5px; margin-bottom: 5px;">Progress: {{progress}} %</div>
        <div class="start-info">Run started at {{runinfo.start_time}}</div>
        {% if not runinfo.finish_time %}
        <div class="inprogress-info">Run in progress...</div>

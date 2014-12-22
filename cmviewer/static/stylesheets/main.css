@@ -5,7 +5,7 @@
 
 body {
     font-family: Geneva, Arial, sans-serif;
-    font-size: 12pt;
+    font-size: 10pt;
     margin: 10px;
 }
 
@@ -72,6 +72,11 @@ table.item-list th {
 #rightcolumn {
     float: left;
     width: 300px;
+}
+
+.run-info {
+    font-size: 14pt;
+    font-weight: bold;
 }
 
 .start-info {
