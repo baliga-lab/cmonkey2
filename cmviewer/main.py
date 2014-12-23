@@ -250,23 +250,36 @@ class ClusterViewerApp:
             return tmpl.render(locals())
 
 
+    def filter_clusters(self, cursor, iteration, min_residual, max_residual):
+        # used clusters
+        query_params = [iteration]
+        query = "select distinct cluster from cluster_stats where iteration=?"
+        if min_residual is not None:
+            query += ' and residual >= ?'
+            query_params.append(min_residual)
+        if max_residual is not None:
+            query += ' and residual <= ?'
+            query_params.append(max_residual)
+        cursor.execute(query, query_params)
+        return [row[0] for row in cursor.fetchall()]
+
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def cytoscape_nodes(self, iteration):
+    def cytoscape_nodes(self, iteration, min_residual=None, max_residual=None,
+                        min_evalue=None, max_evalue=None):
         conn = dbconn()
         cursor = conn.cursor()
 
-        # used clusters
-        cursor.execute('select num_clusters, species from run_infos')
-        num_clusters, species = cursor.fetchone()
+        clusters = self.filter_clusters(cursor, iteration, min_residual, max_residual)
+        valid_clusters = set(clusters)
         clusters_json = [{'classes': 'clusters',
                           'data': {'id': '%d' % cluster, 'name': '%d' % cluster,
                           'href': '/%d?viewcluster=%d' % (int(iteration), cluster)}}
-                         for cluster in range(1, num_clusters + 1)]
+                         for cluster in clusters]
 
         # used genes
-        cursor.execute("select distinct name from row_names rn join row_members rm on rn.order_num = rm.order_num where iteration=? order by name", [iteration])
-        genes = [row[0] for row in cursor.fetchall()]
+        cursor.execute("select distinct name,cluster from row_names rn join row_members rm on rn.order_num = rm.order_num where iteration=? order by name", [iteration])
+        genes = [row[0] for row in cursor.fetchall() if row[1] in valid_clusters]
         genes_json = [{'classes': 'genes',
                        'data': {'id': '%s' % gene, 'name': '%s' % gene}}
                       for gene in genes]
@@ -274,7 +287,8 @@ class ClusterViewerApp:
         # motifs
         cursor.execute("select rowid,cluster,motif_num from motif_infos where iteration=?",
                        [iteration])
-        motifs = [(mid, cluster, motif_num) for mid,cluster,motif_num in cursor.fetchall()]
+        motifs = [(mid, cluster, motif_num) for mid,cluster,motif_num in cursor.fetchall()
+                  if cluster in valid_clusters]
         cursor.close()
         conn.close()
 
@@ -287,17 +301,23 @@ class ClusterViewerApp:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
-    def cytoscape_edges(self, iteration):
+    def cytoscape_edges(self, iteration, min_residual=None, max_residual=None,
+                        min_evalue=None, max_evalue=None):
         conn = dbconn()
         cursor = conn.cursor()
+        clusters = self.filter_clusters(cursor, iteration, min_residual, max_residual)
+        valid_clusters = set(clusters)
+
         # motifs
         cursor.execute("select rowid,cluster,motif_num from motif_infos where iteration=?",
                        [iteration])
-        motifs = [(mid, cluster, motif_num) for mid,cluster,motif_num in cursor.fetchall()]
+        motifs = [(mid, cluster, motif_num) for mid,cluster,motif_num in cursor.fetchall()
+                  if cluster in valid_clusters]
+        valid_motifs = {m[0] for m in motifs}
 
         # edges between clusters and genes
         cursor.execute("select name, cluster from row_members rm join row_names rn on rm.order_num = rn.order_num where iteration=?", [iteration])
-        edges = [(row[0], row[1]) for row in cursor.fetchall()]
+        edges = [(row[0], row[1]) for row in cursor.fetchall() if row[1] in valid_clusters]
 
         # add the edges between motifs and clusters
         for motif in motifs:
@@ -306,19 +326,14 @@ class ClusterViewerApp:
         # tomtom (motif-motif) edges
         cursor.execute("select motif_info_id1, motif_info_id2 from tomtom_results ttr join motif_infos mi on ttr.motif_info_id1=mi.rowid where motif_info_id1 <> motif_info_id2 and iteration=?", [iteration])
         for mid1, mid2 in cursor.fetchall():
-            edges.append(("m%d" % mid1, "m%d" % mid2))
+            if mid1 in valid_motifs and mid2 in valid_motifs:
+                edges.append(("m%d" % mid1, "m%d" % mid2))
         cursor.close()
         conn.close()
 
         return {'edges': [{'data': {'source': '%s' % id1, 'target': '%s' % id2} }
                           for id1, id2 in edges]}
 
-
-    @cherrypy.expose
-    def view_network(self, iteration):
-        current_iter = int(iteration)
-        tmpl = env.get_template('network.html')
-        return tmpl.render(locals())
 
     @cherrypy.expose
     def iteration(self, iteration, viewcluster=None):
@@ -328,6 +343,15 @@ class ClusterViewerApp:
         cursor.execute('select distinct iteration from row_members')
         iterations = [row[0] for row in cursor.fetchall()]
         js_iterations = json.dumps(iterations)
+
+        cursor.execute("select min(residual), max(residual) from cluster_stats where iteration=?", [current_iter])
+        min_residual, max_residual = cursor.fetchone()
+        residual_step = (max_residual - min_residual) / 100.0
+        cursor.execute("select min(evalue), max(evalue) from motif_infos where iteration=?",
+                       [current_iter])
+        min_evalue, max_evalue = cursor.fetchone()
+        evalue_step = (max_evalue - min_evalue) / 100.0
+
         cursor.close()
 
         cursor = conn.cursor()
@@ -392,7 +416,6 @@ class ClusterViewerApp:
         cursor.execute("select iteration,name,score from iteration_stats its join statstypes st on its.statstype=st.rowid where category='network'")
         js_network_stats, min_netscore, max_netscore = make_series([row for row in cursor.fetchall()])
         js_network_stats = json.dumps(js_network_stats)
-
         cursor.close()
         conn.close()
         cursor= None

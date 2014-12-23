@@ -75,7 +75,7 @@ table.item-list th {
 }
 
 .run-info {
-    font-size: 14pt;
+    font-size: 11pt;
 }
 
 .start-info {
@@ -98,6 +98,7 @@ label {
 }
 
 .ui-progressbar {
+    float: left;
     position: relative;
     width: 30%;
 }
@@ -108,4 +109,28 @@ label {
     top: 5px;
     font-weight: bold;
     text-shadow: 1px 1px 0 #fff;
+}
+
+.ui-slider {
+    margin-top: 10px;
+    width: 80%;
+}
+
+#left-slider-column {
+    float: left;
+    width: 300px;
+}
+#right-slider-column {
+    margin-left: 300px;
+    width: 300px;
+}
+
+#slider-section {
+    border: solid 1px #aaa;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#progress-info {
+    margin-left: 32%;
 }
