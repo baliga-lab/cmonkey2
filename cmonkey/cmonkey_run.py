@@ -596,11 +596,21 @@ class CMonkeyRun:
 
     def write_start_info(self):
         conn = self.__dbconn()
+        try:
+            ncbi_code_int = int(self['ncbi_code'])
+        except:
+            # this exception happens when ncbi_code is not specified, usually when
+            # the data files are provided through the command line (e.g. KBase)
+            # in this case, we simply set the code to 0 because it's intended to
+            # not matter
+            ncbi_code_int = 0
+
         with conn:
             conn.execute('''insert into run_infos (start_time, num_iterations, organism,
                             species, ncbi_code, num_rows, num_columns, num_clusters, git_sha) values (?,?,?,?,?,?,?,?,?)''',
                          (datetime.now(), self['num_iterations'], self.organism().code,
-                          self.organism().species(), int(self['ncbi_code']),
+                          self.organism().species(),
+                          ncbi_code_int,
                           self.ratios.num_rows,
                           self.ratios.num_columns, self['num_clusters'],
                           '$Id$'))
