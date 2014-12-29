@@ -33,6 +33,7 @@
     </style>
 
     <script type="text/javascript">
+      var INITIAL_NETWORK_FILTER_SCALE = 8;
       function assignClusterClickHandlers() {
         var cluster = $(this).attr('id');
         $.get('/cluster/{{current_iter}}/' + cluster,
@@ -129,8 +130,9 @@
             activate: function(event, ui) {
               var active = $('#tabs').tabs("option", "active");
               if (active == 2) {
-                initCytoweb({{min_residual}}, {{max_residual}},
-                            {{min_evalue}}, {{max_evalue}});
+                var residuals = $('#residual-slider').slider("values");
+                var evalues = $('#evalue-slider').slider("values");
+                initCytoweb(residuals[0], residuals[1], evalues[0], evalues[1]);
 
               } else if (active == 1) {
                 $('#cluster-list').dataTable().fnAdjustColumnSizing();
@@ -314,7 +316,7 @@
           min: {{min_residual}},
           max: {{max_residual}},
           step: {{residual_step}},
-          values: [{{min_residual}}, {{max_residual}}],
+          values: [{{min_residual}}, {{max_residual}} / INITIAL_NETWORK_FILTER_SCALE],
           slide: function(event, ui) {
             var values = $('#residual-slider').slider("values");
             $('#residual-range').html('[' + values[0] + '-' + values[1] + ']');
@@ -330,7 +332,7 @@
           min: {{min_evalue}},
           max: {{max_evalue}},
           step: {{evalue_step}},
-          values: [{{min_evalue}}, {{max_evalue}}],
+          values: [{{min_evalue}}, {{max_evalue}} / INITIAL_NETWORK_FILTER_SCALE],
           slide: function(event, ui) {
             var values = $('#evalue-slider').slider("values");
             $('#evalue-range').html('[' + values[0] + '-' + values[1] + ']');

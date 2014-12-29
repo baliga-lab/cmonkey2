@@ -249,7 +249,6 @@ class ClusterViewerApp:
             tmpl = env.get_template('not_available.html')
             return tmpl.render(locals())
 
-
     def filter_clusters(self, cursor, iteration, min_residual, max_residual):
         # used clusters
         query_params = [iteration]
@@ -262,6 +261,21 @@ class ClusterViewerApp:
             query_params.append(max_residual)
         cursor.execute(query, query_params)
         return [row[0] for row in cursor.fetchall()]
+
+    def filter_motifs(self, cursor, iteration, valid_clusters,
+                      min_evalue, max_evalue):
+        query_params = [iteration]
+        query = "select rowid,cluster,motif_num from motif_infos where iteration=?"
+        if min_evalue is not None:
+            query += ' and evalue >= ?'
+            query_params.append(min_evalue)
+        if max_evalue is not None:
+            query += ' and evalue <= ?'
+            query_params.append(max_evalue)
+        cursor.execute(query, query_params)
+        return [(mid, cluster, motif_num)
+                for mid,cluster,motif_num in cursor.fetchall()
+                if cluster in valid_clusters]
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -285,10 +299,8 @@ class ClusterViewerApp:
                       for gene in genes]
 
         # motifs
-        cursor.execute("select rowid,cluster,motif_num from motif_infos where iteration=?",
-                       [iteration])
-        motifs = [(mid, cluster, motif_num) for mid,cluster,motif_num in cursor.fetchall()
-                  if cluster in valid_clusters]
+        motifs = self.filter_motifs(cursor, iteration, valid_clusters,
+                                    min_evalue, max_evalue)
         cursor.close()
         conn.close()
 
@@ -307,12 +319,8 @@ class ClusterViewerApp:
         cursor = conn.cursor()
         clusters = self.filter_clusters(cursor, iteration, min_residual, max_residual)
         valid_clusters = set(clusters)
-
-        # motifs
-        cursor.execute("select rowid,cluster,motif_num from motif_infos where iteration=?",
-                       [iteration])
-        motifs = [(mid, cluster, motif_num) for mid,cluster,motif_num in cursor.fetchall()
-                  if cluster in valid_clusters]
+        motifs = self.filter_motifs(cursor, iteration, valid_clusters,
+                                    min_evalue, max_evalue)
         valid_motifs = {m[0] for m in motifs}
 
         # edges between clusters and genes
@@ -333,7 +341,6 @@ class ClusterViewerApp:
 
         return {'edges': [{'data': {'source': '%s' % id1, 'target': '%s' % id2} }
                           for id1, id2 in edges]}
-
 
     @cherrypy.expose
     def iteration(self, iteration, viewcluster=None):
