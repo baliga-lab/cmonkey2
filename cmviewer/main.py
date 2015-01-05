@@ -287,8 +287,7 @@ class ClusterViewerApp:
         clusters = self.filter_clusters(cursor, iteration, min_residual, max_residual)
         valid_clusters = set(clusters)
         clusters_json = [{'classes': 'clusters',
-                          'data': {'id': '%d' % cluster, 'name': '%d' % cluster,
-                          'href': '/%d?viewcluster=%d' % (int(iteration), cluster)}}
+                          'data': {'id': '%d' % cluster, 'name': '%d' % cluster}}
                          for cluster in clusters]
 
         # used genes

@@ -34,9 +34,11 @@
 
     <script type="text/javascript">
       var INITIAL_NETWORK_FILTER_SCALE = 8;
+      var currentIteration = 1;
+
       function assignClusterClickHandlers() {
         var cluster = $(this).attr('id');
-        $.get('/cluster/{{current_iter}}/' + cluster,
+        $.get('/cluster/' + currentIteration + '/' + cluster,
               function(html) {
                 // we need the trim() call in order for jQuery 1.9.x to
                 // recognize the output as valid HTML
@@ -49,7 +51,23 @@
         return false;
       }
 
-      function initCytoweb(minResidual, maxResidual, minEvalue, maxEvalue) {
+      function clearClusterDetailView() {
+        $("<span id=\"cluster-view\">Please select a cluster</span>").replaceAll('#cluster-view');
+      }
+
+      function showClusterDetails(cluster) {
+        $.get('/cluster/' + currentIteration + '/' + cluster,
+              function(html) {
+                $(html.trim()).replaceAll('#cluster-view');
+                $("#tabs").tabs( "option", "active", 1);
+                // notify Firegoose to rescan the page
+                var ev = document.createEvent("Events");
+                ev.initEvent("gaggleDataEvent", true, false);
+                document.dispatchEvent(ev);
+              });
+      }
+
+      function initCytoweb(iteration, minResidual, maxResidual, minEvalue, maxEvalue) {
         var cy = $('#cy').cytoscape({
           style: cytoscape.stylesheet()
             .selector('node').css({
@@ -84,7 +102,7 @@
           ready: function() {
             var cy = this;
                 cy.startBatch();
-                jQuery.getJSON('/cytoscape_nodes/{{current_iter}}',
+                jQuery.getJSON('/cytoscape_nodes/' + iteration,
                                {
                                  min_residual: minResidual,
                                  max_residual: maxResidual,
@@ -93,7 +111,7 @@
                                },
                                function(nodes) {
                                  cy.add(nodes);
-                                 jQuery.getJSON('/cytoscape_edges/{{current_iter}}',
+                                 jQuery.getJSON('/cytoscape_edges/' + iteration,
                                                 {
                                                   min_residual: minResidual,
                                                   max_residual: maxResidual,
@@ -106,9 +124,9 @@
                                    cy.layout({name: 'springy', animate: false, fit: true});
                                    cy.fit();
                                    cy.on('tap', 'node', function() {
-                                     var newurl = this.data('href');
-                                     if (newurl) {
-                                       window.location.href = this.data('href');
+                                     // open tab 1 with a filled in detail view
+                                     if (this.hasClass('clusters')) {
+                                       showClusterDetails(this.id());
                                      }
                                    });
                                  });
@@ -132,25 +150,28 @@
               if (active == 2) {
                 var residuals = $('#residual-slider').slider("values");
                 var evalues = $('#evalue-slider').slider("values");
-                initCytoweb(residuals[0], residuals[1], evalues[0], evalues[1]);
+                initCytoweb(currentIteration, residuals[0], residuals[1],
+                            evalues[0], evalues[1]);
 
               } else if (active == 1) {
                 $('#cluster-list').dataTable().fnAdjustColumnSizing();
-                {%if viewcluster %}
-                $.get('/cluster/{{current_iter}}/{{viewcluster}}',
-                      function(html) {
-                        $(html.trim()).replaceAll('#cluster-view');
-                        // notify Firegoose to rescan the page
-                        var ev = document.createEvent("Events");
-                        ev.initEvent("gaggleDataEvent", true, false);
-                        document.dispatchEvent(ev);
-                      });
-                {%endif%}
               }
             }
          });
          $('#select_iteration').change(function (event) {
-             window.location.href = "/" + $(this).val();
+             currentIteration = $(this).val();
+             var iteration = $(this).val();
+             // Update cluster list and networks
+             var activeTab = $('#tabs').tabs("option", "active");
+
+             $('#cluster-list').DataTable().ajax.url('/clusters/' + iteration).load();
+             clearClusterDetailView();
+
+             if (activeTab == 2) { // only update this if we are in the network tab
+               var residuals = $('#residual-slider').slider("values");
+               var evalues = $('#evalue-slider').slider("values");
+               initCytoweb(iteration, residuals[0], residuals[1], evalues[0], evalues[1]);
+             }
          });
          var iterations = {{js_iterations}};
 
@@ -297,18 +318,10 @@
              { 'bSortable': true }
            ],
            
-           'sAjaxSource': '/clusters/{{current_iter}}',
+           'sAjaxSource': '/clusters/' + currentIteration,
          }).on('order.dt', function() {
             $('a.clusterlink').click(assignClusterClickHandlers);
          });
-
-        // after everything is set up, set the active tab according to the url
-        // we might want to open directly in cluster mode
-        {%if viewcluster %}
-        $("#tabs").tabs( "option", "active", 1);
-        {%else%}
-        $("#tabs").tabs( "option", "active", 0);
-        {%endif%}
         
         // sliders
         $('#residual-slider').slider({
@@ -324,7 +337,7 @@
           stop: function(event, ui) {
             var residuals = $('#residual-slider').slider("values");
             var evalues = $('#evalue-slider').slider("values");
-            initCytoweb(residuals[0], residuals[1], evalues[0], evalues[1]);
+            initCytoweb(currentIteration, residuals[0], residuals[1], evalues[0], evalues[1]);
           }
         });
         $('#evalue-slider').slider({
@@ -340,7 +353,7 @@
           stop: function(event, ui) {
             var residuals = $('#residual-slider').slider("values");
             var evalues = $('#evalue-slider').slider("values");
-            initCytoweb(residuals[0], residuals[1], evalues[0], evalues[1]);
+            initCytoweb(currentIteration, residuals[0], residuals[1], evalues[0], evalues[1]);
           }
         });
       });
@@ -370,6 +383,7 @@
        </div>
        <div>&nbsp;</div>
 
+       <!-- Dynamically replaced -->
        <div>Iteration <select id="select_iteration">
        {% for iter in iterations %}{% if iter == current_iter %}
          <option value="{{iter}}" selected>{{iter}}</option>
