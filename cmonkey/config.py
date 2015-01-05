@@ -88,6 +88,7 @@ def set_config_general(config, params):
     params['output_dir'] = config.get('General', 'output_dir')
     params['cache_dir'] = config.get('General', 'cache_dir')
     params['tmp_dir'] = tmp_dir
+    params['pipeline_file'] = config.get('General', 'pipeline_file')
     params['dbfile_name'] = config.get('General', 'dbfile_name')
     params['rsat_base_url'] = config.get('General', 'rsat_base_url')
     params['normalize_ratios'] = config.getboolean('General', 'normalize_ratios')
@@ -375,6 +376,8 @@ def setup_default(args, config_parser):
         del overrides['random_seed']
     if overrides['case_sensitive'] is None:
         del overrides['case_sensitive']
+    if overrides['pipeline_file'] is None:
+        del overrides['pipeline_file']
 
     # membership update default parameters
     # these come first, since a lot depends on clustering numbers
