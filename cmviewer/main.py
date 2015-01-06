@@ -421,6 +421,17 @@ class ClusterViewerApp:
                                                    'column_scoring.runlog']]
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def fuzzy_coeffs(self):
+        conn = dbconn()
+        cursor = conn.cursor()
+        cursor.execute("select score from iteration_stats its join statstypes st on its.statstype = st.rowid where st.name = 'fuzzy_coeff' order by iteration")
+        result = [row[0] for row in cursor.fetchall()]
+        cursor.close()
+        conn.close()
+        return result
+
+    @cherrypy.expose
     def iteration(self, iteration):
         current_iter = int(iteration)
         conn = dbconn()
@@ -444,9 +455,6 @@ class ClusterViewerApp:
         cursor = conn.cursor()
         cursor.execute("select score from iteration_stats its join statstypes st on its.statstype = st.rowid where st.name = 'median_residual' order by iteration")
         resids = [row[0] for row in cursor.fetchall()]
-        cursor.execute("select score from iteration_stats its join statstypes st on its.statstype = st.rowid where st.name = 'fuzzy_coeff' order by iteration")
-        fuzzys = [row[0] for row in cursor.fetchall()]
-        js_fuzzy_coeff = json.dumps(fuzzys)
         cursor.close()
 
         conn.row_factory = clusterstat_factory
@@ -708,6 +716,8 @@ def setup_routes():
     d = cherrypy.dispatch.RoutesDispatcher()
     main = ClusterViewerApp()
     d.connect('main', '/', controller=main, action="index")
+
+    # run status
     d.connect('run_status', '/run_status', controller=main, action="run_status")
     d.connect('iterations', '/iterations', controller=main, action="iterations")
     d.connect('iteration_select', '/iteration_select', controller=main, action="iteration_select")
@@ -716,12 +726,18 @@ def setup_routes():
     d.connect('mean_cluster_members',
               '/mean_cluster_members', controller=main, action="mean_cluster_members")
     d.connect('runlog', '/runlog', controller=main, action="runlog")
+    d.connect('fuzzy_coeffs', '/fuzzy_coeffs', controller=main, action="fuzzy_coeffs")
 
+    # cytoscape.js routes
     d.connect('cytonodes', '/cytoscape_nodes/:iteration', controller=main,
               action="cytoscape_nodes")
     d.connect('cytoedges', '/cytoscape_edges/:iteration', controller=main,
               action="cytoscape_edges")
+
+    # Deprecated: this should be just the main page
     d.connect('iteration', '/:iteration', controller=main, action="iteration")
+
+    # cluster list and details
     d.connect('clusters', '/clusters/:iteration', controller=main, action="clusters")
     d.connect('cluster', '/cluster/:iteration/:cluster', controller=main, action="view_cluster")
     return d

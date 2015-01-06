@@ -57,8 +57,7 @@
          reloadResidualGraphValues('#residual-graph', iterations);
          reloadClusterMemberGraphValues('#cluster-member-graph', iterations);
          reloadRunlogGraphValues('#runlog-graph');
-         drawFuzzyCoeffGraph('#fuzzy-graph', TITLE_SIZE, iterations,
-                             {{js_fuzzy_coeff}});
+         reloadFuzzyCoeffGraphValues('#fuzzy-graph', iterations);
 
          drawClusterRowGraph('#cluster-row-graph', TITLE_SIZE,
                              {{js_nrows_x}}, {{js_nrows_y}});

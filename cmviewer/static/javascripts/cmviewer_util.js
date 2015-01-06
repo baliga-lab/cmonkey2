@@ -293,6 +293,7 @@ function updateRunStatus(pgbarSelector) {
                      reloadResidualGraphValues('#residual-graph', iterations);
                      reloadClusterMemberGraphValues('#cluster-member-graph', iterations);
                      reloadRunlogGraphValues('#runlog-graph');
+                     reloadFuzzyCoeffGraphValues('#fuzzy-graph', iterations);
                  }
              }});
     updateIterationSelector();
@@ -319,5 +320,11 @@ function reloadClusterMemberGraphValues(selector, iterations) {
 function reloadRunlogGraphValues(selector) {
     $.ajax({ url: '/runlog', success: function(data) {
                  drawRunlogGraph(selector, TITLE_SIZE, data);
+             }});
+}
+
+function reloadFuzzyCoeffGraphValues(selector) {
+    $.ajax({ url: '/fuzzy_coeffs', success: function(data) {
+                 drawFuzzyCoeffGraph(selector, TITLE_SIZE, iterations, data);
              }});
 }
