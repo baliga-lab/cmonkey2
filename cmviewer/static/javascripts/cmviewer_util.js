@@ -1,37 +1,32 @@
 // These function were pulled out of index.html to make it more maintainable, need to clean
 // up here when it's ready
+var INTERVAL = 5000;
+var TITLE_SIZE = '11pt';
+var INITIAL_NETWORK_FILTER_SCALE = 8;
+var iterations = [];
+
+var interval = null;
 var currentIteration = 1;
 
+function onIterationChange(event) {
+    currentIteration = $(this).val();
+    var iteration = $(this).val();
+    // Update cluster list and networks
+    var activeTab = $('#tabs').tabs("option", "active");
+    $('#cluster-list').DataTable().ajax.url('/clusters/' + iteration).load();
+    clearClusterDetailView();
+
+    if (activeTab == 2) { // only update this if we are in the network tab
+        var residuals = $('#residual-slider').slider("values");
+        var evalues = $('#evalue-slider').slider("values");
+        initCytoweb(iteration, residuals[0], residuals[1], evalues[0], evalues[1]);
+    }
+}
 function updateIterationSelector() {
     $.ajax({ url: '/iteration_select', success: function(html) {
                  $(html.trim()).replaceAll('#iteration_select');
-                 $('#select_iteration').change(
-                     function (event) {
-                         currentIteration = $(this).val();
-                         var iteration = $(this).val();
-                         // Update cluster list and networks
-                         var activeTab = $('#tabs').tabs("option", "active");
-                         $('#cluster-list').DataTable().ajax.url('/clusters/' + iteration).load();
-                         clearClusterDetailView();
-
-                         if (activeTab == 2) { // only update this if we are in the network tab
-                             var residuals = $('#residual-slider').slider("values");
-                             var evalues = $('#evalue-slider').slider("values");
-                             initCytoweb(iteration, residuals[0], residuals[1], evalues[0], evalues[1]);
-                         }
-                     });
-             }
-           });
-}
-
-function updateRunStatus(pgbarSelector) {
-    $.ajax({ url: '/run_status', success: function(data) {
-                 var progress = parseFloat(data.progress);
-                 $('#progressbar').progressbar("value", progress);
-                 $('.progress-label').text(progress + "%");
-             }
-           });
-    updateIterationSelector();
+                 $('#select_iteration').change(onIterationChange);
+             }});
 }
 
 function assignClusterClickHandlers() {
@@ -148,8 +143,14 @@ function initCytoweb(iteration, minResidual, maxResidual, minEvalue, maxEvalue) 
 }
 
 
+// **********************************************************************
 // Highcharts plotting
+// **********************************************************************
 
+/**
+ * iterations: an int array of all available iterations
+ * meanResiduals: a float array of all residuals per iteration
+ */
 function drawResidualGraph(selector, titleSize, iterations, meanResiduals) {
     $(selector).highcharts(
         {
@@ -270,4 +271,39 @@ function drawFuzzyCoeffGraph(selector, titleSize, iterations, series) {
             yAxis: { title: { text: 'fuzzy coeff' } },
             series: [{name: 'fuzzy coeff', data: series}]
         });    
+}
+
+function updateRunStatus(pgbarSelector) {
+
+    // progress bar
+    $.ajax({ url: '/run_status', success: function(data) {
+                 var progress = parseFloat(data.progress);
+                 if (progress >= 100.0 && interval != null) {
+                     clearInterval(interval);
+                     interval = null;
+                 }
+                 $('#progressbar').progressbar("value", progress);
+                 $('.progress-label').text(progress + "%");
+             }});
+
+    // update all stats graphs
+    $.ajax({ url: '/iterations', success: function(data) {
+                 if (data.length > iterations.length) {
+                     iterations = data;
+                     reloadResidualGraphValues('#residual-graph', iterations);
+                 }
+             }});
+
+    updateIterationSelector();
+}
+
+function startTimer() {
+    interval = setInterval(function() { updateRunStatus('#progressbar'); }, INTERVAL);
+}
+
+function reloadResidualGraphValues(selector, iterations) {
+    $.ajax({ url: '/mean_residuals', success: function(data) {
+                 drawResidualGraph(selector, TITLE_SIZE,
+                                   iterations, data.values);
+             }});
 }

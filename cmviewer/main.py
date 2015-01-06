@@ -361,6 +361,31 @@ class ClusterViewerApp:
         return {'progress': progress}
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def iterations(self):
+        conn = dbconn()
+        cursor = conn.cursor()
+        cursor.execute("select distinct iteration from row_members order by iteration")
+        result = [row[0] for row in cursor.fetchall()]
+        cursor.close()
+        conn.close()
+        return result
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def mean_residuals(self):
+        conn = dbconn()
+        cursor = conn.cursor()
+        cursor.execute("select score from iteration_stats its join statstypes st on its.statstype = st.rowid where st.name = 'median_residual' order by iteration")
+        resids = [row[0] for row in cursor.fetchall()]
+
+        cursor.close()
+        conn.close()
+        return {'min': min(resids), 'max': max(resids), 'values': resids}
+
+
+
+    @cherrypy.expose
     def iteration_select(self, iteration=1):
         conn = dbconn()
         cursor = conn.cursor()
@@ -668,7 +693,10 @@ def setup_routes():
     main = ClusterViewerApp()
     d.connect('main', '/', controller=main, action="index")
     d.connect('run_status', '/run_status', controller=main, action="run_status")
+    d.connect('iterations', '/iterations', controller=main, action="iterations")
     d.connect('iteration_select', '/iteration_select', controller=main, action="iteration_select")
+    d.connect('mean_residuals', '/mean_residuals', controller=main, action="mean_residuals")
+
     d.connect('cytonodes', '/cytoscape_nodes/:iteration', controller=main,
               action="cytoscape_nodes")
     d.connect('cytoedges', '/cytoscape_edges/:iteration', controller=main,

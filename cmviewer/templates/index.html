@@ -34,9 +34,6 @@
     </style>
 
     <script type="text/javascript">
-      var INITIAL_NETWORK_FILTER_SCALE = 8;
-      var interval = null;
-
       $(document).ready(function() {
          $('#progressbar').progressbar({value: {{progress}}});
          $('.progress-label').text("{{progress}}%");
@@ -56,31 +53,29 @@
          });
 
          var iterations = {{js_iterations}};
-         var titleSize = '11pt';
 
-         drawResidualGraph('#residual-graph', titleSize,
-                           iterations, {{js_mean_residuals}});
-         drawClusterMemberGraph('#cluster-member-graph', titleSize,
+         reloadResidualGraphValues('#residual-graph', iterations);
+         drawClusterMemberGraph('#cluster-member-graph', TITLE_SIZE,
                                 iterations, {{js_mean_nrow}}, {{js_mean_ncol}});
-         drawClusterRowGraph('#cluster-row-graph', titleSize,
+         drawClusterRowGraph('#cluster-row-graph', TITLE_SIZE,
                              {{js_nrows_x}}, {{js_nrows_y}});
-         drawClusterColGraph('#cluster-column-graph', titleSize,
+         drawClusterColGraph('#cluster-column-graph', TITLE_SIZE,
                              {{js_ncols_x}}, {{js_ncols_y}});
-         drawClusterResidualGraph('#cluster-residual-graph', titleSize,
+         drawClusterResidualGraph('#cluster-residual-graph', TITLE_SIZE,
                                   {{js_resids_x}}, {{js_resids_y}});
-         drawRunlogGraph('#runlog-graph', titleSize, {{js_runlog_series}});
+         drawRunlogGraph('#runlog-graph', TITLE_SIZE, {{js_runlog_series}});
 
          drawMeanScoreGraph('#mean-score-graph', 'Median scores',
                             'mean p-value',
-                            titleSize, iterations,
+                            TITLE_SIZE, iterations,
                             {{min_stats_score}}, {{max_stats_score}},
                             {{js_stats}});
          drawMeanScoreGraph('#network-score-graph', 'Mean network scores',
                             'mean net score',
-                            titleSize, iterations,
+                            TITLE_SIZE, iterations,
                             {{min_netscore}}, {{max_netscore}},
                             {{js_network_stats}});
-         drawFuzzyCoeffGraph('#fuzzy-graph', titleSize, iterations,
+         drawFuzzyCoeffGraph('#fuzzy-graph', TITLE_SIZE, iterations,
                              {{js_fuzzy_coeff}});
 
          $('#cluster-list').dataTable({
@@ -142,7 +137,7 @@
 
         // other stuff
         updateIterationSelector();
-        interval = setInterval(function() { updateRunStatus('#progressbar') }, 5000);
+        startTimer();
       });
     </script>
   </head>
