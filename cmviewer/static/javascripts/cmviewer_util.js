@@ -291,9 +291,10 @@ function updateRunStatus(pgbarSelector) {
                  if (data.length > iterations.length) {
                      iterations = data;
                      reloadResidualGraphValues('#residual-graph', iterations);
+                     reloadClusterMemberGraphValues('#cluster-member-graph', iterations);
+                     reloadRunlogGraphValues('#runlog-graph');
                  }
              }});
-
     updateIterationSelector();
 }
 
@@ -305,5 +306,18 @@ function reloadResidualGraphValues(selector, iterations) {
     $.ajax({ url: '/mean_residuals', success: function(data) {
                  drawResidualGraph(selector, TITLE_SIZE,
                                    iterations, data.values);
+             }});
+}
+
+function reloadClusterMemberGraphValues(selector, iterations) {
+    $.ajax({ url: '/mean_cluster_members', success: function(data) {
+                 drawClusterMemberGraph(selector, TITLE_SIZE,
+                                        iterations, data.meanNumRows, data.meanNumCols);
+             }});
+}
+
+function reloadRunlogGraphValues(selector) {
+    $.ajax({ url: '/runlog', success: function(data) {
+                 drawRunlogGraph(selector, TITLE_SIZE, data);
              }});
 }

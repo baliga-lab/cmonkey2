@@ -110,7 +110,7 @@ class Ratios:
         outrows = sorted(map(make_row, data_out), key=lambda r: r[2])
         result = inrows + outrows
         return json.dumps(result)
-                
+
 
 def read_ratios():
     def to_float(s):
@@ -130,17 +130,6 @@ def read_ratios():
             data.append(map(to_float, row[1:]))
     return Ratios(row_titles, column_titles, np.array(data))
 
-def read_runlogs():
-    def read_runlog(fname):
-        with open(fname) as infile:
-            entries = map(lambda l: 0.0 if l[1] == '1' else float(l[2]),
-                          [line.strip().split(':') for line in infile])
-        return {'name': os.path.basename(fname).replace('.runlog', ''), 'data': entries}
-
-    return json.dumps([read_runlog(fname)
-                       for fname in glob.glob(os.path.join(outdir, '*.runlog'))
-                       if os.path.basename(fname) not in ['row_scoring.runlog',
-                                                          'column_scoring.runlog']])
 
 def runinfo_factory(cursor, row):
     return RunInfo(*row)
@@ -383,10 +372,28 @@ class ClusterViewerApp:
         conn.close()
         return {'min': min(resids), 'max': max(resids), 'values': resids}
 
-
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def mean_cluster_members(self):
+        row_stats = defaultdict(list)
+        col_stats = defaultdict(list)
+        conn = dbconn()
+        cursor = conn.cursor()
+        cursor.execute('select iteration, cluster, num_rows, num_cols from cluster_stats')
+        for iteration, cluster, nrows, ncols in cursor.fetchall():
+            row_stats[iteration].append(nrows)
+            col_stats[iteration].append(ncols)
+        mean_nrow = [float(sum(row_stats[i])) / len(row_stats[i])
+                     for i in sorted(row_stats.keys())]
+        mean_ncol = [float(sum(col_stats[i])) / len(col_stats[i])
+                     for i in sorted(col_stats.keys())]
+        cursor.close()
+        conn.close()
+        return {'meanNumRows': mean_nrow, 'meanNumCols': mean_ncol}
 
     @cherrypy.expose
     def iteration_select(self, iteration=1):
+        """TODO: deprecated: build the list on the client TODO"""
         conn = dbconn()
         cursor = conn.cursor()
         cursor.execute("select num_iterations, last_iteration from run_infos")
@@ -400,6 +407,20 @@ class ClusterViewerApp:
         return tmpl.render(locals())
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def runlog(self):
+        def read_runlog(fname):
+            with open(fname) as infile:
+                entries = map(lambda l: 0.0 if l[1] == '1' else float(l[2]),
+                              [line.strip().split(':') for line in infile])
+            return {'name': os.path.basename(fname).replace('.runlog', ''), 'data': entries}
+
+        return [read_runlog(fname)
+                for fname in glob.glob(os.path.join(outdir, '*.runlog'))
+                if os.path.basename(fname) not in ['row_scoring.runlog',
+                                                   'column_scoring.runlog']]
+
+    @cherrypy.expose
     def iteration(self, iteration):
         current_iter = int(iteration)
         conn = dbconn()
@@ -408,6 +429,8 @@ class ClusterViewerApp:
         iterations = [row[0] for row in cursor.fetchall()]
         js_iterations = json.dumps(iterations)
 
+        # slider values TODO: update dynamically
+        #############
         cursor.execute("select min(residual), max(residual) from cluster_stats where iteration=?", [current_iter])
         min_residual, max_residual = cursor.fetchone()
         residual_step = (max_residual - min_residual) / 100.0
@@ -415,15 +438,14 @@ class ClusterViewerApp:
                        [current_iter])
         min_evalue, max_evalue = cursor.fetchone()
         evalue_step = (max_evalue - min_evalue) / 100.0
-
         cursor.close()
+        ################
 
         cursor = conn.cursor()
         cursor.execute("select score from iteration_stats its join statstypes st on its.statstype = st.rowid where st.name = 'median_residual' order by iteration")
         resids = [row[0] for row in cursor.fetchall()]
         cursor.execute("select score from iteration_stats its join statstypes st on its.statstype = st.rowid where st.name = 'fuzzy_coeff' order by iteration")
         fuzzys = [row[0] for row in cursor.fetchall()]
-        js_mean_residuals = json.dumps(resids)
         js_fuzzy_coeff = json.dumps(fuzzys)
         cursor.close()
 
@@ -437,10 +459,6 @@ class ClusterViewerApp:
             row_stats[stat.iter].append(stat.num_rows)
             col_stats[stat.iter].append(stat.num_cols)
             resid_stats[stat.iter].append(stat.residual)
-        js_mean_nrow = json.dumps([float(sum(row_stats[iter])) / len(row_stats[iter])
-                                   for iter in sorted(row_stats.keys())])
-        js_mean_ncol = json.dumps([float(sum(col_stats[iter])) / len(col_stats[iter])
-                                   for iter in sorted(col_stats.keys())])
         js_nrows_x, js_nrows_y = make_int_histogram(row_stats[current_iter])
         js_ncols_x, js_ncols_y = make_int_histogram(col_stats[current_iter])
         js_resids_x, js_resids_y = make_float_histogram(resid_stats[current_iter])
@@ -484,8 +502,6 @@ class ClusterViewerApp:
         conn.close()
         cursor= None
         conn = None
-
-        js_runlog_series = read_runlogs()
 
         tmpl = env.get_template('index.html')
         progress = "%.2f" % min((float(runinfo.last_iter) / float(runinfo.num_iters) * 100.0),
@@ -695,7 +711,11 @@ def setup_routes():
     d.connect('run_status', '/run_status', controller=main, action="run_status")
     d.connect('iterations', '/iterations', controller=main, action="iterations")
     d.connect('iteration_select', '/iteration_select', controller=main, action="iteration_select")
+    # highcharts graph values
     d.connect('mean_residuals', '/mean_residuals', controller=main, action="mean_residuals")
+    d.connect('mean_cluster_members',
+              '/mean_cluster_members', controller=main, action="mean_cluster_members")
+    d.connect('runlog', '/runlog', controller=main, action="runlog")
 
     d.connect('cytonodes', '/cytoscape_nodes/:iteration', controller=main,
               action="cytoscape_nodes")
