@@ -35,6 +35,18 @@
     <script type="text/javascript">
       var INITIAL_NETWORK_FILTER_SCALE = 8;
       var currentIteration = 1;
+      var interval = null;
+
+      function updateRunStatus() {
+        $.ajax({
+          url: '/run_status',
+          success: function(data) {
+            var progress = parseFloat(data.progress);
+            $('#progressbar').progressbar("value", progress);
+            $('.progress-label').text(progress + "%");
+          }
+        });
+      }
 
       function assignClusterClickHandlers() {
         var cluster = $(this).attr('id');
@@ -356,6 +368,9 @@
             initCytoweb(currentIteration, residuals[0], residuals[1], evalues[0], evalues[1]);
           }
         });
+
+        // other stuff
+        interval = setInterval(updateRunStatus, 5000);
       });
     </script>
   </head>

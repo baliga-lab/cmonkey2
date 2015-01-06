@@ -342,7 +342,26 @@ class ClusterViewerApp:
                           for id1, id2 in edges]}
 
     @cherrypy.expose
-    def iteration(self, iteration, viewcluster=None):
+    @cherrypy.tools.json_out()
+    def run_status(self):
+        conn = dbconn()
+        cursor = conn.cursor()
+        conn.row_factory = runinfo_factory
+        cursor = conn.cursor()
+        cursor.execute("select species, organism, num_iterations, last_iteration, num_rows, num_columns, num_clusters, start_time, finish_time, (strftime('%s', finish_time) - strftime('%s', start_time)) from run_infos")
+        runinfo = cursor.fetchone()
+        if runinfo.finish_time:
+            elapsed_hours = runinfo.run_secs / 3600
+            elapsed_mins = (runinfo.run_secs - (elapsed_hours * 3600)) / 60
+            elapsed_time = "(%d hours %d minutes)" % (elapsed_hours, elapsed_mins)
+
+        cursor.close()
+        progress = "%.2f" % min((float(runinfo.last_iter) / float(runinfo.num_iters) * 100.0),
+                                100.0)
+        return {'progress': progress}
+
+    @cherrypy.expose
+    def iteration(self, iteration):
         current_iter = int(iteration)
         conn = dbconn()
         cursor = conn.cursor()
@@ -634,6 +653,7 @@ def setup_routes():
     d = cherrypy.dispatch.RoutesDispatcher()
     main = ClusterViewerApp()
     d.connect('main', '/', controller=main, action="index")
+    d.connect('run_status', '/run_status', controller=main, action="run_status")
     d.connect('cytonodes', '/cytoscape_nodes/:iteration', controller=main,
               action="cytoscape_nodes")
     d.connect('cytoedges', '/cytoscape_edges/:iteration', controller=main,
