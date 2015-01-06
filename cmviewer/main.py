@@ -165,11 +165,6 @@ def make_int_histogram(counts):
     sorted_keys = sorted(histogram.keys())
     return sorted_keys, [histogram[key] for key in sorted_keys]
 
-def make_int_histogram_js(counts):
-    """input: list of counts
-    output: xvalues (count), yvalues (# clusters)"""
-    xvals, yvals = make_int_histogram(counts)
-    return json.dumps(xvals), json.dumps(yvals)
 
 def make_float_histogram(values, nbuckets=20):
     if len(values) > 0:
@@ -184,7 +179,7 @@ def make_float_histogram(values, nbuckets=20):
     else:
         xvals = []
         yvals = []
-    return json.dumps(xvals), json.dumps(yvals)
+    return xvals, yvals
 
 
 def make_series(stats):
@@ -469,6 +464,22 @@ class ClusterViewerApp:
         return {'xvalues': ncols_x, 'yvalues': ncols_y}
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def cluster_residuals(self):
+        """Note: this is actually iteration-specific, currently we lock this to the last
+        iteration until it becomes an issue"""
+        resid_stats = defaultdict(list)
+        conn = dbconn()
+        cursor = conn.cursor()
+        cursor.execute('select iteration, cluster, residual from cluster_stats')
+        for i, cluster, residual in cursor.fetchall():
+            resid_stats[i].append(residual)
+        resids_x, resids_y = make_float_histogram(resid_stats[max(resid_stats.keys())])
+        cursor.close()
+        conn.close()
+        return {'xvalues': resids_x, 'yvalues': resids_y}
+
+    @cherrypy.expose
     def iteration(self, iteration):
         current_iter = int(iteration)
         conn = dbconn()
@@ -488,24 +499,6 @@ class ClusterViewerApp:
         evalue_step = (max_evalue - min_evalue) / 100.0
         cursor.close()
         ################
-
-        cursor = conn.cursor()
-        cursor.execute("select score from iteration_stats its join statstypes st on its.statstype = st.rowid where st.name = 'median_residual' order by iteration")
-        resids = [row[0] for row in cursor.fetchall()]
-        cursor.close()
-
-        conn.row_factory = clusterstat_factory
-        cursor = conn.cursor()
-        cursor.execute('select iteration, cluster, num_rows, num_cols, residual from cluster_stats')
-        row_stats = defaultdict(list)
-        col_stats = defaultdict(list)
-        resid_stats = defaultdict(list)
-        for stat in cursor.fetchall():
-            row_stats[stat.iter].append(stat.num_rows)
-            col_stats[stat.iter].append(stat.num_cols)
-            resid_stats[stat.iter].append(stat.residual)
-        js_resids_x, js_resids_y = make_float_histogram(resid_stats[current_iter])
-        cursor.close()
 
         conn.row_factory = runinfo_factory
         cursor = conn.cursor()
@@ -766,6 +759,8 @@ def setup_routes():
               action="cluster_row_hist")
     d.connect('cluster_col_hist', '/cluster_col_hist', controller=main,
               action="cluster_col_hist")
+    d.connect('cluster_residuals', '/cluster_residuals', controller=main,
+              action="cluster_residuals")
 
 
     # cytoscape.js routes

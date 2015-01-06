@@ -274,6 +274,7 @@ function updateRunStatus(pgbarSelector) {
                      reloadFuzzyCoeffGraphValues('#fuzzy-graph', iterations);
                      reloadClusterRowGraphValues('#cluster-row-graph');
                      reloadClusterColGraphValues('#cluster-column-graph');
+                     reloadClusterResidualGraphValues('#cluster-residual-graph');
                  }
              }});
     updateIterationSelector();
@@ -322,5 +323,11 @@ function reloadClusterColGraphValues(selector) {
                  drawClusterMemberHistogram(selector, TITLE_SIZE, '# clusters -> # columns',
                                             '# columns',
                                             data.xvalues, data.yvalues);
+             }});
+}
+
+function reloadClusterResidualGraphValues(selector) {
+    $.ajax({ url: '/cluster_residuals', success: function(data) {
+                 drawClusterResidualGraph(selector, TITLE_SIZE, data.xvalues, data.yvalues);
              }});
 }
