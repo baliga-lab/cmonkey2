@@ -56,131 +56,32 @@
          });
 
          var iterations = {{js_iterations}};
-
-         // residual graph
          var titleSize = '11pt';
-         $('#residual-graph').highcharts({
-             chart: {
-                 type: 'line',
-                 width: 300, height: 200
-             },
-             title: { text: 'Mean Residual', style: {'fontSize': titleSize} },
-             plotOptions: { line: { marker: { enabled: false }, } },
-             xAxis: {
-                 categories: iterations,
-                 tickInterval: 30
-             },
-             yAxis: { title: { text: 'mean resids' } },
-             series: [{name: 'mean resid', data: {{js_mean_residuals}} }]
-         });
 
-         // cluster member graph
-         $('#cluster-member-graph').highcharts({
-             chart: {
-                 type: 'line',
-                 width: 300, height: 200
-             },
-             title: { text: 'Mean nrow, ncol/iter', style: {'fontSize': titleSize} },
-             plotOptions: { line: { marker: { enabled: false }, } },
-             xAxis: {
-                 categories: iterations,
-                 tickInterval: 30
-             },
-             yAxis: { title: { text: 'mean nrow, ncol/iter' } },
-             series: [{name: 'columns', data: {{js_mean_ncol}} },
-                      {name: 'rows', data: {{js_mean_nrow}} }]
-         });
-         // cluster nrows graph
-         $('#cluster-row-graph').highcharts({
-             chart: {
-                 type: 'column',
-                 width: 300, height: 200
-             },
-             title: { text: '# clusters -> # rows', style: {'fontSize': titleSize} },
-             xAxis: {
-                 categories: {{js_nrows_x}},
-                 tickInterval: 5
-             },
-             yAxis: { title: { text: '# clusters' } },
-             series: [ { name: '# rows', data: {{js_nrows_y}} } ]
-         });
+         drawResidualGraph('#residual-graph', titleSize,
+                           iterations, {{js_mean_residuals}});
+         drawClusterMemberGraph('#cluster-member-graph', titleSize,
+                                iterations, {{js_mean_nrow}}, {{js_mean_ncol}});
+         drawClusterRowGraph('#cluster-row-graph', titleSize,
+                             {{js_nrows_x}}, {{js_nrows_y}});
+         drawClusterColGraph('#cluster-column-graph', titleSize,
+                             {{js_ncols_x}}, {{js_ncols_y}});
+         drawClusterResidualGraph('#cluster-residual-graph', titleSize,
+                                  {{js_resids_x}}, {{js_resids_y}});
+         drawRunlogGraph('#runlog-graph', titleSize, {{js_runlog_series}});
 
-         // cluster ncols graph
-         $('#cluster-column-graph').highcharts({
-             chart: {
-                 type: 'column',
-                 width: 300, height: 200
-             },
-             title: { text: '# clusters -> # columns', style: {'fontSize': titleSize} },
-             xAxis: {
-                 categories: {{js_ncols_x}},
-                 tickInterval: 2
-             },
-             yAxis: { title: { text: '# clusters' } },
-             series: [ { name: '# columns', data: {{js_ncols_y}} } ]
-         });
-
-         // cluster residual graph
-         $('#cluster-residual-graph').highcharts({
-             chart: {
-                 type: 'column',
-                 width: 300, height: 200
-             },
-             title: { text: 'cluster residuals', style: {'fontSize': titleSize} },
-             xAxis: {
-                 categories: {{js_resids_x}},
-                 tickInterval: 3
-             },
-             yAxis: { title: { text: '# clusters' } },
-             series: [ { name: 'residual', data: {{js_resids_y}} } ]
-         });
-
-         $('#runlog-graph').highcharts({
-             chart: {type: 'line', width: 300, height: 200},
-             title: {text: 'Run parameters', style: {'fontSize': titleSize}},
-             plotOptions: { line: { marker: { enabled: false }, } },
-             yAxis: { title: { text: 'scaling' }, min: 0 },
-             series: {{js_runlog_series}}
-         });
-
-         $('#motif-score-graph').highcharts({
-             chart: {type: 'line', width: 300, height: 200},
-             title: { text: 'Median scores', style: {'fontSize': titleSize} },
-             plotOptions: { line: { marker: { enabled: false }, } },
-             xAxis: {categories: iterations, tickInterval: 30},
-             yAxis: { title: { text: 'mean p-value' }, max: {{max_stats_score}}, min: {{min_stats_score}} },
-             series: {{js_stats}}
-         });
-
-         $('#network-score-graph').highcharts({
-             chart: {
-                 type: 'line',
-                 width: 300, height: 200
-             },
-             title: { text: 'Mean network scores', style: {'fontSize': titleSize} },
-             plotOptions: { line: { marker: { enabled: false }, } },
-             xAxis: {
-                 categories: iterations,
-                 tickInterval: 30
-             },
-             yAxis: { title: { text: 'mean net score' }, max: {{max_netscore}}, min: {{min_netscore}} },
-             series: {{js_network_stats}}
-         });
-
-         $('#fuzzy-graph').highcharts({
-             chart: {
-                 type: 'line',
-                 width: 300, height: 200
-             },
-             title: { text: 'Fuzzy coefficient', style: {'fontSize': titleSize} },
-             plotOptions: { line: { marker: { enabled: false }, } },
-             xAxis: {
-                 categories: iterations,
-                 tickInterval: 30
-             },
-             yAxis: { title: { text: 'fuzzy coeff' } },
-             series: [{name: 'fuzzy coeff', data: {{js_fuzzy_coeff}}}]
-         });
+         drawMeanScoreGraph('#mean-score-graph', 'Median scores',
+                            'mean p-value',
+                            titleSize, iterations,
+                            {{min_stats_score}}, {{max_stats_score}},
+                            {{js_stats}});
+         drawMeanScoreGraph('#network-score-graph', 'Mean network scores',
+                            'mean net score',
+                            titleSize, iterations,
+                            {{min_netscore}}, {{max_netscore}},
+                            {{js_network_stats}});
+         drawFuzzyCoeffGraph('#fuzzy-graph', titleSize, iterations,
+                             {{js_fuzzy_coeff}});
 
          $('#cluster-list').dataTable({
            'bPaginate': false,
@@ -286,7 +187,7 @@
          <div id="statssection">
            <div id="leftcolumn">
              <div class="innertube">
-               <div id="cluster-row-graph"></div><div id="cluster-column-graph"></div><div id="motif-score-graph"></div>
+               <div id="cluster-row-graph"></div><div id="cluster-column-graph"></div><div id="mean-score-graph"></div>
              </div>
            </div>
            <div id="rightcolumn">

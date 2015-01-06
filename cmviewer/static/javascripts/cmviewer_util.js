@@ -146,3 +146,128 @@ function initCytoweb(iteration, minResidual, maxResidual, minEvalue, maxEvalue) 
             textureOnViewport: true
         });
 }
+
+
+// Highcharts plotting
+
+function drawResidualGraph(selector, titleSize, iterations, meanResiduals) {
+    $(selector).highcharts(
+        {
+            chart: {type: 'line', width: 300, height: 200},
+            title: { text: 'Mean Residual', style: {'fontSize': titleSize} },
+            plotOptions: { line: { marker: { enabled: false } } },
+            xAxis: {
+                categories: iterations,
+                tickInterval: 30
+            },
+            yAxis: { title: { text: 'mean resids' } },
+            series: [{name: 'mean resid', data: meanResiduals }]
+        });
+}
+
+
+function drawClusterMemberGraph(selector, titleSize, iterations, meanNRows, meanNCols) {
+    $(selector).highcharts(
+        {
+            chart: {
+                type: 'line',
+                width: 300, height: 200
+            },
+            title: { text: 'Mean nrow, ncol/iter', style: {'fontSize': titleSize} },
+            plotOptions: { line: { marker: { enabled: false } } },
+            xAxis: {
+                categories: iterations,
+                tickInterval: 30
+            },
+            yAxis: { title: { text: 'mean nrow, ncol/iter' } },
+            series: [{name: 'columns', data: meanNCols },
+                     {name: 'rows', data: meanNRows }]
+        });
+}
+
+function drawClusterRowGraph(selector, titleSize, nrowsX, nrowsY) {
+    $(selector).highcharts(
+        {
+            chart: {
+                type: 'column',
+                width: 300, height: 200
+            },
+            title: { text: '# clusters -> # rows', style: {'fontSize': titleSize} },
+            xAxis: {
+                categories: nrowsX,
+                tickInterval: 5
+            },
+            yAxis: { title: { text: '# clusters' } },
+            series: [ { name: '# rows', data: nrowsY } ]
+        });   
+}
+
+function drawClusterColGraph(selector, titleSize, ncolsX, ncolsY) {
+    $(selector).highcharts(
+        {
+            chart: {
+                type: 'column',
+                width: 300, height: 200
+            },
+            title: { text: '# clusters -> # columns', style: {'fontSize': titleSize} },
+            xAxis: {
+                categories: ncolsX,
+                tickInterval: 2
+            },
+            yAxis: { title: { text: '# clusters' } },
+            series: [ { name: '# columns', data: ncolsY } ]
+        });
+}
+
+function drawClusterResidualGraph(selector, titleSize, residualsX, residualsY) {
+    $(selector).highcharts(
+        {
+            chart: {
+                type: 'column',
+                width: 300, height: 200
+            },
+            title: { text: 'cluster residuals', style: {'fontSize': titleSize} },
+            xAxis: {
+                categories: residualsX,
+                tickInterval: 3
+            },
+            yAxis: { title: { text: '# clusters' } },
+            series: [ { name: 'residual', data: residualsY } ]
+        });
+}
+
+function drawRunlogGraph(selector, titleSize, runlogSeries) {
+    $(selector).highcharts(
+        {
+            chart: {type: 'line', width: 300, height: 200},
+            title: {text: 'Run parameters', style: {'fontSize': titleSize}},
+            plotOptions: { line: { marker: { enabled: false } } },
+            yAxis: { title: { text: 'scaling' }, min: 0 },
+            series: runlogSeries
+        });
+}
+
+function drawMeanScoreGraph(selector, titleText, yTitleText, titleSize, iterations,
+                            minScore, maxScore, meanScores) {
+    $(selector).highcharts(
+        {
+            chart: {type: 'line', width: 300, height: 200},
+            title: { text: titleText, style: {'fontSize': titleSize} },
+            plotOptions: { line: { marker: { enabled: false } } },
+            xAxis: {categories: iterations, tickInterval: 30},
+            yAxis: { title: { text: yTitleText }, max: maxScore, min: minScore },
+            series: meanScores
+        });
+}
+
+function drawFuzzyCoeffGraph(selector, titleSize, iterations, series) {
+    $(selector).highcharts(
+        {
+            chart: {type: 'line', width: 300, height: 200},
+            title: { text: 'Fuzzy coefficient', style: {'fontSize': titleSize} },
+            plotOptions: { line: { marker: { enabled: false } } },
+            xAxis: {categories: iterations, tickInterval: 30},
+            yAxis: { title: { text: 'fuzzy coeff' } },
+            series: [{name: 'fuzzy coeff', data: series}]
+        });    
+}
