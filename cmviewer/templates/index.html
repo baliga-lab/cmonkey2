@@ -37,6 +37,31 @@
       var currentIteration = 1;
       var interval = null;
 
+      function updateIterationSelector() {
+        $.ajax({
+          url: '/iteration_select',
+          success: function(html) {
+            $(html.trim()).replaceAll('#iteration_select');
+
+            $('#select_iteration').change(function (event) {
+               currentIteration = $(this).val();
+               var iteration = $(this).val();
+               // Update cluster list and networks
+               var activeTab = $('#tabs').tabs("option", "active");
+
+               $('#cluster-list').DataTable().ajax.url('/clusters/' + iteration).load();
+               clearClusterDetailView();
+
+               if (activeTab == 2) { // only update this if we are in the network tab
+                 var residuals = $('#residual-slider').slider("values");
+                 var evalues = $('#evalue-slider').slider("values");
+                 initCytoweb(iteration, residuals[0], residuals[1], evalues[0], evalues[1]);
+               }
+             });
+          }
+        });
+      }
+
       function updateRunStatus() {
         $.ajax({
           url: '/run_status',
@@ -46,6 +71,7 @@
             $('.progress-label').text(progress + "%");
           }
         });
+        updateIterationSelector();
       }
 
       function assignClusterClickHandlers() {
@@ -170,21 +196,7 @@
               }
             }
          });
-         $('#select_iteration').change(function (event) {
-             currentIteration = $(this).val();
-             var iteration = $(this).val();
-             // Update cluster list and networks
-             var activeTab = $('#tabs').tabs("option", "active");
 
-             $('#cluster-list').DataTable().ajax.url('/clusters/' + iteration).load();
-             clearClusterDetailView();
-
-             if (activeTab == 2) { // only update this if we are in the network tab
-               var residuals = $('#residual-slider').slider("values");
-               var evalues = $('#evalue-slider').slider("values");
-               initCytoweb(iteration, residuals[0], residuals[1], evalues[0], evalues[1]);
-             }
-         });
          var iterations = {{js_iterations}};
 
          // residual graph
@@ -370,6 +382,7 @@
         });
 
         // other stuff
+        updateIterationSelector();
         interval = setInterval(updateRunStatus, 5000);
       });
     </script>
@@ -399,12 +412,7 @@
        <div>&nbsp;</div>
 
        <!-- Dynamically replaced -->
-       <div>Iteration <select id="select_iteration">
-       {% for iter in iterations %}{% if iter == current_iter %}
-         <option value="{{iter}}" selected>{{iter}}</option>
-       {% else %}<option value="{{iter}}">{{iter}}</option>{% endif %}{% endfor %}
-       </select>/{{runinfo.num_iters}}
-       </div>
+       <div id="iteration_select"></div>
        <div style="height: 10px;">&nbsp;</div>
 
      </div>
