@@ -163,8 +163,13 @@ def make_int_histogram(counts):
     for count in counts:
         histogram[count] += 1
     sorted_keys = sorted(histogram.keys())
-    return json.dumps(sorted_keys), json.dumps([histogram[key] for key in sorted_keys])
-    
+    return sorted_keys, [histogram[key] for key in sorted_keys]
+
+def make_int_histogram_js(counts):
+    """input: list of counts
+    output: xvalues (count), yvalues (# clusters)"""
+    xvals, yvals = make_int_histogram(counts)
+    return json.dumps(xvals), json.dumps(yvals)
 
 def make_float_histogram(values, nbuckets=20):
     if len(values) > 0:
@@ -432,6 +437,38 @@ class ClusterViewerApp:
         return result
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def cluster_row_hist(self):
+        """Note: this is actually iteration-specific, currently we lock this to the last
+        iteration until it becomes an issue"""
+        row_stats = defaultdict(list)
+        conn = dbconn()
+        cursor = conn.cursor()
+        cursor.execute('select iteration, cluster, num_rows from cluster_stats')
+        for iteration, cluster, nrows in cursor.fetchall():
+            row_stats[iteration].append(nrows)
+        nrows_x, nrows_y = make_int_histogram(row_stats[max(row_stats.keys())])
+        cursor.close()
+        conn.close()
+        return {'xvalues': nrows_x, 'yvalues': nrows_y}
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def cluster_col_hist(self):
+        """Note: this is actually iteration-specific, currently we lock this to the last
+        iteration until it becomes an issue"""
+        col_stats = defaultdict(list)
+        conn = dbconn()
+        cursor = conn.cursor()
+        cursor.execute('select iteration, cluster, num_cols from cluster_stats')
+        for iteration, cluster, ncols in cursor.fetchall():
+            col_stats[iteration].append(ncols)
+        ncols_x, ncols_y = make_int_histogram(col_stats[max(col_stats.keys())])
+        cursor.close()
+        conn.close()
+        return {'xvalues': ncols_x, 'yvalues': ncols_y}
+
+    @cherrypy.expose
     def iteration(self, iteration):
         current_iter = int(iteration)
         conn = dbconn()
@@ -467,8 +504,6 @@ class ClusterViewerApp:
             row_stats[stat.iter].append(stat.num_rows)
             col_stats[stat.iter].append(stat.num_cols)
             resid_stats[stat.iter].append(stat.residual)
-        js_nrows_x, js_nrows_y = make_int_histogram(row_stats[current_iter])
-        js_ncols_x, js_ncols_y = make_int_histogram(col_stats[current_iter])
         js_resids_x, js_resids_y = make_float_histogram(resid_stats[current_iter])
         cursor.close()
 
@@ -721,12 +756,17 @@ def setup_routes():
     d.connect('run_status', '/run_status', controller=main, action="run_status")
     d.connect('iterations', '/iterations', controller=main, action="iterations")
     d.connect('iteration_select', '/iteration_select', controller=main, action="iteration_select")
-    # highcharts graph values
+    # highcharts graph value routes
     d.connect('mean_residuals', '/mean_residuals', controller=main, action="mean_residuals")
     d.connect('mean_cluster_members',
               '/mean_cluster_members', controller=main, action="mean_cluster_members")
     d.connect('runlog', '/runlog', controller=main, action="runlog")
     d.connect('fuzzy_coeffs', '/fuzzy_coeffs', controller=main, action="fuzzy_coeffs")
+    d.connect('cluster_row_hist', '/cluster_row_hist', controller=main,
+              action="cluster_row_hist")
+    d.connect('cluster_col_hist', '/cluster_col_hist', controller=main,
+              action="cluster_col_hist")
+
 
     # cytoscape.js routes
     d.connect('cytonodes', '/cytoscape_nodes/:iteration', controller=main,

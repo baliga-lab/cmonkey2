@@ -186,38 +186,16 @@ function drawClusterMemberGraph(selector, titleSize, iterations, meanNRows, mean
         });
 }
 
-function drawClusterRowGraph(selector, titleSize, nrowsX, nrowsY) {
+function drawClusterMemberHistogram(selector, titleSize, titleText, valueTitleText,
+                                    xvalues, yvalues) {
     $(selector).highcharts(
         {
-            chart: {
-                type: 'column',
-                width: 300, height: 200
-            },
-            title: { text: '# clusters -> # rows', style: {'fontSize': titleSize} },
-            xAxis: {
-                categories: nrowsX,
-                tickInterval: 5
-            },
-            yAxis: { title: { text: '# clusters' } },
-            series: [ { name: '# rows', data: nrowsY } ]
+            chart: {type: 'column', width: 300, height: 200},
+            title: {text: '# clusters -> # rows', style: {'fontSize': titleSize}},
+            xAxis: {categories: xvalues, tickInterval: 5},
+            yAxis: {title: { text: '# clusters' }},
+            series: [{name: '# rows', data: yvalues}]
         });   
-}
-
-function drawClusterColGraph(selector, titleSize, ncolsX, ncolsY) {
-    $(selector).highcharts(
-        {
-            chart: {
-                type: 'column',
-                width: 300, height: 200
-            },
-            title: { text: '# clusters -> # columns', style: {'fontSize': titleSize} },
-            xAxis: {
-                categories: ncolsX,
-                tickInterval: 2
-            },
-            yAxis: { title: { text: '# clusters' } },
-            series: [ { name: '# columns', data: ncolsY } ]
-        });
 }
 
 function drawClusterResidualGraph(selector, titleSize, residualsX, residualsY) {
@@ -294,6 +272,8 @@ function updateRunStatus(pgbarSelector) {
                      reloadClusterMemberGraphValues('#cluster-member-graph', iterations);
                      reloadRunlogGraphValues('#runlog-graph');
                      reloadFuzzyCoeffGraphValues('#fuzzy-graph', iterations);
+                     reloadClusterRowGraphValues('#cluster-row-graph');
+                     reloadClusterColGraphValues('#cluster-column-graph');
                  }
              }});
     updateIterationSelector();
@@ -326,5 +306,21 @@ function reloadRunlogGraphValues(selector) {
 function reloadFuzzyCoeffGraphValues(selector) {
     $.ajax({ url: '/fuzzy_coeffs', success: function(data) {
                  drawFuzzyCoeffGraph(selector, TITLE_SIZE, iterations, data);
+             }});
+}
+
+function reloadClusterRowGraphValues(selector) {
+    $.ajax({ url: '/cluster_row_hist', success: function(data) {
+                 drawClusterMemberHistogram(selector, TITLE_SIZE, '# clusters -> # rows',
+                                            '# rows',
+                                            data.xvalues, data.yvalues);
+             }});
+}
+
+function reloadClusterColGraphValues(selector) {
+    $.ajax({ url: '/cluster_col_hist', success: function(data) {
+                 drawClusterMemberHistogram(selector, TITLE_SIZE, '# clusters -> # columns',
+                                            '# columns',
+                                            data.xvalues, data.yvalues);
              }});
 }

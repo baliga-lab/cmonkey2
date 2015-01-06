@@ -58,11 +58,9 @@
          reloadClusterMemberGraphValues('#cluster-member-graph', iterations);
          reloadRunlogGraphValues('#runlog-graph');
          reloadFuzzyCoeffGraphValues('#fuzzy-graph', iterations);
+         reloadClusterRowGraphValues('#cluster-row-graph');
+         reloadClusterColGraphValues('#cluster-column-graph');
 
-         drawClusterRowGraph('#cluster-row-graph', TITLE_SIZE,
-                             {{js_nrows_x}}, {{js_nrows_y}});
-         drawClusterColGraph('#cluster-column-graph', TITLE_SIZE,
-                             {{js_ncols_x}}, {{js_ncols_y}});
          drawClusterResidualGraph('#cluster-residual-graph', TITLE_SIZE,
                                   {{js_resids_x}}, {{js_resids_y}});
 
