@@ -35,8 +35,9 @@
 
     <script type="text/javascript">
       $(document).ready(function() {
-         $('#progressbar').progressbar({value: {{progress}}});
-         $('.progress-label').text("{{progress}}%");
+         $('#progressbar').progressbar({value: 0.0});
+         $('.progress-label').text("0.0%");
+
          $('#tabs').tabs({
             activate: function(event, ui) {
               var active = $('#tabs').tabs("option", "active");
@@ -51,19 +52,6 @@
               }
             }
          });
-
-         var iterations = {{js_iterations}};
-
-         reloadResidualGraphValues('#residual-graph', iterations);
-         reloadClusterMemberGraphValues('#cluster-member-graph', iterations);
-         reloadRunlogGraphValues('#runlog-graph');
-         reloadFuzzyCoeffGraphValues('#fuzzy-graph', iterations);
-
-         reloadClusterRowGraphValues('#cluster-row-graph');
-         reloadClusterColGraphValues('#cluster-column-graph');
-         reloadClusterResidualGraphValues('#cluster-residual-graph');
-         reloadNetworkScoreGraphValues('#network-score-graph', iterations);
-         reloadMeanScoreGraphValues('#mean-score-graph', iterations);
 
          $('#cluster-list').dataTable({
            'bPaginate': false,
@@ -123,7 +111,7 @@
         });
 
         // other stuff
-        updateIterationSelector(iterations);
+        updateRunStatus();
         startTimer();
       });
     </script>

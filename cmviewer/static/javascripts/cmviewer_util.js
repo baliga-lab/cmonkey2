@@ -257,7 +257,7 @@ function drawFuzzyCoeffGraph(selector, titleSize, iterations, series) {
         });    
 }
 
-function updateRunStatus(pgbarSelector) {
+function updateRunStatus() {
 
     // progress bar
     $.ajax({ url: '/run_status', success: function(data) {
@@ -291,7 +291,7 @@ function updateRunStatus(pgbarSelector) {
 }
 
 function startTimer() {
-    interval = setInterval(function() { updateRunStatus('#progressbar'); }, INTERVAL);
+    interval = setInterval(function() { updateRunStatus(); }, INTERVAL);
 }
 
 function reloadResidualGraphValues(selector, iterations) {

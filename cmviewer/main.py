@@ -233,7 +233,8 @@ class ClusterViewerApp:
                 conn.close()
 
         if iteration is not None:
-            raise cherrypy.HTTPRedirect('/%d' % iteration)
+            # TODO: empty out real_index and render the simple template after that
+            return self.real_index(iteration)
         else:
             tmpl = env.get_template('not_available.html')
             return tmpl.render(locals())
@@ -501,15 +502,10 @@ class ClusterViewerApp:
         conn.close()
         return {'min': min_stats_score, 'max': max_stats_score, 'series': stats}
 
-    @cherrypy.expose
-    def iteration(self, iteration):
+    def real_index(self, iteration):
         current_iter = int(iteration)
         conn = dbconn()
         cursor = conn.cursor()
-        cursor.execute('select distinct iteration from row_members')
-        iterations = [row[0] for row in cursor.fetchall()]
-        js_iterations = json.dumps(iterations)
-
         # slider values TODO: update dynamically
         #############
         cursor.execute("select min(residual), max(residual) from cluster_stats where iteration=?", [current_iter])
@@ -537,8 +533,6 @@ class ClusterViewerApp:
         conn = None
 
         tmpl = env.get_template('index.html')
-        progress = "%.2f" % min((float(runinfo.last_iter) / float(runinfo.num_iters) * 100.0),
-                                100.0)
         return tmpl.render(locals())
 
     @cherrypy.expose
@@ -768,9 +762,6 @@ def setup_routes():
               action="cytoscape_nodes")
     d.connect('cytoedges', '/cytoscape_edges/:iteration', controller=main,
               action="cytoscape_edges")
-
-    # Deprecated: this should be just the main page
-    d.connect('iteration', '/:iteration', controller=main, action="iteration")
 
     # cluster list and details
     d.connect('clusters', '/clusters/:iteration', controller=main, action="clusters")
