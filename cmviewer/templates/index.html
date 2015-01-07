@@ -63,12 +63,7 @@
          reloadClusterColGraphValues('#cluster-column-graph');
          reloadClusterResidualGraphValues('#cluster-residual-graph');
          reloadNetworkScoreGraphValues('#network-score-graph', iterations);
-
-         drawMeanScoreGraph('#mean-score-graph', 'Median scores',
-                            'mean p-value',
-                            TITLE_SIZE, iterations,
-                            {{min_stats_score}}, {{max_stats_score}},
-                            {{js_stats}});
+         reloadMeanScoreGraphValues('#mean-score-graph', iterations);
 
          $('#cluster-list').dataTable({
            'bPaginate': false,

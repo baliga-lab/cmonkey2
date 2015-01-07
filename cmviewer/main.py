@@ -492,6 +492,31 @@ class ClusterViewerApp:
         return {'min': min_score, 'max': max_score, 'series': series}
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def generic_score_means(self):
+        conn = dbconn()
+        cursor = conn.cursor()
+        cursor.execute("select rowid,name from statstypes where (category='scoring' or category='seqtype') and name not in ('Rows', 'Columns', 'Networks')")
+        types = [row[1] for row in cursor.fetchall()]
+        cursor.close()
+
+        conn.row_factory = iterationstat_factory
+        cursor = conn.cursor()
+        stats_scores = []
+        stats = []
+        for statstype in types:
+            cursor.execute("select iteration, name, score from iteration_stats its join statstypes st on its.statstype = st.rowid where st.name=?", [statstype])
+            mean_stats, min_score, max_score = make_series([row for row in cursor.fetchall()])
+            stats_scores.append(min_score)
+            stats_scores.append(max_score)
+            stats.extend(mean_stats)
+        min_stats_score = min(stats_scores)
+        max_stats_score = max(stats_scores)
+        cursor.close()
+        conn.close()
+        return {'min': min_stats_score, 'max': max_stats_score, 'series': stats}
+
+    @cherrypy.expose
     def iteration(self, iteration):
         current_iter = int(iteration)
         conn = dbconn()
@@ -520,28 +545,6 @@ class ClusterViewerApp:
             elapsed_hours = runinfo.run_secs / 3600
             elapsed_mins = (runinfo.run_secs - (elapsed_hours * 3600)) / 60
             elapsed_time = "(%d hours %d minutes)" % (elapsed_hours, elapsed_mins)
-
-        cursor.close()
-
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute("select rowid,name from statstypes where (category='scoring' or category='seqtype') and name not in ('Rows', 'Columns', 'Networks')")
-        types = [row[1] for row in cursor.fetchall()]
-
-        conn.row_factory = iterationstat_factory
-        cursor = conn.cursor()
-
-        stats_scores = []
-        stats = []
-        for statstype in types:
-            cursor.execute("select iteration, name, score from iteration_stats its join statstypes st on its.statstype = st.rowid where st.name=?", [statstype])
-            mean_stats, min_score, max_score = make_series([row for row in cursor.fetchall()])
-            stats_scores.append(min_score)
-            stats_scores.append(max_score)
-            stats.extend(mean_stats)
-        min_stats_score = min(stats_scores)
-        max_stats_score = max(stats_scores)
-        js_stats = json.dumps(stats)
 
         cursor.close()
         conn.close()
@@ -772,7 +775,8 @@ def setup_routes():
               action="cluster_residuals")
     d.connect('network_score_means', '/network_score_means', controller=main,
               action="network_score_means")
-
+    d.connect('generic_score_means', '/generic_score_means', controller=main,
+              action="generic_score_means")
 
     # cytoscape.js routes
     d.connect('cytonodes', '/cytoscape_nodes/:iteration', controller=main,

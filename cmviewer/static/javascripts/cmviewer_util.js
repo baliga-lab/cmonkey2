@@ -273,6 +273,7 @@ function updateRunStatus(pgbarSelector) {
                      reloadRunlogGraphValues('#runlog-graph');
                      reloadFuzzyCoeffGraphValues('#fuzzy-graph', iterations);
                      reloadNetworkScoreGraphValues('#network-score-graph', iterations);
+                     reloadMeanScoreGraphValues('#mean-score-graph', iterations);
 
                      reloadClusterRowGraphValues('#cluster-row-graph');
                      reloadClusterColGraphValues('#cluster-column-graph');
@@ -337,6 +338,14 @@ function reloadClusterResidualGraphValues(selector) {
 function reloadNetworkScoreGraphValues(selector, iterations) {
     $.ajax({ url: '/network_score_means', success: function(data) {
                  drawMeanScoreGraph(selector, 'Mean network scores', 'mean net score',
+                                    TITLE_SIZE, iterations, data.min, data.max,
+                                    data.series);
+             }});
+}
+
+function reloadMeanScoreGraphValues(selector, iterations) {
+    $.ajax({ url: '/generic_score_means', success: function(data) {
+                 drawMeanScoreGraph(selector, 'Median scores', 'mean p-value',
                                     TITLE_SIZE, iterations, data.min, data.max,
                                     data.series);
              }});
