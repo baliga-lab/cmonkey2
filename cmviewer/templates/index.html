@@ -121,15 +121,11 @@
      <div id="topsection">
        <div><img style="float: right" alt="Institute for Systems Biology" src="/static/images/isb_logo.png"></div>
        <a href="/"><img src="/static/images/cmonkey2_logo.png" style="width:80px" title="cMonkey 2 Viewer"></a>
-       <div progress-section>
+       <div id="progress-section">
          <div id="progressbar"><div class="progress-label">Running...</div></div>
          <div id="progress-info">
            <div class="start-info">Run started at {{runinfo.start_time}}</div>
-           {% if not runinfo.finish_time %}
-           <div class="inprogress-info">Run in progress...</div>
-           {% else %}
-           <div class="finish-info">Run finished at {{runinfo.finish_time}} {{elapsed_time}}</div>
-           {% endif %}
+           <div id="finish-info"></div>
          </div>
        </div>
        <div style="height: 10px;">&nbsp;</div>

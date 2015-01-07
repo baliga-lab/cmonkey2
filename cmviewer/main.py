@@ -339,16 +339,19 @@ class ClusterViewerApp:
         cursor = conn.cursor()
         cursor.execute("select species, organism, num_iterations, last_iteration, num_rows, num_columns, num_clusters, start_time, finish_time, (strftime('%s', finish_time) - strftime('%s', start_time)) from run_infos")
         runinfo = cursor.fetchone()
-        if runinfo.finish_time:
-            elapsed_hours = runinfo.run_secs / 3600
-            elapsed_mins = (runinfo.run_secs - (elapsed_hours * 3600)) / 60
-            elapsed_time = "(%d hours %d minutes)" % (elapsed_hours, elapsed_mins)
 
         cursor.close()
         conn.close()
         progress = "%.2f" % min((float(runinfo.last_iter) / float(runinfo.num_iters) * 100.0),
                                 100.0)
-        return {'progress': progress}
+        result = {'progress': progress, 'finished': False}
+        if runinfo.finish_time:
+            elapsed_hours = runinfo.run_secs / 3600
+            elapsed_mins = (runinfo.run_secs - (elapsed_hours * 3600)) / 60
+            result['elapsed_time'] = "(%d hours %d minutes)" % (elapsed_hours, elapsed_mins)
+            result['finish_time'] = runinfo.finish_time
+            result['finished'] = True
+        return result
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -518,14 +521,11 @@ class ClusterViewerApp:
         cursor.close()
         ################
 
+        # extract general information about the run
         conn.row_factory = runinfo_factory
         cursor = conn.cursor()
         cursor.execute("select species, organism, num_iterations, last_iteration, num_rows, num_columns, num_clusters, start_time, finish_time, (strftime('%s', finish_time) - strftime('%s', start_time)) from run_infos")
         runinfo = cursor.fetchone()
-        if runinfo.finish_time:
-            elapsed_hours = runinfo.run_secs / 3600
-            elapsed_mins = (runinfo.run_secs - (elapsed_hours * 3600)) / 60
-            elapsed_time = "(%d hours %d minutes)" % (elapsed_hours, elapsed_mins)
 
         cursor.close()
         conn.close()
