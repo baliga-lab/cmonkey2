@@ -392,21 +392,6 @@ class ClusterViewerApp:
         return {'meanNumRows': mean_nrow, 'meanNumCols': mean_ncol}
 
     @cherrypy.expose
-    def iteration_select(self, iteration=1):
-        """TODO: deprecated: build the list on the client TODO"""
-        conn = dbconn()
-        cursor = conn.cursor()
-        cursor.execute("select num_iterations, last_iteration from run_infos")
-        num_iterations, last_iteration = cursor.fetchone()
-        cursor.execute('select distinct iteration from row_members')
-        iterations = [row[0] for row in cursor.fetchall()]
-        cursor.close()
-        conn.close()
-        tmpl = env.get_template('iteration_select.html')
-        current_iter = iteration
-        return tmpl.render(locals())
-
-    @cherrypy.expose
     @cherrypy.tools.json_out()
     def runlog(self):
         def read_runlog(fname):
@@ -760,7 +745,7 @@ def setup_routes():
     # run status
     d.connect('run_status', '/run_status', controller=main, action="run_status")
     d.connect('iterations', '/iterations', controller=main, action="iterations")
-    d.connect('iteration_select', '/iteration_select', controller=main, action="iteration_select")
+
     # highcharts graph value routes
     d.connect('mean_residuals', '/mean_residuals', controller=main, action="mean_residuals")
     d.connect('mean_cluster_members',

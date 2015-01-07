@@ -22,11 +22,17 @@ function onIterationChange(event) {
         initCytoweb(iteration, residuals[0], residuals[1], evalues[0], evalues[1]);
     }
 }
-function updateIterationSelector() {
-    $.ajax({ url: '/iteration_select', success: function(html) {
-                 $(html.trim()).replaceAll('#iteration_select');
-                 $('#select_iteration').change(onIterationChange);
-             }});
+function updateIterationSelector(iterations) {
+    var oldSelected = $('#select_iteration').val();
+    var sel = $('<select />', {id: 'select_iteration'});
+    for (var i in iterations) {
+        $('<option />', {value: iterations[i], text: iterations[i]}).appendTo(sel);
+    }
+    sel.val(oldSelected);  // remember the old selection value
+    var div = $('<div />', {id: 'iteration_select', text: 'Iteration '});
+    sel.appendTo(div);
+    div.replaceAll('#iteration_select');
+    $('#select_iteration').change(onIterationChange);
 }
 
 function assignClusterClickHandlers() {
@@ -278,9 +284,10 @@ function updateRunStatus(pgbarSelector) {
                      reloadClusterRowGraphValues('#cluster-row-graph');
                      reloadClusterColGraphValues('#cluster-column-graph');
                      reloadClusterResidualGraphValues('#cluster-residual-graph');
+
+                     updateIterationSelector(iterations);
                  }
              }});
-    updateIterationSelector();
 }
 
 function startTimer() {
