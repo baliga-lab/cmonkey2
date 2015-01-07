@@ -480,6 +480,18 @@ class ClusterViewerApp:
         return {'xvalues': resids_x, 'yvalues': resids_y}
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def network_score_means(self):
+        conn = dbconn()
+        conn.row_factory = iterationstat_factory
+        cursor = conn.cursor()
+        cursor.execute("select iteration,name,score from iteration_stats its join statstypes st on its.statstype=st.rowid where category='network'")
+        series, min_score, max_score = make_series([row for row in cursor.fetchall()])
+        cursor.close()
+        conn.close()
+        return {'min': min_score, 'max': max_score, 'series': series}
+
+    @cherrypy.expose
     def iteration(self, iteration):
         current_iter = int(iteration)
         conn = dbconn()
@@ -531,9 +543,6 @@ class ClusterViewerApp:
         max_stats_score = max(stats_scores)
         js_stats = json.dumps(stats)
 
-        cursor.execute("select iteration,name,score from iteration_stats its join statstypes st on its.statstype=st.rowid where category='network'")
-        js_network_stats, min_netscore, max_netscore = make_series([row for row in cursor.fetchall()])
-        js_network_stats = json.dumps(js_network_stats)
         cursor.close()
         conn.close()
         cursor= None
@@ -761,6 +770,8 @@ def setup_routes():
               action="cluster_col_hist")
     d.connect('cluster_residuals', '/cluster_residuals', controller=main,
               action="cluster_residuals")
+    d.connect('network_score_means', '/network_score_means', controller=main,
+              action="network_score_means")
 
 
     # cytoscape.js routes

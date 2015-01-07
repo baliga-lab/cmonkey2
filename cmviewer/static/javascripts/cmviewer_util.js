@@ -272,6 +272,8 @@ function updateRunStatus(pgbarSelector) {
                      reloadClusterMemberGraphValues('#cluster-member-graph', iterations);
                      reloadRunlogGraphValues('#runlog-graph');
                      reloadFuzzyCoeffGraphValues('#fuzzy-graph', iterations);
+                     reloadNetworkScoreGraphValues('#network-score-graph', iterations);
+
                      reloadClusterRowGraphValues('#cluster-row-graph');
                      reloadClusterColGraphValues('#cluster-column-graph');
                      reloadClusterResidualGraphValues('#cluster-residual-graph');
@@ -329,5 +331,13 @@ function reloadClusterColGraphValues(selector) {
 function reloadClusterResidualGraphValues(selector) {
     $.ajax({ url: '/cluster_residuals', success: function(data) {
                  drawClusterResidualGraph(selector, TITLE_SIZE, data.xvalues, data.yvalues);
+             }});
+}
+
+function reloadNetworkScoreGraphValues(selector, iterations) {
+    $.ajax({ url: '/network_score_means', success: function(data) {
+                 drawMeanScoreGraph(selector, 'Mean network scores', 'mean net score',
+                                    TITLE_SIZE, iterations, data.min, data.max,
+                                    data.series);
              }});
 }
