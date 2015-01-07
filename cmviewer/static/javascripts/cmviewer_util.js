@@ -295,6 +295,39 @@ function updateRunStatus() {
                      updateIterationSelector(iterations);
                  }
              }});
+
+    // update the slider ranges
+    var currentIteration = $('#select_iteration').val();
+    var firstTime = true;
+    if (!currentIteration) currentIteration = 1;
+    $.ajax({url: '/slider_ranges/' + currentIteration, success: function(data) {
+                var oldValues = $('#residual-slider').slider("values");
+                $('#residual-slider').slider('option',
+                                             {min: data.residual.min,
+                                              max: data.residual.max,
+                                              step: data.residual.step});
+                if (!firstTime) {
+                    $('#residual-slider').slider('values', oldValues[0], oldValues[1]);
+                } else {
+                    $('#residual-slider').slider('values',
+                                                 data.residual.min,
+                                                 data.residual.max / INITIAL_NETWORK_FILTER_SCALE);
+                }
+
+                oldValues = $('#evalue-slider').slider("values");
+                $('#evalue-slider').slider('option',
+                                           {min: data.evalue.min,
+                                            max: data.evalue.max,
+                                            step: data.evalue.step});
+                if (!firstTime) {
+                    $('#evalue-slider').slider('values', oldValues[0], oldValues[1]);
+                } else {
+                    $('#evalue-slider').slider('values',
+                                               data.evalue.min,
+                                               data.evalue.max / INITIAL_NETWORK_FILTER_SCALE);
+                }
+                firstTime = false;
+            }});
 }
 
 function startTimer() {

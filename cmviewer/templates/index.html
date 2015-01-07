@@ -79,10 +79,6 @@
         // sliders
         $('#residual-slider').slider({
           range: true,
-          min: {{min_residual}},
-          max: {{max_residual}},
-          step: {{residual_step}},
-          values: [{{min_residual}}, {{max_residual}} / INITIAL_NETWORK_FILTER_SCALE],
           slide: function(event, ui) {
             var values = $('#residual-slider').slider("values");
             $('#residual-range').html('[' + values[0] + '-' + values[1] + ']');
@@ -95,10 +91,6 @@
         });
         $('#evalue-slider').slider({
           range: true,
-          min: {{min_evalue}},
-          max: {{max_evalue}},
-          step: {{evalue_step}},
-          values: [{{min_evalue}}, {{max_evalue}} / INITIAL_NETWORK_FILTER_SCALE],
           slide: function(event, ui) {
             var values = $('#evalue-slider').slider("values");
             $('#evalue-range').html('[' + values[0] + '-' + values[1] + ']');

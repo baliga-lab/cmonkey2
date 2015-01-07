@@ -233,8 +233,7 @@ class ClusterViewerApp:
                 conn.close()
 
         if iteration is not None:
-            # TODO: empty out real_index and render the simple template after that
-            return self.real_index(iteration)
+            return self.real_index()
         else:
             tmpl = env.get_template('not_available.html')
             return tmpl.render(locals())
@@ -482,6 +481,22 @@ class ClusterViewerApp:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
+    def slider_ranges(self, iteration):
+        conn = dbconn()
+        cursor = conn.cursor()
+        cursor.execute("select min(residual), max(residual) from cluster_stats where iteration=?", [iteration])
+        min_residual, max_residual = cursor.fetchone()
+        residual_step = (max_residual - min_residual) / 100.0
+        cursor.execute("select min(evalue), max(evalue) from motif_infos where iteration=?",
+                       [iteration])
+        min_evalue, max_evalue = cursor.fetchone()
+        evalue_step = (max_evalue - min_evalue) / 100.0
+        cursor.close()
+        return {'residual': {'min': min_residual, 'max': max_residual, 'step': residual_step},
+                'evalue': {'min': min_evalue, 'max': max_evalue, 'step': evalue_step}}
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
     def generic_score_means(self):
         conn = dbconn()
         cursor = conn.cursor()
@@ -505,21 +520,8 @@ class ClusterViewerApp:
         conn.close()
         return {'min': min_stats_score, 'max': max_stats_score, 'series': stats}
 
-    def real_index(self, iteration):
-        current_iter = int(iteration)
+    def real_index(self):
         conn = dbconn()
-        cursor = conn.cursor()
-        # slider values TODO: update dynamically
-        #############
-        cursor.execute("select min(residual), max(residual) from cluster_stats where iteration=?", [current_iter])
-        min_residual, max_residual = cursor.fetchone()
-        residual_step = (max_residual - min_residual) / 100.0
-        cursor.execute("select min(evalue), max(evalue) from motif_infos where iteration=?",
-                       [current_iter])
-        min_evalue, max_evalue = cursor.fetchone()
-        evalue_step = (max_evalue - min_evalue) / 100.0
-        cursor.close()
-        ################
 
         # extract general information about the run
         conn.row_factory = runinfo_factory
@@ -529,8 +531,6 @@ class ClusterViewerApp:
 
         cursor.close()
         conn.close()
-        cursor= None
-        conn = None
 
         tmpl = env.get_template('index.html')
         return tmpl.render(locals())
@@ -756,6 +756,8 @@ def setup_routes():
               action="network_score_means")
     d.connect('generic_score_means', '/generic_score_means', controller=main,
               action="generic_score_means")
+    d.connect('slider_ranges', '/slider_ranges/:iteration', controller=main,
+              action="slider_ranges")
 
     # cytoscape.js routes
     d.connect('cytonodes', '/cytoscape_nodes/:iteration', controller=main,
