@@ -60,10 +60,23 @@ class RsatDatabase:
     FEATURE_PATH = 'genome/feature.tab'
     FEATURE_NAMES_PATH = 'genome/feature_names.tab'
 
-    def __init__(self, base_url, cache_dir):
+    def __init__(self, base_url, cache_dir, kegg_species, ncbi_code):
         """create an RsatDatabase instance based on a mirror URL"""
         self.base_url = base_url
         self.cache_dir = cache_dir.rstrip('/')
+        self.kegg_species = kegg_species
+        self.ncbi_code = ncbi_code
+
+    def __get_ncbi_code(self, rsat_organism):
+        """retrieve NCBI code from organism.tab file"""
+        cache_file = "/".join([self.cache_dir, '%s.tab' % rsat_organism])
+        text = util.read_url_cached("/".join([self.base_url,
+                                              RsatDatabase.DIR_PATH,
+                                              rsat_organism,
+                                              RsatDatabase.ORGANISM_PATH]),
+                                    cache_file)
+        spec = [line for line in text.split('\n') if not line.startswith('--')][0]
+        return spec.strip().split('\t')[0]
 
     def get_rsat_organism(self, kegg_organism):
         """returns the HTML page for the directory listing"""
@@ -72,7 +85,25 @@ class RsatDatabase:
         text = util.read_url_cached("/".join([self.base_url,
                                               RsatDatabase.DIR_PATH]),
                                     cache_file)
-        return util.best_matching_links(kegg_organism, text)[0].rstrip('/')
+        suggestion1 = util.best_matching_links(self.kegg_species, text)[0].rstrip('/')
+        suggestion2 = util.best_matching_links(kegg_organism, text)[0].rstrip('/')
+        if suggestion1 != suggestion2:
+            ncbi_code1 = self.__get_ncbi_code(suggestion1)
+            ncbi_code2 = self.__get_ncbi_code(suggestion1)
+            if ncbi_code1 == self.ncbi_code:
+                return suggestion1
+            elif ncbi_code2 == self.ncbi_code:
+                return suggestion2
+            else:
+                logging.warn("can't find the correct RSAT mapping !")
+                return suggestion1
+        else:
+            ncbi_code = self.__get_ncbi_code(suggestion1)
+            if ncbi_code == self.ncbi_code:
+                return suggestion1
+            else:
+                logging.warn("can't find the correct RSAT mapping !")
+                return suggestion1
 
     def get_taxonomy_id(self, organism):
         """returns the specified organism name file contents"""

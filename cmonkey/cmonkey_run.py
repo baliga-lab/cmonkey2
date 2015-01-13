@@ -219,16 +219,25 @@ class CMonkeyRun:
             self.__organism = self.make_organism()
         return self.__organism
 
-    def make_organism(self):
-        """returns the organism object to work on"""
-        self.__make_dirs_if_needed()
-
+    def __get_kegg_data(self):
+        # determine the NCBI code
+        organism_code = self['organism_code']
         if os.path.exists(USER_KEGG_FILE_PATH):
             keggfile = util.read_dfile(USER_KEGG_FILE_PATH, comment='#')
         elif os.path.exists(SYSTEM_KEGG_FILE_PATH):
             keggfile = util.read_dfile(SYSTEM_KEGG_FILE_PATH, comment='#')
         else:
             raise Exception('KEGG file not found !!')
+        kegg_map = util.make_dfile_map(keggfile, 1, 3)
+        kegg2ncbi = util.make_dfile_map(keggfile, 1, 2)
+        if self['ncbi_code'] is None and organism_code in kegg2ncbi:
+            self['ncbi_code'] = kegg2ncbi[organism_code]
+        return self['ncbi_code'], kegg_map[organism_code]
+
+    def make_organism(self):
+        """returns the organism object to work on"""
+        self.__make_dirs_if_needed()
+        ncbi_code, kegg_species = self.__get_kegg_data()
 
         if os.path.exists(USER_GO_FILE_PATH):
             gofile = util.read_dfile(USER_GO_FILE_PATH)
@@ -241,9 +250,10 @@ class CMonkeyRun:
             if not self['rsat_organism']:
                 raise Exception('override RSAT loading: please specify --rsat_organism')
             logging.info("using RSAT files for '%s'", self['rsat_organism'])
-            rsatdb = rsat.RsatFiles(self['rsat_dir'], self['rsat_organism'], self['ncbi_code'])
+            rsatdb = rsat.RsatFiles(self['rsat_dir'], self['rsat_organism'], ncbi_code)
         else:
-            rsatdb = rsat.RsatDatabase(self['rsat_base_url'], self['cache_dir'])
+            rsatdb = rsat.RsatDatabase(self['rsat_base_url'], self['cache_dir'],
+                                       kegg_species, ncbi_code)
 
         if self['operon_file']:
             logging.info("using operon file at '%s'", self['operon_file'])
@@ -253,11 +263,6 @@ class CMonkeyRun:
             mo_db = microbes_online.MicrobesOnline(self['cache_dir'])
 
         stringfile = self['string_file']
-        kegg_map = util.make_dfile_map(keggfile, 1, 3)
-        kegg2ncbi = util.make_dfile_map(keggfile, 1, 2)
-        if self['ncbi_code'] is None and self['organism_code'] in kegg2ncbi:
-            self['ncbi_code'] = kegg2ncbi[self['organism_code']]
-        ncbi_code = self['ncbi_code']
         nw_factories = []
         is_microbe = self['organism_code'] not in VERTEBRATES
 
@@ -278,8 +283,7 @@ class CMonkeyRun:
             # download if not provided
             if stringfile is None:
                 if ncbi_code is None:
-                    rsat_info = org.RsatSpeciesInfo(rsatdb,
-                                                    kegg_map[self['organism_code']],
+                    rsat_info = org.RsatSpeciesInfo(rsatdb, kegg_species,
                                                     self['rsat_organism'], None)
                     ncbi_code = rsat_info.taxonomy_id
 
@@ -305,9 +309,8 @@ class CMonkeyRun:
 
         orgcode = self['organism_code']
         logging.debug("Creating Microbe object for '%s'", orgcode)
-        keggorg = kegg_map[orgcode]
-        rsat_info = org.RsatSpeciesInfo(rsatdb, keggorg, self['rsat_organism'],
-                                        self['ncbi_code'])
+        rsat_info = org.RsatSpeciesInfo(rsatdb, kegg_species, self['rsat_organism'],
+                                        ncbi_code)
         gotax = util.make_dfile_map(gofile, 0, 1)[rsat_info.go_species()]
         synonyms = None
         if self['synonym_file'] is not None:
@@ -315,12 +318,14 @@ class CMonkeyRun:
                                                              self['case_sensitive'])
 
         if is_microbe:
-            organism = org.Microbe(orgcode, keggorg, rsat_info, gotax, mo_db, nw_factories,
+            organism = org.Microbe(orgcode, kegg_species, rsat_info, gotax, mo_db,
+                                   nw_factories,
                                    self['search_distances'], self['scan_distances'],
                                    self['use_operons'], self.ratios, synonyms,
                                    self['fasta_file'])
         else:
-            organism = org.RSATOrganism(orgcode, keggorg, rsat_info, gotax, nw_factories,
+            organism = org.RSATOrganism(orgcode, kegg_species, rsat_info, gotax,
+                                        nw_factories,
                                         self['search_distances'], self['scan_distances'],
                                         self.ratios, synonyms,
                                         self['fasta_file'])
@@ -750,6 +755,7 @@ class CMonkeyRun:
                                       self['num_clusters'], self['output_dir'])
 
             # additionally: run tomtom on the motifs
+            # TODO: check if there is a need to run TOMTOM
             if self['MEME']['global_background'] == 'True':
                 meme.run_tomtom(conn, self['output_dir'], self['MEME']['version'])
 

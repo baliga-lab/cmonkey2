@@ -154,6 +154,7 @@ class MemeSuite:
                 return MemeRunResult([], [], [])
             else:
                 print "Unknown error in MAST:\n ", e.__dict__
+                logging.error("MAST error: %s", e.output)
                 raise
         finally:
             if self.__remove_tempfiles:

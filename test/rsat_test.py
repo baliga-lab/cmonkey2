@@ -25,7 +25,8 @@ class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """test fixture"""
         if not os.path.exists('testcache'):
             os.mkdir('testcache')
-        self.database = rsat.RsatDatabase(RSAT_BASE_URL, 'testcache')
+        self.database = rsat.RsatDatabase(RSAT_BASE_URL, 'testcache',
+                                          'Helicobacter_pylori_26695', 85962)
 
     def tearDown(self):  # pylint: disable-msg=C0103
         """test cleanup"""

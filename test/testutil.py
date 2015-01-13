@@ -14,7 +14,8 @@ def make_halo(search_distances, scan_distances, ratios=None):
     """returns the organism object to work on"""
     keggfile = util.read_dfile(KEGG_FILE_PATH, comment='#')
     gofile = util.read_dfile(GO_FILE_PATH)
-    rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, CACHE_DIR)
+    rsatdb = rsat.RsatDatabase(RSAT_BASE_URL, CACHE_DIR,
+                               'Halobacterium sp', 64091)
     mo_db = microbes_online.MicrobesOnline(CACHE_DIR)
     stringfile = 'testdata/string_links_64091.tab'
 
@@ -29,7 +30,7 @@ def make_halo(search_distances, scan_distances, ratios=None):
             mo_db, max_operon_size=ratios.num_rows / 20, weight=0.5))
 
     keggorg = util.make_dfile_map(keggfile, 1, 3)['hal']
-    rsat_info = org.RsatSpeciesInfo(rsatdb, keggorg, None, None)
+    rsat_info = org.RsatSpeciesInfo(rsatdb, keggorg, 'Halobacterium_sp', 64091)
     gotax = util.make_dfile_map(gofile, 0, 1)[rsat_info.go_species()]
     return org.Microbe('hal', keggorg, rsat_info, gotax, mo_db, nw_factories,
                        search_distances, scan_distances, True, None)
