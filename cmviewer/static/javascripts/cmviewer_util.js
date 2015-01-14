@@ -28,7 +28,14 @@ function updateIterationSelector(iterations) {
     for (var i in iterations) {
         $('<option />', {value: iterations[i], text: iterations[i]}).appendTo(sel);
     }
-    sel.val(oldSelected);  // remember the old selection value
+    if (typeof oldSelected != "undefined") {
+        // remember the old selection value when rebuilding
+        sel.val(oldSelected);
+    } else {
+        // by default, we set it to the last iteration
+        sel.val(iterations[iterations.length - 1]);
+    }
+
     var div = $('<div />', {id: 'iteration_select', text: 'Iteration '});
     sel.appendTo(div);
     div.replaceAll('#iteration_select');
@@ -262,7 +269,7 @@ function updateRunStatus() {
     // progress bar
     $.ajax({ url: '/run_status', success: function(data) {
                  var progress = parseFloat(data.progress);
-                 if (progress >= 100.0 && interval != null) {
+                 if (data.finished && interval != null) {
                      clearInterval(interval);
                      interval = null;
                  }
