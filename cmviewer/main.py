@@ -89,7 +89,7 @@ class Ratios:
         return [{'name': gene, 'data': [normalize_js(val) for val in subratios.data[i]]}
                 for i, gene in enumerate(genes)]
 
-    def hs_boxplot_data_for(self, genes, conds):
+    def hs_boxplot_data_for(self, genes, conds, hc_workaround=True):
         def make_row(row):
             r = sorted(row)
             minval = r[0]
@@ -108,20 +108,19 @@ class Ratios:
         data_out = subratios.data[:,len(conds):].T
         inrows = sorted(map(make_row, data_in), key=lambda r: r[2])
         outrows = sorted(map(make_row, data_out), key=lambda r: r[2])
-        nin = len(inrows)
-        nout = len(outrows)
-        scale_in = int(round(math.log10(nin))) + 1
-        scale_out = int(round(math.log10(nout))) + 1
-        #print "scale_in: ", scale_in
-        #print "scale_out: ", scale_out
 
-        if nin > 100:
-            inrows = [row for i, row in enumerate(inrows) if i % scale_in == 1]
-        if nout > 100:
-            outrows = [row for i, row in enumerate(outrows) if i % scale_out == 1]
-        
-        print "# inrows: ", len(inrows)
-        print "# outrows: ", len(outrows)
+        # The boxplot in Highcharts fails if there are too many values (> 1000 or so)
+        # We remove values depending on the order of magnitude of their length
+        # to work around the problem for now
+        if hc_workaround:
+            nin = len(inrows)
+            nout = len(outrows)
+            scale_in = 10 ** (int(round(math.log10(nin))) - 2)
+            scale_out = 10 ** (int(round(math.log10(nout))) - 2)
+            if nin > 100:
+                inrows = [row for i, row in enumerate(inrows) if i % scale_in == 1]
+            if nout > 100:
+                outrows = [row for i, row in enumerate(outrows) if i % scale_out == 1]
 
         result = inrows + outrows
         return json.dumps(result)
