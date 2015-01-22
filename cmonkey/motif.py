@@ -442,7 +442,7 @@ def compute_cluster_score(params):
     pvalues = {}
     run_result = None
     nseqs = len(params.seqs)
-    logging.debug('Cluster %d, # sequences: %d', params.cluster, nseqs)
+    logging.info('running meme/mast on cluster %d, # sequences: %d', params.cluster, nseqs)
     if (nseqs >= params.min_cluster_rows and nseqs <= params.max_cluster_rows):
         run_result = params.meme_runner(params)
         pvalues = {feature_id: pvalue for feature_id, pvalue, evalue in run_result.pe_values}

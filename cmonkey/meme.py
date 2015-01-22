@@ -158,7 +158,6 @@ class MemeSuite:
                 raise
         finally:
             if self.__remove_tempfiles:
-                #logging.info("DELETING ALL TMP FILES...")
                 try:
                     os.remove(seqfile)
                 except:
@@ -239,7 +238,7 @@ class MemeSuite430(MemeSuite):
                     min_motif_info = motif_info
             if min_motif_info is not None and min_motif_info.evalue < max_evalue:
                 cons = min_motif_info.consensus_string().upper()
-                logging.info("seeding MEME with good motif %s", cons)
+                logging.debug("seeding MEME with good motif %s", cons)
                 command.extend(['-cons', cons])
 
         if pspfile_path:
@@ -328,7 +327,7 @@ class MemeSuite481(MemeSuite):
                        '-bfile', bgfile_path, '-nostatus',
                        '-ev', '1500', '-mev', '99999', '-mt', '0.99', '-nohtml',
                        '-notext', '-seqp', '-remcorr', '-oc', dirname]
-            logging.info("running: %s", " ".join(command))
+            logging.debug("running: %s", " ".join(command))
             output = subprocess.check_output(command, stderr=subprocess.STDOUT)
             with open(os.path.join(dirname, "mast.xml")) as infile:
                 result = infile.read()
@@ -338,7 +337,7 @@ class MemeSuite481(MemeSuite):
                          e.output)
             return None  # return nothing if there was an error
         finally:
-            logging.info("removing %s...", dirname)
+            logging.debug("removing %s...", dirname)
             shutil.rmtree(dirname)
             print "done."
 
@@ -737,8 +736,8 @@ def global_background_file(organism, gene_aliases, seqtype, bgorder=3,
     used sequences"""
     global_seqs = organism.sequences_for_genes_scan(gene_aliases,
                                                     seqtype=seqtype)
-    logging.info("Computing global background file on seqtype '%s' " +
-                 "(%d sequences)", seqtype, len(global_seqs))
+    logging.debug("Computing global background file on seqtype '%s' " +
+                  "(%d sequences)", seqtype, len(global_seqs))
     return make_background_file(global_seqs, use_revcomp, bgorder)
 
 
@@ -801,7 +800,7 @@ def write_motifs2meme(conn, filepath):
     cursor.execute("select subsequence,pvalue from global_background where subsequence in ('A','C','G','T')")
     freqs = {base: pvalue for base, pvalue in cursor.fetchall()}
     if len(freqs) >= 4 and 'A' in freqs and 'C' in freqs and 'G' in freqs and 'T' in freqs:
-        logging.info('retrieving letter frequency from global background distribution')
+        logging.debug('retrieving letter frequency from global background distribution')
         with open(filepath, 'w') as outfile:
             outfile.write(MEME_FILE_HEADER % (freqs['A'], freqs['C'], freqs['G'], freqs['T']))
             cursor.execute('select max(iteration) from motif_infos')
@@ -848,7 +847,7 @@ def run_tomtom(conn, targetdir, version, q_thresh=Q_THRESHOLD, dist_method=DIST_
                    '-text',
                    '-query-pseudo', '%.3f' % q_pseudo,
                    '-target-pseudo', '%.3f' % t_pseudo]
-        logging.info(" ".join(command))
+        logging.debug(" ".join(command))
 
         # Tomtom versions > 4.8.x drop the target and query switches
         if version == '4.3.0':
