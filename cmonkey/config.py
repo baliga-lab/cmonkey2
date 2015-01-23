@@ -96,7 +96,7 @@ def set_config_general(config, params):
     params['start_iteration'] = config.getint("General", "start_iteration")
     params['multiprocessing'] = config.getboolean('General', 'use_multiprocessing')
     params['case_sensitive'] = config.getboolean('General', 'case_sensitive')
-    params['num_cores'] = get_config_int('General', 'num_cores', None)
+    params['num_cores'] = get_config_int(config, 'General', 'num_cores', None)
     params['postadjust'] = config.getboolean('General', 'postadjust')
     params['log_subresults'] = config.getboolean('General', 'log_subresults')
     params['add_fuzz'] = config.get('General', 'add_fuzz')
