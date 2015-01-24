@@ -12,8 +12,8 @@
     }
 
     $(document).ready(function() {
-      var chart1 = new Highcharts.Chart({
-        chart: {renderTo: 'expression-graph', type: 'line', height: 250 },
+      $('#expression-graph').highcharts({
+        chart: {type: 'line'},
         title: {text: 'Gene Expressions'},
         plotOptions: {line: {marker: {enabled: false}}},
         xAxis: {
@@ -30,8 +30,8 @@
         series: {{js_ratios}}
       });
 
-      var chart2 = new Highcharts.Chart({
-        chart: {renderTo: 'expression-graph2', type: 'boxplot', height: 250},
+      $('#expression-graph2').highcharts({
+        chart: {type: 'boxplot'},
         legend: {enabled: false},
         title: {text: 'Gene Expressions (Box Plot)'},
         xAxis: {
@@ -98,16 +98,16 @@
   <h3>Cluster memberships</h3>
   <br>
   <div id="cluster-members" style="width: 600px">
-    <div><span class="h4">Row members ({{rows|length}})</span> <a id="toggle-row-members" href="#">(...)</a></div>
+    <div><span class="h4">Row members ({{rows|length}})</span> <a id="toggle-row-members" href="javascript:void(0)">(...)</a></div>
     <div id="row-members" style="display:none">{{rows|join(", ")}}</div>
-    <div><span class="h4">Column members ({{columns|length}})</span> <a id="toggle-col-members" href="#">(...)</a></div>
+    <div><span class="h4">Column members ({{columns|length}})</span> <a id="toggle-col-members" href="javascript:void(0)">(...)</a></div>
     <div id="column-members" style="display:none">{{columns|join(", ")}}</div>
   </div>
   <br>
-  <div id="expression-graph"></div>
-  <a href="#" id="deselect-all-series">Deselect All</a>
-  <a href="#" id="select-all-series">Select All</a>
-  <div id="expression-graph2"></div>
+  <div id="expression-graph" style="height: 250px"></div>
+  <a href="javascript:void(0)" id="deselect-all-series">Deselect All</a>
+  <a href="javascript:void(0)" id="select-all-series">Select All</a>
+  <div id="expression-graph2" style="height: 250px"></div>
   <div>&nbsp;</div><br>
   <h3>Motifs</h3>
   {% if seqtypes|length == 0 %}
@@ -145,6 +145,22 @@
   <span class="gaggle-species">{{species}}</span>
   <span class="gaggle-namelist">
     <ol>{% for name in columns %}<li>{{name}}</li>{% endfor %}</ol>
+  </span>
+</div>
+<div class="gaggle-data" style="display:none">
+  <span class="gaggle-name">PSSM motif 1</span>
+  <span class="gaggle-species">{{species}}</span>
+  <span class="gaggle-size">{{motif1_length}}x4</span>
+  <span class="gaggle-matrix-tsv">
+    {{motif1_pssm_tsv}}
+  </span>
+</div>
+<div class="gaggle-data" style="display:none">
+  <span class="gaggle-name">PSSM motif 2</span>
+  <span class="gaggle-species">{{species}}</span>
+  <span class="gaggle-size">{{motif2_length}}x4</span>
+  <span class="gaggle-matrix-tsv">
+    {{motif2_pssm_tsv}}
   </span>
 </div>
 
