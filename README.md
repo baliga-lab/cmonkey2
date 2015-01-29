@@ -12,7 +12,7 @@ A complete set of documentation for installation and running of cMonkey is on th
 
 ### System requirements
 
-* Developed and tested with Python 2.7.2
+* Developed and tested with Python 2.7.8
 * scipy >= 0.9.0
 * numpy >= 1.6.0
 * biopython >= 1.63
