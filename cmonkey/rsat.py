@@ -11,6 +11,8 @@ import re
 import patches
 import os
 
+#RSAT_BASE_URL = 'http://embnet.ccg.unam.mx/rsa-tools'
+#RSAT_BASE_URL = 'http://rsat.bigre.ulb.ac.be/rsat/'
 
 class RsatFiles:
     """This class implements the same service functions as RsatDatabase, but
@@ -36,6 +38,7 @@ class RsatFiles:
 
     def get_features(self, organism, original=True):
         if original:
+            #path = os.path.join(self.dirname, 'features.tab')
             path = os.path.join(self.dirname, self.feature_name + '.tab')
         else:
             path = os.path.join(self.dirname, organism + '_' + self.feature_name)
@@ -83,25 +86,7 @@ class RsatDatabase:
         text = util.read_url_cached("/".join([self.base_url,
                                               RsatDatabase.DIR_PATH]),
                                     cache_file)
-        suggestion1 = util.best_matching_links(self.kegg_species, text)[0].rstrip('/')
-        suggestion2 = util.best_matching_links(kegg_organism, text)[0].rstrip('/')
-        if suggestion1 != suggestion2:
-            ncbi_code1 = self.__get_ncbi_code(suggestion1)
-            ncbi_code2 = self.__get_ncbi_code(suggestion1)
-            if ncbi_code1 == self.ncbi_code:
-                return suggestion1
-            elif ncbi_code2 == self.ncbi_code:
-                return suggestion2
-            else:
-                logging.warn("can't find the correct RSAT mapping !")
-                return suggestion1
-        else:
-            ncbi_code = self.__get_ncbi_code(suggestion1)
-            if ncbi_code == self.ncbi_code:
-                return suggestion1
-            else:
-                logging.warn("can't find the correct RSAT mapping !")
-                return suggestion1
+        return util.best_matching_links(kegg_organism, text)[0].rstrip('/')
 
     def get_taxonomy_id(self, organism):
         """returns the specified organism name file contents"""
@@ -120,7 +105,9 @@ class RsatDatabase:
         if that fails
         """
         #logging.info('RSAT - get_features(%s)', organism)
-	cache_file = "/".join([self.cache_dir, organism + '_' + self.feature_name])
+	import pdb
+	#pdb.set_trace()
+        cache_file = "/".join([self.cache_dir, organism + '_' + self.feature_name])
         uCache = util.read_url_cached("/".join([self.base_url, RsatDatabase.DIR_PATH, organism, self.feature_path]), cache_file)
 
 	#Make sure that the fields are in the correct order
@@ -186,6 +173,8 @@ class RsatDatabase:
         cache_file = "/".join([self.cache_dir, organism + '_' + contig])
         url = "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
                         'genome', contig + '.raw'])
+	#import pdb
+	#pdb.set_trace()
 	#10-07-14 Crashed here with URL timeout.  Maybe RSAT limits downloads?
 	#  On 10-08-14 I could download the other files with pdb.set_trace()
 	#  Maybe all I will need is a pause between files?

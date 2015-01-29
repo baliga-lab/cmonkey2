@@ -21,7 +21,7 @@ import logging
 def getVarianceMeanSDvect_mp_wrapper(args):
     return(getVarianceMeanSDvect(args[0], args[1], args[2], args[3], args[4], args[5], args[6]))
 
-def getVarianceMeanSDvect(ratioVect, n, tolerance = 0.05, maxTime=600, chunkSize=200, verbose=False, expName=None):
+def getVarianceMeanSDvect(ratioVect, n, tolerance = 0.01, maxTime=600, chunkSize=200, verbose=False, expName=None):
     """Given a ratios matrix and a number of genes, figure out the expected distribution of variances
        Will sample background until the mean and sd converge or the operation times out
        Will return a list of variances to be used for statistical tests, 
@@ -133,7 +133,7 @@ class BSCM:
                 self.allVars[cn] = {} 
 
             #For loop: efficiently use multicore by precalculating additional numbers of genes
-            i_s = n
+            i_s = [n]
             if num_cores > 1:
                 i_s = [n-3, n-2, n-1, n, n+1, n+2, n+3]
             for i in i_s:
@@ -185,23 +185,5 @@ class BSCM:
                 pVals[cn] = np.mean(self.allVars[cn][str(n)] < curVar)
 
         return pVals
-    #def getPvals(self, geneNames):
-        
+    #def getPvals(self, geneNames):        
 #class BSCM:
-
-
-#import random  
-#import datamatrix as dm #Used for testing
-#import util as util #used for testing
-#matrix_factory = dm.DataMatrixFactory([])
-#infile = util.read_dfile('../ALS.log2ratios.cut.0.05.tsv', has_header=True, quote='\"')
-#ratios = matrix_factory.create_from(infile, True)
-#geneNames = random.sample(ratios.row_names, 25)
-#import BSCM
-#reload(BSCM)
-#myBSCM = BSCM.BSCM(ratios=ratios, tolerance=0.05)
-#curPs = myBSCM.getPvals(geneNames=geneNames, num_cores=4)
-#
-#myBSCM = BSCM.BSCM(ratios=ratios, tolerance=0.01)
-#curPs2 = myBSCM.getPvals(geneNames=geneNames, num_cores=16)
-
