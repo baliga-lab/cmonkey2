@@ -60,7 +60,7 @@ def write_iteration(conn, outfile, iteration, num_clusters, outdir):
         cursor.close()
 
         cursor = conn.cursor()
-        cursor.execute('select residual from cluster_residuals where cluster = ? and iteration = ?',
+        cursor.execute('select residual from cluster_stats where cluster = ? and iteration = ?',
                        [cluster, iteration])
         row = cursor.fetchone()
         resid = row[0] if row != None else 1.0

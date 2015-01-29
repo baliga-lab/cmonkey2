@@ -63,10 +63,11 @@ class SetType:
     """Set type representation. This is just a grouping from name to a number of sets
     and providing access to all contained genes"""
 
-    def __init__(self, name, sets):
+    def __init__(self, name, sets, weight):
         """instance creation"""
         self.name = name
         self.sets = sets
+        self.weight = weight
         self.__genes = None
 
     def genes(self):
@@ -97,35 +98,53 @@ CANONICAL_ROWNAMES = None
 CANONICAL_ROW_INDEXES = None
 
 
-def read_set_types(config_params, thesaurus):
+def read_set_types(config_params, thesaurus, input_genes):
     """Reads sets from a JSON file. We also ensure that genes
     are stored in canonical form in the set, so that set operations based on
     gene names will succeed"""
-    setfile = config_params['SetEnrichment']['set_file']
-    if setfile.endswith('csv'):
-        with open(setfile) as infile:
-            sets = read_sets_csv(infile, thesaurus)
-    else:
-        with open(setfile) as infile:
-            sets = process_sets(json.load(infile), thesaurus)
-    return [SetType('default', sets)]
+    result = []
+    set_types = config_params['SetEnrichment']['set_types'].split(',')
+
+    for set_type in set_types:
+        setfile = config_params['SetEnrichment-%s' % set_type]['set_file']
+        weight = float(config_params['SetEnrichment-%s' % set_type]['weight'])
+        if setfile.endswith('csv'):
+            with open(setfile) as infile:
+                sets = read_sets_csv(infile)
+        else:
+            with open(setfile) as infile:
+                sets = json.load(infile)
+        sets = process_sets(sets, thesaurus, input_genes)
+        result.append(SetType(set_type, sets, weight))
+    return result
 
 
-def process_sets(input_sets, thesaurus):
+def process_sets(input_sets, thesaurus, input_genes):
     """Reusable function that maps a dictionary {name: [genes]}
     to a set of DiscretenEnrichmentSet objects"""
     sets = {}
-    thrown_out = 0
+    genes_thrown_out = 0
+    sets_thrown_out = 0
+    input_genes = {thesaurus[gene] for gene in input_genes if gene in thesaurus}
+
     for setname, genes in input_sets.iteritems():
         filtered = map(lambda s: intern(str(s)), filter(lambda g: g in thesaurus, genes))
         canonic_genes = {thesaurus[gene] for gene in filtered}
-        thrown_out += len(genes) - len(canonic_genes)
-        sets[setname] = DiscreteEnrichmentSet(canonic_genes)
-    logging.info("SET_ENRICHMENT REMOVED  %d ELEMENTS FROM INPUT", thrown_out)
+        genes_thrown_out += len(genes) - len(canonic_genes)
+
+        # check whether the genes are found in the ratios
+        # and ignore 
+        canonic_genes = {gene for gene in canonic_genes if gene in input_genes}
+        if len(canonic_genes) > 0:
+            sets[setname] = DiscreteEnrichmentSet(canonic_genes)
+        else:
+            sets_thrown_out += 1
+    logging.info("SET_ENRICHMENT REMOVED %d GENES FROM INPUT", genes_thrown_out)
+    logging.info("SET_ENRICHMENT REMOVED %d SETS FROM INPUT", sets_thrown_out)
     return sets
 
 
-def read_sets_csv(infile, thesaurus, sep=','):
+def read_sets_csv(infile, sep1=',', sep2=';'):
     """Reads sets from a CSV file
     We support 2-column and 3 column formats:
 
@@ -137,14 +156,17 @@ def read_sets_csv(infile, thesaurus, sep=','):
 
     <set name><separator><gene><weight>
     """
-    line1 = infile.readline().strip().split(sep)
+    line1 = infile.readline().strip().split(sep1)
     if len(line1) == 2:
         sets = defaultdict(list)
-        sets[line1[0]].append(line1[1])
+        for gene in line1[1].split(sep2):
+            sets[line1[0]].append(gene)
+
         for line in infile:
-            row = line.strip().split(sep)
-            sets[row[0]].append(row[1])
-        return process_sets(sets, thesaurus)
+            row = line.strip().split(sep1)
+            for gene in row[1].split(sep2):
+                sets[row[0]].append(gene)
+        return sets
     else:
         raise Exception("3 column set files not supported yet")
 
@@ -155,7 +177,8 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, "SetEnrichment", organism, membership,
                                              ratios, config_params)
-        self.__set_types = read_set_types(config_params, organism.thesaurus())
+        self.__set_types = read_set_types(config_params, organism.thesaurus(),
+                                          ratios.row_names)
         self.run_log = scoring.RunLog('set_enrichment', config_params)
 
     def bonferroni_cutoff(self):
@@ -233,7 +256,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                 pValues.append(min_pvalue)
 
                 for row in xrange(len(self.gene_names())):
-                    matrix.values[row][cluster - 1] = scores[row]
+                    matrix.values[row][cluster - 1] += scores[row] * set_type.weight
             setFile.write('\n'+str(iteration_result['iteration'])+','+','.join([str(i) for i in minSets]))
             pvFile.write('\n'+str(iteration_result['iteration'])+','+','.join([str(i) for i in pValues]))
             setFile.close()
@@ -272,27 +295,29 @@ def compute_cluster_score(args):
     cluster_genes = {gene for gene in cluster_rows if gene in set_type_genes}
     overlap_sizes = []
     set_sizes = []
-
+    set_names = []
     for set_name in sorted(set_type.sets.keys()):
         eset = set_type.sets[set_name]
         set_genes = eset.genes_above_cutoff()
-        set_sizes.append(len(set_genes))
-        intersect = cluster_genes.intersection(set_genes)
-        overlap_sizes.append(len(intersect))
+        intersect = len(cluster_genes.intersection(set_genes))
+        if intersect > 0:
+            set_names.append(set_name)
+            set_sizes.append(len(set_genes))
+            overlap_sizes.append(intersect)
 
-    num_sets = len(set_type.sets)
-    num_genes = len(set_type_genes)
-    phyper_n = list(np.array([num_genes] * num_sets) - np.array(set_sizes))
-    phyper_k = [len(cluster_genes)] * num_sets
-
-    enrichment_pvalues = np.array(util.phyper(overlap_sizes, set_sizes, phyper_n, phyper_k))
-    min_pvalue = enrichment_pvalues[np.isfinite(enrichment_pvalues)].min()
-    min_index = np.where(enrichment_pvalues == min_pvalue)[0][0]
-    min_set = sorted(set_type.sets.keys())[min_index]
-    min_set_overlap = overlap_sizes[min_index]
-
+    num_sets = len(overlap_sizes)
     scores = np.zeros(matrix.num_rows)
-    if min_set_overlap > 0:
+    if not num_sets==0:
+        num_genes = len(set_type_genes)
+        phyper_n = list(np.array([num_genes] * num_sets) - np.array(set_sizes))
+        phyper_k = [len(cluster_genes)] * num_sets
+
+        enrichment_pvalues = np.array(util.phyper(overlap_sizes, set_sizes, phyper_n, phyper_k))
+        min_pvalue = enrichment_pvalues[np.isfinite(enrichment_pvalues)].min()
+        min_index = np.where(enrichment_pvalues == min_pvalue)[0][0]
+        min_set = set_names[min_index]
+        min_set_overlap = overlap_sizes[min_index]
+
         min_genes = set_type.sets[min_set].genes()
         # ensure all row names are in canonical form
         min_genes = [gene for gene in min_genes if gene in CANONICAL_ROWNAMES]
@@ -320,5 +345,8 @@ def compute_cluster_score(args):
 
         scores[scores != 0.0] = dampened_pvalue / scores[scores != 0.0]
         scores *= ref_min_score
+    else:
+        min_set = 'NA'
+        min_pvalue = np.nan
 
     return scores, min_set, min_pvalue

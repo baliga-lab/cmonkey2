@@ -34,12 +34,14 @@ class MemeSuite:
     meme - discover motifs in a set of sequences
     mast - search for a group of motifs in a set of sequences
     """
-    def __init__(self, config_params, background_file=None, remove_tempfiles=True):
+    def __init__(self, config_params, background_file=None, bgmodel=None,
+                 remove_tempfiles=True):
         """Create MemeSuite instance"""
         self.max_width = int(config_params['MEME']['max_width'])
         self.background_order = int(config_params['MEME']['background_order'])
         self.__use_revcomp = config_params['MEME']['use_revcomp'] == 'True'
         self.__background_file = background_file
+        self.bgmodel = bgmodel
         self.__remove_tempfiles = remove_tempfiles
         self.arg_mod = config_params['MEME']['arg_mod']
 
@@ -152,10 +154,10 @@ class MemeSuite:
                 return MemeRunResult([], [], [])
             else:
                 print "Unknown error in MAST:\n ", e.__dict__
+                logging.error("MAST error: %s", e.output)
                 raise
         finally:
             if self.__remove_tempfiles:
-                #logging.info("DELETING ALL TMP FILES...")
                 try:
                     os.remove(seqfile)
                 except:
@@ -236,7 +238,7 @@ class MemeSuite430(MemeSuite):
                     min_motif_info = motif_info
             if min_motif_info is not None and min_motif_info.evalue < max_evalue:
                 cons = min_motif_info.consensus_string().upper()
-                logging.info("seeding MEME with good motif %s", cons)
+                logging.debug("seeding MEME with good motif %s", cons)
                 command.extend(['-cons', cons])
 
         if pspfile_path:
@@ -325,7 +327,7 @@ class MemeSuite481(MemeSuite):
                        '-bfile', bgfile_path, '-nostatus',
                        '-ev', '1500', '-mev', '99999', '-mt', '0.99', '-nohtml',
                        '-notext', '-seqp', '-remcorr', '-oc', dirname]
-            logging.info("running: %s", " ".join(command))
+            logging.debug("running: %s", " ".join(command))
             output = subprocess.check_output(command, stderr=subprocess.STDOUT)
             with open(os.path.join(dirname, "mast.xml")) as infile:
                 result = infile.read()
@@ -335,7 +337,7 @@ class MemeSuite481(MemeSuite):
                          e.output)
             return None  # return nothing if there was an error
         finally:
-            print "removing %s..." % dirname
+            logging.debug("removing %s...", dirname)
             shutil.rmtree(dirname)
             print "done."
 
@@ -734,13 +736,13 @@ def global_background_file(organism, gene_aliases, seqtype, bgorder=3,
     used sequences"""
     global_seqs = organism.sequences_for_genes_scan(gene_aliases,
                                                     seqtype=seqtype)
-    logging.info("Computing global background file on seqtype '%s' " +
-                 "(%d sequences)", seqtype, len(global_seqs))
+    logging.debug("Computing global background file on seqtype '%s' " +
+                  "(%d sequences)", seqtype, len(global_seqs))
     return make_background_file(global_seqs, use_revcomp, bgorder)
 
 
 USER_TEST_FASTA_PATH = 'config/fasta_test.fa'
-SYSTEM_TEST_FASTA_PATH = '/etc/cmonkey-python/fasta_test.fa'
+SYSTEM_TEST_FASTA_PATH = '/etc/cmonkey2/fasta_test.fa'
 
 
 def check_meme_version():
@@ -762,5 +764,110 @@ def check_meme_version():
         logging.error("MEME does not exist")
         return None
 
+######################################################################
+### Export
+###############################3
+
+MEME_FILE_HEADER = """MEME version 3.0
+
+ALPHABET= ACGT
+
+strands: + -
+
+Background letter frequencies (from dataset with add-one prior applied):
+A %.3f C %.3f G %.3f T %.3f
+"""
+
+def write_pssm(outfile, cursor, motif_info_id, evalue, num_sites):
+    """writes a single PSSM to the given file"""
+    outfile.write('\nMOTIF %d\n' % motif_info_id)
+    outfile.write('BL   MOTIF %s width=0 seqs=0\n' % motif_info_id)
+
+    cursor.execute('select a,c,g,t from motif_pssm_rows where motif_info_id=? order by row',
+                   [motif_info_id])
+    pssm_rows = [(a, c, g, t) for a, c, g, t in cursor.fetchall()]
+    outfile.write('letter-probability matrix: alength= 4 w= %d nsites= %d E= %.3e\n' % (len(pssm_rows), num_sites, evalue))
+    for a, c, g, t in pssm_rows:
+        outfile.write('%5.3f %5.3f %5.3f %5.3f\n' % (a, c, g, t))
+
+def write_motifs2meme(conn, filepath):
+    """Write the motifs to a MEME file and returns True if successful
+    Currently, this only works if there is global background data in the database
+    """
+    cursor = conn.cursor()
+    cursor2 = conn.cursor()
+
+    cursor.execute("select subsequence,pvalue from global_background where subsequence in ('A','C','G','T')")
+    freqs = {base: pvalue for base, pvalue in cursor.fetchall()}
+    if len(freqs) >= 4 and 'A' in freqs and 'C' in freqs and 'G' in freqs and 'T' in freqs:
+        logging.debug('retrieving letter frequency from global background distribution')
+        with open(filepath, 'w') as outfile:
+            outfile.write(MEME_FILE_HEADER % (freqs['A'], freqs['C'], freqs['G'], freqs['T']))
+            cursor.execute('select max(iteration) from motif_infos')
+            iteration = cursor.fetchone()[0]
+            cursor.execute('select mi.rowid,evalue,count(mms.rowid) from motif_infos mi join meme_motif_sites mms on mi.rowid=mms.motif_info_id where iteration=? group by mi.rowid',
+                           [iteration])
+            num_pssms_written = 0
+            for motif_info_id, evalue, num_sites in cursor.fetchall():
+                write_pssm(outfile, cursor2, motif_info_id, evalue, num_sites)
+
+            # no pssms were written, this can happen when we did not
+            # run MEME, but weeder, so we retrieve the number of sites from MAST instead
+            if num_pssms_written == 0:
+                cursor.execute("select mi.rowid,evalue,count(ann.rowid) from motif_infos mi join motif_annotations ann on mi.rowid=ann.motif_info_id where mi.iteration=? group by mi.rowid",
+                               [iteration])
+                for motif_info_id, evalue, num_sites in cursor.fetchall():
+                    write_pssm(outfile, cursor2, motif_info_id, evalue, num_sites)
+        return True
+    else:
+        logging.warn('no global background distribution found')
+        return False
+
+
+EVALUE_CUTOFF = 100
+RESID_CUTOFF  = 0.8
+DIST_METHOD   = "ed"
+Q_THRESHOLD   = 0.5
+MIN_OVERLAP   = 4
+Q_PSEUDO      = 0
+T_PSEUDO      = 0
+
+
+def run_tomtom(conn, targetdir, version, q_thresh=Q_THRESHOLD, dist_method=DIST_METHOD,
+               min_overlap=MIN_OVERLAP, q_pseudo=Q_PSEUDO, t_pseudo=T_PSEUDO):
+    """a wrapper around the tomtom script"""
+    targetfile = os.path.join(targetdir, 'post.tomtom.meme')
+    queryfile = targetfile
+    if write_motifs2meme(conn, targetfile):
+        command = ['tomtom',
+                   '-verbosity', '1',
+                   '-q-thresh', '%.3f' % q_thresh,
+                   '-dist', dist_method,
+                   '-min-overlap', '%d' % min_overlap,
+                   '-text',
+                   '-query-pseudo', '%.3f' % q_pseudo,
+                   '-target-pseudo', '%.3f' % t_pseudo]
+        logging.debug(" ".join(command))
+
+        # Tomtom versions > 4.8.x drop the target and query switches
+        if version == '4.3.0':
+            command.extend(['-target', targetfile, '-query', queryfile])
+        else:
+            command.extend([targetfile, queryfile])
+
+        try:
+            output = subprocess.check_output(command)
+            lines = output.split('\n')[1:]
+            for line in lines:
+                if len(line.strip()) > 0:
+                    row = line.strip().split('\t')            
+                    motif1 = int(row[0])
+                    motif2 = int(row[1])
+                    if motif1 != motif2:
+                        pvalue = float(row[3])
+                        conn.execute('insert into tomtom_results (motif_info_id1,motif_info_id2,pvalue) values (?,?,?)',
+                                     [motif1, motif2, pvalue])
+        except:
+            raise
 
 __all__ = ['read_meme_output']

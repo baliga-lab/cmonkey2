@@ -223,9 +223,12 @@ class DataMatrix:
         masked = self.values[np.isfinite(self.values)]
         minval = np.min(masked[masked >= min_value])
         maxval = np.max(masked)
-        self.values[self.values < -20.0] = np.min(masked[masked >= -20.0])
+        
         self.values[np.isinf(self.values)] = maxval
-        self.values[np.isnan(self.values)] = maxval
+        self.values[np.isnan(self.values)] = maxval #Should this actually be 0 or median?
+
+        #01-28-15 reordered to make sure that NAs are removed before this test
+        self.values[self.values < min_value] = np.min(masked[masked >= min_value])
 
     def __repr__(self):
         """returns a string representation of this matrix"""
@@ -236,8 +239,8 @@ class DataMatrix:
         result = "%10s" % 'Row'
         result += ' '.join([("%10s" % name)
                             for name in self.column_names]) + '\n'
-        for row_index in xrange(self.num_rows):
-            result += ("%10s" % self.row_names[row_index]) + ' '
+        for row_index, rowname in enumerate(self.row_names):
+            result += ("%10s" % rowname) + ' '
             result += ' '.join([("%10f" % value)
                                 for value in self.values[row_index]])
             result += '\n'
@@ -248,8 +251,8 @@ class DataMatrix:
         def write_data(outfile):
             titlerow = '\t'.join(self.column_names)
             outfile.write(titlerow + '\n')
-            for row_index in range(len(self.row_names)):
-                row = [self.row_names[row_index]]
+            for row_index, rowname in enumerate(self.row_names):
+                row = [rowname]
                 row.extend([('%.17f' % value) for value in self.values[row_index]])
                 outfile.write('\t'.join(row) + '\n')
         if compressed:

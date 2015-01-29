@@ -1,5 +1,6 @@
 # vi: sw=4 ts=4 et:
 import os
+import shutil
 from datetime import date, datetime
 import json
 import numpy as np
@@ -27,11 +28,12 @@ import stringdb
 import debug
 import sizes
 import thesaurus
+import BSCM
 
 USER_KEGG_FILE_PATH = 'config/KEGG_taxonomy'
 USER_GO_FILE_PATH = 'config/proteome2taxid'
-SYSTEM_KEGG_FILE_PATH = '/etc/cmonkey-python/KEGG_taxonomy'
-SYSTEM_GO_FILE_PATH = '/etc/cmonkey-python/proteome2taxid'
+SYSTEM_KEGG_FILE_PATH = '/etc/cmonkey2/KEGG_taxonomy'
+SYSTEM_GO_FILE_PATH = '/etc/cmonkey2/proteome2taxid'
 
 # pipeline paths
 PIPELINE_USER_PATHS = {
@@ -41,10 +43,10 @@ PIPELINE_USER_PATHS = {
     'rowsandnetworks': 'config/rows_and_networks_pipeline.json'
 }
 PIPELINE_SYSTEM_PATHS = {
-    'default': '/etc/cmonkey-python/default_pipeline.json',
-    'rows': '/etc/cmonkey-python/rows_pipeline.json',
-    'rowsandmotifs': '/etc/cmonkey-python/rows_and_motifs_pipeline.json',
-    'rowsandnetworks': '/etc/cmonkey-python/rows_and_networks_pipeline.json'
+    'default': '/etc/cmonkey2/default_pipeline.json',
+    'rows': '/etc/cmonkey2/rows_pipeline.json',
+    'rowsandmotifs': '/etc/cmonkey2/rows_and_motifs_pipeline.json',
+    'rowsandnetworks': '/etc/cmonkey2/rows_and_networks_pipeline.json'
 }
 
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
@@ -101,7 +103,9 @@ class CMonkeyRun:
         conn.execute('''create table run_infos (start_time timestamp,
                         finish_time timestamp,
                         num_iterations int, last_iteration int,
-                        organism text, species text, num_rows int,
+                        organism text, species text,
+                        ncbi_code int,
+                        num_rows int,
                         num_columns int, num_clusters int, git_sha text)''')
 
         # stats tables
@@ -124,8 +128,6 @@ class CMonkeyRun:
                         order_num int)''')
         conn.execute('''create table column_members (iteration int, cluster int,
                         order_num int)''')
-        conn.execute('''create table cluster_residuals (iteration int,
-                        cluster int, residual decimal)''')
         conn.execute('create table global_background (subsequence text, pvalue decimal)')
 
         # in case you are wondering about the redundant iteration field here -
@@ -141,6 +143,9 @@ class CMonkeyRun:
                         seq_name text,
                         reverse boolean, start int, pvalue decimal,
                         flank_left text, seq text, flank_right text)''')
+        # Additional TomTom step
+        conn.execute('''create table tomtom_results (motif_info_id1 int,
+                        motif_info_id2 int, pvalue decimal)''')
 
         conn.execute('''create table motif_annotations (motif_info_id int,
                         iteration int, gene_num int,
@@ -149,8 +154,12 @@ class CMonkeyRun:
                         on column_members (iteration)''')
         conn.execute('''create index if not exists rowmemb_iter_index
                         on row_members (iteration)''')
-        conn.execute('''create index if not exists clustresid_iter_index
-                        on cluster_residuals (iteration)''')
+        conn.execute('''create index if not exists cluststat_iter_index
+                        on cluster_stats (iteration)''')
+        conn.execute("create index if not exists rowmemb_order_index on row_members (order_num)")
+        conn.execute("create index if not exists rowmemb_clust_index on row_members (cluster)")
+        conn.execute("create index if not exists motinf_clust_index on motif_infos (cluster)")
+
         logging.debug("created output database schema")
 
         # all cluster members are stored relative to the base ratio matrix
@@ -211,16 +220,25 @@ class CMonkeyRun:
             self.__organism = self.make_organism()
         return self.__organism
 
-    def make_organism(self):
-        """returns the organism object to work on"""
-        self.__make_dirs_if_needed()
-
+    def __get_kegg_data(self):
+        # determine the NCBI code
+        organism_code = self['organism_code']
         if os.path.exists(USER_KEGG_FILE_PATH):
             keggfile = util.read_dfile(USER_KEGG_FILE_PATH, comment='#')
         elif os.path.exists(SYSTEM_KEGG_FILE_PATH):
             keggfile = util.read_dfile(SYSTEM_KEGG_FILE_PATH, comment='#')
         else:
             raise Exception('KEGG file not found !!')
+        kegg_map = util.make_dfile_map(keggfile, 1, 3)
+        kegg2ncbi = util.make_dfile_map(keggfile, 1, 2)
+        if self['ncbi_code'] is None and organism_code in kegg2ncbi:
+            self['ncbi_code'] = kegg2ncbi[organism_code]
+        return self['ncbi_code'], kegg_map[organism_code]
+
+    def make_organism(self):
+        """returns the organism object to work on"""
+        self.__make_dirs_if_needed()
+        ncbi_code, kegg_species = self.__get_kegg_data()
 
         if os.path.exists(USER_GO_FILE_PATH):
             gofile = util.read_dfile(USER_GO_FILE_PATH)
@@ -245,8 +263,6 @@ class CMonkeyRun:
             mo_db = microbes_online.MicrobesOnline(self['cache_dir'])
 
         stringfile = self['string_file']
-        kegg_map = util.make_dfile_map(keggfile, 1, 3)
-        ncbi_code = self['ncbi_code']
         nw_factories = []
         is_microbe = self['organism_code'] not in VERTEBRATES
 
@@ -267,8 +283,7 @@ class CMonkeyRun:
             # download if not provided
             if stringfile is None:
                 if ncbi_code is None:
-                    rsat_info = org.RsatSpeciesInfo(rsatdb,
-                                                    kegg_map[self['organism_code']],
+                    rsat_info = org.RsatSpeciesInfo(rsatdb, kegg_species,
                                                     self['rsat_organism'], None)
                     ncbi_code = rsat_info.taxonomy_id
 
@@ -276,7 +291,6 @@ class CMonkeyRun:
                 url = STRING_URL_PATTERN % ncbi_code
                 stringfile = "%s/%s.gz" % (self['cache_dir'], ncbi_code)
                 self['string_file'] = stringfile
-		#Around here it could download a biogrid file instead
                 logging.info("Automatically using STRING file in '%s'", stringfile)
                 util.get_url_cached(url, stringfile)
             else:
@@ -295,9 +309,8 @@ class CMonkeyRun:
 
         orgcode = self['organism_code']
         logging.debug("Creating Microbe object for '%s'", orgcode)
-        keggorg = kegg_map[orgcode]
-        rsat_info = org.RsatSpeciesInfo(rsatdb, keggorg, self['rsat_organism'],
-                                        self['ncbi_code'])
+        rsat_info = org.RsatSpeciesInfo(rsatdb, kegg_species, self['rsat_organism'],
+                                        ncbi_code)
         gotax = util.make_dfile_map(gofile, 0, 1)[rsat_info.go_species()]
         synonyms = None
         if self['synonym_file'] is not None:
@@ -309,12 +322,14 @@ class CMonkeyRun:
 	
 	is_microbe = True
         if is_microbe:
-            organism = org.Microbe(orgcode, keggorg, rsat_info, gotax, mo_db, nw_factories,
+            organism = org.Microbe(orgcode, kegg_species, rsat_info, gotax, mo_db,
+                                   nw_factories,
                                    self['search_distances'], self['scan_distances'],
                                    self['use_operons'], self.ratios, synonyms,
                                    self['fasta_file'])
         else:
-            organism = org.RSATOrganism(orgcode, keggorg, rsat_info, gotax, nw_factories,
+            organism = org.RSATOrganism(orgcode, kegg_species, rsat_info, gotax,
+                                        nw_factories,
                                         self['search_distances'], self['scan_distances'],
                                         self.ratios, synonyms,
                                         self['fasta_file'])
@@ -430,8 +445,17 @@ class CMonkeyRun:
 
             # write the normalized ratio matrix for stats and visualization
             output_dir = self['output_dir']
-            if not os.path.exists(output_dir + '/ratios.tsv'):
+            if not os.path.exists(os.path.join(output_dir, '/ratios.tsv')):
                 self.ratios.write_tsv_file(output_dir + '/ratios.tsv')
+            # also copy the input matrix to the output
+            if (os.path.exists(self['ratios_file'])):
+                if self['ratios_file'].endswith('.gz'):
+                    copy_name = 'ratios.original.tsv.gz'
+                else:
+                    copy_name = 'ratios.original.tsv'
+
+                shutil.copyfile(self['ratios_file'],
+                                os.path.join(output_dir, 'ratios.original.tsv'))
 
         # gene index map is used for writing statistics
         thesaurus = self.organism().thesaurus()
@@ -439,9 +463,7 @@ class CMonkeyRun:
                  for row_name in self.ratios.row_names]
         self.gene_indexes = {genes[index]: index
                              for index in xrange(len(genes))}
-        #import pdb
-	#pdb.set_trace()
-	row_scoring, col_scoring = self.__setup_pipeline()
+        row_scoring, col_scoring = self.__setup_pipeline()
         row_scoring.check_requirements()
         col_scoring.check_requirements()
 
@@ -472,15 +494,6 @@ class CMonkeyRun:
             for order_num in self.ratios.row_indexes_for(row_names):
                 conn.execute('''insert into row_members (iteration,cluster,order_num)
                                 values (?,?,?)''', (iteration, cluster, order_num))
-            try:
-                residual = self.residual_for(row_names, column_names)
-                conn.execute('''insert into cluster_residuals (iteration,cluster,residual)
-                           values (?,?,?)''', (iteration, cluster, residual))
-            except:
-                # apparently computing the mean residual led to a numpy masked
-                # value. We set it to 1.0 to avoid crashing out
-                conn.execute('''insert into cluster_residuals (iteration,cluster,residual)
-                           values (?,?,?)''', (iteration, cluster, 1.0))
 
     def write_results(self, iteration_result):
         """write iteration results to database"""
@@ -592,12 +605,24 @@ class CMonkeyRun:
 
     def write_start_info(self):
         conn = self.__dbconn()
+        try:
+            ncbi_code_int = int(self['ncbi_code'])
+        except:
+            # this exception happens when ncbi_code is not specified, usually when
+            # the data files are provided through the command line (e.g. KBase)
+            # in this case, we simply set the code to 0 because it's intended to
+            # not matter
+            ncbi_code_int = 0
+
         with conn:
             conn.execute('''insert into run_infos (start_time, num_iterations, organism,
-                            species, num_rows, num_columns, num_clusters, git_sha) values (?,?,?,?,?,?,?,?)''',
+                            species, ncbi_code, num_rows, num_columns, num_clusters, git_sha) values (?,?,?,?,?,?,?,?,?)''',
                          (datetime.now(), self['num_iterations'], self.organism().code,
-                          self.organism().species(), self.ratios.num_rows,
-                          self.ratios.num_columns, self['num_clusters'], '$Id$'))
+                          self.organism().species(),
+                          ncbi_code_int,
+                          self.ratios.num_rows,
+                          self.ratios.num_columns, self['num_clusters'],
+                          '$Id$'))
 
     def update_iteration(self, iteration):
         conn = self.__dbconn()
@@ -644,9 +669,10 @@ class CMonkeyRun:
             if iteration == 1 or (iteration % self['result_freq'] == 0):
                 self.write_results(iteration_result)
 
-            if iteration == 1 or (iteration % self['stats_freq'] == 0):
-                self.write_stats(iteration_result)
-                self.update_iteration(iteration)
+        # This should not be too much writing, so we can keep it OUT of minimize_io option...?
+        if iteration == 1 or (iteration % self['stats_freq'] == 0):
+            self.write_stats(iteration_result)
+            self.update_iteration(iteration)
 
         if 'dump_results' in self['debug'] and (iteration == 1 or
                                                 (iteration % self['debug_freq'] == 0)):
@@ -732,6 +758,10 @@ class CMonkeyRun:
                                       self['num_iterations'] + 1,
                                       self['num_clusters'], self['output_dir'])
 
+            # additionally: run tomtom on the motifs
+            # TODO: check if there is a need to run TOMTOM
+            if self['MEME']['global_background'] == 'True':
+                meme.run_tomtom(conn, self['output_dir'], self['MEME']['version'])
 
         self.write_finish_info()
         logging.info("Done !!!!")

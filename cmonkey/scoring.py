@@ -16,6 +16,7 @@ import numpy as np
 import cPickle
 import gc
 import sqlite3
+import BSCM
 
 
 # Official keys to access values in the configuration map
@@ -96,11 +97,14 @@ class ScoringFunctionBase:
         else:
             return None
 
-    def set_score_means(self, iteration_result, matrix):
-        score_means = 0.0
-        if matrix is not None:
-            score_means = matrix.mean()
-        iteration_result['score_means'][self.id] = score_means        
+    def current_score_means(self, result_matrix):
+        """This function can be overridden by custom functions to provide their
+        own score means. The default version computes the means of the result
+        matrix, but feel free to provide your own"""
+        if result_matrix is None:
+            return 0.0
+        else:
+            return result_matrix.mean()
 
     def compute(self, iteration_result, reference_matrix=None):
         """general compute method,
@@ -139,7 +143,7 @@ class ScoringFunctionBase:
         self.run_log.log(iteration,
                          self.run_in_iteration(iteration),
                          self.scaling(iteration_result['iteration']))
-        self.set_score_means(iteration_result, computed_result)
+        iteration_result['score_means'][self.id] = self.current_score_means(computed_result)
         return computed_result
 
     def compute_force(self, iteration_result, reference_matrix=None):
@@ -153,11 +157,13 @@ class ScoringFunctionBase:
         self.run_log.log(iteration,
                          self.run_in_iteration(iteration),
                          self.scaling(iteration_result['iteration']))
-        self.set_score_means(iteration_result, computed_result)
+        iteration_result['score_means'][self.id] = self.current_score_means(computed_result)
         return computed_result
 
     def do_compute(self, iteration_result, ref_matrix=None):
-        raise Execption("implement me")
+        """this function is the location of the actual computation, derived scoring
+        functions must implement this"""
+        raise Exception("implement me")
 
     def num_clusters(self):
         """returns the number of clusters"""
@@ -202,16 +208,23 @@ class ColumnScoringFunction(ScoringFunctionBase):
         """create scoring function instance"""
         ScoringFunctionBase.__init__(self, "Columns", organism, membership,
                                      ratios, config_params=config_params)
+                                     
+        #BSCM.  Danziger et al. 2015
+        self.BSCM_obj = None
+        if config_params['use_BSCM']:
+            self.BSCM_obj = BSCM.BSCM(ratios, verbose=False) #How to pass verbose and so on? More parameters?
+            #Note: Ratios normalized upstream during loading by config.py module
         self.run_log = RunLog("column_scoring", config_params)
 
     def do_compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
         return compute_column_scores(self.membership, self.ratios,
-                                     self.num_clusters(), self.config_params)
+                                     self.num_clusters(), self.config_params, 
+                                     self.BSCM_obj)
 
 
 def compute_column_scores(membership, matrix, num_clusters,
-                          config_params):
+                          config_params, BSCM_obj=None):
     """Computes the column scores for the specified number of clusters"""
 
     def compute_substitution(cluster_column_scores):
@@ -234,16 +247,29 @@ def compute_column_scores(membership, matrix, num_clusters,
         else:
             return None
 
-    if config_params['multiprocessing']:
-        with util.get_mp_pool(config_params) as pool:
-            cluster_column_scores = pool.map(compute_column_scores_submatrix,
-                                             map(make_submatrix, xrange(1, num_clusters + 1)))
-    else:
-        cluster_column_scores = []
+    cluster_column_scores = [] #To be filled or overwritten
+    if BSCM_obj is None:
+        if config_params['multiprocessing']:
+	        with util.get_mp_pool(config_params) as pool:
+                    cluster_column_scores = pool.map(compute_column_scores_submatrix, map(make_submatrix, xrange(1, num_clusters + 1)))
+        else:
+	        for cluster in xrange(1, num_clusters + 1):
+	            cluster_column_scores.append(compute_column_scores_submatrix(
+	            	make_submatrix(cluster)))
+    else: #if BSCM_obj exists
+        num_cores = 1
+        if not config_params['num_cores'] is None:
+            num_cores = config_params['num_cores']
+        
         for cluster in xrange(1, num_clusters + 1):
-            cluster_column_scores.append(compute_column_scores_submatrix(
-                make_submatrix(cluster)))
-
+            if make_submatrix(cluster) is None:
+                cluster_column_scores.append(None)
+            else:
+                cur_column_scores = BSCM_obj.getPvals(make_submatrix(cluster).row_names, num_cores=num_cores) 
+                exp_names = cur_column_scores.keys()
+                exp_scores = np.array(cur_column_scores.values() )
+                cluster_column_scores.append((exp_names, exp_scores))
+        	
     substitution = compute_substitution(cluster_column_scores)
 
     # Convert scores into a matrix that have the clusters as columns
@@ -351,15 +377,15 @@ def combine(result_matrices, score_scalings, membership, iteration, config_param
                 values = result_matrices[i].values
                 qqq = abs(util.quantile(values, 0.01))
                 if qqq == 0:
-                    logging.warn('SPARSE SCORES - %d attempt 1: pick from sorted values', i)
+                    logging.debug('SPARSE SCORES - %d attempt 1: pick from sorted values', i)
                     qqq = sorted(values.ravel())[9]
                 if qqq == 0:
-                    logging.warn('SPARSE SCORES - %d attempt 2: pick minimum value', i)
+                    logging.debug('SPARSE SCORES - %d attempt 2: pick minimum value', i)
                     qqq = abs(values.min())
                 if qqq != 0:
                     values = values / qqq * abs(rs_quant)
                 else:
-                    logging.warn('SPARSE SCORES - %d not normalizing!', i)
+                    logging.debug('SPARSE SCORES - %d not normalizing!', i)
                 in_matrices.append(values)
 
     if len(result_matrices) > 0:

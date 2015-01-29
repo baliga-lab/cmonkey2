@@ -112,10 +112,11 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
     def __setup_meme_suite(self, config_params):
         background_file = None
+        bgmodel = None
         meme_version = config_params['MEME']['version']
         search_distance = config_params['search_distances'][self.seqtype]
 
-        if config_params['MEME']['global_background']:
+        if config_params['MEME']['global_background'] == 'True':
             background_file, bgmodel = meme.global_background_file(
                 self.organism, self.ratios.row_names, self.seqtype,
                 bgorder=int(self.config_params['MEME']['background_order']))
@@ -131,11 +132,14 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
 
         if meme_version == '4.3.0':
             self.meme_suite = meme.MemeSuite430(self.config_params,
-                                                background_file=background_file)
+                                                background_file=background_file,
+                                                bgmodel=bgmodel)
         elif meme_version and (
-                meme_version.startswith('4.8') or meme_version.startswith('4.9')):
+                meme_version.startswith('4.8') or meme_version.startswith('4.9') or
+                meme_version.startswith('4.10')):
             self.meme_suite = meme.MemeSuite481(self.config_params,
-                                                background_file=background_file)
+                                                background_file=background_file,
+                                                bgmodel=bgmodel)
         else:
             logging.error("MEME version %s currently not supported !", meme_version)
             raise Exception("unsupported MEME version: '%s'" % meme_version)
@@ -282,8 +286,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         cluster_pvalues = {}
         min_cluster_rows_allowed = self.config_params['memb.min_cluster_rows_allowed']
         max_cluster_rows_allowed = self.config_params['memb.max_cluster_rows_allowed']
-        use_multiprocessing = self.config_params[
-            scoring.KEY_MULTIPROCESSING]
+        use_multiprocessing = self.config_params[scoring.KEY_MULTIPROCESSING]
 
         # extract the sequences for each cluster, slow
         start_time = util.current_millis()
@@ -439,7 +442,7 @@ def compute_cluster_score(params):
     pvalues = {}
     run_result = None
     nseqs = len(params.seqs)
-    logging.debug('Cluster %d, # sequences: %d', params.cluster, nseqs)
+    logging.info('running meme/mast on cluster %d, # sequences: %d', params.cluster, nseqs)
     if (nseqs >= params.min_cluster_rows and nseqs <= params.max_cluster_rows):
         run_result = params.meme_runner(params)
         pvalues = {feature_id: pvalue for feature_id, pvalue, evalue in run_result.pe_values}
@@ -518,7 +521,8 @@ class WeederRunner:
 
         try:
             dbfile = None
-            meme_outfile, pssms = weeder.run_weeder(filename, params, self.config_params)
+            meme_outfile, pssms = weeder.run_weeder(filename, params, self.config_params,
+                                                    self.meme_suite.bgmodel)
             if len(pssms) == 0:
                 logging.debug('no PSSMS generated, skipping cluster')
                 return meme.MemeRunResult([], {}, [])

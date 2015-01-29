@@ -152,7 +152,7 @@ def add_biclusters(pgconn, sqliteconn, network_id, iteration):
     else:
         print "adding biclusters..."
         sqlite_cur = sqliteconn.cursor()
-        sqlite_cur.execute('select cluster, residual from cluster_residuals where iteration = ?', [iteration])
+        sqlite_cur.execute('select cluster, residual from cluster_stats where iteration = ?', [iteration])
         resids = [(row[0], row[1]) for row in sqlite_cur.fetchall()]
         result = []
         for cluster, residual in resids:

@@ -51,7 +51,7 @@ read.cmonkey.sqlite <- function(db.filename, iteration=0) {
                                       data.frame(iteration=iteration, cluster=cluster))[,]
     col.members <- dbGetPreparedQuery(con, "select order_num from column_members where iteration = :iteration and cluster = :cluster",
                                       data.frame(iteration=iteration, cluster=cluster))[,]
-    cluster.residual <- dbGetPreparedQuery(con, "select residual from cluster_residuals where iteration = :iteration and cluster = :cluster",
+    cluster.residual <- dbGetPreparedQuery(con, "select residual from cluster_stats where iteration = :iteration and cluster = :cluster",
                                       data.frame(iteration=iteration, cluster=cluster))[1,]
 
     # indexes in the database are 0-based, correct by 1 to use R indexing

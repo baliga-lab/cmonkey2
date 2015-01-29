@@ -47,7 +47,7 @@ def compute_combscores(combscore_file, num_clusters, row_members):
 
 if __name__ == '__main__':
     description = """
-scores2json - convert cmonkey-python pickle scores to json scores
+scores2json - convert cmonkey2 pickle scores to json scores
 """
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--dbfile', required=True,

@@ -25,7 +25,7 @@ This program is licensed under the General Public License V3.
 See README and LICENSE for details.\n"""
 
 # if we were installed through Debian package management, default.ini is found here
-SYSTEM_INI_PATH = '/etc/cmonkey-python/default.ini'
+SYSTEM_INI_PATH = '/etc/cmonkey2/default.ini'
 USER_INI_PATH = 'config/default.ini'
 
 """
@@ -88,13 +88,15 @@ def set_config_general(config, params):
     params['output_dir'] = config.get('General', 'output_dir')
     params['cache_dir'] = config.get('General', 'cache_dir')
     params['tmp_dir'] = tmp_dir
+    params['pipeline_file'] = config.get('General', 'pipeline_file')
     params['dbfile_name'] = config.get('General', 'dbfile_name')
+    params['rsat_base_url'] = config.get('General', 'rsat_base_url')
     params['normalize_ratios'] = config.getboolean('General', 'normalize_ratios')
     params['num_iterations'] = config.getint("General", "num_iterations")
     params['start_iteration'] = config.getint("General", "start_iteration")
     params['multiprocessing'] = config.getboolean('General', 'use_multiprocessing')
     params['case_sensitive'] = config.getboolean('General', 'case_sensitive')
-    params['num_cores'] = get_config_int('General', 'num_cores', None)
+    params['num_cores'] = get_config_int(config, 'General', 'num_cores', None)
     params['postadjust'] = config.getboolean('General', 'postadjust')
     params['log_subresults'] = config.getboolean('General', 'log_subresults')
     params['add_fuzz'] = config.get('General', 'add_fuzz')
@@ -242,6 +244,9 @@ dump_results, dump_scores, profile_mem, random_seed, keep_mastout, all or a comb
     parser.add_argument('--num_iterations', type=int, default=None,
                         help="""specify number of iterations""")
 
+    # BSCM: Bicluster Sampled Coherence Metric
+    parser.add_argument('--use_BSCM', action='store_true', default=False,
+                        help="""Set the use Bicluster Sampled Coherence Metric""")
 
     if arg_ext is not None:
         arg_ext(parser)
@@ -349,8 +354,11 @@ def setup_default(args, config_parser):
     """The overrides dictionary holds all the values that will overwrite or add
     to the settings defined in the default and user-defined ini files
     """
-    overrides = {'organism_code': args.organism, 'string_file': args.string,
-                 'logfile': args.logfile, 'rsat_organism': args.rsat_organism,
+    overrides = {'organism_code': args.organism,
+                 'ratios_file': args.ratios,
+                 'string_file': args.string,
+                 'logfile': args.logfile, 
+                 'rsat_organism': args.rsat_organism,
                  'num_clusters': __num_clusters(config_parser, args, ratios),
                  'memb.clusters_per_row': args.clusters_per_row,
                  'remap_network_nodes': args.remap_network_nodes,
@@ -372,12 +380,15 @@ def setup_default(args, config_parser):
                  'interactive': args.interactive,
                  'resume': args.resume,
                  'case_sensitive': args.case_sensitive,
-                 'command_line': args.command_line}
+                 'command_line': args.command_line,
+                 'use_BSCM': args.use_BSCM}
 
     if overrides['random_seed'] is None:
         del overrides['random_seed']
     if overrides['case_sensitive'] is None:
         del overrides['case_sensitive']
+    if overrides['pipeline_file'] is None:
+        del overrides['pipeline_file']
 
     # membership update default parameters
     # these come first, since a lot depends on clustering numbers
@@ -466,6 +477,7 @@ def write_general_settings(outfile, config_params):
     outfile.write('output_dir = %s\n' % config_params['output_dir'])
     outfile.write('cache_dir = %s\n' % config_params['cache_dir'])
     outfile.write('tmp_dir = %s\n' % config_params['tmp_dir'])
+    outfile.write('rsat_base_url = %s\n' % config_params['rsat_base_url'])
     outfile.write('dbfile_name = %s\n' % config_params['dbfile_name'])
     outfile.write('use_multiprocessing = %s\n' % str(config_params['multiprocessing']))
     outfile.write('case_sensitive = %s\n' % str(config_params['case_sensitive']))

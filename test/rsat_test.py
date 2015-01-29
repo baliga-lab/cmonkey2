@@ -10,6 +10,9 @@ import rsat
 import util
 
 
+RSAT_BASE_URL = 'http://embnet.ccg.unam.mx/rsa-tools'
+
+
 class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for RsatDatabase. These tests interacts with a real web
     service and will therefore run relatively slowly. Should be run
@@ -22,7 +25,8 @@ class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
         """test fixture"""
         if not os.path.exists('testcache'):
             os.mkdir('testcache')
-        self.database = rsat.RsatDatabase(rsat.RSAT_BASE_URL, 'testcache')
+        self.database = rsat.RsatDatabase(RSAT_BASE_URL, 'testcache',
+                                          'Helicobacter_pylori_26695', 85962)
 
     def tearDown(self):  # pylint: disable-msg=C0103
         """test cleanup"""
