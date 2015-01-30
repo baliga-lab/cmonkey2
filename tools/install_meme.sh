@@ -8,7 +8,7 @@ url="http://ebi.edu.au/ftp/software/MEME/${memeVersion}/meme_${memeVersion}${mem
 mkdir progs
 cd progs
 wget "$url"
-tar -xvzf "meme_${memeVersion}.tar.gz"
+tar -xvzf "meme_${memeVersion}${memePatch}.tar.gz"
 cd "meme_${memeVersion}"
 mkdir local
 ./configure --prefix=`pwd`/local/ --enable-dependency-tracking --enable-opt --disable-shared --disable-fast-install \
@@ -25,3 +25,4 @@ cd ..
 ln -s progs/meme
 ln -s progs/mast
 ln -s progs/dust
+ln -s progs/tomtom

@@ -339,7 +339,7 @@ class MemeSuite481(MemeSuite):
         finally:
             logging.debug("removing %s...", dirname)
             shutil.rmtree(dirname)
-            print "done."
+            ##print "done."
 
     def read_mast_output(self, mast_output, genes):
         """XML MAST output"""

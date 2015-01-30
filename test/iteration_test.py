@@ -76,6 +76,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
                               'num_clusters': 43,
                               'output_dir': 'out',
                               'remap_network_nodes': False,
+                              'use_BSCM': False,
                               'num_iterations': 2000,
                               'debug': {},
                               'search_distances': {'upstream': (-20, 150)},

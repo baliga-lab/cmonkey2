@@ -11,9 +11,6 @@ import re
 import patches
 import os
 
-#RSAT_BASE_URL = 'http://embnet.ccg.unam.mx/rsa-tools'
-#RSAT_BASE_URL = 'http://rsat.bigre.ulb.ac.be/rsat/'
-
 class RsatFiles:
     """This class implements the same service functions as RsatDatabase, but
     takes the data from files"""
@@ -71,13 +68,26 @@ class RsatDatabase:
     #FEATURE_PATH = 'genome/feature.tab'
     #FEATURE_NAMES_PATH = 'genome/feature_names.tab'
 
-    def __init__(self, base_url, cache_dir, feature_name):
+    def __init__(self, base_url, cache_dir, kegg_species, ncbi_code, feature_name='feature'):
         """create an RsatDatabase instance based on a mirror URL"""
         self.base_url = base_url
         self.cache_dir = cache_dir.rstrip('/')
-	self.feature_name = feature_name
-	self.feature_path = 'genome/' + feature_name + '.tab'
-	self.feature_names_path = 'genome/' + feature_name + '_names.tab'
+        self.kegg_species = kegg_species
+        self.ncbi_code = ncbi_code
+        self.feature_name = feature_name
+        self.feature_path = 'genome/' + feature_name + '.tab'
+        self.feature_names_path = 'genome/' + feature_name + '_names.tab'
+
+    def __get_ncbi_code(self, rsat_organism):
+        """retrieve NCBI code from organism.tab file"""
+        cache_file = "/".join([self.cache_dir, '%s.tab' % rsat_organism])
+        text = util.read_url_cached("/".join([self.base_url,
+                                              RsatDatabase.DIR_PATH,
+                                              rsat_organism,
+                                              RsatDatabase.ORGANISM_PATH]),
+                                    cache_file)
+        spec = [line for line in text.split('\n') if not line.startswith('--')][0]
+        return spec.strip().split('\t')[0]
 
     def get_rsat_organism(self, kegg_organism):
         """returns the HTML page for the directory listing"""
@@ -86,7 +96,25 @@ class RsatDatabase:
         text = util.read_url_cached("/".join([self.base_url,
                                               RsatDatabase.DIR_PATH]),
                                     cache_file)
-        return util.best_matching_links(kegg_organism, text)[0].rstrip('/')
+        suggestion1 = util.best_matching_links(self.kegg_species, text)[0].rstrip('/')
+        suggestion2 = util.best_matching_links(kegg_organism, text)[0].rstrip('/')
+        if suggestion1 != suggestion2:
+            ncbi_code1 = self.__get_ncbi_code(suggestion1)
+            ncbi_code2 = self.__get_ncbi_code(suggestion1)
+            if ncbi_code1 == self.ncbi_code:
+                return suggestion1
+            elif ncbi_code2 == self.ncbi_code:
+                return suggestion2
+            else:
+                logging.warn("can't find the correct RSAT mapping !")
+                return suggestion1
+        else:
+            ncbi_code = self.__get_ncbi_code(suggestion1)
+            if ncbi_code == self.ncbi_code:
+                return suggestion1
+            else:
+                logging.warn("can't find the correct RSAT mapping !")
+                return suggestion1
 
     def get_taxonomy_id(self, organism):
         """returns the specified organism name file contents"""
@@ -104,54 +132,52 @@ class RsatDatabase:
         while the original cMonkey will fall back to cds.tab
         if that fails
         """
-        #logging.info('RSAT - get_features(%s)', organism)
-	import pdb
-	#pdb.set_trace()
+        logging.info('RSAT - get_features(%s)', organism)
         cache_file = "/".join([self.cache_dir, organism + '_' + self.feature_name])
         uCache = util.read_url_cached("/".join([self.base_url, RsatDatabase.DIR_PATH, organism, self.feature_path]), cache_file)
 
-	#Make sure that the fields are in the correct order
+        #Make sure that the fields are in the correct order
         #Later parts assume that the features file will have the following columns
         fieldOrder = ['id', 'type', 'name', 'contig', 'start_pos', 'end_pos', 'strand']
 
         uCache = uCache.split('\n')
-	#Remove any blank lines
-	while "" in uCache:
-		uCache.remove("")
+        #Remove any blank lines
+        while "" in uCache:
+            uCache.remove("")
 
         idxs = {} #Dictionary to store field idxs
         targIdx = [] #The ordered list of columns for output
         outString = "" #This will be the new data
         for line in uCache:
-		try:
-			line = line + '\n'
-                except:
-                        #pdb.set_trace()
-			continue
-                lineParts = line.split()
-                if lineParts[0] == '--':
-                        if lineParts[1] == 'field':
-                                idxs[lineParts[3]] = lineParts[2]
-                                if lineParts[3] in fieldOrder:
-                                        newIdx = str(fieldOrder.index(lineParts[3]) + 1)
-                                        outString = outString + lineParts[0] + " " + lineParts[1] + " " + newIdx + '\t' + lineParts[3] + '\n'
-                        else:
-                                outString = outString + line
+            try:
+                line = line + '\n'
+            except:
+                continue
+        
+            lineParts = line.split()
+            if lineParts[0] == '--':
+                if lineParts[1] == 'field':
+                        idxs[lineParts[3]] = lineParts[2]
+                        if lineParts[3] in fieldOrder:
+                                newIdx = str(fieldOrder.index(lineParts[3]) + 1)
+                                outString = outString + lineParts[0] + " " + lineParts[1] + " " + newIdx + '\t' + lineParts[3] + '\n'
                 else:
-                        if (len(targIdx) == 0):
-                                #Create the targIdx
-                                for curField in fieldOrder:
-                                        targIdx.append(int(idxs[curField])-1)
-                        outline = ""
-                        for curTarg in targIdx:
-                                outline = outline + lineParts[curTarg] + '\t'
-                        #Some RSAT files have a contig with ':'s instead of '_'s
-                        outline = outline.replace(':','_')
-                        #Now strip trailing \t
-                        outline = ''.join(outline.rsplit('\t', 1))
-                        outString = outString + outline + '\n'
+                        outString = outString + line
+            else:
+                if (len(targIdx) == 0):
+                        #Create the targIdx
+                        for curField in fieldOrder:
+                                targIdx.append(int(idxs[curField])-1)
+                outline = ""
+                for curTarg in targIdx:
+                        outline = outline + lineParts[curTarg] + '\t'
+                #Some RSAT files have a contig with ':'s instead of '_'s
+                outline = outline.replace(':','_')
+                #Now strip trailing \t
+                outline = ''.join(outline.rsplit('\t', 1))
+                outString = outString + outline + '\n'
 
-	#To Do: Overwrite cache file & add early check to see if we need the sub
+        #To Do: Overwrite cache file & add early check to see if we need the sub
         return outString
 
     def get_feature_names(self, organism):
@@ -164,7 +190,7 @@ class RsatDatabase:
                       organism,
                       self.feature_names_path]),
             cache_file)
-	return uCach
+        return uCach
 
     def get_contig_sequence(self, organism, contig):
         """returns the specified contig sequence"""
@@ -173,20 +199,18 @@ class RsatDatabase:
         cache_file = "/".join([self.cache_dir, organism + '_' + contig])
         url = "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
                         'genome', contig + '.raw'])
-	#import pdb
-	#pdb.set_trace()
-	#10-07-14 Crashed here with URL timeout.  Maybe RSAT limits downloads?
-	#  On 10-08-14 I could download the other files with pdb.set_trace()
-	#  Maybe all I will need is a pause between files?
+    
+        #10-07-14 Crashed here with URL timeout.  Maybe RSAT limits downloads?
+        #  On 10-08-14 I could download the other files with pdb.set_trace()
+        #  Maybe all I will need is a pause between files?
         try:
-		seqstr = util.read_url_cached(url, cache_file).upper()
-	except:
-		print "Error downloading file: " + url
-		print "RSAT occasionally has connectivity problems."
-		print "Try again later, or try a different RSAT mirror"
-		print "useing the parameter --rsat_URL"
+            seqstr = util.read_url_cached(url, cache_file).upper()
+        except:
+            print "Error downloading file: " + url
+            print "RSAT occasionally has connectivity problems."
+            print "Try again later, or try a different RSAT mirror"
+            print "useing the parameter --rsat_URL"
         return join_contig_sequence(seqstr)
-
 
 def join_contig_sequence(seqstr):
     """we take the safer route and assume that the input could

@@ -114,6 +114,7 @@ def set_config_general(config, params):
     params['checkratios'] = get_config_boolean(config, 'General', 'checkratios', False)
     params['organism_code'] = get_config_str(config, 'General', 'organism_code', None)
 
+    params['use_BSCM'] = get_config_boolean(config, 'General', 'use_BSCM', False)
 
 def set_config_membership(config, params):
     """membership default parameters"""

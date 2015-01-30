@@ -251,9 +251,10 @@ class CMonkeyRun:
             if not self['rsat_organism']:
                 raise Exception('override RSAT loading: please specify --rsat_organism')
             logging.info("using RSAT files for '%s'", self['rsat_organism'])
-            rsatdb = rsat.RsatFiles(self['rsat_dir'], self['rsat_organism'], self['ncbi_code'], self['rsat_features'], self['rsat_URL'])
+            rsatdb = rsat.RsatFiles(self['rsat_dir'], self['rsat_organism'], ncbi_code, self['rsat_features'], self['rsat_URL'])
         else:
-            rsatdb = rsat.RsatDatabase(self['rsat_URL'], self['cache_dir'], self['rsat_features'])
+            rsatdb = rsat.RsatDatabase(self['rsat_base_url'], self['cache_dir'],
+                                       kegg_species, ncbi_code, self['rsat_features'])
 
         if self['operon_file']:
             logging.info("using operon file at '%s'", self['operon_file'])
@@ -317,12 +318,12 @@ class CMonkeyRun:
             synonyms = thesaurus.create_from_delimited_file2(self['synonym_file'],
                                                              self['case_sensitive'])
 
-	#New logic: test to see if there's a fastafile.  If not, then
-	#Download it from rsat, process it, and then return the new file name
-	
-	is_microbe = True
+        #New logic: test to see if there's a fastafile.  If not, then
+        #Download it from rsat, process it, and then return the new file name
+    
+        is_microbe = True
         if is_microbe:
-            organism = org.Microbe(orgcode, kegg_species, rsat_info, gotax, mo_db,
+           organism = org.Microbe(orgcode, kegg_species, rsat_info, gotax, mo_db,
                                    nw_factories,
                                    self['search_distances'], self['scan_distances'],
                                    self['use_operons'], self.ratios, synonyms,

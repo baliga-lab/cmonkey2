@@ -12,7 +12,9 @@ A complete set of documentation for installation and running of cMonkey is on th
 
 ### System requirements
 
-* Developed and tested with Python 2.7.8
+cMonkey<sub>2</sub> has been tested and runs on all tested recent versions of Linux (including debian-based [Ubuntu, Mint, Debian] and RPM-based [CentOS, Fedora]) and recent versions of Mac OS X. Additional dependencies include:
+
+* Developed and tested with Python 2.7.x
 * scipy >= 0.9.0
 * numpy >= 1.6.0
 * biopython >= 1.63
@@ -28,7 +30,7 @@ for running the unit tests (optional):
 
 * python-xmlrunner 
 
-for running the monitoring application (optional):
+for running the interactive monitoring and visualization web application (optional):
 
 * CherryPy 3
 * Jinja2
@@ -41,7 +43,7 @@ for running the monitoring application (optional):
 ### Running cmonkey2
 
 In general, you should be able to run cmonkey2 on microbial gene
-expressions with
+expression ratios with
 
     ./cmonkey.py --organism <organism-code> --ratios <tab separated file of gene expressions>
 
