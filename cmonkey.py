@@ -12,14 +12,10 @@ import cmonkey.util as util
 import logging
 import cmonkey.scoring as scoring
 import random
-import warnings
-warnings.filterwarnings('error')
 
 if __name__ == '__main__':
     """process configuration"""
     args, params, ratios = conf.setup()
-    #import pdb
-    #pdb.set_trace()
     
     cmonkey_run = cmr.CMonkeyRun(ratios, params)
 
