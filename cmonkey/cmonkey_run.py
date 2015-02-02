@@ -464,12 +464,32 @@ class CMonkeyRun:
         col_scoring.check_requirements()
 
         config.write_setup(self.config_params)
-        return row_scoring, col_scoring
 
-    def run(self):
-        row_scoring, col_scoring = self.prepare_run()
         self.row_scoring = row_scoring
         self.column_scoring = col_scoring
+
+        ## MOVED FROM run_iterations()
+        self.report_params()
+        self.write_start_info()
+
+        conn = self.__dbconn()
+        with conn:
+            for scoring_function in self.row_scoring.scoring_functions:
+                conn.execute("insert into statstypes values ('scoring',?)", [scoring_function.id])
+            conn.execute("insert into statstypes values ('scoring',?)", [self.column_scoring.id])
+
+        if 'profile_mem' in self['debug']:
+            with open(os.path.join(self['output_dir'], 'memprofile.tsv'), 'w') as outfile:
+                outfile.write('Iteration\tMembership\tOrganism\tCol\tRow\tNetwork\tMotif\n')
+        ## end MOVED
+
+        ##return row_scoring, col_scoring
+
+    def run(self):
+        #row_scoring, col_scoring = self.prepare_run()
+        #self.row_scoring = row_scoring
+        #self.column_scoring = col_scoring
+        self.prepare_run()
         self.run_iterations()
 
     def residual_for(self, row_names, column_names):
@@ -689,25 +709,18 @@ class CMonkeyRun:
         motsize = sizes.asizeof(funs[2]) / 1000000.0
         outfile.write('%d\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\n' % (iteration, membsize, orgsize, colsize, rowsize, netsize, motsize))
 
-    def run_iterations(self):
-        self.report_params()
-        self.write_start_info()
-
-        conn = self.__dbconn()
-        with conn:
-            for scoring_function in self.row_scoring.scoring_functions:
-                conn.execute("insert into statstypes values ('scoring',?)", [scoring_function.id])
-            conn.execute("insert into statstypes values ('scoring',?)", [self.column_scoring.id])
-
-        if 'profile_mem' in self['debug']:
-            with open(os.path.join(self['output_dir'], 'memprofile.tsv'), 'w') as outfile:
-                outfile.write('Iteration\tMembership\tOrganism\tCol\tRow\tNetwork\tMotif\n')
+    def run_iterations(self, start_iter=None, num_iter=None):
+        if start_iter is None:
+            start_iter = self['start_iteration']
+        if num_iter is None:
+            num_iter=self['num_iterations'] + 1
 
         if self.config_params['interactive']:  # stop here in interactive mode
             return
 
-        for iteration in range(self['start_iteration'],
-                               self['num_iterations'] + 1):
+        #for iteration in range(self['start_iteration'],
+        #                       self['num_iterations'] + 1):
+        for iteration in range(start_iter, num_iter):
             start_time = util.current_millis()
             self.run_iteration(iteration)
             # garbage collection after everything in iteration went out of scope
