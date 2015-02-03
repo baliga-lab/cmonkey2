@@ -1,5 +1,4 @@
-"""config.py - cMonkey configuration module
-
+"""config.py - cMonkey configuration moduleras
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
@@ -226,8 +225,8 @@ dump_results, dump_scores, profile_mem, random_seed, keep_mastout, all or a comb
                         help="""override the RSAT organism name""")
     parser.add_argument('--rsat_features', default='feature',
                         help="""Gene look up table.  Aternative 'cds', 'protein_coding' or 'gene' """)
-    parser.add_argument('--rsat_URL', default='http://rsat.bigre.ulb.ac.be/rsat/',
-                        help="""RSAT mirror. Alternative 'http://embnet.ccg.unam.mx/rsa-tools'""")
+    parser.add_argument('--rsat_base_url', default='http://embnet.ccg.unam.mx/rsa-tools',
+                        help="""RSAT mirror. Alternative 'http://rsat.bigre.ulb.ac.be/rsat/'""")
 
     # Synonym override
     parser.add_argument('--synonym_file', default=None, help="synonyms file")
@@ -366,9 +365,10 @@ def setup_default(args, config_parser):
                  'ncbi_code': args.ncbi_code,
                  'operon_file': args.operons,
                  'rsat_dir': args.rsat_dir,
-                 'rsat_URL': args.rsat_URL,
+                 'rsat_base_url': args.rsat_base_url,
                  'rsat_features': args.rsat_features,
-                 'use_operons': True, 'use_string': True,
+                 'use_operons': True, 
+                 'use_string': True,
                  'debug': debug_options,
                  'nomotifs': False,
                  'minimize_io': args.minimize_io,

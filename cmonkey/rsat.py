@@ -90,6 +90,8 @@ class RsatDatabase:
         return spec.strip().split('\t')[0]
 
     def get_rsat_organism(self, kegg_organism):
+        import pdb
+        pdb.set_trace()
         """returns the HTML page for the directory listing"""
         logging.info('RSAT - get_directory()')
         cache_file = "/".join([self.cache_dir, 'rsat_dir.html'])
@@ -209,7 +211,7 @@ class RsatDatabase:
             print "Error downloading file: " + url
             print "RSAT occasionally has connectivity problems."
             print "Try again later, or try a different RSAT mirror"
-            print "useing the parameter --rsat_URL"
+            print "useing the parameter --rsat_base_url"
         return join_contig_sequence(seqstr)
 
 def join_contig_sequence(seqstr):
