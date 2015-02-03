@@ -90,8 +90,6 @@ class RsatDatabase:
         return spec.strip().split('\t')[0]
 
     def get_rsat_organism(self, kegg_organism):
-        import pdb
-        pdb.set_trace()
         """returns the HTML page for the directory listing"""
         logging.info('RSAT - get_directory()')
         cache_file = "/".join([self.cache_dir, 'rsat_dir.html'])

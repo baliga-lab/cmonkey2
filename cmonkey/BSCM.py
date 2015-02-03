@@ -14,7 +14,6 @@ import numpy as np
 import math
 import random
 import datetime as dt
-import pdb
 import multiprocessing as mp
 import logging
 
@@ -57,8 +56,6 @@ def getVarianceMeanSDvect(ratioVect, n, tolerance = 0.01, maxTime=600, chunkSize
             try:
                 newVar = np.var(curSample)
             except:
-                import pdb
-                pdb.set_trace()
                 newVar = 0
             newVars.append(newVar)
 
@@ -146,7 +143,6 @@ class BSCM:
         #  2) Use a pool of workers to calculate a distribution for each of the tuples
         if len(noVarNs) > 0:
             logging.info("Calculating some backgrounds for about %d genes", len(geneNames))
-            #pdb.set_trace()
             if num_cores > 1:
                 newargs = []
                 for i in range(0, len(noVarNs)):
