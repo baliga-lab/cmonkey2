@@ -91,7 +91,7 @@ class RsatDatabase:
 
     def get_rsat_organism(self, kegg_organism):
         """returns the HTML page for the directory listing"""
-        logging.info('RSAT - get_directory()')
+        logging.debug('RSAT - get_directory()')
         cache_file = "/".join([self.cache_dir, 'rsat_dir.html'])
         text = util.read_url_cached("/".join([self.base_url,
                                               RsatDatabase.DIR_PATH]),
@@ -118,7 +118,7 @@ class RsatDatabase:
 
     def get_taxonomy_id(self, organism):
         """returns the specified organism name file contents"""
-        logging.info('RSAT - get_organism_names(%s)', organism)
+        logging.debug('RSAT - get_organism_names(%s)', organism)
         cache_file = "/".join([self.cache_dir, 'rsatnames_' + organism])
         text = util.read_url_cached(
             "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
@@ -132,7 +132,7 @@ class RsatDatabase:
         while the original cMonkey will fall back to cds.tab
         if that fails
         """
-        logging.info('RSAT - get_features(%s)', organism)
+        logging.debug('RSAT - get_features(%s)', organism)
         cache_file = "/".join([self.cache_dir, organism + '_' + self.feature_name])
         uCache = util.read_url_cached("/".join([self.base_url, RsatDatabase.DIR_PATH, organism, self.feature_path]), cache_file)
 
@@ -194,7 +194,7 @@ class RsatDatabase:
 
     def get_contig_sequence(self, organism, contig):
         """returns the specified contig sequence"""
-        logging.info('RSAT - get_contig_sequence(%s, %s)',
+        logging.debug('RSAT - get_contig_sequence(%s, %s)',
                     organism, contig)
         cache_file = "/".join([self.cache_dir, organism + '_' + contig])
         url = "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
