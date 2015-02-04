@@ -1,5 +1,4 @@
-"""config.py - cMonkey configuration module
-
+"""config.py - cMonkey configuration moduleras
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
@@ -114,6 +113,7 @@ def set_config_general(config, params):
     params['checkratios'] = get_config_boolean(config, 'General', 'checkratios', False)
     params['organism_code'] = get_config_str(config, 'General', 'organism_code', None)
 
+    params['use_BSCM'] = get_config_boolean(config, 'General', 'use_BSCM', False)
 
 def set_config_membership(config, params):
     """membership default parameters"""
@@ -223,6 +223,10 @@ dump_results, dump_scores, profile_mem, random_seed, keep_mastout, all or a comb
                         help="""RSAT override: data directory""")
     parser.add_argument('--rsat_organism', default=None,
                         help="""override the RSAT organism name""")
+    parser.add_argument('--rsat_features', default='feature',
+                        help="""Gene look up table.  Aternative 'cds', 'protein_coding' or 'gene' """)
+    parser.add_argument('--rsat_base_url', default='http://embnet.ccg.unam.mx/rsa-tools',
+                        help="""RSAT mirror. Alternative 'http://rsat.bigre.ulb.ac.be/rsat/'""")
 
     # Synonym override
     parser.add_argument('--synonym_file', default=None, help="synonyms file")
@@ -240,6 +244,9 @@ dump_results, dump_scores, profile_mem, random_seed, keep_mastout, all or a comb
     parser.add_argument('--num_iterations', type=int, default=None,
                         help="""specify number of iterations""")
 
+    # BSCM: Bicluster Sampled Coherence Metric
+    parser.add_argument('--use_BSCM', action='store_true', default=False,
+                        help="""Set the use Bicluster Sampled Coherence Metric""")
 
     if arg_ext is not None:
         arg_ext(parser)
@@ -350,14 +357,18 @@ def setup_default(args, config_parser):
     overrides = {'organism_code': args.organism,
                  'ratios_file': args.ratios,
                  'string_file': args.string,
-                 'logfile': args.logfile, 'rsat_organism': args.rsat_organism,
+                 'logfile': args.logfile, 
+                 'rsat_organism': args.rsat_organism,
                  'num_clusters': __num_clusters(config_parser, args, ratios),
                  'memb.clusters_per_row': args.clusters_per_row,
                  'remap_network_nodes': args.remap_network_nodes,
                  'ncbi_code': args.ncbi_code,
                  'operon_file': args.operons,
                  'rsat_dir': args.rsat_dir,
-                 'use_operons': True, 'use_string': True,
+                 'rsat_base_url': args.rsat_base_url,
+                 'rsat_features': args.rsat_features,
+                 'use_operons': True, 
+                 'use_string': True,
                  'debug': debug_options,
                  'nomotifs': False,
                  'minimize_io': args.minimize_io,
@@ -370,7 +381,8 @@ def setup_default(args, config_parser):
                  'interactive': args.interactive,
                  'resume': args.resume,
                  'case_sensitive': args.case_sensitive,
-                 'command_line': args.command_line}
+                 'command_line': args.command_line,
+                 'use_BSCM': args.use_BSCM}
 
     if overrides['random_seed'] is None:
         del overrides['random_seed']

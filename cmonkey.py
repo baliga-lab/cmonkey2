@@ -13,10 +13,10 @@ import logging
 import cmonkey.scoring as scoring
 import random
 
-
 if __name__ == '__main__':
     """process configuration"""
     args, params, ratios = conf.setup()
+    
     cmonkey_run = cmr.CMonkeyRun(ratios, params)
 
     proceed = True

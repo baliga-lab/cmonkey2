@@ -16,6 +16,7 @@ import numpy as np
 import cPickle
 import gc
 import sqlite3
+import BSCM
 
 
 # Official keys to access values in the configuration map
@@ -207,16 +208,23 @@ class ColumnScoringFunction(ScoringFunctionBase):
         """create scoring function instance"""
         ScoringFunctionBase.__init__(self, "Columns", organism, membership,
                                      ratios, config_params=config_params)
+                                     
+        #BSCM.  Danziger et al. 2015
+        self.BSCM_obj = None
+        if config_params['use_BSCM']:
+            self.BSCM_obj = BSCM.BSCM(ratios, verbose=False) #How to pass verbose and so on? More parameters?
+            #Note: Ratios normalized upstream during loading by config.py module
         self.run_log = RunLog("column_scoring", config_params)
 
     def do_compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
         return compute_column_scores(self.membership, self.ratios,
-                                     self.num_clusters(), self.config_params)
+                                     self.num_clusters(), self.config_params, 
+                                     self.BSCM_obj)
 
 
 def compute_column_scores(membership, matrix, num_clusters,
-                          config_params):
+                          config_params, BSCM_obj=None):
     """Computes the column scores for the specified number of clusters"""
 
     def compute_substitution(cluster_column_scores):
@@ -239,16 +247,29 @@ def compute_column_scores(membership, matrix, num_clusters,
         else:
             return None
 
-    if config_params['multiprocessing']:
-        with util.get_mp_pool(config_params) as pool:
-            cluster_column_scores = pool.map(compute_column_scores_submatrix,
-                                             map(make_submatrix, xrange(1, num_clusters + 1)))
-    else:
-        cluster_column_scores = []
+    cluster_column_scores = [] #To be filled or overwritten
+    if BSCM_obj is None:
+        if config_params['multiprocessing']:
+	        with util.get_mp_pool(config_params) as pool:
+                    cluster_column_scores = pool.map(compute_column_scores_submatrix, map(make_submatrix, xrange(1, num_clusters + 1)))
+        else:
+	        for cluster in xrange(1, num_clusters + 1):
+	            cluster_column_scores.append(compute_column_scores_submatrix(
+	            	make_submatrix(cluster)))
+    else: #if BSCM_obj exists
+        num_cores = 1
+        if not config_params['num_cores'] is None:
+            num_cores = config_params['num_cores']
+        
         for cluster in xrange(1, num_clusters + 1):
-            cluster_column_scores.append(compute_column_scores_submatrix(
-                make_submatrix(cluster)))
-
+            if make_submatrix(cluster) is None:
+                cluster_column_scores.append(None)
+            else:
+                cur_column_scores = BSCM_obj.getPvals(make_submatrix(cluster).row_names, num_cores=num_cores) 
+                exp_names = cur_column_scores.keys()
+                exp_scores = np.array(cur_column_scores.values() )
+                cluster_column_scores.append((exp_names, exp_scores))
+        	
     substitution = compute_substitution(cluster_column_scores)
 
     # Convert scores into a matrix that have the clusters as columns
