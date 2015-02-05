@@ -746,9 +746,13 @@ class CMonkeyRun:
             rd_scores = memb.get_row_density_scores(self.membership(), rscores)
             logging.info("Recomputed combined + density scores.")
             memb.postadjust(self.membership(), rd_scores)
+            
+            BSCM_obj = self.column_scoring.get_BSCM()
+            if not (BSCM_obj is None):
+                new_membership = BSCM_obj.resplit_clusters(self.membership(), cutoff=0.05)
+            
             logging.info("Adjusted. Now re-run scoring (iteration: %d)",
                          self['num_iterations'])
-
             iteration_result = {'iteration': self['num_iterations'] + 1,
                                 'score_means': {}}
             combined_scores = self.row_scoring.compute_force(iteration_result)

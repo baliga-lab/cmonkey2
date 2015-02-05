@@ -3,6 +3,11 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 
+To Do: Write a 'save' and 'load' function that pickles/writes and unpickles/reads.
+      Integrate that with main cMonkey save and load functions.
+      
+To Do: Write a function for resplitting clusters based on a new ratios matrix
+
 This module implements the algorithm described in:
 Bicluster Sampled Coherence Metric (BSCM) provides an accurate environmental context for phenotype predictions
 Danziger et al.
@@ -103,14 +108,13 @@ class BSCM:
         self.chunkSize = chunkSize
         self.verbose = verbose
     #def __init__(self, ratios, tolerance = 0.05, maxTime=600, chunkSize=200, verbose=False):
-        
-        
+           
     def getPvals(self, geneNames, num_cores=1):
         """Get p-Values for the the list of genes, one for each column in the ratios matrix
 
          Keyword arguments:
          geneNames  -- A list of genes in the cluster
-         singleCore     -- Set to True to use a single core.  False may not work.
+         singleCore -- Set to True to use a single core.  False may not work.
         """
         pVals = {}
         
@@ -181,5 +185,36 @@ class BSCM:
                 pVals[cn] = np.mean(self.allVars[cn][str(n)] < curVar)
 
         return pVals
-    #def getPvals(self, geneNames):        
+    #def getPvals(self, geneNames):  
+    
+    def resplit_clusters(self, membership, cutoff=0.05):
+        """Get p-Values for the the list of genes, one for each column in the ratios matrix
+        Note: this will increase the number of elements in each row of 'membership.col_membs'
+
+         Keyword arguments:
+         membership -- A membership object containing all of the cluster membership information
+         cutoff     -- The p-Value inclusion cutoff (DEFAULT: 0.05)
+        """
+        
+        #Record 
+        pDict = {}
+        for cluster in range(1, membership.num_clusters() + 1):
+            cur_genes = membership.rows_for_cluster(cluster)
+            cur_pvals = self.getPvals(geneNames=cur_genes, num_cores=1)
+           
+            for curCol in cur_pvals.keys():
+                if (curCol in pDict) == False:
+                    pDict[curCol] = []
+                    
+                if cur_pvals[curCol] <= cutoff:
+                    pDict[curCol].append(cluster)
+                else:
+                    pDict[curCol].append(0)
+        #for cluster in range(1 ...
+        membership.col_membs = np.zeros((len(membership.col_membs),membership.num_clusters()), dtype='int32')    
+        for col in pDict.keys():
+            membership.col_membs[membership.colidx[col]] = np.array(pDict[col], dtype='int32')
+            
+        return membership
+    #def resplit_clusters(membership)
 #class BSCM:

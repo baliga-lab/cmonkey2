@@ -71,7 +71,7 @@ class OrigMembership:
         """
         self.row_membs = np.zeros((len(row_is_member_of), num_per_row), dtype='int32')
         self.col_membs = np.zeros((len(col_is_member_of), num_per_col), dtype='int32')
-
+        
         for row, clusters in row_is_member_of.iteritems():
             tmp = row_is_member_of[row][:num_per_row]
             for i in range(len(tmp)):
