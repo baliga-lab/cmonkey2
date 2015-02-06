@@ -90,6 +90,9 @@ def set_config_general(config, params):
     params['pipeline_file'] = config.get('General', 'pipeline_file')
     params['dbfile_name'] = config.get('General', 'dbfile_name')
     params['rsat_base_url'] = config.get('General', 'rsat_base_url')
+    params['rsat_features'] = config.get('General', 'rsat_features')
+    params['rsat_organism'] = config.get('General', 'rsat_organism')
+    params['rsat_dir'] = config.get('General', 'rsat_dir')
     params['normalize_ratios'] = config.getboolean('General', 'normalize_ratios')
     params['num_iterations'] = config.getint("General", "num_iterations")
     params['start_iteration'] = config.getint("General", "start_iteration")
@@ -311,6 +314,7 @@ def setup_resume(args, config_parser):
     # needs rework
     params['rsat_dir'] = None
     params['rsat_organism'] = None
+    params['rsat_features'] = None
     params['operon_file'] = None
     params['string_file'] = None
     params['ncbi_code'] = None
@@ -367,6 +371,8 @@ def setup_default(args, config_parser):
                  'rsat_dir': args.rsat_dir,
                  'rsat_base_url': args.rsat_base_url,
                  'rsat_features': args.rsat_features,
+                 'rsat_organism': args.rsat_organism,
+                 'rsat_dir': args.rsat_dir,
                  'use_operons': True, 
                  'use_string': True,
                  'debug': debug_options,
@@ -479,6 +485,9 @@ def write_general_settings(outfile, config_params):
     outfile.write('cache_dir = %s\n' % config_params['cache_dir'])
     outfile.write('tmp_dir = %s\n' % config_params['tmp_dir'])
     outfile.write('rsat_base_url = %s\n' % config_params['rsat_base_url'])
+    outfile.write('rsat_features = %s\n' % config_params['rsat_features'])
+    outfile.write('rsat_organism = %s\n' % config_params['rsat_organism'])
+    outfile.write('rsat_dir = %s\n' % config_params['rsat_dir'])
     outfile.write('dbfile_name = %s\n' % config_params['dbfile_name'])
     outfile.write('use_multiprocessing = %s\n' % str(config_params['multiprocessing']))
     outfile.write('case_sensitive = %s\n' % str(config_params['case_sensitive']))
