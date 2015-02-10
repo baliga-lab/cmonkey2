@@ -192,12 +192,14 @@ class ScoringFunction(scoring.ScoringFunctionBase):
         """overridden compute for storing additional information"""
         result = scoring.ScoringFunctionBase.compute(self, iteration_result, ref_matrix)
         iteration_result['networks'] = self.score_means
+            
         return result
 
     def compute_force(self, iteration_result, ref_matrix=None):
         """overridden compute for storing additional information"""
         result = scoring.ScoringFunctionBase.compute_force(self, iteration_result, ref_matrix)
         iteration_result['networks'] = self.score_means
+        
         return result
 
     def networks(self):

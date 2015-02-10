@@ -89,7 +89,7 @@ class ScoringFunctionBase:
         return '%s/%s_last.pkl' % (self.config_params['output_dir'], self.id)
 
     def last_cached(self):
-        if self.cache_result:
+        if self.cache_result and ('cached_result' in dir(self)):
             return self.cached_result
         elif os.path.exists(self.pickle_path()):
             with open(self.pickle_path()) as infile:
@@ -132,7 +132,7 @@ class ScoringFunctionBase:
                 with open(self.pickle_path(), 'w') as outfile:
                     cPickle.dump(computed_result, outfile)
 
-        elif self.cache_result:
+        elif self.cache_result and ('cached_result' in dir(self)):
             computed_result = self.cached_result
         elif os.path.exists(self.pickle_path()):
             with open(self.pickle_path()) as infile:

@@ -83,7 +83,11 @@ def set_config_general(config, params):
     tmp_dir = config.get('General', 'tmp_dir')
     if tmp_dir:
         tempfile.tempdir = tmp_dir
-        
+    
+    try:  #Only resumed or final runs should have a stored command line
+        params['command_line'] = config.get('General', 'command_line')
+    except:
+        pass
     params['output_dir'] = config.get('General', 'output_dir')
     params['cache_dir'] = config.get('General', 'cache_dir')
     params['tmp_dir'] = tmp_dir
@@ -278,56 +282,85 @@ def setup(arg_ext=None):
     argparser that can be processed outside of the core application."""
     config_parser = __get_config_parser()
     arg_parser = __get_arg_parser(arg_ext)
-    args = arg_parser.parse_args()
-    args.command_line = ' '.join(sys.argv)
-    if args.verbose:
+    args_in = arg_parser.parse_args() 
+    #Don't call it 'args'.  That's a debugger  keywords for the args in the function call
+    args_in.command_line = ' '.join(sys.argv)
+    if args_in.verbose:
         loglevel = logging.DEBUG
     else:
         loglevel = logging.INFO
 
     logging.basicConfig(format=LOG_FORMAT, datefmt='%Y-%m-%d %H:%M:%S',
-                        level=loglevel, filename=args.logfile)
+                        level=loglevel, filename=args_in.logfile)
 
-    if args.resume:
-        return setup_resume(args, config_parser)
+    if args_in.resume:
+        return setup_resume(args_in, config_parser)
     else:
-        return setup_default(args, config_parser)
+        return setup_default(args_in, config_parser)
 
-def setup_resume(args, config_parser):
+def setup_resume(args_in, config_parser):
     """setup from out directory"""
     outdir = config_parser.get('General', 'output_dir')
-    if args.out is not None:
+    if args_in.out is not None:
         outdir = args.out
     logging.info("Reading configuration from '%s'...", outdir)
     config_parser.read(os.path.join(outdir, 'final.ini'))
     logging.info('done.')
     params = set_config(config_parser)
-    args.ratios = os.path.join(outdir, 'ratios.tsv.gz')
-    ratios = read_ratios(params, args)
+    
+    args_in.ratios = os.path.join(outdir, 'ratios.tsv.gz')
+    ratios = read_ratios(params, args_in)
 
     params['resume'] = True
     params['out_database'] = os.path.join(params['output_dir'], params['dbfile_name'])
     params['num_clusters'] = config_parser.getint('General', 'num_clusters')
-    num_clusters = params['num_clusters']
 
+    #overwrite anything new in the command line
+    for curParam in args_in.__dict__.keys():
+        params[curParam] = args_in.__dict__[curParam]
+
+    num_clusters = params['num_clusters']
+    
     # TODO: these need to be restored or it will crash, need to move stuff around
     # needs rework
-    params['rsat_dir'] = None
-    params['rsat_organism'] = None
-    params['rsat_features'] = None
-    params['operon_file'] = None
-    params['string_file'] = None
-    params['ncbi_code'] = None
-    params['nonetworks'] = False
-    params['nomotifs'] = False
-    params['synonym_file'] = None
-    params['fasta_file'] = None
-    params['pipeline_file'] = None
-    params['debug'] = []
-    params['interactive'] = True
+    # A good way to fix this one might be to have a list of necessary parameters
+    if not 'rsat_dir' in params.keys():
+        params['rsat_dir'] = None
+    if params['rsat_dir'] == 'None':
+        params['rsat_dir'] = None
+    if not 'rsat_organism' in params.keys():
+        params['rsat_organism'] = None
+    if params['rsat_organism'] == 'None':
+        params['rsat_organism'] = None
+    if not 'rsat_features' in params.keys():
+        params['rsat_features'] = None
+    if params['rsat_features'] == 'None':
+        params['rsat_features'] = None
+    if not 'operon_file' in params.keys():
+        params['operon_file'] = None
+    if not 'string_file' in params.keys():
+        params['string_file'] = None
+    if not 'ncbi_code' in params.keys():
+        params['ncbi_code'] = None
+    if not 'nonetworks' in params.keys():
+        params['nonetworks'] = False
+    if not 'nomotifs' in params.keys():
+        params['nomotifs'] = False
+    if not 'synonym_file' in params.keys():
+        params['synonym_file'] = None
+    if not 'fasta_file' in params.keys():
+        params['fasta_file'] = None
+    if not 'pipeline_file' in params.keys():
+        params['pipeline_file'] = None
+    if not 'debug' in params.keys():
+        params['debug'] = set()
+    if params['debug'] is None:
+        params['debug'] = set()
+    if not 'interactive' in params.keys():
+        params['interactive'] = True
     # TODO END
 
-    return args, params, ratios
+    return args_in, params, ratios
 
 def setup_default(args, config_parser):
     """default configuration method"""

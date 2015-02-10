@@ -487,6 +487,9 @@ class CMonkeyRun:
                 outfile.write('Iteration\tMembership\tOrganism\tCol\tRow\tNetwork\tMotif\n')
         ## end MOVED
 
+        if self['resume']:
+            self['start_iteration'] = self.get_last_iteration()
+
         ##return row_scoring, col_scoring
 
     def run(self):
@@ -648,6 +651,19 @@ class CMonkeyRun:
         conn = self.__dbconn()
         with conn:
             conn.execute('''update run_infos set last_iteration = ?''', (iteration,))
+            
+    def get_last_iteration(self):
+        """Return the last iteration listed in cMonkey database.  This is intended to
+            inform the '--resume' flag
+        """      
+        try:
+            conn = self.__dbconn()
+            with conn:
+                cur = conn.execute('''select max(last_iteration) from run_infos''')
+                iteration = cur.fetchone()[0]
+        except:
+            iteration = 1
+        return iteration
 
     def write_finish_info(self):
         conn = self.__dbconn()
@@ -657,12 +673,24 @@ class CMonkeyRun:
     def combined_rscores_pickle_path(self):
         return "%s/combined_rscores_last.pkl" % self.config_params['output_dir']
 
-    def run_iteration(self, iteration):
+    def run_iteration(self, iteration, force=False):
+        """Run a single cMonkey iteration
+    
+             Keyword arguments:
+             iteration -- The iteration number to run
+             force     -- Set to true to force recalculations (DEFAULT:FALSE)
+        """
         logging.info("Iteration # %d", iteration)
         iteration_result = {'iteration': iteration, 'score_means': {}}
-        rscores = self.row_scoring.compute(iteration_result)
+        if force == True:
+            rscores = self.row_scoring.compute_force(iteration_result)
+        else:
+            rscores = self.row_scoring.compute(iteration_result)
         start_time = util.current_millis()
-        cscores = self.column_scoring.compute(iteration_result)
+        if force == True:
+            cscores = self.column_scoring.compute_force(iteration_result)
+        else:
+            cscores = self.column_scoring.compute(iteration_result)
         elapsed = util.current_millis() - start_time
         if elapsed > 0.0001:
             logging.debug("computed column_scores in %f s.", elapsed / 1000.0)
@@ -726,7 +754,12 @@ class CMonkeyRun:
         #                       self['num_iterations'] + 1):
         for iteration in range(start_iter, num_iter):
             start_time = util.current_millis()
-            self.run_iteration(iteration)
+            
+            #02-09-15 Force recalculation if first iteration of a resume
+            force = False
+            if (iteration == start_iter) and (self['resume'] == True):
+               force=True
+            self.run_iteration(iteration, force=force) 
             # garbage collection after everything in iteration went out of scope
             gc.collect()
             elapsed = util.current_millis() - start_time

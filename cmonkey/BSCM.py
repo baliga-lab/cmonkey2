@@ -74,7 +74,6 @@ def getVarianceMeanSDvect(ratioVect, n, tolerance = 0.01, maxTime=600, chunkSize
             varWinTol = abs(oldVar-newVar) < tolerance*abs(oldVar)
             if meanWinTol and varWinTol:
                 repeat = False
-
         else:
             varList = varList+newVars
 
@@ -94,7 +93,7 @@ class BSCM:
     completed, it can be queried to return a p-Value for a specific set of genes
     Right now it copies ratios, which will waste some memory
     """
-    def __init__(self, ratios, tolerance = 0.01, maxTime=600, chunkSize=200, verbose=False):
+    def __init__(self, ratios, tolerance = 0.001, maxTime=600, chunkSize=200, verbose=False):
         """Given a ratios matrix and a number of genes, figure out the expected distribution of variances
            Will sample background until the mean and sd converge or the operation times out
 
@@ -107,7 +106,7 @@ class BSCM:
         self.maxTime = maxTime
         self.chunkSize = chunkSize
         self.verbose = verbose
-    #def __init__(self, ratios, tolerance = 0.05, maxTime=600, chunkSize=200, verbose=False):
+    #def __init__(self, ratios, tolerance = 0.001, maxTime=600, chunkSize=200, verbose=False):
            
     def getPvals(self, geneNames, num_cores=1):
         """Get p-Values for the the list of genes, one for each column in the ratios matrix
