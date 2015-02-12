@@ -713,7 +713,8 @@ def make_db_row_seeder(outdb):
                 row_clusters[row_name].append(cluster)
 
             # copy memberships
-            for row_name in matrix.row_names:
+            #for row_name in matrix.row_names:
+            for row_name in row_clusters.keys():
                 cur_map = row_map[row_name]
                 for i, cluster in enumerate(row_clusters[row_name]):
                     #logging.info('row_name = %s, cur_map = %d, cluster = %d, i = %d', row_name, cur_map, cluster, i)

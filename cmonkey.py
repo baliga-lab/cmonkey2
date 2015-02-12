@@ -18,7 +18,6 @@ if __name__ == '__main__':
     args, params, ratios = conf.setup()
     
     cmonkey_run = cmr.CMonkeyRun(ratios, params)
-
     proceed = True
 
     if params['checkratios']:

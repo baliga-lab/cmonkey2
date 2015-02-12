@@ -43,8 +43,6 @@ class RsatFiles:
             return infile.read()
 
     def get_feature_names(self, organism, original=True):
-        import pdb
-        pdb.set_trace()
         if original:
             path = os.path.join(self.dirname, self.feature_name + '_names.tab')
         else:

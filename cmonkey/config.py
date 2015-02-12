@@ -308,10 +308,14 @@ def setup_resume(args_in, config_parser):
     logging.info('done.')
     params = set_config(config_parser)
     
-    args_in.ratios = os.path.join(outdir, 'ratios.tsv.gz')
+    #Change this so the resume can optionally read in new data if --ratios specifid in command line
+    if not 'ratios' in args_in:
+        args_in.ratios = os.path.join(outdir, 'ratios.tsv.gz')
+    params['ratios_file'] = args_in.ratios
     ratios = read_ratios(params, args_in)
-
-    params['resume'] = True
+    params['new_data_file'] = test_data_change(params, args_in)
+    
+    params['resume'] = args_in.resume #Should be true to get here
     params['out_database'] = os.path.join(params['output_dir'], params['dbfile_name'])
     params['num_clusters'] = config_parser.getint('General', 'num_clusters')
 
@@ -462,20 +466,44 @@ def setup_default(args, config_parser):
 
     params['out_database'] = os.path.join(params['output_dir'], params['dbfile_name'])
 
+    params['new_data_file'] = False #It should only be possible to change data files in a resume
     # we return the args here, too, in case we have some parameters not
     # processed
     return args, params, ratios
 
+def test_data_change(params, args_in):
+    """Test to see if a resumed cMonkey run has changed the data matrix.
 
-def read_ratios(params, args):
+     Keyword arguments:
+     params  -- The parameter list
+     args_in -- The input argument list
+    """
+    dataChanged = False  #The default value
+    
+    try:
+        origCommandLine = params['command_line']
+        origRatiosFile = origCommandLine.split('--ratios ')[1].split(' ')[0]
+        newRatiosFile = args_in.ratios
+        if not origRatiosFile == newRatiosFile:
+            dataChanged = True
+    except:
+        dataChanged = False
+    
+    return dataChanged
+
+def read_ratios(params, args_in):
     """reading ratios matrix"""
     if params['normalize_ratios']:
-        ratio_filters = [dm.nochange_filter, dm.center_scale_filter]
+        if test_data_change(params, args_in) == True:
+            #Turn off the nochange_filter if you're resuming a run an have changed the data matrix
+            ratio_filters = [dm.center_scale_filter]
+        else :
+            ratio_filters = [dm.nochange_filter, dm.center_scale_filter]
     else:
         ratio_filters = []
 
     matrix_factory = dm.DataMatrixFactory(ratio_filters)
-    matrix_filename = args.ratios
+    matrix_filename = args_in.ratios
 
     if matrix_filename.startswith('http://'):
         indata = util.read_url(matrix_filename)
@@ -483,7 +511,7 @@ def read_ratios(params, args):
     else:
         infile = util.read_dfile(matrix_filename, has_header=True, quote='\"')
 
-    if params['case_sensitive'] or args.case_sensitive:
+    if params['case_sensitive'] or args_in.case_sensitive:
         ratios = matrix_factory.create_from(infile, True)
     else:
         ratios = matrix_factory.create_from(infile, False)

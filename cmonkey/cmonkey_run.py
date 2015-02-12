@@ -57,29 +57,33 @@ STRING_URL_PATTERN = "http://networks.systemsbiology.net/string9/%s.gz"
 VERTEBRATES = {'hsa', 'mmu', 'rno'}
 
 class CMonkeyRun:
-    def __init__(self, ratios, args):
+    def __init__(self, ratios, args_in):
         self.__membership = None
         self.__organism = None
-        self.config_params = args
+        self.config_params = args_in
         self.ratios = ratios
-        if args['resume']:
-            self.row_seeder = memb.make_db_row_seeder(args['out_database'])
-            self.column_seeder = memb.make_db_column_seeder(args['out_database'])
+        if args_in['resume']:
+            self.row_seeder = memb.make_db_row_seeder(args_in['out_database'])
+            
+            if args_in['new_data_file'] == True: #data file has changed 
+                self.column_seeder = microarray.seed_column_members
+            else:
+                self.column_seeder = memb.make_db_column_seeder(args_in['out_database'])
         else:
-            self.row_seeder = memb.make_kmeans_row_seeder(args['num_clusters'])
+            self.row_seeder = memb.make_kmeans_row_seeder(args_in['num_clusters'])
             self.column_seeder = microarray.seed_column_members
         self.__conn = None
 
         today = date.today()
         logging.info('Input matrix has # rows: %d, # columns: %d',
                      ratios.num_rows, ratios.num_columns)
-        logging.info("# clusters/row: %d", args['memb.clusters_per_row'])
-        logging.info("# clusters/column: %d", args['memb.clusters_per_col'])
-        logging.info("# CLUSTERS: %d", args['num_clusters'])
-        logging.info("use operons: %d", args['use_operons'])
+        logging.info("# clusters/row: %d", args_in['memb.clusters_per_row'])
+        logging.info("# clusters/column: %d", args_in['memb.clusters_per_col'])
+        logging.info("# CLUSTERS: %d", args_in['num_clusters'])
+        logging.info("use operons: %d", args_in['use_operons'])
 
-        if args['MEME']['version']:
-            logging.info('using MEME version %s', args['MEME']['version'])
+        if args_in['MEME']['version']:
+            logging.info('using MEME version %s', args_in['MEME']['version'])
         else:
             logging.error('MEME not detected - please check')
 
@@ -190,9 +194,10 @@ class CMonkeyRun:
         if 'random_seed' in self['debug']:
             util.r_set_seed(10)
 
-        return memb.create_membership(self.ratios,
-                                      self.row_seeder, self.column_seeder,
-                                      self.config_params)
+        new_membs = memb.create_membership(self.ratios,
+                               self.row_seeder, self.column_seeder,
+                               self.config_params)
+        return new_membs
 
     def membership(self):
         if self.__membership is None:
