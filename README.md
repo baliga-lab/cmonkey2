@@ -69,7 +69,7 @@ system
 
 To run cMonkey on human data, run the following code with your own `<ratios.tsv>` file
 
-    ./cmonkey.py --organism hsa --ratios <ratios.tsv> --string <stringFile> --rsat_organism Homo_sapiens_ensembl_74_GRCh37 --rsat_URL http://rsat.bigre.ulb.ac.be/rsat/ --rsat_features protein_coding --nooperons
+    ./cmonkey.py --organism hsa --ratios <ratios.tsv> --string <stringFile> --rsat_organism Homo_sapiens_GRCh37 --rsat_URL http://rsat.sb-roscoff.fr/ --rsat_features protein_coding --nooperons --remap_network_nodes
 
 #### More details for running cMonkey on human data
 

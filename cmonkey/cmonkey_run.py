@@ -700,6 +700,11 @@ class CMonkeyRun:
         if elapsed > 0.0001:
             logging.debug("computed column_scores in %f s.", elapsed / 1000.0)
 
+        #skip_update = False
+        #if (self['num_iterations'] == self['start_iteration'] and self['resume'] == True):
+        #    skip_update = True
+            
+        #if skip_update == False:
         self.membership().update(self.ratios, rscores, cscores,
                                  self['num_iterations'], iteration_result)
 
@@ -763,7 +768,7 @@ class CMonkeyRun:
             #02-09-15 Force recalculation if first iteration of a resume
             force = False
             if (iteration == start_iter) and (self['resume'] == True):
-               force=True
+                force=True
             self.run_iteration(iteration, force=force) 
             # garbage collection after everything in iteration went out of scope
             gc.collect()
@@ -780,6 +785,7 @@ class CMonkeyRun:
         if self['postadjust']:
             logging.info("Postprocessing: Adjusting the clusters....")
             # run combiner using the weights of the last iteration
+            
             rscores = self.row_scoring.combine_cached(self['num_iterations'])
             rd_scores = memb.get_row_density_scores(self.membership(), rscores)
             logging.info("Recomputed combined + density scores.")
@@ -793,6 +799,7 @@ class CMonkeyRun:
                          self['num_iterations'])
             iteration_result = {'iteration': self['num_iterations'] + 1,
                                 'score_means': {}}
+                                
             combined_scores = self.row_scoring.compute_force(iteration_result)
 
             # write the combined scores for benchmarking/diagnostics
@@ -812,6 +819,7 @@ class CMonkeyRun:
                 debug.write_iteration(conn, outfile,
                                       self['num_iterations'] + 1,
                                       self['num_clusters'], self['output_dir'])
+            #Why is conn never closed?  Where does it write to the db?
 
             # additionally: run tomtom on the motifs
             # TODO: check if there is a need to run TOMTOM
