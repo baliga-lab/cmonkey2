@@ -121,9 +121,13 @@ class RsatDatabase:
         """returns the specified organism name file contents"""
         logging.debug('RSAT - get_organism_names(%s)', organism)
         cache_file = "/".join([self.cache_dir, 'rsatnames_' + organism])
+        #Changed 02-19-15 due to missing organism_names file in h.pylori
+        #text = util.read_url_cached(
+        #    "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
+        #              RsatDatabase.ORGANISM_NAMES_PATH]), cache_file)
         text = util.read_url_cached(
             "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
-                      RsatDatabase.ORGANISM_NAMES_PATH]), cache_file)
+                      RsatDatabase.ORGANISM_PATH]), cache_file)
         organism_names_dfile = util.dfile_from_text(text, comment='--')
         return patches.patch_ncbi_taxonomy(organism_names_dfile.lines[0][0])
 
