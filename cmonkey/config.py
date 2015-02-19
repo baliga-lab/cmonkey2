@@ -207,7 +207,7 @@ def __get_arg_parser(arg_ext):
     parser.add_argument('--checkratios', action="store_true",
                         help='check gene expression quality')
     parser.add_argument('--remap_network_nodes', action="store_true",
-                        help='network nodes are not named to RSAT primary names')
+                        help='convert network nodes to RSAT primary names -- DEPRICATED')
     parser.add_argument('--logfile', default=None, help="""path to log file""")
     parser.add_argument('--ncbi_code', default=None, help="NCBI taxonomy id")
     parser.add_argument('--numclusters', type=int,
@@ -232,8 +232,8 @@ dump_results, dump_scores, profile_mem, random_seed, keep_mastout, all or a comb
                         help="""override the RSAT organism name""")
     parser.add_argument('--rsat_features', default='feature',
                         help="""Gene look up table.  Aternative 'cds', 'protein_coding' or 'gene' """)
-    parser.add_argument('--rsat_base_url', default='http://embnet.ccg.unam.mx/rsa-tools',
-                        help="""RSAT mirror. Alternative 'http://rsat.bigre.ulb.ac.be/rsat/'""")
+    parser.add_argument('--rsat_base_url', default='http://prokaryotes.rsat.eu/rsa-tools',
+                        help="""RSAT mirror.  NOTE: RSAT changed mirror structure on 02-18-15""")
 
     # Synonym override
     parser.add_argument('--synonym_file', default=None, help="synonyms file")
@@ -302,16 +302,21 @@ def setup_resume(args_in, config_parser):
     """setup from out directory"""
     outdir = config_parser.get('General', 'output_dir')
     if args_in.out is not None:
-        outdir = args.out
+        outdir = args_in.out
     logging.info("Reading configuration from '%s'...", outdir)
     config_parser.read(os.path.join(outdir, 'final.ini'))
     logging.info('done.')
     params = set_config(config_parser)
     
     #Change this so the resume can optionally read in new data if --ratios specifid in command line
-    if not 'ratios' in args_in:
+    use_cached_ratios = True
+    if 'ratios' in args_in:
+        if not args_in.ratios is None:
+            use_cached_ratios = False
+    if use_cached_ratios == True:
         args_in.ratios = os.path.join(outdir, 'ratios.tsv.gz')
     params['ratios_file'] = args_in.ratios
+    
     ratios = read_ratios(params, args_in)
     params['new_data_file'] = test_data_change(params, args_in)
     

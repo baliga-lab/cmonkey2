@@ -37,6 +37,18 @@ class Network:
             self.edges_with_source[edge[1]].append(edge)
 
     def validate(self, synonyms, genes):
+        """Change the names in the network to have the standard names in the 
+            synonyms (elswhere call the thesaurus).  Problem: it does not
+            also rename the ratios matrix to the standard names
+        
+             Keyword arguments:
+             synonyms  -- The thesaurus.
+             genes     -- The gene names from the ratios.
+            
+             Useage: 
+             self.validate(synonyms, genes)
+        """
+
         # remap first
         new_edges = []
         for n0, n1, score in self.edges:
@@ -147,6 +159,7 @@ def compute_network_scores(cluster):
 
     genes = sorted(NETWORK_SCORE_MEMBERSHIP.rows_for_cluster(cluster))
     gene_scores = {}
+    
     for gene in genes:
         # TODO: optimization: we can use numpy arrays for the scores array
         # and then sum

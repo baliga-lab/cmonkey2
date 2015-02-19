@@ -10,7 +10,7 @@ import rsat
 import util
 
 
-RSAT_BASE_URL = 'http://embnet.ccg.unam.mx/rsa-tools'
+RSAT_BASE_URL = 'http://teaching.rsat.eu/rsa-tools'
 
 
 class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -26,7 +26,7 @@ class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
         if not os.path.exists('testcache'):
             os.mkdir('testcache')
         self.database = rsat.RsatDatabase(RSAT_BASE_URL, 'testcache',
-                                          'Helicobacter_pylori_26695', 85962)
+                                          'Helicobacter_pylori_26695_uid57787', 85962)
 
     def tearDown(self):  # pylint: disable-msg=C0103
         """test cleanup"""
@@ -35,14 +35,14 @@ class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_get_organism_names(self):
         """test get_organism_names method"""
-        self.assertEquals("85962", self.database.get_taxonomy_id('Helicobacter_pylori_26695'))
+        self.assertEquals("85962", self.database.get_taxonomy_id('Helicobacter_pylori_26695_uid57787'))
 
     def test_get_features(self):
         """test get_features method"""
-        text = self.database.get_features('Helicobacter_pylori_26695')
+        text = self.database.get_features('Helicobacter_pylori_26695_uid57787')
         self.assertIsNotNone(text)
 
     def test_get_feature_names(self):
         """test get_feature_names method"""
-        text = self.database.get_feature_names('Helicobacter_pylori_26695')
+        text = self.database.get_feature_names('Helicobacter_pylori_26695_uid57787')
         self.assertIsNotNone(text)
