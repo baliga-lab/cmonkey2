@@ -52,6 +52,7 @@ def get_network_factory(organism_code, filename, weight, sep='\t',
             for row_name in ratios.row_names:
                 if row_name in thesaurus:
                     gene_lut[thesaurus[row_name]] = row_name
+                gene_lut[row_name] = row_name #A node should always map to itself
             cano_genes = gene_lut.keys()
         else:
             gene_lut = None
@@ -75,6 +76,13 @@ def get_network_factory(organism_code, filename, weight, sep='\t',
                         keep_bool[node] = node in thesaurus and thesaurus[node] in cano_genes
                     else:
                         keep_bool[node] = node in thesaurus
+                    
+                    #Add this node to the lut if it is not already there.
+                    if not node in gene_lut:
+                        gene_lut[node] = node
+                        if node in thesaurus:
+                            gene_lut[thesaurus[node]] = node
+                        
             score = float(line[2])
             max_score = max(score, max_score)
 
