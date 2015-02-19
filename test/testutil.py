@@ -8,7 +8,7 @@ import organism as org
 KEGG_FILE_PATH = 'config/KEGG_taxonomy'
 GO_FILE_PATH = 'config/proteome2taxid'
 CACHE_DIR = 'cache'
-RSAT_BASE_URL = 'http://teaching.rsat.eu/rsa-tools'
+RSAT_BASE_URL = 'http://pedagogix-tagc.univ-mrs.fr/rsat'
 
 def make_halo(search_distances, scan_distances, ratios=None):
     """returns the organism object to work on"""
