@@ -78,7 +78,7 @@ def get_network_factory(organism_code, filename, weight, sep='\t',
                         keep_bool[node] = node in thesaurus
                     
                     #Add this node to the lut if it is not already there.
-                    if not node in gene_lut:
+                    if (not gene_lut is None) and (not node in gene_lut):
                         gene_lut[node] = node
                         if node in thesaurus:
                             gene_lut[thesaurus[node]] = node
