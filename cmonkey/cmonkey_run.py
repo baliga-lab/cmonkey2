@@ -57,29 +57,33 @@ STRING_URL_PATTERN = "http://networks.systemsbiology.net/string9/%s.gz"
 VERTEBRATES = {'hsa', 'mmu', 'rno'}
 
 class CMonkeyRun:
-    def __init__(self, ratios, args):
+    def __init__(self, ratios, args_in):
         self.__membership = None
         self.__organism = None
-        self.config_params = args
+        self.config_params = args_in
         self.ratios = ratios
-        if args['resume']:
-            self.row_seeder = memb.make_db_row_seeder(args['out_database'])
-            self.column_seeder = memb.make_db_column_seeder(args['out_database'])
+        if args_in['resume']:
+            self.row_seeder = memb.make_db_row_seeder(args_in['out_database'])
+            
+            if args_in['new_data_file'] == True: #data file has changed 
+                self.column_seeder = microarray.seed_column_members
+            else:
+                self.column_seeder = memb.make_db_column_seeder(args_in['out_database'])
         else:
-            self.row_seeder = memb.make_kmeans_row_seeder(args['num_clusters'])
+            self.row_seeder = memb.make_kmeans_row_seeder(args_in['num_clusters'])
             self.column_seeder = microarray.seed_column_members
         self.__conn = None
 
         today = date.today()
         logging.info('Input matrix has # rows: %d, # columns: %d',
                      ratios.num_rows, ratios.num_columns)
-        logging.info("# clusters/row: %d", args['memb.clusters_per_row'])
-        logging.info("# clusters/column: %d", args['memb.clusters_per_col'])
-        logging.info("# CLUSTERS: %d", args['num_clusters'])
-        logging.info("use operons: %d", args['use_operons'])
+        logging.info("# clusters/row: %d", args_in['memb.clusters_per_row'])
+        logging.info("# clusters/column: %d", args_in['memb.clusters_per_col'])
+        logging.info("# CLUSTERS: %d", args_in['num_clusters'])
+        logging.info("use operons: %d", args_in['use_operons'])
 
-        if args['MEME']['version']:
-            logging.info('using MEME version %s', args['MEME']['version'])
+        if args_in['MEME']['version']:
+            logging.info('using MEME version %s', args_in['MEME']['version'])
         else:
             logging.error('MEME not detected - please check')
 
@@ -190,9 +194,10 @@ class CMonkeyRun:
         if 'random_seed' in self['debug']:
             util.r_set_seed(10)
 
-        return memb.create_membership(self.ratios,
-                                      self.row_seeder, self.column_seeder,
-                                      self.config_params)
+        new_membs = memb.create_membership(self.ratios,
+                               self.row_seeder, self.column_seeder,
+                               self.config_params)
+        return new_membs
 
     def membership(self):
         if self.__membership is None:
@@ -487,6 +492,9 @@ class CMonkeyRun:
                 outfile.write('Iteration\tMembership\tOrganism\tCol\tRow\tNetwork\tMotif\n')
         ## end MOVED
 
+        if self['resume']:
+            self['start_iteration'] = self.get_last_iteration()
+
         ##return row_scoring, col_scoring
 
     def run(self):
@@ -648,6 +656,19 @@ class CMonkeyRun:
         conn = self.__dbconn()
         with conn:
             conn.execute('''update run_infos set last_iteration = ?''', (iteration,))
+            
+    def get_last_iteration(self):
+        """Return the last iteration listed in cMonkey database.  This is intended to
+            inform the '--resume' flag
+        """      
+        try:
+            conn = self.__dbconn()
+            with conn:
+                cur = conn.execute('''select max(last_iteration) from run_infos''')
+                iteration = cur.fetchone()[0]
+        except:
+            iteration = 1
+        return iteration
 
     def write_finish_info(self):
         conn = self.__dbconn()
@@ -657,16 +678,33 @@ class CMonkeyRun:
     def combined_rscores_pickle_path(self):
         return "%s/combined_rscores_last.pkl" % self.config_params['output_dir']
 
-    def run_iteration(self, iteration):
+    def run_iteration(self, iteration, force=False):
+        """Run a single cMonkey iteration
+    
+             Keyword arguments:
+             iteration -- The iteration number to run
+             force     -- Set to true to force recalculations (DEFAULT:FALSE)
+        """
         logging.info("Iteration # %d", iteration)
         iteration_result = {'iteration': iteration, 'score_means': {}}
-        rscores = self.row_scoring.compute(iteration_result)
+        if force == True:
+            rscores = self.row_scoring.compute_force(iteration_result)
+        else:
+            rscores = self.row_scoring.compute(iteration_result)
         start_time = util.current_millis()
-        cscores = self.column_scoring.compute(iteration_result)
+        if force == True:
+            cscores = self.column_scoring.compute_force(iteration_result)
+        else:
+            cscores = self.column_scoring.compute(iteration_result)
         elapsed = util.current_millis() - start_time
         if elapsed > 0.0001:
             logging.debug("computed column_scores in %f s.", elapsed / 1000.0)
 
+        #skip_update = False
+        #if (self['num_iterations'] == self['start_iteration'] and self['resume'] == True):
+        #    skip_update = True
+            
+        #if skip_update == False:
         self.membership().update(self.ratios, rscores, cscores,
                                  self['num_iterations'], iteration_result)
 
@@ -726,7 +764,12 @@ class CMonkeyRun:
         #                       self['num_iterations'] + 1):
         for iteration in range(start_iter, num_iter):
             start_time = util.current_millis()
-            self.run_iteration(iteration)
+            
+            #02-09-15 Force recalculation if first iteration of a resume
+            force = False
+            if (iteration == start_iter) and (self['resume'] == True):
+                force=True
+            self.run_iteration(iteration, force=force) 
             # garbage collection after everything in iteration went out of scope
             gc.collect()
             elapsed = util.current_millis() - start_time
@@ -742,15 +785,21 @@ class CMonkeyRun:
         if self['postadjust']:
             logging.info("Postprocessing: Adjusting the clusters....")
             # run combiner using the weights of the last iteration
+            
             rscores = self.row_scoring.combine_cached(self['num_iterations'])
             rd_scores = memb.get_row_density_scores(self.membership(), rscores)
             logging.info("Recomputed combined + density scores.")
             memb.postadjust(self.membership(), rd_scores)
+            
+            BSCM_obj = self.column_scoring.get_BSCM()
+            if not (BSCM_obj is None):
+                new_membership = BSCM_obj.resplit_clusters(self.membership(), cutoff=0.05)
+            
             logging.info("Adjusted. Now re-run scoring (iteration: %d)",
                          self['num_iterations'])
-
             iteration_result = {'iteration': self['num_iterations'] + 1,
                                 'score_means': {}}
+                                
             combined_scores = self.row_scoring.compute_force(iteration_result)
 
             # write the combined scores for benchmarking/diagnostics
@@ -770,6 +819,7 @@ class CMonkeyRun:
                 debug.write_iteration(conn, outfile,
                                       self['num_iterations'] + 1,
                                       self['num_clusters'], self['output_dir'])
+            #Why is conn never closed?  Where does it write to the db?
 
             # additionally: run tomtom on the motifs
             # TODO: check if there is a need to run TOMTOM

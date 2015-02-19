@@ -71,7 +71,7 @@ class OrigMembership:
         """
         self.row_membs = np.zeros((len(row_is_member_of), num_per_row), dtype='int32')
         self.col_membs = np.zeros((len(col_is_member_of), num_per_col), dtype='int32')
-
+        
         for row, clusters in row_is_member_of.iteritems():
             tmp = row_is_member_of[row][:num_per_row]
             for i in range(len(tmp)):
@@ -713,9 +713,17 @@ def make_db_row_seeder(outdb):
                 row_clusters[row_name].append(cluster)
 
             # copy memberships
-            for row_name in matrix.row_names:
+            #for row_name in matrix.row_names:
+            for row_name in row_clusters.keys():
+                cur_map = row_map[row_name]
                 for i, cluster in enumerate(row_clusters[row_name]):
-                    row_membership[row_map[row_name]][i] = cluster
+                    #logging.info('row_name = %s, cur_map = %d, cluster = %d, i = %d', row_name, cur_map, cluster, i)
+                    if i < len(row_membership[cur_map]):
+                        row_membership[cur_map][i] = cluster
+                    else:   #A resumed job that has been finalized may have genes in additional clusters
+                        logging.info('Making row_membership for gene %s bigger than %d', cur_map, len(row_membership[cur_map]))
+                        row_membership[cur_map].append(cluster)
+                    
         finally:
             if cursor:
                 cursor.close()
@@ -740,8 +748,22 @@ def make_db_column_seeder(outdb):
                 col_clusters[col_name].append(cluster)
             result = [[0] * num_clusters_per_column for col in matrix.column_names]
             for col_name in matrix.column_names:
+                cur_map = column_map[col_name]
+                first_expand = True
                 for i, cluster in enumerate(col_clusters[col_name]):
-                    result[column_map[col_name]][i] = cluster
+                    if i < len(result[cur_map]):
+                        result[cur_map][i] = cluster
+                    else:   #A resumed job that has been finalized may have extra columns in clusters
+                        if first_expand == True:
+                            logging.info('Making col_membership for condition %s bigger, probably due to resuming a finalized run', cur_map)                    
+                            first_expand = False
+                        #Make sure that a cluster cannot have the same condition twice
+                        if not cluster in result[cur_map]:
+                            if 0 in result[cur_map]:
+                                result[cur_map][result[cur_map].index(0)]= cluster 
+                            else:
+                                result[cur_map].append(cluster)
+                       
             return result
         finally:
             if conn:

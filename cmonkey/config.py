@@ -83,13 +83,20 @@ def set_config_general(config, params):
     tmp_dir = config.get('General', 'tmp_dir')
     if tmp_dir:
         tempfile.tempdir = tmp_dir
-        
+    
+    try:  #Only resumed or final runs should have a stored command line
+        params['command_line'] = config.get('General', 'command_line')
+    except:
+        pass
     params['output_dir'] = config.get('General', 'output_dir')
     params['cache_dir'] = config.get('General', 'cache_dir')
     params['tmp_dir'] = tmp_dir
     params['pipeline_file'] = config.get('General', 'pipeline_file')
     params['dbfile_name'] = config.get('General', 'dbfile_name')
     params['rsat_base_url'] = config.get('General', 'rsat_base_url')
+    params['rsat_features'] = config.get('General', 'rsat_features')
+    params['rsat_organism'] = config.get('General', 'rsat_organism')
+    params['rsat_dir'] = config.get('General', 'rsat_dir')
     params['normalize_ratios'] = config.getboolean('General', 'normalize_ratios')
     params['num_iterations'] = config.getint("General", "num_iterations")
     params['start_iteration'] = config.getint("General", "start_iteration")
@@ -200,7 +207,7 @@ def __get_arg_parser(arg_ext):
     parser.add_argument('--checkratios', action="store_true",
                         help='check gene expression quality')
     parser.add_argument('--remap_network_nodes', action="store_true",
-                        help='network nodes are not named to RSAT primary names')
+                        help='convert network nodes to RSAT primary names -- DEPRICATED')
     parser.add_argument('--logfile', default=None, help="""path to log file""")
     parser.add_argument('--ncbi_code', default=None, help="NCBI taxonomy id")
     parser.add_argument('--numclusters', type=int,
@@ -225,8 +232,8 @@ dump_results, dump_scores, profile_mem, random_seed, keep_mastout, all or a comb
                         help="""override the RSAT organism name""")
     parser.add_argument('--rsat_features', default='feature',
                         help="""Gene look up table.  Aternative 'cds', 'protein_coding' or 'gene' """)
-    parser.add_argument('--rsat_base_url', default='http://embnet.ccg.unam.mx/rsa-tools',
-                        help="""RSAT mirror. Alternative 'http://rsat.bigre.ulb.ac.be/rsat/'""")
+    parser.add_argument('--rsat_base_url', default='http://prokaryotes.rsat.eu/rsa-tools',
+                        help="""RSAT mirror.  NOTE: RSAT changed mirror structure on 02-18-15""")
 
     # Synonym override
     parser.add_argument('--synonym_file', default=None, help="synonyms file")
@@ -275,55 +282,94 @@ def setup(arg_ext=None):
     argparser that can be processed outside of the core application."""
     config_parser = __get_config_parser()
     arg_parser = __get_arg_parser(arg_ext)
-    args = arg_parser.parse_args()
-    args.command_line = ' '.join(sys.argv)
-    if args.verbose:
+    args_in = arg_parser.parse_args() 
+    #Don't call it 'args'.  That's a debugger  keywords for the args in the function call
+    args_in.command_line = ' '.join(sys.argv)
+    if args_in.verbose:
         loglevel = logging.DEBUG
     else:
         loglevel = logging.INFO
 
     logging.basicConfig(format=LOG_FORMAT, datefmt='%Y-%m-%d %H:%M:%S',
-                        level=loglevel, filename=args.logfile)
+                        level=loglevel, filename=args_in.logfile)
 
-    if args.resume:
-        return setup_resume(args, config_parser)
+    if args_in.resume:
+        return setup_resume(args_in, config_parser)
     else:
-        return setup_default(args, config_parser)
+        return setup_default(args_in, config_parser)
 
-def setup_resume(args, config_parser):
+def setup_resume(args_in, config_parser):
     """setup from out directory"""
     outdir = config_parser.get('General', 'output_dir')
-    if args.out is not None:
-        outdir = args.out
+    if args_in.out is not None:
+        outdir = args_in.out
     logging.info("Reading configuration from '%s'...", outdir)
     config_parser.read(os.path.join(outdir, 'final.ini'))
     logging.info('done.')
     params = set_config(config_parser)
-    args.ratios = os.path.join(outdir, 'ratios.tsv.gz')
-    ratios = read_ratios(params, args)
-
-    params['resume'] = True
+    
+    #Change this so the resume can optionally read in new data if --ratios specifid in command line
+    use_cached_ratios = True
+    if 'ratios' in args_in:
+        if not args_in.ratios is None:
+            use_cached_ratios = False
+    if use_cached_ratios == True:
+        args_in.ratios = os.path.join(outdir, 'ratios.tsv.gz')
+    params['ratios_file'] = args_in.ratios
+    
+    ratios = read_ratios(params, args_in)
+    params['new_data_file'] = test_data_change(params, args_in)
+    
+    params['resume'] = args_in.resume #Should be true to get here
     params['out_database'] = os.path.join(params['output_dir'], params['dbfile_name'])
     params['num_clusters'] = config_parser.getint('General', 'num_clusters')
-    num_clusters = params['num_clusters']
 
+    #overwrite anything new in the command line
+    for curParam in args_in.__dict__.keys():
+        params[curParam] = args_in.__dict__[curParam]
+
+    num_clusters = params['num_clusters']
+    
     # TODO: these need to be restored or it will crash, need to move stuff around
     # needs rework
-    params['rsat_dir'] = None
-    params['rsat_organism'] = None
-    params['operon_file'] = None
-    params['string_file'] = None
-    params['ncbi_code'] = None
-    params['nonetworks'] = False
-    params['nomotifs'] = False
-    params['synonym_file'] = None
-    params['fasta_file'] = None
-    params['pipeline_file'] = None
-    params['debug'] = []
-    params['interactive'] = True
+    # A good way to fix this one might be to have a list of necessary parameters
+    if not 'rsat_dir' in params.keys():
+        params['rsat_dir'] = None
+    if params['rsat_dir'] == 'None':
+        params['rsat_dir'] = None
+    if not 'rsat_organism' in params.keys():
+        params['rsat_organism'] = None
+    if params['rsat_organism'] == 'None':
+        params['rsat_organism'] = None
+    if not 'rsat_features' in params.keys():
+        params['rsat_features'] = None
+    if params['rsat_features'] == 'None':
+        params['rsat_features'] = None
+    if not 'operon_file' in params.keys():
+        params['operon_file'] = None
+    if not 'string_file' in params.keys():
+        params['string_file'] = None
+    if not 'ncbi_code' in params.keys():
+        params['ncbi_code'] = None
+    if not 'nonetworks' in params.keys():
+        params['nonetworks'] = False
+    if not 'nomotifs' in params.keys():
+        params['nomotifs'] = False
+    if not 'synonym_file' in params.keys():
+        params['synonym_file'] = None
+    if not 'fasta_file' in params.keys():
+        params['fasta_file'] = None
+    if not 'pipeline_file' in params.keys():
+        params['pipeline_file'] = None
+    if not 'debug' in params.keys():
+        params['debug'] = set()
+    if params['debug'] is None:
+        params['debug'] = set()
+    if not 'interactive' in params.keys():
+        params['interactive'] = True
     # TODO END
 
-    return args, params, ratios
+    return args_in, params, ratios
 
 def setup_default(args, config_parser):
     """default configuration method"""
@@ -367,6 +413,8 @@ def setup_default(args, config_parser):
                  'rsat_dir': args.rsat_dir,
                  'rsat_base_url': args.rsat_base_url,
                  'rsat_features': args.rsat_features,
+                 'rsat_organism': args.rsat_organism,
+                 'rsat_dir': args.rsat_dir,
                  'use_operons': True, 
                  'use_string': True,
                  'debug': debug_options,
@@ -423,20 +471,44 @@ def setup_default(args, config_parser):
 
     params['out_database'] = os.path.join(params['output_dir'], params['dbfile_name'])
 
+    params['new_data_file'] = False #It should only be possible to change data files in a resume
     # we return the args here, too, in case we have some parameters not
     # processed
     return args, params, ratios
 
+def test_data_change(params, args_in):
+    """Test to see if a resumed cMonkey run has changed the data matrix.
 
-def read_ratios(params, args):
+     Keyword arguments:
+     params  -- The parameter list
+     args_in -- The input argument list
+    """
+    dataChanged = False  #The default value
+    
+    try:
+        origCommandLine = params['command_line']
+        origRatiosFile = origCommandLine.split('--ratios ')[1].split(' ')[0]
+        newRatiosFile = args_in.ratios
+        if not origRatiosFile == newRatiosFile:
+            dataChanged = True
+    except:
+        dataChanged = False
+    
+    return dataChanged
+
+def read_ratios(params, args_in):
     """reading ratios matrix"""
     if params['normalize_ratios']:
-        ratio_filters = [dm.nochange_filter, dm.center_scale_filter]
+        if test_data_change(params, args_in) == True:
+            #Turn off the nochange_filter if you're resuming a run an have changed the data matrix
+            ratio_filters = [dm.center_scale_filter]
+        else :
+            ratio_filters = [dm.nochange_filter, dm.center_scale_filter]
     else:
         ratio_filters = []
 
     matrix_factory = dm.DataMatrixFactory(ratio_filters)
-    matrix_filename = args.ratios
+    matrix_filename = args_in.ratios
 
     if matrix_filename.startswith('http://'):
         indata = util.read_url(matrix_filename)
@@ -444,7 +516,7 @@ def read_ratios(params, args):
     else:
         infile = util.read_dfile(matrix_filename, has_header=True, quote='\"')
 
-    if params['case_sensitive'] or args.case_sensitive:
+    if params['case_sensitive'] or args_in.case_sensitive:
         ratios = matrix_factory.create_from(infile, True)
     else:
         ratios = matrix_factory.create_from(infile, False)
@@ -479,6 +551,9 @@ def write_general_settings(outfile, config_params):
     outfile.write('cache_dir = %s\n' % config_params['cache_dir'])
     outfile.write('tmp_dir = %s\n' % config_params['tmp_dir'])
     outfile.write('rsat_base_url = %s\n' % config_params['rsat_base_url'])
+    outfile.write('rsat_features = %s\n' % config_params['rsat_features'])
+    outfile.write('rsat_organism = %s\n' % config_params['rsat_organism'])
+    outfile.write('rsat_dir = %s\n' % config_params['rsat_dir'])
     outfile.write('dbfile_name = %s\n' % config_params['dbfile_name'])
     outfile.write('use_multiprocessing = %s\n' % str(config_params['multiprocessing']))
     outfile.write('case_sensitive = %s\n' % str(config_params['case_sensitive']))

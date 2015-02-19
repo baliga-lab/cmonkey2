@@ -69,6 +69,7 @@ class RsatDatabase:
     #FEATURE_NAMES_PATH = 'genome/feature_names.tab'
 
     def __init__(self, base_url, cache_dir, kegg_species, ncbi_code, feature_name='feature'):
+    
         """create an RsatDatabase instance based on a mirror URL"""
         self.base_url = base_url
         self.cache_dir = cache_dir.rstrip('/')

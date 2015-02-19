@@ -89,7 +89,7 @@ class ScoringFunctionBase:
         return '%s/%s_last.pkl' % (self.config_params['output_dir'], self.id)
 
     def last_cached(self):
-        if self.cache_result:
+        if self.cache_result and ('cached_result' in dir(self)):
             return self.cached_result
         elif os.path.exists(self.pickle_path()):
             with open(self.pickle_path()) as infile:
@@ -132,7 +132,7 @@ class ScoringFunctionBase:
                 with open(self.pickle_path(), 'w') as outfile:
                     cPickle.dump(computed_result, outfile)
 
-        elif self.cache_result:
+        elif self.cache_result and ('cached_result' in dir(self)):
             computed_result = self.cached_result
         elif os.path.exists(self.pickle_path()):
             with open(self.pickle_path()) as infile:
@@ -221,6 +221,10 @@ class ColumnScoringFunction(ScoringFunctionBase):
         return compute_column_scores(self.membership, self.ratios,
                                      self.num_clusters(), self.config_params, 
                                      self.BSCM_obj)
+                                     
+    def get_BSCM(self):
+        """Return the background sampled coherence matrix object"""
+        return self.BSCM_obj
 
 
 def compute_column_scores(membership, matrix, num_clusters,
@@ -250,12 +254,12 @@ def compute_column_scores(membership, matrix, num_clusters,
     cluster_column_scores = [] #To be filled or overwritten
     if BSCM_obj is None:
         if config_params['multiprocessing']:
-	        with util.get_mp_pool(config_params) as pool:
+            with util.get_mp_pool(config_params) as pool:
                     cluster_column_scores = pool.map(compute_column_scores_submatrix, map(make_submatrix, xrange(1, num_clusters + 1)))
         else:
-	        for cluster in xrange(1, num_clusters + 1):
-	            cluster_column_scores.append(compute_column_scores_submatrix(
-	            	make_submatrix(cluster)))
+            for cluster in xrange(1, num_clusters + 1):
+                cluster_column_scores.append(compute_column_scores_submatrix(
+                    make_submatrix(cluster)))
     else: #if BSCM_obj exists
         num_cores = 1
         if not config_params['num_cores'] is None:
@@ -269,7 +273,7 @@ def compute_column_scores(membership, matrix, num_clusters,
                 exp_names = cur_column_scores.keys()
                 exp_scores = np.array(cur_column_scores.values() )
                 cluster_column_scores.append((exp_names, exp_scores))
-        	
+            
     substitution = compute_substitution(cluster_column_scores)
 
     # Convert scores into a matrix that have the clusters as columns
