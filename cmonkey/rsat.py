@@ -81,14 +81,15 @@ class RsatDatabase:
 
     def __get_ncbi_code(self, rsat_organism):
         """retrieve NCBI code from organism.tab file"""
-        cache_file = "/".join([self.cache_dir, '%s.tab' % rsat_organism])
-        text = util.read_url_cached("/".join([self.base_url,
-                                              RsatDatabase.DIR_PATH,
-                                              rsat_organism,
-                                              RsatDatabase.ORGANISM_PATH]),
-                                    cache_file)
-        spec = [line for line in text.split('\n') if not line.startswith('--')][0]
-        return spec.strip().split('\t')[0]
+        try:
+            cache_file = "/".join([self.cache_dir, '%s.tab' % rsat_organism])
+            url = "/".join([self.base_url, RsatDatabase.DIR_PATH, rsat_organism,
+                            RsatDatabase.ORGANISM_PATH])
+            text = util.read_url_cached(url, cache_file)
+            spec = [line for line in text.split('\n') if not line.startswith('--')][0]
+            return spec.strip().split('\t')[0]
+        except:
+            return None
 
     def get_rsat_organism(self, kegg_organism):
         """returns the HTML page for the directory listing"""
@@ -101,17 +102,17 @@ class RsatDatabase:
         suggestion2 = util.best_matching_links(kegg_organism, text)[0].rstrip('/')
         if suggestion1 != suggestion2:
             ncbi_code1 = self.__get_ncbi_code(suggestion1)
-            ncbi_code2 = self.__get_ncbi_code(suggestion1)
-            if ncbi_code1 == self.ncbi_code:
+            ncbi_code2 = self.__get_ncbi_code(suggestion2)
+            if str(ncbi_code1) == str(self.ncbi_code):
                 return suggestion1
-            elif ncbi_code2 == self.ncbi_code:
+            elif str(ncbi_code2) == str(self.ncbi_code):
                 return suggestion2
             else:
                 logging.warn("can't find the correct RSAT mapping !")
                 return suggestion1
         else:
             ncbi_code = self.__get_ncbi_code(suggestion1)
-            if ncbi_code == self.ncbi_code:
+            if str(ncbi_code) == str(self.ncbi_code):
                 return suggestion1
             else:
                 logging.warn("can't find the correct RSAT mapping !")
@@ -189,13 +190,9 @@ class RsatDatabase:
         """returns the specified organism's feature name file contents"""
         #logging.info('RSAT - get_feature_names(%s)', organism)
         cache_file = "/".join([self.cache_dir, organism + '_' + self.feature_name + '_names'])
-        uCach = util.read_url_cached(
-            "/".join([self.base_url,
-                      RsatDatabase.DIR_PATH,
-                      organism,
-                      self.feature_names_path]),
-            cache_file)
-        return uCach
+        rsat_url = "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
+                             self.feature_names_path])
+        return util.read_url_cached(rsat_url, cache_file)
 
     def get_contig_sequence(self, organism, contig):
         """returns the specified contig sequence"""
@@ -211,11 +208,12 @@ class RsatDatabase:
         try:
             seqstr = util.read_url_cached(url, cache_file).upper()
         except:
-            print "Error downloading file: " + url
-            print "RSAT occasionally has connectivity problems."
-            print "Try again later, or try a different RSAT mirror"
-            print "useing the parameter --rsat_base_url"
+            logging.error("Error downloading file: %s", url)
+            logging.error("RSAT occasionally has connectivity problems.")
+            logging.error("Try again later, or try a different RSAT mirror")
+            logging.error("using the parameter --rsat_base_url")
         return join_contig_sequence(seqstr)
+
 
 def join_contig_sequence(seqstr):
     """we take the safer route and assume that the input could

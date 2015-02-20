@@ -4,7 +4,7 @@ T00003	mja	243232	Methanocaldococcus jannaschii DSM 2661
 T00004	syn	1148	Synechocystis sp. PCC 6803
 T00005	sce	559292	Saccharomyces cerevisiae S288c
 T00006	mpn	272634	Mycoplasma pneumoniae M129
-T00007	eco	511145	Escherichia coli K-12 MG1655
+T00007	eco	511145	Escherichia coli K_12 substr  MG1655 uid57779
 T00008	hpy	85962	Helicobacter pylori 26695
 T00009	mth	187420	Methanothermobacter thermautotrophicus deltaH
 T00010	bsu	224308	Bacillus subtilis subsp. subtilis 168
@@ -12,7 +12,7 @@ T00011	afu	224325	Archaeoglobus fulgidus DSM 4304 (VC-16)
 T00012	bbu	224326	Borrelia burgdorferi B31
 T00013	aae	224324	Aquifex aeolicus VF5
 T00014	pho	70601	Pyrococcus horikoshii OT3
-T00015	mtu	83332	Mycobacterium tuberculosis H37Rv
+T00015	mtu	83332	Mycobacterium tuberculosis H37Rv uid57777
 T00016	tpa	243276	Treponema pallidum subsp. pallidum Nichols
 T00017	ctr	272561	Chlamydia trachomatis D/UW-3/CX
 T00018	rpr	272947	Rickettsia prowazekii Madrid E
@@ -35,7 +35,7 @@ T00034	vch	243277	Vibrio cholerae O1 biovar El Tor N16961
 T00035	pae	208964	Pseudomonas aeruginosa PAO1
 T00036	buc	107806	Buchnera aphidicola APS, endosymbiont of Acyrthosiphon pisum (pea aphid)
 T00037	tac	273075	Thermoplasma acidophilum DSM 1728
-T00038	hal	64091	Halobacterium sp. NRC-1
+T00038	hal	64091	Halobacterium NRC 1 uid57769
 T00039	bha	272558	Bacillus halodurans C-125
 T00040	uur	273119	Ureaplasma parvum serovar 3 ATCC 700970
 T00041	ath	3702	Arabidopsis thaliana (thale cress)

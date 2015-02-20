@@ -8,7 +8,7 @@ import organism as org
 KEGG_FILE_PATH = 'config/KEGG_taxonomy'
 GO_FILE_PATH = 'config/proteome2taxid'
 CACHE_DIR = 'cache'
-RSAT_BASE_URL = 'http://pedagogix-tagc.univ-mrs.fr/rsat'
+RSAT_BASE_URL = 'http://rsat01.biologie.ens.fr/rsat'
 
 def make_halo(search_distances, scan_distances, ratios=None):
     """returns the organism object to work on"""
@@ -30,7 +30,8 @@ def make_halo(search_distances, scan_distances, ratios=None):
             mo_db, max_operon_size=ratios.num_rows / 20, weight=0.5))
 
     keggorg = util.make_dfile_map(keggfile, 1, 3)['hal']
-    rsat_info = org.RsatSpeciesInfo(rsatdb, keggorg, 'Halobacterium_sp', 64091)
+    rsat_organism = rsatdb.get_rsat_organism(keggorg)
+    rsat_info = org.RsatSpeciesInfo(rsatdb, keggorg, rsat_organism, 64091)
     gotax = util.make_dfile_map(gofile, 0, 1)[rsat_info.go_species()]
     return org.Microbe('hal', keggorg, rsat_info, gotax, mo_db, nw_factories,
                        search_distances, scan_distances, True, None)

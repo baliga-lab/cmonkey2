@@ -232,8 +232,7 @@ dump_results, dump_scores, profile_mem, random_seed, keep_mastout, all or a comb
                         help="""override the RSAT organism name""")
     parser.add_argument('--rsat_features', default='feature',
                         help="""Gene look up table.  Aternative 'cds', 'protein_coding' or 'gene' """)
-    parser.add_argument('--rsat_base_url', default='http://prokaryotes.rsat.eu/rsa-tools',
-                        help="""RSAT mirror.  NOTE: RSAT changed mirror structure on 02-18-15""")
+    parser.add_argument('--rsat_base_url', default=None, help="""override RSAT mirror""")
 
     # Synonym override
     parser.add_argument('--synonym_file', default=None, help="synonyms file")
@@ -438,6 +437,8 @@ def setup_default(args, config_parser):
         del overrides['case_sensitive']
     if overrides['pipeline_file'] is None:
         del overrides['pipeline_file']
+    if overrides['rsat_base_url'] is None:
+        del overrides['rsat_base_url']
 
     # membership update default parameters
     # these come first, since a lot depends on clustering numbers
