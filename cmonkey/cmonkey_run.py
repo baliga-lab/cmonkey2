@@ -821,9 +821,9 @@ class CMonkeyRun:
                                       self['num_clusters'], self['output_dir'])
             #Why is conn never closed?  Where does it write to the db?
 
-            # additionally: run tomtom on the motifs
-            # TODO: check if there is a need to run TOMTOM
-            if self['MEME']['global_background'] == 'True':
+            # additionally: run tomtom on the motifs if requested
+            if (self['MEME']['global_background'] == 'True' and
+                self['Postprocessing']['run_tomtom'] == 'True'):
                 meme.run_tomtom(conn, self['output_dir'], self['MEME']['version'])
 
         self.write_finish_info()
