@@ -70,9 +70,9 @@
              { 'sWidth': '70px', 'sClass': 'alignRight' },
              { 'bSortable': true }
            ],
-           
+           'searching': true,
            'sAjaxSource': '/clusters/' + currentIteration,
-         }).on('order.dt', function() {
+         }).on('draw.dt', function() {
             $('a.clusterlink').click(assignClusterClickHandlers);
          });
         

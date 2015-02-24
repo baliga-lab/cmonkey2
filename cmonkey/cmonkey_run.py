@@ -160,6 +160,7 @@ class CMonkeyRun:
                         on row_members (iteration)''')
         conn.execute('''create index if not exists cluststat_iter_index
                         on cluster_stats (iteration)''')
+        conn.execute("create index if not exists rnames_name_index on row_names (name)")
         conn.execute("create index if not exists rowmemb_order_index on row_members (order_num)")
         conn.execute("create index if not exists rowmemb_clust_index on row_members (cluster)")
         conn.execute("create index if not exists motinf_clust_index on motif_infos (cluster)")
