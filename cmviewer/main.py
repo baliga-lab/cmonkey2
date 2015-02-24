@@ -585,7 +585,7 @@ class ClusterViewerApp:
             search_string = search_string.strip()
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
-            cursor.execute("select distinct cluster from row_members rm join row_names rn where rm.iteration=? and rn.name like ?", [iteration, '%' + search_string + '%'])
+            cursor.execute("select distinct cluster from row_members rm join row_names rn on rn.order_num=rm.order_num where rm.iteration=? and rn.name like ?", [int(iteration), '%' + search_string + '%'])
             valid_clusters = {row[0] for row in cursor.fetchall()}
         else:
             valid_clusters = None

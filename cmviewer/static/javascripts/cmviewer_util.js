@@ -6,10 +6,8 @@ var INITIAL_NETWORK_FILTER_SCALE = 8;
 var iterations = [];
 
 var interval = null;
-var currentIteration = 1;
 
 function onIterationChange(event) {
-    currentIteration = $(this).val();
     var iteration = $(this).val();
     // Update cluster list and networks
     var activeTab = $('#tabs').tabs("option", "active");
@@ -44,7 +42,8 @@ function updateIterationSelector(iterations) {
 
 function assignClusterClickHandlers() {
     var cluster = $(this).attr('id');
-    $.get('/cluster/' + currentIteration + '/' + cluster,
+    var iteration = $('#select_iteration').val();
+    $.get('/cluster/' + iteration + '/' + cluster,
           function(html) {
               // we need the trim() call in order for jQuery 1.9.x to
               // recognize the output as valid HTML
@@ -62,7 +61,8 @@ function clearClusterDetailView() {
 }
 
 function showClusterDetails(cluster) {
-    $.get('/cluster/' + currentIteration + '/' + cluster,
+    var iteration = $('#select_iteration').val();
+    $.get('/cluster/' + iteration + '/' + cluster,
           function(html) {
               $(html.trim()).replaceAll('#cluster-view');
               $("#tabs").tabs( "option", "active", 1);
@@ -304,10 +304,10 @@ function updateRunStatus() {
              }});
 
     // update the slider ranges
-    var currentIteration = $('#select_iteration').val();
+    var iteration = $('#select_iteration').val();
     var firstTime = true;
-    if (!currentIteration) currentIteration = 1;
-    $.ajax({url: '/slider_ranges/' + currentIteration, success: function(data) {
+    if (!iteration) iteration = 1;
+    $.ajax({url: '/slider_ranges/' + iteration, success: function(data) {
                 var oldValues = $('#residual-slider').slider("values");
                 $('#residual-slider').slider('option',
                                              {min: data.residual.min,
