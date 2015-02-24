@@ -32,7 +32,11 @@ def get_network_factory(organism_code, filename, weight, sep='\t',
     This is the standard factory method used for Microbes.
     """
     def can_add_edge(node1, node2, thesaurus, cano_genes):
-        """check whether we can add the edge"""
+        """check whether we can add the edge
+            deprecated on 2/18/15 by keep_bool object in read_edges2
+            In principal, this could be replaced by an object that
+            stores the keep_bool instance variable.
+        """
         if cano_genes is not None:
             return (node1 in thesaurus and node2 in thesaurus
                     and thesaurus[node1] in cano_genes and thesaurus[node2] in cano_genes)
