@@ -300,7 +300,10 @@ class ClusterViewerApp:
                        'data': {'id': '%s' % gene, 'name': '%s' % gene}}
                       for gene in genes]
 
-        # motifs
+        # motifs, since we are operating on a log scale, we have to
+        # remap the values to the original scale
+        min_evalue = 10.0**float(min_evalue)
+        max_evalue = 10.0**float(max_evalue)
         motifs = self.filter_motifs(cursor, iteration, valid_clusters,
                                     min_evalue, max_evalue)
         cursor.close()
@@ -503,7 +506,11 @@ class ClusterViewerApp:
         residual_step = (max_residual - min_residual) / 100.0
         cursor.execute("select min(evalue), max(evalue) from motif_infos where iteration=?",
                        [iteration])
+
+        # since the e-value range is tricky to use, we use the log scale instead
         min_evalue, max_evalue = cursor.fetchone()
+        min_evalue = math.log10(min_evalue)
+        max_evalue = math.log10(max_evalue)
         evalue_step = (max_evalue - min_evalue) / 100.0
         cursor.close()
         return {'residual': {'min': min_residual, 'max': max_residual, 'step': residual_step},
