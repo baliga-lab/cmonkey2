@@ -12,7 +12,7 @@ A complete set of documentation for installation and running of cMonkey is on th
 
 ### Contact
 
-Please report all issues using the [issue tracker](https://github.com/baliga-lab/cmonkey2/issues). Please direct any and all questions to either the [developer](https://groups.google.com/d/forum/cmonkey-dev) or [user](https://groups.google.com/d/forum/cmonkey-users) discussion groups. 
+Please report all bugs or other issues using the [issue tracker](https://github.com/baliga-lab/cmonkey2/issues). Please direct any and all questions to either the [developer](https://groups.google.com/d/forum/cmonkey-dev) or [user](https://groups.google.com/d/forum/cmonkey-users) discussion groups. 
 
 ### System requirements
 
