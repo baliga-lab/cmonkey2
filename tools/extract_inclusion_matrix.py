@@ -25,11 +25,15 @@ if __name__ == '__main__':
     con = sqlite3.connect(db_file, 15, isolation_level='DEFERRED')
     cur = con.cursor()
     
-    cur.execute("select last_iteration, num_clusters from run_infos")
-    [last_iteration, num_clusters] = cur.fetchone()
+    cur.execute("select num_clusters from run_infos")
+    [num_clusters] = cur.fetchone()
+                
+    cur.execute("select max(iteration) from cluster_stats")
+    [last_iteration] = cur.fetchone()
                 
     cur.execute("select name from row_names order by order_num")
     row_names = cur.fetchall()
+    row_names = [i[0] for i in row_names]
     
     cur.execute("select name from column_names order by order_num")
     col_names = cur.fetchall()
@@ -51,6 +55,7 @@ if __name__ == '__main__':
         cur.execute("select order_num from column_members where iteration = ? and cluster = ?", (last_iteration, cn+1))
         col_members = cur.fetchall()
         col_members = [i[0] for i in col_members]
+        col_members.sort()
         cur_names = [col_names[i] for i in col_members]
         
         cur.execute("select order_num from row_members where iteration = ? and cluster = ?", (last_iteration, cn+1))
