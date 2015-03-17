@@ -135,7 +135,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
             config_params=self.config_params)
         motscores = motif_scoring.compute(self.iteration_result).sorted_by_row_name()
         motscores.fix_extreme_values()
-        ref_motscores = read_matrix('testdata/motscores_fixed.tsv')
+        ref_motscores = read_matrix('testdata/ref_motscores.tsv')
         self.assertTrue(check_matrix_values(motscores, ref_motscores))
 
     def test_scoring_combine(self):

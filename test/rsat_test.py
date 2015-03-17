@@ -10,7 +10,7 @@ import rsat
 import util
 
 
-RSAT_BASE_URL = 'http://pedagogix-tagc.univ-mrs.fr/rsat'
+RSAT_BASE_URL = 'http://rsat01.biologie.ens.fr/rsat'
 
 
 class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904

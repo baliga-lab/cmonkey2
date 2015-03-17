@@ -300,7 +300,10 @@ class ClusterViewerApp:
                        'data': {'id': '%s' % gene, 'name': '%s' % gene}}
                       for gene in genes]
 
-        # motifs
+        # motifs, since we are operating on a log scale, we have to
+        # remap the values to the original scale
+        min_evalue = 10.0**float(min_evalue)
+        max_evalue = 10.0**float(max_evalue)
         motifs = self.filter_motifs(cursor, iteration, valid_clusters,
                                     min_evalue, max_evalue)
         cursor.close()
@@ -503,7 +506,11 @@ class ClusterViewerApp:
         residual_step = (max_residual - min_residual) / 100.0
         cursor.execute("select min(evalue), max(evalue) from motif_infos where iteration=?",
                        [iteration])
+
+        # since the e-value range is tricky to use, we use the log scale instead
         min_evalue, max_evalue = cursor.fetchone()
+        min_evalue = math.log10(min_evalue)
+        max_evalue = math.log10(max_evalue)
         evalue_step = (max_evalue - min_evalue) / 100.0
         cursor.close()
         return {'residual': {'min': min_residual, 'max': max_residual, 'step': residual_step},
@@ -560,6 +567,7 @@ class ClusterViewerApp:
 
         sort_col = int(kw['iSortCol_0'])
         sort_reverse = kw['sSortDir_0'] == 'desc'
+        search_string = kw['sSearch']
         conn = dbconn()
         conn.row_factory = motifinfo_factory
         cursor = conn.cursor()
@@ -571,6 +579,7 @@ class ClusterViewerApp:
         cursor.close()
 
         conn.row_factory = motifpssmrow_factory
+
         cursor = conn.cursor()
         cursor.execute("select motif_info_id, row, a, c, g, t from motif_pssm_rows where iteration = ?", [iteration])
         # grouped by motif info id
@@ -578,6 +587,15 @@ class ClusterViewerApp:
         for row in cursor.fetchall():
             motif_pssm_rows[row.motif_id].append([row.a, row.c, row.g, row.t])
         
+        cursor.close()
+        if search_string is not None and len(search_string.strip()) > 0:
+            search_string = search_string.strip()
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute("select distinct cluster from row_members rm join row_names rn on rn.order_num=rm.order_num where rm.iteration=? and rn.name like ?", [int(iteration), '%' + search_string + '%'])
+            valid_clusters = {row[0] for row in cursor.fetchall()}
+        else:
+            valid_clusters = None
         cursor.close()
 
         conn.row_factory = clusterstat_factory
@@ -600,15 +618,15 @@ class ClusterViewerApp:
             cluster_stats = sorted(cluster_stats, key=lambda item: min_evalue(motif_infos[item.cluster]),
                                    reverse=sort_reverse)
             
-
-        rows = [["%d" % (i + 1),
-                 "<a class=\"clusterlink\" id=\"%d\"  href=\"javascript:void(0)\">%d</a>" % (stat.cluster, stat.cluster),
+        filtered_rows = [["<a class=\"clusterlink\" id=\"%d\"  href=\"javascript:void(0)\">%d</a>" % (stat.cluster, stat.cluster),
                  '%d' % stat.num_rows,
                  '%d' % stat.num_cols,
                  format_float(stat.residual),
                  make_motif_string(motif_infos[stat.cluster],
                                    motif_pssm_rows)]
-                for i, stat in enumerate(cluster_stats)]
+                         for stat in cluster_stats
+                         if valid_clusters is None or stat.cluster in valid_clusters]
+        rows = [["%d" % (i + 1)] + row for i, row in enumerate(filtered_rows)]
 
         cursor.close()
         conn.close()

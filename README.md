@@ -10,6 +10,10 @@ This is the Python implementation of the cMonkey algorithm based on the original
 
 A complete set of documentation for installation and running of cMonkey is on the [wiki](https://github.com/baliga-lab/cmonkey2/wiki). There are also [developer](https://groups.google.com/d/forum/cmonkey-dev) and [user](https://groups.google.com/d/forum/cmonkey-users) discussion groups. 
 
+### Contact
+
+Please report all bugs or other issues using the [issue tracker](https://github.com/baliga-lab/cmonkey2/issues). Please direct any and all questions to either the [developer](https://groups.google.com/d/forum/cmonkey-dev) or [user](https://groups.google.com/d/forum/cmonkey-users) discussion groups. 
+
 ### System requirements
 
 cMonkey<sub>2</sub> has been tested and runs on all tested recent versions of Linux (including debian-based [Ubuntu, Mint, Debian] and RPM-based [CentOS, Fedora]) and recent versions of Mac OS X. Additional dependencies include:

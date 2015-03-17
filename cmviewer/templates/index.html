@@ -35,6 +35,8 @@
 
     <script type="text/javascript">
       $(document).ready(function() {
+         var currentIteration = $('#select_iteration').val();
+         if (!currentIteration) currentIteration = 1;
          $('#progressbar').progressbar({value: 0.0});
          $('.progress-label').text("0.0%");
 
@@ -49,6 +51,8 @@
 
               } else if (active == 1) {
                 $('#cluster-list').dataTable().fnAdjustColumnSizing();
+                var iteration = $('#select_iteration').val();
+                $('#cluster-list').DataTable().ajax.url('/clusters/' + iteration).load();
               }
             }
          });
@@ -62,6 +66,9 @@
            'sScrollY': 300,
            'sScrollX': '100%',
            'bProcessing': true,
+           'oLanguage': {
+             'sSearch': 'Display clusters containing gene: ',
+           },
            'aoColumns': [
              { 'sWidth': '30px', 'sClass': 'alignRight', 'bSortable': false },
              { 'sWidth': '60px', 'sClass': 'alignRight' },
@@ -70,9 +77,9 @@
              { 'sWidth': '70px', 'sClass': 'alignRight' },
              { 'bSortable': true }
            ],
-           
+           'searching': true,
            'sAjaxSource': '/clusters/' + currentIteration,
-         }).on('order.dt', function() {
+         }).on('draw.dt', function() {
             $('a.clusterlink').click(assignClusterClickHandlers);
          });
         
@@ -186,7 +193,7 @@
              <div id="residual-slider"></div>
            </div>
            <div id="right-slider-column">
-             <div>Motif e-value</div>
+             <div>Motif e-value (log10 scale)</div>
              <div style="font-size: 9pt" id="evalue-range">[{{min_evalue}}-{{max_evalue}}]</div>
              <div id="evalue-slider"></div>
            </div>
