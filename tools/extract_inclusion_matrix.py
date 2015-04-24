@@ -15,12 +15,16 @@ import util
 
 if __name__ == '__main__':
   if len(sys.argv) <= 2:
-    print "usage: python %s <out_directory> <outfile.tsv>"
+    print "usage: python %s <out_directory> <outfile.tsv> <OPTIONAL - returnNumeric>"
     print "\t example: python %s ../out ../out/inclusionMatrix.tsv"
   else:
     db_file = sys.argv[1]+'/cmonkey_run.db'
     ratio_file = sys.argv[1]+'/ratios.tsv.gz'
     out_file = sys.argv[2]
+    if len(sys.argv) == 3:
+        returnNumeric = True
+    else:
+        returnNumeric = False
     
     con = sqlite3.connect(db_file, 15, isolation_level='DEFERRED')
     cur = con.cursor()
@@ -70,14 +74,20 @@ if __name__ == '__main__':
         for col_name in col_names:
             if col_name in cur_names:
                 cur_val = ratios.values[row_members,ratios.column_names.index(col_name)].mean()
-                if cur_val == 0:
-                    cur_row = cur_row + '\tZERO' #Unlikely
-                elif cur_val > 0:
-                    cur_row = cur_row + '\tUP' 
-                else: #cur_val <0
-                    cur_row = cur_row + '\tDOWN' 
+                if returnNumeric:
+                    cur_row = cur_row + '\t' + str(cur_val)
+                else:
+                    if cur_val == 0:
+                        cur_row = cur_row + '\tZERO' #Unlikely
+                    elif cur_val > 0:
+                        cur_row = cur_row + '\tUP' 
+                    else: #cur_val <0
+                        cur_row = cur_row + '\tDOWN' 
             else:
-                cur_row = cur_row + '\tEXCLUDE'
+                if returnNumeric:
+                    cur_row = cur_row + '\t0'    
+                else:
+                    cur_row = cur_row + '\tEXCLUDE'
         f.write(cur_row+'\n')
     f.close()
     cur.close()
