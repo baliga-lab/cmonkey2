@@ -170,6 +170,10 @@ class RsatDatabase:
                 else:
                         outString = outString + line
             else:
+                lineParts = line.strip().split('\t')
+                if len(lineParts) == 1:
+                    lineParts = line.split()
+            
                 if (len(targIdx) == 0):
                         #Create the targIdx
                         for curField in fieldOrder:
