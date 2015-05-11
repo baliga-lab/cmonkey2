@@ -325,7 +325,9 @@ def setup_resume(args_in, config_parser):
 
     #overwrite anything new in the command line
     for curParam in args_in.__dict__.keys():
-        params[curParam] = args_in.__dict__[curParam]
+        newVal = args_in.__dict__[curParam]
+        if not newVal == None:
+            params[curParam] = args_in.__dict__[curParam]
 
     num_clusters = params['num_clusters']
     
@@ -347,7 +349,11 @@ def setup_resume(args_in, config_parser):
     if not 'operon_file' in params.keys():
         params['operon_file'] = None
     if not 'string_file' in params.keys():
-        params['string_file'] = None
+        if 'string' in params.keys():
+            params['string_file'] = params['string']
+            params['use_string'] = True
+        else :
+            params['string_file'] = None
     if not 'ncbi_code' in params.keys():
         params['ncbi_code'] = None
     if not 'nonetworks' in params.keys():
@@ -577,7 +583,8 @@ def write_general_settings(outfile, config_params):
     outfile.write('use_operons = %s\n' % str(config_params['use_operons']))
     outfile.write('use_string = %s\n' % str(config_params['use_string']))
     outfile.write('checkratios = %s\n' % str(config_params['checkratios']))
-
+    outfile.write('use_BSCM = %s\n' % str(config_params['use_BSCM']))
+    
 
 def write_membership_settings(outfile, config_params):
     """Writes the Membership section of the final.ini file"""

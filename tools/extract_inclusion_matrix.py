@@ -17,6 +17,7 @@ if __name__ == '__main__':
   if len(sys.argv) <= 2:
     print "usage: python %s <out_directory> <outfile.tsv> <OPTIONAL - returnNumeric>"
     print "\t example: python %s ../out ../out/inclusionMatrix.tsv"
+    sys.exit(0)
   else:
     db_file = sys.argv[1]+'/cmonkey_run.db'
     ratio_file = sys.argv[1]+'/ratios.tsv.gz'
