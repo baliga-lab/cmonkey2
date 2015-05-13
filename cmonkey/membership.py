@@ -711,11 +711,21 @@ def make_db_row_seeder(outdb):
             row_clusters = defaultdict(list)
             for cluster, row_name in cursor.fetchall():
                 row_clusters[row_name].append(cluster)
-
+                #row_clusters[row_name.upper()].append(cluster)
+                
             # copy memberships
             #for row_name in matrix.row_names:
             for row_name in row_clusters.keys():
-                cur_map = row_map[row_name]
+                #05-07-15 added '.upper' to fix a name mismatch in resume
+                if row_name in row_map.keys():
+                    cur_map = row_map[row_name]
+                elif row_name.upper() in row_map.keys():
+                    cur_map = row_map[row_name.upper()]
+                elif row_name.lower() in row_map.keys():
+                    cur_map = row_map[row_name.lower()]
+                else:
+                    continue
+                
                 for i, cluster in enumerate(row_clusters[row_name]):
                     #logging.info('row_name = %s, cur_map = %d, cluster = %d, i = %d', row_name, cur_map, cluster, i)
                     if i < len(row_membership[cur_map]):

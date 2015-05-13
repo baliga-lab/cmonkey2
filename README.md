@@ -69,6 +69,11 @@ system
 
     python cmviewer/main.py
 
+### Another way is to run Halobacterium is specify the RSAT database
+
+    ./cmonkey.py --organism hal --ratios example_data/hal/halo_ratios5.tsv --rsat_organism Halobacterium_NRC_1_uid57769 --rsat_base_url http://pedagogix-tagc.univ-mrs.fr/rsat --rsat_features gene --nooperons --use_BSCM
+
+
 ### Running cMonkey on Human
 
 To run cMonkey on human data, run the following code with your own `<ratios.tsv>` file

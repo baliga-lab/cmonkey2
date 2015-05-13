@@ -16,6 +16,7 @@ BMC Systems Biology, 2015
 import datamatrix
 import util as util
 import numpy as np
+import scipy as sp
 import math
 import random
 import datetime as dt
@@ -93,12 +94,17 @@ class BSCM:
     completed, it can be queried to return a p-Value for a specific set of genes
     Right now it copies ratios, which will waste some memory
     """
-    def __init__(self, ratios, tolerance = 0.001, maxTime=600, chunkSize=200, verbose=False):
+    def __init__(self, ratios, tolerance = 0.001, maxTime=600, chunkSize=200, verbose=False, useChi2=False):
         """Given a ratios matrix and a number of genes, figure out the expected distribution of variances
            Will sample background until the mean and sd converge or the operation times out
 
          Keyword arguments:
-         ratios     -- A DataMatrix object from 'cmonkey.datamatrix'
+         ratios         -- A DataMatrix object from 'cmonkey.datamatrix'
+         tolerance      -- The fraction tolance to use as a stopping condition (DEFAULT: 0.001)
+         maxTime        -- The approximate maximum time to run in seconds (DEFAULT: 600)
+         chunkSize      -- The number of samples to add between test (DEFAULT: 200)
+         verbose        -- Set to false to suppress output (DEFAULT: False)
+         useChi2        -- Set to True to fit a chi2 instead of storing all values (DEFAULT: False)
         """
         self.allVars = {} #Store all of the variances here.  Structure: allVars[expName][numExp]
         self.ratios = ratios
@@ -106,6 +112,7 @@ class BSCM:
         self.maxTime = maxTime
         self.chunkSize = chunkSize
         self.verbose = verbose
+        self.useChi2 = useChi2
     #def __init__(self, ratios, tolerance = 0.001, maxTime=600, chunkSize=200, verbose=False):
            
     def getPvals(self, geneNames, num_cores=1):
@@ -146,6 +153,8 @@ class BSCM:
         #  2) Use a pool of workers to calculate a distribution for each of the tuples
         if len(noVarNs) > 0:
             logging.info("Calculating some backgrounds for about %d genes", len(geneNames))
+            if self.useChi2 == True:
+                logging.info("\tFitting variance samples to Chi2 distribution")
             if num_cores > 1:
                 newargs = []
                 for i in range(0, len(noVarNs)):
@@ -167,7 +176,13 @@ class BSCM:
         for idx in range(0,len(noVarCns)):
             cn = noVarCns[idx]
             curN = str(noVarNs[idx])
-            self.allVars[cn][curN] = newVars[idx]
+            if self.useChi2 == True:
+                curVars = newVars[idx]
+                #But what happens if this curve fitting fails?
+                #self.allVars[cn][curN] = sp.stats.chi2.fit_loc_scale(curVars, int(curN))
+                self.allVars[cn][curN] = sp.stats.chi2.fit(curVars, df=int(curN))
+            else:
+                self.allVars[cn][curN] = newVars[idx]
         
         #  4) Calculate the p-Values 
         pVals = {}
@@ -181,7 +196,13 @@ class BSCM:
                 pVals[cn] = 1
             else:
                 curVar = np.var(geneVect)
-                pVals[cn] = np.mean(self.allVars[cn][str(n)] < curVar)
+                if self.useChi2 == True:
+                    #[loc, scale] = self.allVars[cn][str(n)]
+                    #pVals[cn] = 1-sp.stats.chi2.sf(curVar, df=int(n), loc=loc, scale=scale)
+                    [df, loc, scale] = self.allVars[cn][str(n)]
+                    pVals[cn] = 1-sp.stats.chi2.sf(curVar, df=df, loc=loc, scale=scale)
+                else:
+                    pVals[cn] = np.mean(self.allVars[cn][str(n)] < curVar)
 
         return pVals
     #def getPvals(self, geneNames):  

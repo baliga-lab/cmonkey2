@@ -48,7 +48,7 @@ class Network:
              Useage: 
              self.validate(synonyms, genes)
         """
-
+        
         # remap first
         new_edges = []
         for n0, n1, score in self.edges:
@@ -118,6 +118,7 @@ class Network:
         # 2. check gene names that are in the ratios matrix, but not in the network
         # 3. keep the nodes that are in the ratios and are in the thesaurus
         """
+        
         num_nodes_orig = len(nodes)
         if organism:
             thesaurus = organism.thesaurus()

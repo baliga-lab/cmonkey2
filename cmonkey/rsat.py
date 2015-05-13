@@ -78,7 +78,7 @@ class RsatDatabase:
         self.feature_name = feature_name
         self.feature_path = 'genome/' + feature_name + '.tab'
         self.feature_names_path = 'genome/' + feature_name + '_names.tab'
-
+        
     def __get_ncbi_code(self, rsat_organism):
         """retrieve NCBI code from organism.tab file"""
         try:
@@ -160,7 +160,7 @@ class RsatDatabase:
             except:
                 continue
         
-            lineParts = line.split()
+            lineParts = line.split()        
             if lineParts[0] == '--':
                 if lineParts[1] == 'field':
                         idxs[lineParts[3]] = lineParts[2]
@@ -170,13 +170,18 @@ class RsatDatabase:
                 else:
                         outString = outString + line
             else:
+                lineParts = line.strip().split('\t')
+                if len(lineParts) == 1:
+                    lineParts = line.split()
+            
                 if (len(targIdx) == 0):
                         #Create the targIdx
                         for curField in fieldOrder:
                                 targIdx.append(int(idxs[curField])-1)
                 outline = ""
+                lineParts = line.split('\t')  #Resplit to fix empty fields
                 for curTarg in targIdx:
-                        outline = outline + lineParts[curTarg] + '\t'
+                        outline = outline + lineParts[curTarg].strip() + '\t'
                 #Some RSAT files have a contig with ':'s instead of '_'s
                 outline = outline.replace(':','_')
                 #Now strip trailing \t

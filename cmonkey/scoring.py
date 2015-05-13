@@ -212,7 +212,7 @@ class ColumnScoringFunction(ScoringFunctionBase):
         #BSCM.  Danziger et al. 2015
         self.BSCM_obj = None
         if config_params['use_BSCM']:
-            self.BSCM_obj = BSCM.BSCM(ratios, verbose=False) #How to pass verbose and so on? More parameters?
+            self.BSCM_obj = BSCM.BSCM(ratios, verbose=False, useChi2=config_params['use_chi2']) #How to pass verbose and so on? More parameters?
             #Note: Ratios normalized upstream during loading by config.py module
         self.run_log = RunLog("column_scoring", config_params)
 

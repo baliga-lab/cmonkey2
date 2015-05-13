@@ -121,6 +121,8 @@ def set_config_general(config, params):
     params['organism_code'] = get_config_str(config, 'General', 'organism_code', None)
 
     params['use_BSCM'] = get_config_boolean(config, 'General', 'use_BSCM', False)
+    params['use_chi2'] = get_config_boolean(config, 'General', 'use_chi2', False)
+
 
 def set_config_membership(config, params):
     """membership default parameters"""
@@ -253,6 +255,8 @@ dump_results, dump_scores, profile_mem, random_seed, keep_mastout, all or a comb
     # BSCM: Bicluster Sampled Coherence Metric
     parser.add_argument('--use_BSCM', action='store_true', default=False,
                         help="""Set the use Bicluster Sampled Coherence Metric""")
+    parser.add_argument('--use_chi2', action='store_true', default=False,
+                        help="""Set to save memory by estimating Chi2 parameters for BSCM rather than storing all sampled values""")
 
     if arg_ext is not None:
         arg_ext(parser)
@@ -325,7 +329,9 @@ def setup_resume(args_in, config_parser):
 
     #overwrite anything new in the command line
     for curParam in args_in.__dict__.keys():
-        params[curParam] = args_in.__dict__[curParam]
+        newVal = args_in.__dict__[curParam]
+        if not newVal == None:
+            params[curParam] = args_in.__dict__[curParam]
 
     num_clusters = params['num_clusters']
     
@@ -347,7 +353,11 @@ def setup_resume(args_in, config_parser):
     if not 'operon_file' in params.keys():
         params['operon_file'] = None
     if not 'string_file' in params.keys():
-        params['string_file'] = None
+        if 'string' in params.keys():
+            params['string_file'] = params['string']
+            params['use_string'] = True
+        else :
+            params['string_file'] = None
     if not 'ncbi_code' in params.keys():
         params['ncbi_code'] = None
     if not 'nonetworks' in params.keys():
@@ -429,7 +439,8 @@ def setup_default(args, config_parser):
                  'resume': args.resume,
                  'case_sensitive': args.case_sensitive,
                  'command_line': args.command_line,
-                 'use_BSCM': args.use_BSCM}
+                 'use_BSCM': args.use_BSCM,
+                 'use_chi2': args.use_chi2}
 
     if overrides['random_seed'] is None:
         del overrides['random_seed']
@@ -577,7 +588,9 @@ def write_general_settings(outfile, config_params):
     outfile.write('use_operons = %s\n' % str(config_params['use_operons']))
     outfile.write('use_string = %s\n' % str(config_params['use_string']))
     outfile.write('checkratios = %s\n' % str(config_params['checkratios']))
-
+    outfile.write('use_BSCM = %s\n' % str(config_params['use_BSCM']))
+    outfile.write('use_chi2 = %s\n' % str(config_params['use_chi2']))
+    
 
 def write_membership_settings(outfile, config_params):
     """Writes the Membership section of the final.ini file"""
