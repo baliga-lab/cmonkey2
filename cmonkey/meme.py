@@ -333,8 +333,8 @@ class MemeSuite481(MemeSuite):
                 result = infile.read()
             return result
         except subprocess.CalledProcessError, e:
-            logging.warn("there is an exception thrown in MAST: %s",
-                         e.output)
+            logging.warn("there is an exception thrown in MAST: %s, (meme file: '%s', dbfile: '%s', bgfile: '%s')",
+                         e.output, meme_outfile_path, database_file_path, bgfile_path)
             return None  # return nothing if there was an error
         finally:
             logging.debug("removing %s...", dirname)
