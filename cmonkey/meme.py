@@ -123,6 +123,7 @@ class MemeSuite:
 
         # run mast
         meme_outfile = None
+        keep_memeout = False
         is_last_iteration = params.iteration > params.num_iterations
         if 'keep_memeout' in params.debug or is_last_iteration:
             meme_outfile = os.path.join(params.outdir,
@@ -142,6 +143,11 @@ class MemeSuite:
         #logging.info('created mast database in %s', dbfile)
         try:
             mast_output = self.mast(meme_outfile, dbfile, bgfile)
+            # There is a bug in MAST, catch that here to report to MEME team
+            # when it is fixed, we could remove it
+            if mast_output is None:
+                keep_memeout = True
+
             if 'keep_mastout' in params.debug:
                 with open('%s.mast' % meme_outfile, 'w') as outfile:
                     outfile.write(mast_output)
@@ -163,7 +169,12 @@ class MemeSuite:
                 except:
                     logging.warn("could not remove tmp file: '%s'", seqfile)
                 try:
-                    if 'keep_memeout' not in params.debug and not is_last_iteration:
+                    if keep_memeout:
+                        # This is a workaround to keep the meme output file in case
+                        # the strange 1000 != 1000 text parser problem
+                        # occurs in MAST. Remove when it's fixed in MEME
+                        pass
+                    elif 'keep_memeout' not in params.debug and not is_last_iteration:
                         os.remove(meme_outfile)
                 except:
                     logging.warn("could not remove tmp file: '%s'", meme_outfile)
