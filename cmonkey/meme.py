@@ -111,36 +111,41 @@ class MemeSuite:
                 return make_background_file(bgseqs, self.__use_revcomp,
                                             self.background_order)[0]
 
-        #logging.info("run_meme() - # seqs = %d", len(input_seqs))
-        bgfile = background_file()
-        #logging.info("created background file in %s", bgfile)
-        seqfile = self.make_sequence_file(
-            [(feature_id, input_seqs[feature_id])
-             for feature_id in params.feature_ids if feature_id in input_seqs])
-        #logging.info("created sequence file in %s", seqfile)
-        motif_infos, output = self.meme(seqfile, bgfile, params.num_motifs,
-                                        previous_motif_infos=params.previous_motif_infos)
+        try:
+            #logging.info("run_meme() - # seqs = %d", len(input_seqs))
+            bgfile = background_file()
+            #logging.info("created background file in %s", bgfile)
+            seqfile = self.make_sequence_file(
+                [(feature_id, input_seqs[feature_id])
+                 for feature_id in params.feature_ids if feature_id in input_seqs])
+            #logging.info("created sequence file in %s", seqfile)
+            motif_infos, output = self.meme(seqfile, bgfile, params.num_motifs,
+                                            previous_motif_infos=params.previous_motif_infos)
 
-        # run mast
-        meme_outfile = None
-        mast_failed = False
-        is_last_iteration = params.iteration > params.num_iterations
-        if 'keep_memeout' in params.debug or is_last_iteration:
-            meme_outfile = os.path.join(params.outdir,
-                                        'meme-out-%04d-%04d' % (params.iteration, params.cluster))
-            with open(meme_outfile, 'w') as outfile:
-                outfile.write(output)
-        else:
-            with tempfile.NamedTemporaryFile(prefix='meme.out.',
-                                             delete=False) as outfile:
-                meme_outfile = outfile.name
-                outfile.write(output)
+            # run mast
+            meme_outfile = None
+            mast_failed = False
+            is_last_iteration = params.iteration > params.num_iterations
+            if 'keep_memeout' in params.debug or is_last_iteration:
+                meme_outfile = os.path.join(params.outdir,
+                                            'meme-out-%04d-%04d' % (params.iteration, params.cluster))
+                with open(meme_outfile, 'w') as outfile:
+                    outfile.write(output)
+            else:
+                with tempfile.NamedTemporaryFile(prefix='meme.out.',
+                                                 delete=False) as outfile:
+                    meme_outfile = outfile.name
+                    outfile.write(output)
 
-        #logging.info('wrote meme output to %s', meme_outfile)
-        dbfile = self.make_sequence_file(
-            [(feature_id, locseq[1])
-             for feature_id, locseq in all_seqs.iteritems()])
-        #logging.info('created mast database in %s', dbfile)
+            #logging.info('wrote meme output to %s', meme_outfile)
+            dbfile = self.make_sequence_file(
+                [(feature_id, locseq[1])
+                 for feature_id, locseq in all_seqs.iteritems()])
+            #logging.info('created mast database in %s', dbfile)
+        except subprocess.CalledProcessError, e:
+            logging.error("MEME output: %s", e.output)
+            return MemeRunResult([], [], [])
+
         try:
             mast_output = self.mast(meme_outfile, dbfile, bgfile)
             # There is a bug in MAST, catch that here to report to MEME team
@@ -161,7 +166,7 @@ class MemeSuite:
             else:
                 print "Unknown error in MAST:\n ", e.__dict__
                 logging.error("MAST error: %s", e.output)
-                raise
+                return MemeRunResult([], [], [])
         finally:
             if mast_failed:
                 # This is a workaround to keep the meme output file in case
@@ -324,7 +329,7 @@ class MemeSuite481(MemeSuite):
             output = subprocess.check_output(command)
             return (read_meme_output(output, num_motifs), output)
         except:
-            print command
+            logging.error("MEME execution error, command: %s", str(command))
             raise
 
     def mast(self, meme_outfile_path, database_file_path,
