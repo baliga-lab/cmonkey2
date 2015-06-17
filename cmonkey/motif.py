@@ -549,8 +549,8 @@ class WeederRunner:
             pe_values, annotations = self.meme_suite.read_mast_output(mast_out,
                                                                       params.seqs.keys())
             return meme.MemeRunResult(pe_values, annotations, motif_infos)
-        except Exception as e:
-            log.exception(e)
+        except Exception, e:
+            logging.exception(e)
             return meme.MemeRunResult([], {}, [])
         finally:
             if self.__remove_tempfiles:
