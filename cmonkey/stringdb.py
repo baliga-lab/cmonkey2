@@ -33,9 +33,9 @@ def get_network_factory(organism_code, filename, weight, sep='\t',
     """
     def can_add_edge(node1, node2, thesaurus, cano_genes):
         """check whether we can add the edge
-            deprecated on 2/18/15 by keep_bool object in read_edges2
+            deprecated on 2/18/15 by keep_node object in read_edges2
             In principal, this could be replaced by an object that
-            stores the keep_bool instance variable.
+            stores the keep_node instance variable.
         """
         if cano_genes is not None:
             return (node1 in thesaurus and node2 in thesaurus
@@ -63,7 +63,7 @@ def get_network_factory(organism_code, filename, weight, sep='\t',
             cano_genes = None
         
         num_ignored = 0
-        keep_bool = {} #Big Speedup: Use to search thesaurus and cano_genes only once for each gene
+        keep_node = {} #Big Speedup: Use to search thesaurus and cano_genes only once for each gene
         idx = 1 #Used to display progress
         for line in dfile.lines:
             #This can be slow, display progress every 5%
@@ -75,11 +75,16 @@ def get_network_factory(organism_code, filename, weight, sep='\t',
             node1 = patches.patch_string_gene(organism_code, line[0])
             node2 = patches.patch_string_gene(organism_code, line[1])
             for node in (node1, node2):
-                if not node in keep_bool:
+                if not node in keep_node:
                     if cano_genes is not None:
-                        keep_bool[node] = node in thesaurus and thesaurus[node] in cano_genes
+                        keep_node[node] = node in thesaurus and thesaurus[node] in cano_genes
                     else:
-                        keep_bool[node] = node in thesaurus
+                        keep_node[node] = node in thesaurus
+                    if not keep_node[node]:
+                        if not node in thesaurus:
+                            print "'%s' is not in thesaurus" % node
+                        elif not thesaurus[node] in cano_genes:
+                            print "'%s' is not in cano_genes" % thesaurus[node]
                     
                     #Add this node to the lut if it is not already there.
                     if (not gene_lut is None) and (not node in gene_lut):
@@ -91,7 +96,7 @@ def get_network_factory(organism_code, filename, weight, sep='\t',
             max_score = max(score, max_score)
 
             #if can_add_edge(node1, node2, thesaurus, cano_genes):
-            if keep_bool[node1] and keep_bool[node2]:
+            if keep_node[node1] and keep_node[node2]:
                 #2/18/15 SD.  Translate nodes into names in ratio rows using gene_lut
                 #   This will let the ratios matrix define how the genes are named
                 if gene_lut is None:
