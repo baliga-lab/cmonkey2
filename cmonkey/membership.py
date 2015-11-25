@@ -646,9 +646,11 @@ def make_kmeans_row_seeder(num_clusters):
     """creates a row seeding function based on k-means"""
 
     def seed(row_membership, matrix):
-        """uses k-means seeding to seed row membership"""        
+        """uses k-means seeding to seed row membership"""
         flat_values = matrix.values.flatten()
         flat_values[np.isnan(flat_values)] = 0.0
+        flat_values[np.isinf(flat_values)] = 0.0
+        flat_values[np.isneginf(flat_values)] = 0.0
         matrix_values = robjects.r.matrix(
             robjects.FloatVector(flat_values), nrow=matrix.num_rows, byrow=True)
         kmeans = robjects.r['kmeans']
