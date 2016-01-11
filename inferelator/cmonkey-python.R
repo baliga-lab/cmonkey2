@@ -64,7 +64,10 @@ read.cmonkey.sqlite <- function(db.filename, iteration=0) {
     cluster.data$cols <- col.names[col.members]
     cluster.data$k <- cluster
     cluster.data$p.clust <- NULL
-    cluster.data$e.val <- NULL
+    # note: result is a little different than documented above,
+    # currently, there is a row for each sequence type
+    cluster.data$e.val <- dbGetPreparedQuery(con, "select seqtype,motif_num,evalue from motif_infos where iteration = :iteration and cluster = :cluster",
+                                             data.frame(iteration=iteration, cluster=cluster))[1,]
     cluster.data$resid <- cluster.residual
     result[[cluster]] <- cluster.data
   }
