@@ -69,9 +69,9 @@ class OrigMembership:
         A matrix that has genes/conditions as their row, in the order of row_names/col_names.
         Each row in the matrix has num_per_X slots, each cell contains a cluster number.
         """
-        self.row_membs = np.zeros((len(row_is_member_of), num_per_row), dtype='int32')
-        self.col_membs = np.zeros((len(col_is_member_of), num_per_col), dtype='int32')
-        
+        self.row_membs = np.zeros((len(row_names), num_per_row), dtype='int32')
+        self.col_membs = np.zeros((len(col_names), num_per_col), dtype='int32')
+
         for row, clusters in row_is_member_of.iteritems():
             tmp = row_is_member_of[row][:num_per_row]
             for i in range(len(tmp)):
