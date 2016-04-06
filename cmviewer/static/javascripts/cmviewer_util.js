@@ -204,10 +204,10 @@ function drawClusterMemberHistogram(selector, titleSize, titleText, valueTitleTe
     $(selector).highcharts(
         {
             chart: {type: 'column', width: 300, height: 200},
-            title: {text: '# clusters -> # rows', style: {'fontSize': titleSize}},
+            title: {text: titleText, style: {'fontSize': titleSize}},
             xAxis: {categories: xvalues, tickInterval: 5},
             yAxis: {title: { text: '# clusters' }},
-            series: [{name: '# rows', data: yvalues}]
+            series: [{name: valueTitleText, data: yvalues}]
         });   
 }
 
