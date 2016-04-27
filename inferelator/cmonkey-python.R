@@ -30,6 +30,16 @@ cmonkey.organism <- function(db.filename) {
   run.info
 }
 
+cmonkey.motif.pssms<- function(db.filename, cluster) {
+  sqlite <- dbDriver("SQLite")
+  con <- dbConnect(sqlite, dbname=db.filename)
+  maxiter <- dbGetQuery(con, 'select max(iteration) from motif_pssm_rows')[1,]
+  motif.ids <- dbGetQuery(con, 'select rowid from motif_infos where iteration=:iteration and cluster=:cluster',
+                          data.frame(iteration=maxiter, cluster=cluster))
+  motif.ids <- unlist(motif.ids)
+  lapply(motif.ids, function(i) { dbGetQuery(con, 'select a,c,g,t from motif_pssm_rows where motif_info_id=:m_id', data.frame(m_id=i)) })
+}
+
 read.cmonkey.sqlite <- function(db.filename, iteration=0) {
   sqlite <- dbDriver("SQLite")
   con <- dbConnect(sqlite, dbname=db.filename)
