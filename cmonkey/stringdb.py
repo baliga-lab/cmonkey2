@@ -61,17 +61,21 @@ def get_network_factory(organism_code, filename, weight, sep='\t',
         else:
             gene_lut = None
             cano_genes = None
-        
+
         num_ignored = 0
-        keep_node = {} #Big Speedup: Use to search thesaurus and cano_genes only once for each gene
-        idx = 1 #Used to display progress
+        keep_node = {}  # Big Speedup: Use to search thesaurus and cano_genes only once for each gene
+        idx = 1  # Used to display progress
+        total_nodes = 0
+        nodes_not_in_thesaurus = 0
+        nodes_not_in_cano_genes = 0
+
         for line in dfile.lines:
             #This can be slow, display progress every 5%
             frac = idx % (len(dfile.lines)/20)
             idx += 1
             if frac == 0:
                 logging.info("Processing network %d%%", round(100*float(idx)/len(dfile.lines)))
-            
+
             node1 = patches.patch_string_gene(organism_code, line[0])
             node2 = patches.patch_string_gene(organism_code, line[1])
             for node in (node1, node2):
@@ -82,20 +86,20 @@ def get_network_factory(organism_code, filename, weight, sep='\t',
                         keep_node[node] = node in thesaurus
                     if not keep_node[node]:
                         if not node in thesaurus:
-                            print "'%s' is not in thesaurus" % node
+                            nodes_not_in_thesaurus += 1
                         elif not thesaurus[node] in cano_genes:
-                            print "'%s' is not in cano_genes" % thesaurus[node]
-                    
-                    #Add this node to the lut if it is not already there.
+                            nodes_not_in_cano_genes += 1
+
+                    # Add this node to the lut if it is not already there.
                     if (not gene_lut is None) and (not node in gene_lut):
                         gene_lut[node] = node
                         if node in thesaurus:
                             gene_lut[thesaurus[node]] = node
-                        
+                total_nodes += 1
+
             score = float(line[2])
             max_score = max(score, max_score)
 
-            #if can_add_edge(node1, node2, thesaurus, cano_genes):
             if keep_node[node1] and keep_node[node2]:
                 #2/18/15 SD.  Translate nodes into names in ratio rows using gene_lut
                 #   This will let the ratios matrix define how the genes are named
@@ -108,15 +112,18 @@ def get_network_factory(organism_code, filename, weight, sep='\t',
             else:
                 num_ignored += 1
 
+        # Warnings
+        if nodes_not_in_thesaurus > 0:
+            logging.warn('%d (out of %d) nodes not found in synonyms', nodes_not_in_thesaurus, total_nodes)
+        if nodes_not_in_cano_genes > 0:
+            logging.warn('%d (out of %d) nodes not found in canonical gene names', nodes_not_in_cano_genes, total_nodes)
+
         if not normalized:
             result = normalize_edges_to_max_score(result, max_score)
 
         logging.info("stringdb.read_edges2(), %d edges read, %d edges ignored",
                      len(result), num_ignored)
-        
-        #Write file to be used later?
-        #outfile = util.make_delimited_file_from_lines(lines, sep, has_header, comment, quote)
-        
+
         return result
 
     def make_network(organism, ratios=None, check_size=False):
