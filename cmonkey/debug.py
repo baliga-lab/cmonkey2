@@ -32,9 +32,14 @@ def meme_to_str(outdir, iteration, cluster):
     return ''.join(lines)
 
 
-def write_iteration(conn, outfile, iteration, num_clusters, outdir):
+def write_iteration(conn, outfile, iteration, num_clusters, outdir, as_binary=True):
     """writes the iteration into a debug file"""
-    outfile.write('"cols"\t"dens_string"\t"k"\t"meanp_meme"\t"meme_out"\t"resid"\t"rows"\n')
+    HEADER = '"cols"\t"dens_string"\t"k"\t"meanp_meme"\t"meme_out"\t"resid"\t"rows"\n'
+    if as_binary:
+        outfile.write(HEADER.encode('utf-8'))
+    else:
+        outfile.write(HEADER)
+
     for cluster in range(1, num_clusters + 1):
         cursor = conn.cursor()
         cursor.execute('select name from column_members m join column_names c on m.order_num = c.order_num where m.cluster = ? and iteration = ?', [cluster, iteration])
@@ -71,5 +76,9 @@ def write_iteration(conn, outfile, iteration, num_clusters, outdir):
         rownames = [row[0] for row in cursor.fetchall()]
         rows_out = ",".join(rownames)
         cursor.close()
-        
-        outfile.write('"%s"\t%f\t%d\t%f\t"%s"\t%f\t"%s"\n' % (cols_out, string_dens, cluster, meme_pval, meme_out, resid, rows_out))
+
+        info_line = '"%s"\t%f\t%d\t%f\t"%s"\t%f\t"%s"\n' % (cols_out, string_dens, cluster, meme_pval, meme_out, resid, rows_out)
+        if as_binary:
+            outfile.write(info_line.encode('utf-8'))
+        else:
+            outfile.write(info_line)

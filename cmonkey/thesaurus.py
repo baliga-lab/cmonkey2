@@ -5,7 +5,13 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import re
-import util
+import cmonkey.util as util
+
+# Python2/Python3 compatibility
+try:
+    from sys import intern
+except ImportError:
+    pass
 
 
 def create_from_delimited_file1(dfile):

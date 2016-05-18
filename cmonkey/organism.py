@@ -6,14 +6,14 @@ from Microbes Online and RSAT
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import string
 import logging
-import thesaurus
-import util
-import seqtools as st
-import microbes_online as mo
 import collections
-import patches
+
+import cmonkey.thesaurus as thesaurus
+import cmonkey.util as util
+import cmonkey.seqtools as st
+import cmonkey.microbes_online as mo
+import cmonkey.patches as patches
 
 # requires biopython
 from Bio import SeqIO
@@ -172,8 +172,8 @@ class RSATOrganism(OrganismBase):
             # or '<', so make sure it is stripped away
             return st.Feature(line[0], line[1], line[2],
                               st.Location(contig,
-                                          int(string.lstrip(line[4], '<>')),
-                                          int(string.lstrip(line[5], '<>')),
+                                          int(line[4].lstrip('<>')),
+                                          int(line[5].lstrip('<>')),
                                           is_reverse))
 
         features = {}
@@ -198,7 +198,7 @@ class RSATOrganism(OrganismBase):
         contig_seqs = {contig: self.__rsat_info.get_contig_sequence(contig)
                        for contig in unique_contigs()}
 
-        for key, feature in features.iteritems():
+        for key, feature in features.items():
             location = feature.location
             sequences[key] = extractor(
                 contig_seqs[location.contig], location, distance)

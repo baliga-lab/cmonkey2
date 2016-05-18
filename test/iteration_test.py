@@ -3,20 +3,20 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import meme
-import motif
+import cmonkey.meme as meme
+import cmonkey.motif as motif
 import unittest
 import xmlrunner
-import util
-import rsat
-import organism as org
-import microbes_online
-import stringdb
-import datamatrix as dm
-import membership as memb
-import microarray
-import scoring
-import network as nw
+import cmonkey.util as util
+import cmonkey.rsat as rsat
+import cmonkey.organism as org
+import cmonkey.microbes_online as microbes_online
+import cmonkey.stringdb as stringdb
+import cmonkey.datamatrix as dm
+import cmonkey.membership as memb
+import cmonkey.microarray as microarray
+import cmonkey.scoring as scoring
+import cmonkey.network as nw
 import logging
 import sys
 import testutil
@@ -231,12 +231,11 @@ def check_matrix_values(matrix1, matrix2, eps=EPS):
     for row in range(matrix1.num_rows):
         for col in range(matrix1.num_columns):
             diff = abs(matrix1.values[row][col] - matrix2.values[row][col])
-            #print diff
             if diff > eps:
-                print "Value mismatch at (%s, cluster %d): %f != %f (diff = %f)" % (
+                print("Value mismatch at (%s, cluster %d): %f != %f (diff = %f)" % (
                     matrix1.row_names[row], col + 1,
                     matrix1.values[row][col],
-                    matrix2.values[row][col], diff)
+                    matrix2.values[row][col], diff))
                 result = False
     return result
 

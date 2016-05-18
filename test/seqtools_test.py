@@ -6,7 +6,7 @@ more information and licensing details.
 import unittest
 import os
 import re
-import seqtools as st
+import cmonkey.seqtools as st
 
 
 class LocationTest(unittest.TestCase):  # pylint: disable-msg=R0904

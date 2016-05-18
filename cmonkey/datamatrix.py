@@ -7,12 +7,22 @@ more information and licensing details.
 import scipy
 import numpy as np
 import operator
-import util
+import cmonkey.util as util
 import logging
 import gzip
 import os
 import random
 
+# Python2/Python3 compatibility
+try:
+    from sys import intern
+except ImportError:
+    pass
+
+try:
+    xrange
+except NameError:
+    xrange = range
 
 class DataMatrix:
     """
@@ -40,7 +50,7 @@ class DataMatrix:
                                      % (row_index, ncols, len(inrow)))
 
         if row_names is None:
-            self.row_names = ["Row " + str(i) for i in range(nrows)]
+            self.row_names = ["Row " + str(i) for i in xrange(nrows)]
         else:
             if len(row_names) != nrows:
                 raise ValueError("number of row names should be %d" % nrows)
@@ -223,7 +233,7 @@ class DataMatrix:
         masked = self.values[np.isfinite(self.values)]
         minval = np.min(masked[masked >= min_value])
         maxval = np.max(masked)
-        
+
         self.values[np.isinf(self.values)] = maxval
         self.values[np.isnan(self.values)] = maxval #Should this actually be 0 or median?
 
@@ -250,11 +260,18 @@ class DataMatrix:
         """writes this matrix to tab-separated file"""
         def write_data(outfile):
             titlerow = '\t'.join(self.column_names)
-            outfile.write(titlerow + '\n')
+            if compressed:
+                outfile.write((titlerow + '\n').encode('utf-8'))
+            else:
+                outfile.write(titlerow + '\n')
             for row_index, rowname in enumerate(self.row_names):
                 row = [rowname]
                 row.extend([('%.17f' % value) for value in self.values[row_index]])
-                outfile.write('\t'.join(row) + '\n')
+                if compressed:
+                    outfile.write(('\t'.join(row) + '\n').encode('utf-8'))
+                else:
+                    outfile.write('\t'.join(row) + '\n')
+
         if compressed:
             if not path.endswith('.gz'):
                 path = path + '.gz'
@@ -297,7 +314,7 @@ class DataMatrixFactory:
             colnames = header[1:len(header)]
 
         # optimization: internalize row and column names
-        colnames = map(intern, colnames)
+        colnames = list(map(intern, colnames))
         if case_sensitive:
             rownames = [intern(line[0]) for line in lines]
         else:
@@ -359,8 +376,8 @@ def nochange_filter(matrix):
 
     rows_to_keep = nochange_filter_rows(matrix)
     cols_to_keep = nochange_filter_columns(matrix)
-    colnames = map(lambda col: matrix.column_names[col], cols_to_keep)
-    rownames = map(lambda row: matrix.row_names[row], rows_to_keep)
+    colnames = list(map(lambda col: matrix.column_names[col], cols_to_keep))
+    rownames = list(map(lambda row: matrix.row_names[row], rows_to_keep))
     numrows = len(rows_to_keep)
     numcols = len(cols_to_keep)
 
@@ -473,7 +490,7 @@ def qm_result_matrices(matrices, tmp_mean, multiprocessing=True):
     else:
         # non-parallelized
         result = []
-        for i in range(len(matrices)):
+        for i in xrange(len(matrices)):
             matrix = matrices[i]
             values = matrix.values
             num_rows, num_cols = values.shape
@@ -496,7 +513,7 @@ def split_matrix(matrix, outdir, n, kmin, kmax):
     if not os.path.exists(outdir):
         os.mkdir(outdir)
 
-    for i in range(n):
+    for i in xrange(n):
         k = random.randint(kmin, kmax)
         column_names = random.sample(matrix.column_names, k)
         m = matrix.submatrix_by_name(column_names=column_names)

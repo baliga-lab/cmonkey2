@@ -4,7 +4,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-import util
+import cmonkey.util as util
 import operator
 import numpy as np
 
@@ -222,7 +222,7 @@ class UtilsTest(unittest.TestCase):  # pylint: disable-msg=R0904
         kvalues = [3.4268700450682301, 3.3655160468930152, -8.0654569044842539,
                    2.0762815314005487, 4.8537715329554203, 1.2374476248622075]
         cluster_values = [-3.5923001345962162, 0.77069901513184735,
-                           -4.942909785931378, -3.1580950032999096] 
+                           -4.942909785931378, -3.1580950032999096]
         bandwidth = 2.69474878768
         dmin = -13.8848342423
         dmax = 12.6744452247

@@ -6,7 +6,7 @@ more information and licensing details.
 import unittest
 import os
 import shutil
-import microbes_online as mo
+import cmonkey.microbes_online as mo
 
 
 class MicrobesOnlineTest(unittest.TestCase):  # pylint: disable-msg=R0904

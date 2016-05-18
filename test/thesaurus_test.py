@@ -4,7 +4,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-import thesaurus
+import cmonkey.thesaurus as thesaurus
 
 
 class MockDelimitedFile1:

@@ -5,11 +5,16 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import logging
-import util
-import StringIO
 import re
-import patches
 import os
+
+import cmonkey.util as util
+import cmonkey.patches as patches
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 class RsatFiles:
     """This class implements the same service functions as RsatDatabase, but
@@ -47,7 +52,7 @@ class RsatFiles:
             path = os.path.join(self.dirname, self.feature_name + '_names.tab')
         else:
             path = os.path.join(self.dirname, organism + '_' + self.feature_name + '_names')
-        with open(path) as infile:
+        with open(path, 'r') as infile:
             return infile.read()
 
     def get_contig_sequence(self, organism, contig, original=True):
@@ -56,7 +61,7 @@ class RsatFiles:
         else:
             path = os.path.join(self.dirname, organism + '_' + contig)
         with open(path) as infile:
-            seqstr = infile.read().upper()
+            seqstr = infile.read().upper().decode('utf-8')
             return join_contig_sequence(seqstr)
 
 
@@ -69,7 +74,7 @@ class RsatDatabase:
     #FEATURE_NAMES_PATH = 'genome/feature_names.tab'
 
     def __init__(self, base_url, cache_dir, kegg_species, ncbi_code, feature_name='feature'):
-    
+
         """create an RsatDatabase instance based on a mirror URL"""
         self.base_url = base_url
         self.cache_dir = cache_dir.rstrip('/')
@@ -78,14 +83,14 @@ class RsatDatabase:
         self.feature_name = feature_name
         self.feature_path = 'genome/' + feature_name + '.tab'
         self.feature_names_path = 'genome/' + feature_name + '_names.tab'
-        
+
     def __get_ncbi_code(self, rsat_organism):
         """retrieve NCBI code from organism.tab file"""
         try:
             cache_file = "/".join([self.cache_dir, '%s.tab' % rsat_organism])
             url = "/".join([self.base_url, RsatDatabase.DIR_PATH, rsat_organism,
                             RsatDatabase.ORGANISM_PATH])
-            text = util.read_url_cached(url, cache_file)
+            text = util.read_url_cached(url, cache_file).decode('utf-8')
             spec = [line for line in text.split('\n') if not line.startswith('--')][0]
             return spec.strip().split('\t')[0]
         except:
@@ -95,9 +100,8 @@ class RsatDatabase:
         """returns the HTML page for the directory listing"""
         logging.debug('RSAT - get_directory()')
         cache_file = "/".join([self.cache_dir, 'rsat_dir.html'])
-        text = util.read_url_cached("/".join([self.base_url,
-                                              RsatDatabase.DIR_PATH]),
-                                    cache_file)
+        text = util.read_url_cached("/".join([self.base_url, RsatDatabase.DIR_PATH]),
+                                    cache_file).decode('utf-8')
         suggestion1 = util.best_matching_links(self.kegg_species, text)[0].rstrip('/')
         suggestion2 = util.best_matching_links(kegg_organism, text)[0].rstrip('/')
         if suggestion1 != suggestion2:
@@ -128,7 +132,7 @@ class RsatDatabase:
         #              RsatDatabase.ORGANISM_NAMES_PATH]), cache_file)
         text = util.read_url_cached(
             "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
-                      RsatDatabase.ORGANISM_PATH]), cache_file)
+                      RsatDatabase.ORGANISM_PATH]), cache_file).decode('utf-8')
         organism_names_dfile = util.dfile_from_text(text, comment='--')
         return patches.patch_ncbi_taxonomy(organism_names_dfile.lines[0][0])
 
@@ -140,7 +144,7 @@ class RsatDatabase:
         """
         logging.debug('RSAT - get_features(%s)', organism)
         cache_file = "/".join([self.cache_dir, organism + '_' + self.feature_name])
-        uCache = util.read_url_cached("/".join([self.base_url, RsatDatabase.DIR_PATH, organism, self.feature_path]), cache_file)
+        uCache = util.read_url_cached("/".join([self.base_url, RsatDatabase.DIR_PATH, organism, self.feature_path]), cache_file).decode('utf-8')
 
         #Make sure that the fields are in the correct order
         #Later parts assume that the features file will have the following columns
@@ -159,8 +163,8 @@ class RsatDatabase:
                 line = line + '\n'
             except:
                 continue
-        
-            lineParts = line.split()        
+
+            lineParts = line.split()
             if lineParts[0] == '--':
                 if lineParts[1] == 'field':
                         idxs[lineParts[3]] = lineParts[2]
@@ -173,7 +177,7 @@ class RsatDatabase:
                 lineParts = line.strip().split('\t')
                 if len(lineParts) == 1:
                     lineParts = line.split()
-            
+
                 if (len(targIdx) == 0):
                         #Create the targIdx
                         for curField in fieldOrder:
@@ -197,7 +201,7 @@ class RsatDatabase:
         cache_file = "/".join([self.cache_dir, organism + '_' + self.feature_name + '_names'])
         rsat_url = "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
                              self.feature_names_path])
-        return util.read_url_cached(rsat_url, cache_file)
+        return util.read_url_cached(rsat_url, cache_file).decode('utf-8')
 
     def get_contig_sequence(self, organism, contig):
         """returns the specified contig sequence"""
@@ -206,12 +210,12 @@ class RsatDatabase:
         cache_file = "/".join([self.cache_dir, organism + '_' + contig])
         url = "/".join([self.base_url, RsatDatabase.DIR_PATH, organism,
                         'genome', contig + '.raw'])
-    
+
         #10-07-14 Crashed here with URL timeout.  Maybe RSAT limits downloads?
         #  On 10-08-14 I could download the other files with pdb.set_trace()
         #  Maybe all I will need is a pause between files?
         try:
-            seqstr = util.read_url_cached(url, cache_file).upper()
+            seqstr = util.read_url_cached(url, cache_file).upper().decode('utf-8')
         except:
             logging.error("Error downloading file: %s", url)
             logging.error("RSAT occasionally has connectivity problems.")
@@ -223,7 +227,7 @@ class RsatDatabase:
 def join_contig_sequence(seqstr):
     """we take the safer route and assume that the input could
     be separated out into lines"""
-    buf = StringIO.StringIO(seqstr)
+    buf = StringIO(seqstr)
     result = ''
     for line in buf:
         result += line.strip()

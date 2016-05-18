@@ -8,19 +8,31 @@ more information and licensing details.
 """
 import logging
 import numpy as np
-import scoring
-import datamatrix as dm
-import weeder
-import meme
 import tempfile
-import seqtools as st
-import util
 import os
-import cPickle
 import collections
 import sys
 import subprocess
 import sqlite3
+
+import cmonkey.scoring as scoring
+import cmonkey.datamatrix as dm
+import cmonkey.weeder as weeder
+import cmonkey.meme as meme
+import cmonkey.seqtools as st
+import cmonkey.util as util
+
+
+# Python2/Python3 compatibility
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
+try:
+    xrange
+except NameError:
+    xrange = range
 
 
 ComputeScoreParams = collections.namedtuple('ComputeScoreParams',
@@ -94,8 +106,8 @@ def pvalues2matrix(all_pvalues, num_clusters, gene_names, reverse_map):
     matrix = dm.DataMatrix(len(gene_names), num_clusters,
                            gene_names)
     mvalues = matrix.values
-    for cluster, feature_pvals in all_pvalues.iteritems():
-        for feature_id, pval in feature_pvals.iteritems():
+    for cluster, feature_pvals in all_pvalues.items():
+        for feature_id, pval in feature_pvals.items():
             ridx = row_map[reverse_map[feature_id]]
             mvalues[ridx, cluster - 1] = pval
 
@@ -145,7 +157,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             raise Exception("unsupported MEME version: '%s'" % meme_version)
         self.__sequence_filters = [unique_filter, get_remove_low_complexity_filter(self.meme_suite),
                                    get_remove_atgs_filter(search_distance)]
-        
+
     def __init__(self, id, organism, membership, ratios, seqtype, config_params=None):
         """creates a ScoringFunction"""
         scoring.ScoringFunctionBase.__init__(self, id, organism, membership,
@@ -216,8 +228,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         since it nests Motif and MEME runs"""
         result = self.__compute(iteration_result, True, ref_matrix)
         # and pickle the last result for diagnostics
-        with open(self.pickle_path(), 'w') as outfile:
-            cPickle.dump(result, outfile)
+        with open(self.pickle_path(), 'wb') as outfile:
+            pickle.dump(result, outfile)
         return result
 
     def last_cached(self):
@@ -239,8 +251,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
             self.all_pvalues = self.compute_pvalues(self.__last_iteration_result,
                                                     num_motifs, force)
             with open(os.path.join(self.config_params['output_dir'],
-                                   'motif_pvalues_last.pkl'), 'w') as outfile:
-                cPickle.dump(self.__last_iteration_result, outfile)            
+                                   'motif_pvalues_last.pkl'), 'wb') as outfile:
+                pickle.dump(self.__last_iteration_result, outfile)
 
         if self.all_pvalues is not None and (force or self.run_in_iteration(iteration)):  # mot.iter in R
             logging.debug("UPDATING MOTIF SCORES in iteration %d with scaling: %f",
@@ -294,10 +306,12 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         ORGANISM = self.organism
         MEMBERSHIP = self.membership
 
-        with util.get_mp_pool(self.config_params) as pool:
-            cluster_seqs_params = [(cluster, self.seqtype)
-                                   for cluster in xrange(1, self.num_clusters() + 1)]
-            seqs_list = pool.map(cluster_seqs, cluster_seqs_params)
+        cluster_seqs_params = [(cluster, self.seqtype) for cluster in xrange(1, self.num_clusters() + 1)]
+        if use_multiprocessing:
+            with util.get_mp_pool(self.config_params) as pool:
+                seqs_list = pool.map(cluster_seqs, cluster_seqs_params)
+        else:
+            seqs_list = [cluster_seqs(p) for p in cluster_seqs_params]
 
         SEQUENCE_FILTERS = None
         ORGANISM = None
@@ -371,7 +385,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                     if run_result:
                         self.__last_motif_infos[cluster] = run_result.motif_infos
                     iteration_result[cluster]['motif-info'] = meme_json(run_result)
-                    iteration_result[cluster]['pvalues'] = pvalues                    
+                    iteration_result[cluster]['pvalues'] = pvalues
         else:
             for cluster in xrange(1, self.num_clusters() + 1):
                 if cluster in params:
@@ -517,7 +531,7 @@ class WeederRunner:
                                          delete=False) as outfile:
             filename = outfile.name
             logging.debug("Run Weeder on FASTA file: '%s'", filename)
-            st.write_sequences_to_fasta_file(outfile, params.seqs.iteritems())
+            st.write_sequences_to_fasta_file(outfile, params.seqs.items())
 
         try:
             dbfile = None
@@ -529,7 +543,7 @@ class WeederRunner:
 
             dbfile = self.meme_suite.make_sequence_file(
                 [(feature_id, locseq[1])
-                 for feature_id, locseq in params.used_seqs.iteritems()])
+                 for feature_id, locseq in params.used_seqs.items()])
             logging.debug("# PSSMS created: %d %s", len(pssms), str([i.consensus_motif() for i in pssms]))
             logging.debug("run MAST on '%s', dbfile: '%s'", meme_outfile, dbfile)
 
@@ -549,7 +563,7 @@ class WeederRunner:
             pe_values, annotations = self.meme_suite.read_mast_output(mast_out,
                                                                       params.seqs.keys())
             return meme.MemeRunResult(pe_values, annotations, motif_infos)
-        except Exception, e:
+        except Exception as e:
             logging.exception(e)
             return meme.MemeRunResult([], {}, [])
         finally:

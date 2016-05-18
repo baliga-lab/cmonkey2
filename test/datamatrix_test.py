@@ -5,9 +5,9 @@ more information and licensing details.
 """
 import unittest
 import copy
-import datamatrix as dm
+import cmonkey.datamatrix as dm
 import numpy as np
-import util
+import cmonkey.util as util
 
 
 class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904

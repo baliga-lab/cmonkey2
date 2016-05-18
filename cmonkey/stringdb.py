@@ -6,10 +6,16 @@ more information and licensing details.
 import logging
 import re
 import math
-import util
-import network
-import patches
 
+import cmonkey.util as util
+import cmonkey.network as network
+import cmonkey.patches as patches
+
+# Python2/Python3 compatibility
+try:
+    from sys import intern
+except ImportError:
+    pass
 
 STRING_FILE2 = 'string_links_64091.tab'
 PROTEIN_PREFIX = re.compile('^string:\d+[.]')

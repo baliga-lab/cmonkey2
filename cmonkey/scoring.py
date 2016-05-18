@@ -8,15 +8,25 @@ LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 
 import logging
 import os
-import datamatrix as dm
 from datetime import date
-import util
-import membership as memb
+import cmonkey.datamatrix as dm
+import cmonkey.util as util
+import cmonkey.membership as memb
+import cmonkey.BSCM as BSCM
 import numpy as np
-import cPickle
 import gc
 import sqlite3
-import BSCM
+
+# Python2/Python3 compatibility
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
+try:
+    xrange
+except NameError:
+    xrange = range
 
 
 # Official keys to access values in the configuration map
@@ -92,8 +102,8 @@ class ScoringFunctionBase:
         if self.cache_result and ('cached_result' in dir(self)):
             return self.cached_result
         elif os.path.exists(self.pickle_path()):
-            with open(self.pickle_path()) as infile:
-                return cPickle.load(infile)
+            with open(self.pickle_path(), 'rb') as infile:
+                return pickle.load(infile)
         else:
             return None
 
@@ -129,14 +139,14 @@ class ScoringFunctionBase:
             else:
                 # pickle the result for future use
                 logging.debug("pickle result to %s", self.pickle_path())
-                with open(self.pickle_path(), 'w') as outfile:
-                    cPickle.dump(computed_result, outfile)
+                with open(self.pickle_path(), 'wb') as outfile:
+                    pickle.dump(computed_result, outfile)
 
         elif self.cache_result and ('cached_result' in dir(self)):
             computed_result = self.cached_result
         elif os.path.exists(self.pickle_path()):
-            with open(self.pickle_path()) as infile:
-                computed_result = cPickle.load(infile)
+            with open(self.pickle_path(), 'rb') as infile:
+                computed_result = pickle.load(infile)
         else:
             computed_result = None
 
@@ -151,8 +161,8 @@ class ScoringFunctionBase:
         iteration = iteration_result['iteration']
         computed_result = self.do_compute(iteration_result,
                                           reference_matrix)
-        with open(self.pickle_path(), 'w') as outfile:
-            cPickle.dump(computed_result, outfile)
+        with open(self.pickle_path(), 'wb') as outfile:
+            pickle.dump(computed_result, outfile)
 
         self.run_log.log(iteration,
                          self.run_in_iteration(iteration),
@@ -208,7 +218,7 @@ class ColumnScoringFunction(ScoringFunctionBase):
         """create scoring function instance"""
         ScoringFunctionBase.__init__(self, "Columns", organism, membership,
                                      ratios, config_params=config_params)
-                                     
+
         #BSCM.  Danziger et al. 2015
         self.BSCM_obj = None
         if config_params['use_BSCM']:
@@ -264,16 +274,16 @@ def compute_column_scores(membership, matrix, num_clusters,
         num_cores = 1
         if not config_params['num_cores'] is None:
             num_cores = config_params['num_cores']
-        
+
         for cluster in xrange(1, num_clusters + 1):
             if make_submatrix(cluster) is None:
                 cluster_column_scores.append(None)
             else:
-                cur_column_scores = BSCM_obj.getPvals(make_submatrix(cluster).row_names, num_cores=num_cores) 
+                cur_column_scores = BSCM_obj.getPvals(make_submatrix(cluster).row_names, num_cores=num_cores)
                 exp_names = cur_column_scores.keys()
                 exp_scores = np.array(cur_column_scores.values() )
                 cluster_column_scores.append((exp_names, exp_scores))
-            
+
     substitution = compute_substitution(cluster_column_scores)
 
     # Convert scores into a matrix that have the clusters as columns

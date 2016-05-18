@@ -18,12 +18,12 @@ Please report all bugs or other issues using the [issue tracker](https://github.
 
 cMonkey<sub>2</sub> has been tested and runs on all tested recent versions of Linux (including debian-based [Ubuntu, Mint, Debian] and RPM-based [CentOS, Fedora]) and recent versions of Mac OS X. Additional dependencies include:
 
-* Developed and tested with Python 2.7.x
+* Developed and tested with Python 2.7.x and Python 3.x
 * scipy >= 0.9.0
 * numpy >= 1.6.0
 * biopython >= 1.63
 * MySQLdb >= 1.2.3
-* BeautifulSoup >= 3.2.0
+* BeautifulSoup >= 4
 * R >= 2.14.1
 * rpy2 >= 2.2.1
 * MEME 4.3.0 or >= 4.8.1

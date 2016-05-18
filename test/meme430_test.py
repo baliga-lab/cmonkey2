@@ -3,12 +3,12 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import meme
-import motif
+import cmonkey.meme as meme
+import cmonkey.motif as motif
 import unittest
-import util
-import organism as org
-import datamatrix as dm
+import cmonkey.util as util
+import cmonkey.organism as org
+import cmonkey.datamatrix as dm
 import os, os.path
 
 import testutil

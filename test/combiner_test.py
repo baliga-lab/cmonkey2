@@ -4,8 +4,8 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-import datamatrix as dm
-import scoring as s
+import cmonkey.datamatrix as dm
+import cmonkey.scoring as s
 
 class CombinerTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for Pssm"""

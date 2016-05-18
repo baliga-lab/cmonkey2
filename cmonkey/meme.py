@@ -9,13 +9,19 @@ more information and licensing details.
 import subprocess
 import tempfile
 import logging
-import seqtools as st
 import os
-import util
 import shutil
 import re
 import collections
 import xml.etree.ElementTree as ET
+
+import cmonkey.seqtools as st
+import cmonkey.util as util
+
+try:
+    xrange
+except NameError:
+    xrange = range
 
 
 MemeRunResult = collections.namedtuple('MemeRunResult',
@@ -56,9 +62,10 @@ class MemeSuite:
         def process_with_dust(seqs):
             """data conversion from and to dust tool"""
             dust_tmp_file = None
-            with tempfile.NamedTemporaryFile(prefix='dust',
+            with tempfile.NamedTemporaryFile(mode='w+',
+                                             prefix='dust',
                                              delete=False) as dust_input:
-                for feature_id, seq in seqs.iteritems():
+                for feature_id, seq in seqs.items():
                     dust_input.write(">%s\n" % feature_id)
                     if isinstance(seq, str):
                         dust_input.write("%s\n" % seq)
@@ -72,7 +79,7 @@ class MemeSuite:
             return {feature_id: seq for feature_id, seq in seqpairs}
 
         seqs_for_dust = {}
-        for feature_id, seq in seqs.iteritems():
+        for feature_id, seq in seqs.items():
             if isinstance(seq, str):
                 if len(seq) > self.max_width:
                     seqs_for_dust[feature_id] = seq
@@ -132,7 +139,7 @@ class MemeSuite:
                 with open(meme_outfile, 'w') as outfile:
                     outfile.write(output)
             else:
-                with tempfile.NamedTemporaryFile(prefix='meme.out.',
+                with tempfile.NamedTemporaryFile(mode='w+', prefix='meme.out.',
                                                  delete=False) as outfile:
                     meme_outfile = outfile.name
                     outfile.write(output)
@@ -140,9 +147,9 @@ class MemeSuite:
             #logging.info('wrote meme output to %s', meme_outfile)
             dbfile = self.make_sequence_file(
                 [(feature_id, locseq[1])
-                 for feature_id, locseq in all_seqs.iteritems()])
+                 for feature_id, locseq in all_seqs.items()])
             #logging.info('created mast database in %s', dbfile)
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             logging.error("MEME output: %s", e.output)
             return MemeRunResult([], [], [])
 
@@ -159,12 +166,12 @@ class MemeSuite:
             pe_values, annotations = self.read_mast_output(mast_output,
                                                            input_seqs.keys())
             return MemeRunResult(pe_values, annotations, motif_infos)
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             if e.output.startswith('No input motifs pass the E-value'):
                 logging.warn("no input motifs pass the e-value, ignoring result")
                 return MemeRunResult([], [], [])
             else:
-                print "Unknown error in MAST:\n ", e.__dict__
+                print("Unknown error in MAST:\n ", e.__dict__)
                 logging.error("MAST error: %s", e.output)
                 return MemeRunResult([], [], [])
         finally:
@@ -205,7 +212,7 @@ class MemeSuite:
         """Creates a FASTA file from a list of(feature_id, sequence)
         pairs"""
         filename = None
-        with tempfile.NamedTemporaryFile(prefix='memeseqs',
+        with tempfile.NamedTemporaryFile(mode='w+', prefix='memeseqs',
                                          delete=False) as outfile:
             filename = outfile.name
             st.write_sequences_to_fasta_file(outfile, seqs)
@@ -216,7 +223,7 @@ class MemeSuite:
         returns a list of sequences. It is assumed that dust has
         a very simple interface: FASTA in, output on stdout"""
         output = subprocess.check_output(['dust', fasta_file_path])
-        return output
+        return output.decode('utf-8')
 
     # pylint: disable-msg=W0613,R0201
     def meme(self, infile_path, bgfile_path, num_motifs,
@@ -264,7 +271,7 @@ class MemeSuite430(MemeSuite):
             command.extend(['-psp', pspfile_path])
 
         #logging.info("running: %s", " ".join(command))
-        output = subprocess.check_output(command)
+        output = subprocess.check_output(command).decode('utf-8')
         return (read_meme_output(output, num_motifs), output)
 
     def mast(self, meme_outfile_path, database_file_path,
@@ -278,7 +285,7 @@ class MemeSuite430(MemeSuite):
                    '-seqp', '-remcorr']
         #logging.info("running: %s", " ".join(command))
         output = subprocess.check_output(command, stderr=subprocess.STDOUT)
-        return output
+        return output.decode('utf-8')
 
     def read_mast_output(self, mast_output, genes):
         """old-style MAST output"""
@@ -326,7 +333,7 @@ class MemeSuite481(MemeSuite):
 
         #logging.info("running: %s", " ".join(command))
         try:
-            output = subprocess.check_output(command)
+            output = subprocess.check_output(command).decode('utf-8')
             return (read_meme_output(output, num_motifs), output)
         except:
             logging.error("MEME execution error, command: %s", str(command))
@@ -351,14 +358,13 @@ class MemeSuite481(MemeSuite):
             with open(os.path.join(dirname, "mast.xml")) as infile:
                 result = infile.read()
             return result
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             logging.warn("there is an exception thrown in MAST: %s, (meme file: '%s', dbfile: '%s', bgfile: '%s')",
                          e.output, meme_outfile_path, database_file_path, bgfile_path)
             return None  # return nothing if there was an error
         finally:
             logging.debug("removing %s...", dirname)
             shutil.rmtree(dirname)
-            ##print "done."
 
     def read_mast_output(self, mast_output, genes):
         """XML MAST output"""
@@ -611,7 +617,7 @@ def read_mast_output_oldstyle(output_text, genes):
                     not re.match('(\d+).*', lines[index + 10]))
         except:
             if seqline is not None:
-                print "ERROR IN SEQLINE: [%s]" % seqline
+                print("ERROR IN SEQLINE: [%s]" % seqline)
 
     def read_motif_numbers(motifnum_line):
         """reads the motif numbers contained in a motif number line"""
@@ -736,14 +742,14 @@ def make_background_file(bgseqs, use_revcomp, bgorder):
 
     filename = None
     bgmodel = st.markov_background(make_seqs(bgseqs), bgorder)
-    with tempfile.NamedTemporaryFile(prefix='memebg',
+    with tempfile.NamedTemporaryFile(mode='w+', prefix='memebg',
                                      delete=False) as outfile:
         filename = outfile.name
         #logging.info("make background file '%s'", filename)
         outfile.write("# %s order Markov background model\n" %
                       util.order2string(len(bgmodel) - 1))
         for order_row in bgmodel:
-            for seq, frequency in order_row.iteritems():
+            for seq, frequency in order_row.items():
                 outfile.write('%s %10s\n' %
                               (seq, str(round(frequency, 8))))
     return (filename, bgmodel)
@@ -775,7 +781,7 @@ def check_meme_version():
 
     try:
         command = ['meme', '-nostatus', '-text', test_fasta]
-        output = subprocess.check_output(command).split('\n')
+        output = subprocess.check_output(command).decode('utf-8').split('\n')
         for line in output:
             if line.startswith('MEME version'):
                 return line.split(' ')[2]
@@ -879,7 +885,7 @@ def run_tomtom(conn, targetdir, version, q_thresh=Q_THRESHOLD, dist_method=DIST_
             lines = output.split('\n')[1:]
             for line in lines:
                 if len(line.strip()) > 0:
-                    row = line.strip().split('\t')            
+                    row = line.strip().split('\t')
                     motif1 = int(row[0])
                     motif2 = int(row[1])
                     if motif1 != motif2:

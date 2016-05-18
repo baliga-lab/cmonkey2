@@ -6,15 +6,27 @@ of cMonkey.
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import datamatrix as dm
 import math
-import util
 import random
 import logging
 import sys
 import numpy as np
 import rpy2.robjects as robjects
-import cPickle
+
+import cmonkey.datamatrix as dm
+import cmonkey.util as util
+
+# Python2/Python3 compatibility
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
+try:
+    xrange
+except NameError:
+    xrange = range
+
 import array
 from collections import defaultdict
 import sqlite3
@@ -72,12 +84,12 @@ class OrigMembership:
         self.row_membs = np.zeros((len(row_names), num_per_row), dtype='int32')
         self.col_membs = np.zeros((len(col_names), num_per_col), dtype='int32')
 
-        for row, clusters in row_is_member_of.iteritems():
+        for row, clusters in row_is_member_of.items():
             tmp = row_is_member_of[row][:num_per_row]
             for i in range(len(tmp)):
                 self.row_membs[self.rowidx[row]][i] = tmp[i]
 
-        for col, clusters in col_is_member_of.iteritems():
+        for col, clusters in col_is_member_of.items():
             tmp = col_is_member_of[col][:num_per_col]
             for i in range(len(tmp)):
                 self.col_membs[self.colidx[col]][i] = tmp[i]
@@ -255,8 +267,8 @@ class OrigMembership:
         # iteration
         iteration = iteration_result['iteration']
         if iteration == num_iterations:
-            with open(self.pickle_path(), 'w') as outfile:
-                cPickle.dump(row_scores, outfile)
+            with open(self.pickle_path(), 'wb') as outfile:
+                pickle.dump(row_scores, outfile)
 
         start = util.current_millis()
         rd_scores, cd_scores = get_density_scores(self, row_scores,
@@ -424,7 +436,7 @@ def postadjust(membership, rowscores, cutoff=0.33, limit=100):
         assign_list.append(assign)
 
     for assign in assign_list:
-        for row, cluster in assign.iteritems():
+        for row, cluster in assign.items():
             membership.add_cluster_to_row(row, cluster, force=True)
 
 
@@ -713,10 +725,8 @@ def make_db_row_seeder(outdb):
             row_clusters = defaultdict(list)
             for cluster, row_name in cursor.fetchall():
                 row_clusters[row_name].append(cluster)
-                #row_clusters[row_name.upper()].append(cluster)
-                
+
             # copy memberships
-            #for row_name in matrix.row_names:
             for row_name in row_clusters.keys():
                 #05-07-15 added '.upper' to fix a name mismatch in resume
                 if row_name in row_map.keys():
@@ -727,7 +737,7 @@ def make_db_row_seeder(outdb):
                     cur_map = row_map[row_name.lower()]
                 else:
                     continue
-                
+
                 for i, cluster in enumerate(row_clusters[row_name]):
                     #logging.info('row_name = %s, cur_map = %d, cluster = %d, i = %d', row_name, cur_map, cluster, i)
                     if i < len(row_membership[cur_map]):
@@ -735,7 +745,7 @@ def make_db_row_seeder(outdb):
                     else:   #A resumed job that has been finalized may have genes in additional clusters
                         logging.info('Making row_membership for gene %s bigger than %d', cur_map, len(row_membership[cur_map]))
                         row_membership[cur_map].append(cluster)
-                    
+
         finally:
             if cursor:
                 cursor.close()
@@ -767,15 +777,15 @@ def make_db_column_seeder(outdb):
                         result[cur_map][i] = cluster
                     else:   #A resumed job that has been finalized may have extra columns in clusters
                         if first_expand == True:
-                            logging.info('Making col_membership for condition %s bigger, probably due to resuming a finalized run', cur_map)                    
+                            logging.info('Making col_membership for condition %s bigger, probably due to resuming a finalized run', cur_map)
                             first_expand = False
-                        #Make sure that a cluster cannot have the same condition twice
+                        # Make sure that a cluster cannot have the same condition twice
                         if not cluster in result[cur_map]:
                             if 0 in result[cur_map]:
-                                result[cur_map][result[cur_map].index(0)]= cluster 
+                                result[cur_map][result[cur_map].index(0)] = cluster
                             else:
                                 result[cur_map].append(cluster)
-                       
+
             return result
         finally:
             if conn:

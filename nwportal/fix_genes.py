@@ -41,9 +41,7 @@ if __name__ == '__main__':
     synonyms = organism.thesaurus()
 
     mark_regulators(pgconn, species_id, regulators, synonyms)  # mark transcription factors
-    
-    if not os.path.exists(cache_filename):
-        util.CMonkeyURLopener().retrieve(url, cache_filename)
+    util.get_url_cached(url, cache_filename)
     with open(cache_filename) as cached_file:
         lines = [line.split('\t') for i, line in enumerate(cached_file) if i > 0]
 

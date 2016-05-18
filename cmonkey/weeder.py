@@ -7,9 +7,16 @@ more information and licensing details.
 import subprocess as sp
 import logging
 import re
-import pssm
 import os
-import weederlauncher
+import cmonkey.pssm as pssm
+import cmonkey.weederlauncher as weederlauncher
+
+# Python2/Python3 compatibility
+try:
+    xrange
+except NameError:
+    xrange = range
+
 
 LAUNCHER = 'weederlauncher'
 LLR_VALUE = 'NA'

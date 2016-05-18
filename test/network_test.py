@@ -4,7 +4,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-import network as nw
+import cmonkey.network as nw
 
 
 class NetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -69,4 +69,4 @@ class NetworkTest(unittest.TestCase):  # pylint: disable-msg=R0904
         res_edges = network.edges_with_node('n3')
         self.assertEquals(1, len(res_edges))
         self.assertTrue(edge2 in res_edges)
-        
+

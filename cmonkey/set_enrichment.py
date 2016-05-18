@@ -4,18 +4,23 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import util
 import math
 import os
 import json
 import logging
 import numpy as np
-
-import scoring
-import datamatrix as dm
 import multiprocessing as mp
-
 from collections import defaultdict
+
+import cmonkey.util as util
+import cmonkey.scoring as scoring
+import cmonkey.datamatrix as dm
+
+# Python2/Python3 compatibility
+try:
+    xrange
+except NameError:
+    xrange = range
 
 
 class DiscreteEnrichmentSet:
@@ -35,7 +40,7 @@ class DiscreteEnrichmentSet:
         return ("Enrichment set: Cutoff = discrete, # genes: %d # above cutoff: %d" %
                 (len(self.__genes), len(self.__genes)))
 
-    
+
 class CutoffEnrichmentSet:
     """Enrichment set representation constructed with a cutoff"""
     def __init__(self, cutoff, elems):
@@ -80,7 +85,7 @@ class SetType:
     def __repr__(self):
         """string representation"""
         result = "SetType['%s'] = {\n" % self.name
-        for key, value in self.sets.iteritems():
+        for key, value in self.sets.items():
             result += "%s -> %s\n" % (key, value)
         result += "}"
         return result
@@ -127,13 +132,13 @@ def process_sets(input_sets, thesaurus, input_genes):
     sets_thrown_out = 0
     input_genes = {thesaurus[gene] for gene in input_genes if gene in thesaurus}
 
-    for setname, genes in input_sets.iteritems():
+    for setname, genes in input_sets.items():
         filtered = map(lambda s: intern(str(s)), filter(lambda g: g in thesaurus, genes))
         canonic_genes = {thesaurus[gene] for gene in filtered}
         genes_thrown_out += len(genes) - len(canonic_genes)
 
         # check whether the genes are found in the ratios
-        # and ignore 
+        # and ignore
         canonic_genes = {gene for gene in canonic_genes if gene in input_genes}
         if len(canonic_genes) > 0:
             sets[setname] = DiscreteEnrichmentSet(canonic_genes)

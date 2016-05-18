@@ -134,4 +134,4 @@ if __name__ == '__main__':
         run_extra_analysis(args.input, args.orgcode, args.topresults,
                            args.reverse, args.multi, args.allseqs, args.ffdir)
     else:
-        print "Analysis type '%s' not supported" % args.analysis
+        print("Analysis type '%s' not supported" % args.analysis)

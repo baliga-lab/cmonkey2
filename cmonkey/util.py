@@ -10,7 +10,19 @@ from collections import defaultdict
 import math
 import numpy as np
 import scipy.stats
-import urllib
+
+# Python2 - Python3 compatibility
+try:
+    from urllib2 import urlopen
+except ImportError:
+    from urllib.request import urlopen
+
+try:
+    xrange
+except NameError:
+    xrange = range
+
+
 import os
 import rpy2.robjects as robjects
 import gzip
@@ -21,19 +33,7 @@ import multiprocessing as mp
 
 # RSAT organism finding is an optional feature, which we can skip in case that
 # the user imports all the features through own text files
-try:
-    import BeautifulSoup as bs
-except ImportError:
-    try:
-        print "BeautifulSoup 3 not available, trying BeautifulSoup 4..."
-        import bs4 as bs
-        print "Found."
-    except ImportError:
-        # do not use the logging system here !!!
-        # this would lead to the logging.basicConfig() call being
-        # ignored !!!
-        print "WARN: could not import BeautifulSoup, RSAT organism finding won't work"
-
+import bs4
 
 # this tuple structure holds data of a delimited file
 DelimitedFile = collections.namedtuple('DelimitedFile', ['lines', 'header'])
@@ -98,9 +98,9 @@ def read_dfile(filepath, sep='\t', has_header=False, comment=None,
     lines = None
     if filepath.endswith('.gz'):
         with gzip.open(filepath) as inputfile:
-            lines = inputfile.readlines()
+            lines = [line.decode('utf-8') for line in inputfile.readlines()]
     else:
-        with open(filepath) as inputfile:
+        with open(filepath, 'r') as inputfile:
             lines = inputfile.readlines()
     return make_delimited_file_from_lines(lines, sep, has_header,
                                           comment, quote)
@@ -142,7 +142,7 @@ RankedAnchor = collections.namedtuple('RankedAnchor', ['score', 'anchor'])
 def best_matching_links(search_string, html):
     """given a search string and an HTML text, extract the best matching
     href"""
-    soup = bs.BeautifulSoup(html)
+    soup = bs4.BeautifulSoup(html, "lxml")
     links = []
     for anchor in soup.findAll('a'):
         score = levenshtein_distance(search_string, anchor['href'])
@@ -233,27 +233,10 @@ class DocumentNotFound(Exception):
     pass
 
 
-class CMonkeyURLopener(urllib.FancyURLopener):
-    """An URL opener that can detect 404 errors"""
-
-    def http_error_default(self, url, fp, errcode, errmsg, headers):
-        # pylint: disable-msg=R0913
-        # pylint: disable-msg=C0103
-        """overriding the default error handling method to handle HTTP 404
-        errors"""
-        if (errcode == 404):
-            raise DocumentNotFound(url)
-
-        # call super class handler.
-        # note that urllib.FancyURLopener is not a new-style class
-        return urllib.FancyURLopener.http_error_default(
-            self, url, fp, errcode, errmsg, headers)
-
-
 def read_url(url):
     """convenience method to read a document from a URL using the
     CMonkeyURLopener"""
-    return CMonkeyURLopener().open(url).read()
+    return urlopen(url).read()
 
 
 def read_url_cached(url, cache_filename):
@@ -263,8 +246,9 @@ def read_url_cached(url, cache_filename):
         cache_dir = os.path.dirname(cache_filename)
         if not os.path.isdir(cache_dir):
             os.makedirs(cache_dir)
-        CMonkeyURLopener().retrieve(url, cache_filename)
-    with open(cache_filename) as cached_file:
+        with open(cache_filename, 'wb') as outfile:
+            outfile.write(read_url(url))
+    with open(cache_filename, 'rb') as cached_file:
         return cached_file.read()
 
 
@@ -272,7 +256,8 @@ def get_url_cached(url, cache_filename):
     """convenience method to read a document from a URL using the
     CMonkeyURLopener, cached version, the file is only downloaded"""
     if not os.path.exists(cache_filename):
-        CMonkeyURLopener().retrieve(url, cache_filename)
+        with open(cache_filename, 'wb') as outfile:
+            outfile.write(read_url(url))
 
 
 class ThesaurusBasedMap:  # pylint: disable-msg=R0903
@@ -450,7 +435,7 @@ def get_rvec_fun(rvecstr):
         else:
             return rvec[iteration - 1]
     return scale
-        
+
 
 def get_iter_fun(params, prefix, num_iterations):
     """returns an iteration function for the given prefix from the configuration parameters"""
@@ -498,7 +483,7 @@ def which_multiple(elems):
     result = defaultdict(int)
     for elem in elems:
         result[elem] += 1
-    return {elem for elem, count in result.iteritems() if count > 1}
+    return {elem for elem, count in result.items() if count > 1}
 
 
 class get_mp_pool:
@@ -510,7 +495,7 @@ class get_mp_pool:
             self.pool = mp.Pool(config_params['num_cores'])
         else:
             self.pool = mp.Pool()
-        
+
     def __enter__(self):
         return self.pool
 

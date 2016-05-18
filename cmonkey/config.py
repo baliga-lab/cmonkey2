@@ -5,7 +5,13 @@ more information and licensing details.
 import os
 import sys
 import argparse
-import ConfigParser
+
+# Python2/Python3 compatibility
+try:
+    from ConfigParser import ConfigParser
+except ImportError:
+    from configparser import ConfigParser
+
 import logging
 import tempfile
 import json
@@ -14,7 +20,7 @@ import random
 from cmonkey.schedule import make_schedule
 import cmonkey.util as util
 import cmonkey.datamatrix as dm
-import meme
+import cmonkey.meme as meme
 
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 
@@ -83,7 +89,7 @@ def set_config_general(config, params):
     tmp_dir = config.get('General', 'tmp_dir')
     if tmp_dir:
         tempfile.tempdir = tmp_dir
-    
+
     try:  #Only resumed or final runs should have a stored command line
         params['command_line'] = config.get('General', 'command_line')
     except:
@@ -183,7 +189,7 @@ def set_config_motifs(config, params):
 
 def __get_config_parser():
     # read default configuration parameters
-    config = ConfigParser.ConfigParser()
+    config = ConfigParser()
     if os.path.exists(USER_INI_PATH):
         config.read(USER_INI_PATH)
     elif os.path.exists(SYSTEM_INI_PATH):
@@ -274,7 +280,7 @@ def __num_clusters(config, args, ratios):
         return int(round(ratios.num_rows * args.clusters_per_row / 20.0))
     else:
         return num_clusters
-    
+
 
 def setup(arg_ext=None):
     """main configuration function - does everything. It reads and configures
@@ -285,7 +291,7 @@ def setup(arg_ext=None):
     argparser that can be processed outside of the core application."""
     config_parser = __get_config_parser()
     arg_parser = __get_arg_parser(arg_ext)
-    args_in = arg_parser.parse_args() 
+    args_in = arg_parser.parse_args()
     #Don't call it 'args'.  That's a debugger  keywords for the args in the function call
     args_in.command_line = ' '.join(sys.argv)
     if args_in.verbose:
@@ -310,7 +316,7 @@ def setup_resume(args_in, config_parser):
     config_parser.read(os.path.join(outdir, 'final.ini'))
     logging.info('done.')
     params = set_config(config_parser)
-    
+
     #Change this so the resume can optionally read in new data if --ratios specifid in command line
     use_cached_ratios = True
     if 'ratios' in args_in:
@@ -319,10 +325,10 @@ def setup_resume(args_in, config_parser):
     if use_cached_ratios == True:
         args_in.ratios = os.path.join(outdir, 'ratios.tsv.gz')
     params['ratios_file'] = args_in.ratios
-    
+
     ratios = read_ratios(params, args_in)
     params['new_data_file'] = test_data_change(params, args_in)
-    
+
     params['resume'] = args_in.resume #Should be true to get here
     params['out_database'] = os.path.join(params['output_dir'], params['dbfile_name'])
     params['num_clusters'] = config_parser.getint('General', 'num_clusters')
@@ -334,7 +340,7 @@ def setup_resume(args_in, config_parser):
             params[curParam] = args_in.__dict__[curParam]
 
     num_clusters = params['num_clusters']
-    
+
     # TODO: these need to be restored or it will crash, need to move stuff around
     # needs rework
     # A good way to fix this one might be to have a list of necessary parameters
@@ -405,14 +411,14 @@ def setup_default(args, config_parser):
         debug_options.add('keep_memeout')
     if debug_options == {'all'}:
         debug_options = ALL_DEBUG_OPTIONS
-    
+
     """The overrides dictionary holds all the values that will overwrite or add
     to the settings defined in the default and user-defined ini files
     """
     overrides = {'organism_code': args.organism,
                  'ratios_file': args.ratios,
                  'string_file': args.string,
-                 'logfile': args.logfile, 
+                 'logfile': args.logfile,
                  'rsat_organism': args.rsat_organism,
                  'num_clusters': __num_clusters(config_parser, args, ratios),
                  'memb.clusters_per_row': args.clusters_per_row,
@@ -424,7 +430,7 @@ def setup_default(args, config_parser):
                  'rsat_features': args.rsat_features,
                  'rsat_organism': args.rsat_organism,
                  'rsat_dir': args.rsat_dir,
-                 'use_operons': True, 
+                 'use_operons': True,
                  'use_string': True,
                  'debug': debug_options,
                  'nomotifs': False,
@@ -474,7 +480,7 @@ def setup_default(args, config_parser):
     if args.num_iterations is not None:
         overrides['num_iterations'] = args.num_iterations
 
-    for key, value in overrides.iteritems():
+    for key, value in overrides.items():
         params[key] = value
 
     if params['random_seed'] is not None:
@@ -496,7 +502,7 @@ def test_data_change(params, args_in):
      args_in -- The input argument list
     """
     dataChanged = False  #The default value
-    
+
     try:
         origCommandLine = params['command_line']
         origRatiosFile = origCommandLine.split('--ratios ')[1].split(' ')[0]
@@ -505,7 +511,7 @@ def test_data_change(params, args_in):
             dataChanged = True
     except:
         dataChanged = False
-    
+
     return dataChanged
 
 def read_ratios(params, args_in):
@@ -523,7 +529,7 @@ def read_ratios(params, args_in):
     matrix_filename = args_in.ratios
 
     if matrix_filename.startswith('http://'):
-        indata = util.read_url(matrix_filename)
+        indata = util.read_url(matrix_filename).decode('utf-8')
         infile = util.dfile_from_text(indata, has_header=True, quote='\"')
     else:
         infile = util.read_dfile(matrix_filename, has_header=True, quote='\"')
@@ -542,7 +548,7 @@ def write_setup(config_params):
         write_membership_settings(outfile, config_params)
         outfile.write('\n[Scoring]\n')
         outfile.write('quantile_normalize = %s\n' % str(config_params['quantile_normalize']))
-        for key, value in config_params.iteritems():
+        for key, value in config_params.items():
             if key != 'pipeline' and type(value) is dict:
                 write_section(outfile, key, value)
 
@@ -590,7 +596,7 @@ def write_general_settings(outfile, config_params):
     outfile.write('checkratios = %s\n' % str(config_params['checkratios']))
     outfile.write('use_BSCM = %s\n' % str(config_params['use_BSCM']))
     outfile.write('use_chi2 = %s\n' % str(config_params['use_chi2']))
-    
+
 
 def write_membership_settings(outfile, config_params):
     """Writes the Membership section of the final.ini file"""
@@ -608,7 +614,7 @@ def write_membership_settings(outfile, config_params):
 def write_section(outfile, section, settings):
     """Writes a scoring function specific section to the final.ini file"""
     outfile.write('\n[%s]\n' % section)
-    for setting, param in settings.iteritems():
+    for setting, param in settings.items():
         if setting == 'scaling':
             if param[0] == 'scaling_const':
                 outfile.write('scaling_const = %f\n' % param[1])

@@ -4,10 +4,10 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-import membership as memb
-import datamatrix as dm
-import microarray as ma
-import scoring
+import cmonkey.membership as memb
+import cmonkey.datamatrix as dm
+import cmonkey.microarray as ma
+import cmonkey.scoring
 
 CONFIG_PARAMS = {
     'memb.clusters_per_row': 2,
@@ -76,7 +76,7 @@ class OrigMembershipTest(unittest.TestCase):
         self.assertEquals({3}, m.clusters_for_row('R2'))
         self.assertEquals(1, m.num_clusters_for_row('R2'))
         self.assertEquals({'R2'}, m.rows_for_cluster(3))
-        
+
         m.add_cluster_to_row('R2', 1)
         self.assertEquals({1, 3}, m.clusters_for_row('R2'))
         self.assertEquals(2, m.num_clusters_for_row('R2'))
@@ -117,7 +117,7 @@ class OrigMembershipTest(unittest.TestCase):
         m.add_cluster_to_row('R1', 3, True)
         self.assertEquals({1, 3, 5}, m.clusters_for_row('R1'))
         self.assertEquals({'R1'}, m.rows_for_cluster(3))
-    
+
     def test_add_cluster_to_column(self):
         # happy path for add_cluster_to_column()
         m = memb.OrigMembership(['R1', 'R2'], ['C1', 'C2'],

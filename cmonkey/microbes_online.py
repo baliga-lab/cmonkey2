@@ -11,9 +11,10 @@ more information and licensing details.
 """
 import sys
 import logging
-import util
-import network
-import patches
+
+import cmonkey.util as util
+import cmonkey.network as network
+import cmonkey.patches as patches
 
 MICROBES_ONLINE_BASE_URL = 'http://www.microbesonline.org'
 MYSQL_HOST = 'pub.microbesonline.org'
@@ -50,7 +51,7 @@ class MicrobesOnline:
                        'gnc%s.named' % str(organism_id)])
         cache_file = '/'.join([self.cache_dir,
                               'gnc%s.named' % str(organism_id)])
-        return util.read_url_cached(url, cache_file)
+        return util.read_url_cached(url, cache_file).decode('utf-8')
 
 
 # Operon calculation functionality.
@@ -80,7 +81,7 @@ def make_operon_pairs(operon, features):
         """determine reverse head of the operon"""
         max_gene = None
         max_end = 0
-        for (gene, feature) in feature_map.iteritems():
+        for (gene, feature) in feature_map.items():
             if feature.location.end > max_end:
                 max_end = feature.location.end
                 max_gene = gene
@@ -89,8 +90,8 @@ def make_operon_pairs(operon, features):
     def get_forward_head(feature_map):
         """determine forward head of the operon"""
         min_gene = None
-        min_start = sys.maxint
-        for (gene, feature) in feature_map.iteritems():
+        min_start = sys.maxsize
+        for (gene, feature) in feature_map.items():
             if feature.location.start < min_start:
                 min_start = feature.location.start
                 min_gene = gene
@@ -259,7 +260,7 @@ def mysql_synonyms(conn, taxonomy_id):
                    {'taxid': taxonomy_id})
     row = cursor.fetchone()
     while row:
-        print "%d: %s (%s)" % (row[0], row[1], row[2])
+        print ("%d: %s (%s)" % (row[0], row[1], row[2]))
         row = cursor.fetchone()
 
 

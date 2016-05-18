@@ -4,7 +4,7 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-import pssm as p
+import cmonkey.pssm as p
 
 class PssmTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for Pssm"""

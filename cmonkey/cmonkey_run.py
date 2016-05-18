@@ -10,25 +10,36 @@ import logging
 import gzip
 import sqlite3
 from decimal import Decimal
-import cPickle
 import bz2
-import config
 
-import microarray
-import membership as memb
-import meme
-import motif
-import util
-import rsat
-import microbes_online
-import organism as org
-import scoring
-import network as nw
-import stringdb
-import debug
-import sizes
-import thesaurus
-import BSCM
+import cmonkey.config as config
+import cmonkey.microarray as microarray
+import cmonkey.membership as memb
+import cmonkey.meme as meme
+import cmonkey.motif as motif
+import cmonkey.util as util
+import cmonkey.rsat as rsat
+import cmonkey.microbes_online as microbes_online
+import cmonkey.organism as org
+import cmonkey.scoring as scoring
+import cmonkey.network as nw
+import cmonkey.stringdb as stringdb
+import cmonkey.debug as debug
+import cmonkey.sizes as sizes
+import cmonkey.thesaurus as thesaurus
+import cmonkey.BSCM as BSCM
+
+# Python2/Python3 compatibility
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
+try:
+    xrange
+except NameError:
+    xrange = range
+
 
 USER_KEGG_FILE_PATH = 'config/KEGG_taxonomy'
 USER_GO_FILE_PATH = 'config/proteome2taxid'
@@ -64,8 +75,8 @@ class CMonkeyRun:
         self.ratios = ratios
         if args_in['resume']:
             self.row_seeder = memb.make_db_row_seeder(args_in['out_database'])
-            
-            if args_in['new_data_file'] == True: #data file has changed 
+
+            if args_in['new_data_file']:  # data file has changed
                 self.column_seeder = microarray.seed_column_members
             else:
                 self.column_seeder = memb.make_db_column_seeder(args_in['out_database'])
@@ -123,7 +134,7 @@ class CMonkeyRun:
         conn.execute("insert into statstypes values ('main', 'fuzzy_coeff')")
         conn.execute("insert into statstypes values ('main', 'median_residual')")
         conn.execute('''create table iteration_stats (statstype int, iteration int, score decimal)''')
-        
+
         conn.execute('''create table row_names (order_num int, name text)''')
         conn.execute('''create table column_names (order_num int, name text)''')
 
@@ -181,7 +192,7 @@ class CMonkeyRun:
 
     def report_params(self):
         logging.info('cmonkey_run config_params:')
-        for param, value in self.config_params.iteritems():
+        for param, value in self.config_params.items():
             logging.info('%s=%s' % (param, str(value)))
 
     def __getitem__(self, key):
@@ -282,8 +293,7 @@ class CMonkeyRun:
         network_weight = 0.0
         if num_networks > 0:
             network_weight = 1.0 / num_networks
-        
-        
+
         # do we use STRING ?
         if not self['nonetworks'] and self['use_string']:
             # download if not provided
@@ -297,7 +307,8 @@ class CMonkeyRun:
                 url = STRING_URL_PATTERN % ncbi_code
                 stringfile = "%s/%s.gz" % (self['cache_dir'], ncbi_code)
                 self['string_file'] = stringfile
-                logging.info("Automatically using STRING file in '%s'", stringfile)
+                logging.info("Automatically using STRING file in '%s' (URL: %s)",
+                             stringfile, url)
                 util.get_url_cached(url, stringfile)
             else:
                 logging.info("Loading STRING file at '%s'", stringfile)
@@ -325,7 +336,7 @@ class CMonkeyRun:
 
         #New logic: test to see if there's a fastafile.  If not, then
         #Download it from rsat, process it, and then return the new file name
-    
+
         is_microbe = True
         if is_microbe:
            organism = org.Microbe(orgcode, kegg_species, rsat_info, gotax, mo_db,
@@ -339,17 +350,16 @@ class CMonkeyRun:
                                         self['search_distances'], self['scan_distances'],
                                         self.ratios, synonyms,
                                         self['fasta_file'])
-        
+
         conn = self.__dbconn()
         with conn:
             for network in organism.networks():
                 conn.execute("insert into statstypes values ('network',?)", [network.name])
             for sequence_type in self['sequence_types']:
                 conn.execute("insert into statstypes values ('seqtype',?)", [sequence_type])
-            
+
         return organism
-        
-            
+
 
     def __make_dirs_if_needed(self):
         logging.debug('creating aux directories')
@@ -381,14 +391,14 @@ class CMonkeyRun:
             if param not in self.config_params:
                 raise Exception("required parameter not found in config: '%s'" % param)
 
-    
+
     def __setup_pipeline(self):
         """Reading pipeline setup
         By default, this uses the default pipelines defined in config
         The default pipeline can be modified by
         1. nomotifs switch
         2. nonetworks switch
-        
+
         User-defined pipelines can be provided using a JSON file, which is
         specified using the --pipeline switch on the command line
         """
@@ -619,13 +629,13 @@ class CMonkeyRun:
                              [type_id, iteration, iteration_result['score_means'][fun_id]])
 
         with conn:
-            for network, score in network_scores.iteritems():
+            for network, score in network_scores.items():
                 cur.execute("select rowid from statstypes where category='network' and name=?", [network])
                 typeid = cur.fetchone()[0]
                 conn.execute("insert into iteration_stats values (?,?,?)",
                              (typeid, iteration, score))
         with conn:
-            for seqtype, pval in motif_pvalues.iteritems():
+            for seqtype, pval in motif_pvalues.items():
                 cur.execute("select rowid from statstypes where category='seqtype' and name=?", [seqtype])
                 typeid = cur.fetchone()[0]
                 conn.execute("insert into iteration_stats values (?,?,?)",
@@ -657,11 +667,11 @@ class CMonkeyRun:
         conn = self.__dbconn()
         with conn:
             conn.execute('''update run_infos set last_iteration = ?''', (iteration,))
-            
+
     def get_last_iteration(self):
         """Return the last iteration listed in cMonkey database.  This is intended to
             inform the '--resume' flag
-        """      
+        """
         try:
             conn = self.__dbconn()
             with conn:
@@ -681,31 +691,28 @@ class CMonkeyRun:
 
     def run_iteration(self, iteration, force=False):
         """Run a single cMonkey iteration
-    
+
              Keyword arguments:
              iteration -- The iteration number to run
              force     -- Set to true to force recalculations (DEFAULT:FALSE)
         """
         logging.info("Iteration # %d", iteration)
         iteration_result = {'iteration': iteration, 'score_means': {}}
-        if force == True:
+        if force:
             rscores = self.row_scoring.compute_force(iteration_result)
         else:
             rscores = self.row_scoring.compute(iteration_result)
         start_time = util.current_millis()
-        if force == True:
+
+        if force:
             cscores = self.column_scoring.compute_force(iteration_result)
         else:
             cscores = self.column_scoring.compute(iteration_result)
+
         elapsed = util.current_millis() - start_time
         if elapsed > 0.0001:
             logging.debug("computed column_scores in %f s.", elapsed / 1000.0)
 
-        #skip_update = False
-        #if (self['num_iterations'] == self['start_iteration'] and self['resume'] == True):
-        #    skip_update = True
-            
-        #if skip_update == False:
         self.membership().update(self.ratios, rscores, cscores,
                                  self['num_iterations'], iteration_result)
 
@@ -761,21 +768,16 @@ class CMonkeyRun:
         if self.config_params['interactive']:  # stop here in interactive mode
             return
 
-        #for iteration in range(self['start_iteration'],
-        #                       self['num_iterations'] + 1):
         for iteration in range(start_iter, num_iter):
             start_time = util.current_millis()
-            
-            #02-09-15 Force recalculation if first iteration of a resume
-            force = False
-            if (iteration == start_iter) and (self['resume'] == True):
-                force=True
-            self.run_iteration(iteration, force=force) 
+            force = self['resume'] and iteration == start_iter
+            self.run_iteration(iteration, force=force)
+
             # garbage collection after everything in iteration went out of scope
             gc.collect()
             elapsed = util.current_millis() - start_time
             logging.debug("performed iteration %d in %f s.", iteration, elapsed / 1000.0)
-            
+
             if 'profile_mem' in self['debug'] and (iteration == 1 or iteration % 100 == 0):
                 with open(os.path.join(self['output_dir'], 'memprofile.tsv'), 'a') as outfile:
                     self.write_mem_profile(outfile, iteration)
@@ -786,26 +788,26 @@ class CMonkeyRun:
         if self['postadjust']:
             logging.info("Postprocessing: Adjusting the clusters....")
             # run combiner using the weights of the last iteration
-            
+
             rscores = self.row_scoring.combine_cached(self['num_iterations'])
             rd_scores = memb.get_row_density_scores(self.membership(), rscores)
             logging.info("Recomputed combined + density scores.")
             memb.postadjust(self.membership(), rd_scores)
-            
+
             BSCM_obj = self.column_scoring.get_BSCM()
             if not (BSCM_obj is None):
                 new_membership = BSCM_obj.resplit_clusters(self.membership(), cutoff=0.05)
-            
+
             logging.info("Adjusted. Now re-run scoring (iteration: %d)",
                          self['num_iterations'])
             iteration_result = {'iteration': self['num_iterations'] + 1,
                                 'score_means': {}}
-                                
+
             combined_scores = self.row_scoring.compute_force(iteration_result)
 
             # write the combined scores for benchmarking/diagnostics
-            with open(self.combined_rscores_pickle_path(), 'w') as outfile:
-                cPickle.dump(combined_scores, outfile)
+            with open(self.combined_rscores_pickle_path(), 'wb') as outfile:
+                pickle.dump(combined_scores, outfile)
 
             self.write_results(iteration_result)
             self.write_stats(iteration_result)
@@ -820,7 +822,7 @@ class CMonkeyRun:
                 debug.write_iteration(conn, outfile,
                                       self['num_iterations'] + 1,
                                       self['num_clusters'], self['output_dir'])
-            #Why is conn never closed?  Where does it write to the db?
+            # TODO: Why is conn never closed?  Where does it write to the db?
 
             # additionally: run tomtom on the motifs if requested
             if (self['MEME']['global_background'] == 'True' and
@@ -837,5 +839,4 @@ def get_function_class(scorefun):
         module = __import__(scorefun['module'], fromlist=[modulepath[1]])
     else:
         module = __import__(modulepath[0])
-    return getattr(module, scorefun['class'])        
-
+    return getattr(module, scorefun['class'])

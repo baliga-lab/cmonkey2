@@ -3,7 +3,7 @@
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
-import meme
+import cmonkey.meme as meme
 import unittest
 
 
@@ -65,12 +65,12 @@ class MemeTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEquals(8.0e-12, pevalues[0][2])
         self.assertAlmostEquals(1.4e-09, pevalues[1][2])
 
-        annot1 = annotations['VNG6198H']
+        annot1 = list(annotations['VNG6198H'])
         self.assertAlmostEquals(6.6e-01, annot1[0][0])
         self.assertEquals(16, annot1[0][1])
         self.assertEquals(1, annot1[0][2])
 
-        annot2 = annotations['VNG0117H']
+        annot2 = list(annotations['VNG0117H'])
         self.assertAlmostEquals(2.0e-01, annot2[0][0])
         self.assertAlmostEquals(24, annot2[0][1])
         self.assertAlmostEquals(-1, annot2[0][2])

@@ -4,12 +4,12 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-import seqtools as st
-import organism as org
-import microbes_online as mo
-import util
-import thesaurus as th
-    
+import cmonkey.seqtools as st
+import cmonkey.organism as org
+import cmonkey.microbes_online as mo
+import cmonkey.util as util
+import cmonkey.thesaurus as th
+
 
 class MockMicrobesOnline:
     """mock class for MicrobesOnline"""

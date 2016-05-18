@@ -6,8 +6,8 @@ more information and licensing details.
 import unittest
 import os
 import shutil
-import rsat
-import util
+import cmonkey.rsat as rsat
+import cmonkey.util as util
 
 
 RSAT_BASE_URL = 'http://rsat01.biologie.ens.fr/rsat'

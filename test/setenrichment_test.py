@@ -1,10 +1,10 @@
-"""network_test.py - unit tests for network module
+"""setenrichment_test.py - unit tests for set enrichment module
 
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-import set_enrichment as se
+import cmonkey.set_enrichment as se
 
 class DiscreteEnrichmentSetTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for DiscreteEnrichmentSet"""

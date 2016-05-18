@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """all_tests.py - run all unit tests in the project
 
 This file is part of cMonkey Python. Please see README and LICENSE for

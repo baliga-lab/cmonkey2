@@ -10,7 +10,13 @@ import logging
 import random
 import string
 import collections
-from util import DelimitedFile
+from cmonkey.util import DelimitedFile
+
+try:
+    xrange
+except NameError:
+    xrange = range
+
 
 logger = logging.getLogger('seqtools')
 logger.setLevel(logging.DEBUG)
@@ -145,7 +151,7 @@ def subseq_frequencies(seqs, subseq_len):
     result = {}
     counts = subseq_counts(seqs, subseq_len)
     total = sum([count for count in counts.values()])
-    for subseq, count in counts.iteritems():
+    for subseq, count in counts.items():
         result[subseq] = float(count) / float(total)
     return result
 

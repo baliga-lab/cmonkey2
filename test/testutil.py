@@ -1,9 +1,9 @@
 """common functionality for tests"""
-import util
-import rsat
-import stringdb
-import microbes_online
-import organism as org
+import cmonkey.util as util
+import cmonkey.rsat as rsat
+import cmonkey.stringdb as stringdb
+import cmonkey.microbes_online as microbes_online
+import cmonkey.organism as org
 
 KEGG_FILE_PATH = 'config/KEGG_taxonomy'
 GO_FILE_PATH = 'config/proteome2taxid'

@@ -8,9 +8,14 @@ more information and licensing details.
 """
 import numpy as np
 import logging
-import datamatrix as dm
-import util
-import scoring
+import cmonkey.datamatrix as dm
+import cmonkey.util as util
+import cmonkey.scoring as scoring
+
+try:
+    xrange
+except NameError:
+    xrange = range
 
 
 def seed_column_members(data_matrix, row_membership, num_clusters,

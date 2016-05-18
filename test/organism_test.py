@@ -5,10 +5,10 @@ This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
 """
 import unittest
-import util
-import network as nw
-import organism as org
-import seqtools as st
+import cmonkey.util as util
+import cmonkey.network as nw
+import cmonkey.organism as org
+import cmonkey.seqtools as st
 
 
 SEARCH_DISTANCES = {'upstream':(-20, 150)}

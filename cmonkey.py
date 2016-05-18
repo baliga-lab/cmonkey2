@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # vi: sw=4 ts=4 et:
 """cmonkey.py - cMonkey top-level module
 
@@ -16,7 +16,7 @@ import random
 if __name__ == '__main__':
     """process configuration"""
     args, params, ratios = conf.setup()
-    
+
     cmonkey_run = cmr.CMonkeyRun(ratios, params)
     proceed = True
 
