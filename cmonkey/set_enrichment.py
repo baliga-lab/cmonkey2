@@ -133,7 +133,7 @@ def process_sets(input_sets, thesaurus, input_genes):
     input_genes = {thesaurus[gene] for gene in input_genes if gene in thesaurus}
 
     for setname, genes in input_sets.items():
-        filtered = map(lambda s: intern(str(s)), filter(lambda g: g in thesaurus, genes))
+        filtered = map(str, filter(lambda g: g in thesaurus, genes))
         canonic_genes = {thesaurus[gene] for gene in filtered}
         genes_thrown_out += len(genes) - len(canonic_genes)
 

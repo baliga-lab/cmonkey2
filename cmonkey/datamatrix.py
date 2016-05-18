@@ -15,11 +15,6 @@ import random
 
 # Python2/Python3 compatibility
 try:
-    from sys import intern
-except ImportError:
-    pass
-
-try:
     xrange
 except NameError:
     xrange = range
@@ -313,12 +308,10 @@ class DataMatrixFactory:
         else:
             colnames = header[1:len(header)]
 
-        # optimization: internalize row and column names
-        colnames = list(map(intern, colnames))
         if case_sensitive:
-            rownames = [intern(line[0]) for line in lines]
+            rownames = [line[0] for line in lines]
         else:
-            rownames = [intern(line[0].upper()) for line in lines]
+            rownames = [line[0].upper() for line in lines]
 
         values = np.empty([nrows, ncols])
         for row in xrange(nrows):

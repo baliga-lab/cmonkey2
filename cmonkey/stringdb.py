@@ -11,11 +11,6 @@ import cmonkey.util as util
 import cmonkey.network as network
 import cmonkey.patches as patches
 
-# Python2/Python3 compatibility
-try:
-    from sys import intern
-except ImportError:
-    pass
 
 STRING_FILE2 = 'string_links_64091.tab'
 PROTEIN_PREFIX = re.compile('^string:\d+[.]')
@@ -110,9 +105,9 @@ def get_network_factory(organism_code, filename, weight, sep='\t',
                 #2/18/15 SD.  Translate nodes into names in ratio rows using gene_lut
                 #   This will let the ratios matrix define how the genes are named
                 if gene_lut is None:
-                    new_edge = (intern(node1), intern(node2), score)
+                    new_edge = (node1, node2, score)
                 else:
-                    new_edge = (intern(gene_lut[node1]), intern(gene_lut[node2]), score)
+                    new_edge = (gene_lut[node1], gene_lut[node2], score)
                 #logging.info("Adding edge %s - %s - %f", new_edge[0], new_edge[1], new_edge[2])
                 result.append(new_edge)
             else:

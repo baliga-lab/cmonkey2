@@ -7,18 +7,12 @@ more information and licensing details.
 import re
 import cmonkey.util as util
 
-# Python2/Python3 compatibility
-try:
-    from sys import intern
-except ImportError:
-    pass
-
 
 def create_from_delimited_file1(dfile):
     """creates a thesaurus from a delimited file where the format is
     <alternative>SEPARATOR<original>
     ..."""
-    return {intern(line[0]): intern(line[1]) for line in dfile.lines}
+    return {line[0]: line[1] for line in dfile.lines}
 
 
 def create_from_delimited_file2(dfile, case_sensitive):
@@ -32,10 +26,10 @@ def create_from_delimited_file2(dfile, case_sensitive):
         dfile = util.read_dfile(dfile, sep=',', has_header=False)
     result = {}
     for line in dfile.lines:
-        original = intern(fix_case(line[0]))  # original should map to itself
+        original = fix_case(line[0])  # original should map to itself
         result[original] = original
         for alternative in line[1].split(';'):
-            result[intern(fix_case(alternative))] = original
+            result[fix_case(alternative)] = original
     return result
 
 
@@ -51,8 +45,8 @@ def create_from_rsat_feature_names(dfile, key_transforms=None):
     """
     result = {}
     for line in dfile.lines:
-        key = intern(line[1])  # intern the key
-        alternative = intern(line[0])  # and the alternative
+        key = line[1]
+        alternative = line[0]
         if key_transforms:
             for transform in key_transforms:
                 for transform_key in transform(key):
