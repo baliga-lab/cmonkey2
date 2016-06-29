@@ -48,7 +48,7 @@ def normalize_js(value):
         return 0.0
     else:
         return value
-    
+
 
 def format_float(value):
     if value <= 1e-3:
@@ -101,7 +101,7 @@ class Ratios:
             return [normalize_js(minval), normalize_js(lower_quartile),
                     normalize_js(median), normalize_js(upper_quartile),
                     normalize_js(maxval)]
-            
+
         subratios = self.subratios_for(genes, conds)
         # cut up the data into left and right half
         data_in = subratios.data[:,:len(conds)].T
@@ -135,13 +135,14 @@ def read_ratios():
 
     ratios_file = os.path.join(outdir, 'ratios.tsv.gz')
     with gzip.open(ratios_file) as infile:
-        column_titles = infile.readline().strip().split('\t')
+        line = infile.readline()
+        column_titles = infile.readline().strip().split(b'\t')
         row_titles = []
         data = []
         for line in infile:
-            row = line.strip().split('\t')
+            row = line.strip().split(b'\t')
             row_titles.append(row[0])
-            data.append(map(to_float, row[1:]))
+            data.append(list(map(to_float, row[1:])))
     return Ratios(row_titles, column_titles, np.array(data))
 
 
@@ -416,8 +417,8 @@ class ClusterViewerApp:
     def runlog(self):
         def read_runlog(fname):
             with open(fname) as infile:
-                entries = map(lambda l: 0.0 if l[1] == '1' else float(l[2]),
-                              [line.strip().split(':') for line in infile])
+                entries = list(map(lambda l: 0.0 if l[1] == '1' else float(l[2]),
+                                   [line.strip().split(':') for line in infile]))
             return {'name': os.path.basename(fname).replace('.runlog', ''), 'data': entries}
 
         return [read_runlog(fname)
