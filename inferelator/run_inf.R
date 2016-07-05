@@ -99,6 +99,7 @@ run.inferelator <- function(tfsfile=NULL, json=NULL, ratios=NULL,
   coeffs <- runnit.wrapper.halo(e, cv.choose="min+4se", tf.groups=999, alpha=0.8,
                                 n.boot=1, tau=10,
                                 r.cutoff=Inf, r.filter=Inf, weighted=T, aic.filter=Inf, plot=F)
+  save(coeffs, file='inferelator-coeffs.RData')
   coeffs=coeffs
 }
 

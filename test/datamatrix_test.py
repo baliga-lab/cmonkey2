@@ -8,6 +8,7 @@ import copy
 import cmonkey.datamatrix as dm
 import numpy as np
 import cmonkey.util as util
+import pandas
 
 
 class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
@@ -299,53 +300,6 @@ class MockDelimitedFile:  # pylint: disable-msg=R0903
         return self.__lines
 
 
-class DataMatrixFactoryTest(unittest.TestCase):  # pylint: disable-msg=R0904
-    """Test class for DataMatrixFactory"""
-
-    def setUp(self):  # pylint: disable-msg=C0103
-        """text fixture"""
-        self.dfile = util.DelimitedFile(header=["H1", "H2", "H3"],
-                                        lines=[["R1", '1', '2'], ["R2", '3', '4']])
-        self.dfile_with_na = util.DelimitedFile(header=["H1", "H2", "H3"],
-                                                lines=[["R1", 'NA', '2'],
-                                                 ["R2", 'NA', '4']])
-
-    def test_no_filters(self):
-        """test a factory without filters"""
-        factory = dm.DataMatrixFactory([])
-        matrix = factory.create_from(self.dfile)
-        self.assertEquals(2, matrix.num_rows)
-        self.assertEquals(2, matrix.num_columns)
-        self.assertEquals(matrix.column_names, ["H2", "H3"])
-        self.assertEquals(matrix.row_names, ["R1", "R2"])
-        self.assertTrue((matrix.values[0] == [1, 2]).all())
-        self.assertTrue((matrix.values[1] == [3, 4]).all())
-
-    def test_with_na_values(self):
-        """test a factory with a DelimitedFile containing NA values"""
-        factory = dm.DataMatrixFactory([])
-        matrix = factory.create_from(self.dfile_with_na)
-        self.assertEquals(2, matrix.num_rows)
-        self.assertEquals(2, matrix.num_columns)
-        self.assertEquals(matrix.column_names, ["H2", "H3"])
-        self.assertEquals(matrix.row_names, ["R1", "R2"])
-        self.assertTrue(np.isnan(matrix.values[0][0]))
-        self.assertEquals(2.0, matrix.values[0][1])
-        self.assertTrue(np.isnan(matrix.values[1][0]))
-        self.assertEquals(4.0, matrix.values[1][1])
-
-    def test_simple_filter(self):
-        """test a factory using a single filter"""
-        factory = dm.DataMatrixFactory([times2])
-        matrix = factory.create_from(self.dfile)
-        self.assertEquals(2, matrix.num_rows)
-        self.assertEquals(2, matrix.num_columns)
-        self.assertEquals(matrix.column_names, ["H2", "H3"])
-        self.assertEquals(matrix.row_names, ["R1", "R2"])
-        self.assertTrue((matrix.values[0] == [2, 4]).all())
-        self.assertTrue((matrix.values[1] == [6, 8]).all())
-
-
 def times2(matrix):
     """a simple filter that multiplies all values in the matrix by 2"""
     result = copy.deepcopy(matrix)
@@ -357,33 +311,29 @@ def times2(matrix):
 
 class NoChangeFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for nochange_filter"""
-
     def test_simple(self):
         """simplest test case: everything kept"""
-        matrix = dm.DataMatrix(2, 2, ['R1', 'R2'], ['C1', 'C2'],
-                               values=[[0.24, -0.35], [-0.42, 0.42]])
-        filtered = dm.nochange_filter(matrix)
-        self.assertEquals(2, filtered.num_rows)
-        self.assertEquals(2, filtered.num_columns)
+        df = pandas.DataFrame(np.array([[0.24, -0.35], [-0.42, 0.42]]), ['R1', 'R2'], ['C1', 'C2'])
+        filtered = dm.nochange_filter(df)
+        self.assertEquals(2, filtered.shape[0])
+        self.assertEquals(2, filtered.shape[1])
         self.assertTrue((filtered.values == [[0.24, -0.35],
                                                [-0.42, 0.42]]).all())
 
     def test_remove_row(self):
         """remove one row"""
-        matrix = dm.DataMatrix(2, 2, ['R1', 'R2'], ['C1', 'C2'],
-                               values=[[0.24, -0.35], [-0.001, np.nan]])
-        filtered = dm.nochange_filter(matrix)
-        self.assertEquals(1, filtered.num_rows)
-        self.assertEquals(2, filtered.num_columns)
+        df = pandas.DataFrame([[0.24, -0.35], [-0.001, np.nan]], ['R1', 'R2'], ['C1', 'C2'])
+        filtered = dm.nochange_filter(df)
+        self.assertEquals(1, filtered.shape[0])
+        self.assertEquals(2, filtered.shape[1])
         self.assertTrue((filtered.values == [[0.24, -0.35]]).all())
 
     def test_remove_column(self):
         """remove one column"""
-        matrix = dm.DataMatrix(2, 2, ['R1', 'R2'], ['C1', 'C2'],
-                               values=[[0.001, -0.35], [np.nan, 0.42]])
-        filtered = dm.nochange_filter(matrix)
-        self.assertEquals(2, filtered.num_rows)
-        self.assertEquals(1, filtered.num_columns)
+        df = pandas.DataFrame([[0.001, -0.35], [np.nan, 0.42]], ['R1', 'R2'], ['C1', 'C2'])
+        filtered = dm.nochange_filter(df)
+        self.assertEquals(2, filtered.shape[0])
+        self.assertEquals(1, filtered.shape[1])
         self.assertTrue((filtered.values == [[-0.35], [0.42]]).all())
 
 
@@ -392,13 +342,13 @@ class CenterScaleFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
     def test_filter(self):
         """test the centering"""
-        matrix = dm.DataMatrix(2, 2, ['R1', 'R2'], ['C1', 'C2'],
-                               values=[[2, 3], [3, 4]])
-        filtered = dm.center_scale_filter(matrix).values
+        df = pandas.DataFrame(np.array([[2, 3], [3, 4]]), ['R1', 'R2'], ['C1', 'C2'])
+        filtered = dm.center_scale_filter(df).values
         self.assertAlmostEqual(-0.70710678237309499, filtered[0][0])
         self.assertAlmostEqual(0.70710678237309499, filtered[0][1])
         self.assertAlmostEqual(-0.70710678237309499, filtered[1][0])
         self.assertAlmostEqual(0.70710678237309499, filtered[1][1])
+
 
 
 def as_sorted_flat_values(matrices):
@@ -504,6 +454,6 @@ if __name__ == '__main__':
     SUITE = []
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(QuantileNormalizeTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DataMatrixTest))
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DataMatrixFactoryTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(CenterScaleFilterTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(NoChangeFilterTest))
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))

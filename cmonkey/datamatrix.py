@@ -12,6 +12,7 @@ import logging
 import gzip
 import os
 import random
+import pandas
 
 # Python2/Python3 compatibility
 try:
@@ -278,124 +279,73 @@ class DataMatrix:
                 outfile.flush()
 
 
-class DataMatrixFactory:
-    """Reader class for creating a DataMatrix from a delimited file,
-    applying all supplied filters. Currently, the assumption is
-    that all input ratio files have a header row and the first column
-    denotes the gene names.
-    (To be moved to filter class comments):
-    There are a couple of constraints and special things to consider:
-    - Row names are unique, throw out rows with names that are already
-      in the matrix, first come, first in. This is to throw out the second
-      probe of a gene in certain cases
-    """
-
-    def __init__(self, filters):
-        """create a reader instance with the specified filters"""
-        self.filters = filters
-
-    def create_from(self, delimited_file, case_sensitive=True):
-        """creates and returns an initialized, filtered DataMatrix instance"""
-        lines = delimited_file.lines
-        header = delimited_file.header
-        nrows = len(lines)
-        ncols = len(header) - 1
-
-        # This handles header formats that omit the 0-column
-        if len(lines) > 0 and len(lines[0]) - 1 > ncols:
-            ncols = len(lines[0]) - 1
-            colnames = header
-        else:
-            colnames = header[1:len(header)]
-
-        if case_sensitive:
-            rownames = [line[0] for line in lines]
-        else:
-            rownames = [line[0].upper() for line in lines]
-
-        values = np.empty([nrows, ncols])
-        for row in xrange(nrows):
-            for col in xrange(ncols):
-                strval = lines[row][col + 1]
-                value = np.nan if len(strval) == 0 or strval == 'NA' else float(strval)
-                values[row, col] = value
-
-        data_matrix = DataMatrix(nrows, ncols, rownames, colnames,
-                                 values=values)
-
-        for matrix_filter in self.filters:
-            data_matrix = matrix_filter(data_matrix)
-        return data_matrix.sorted_by_row_name()
-
-
 FILTER_THRESHOLD = 0.98
 ROW_THRESHOLD = 0.17
 COLUMN_THRESHOLD = 0.1
 
 
-def nochange_filter(matrix):
+def nochange_filter(dataframe):
     """returns a new filtered DataMatrix containing only the columns and
     rows that have large enough measurements"""
 
-    def nochange_filter_rows(data_matrix):
+    def nochange_filter_rows():
         """subfunction of nochange_filter to filter row-wise"""
         keep = []
-        dmvalues = data_matrix.values
-        for row_index in xrange(data_matrix.num_rows):
+        dmvalues = dataframe.values
+        for row_index in xrange(dataframe.shape[0]):
             count = 0
-            for col_index in xrange(data_matrix.num_columns):
+            for col_index in xrange(dataframe.shape[1]):
                 value = dmvalues[row_index, col_index]
                 if np.isnan(value) or abs(value) <= ROW_THRESHOLD:
                     count += 1
-            mean = float(count) / data_matrix.num_columns
+            mean = float(count) / dataframe.shape[1]
             if mean < FILTER_THRESHOLD:
                 keep.append(row_index)
         return keep
 
-    def nochange_filter_columns(data_matrix):
+    def nochange_filter_columns():
         """subfunction of nochange_filter to filter column-wise"""
         keep = []
-        dmvalues = data_matrix.values
-        for col_index in xrange(data_matrix.num_columns):
+        dmvalues = dataframe.values
+        for col_index in xrange(dataframe.shape[1]):
             count = 0
-            for row_index in xrange(data_matrix.num_rows):
+            for row_index in xrange(dataframe.shape[0]):
                 value = dmvalues[row_index, col_index]
                 if np.isnan(value) or abs(value) <= COLUMN_THRESHOLD:
                     count += 1
-            mean = float(count) / data_matrix.num_rows
+            mean = float(count) / dataframe.shape[0]
             if mean < FILTER_THRESHOLD:
                 keep.append(col_index)
         return keep
 
-    rows_to_keep = nochange_filter_rows(matrix)
-    cols_to_keep = nochange_filter_columns(matrix)
-    colnames = list(map(lambda col: matrix.column_names[col], cols_to_keep))
-    rownames = list(map(lambda row: matrix.row_names[row], rows_to_keep))
+    rows_to_keep = nochange_filter_rows()
+    cols_to_keep = nochange_filter_columns()
+    colnames = list(map(lambda col: dataframe.columns[col], cols_to_keep))
+    rownames = list(map(lambda row: dataframe.index[row], rows_to_keep))
     numrows = len(rows_to_keep)
     numcols = len(cols_to_keep)
 
-    result = DataMatrix(numrows, numcols, rownames, colnames)
-    rvalues = result.values
-    mvalues = matrix.values
+    rvalues = np.zeros((numrows, numcols))
+    mvalues = dataframe.values
     for row_index in xrange(numrows):
         for col_index in xrange(numcols):
             value = mvalues[rows_to_keep[row_index], cols_to_keep[col_index]]
             rvalues[row_index, col_index] = value
+    result = pandas.DataFrame(rvalues, rownames, colnames)
     return result
 
 
-def row_filter(matrix, fun):
+def row_filter(dataframe, fun):
     """generalize a matrix filter that is applying a function for each row"""
-    values = []
-    for row_index in xrange(matrix.num_rows):
-        values.append(fun(matrix.values[row_index]))
-    result = DataMatrix(matrix.num_rows, matrix.num_columns,
-                        matrix.row_names, matrix.column_names,
-                        values=values)
-    return result
+    num_rows = dataframe.shape[0]
+    values = np.zeros(dataframe.shape)
+    for row_index in xrange(num_rows):
+        values[row_index] = fun(dataframe.values[row_index])
+
+    return pandas.DataFrame(values, dataframe.index, dataframe.columns)
 
 
-def center_scale_filter(matrix):
+def center_scale_filter(dataframe):
     """center the values of each row around their median and scale
     by their standard deviation"""
 
@@ -408,7 +358,24 @@ def center_scale_filter(matrix):
                  if not np.isnan(value) else value for value in row]
         return nurow
 
-    return row_filter(matrix, center_scale)
+    return row_filter(dataframe, center_scale)
+
+
+def create_from_csv(csvpath, filters=[], sep='\t', quotechar='"', case_sensitive=True):
+    """creates and returns an initialized, filtered DataMatrix instance"""
+    if csvpath.startswith('http://'):
+        raise Exception('reading from URL temporarily disabled')
+
+    if os.path.exists(csvpath):
+        df = pandas.read_csv(csvpath, index_col=0, sep=sep, quotechar=quotechar)
+    for matrix_filter in filters:
+        df = matrix_filter(df)
+    if not case_sensitive:
+        df.index = df.index.str.upper()
+    df = df.sort_index()
+    # for now, we will make a DataMatrix object from the data frame for compatibility
+    return DataMatrix(df.shape[0], df.shape[1], list(df.index), list(df.columns),
+                      values=df.values)
 
 
 def quantile_normalize_scores(matrices, weights=None):

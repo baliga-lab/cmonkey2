@@ -525,20 +525,10 @@ def read_ratios(params, args_in):
     else:
         ratio_filters = []
 
-    matrix_factory = dm.DataMatrixFactory(ratio_filters)
     matrix_filename = args_in.ratios
 
-    if matrix_filename.startswith('http://'):
-        indata = util.read_url(matrix_filename).decode('utf-8')
-        infile = util.dfile_from_text(indata, has_header=True, quote='\"')
-    else:
-        infile = util.read_dfile(matrix_filename, has_header=True, quote='\"')
-
-    if params['case_sensitive'] or args_in.case_sensitive:
-        ratios = matrix_factory.create_from(infile, True)
-    else:
-        ratios = matrix_factory.create_from(infile, False)
-    return ratios
+    case_sensitive = params['case_sensitive'] or args_in.case_sensitive
+    return dm.create_from_csv(matrix_filename, filters=ratio_filters, case_sensitive=case_sensitive)
 
 
 def write_setup(config_params):
