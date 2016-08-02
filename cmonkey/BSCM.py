@@ -172,8 +172,8 @@ class BSCM:
                 maxTime = np.repeat(self.maxTime, len(noVarNs)).tolist()
                 chunkSize = np.repeat(self.chunkSize, len(noVarNs)).tolist()
                 verbose = np.repeat(self.verbose, len(noVarNs)).tolist()
-                newVars = map(getVarianceMeanSDvect, noVarRats, noVarNs, tolerance, maxTime,
-                              chunkSize, verbose, noVarCns)
+                newVars = list(map(getVarianceMeanSDvect, noVarRats, noVarNs, tolerance, maxTime,
+                                   chunkSize, verbose, noVarCns))
 
         #  3) Assign the new values into the empty slots
         for idx in range(0,len(noVarCns)):
