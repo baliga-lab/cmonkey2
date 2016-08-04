@@ -49,21 +49,21 @@ for running the interactive monitoring and visualization web application (option
 In general, you should be able to run cmonkey2 on microbial gene
 expression ratios with
 
-    ./cmonkey.py --organism <organism-code> --ratios <tab separated file of gene expressions>
+    bin/cmonkey2 --organism <organism-code> <tab separated file of gene expressions>
 
 The file can be either in your file system or a web URL.
 
 After the program was started, a log file will be written in cmonkey.log. You
 can see all available options with
 
-    ./cmonkey.py --help
+    bin/cmonkey2 --help
 
 ### Test Run with Halobacterium Salinarum
 
 There is a startup script for cMonkey to run the current integrated
 system
 
-    ./cmonkey.py --organism hal --ratios example_data/hal/halo_ratios5.tsv
+    bin/cmonkey2 --organism hal example_data/hal/halo_ratios5.tsv
 
 ### Start the python based monitoring application
 
@@ -71,14 +71,14 @@ system
 
 ### Another way is to run Halobacterium is specify the RSAT database
 
-    ./cmonkey.py --organism hal --ratios example_data/hal/halo_ratios5.tsv --rsat_organism Halobacterium_NRC_1_uid57769 --rsat_base_url http://pedagogix-tagc.univ-mrs.fr/rsat --rsat_features gene --nooperons --use_BSCM
+    bin/cmonkey2 --organism hal --rsat_organism Halobacterium_NRC_1_uid57769 --rsat_base_url http://pedagogix-tagc.univ-mrs.fr/rsat --rsat_features gene --nooperons --use_BSCM example_data/hal/halo_ratios5.tsv
 
 
 ### Running cMonkey on Human
 
 To run cMonkey on human data, run the following code with your own `<ratios.tsv>` file
 
-    ./cmonkey.py --organism hsa --ratios <ratios.tsv> --string <stringFile> --rsat_organism Homo_sapiens_GRCh37 --rsat_URL http://rsat.sb-roscoff.fr/ --rsat_features protein_coding --nooperons
+    bin/cmonkey2 --organism hsa --string <stringFile> --rsat_organism Homo_sapiens_GRCh37 --rsat_URL http://rsat.sb-roscoff.fr/ --rsat_features protein_coding --nooperons <ratios.tsv>
 
 #### More details for running cMonkey on human data
 

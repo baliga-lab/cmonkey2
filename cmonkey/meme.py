@@ -14,6 +14,7 @@ import shutil
 import re
 import collections
 import xml.etree.ElementTree as ET
+from pkg_resources import Requirement, resource_filename
 
 import cmonkey.seqtools as st
 import cmonkey.util as util
@@ -767,18 +768,10 @@ def global_background_file(organism, gene_aliases, seqtype, bgorder=3,
 
 
 USER_TEST_FASTA_PATH = 'config/fasta_test.fa'
-SYSTEM_TEST_FASTA_PATH = '/etc/cmonkey2/fasta_test.fa'
-
 
 def check_meme_version():
     logging.info('checking MEME...')
-    if os.path.exists(USER_TEST_FASTA_PATH):
-        test_fasta = USER_TEST_FASTA_PATH
-    elif os.path.exists(SYSTEM_TEST_FASTA_PATH):
-        test_fasta = SYSTEM_TEST_FASTA_PATH
-    else:
-        raise Exception('fasta_test.fa not found !')
-
+    test_fasta = resource_filename(Requirement.parse("cmonkey2"), USER_TEST_FASTA_PATH)
     try:
         command = ['meme', '-nostatus', '-text', test_fasta]
         output = subprocess.check_output(command).decode('utf-8').split('\n')

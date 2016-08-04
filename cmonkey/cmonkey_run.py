@@ -11,6 +11,7 @@ import gzip
 import sqlite3
 from decimal import Decimal
 import bz2
+from pkg_resources import Requirement, resource_filename
 
 import cmonkey.config as config
 import cmonkey.microarray as microarray
@@ -43,8 +44,6 @@ except NameError:
 
 USER_KEGG_FILE_PATH = 'config/KEGG_taxonomy'
 USER_GO_FILE_PATH = 'config/proteome2taxid'
-SYSTEM_KEGG_FILE_PATH = '/etc/cmonkey2/KEGG_taxonomy'
-SYSTEM_GO_FILE_PATH = '/etc/cmonkey2/proteome2taxid'
 
 # pipeline paths
 PIPELINE_USER_PATHS = {
@@ -53,12 +52,7 @@ PIPELINE_USER_PATHS = {
     'rowsandmotifs': 'config/rows_and_motifs_pipeline.json',
     'rowsandnetworks': 'config/rows_and_networks_pipeline.json'
 }
-PIPELINE_SYSTEM_PATHS = {
-    'default': '/etc/cmonkey2/default_pipeline.json',
-    'rows': '/etc/cmonkey2/rows_pipeline.json',
-    'rowsandmotifs': '/etc/cmonkey2/rows_and_motifs_pipeline.json',
-    'rowsandnetworks': '/etc/cmonkey2/rows_and_networks_pipeline.json'
-}
+
 
 COG_WHOG_URL = 'ftp://ftp.ncbi.nih.gov/pub/COG/COG/whog'
 STRING_URL_PATTERN = "http://networks.systemsbiology.net/string9/%s.gz"
@@ -240,12 +234,8 @@ class CMonkeyRun:
     def __get_kegg_data(self):
         # determine the NCBI code
         organism_code = self['organism_code']
-        if os.path.exists(USER_KEGG_FILE_PATH):
-            keggfile = util.read_dfile(USER_KEGG_FILE_PATH, comment='#')
-        elif os.path.exists(SYSTEM_KEGG_FILE_PATH):
-            keggfile = util.read_dfile(SYSTEM_KEGG_FILE_PATH, comment='#')
-        else:
-            raise Exception('KEGG file not found !!')
+        kegg_path = resource_filename(Requirement.parse("cmonkey2"), USER_KEGG_FILE_PATH)
+        keggfile = util.read_dfile(kegg_path, comment='#')
         kegg_map = util.make_dfile_map(keggfile, 1, 3)
         kegg2ncbi = util.make_dfile_map(keggfile, 1, 2)
         if self['ncbi_code'] is None and organism_code in kegg2ncbi:
@@ -257,12 +247,8 @@ class CMonkeyRun:
         self.__make_dirs_if_needed()
         ncbi_code, kegg_species = self.__get_kegg_data()
 
-        if os.path.exists(USER_GO_FILE_PATH):
-            gofile = util.read_dfile(USER_GO_FILE_PATH)
-        elif os.path.exists(SYSTEM_GO_FILE_PATH):
-            gofile = util.read_dfile(SYSTEM_GO_FILE_PATH)
-        else:
-            raise Exception('GO file not found !!')
+        go_file_path = resource_filename(Requirement.parse("cmonkey2"), USER_GO_FILE_PATH)
+        gofile = util.read_dfile(go_file_path)
 
         if self['rsat_dir']:
             if not self['rsat_organism']:
@@ -418,12 +404,11 @@ class CMonkeyRun:
             else:
                 raise Exception("Pipeline file '%s' does not exist" % pipeline_file)
         else:
-            if os.path.exists(PIPELINE_USER_PATHS[pipeline_id]):
-                with open(PIPELINE_USER_PATHS[pipeline_id]) as infile:
-                    self['pipeline'] = json.load(infile)
-            else:
-                with open(PIPELINE_SYSTEM_PATHS[pipeline_id]) as infile:
-                    self['pipeline'] = json.load(infile)
+            pipeline_path = resource_filename(Requirement.parse("cmonkey2"),
+                                              PIPELINE_USER_PATHS[pipeline_id])
+
+            with open(pipeline_path) as infile:
+                self['pipeline'] = json.load(infile)
 
         # TODO: for now, we always assume the top level of row scoring is a combiner
         class_ = get_function_class(self['pipeline']['row-scoring']['function'])

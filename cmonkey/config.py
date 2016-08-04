@@ -16,6 +16,7 @@ import logging
 import tempfile
 import json
 import random
+from pkg_resources import Requirement, resource_filename
 
 from cmonkey.schedule import make_schedule
 import cmonkey.util as util
@@ -30,7 +31,6 @@ This program is licensed under the General Public License V3.
 See README and LICENSE for details.\n"""
 
 # if we were installed through Debian package management, default.ini is found here
-SYSTEM_INI_PATH = '/etc/cmonkey2/default.ini'
 USER_INI_PATH = 'config/default.ini'
 
 """
@@ -190,22 +190,18 @@ def set_config_motifs(config, params):
 def __get_config_parser():
     # read default configuration parameters
     config = ConfigParser()
-    if os.path.exists(USER_INI_PATH):
-        config.read(USER_INI_PATH)
-    elif os.path.exists(SYSTEM_INI_PATH):
-        config.read(SYSTEM_INI_PATH)
-    else:
-        raise Exception('could not find default.ini !')
+    config_path = resource_filename(Requirement.parse("cmonkey2"), USER_INI_PATH)
+    config.read(config_path)
     return config
 
 
 def __get_arg_parser(arg_ext):
     parser = argparse.ArgumentParser(description=DESCRIPTION)
-    parser.add_argument('--ratios',
+    parser.add_argument('ratios',
                         help='tab-separated ratios matrix file')
 
     parser.add_argument('--verbose', action="store_true")
-    parser.add_argument('--organism', help='KEGG organism code', default=None)
+    parser.add_argument('--organism', help='KEGG organism code', required=True)
     parser.add_argument('--out', help='output directory')
     parser.add_argument('--cachedir', help="path to cache directory")
     parser.add_argument('--string', help='tab-separated STRING file for the organism',

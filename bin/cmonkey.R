@@ -9,7 +9,7 @@ cmonkey.currentiter <- function(db.filename) {
 }
 
 run.cmonkey <- function(organism, ratios) {
-    command <- paste(c("./cmonkey.py", "--organism", organism, "--ratios", ratios), collapse=" ")
+    command <- paste(c("./cmonkey2.py", "--organism", organism, "--ratios", ratios), collapse=" ")
     message(command)
     system(command, wait=FALSE, ignore.stdout=TRUE, ignore.stderr=TRUE)
 }

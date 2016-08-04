@@ -14,17 +14,11 @@ import math
 import argparse
 
 
+DEFAULT_OUTDIR = 'out'
 current_dir = os.path.dirname(os.path.abspath(__file__))
 env = Environment(loader=FileSystemLoader(os.path.join(current_dir, 'templates')))
-outdir = 'out'  # make it flexible
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--out', default=outdir, help='output directory')
-parser.add_argument('--port', type=int, default=8080, help='port to listen to web requests')
-args = parser.parse_args()
-outdir = os.path.join(os.getcwd(), args.out)
-outdb = os.path.join(outdir, 'cmonkey_run.db')
-
+outdir = DEFAULT_OUTDIR
+outdb = None
 
 RunInfo = namedtuple('RunInfo',
                      ['species', 'orgcode', 'num_iters', 'last_iter',
@@ -132,11 +126,11 @@ def read_ratios():
             return float('nan')
         else:
             return float(s)
-
+    global outdir
     ratios_file = os.path.join(outdir, 'ratios.tsv.gz')
     with gzip.open(ratios_file) as infile:
-        line = infile.readline()
         column_titles = infile.readline().strip().split(b'\t')
+        print(column_titles)
         row_titles = []
         data = []
         for line in infile:
@@ -168,6 +162,7 @@ def iterationstat_factory(cursor, row):
 
 
 def dbconn():
+    global outdb
     return sqlite3.connect(outdb, timeout=10, isolation_level=None)
 
 
@@ -415,6 +410,7 @@ class ClusterViewerApp:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def runlog(self):
+        global outdir
         def read_runlog(fname):
             with open(fname) as infile:
                 entries = list(map(lambda l: 0.0 if l[1] == '1' else float(l[2]),
@@ -587,7 +583,7 @@ class ClusterViewerApp:
         motif_pssm_rows = defaultdict(list)
         for row in cursor.fetchall():
             motif_pssm_rows[row.motif_id].append([row.a, row.c, row.g, row.t])
-        
+
         cursor.close()
         if search_string is not None and len(search_string.strip()) > 0:
             search_string = search_string.strip()
@@ -618,7 +614,7 @@ class ClusterViewerApp:
         elif sort_col == 5:
             cluster_stats = sorted(cluster_stats, key=lambda item: min_evalue(motif_infos[item.cluster]),
                                    reverse=sort_reverse)
-            
+
         filtered_rows = [["<a class=\"clusterlink\" id=\"%d\"  href=\"javascript:void(0)\">%d</a>" % (stat.cluster, stat.cluster),
                  '%d' % stat.num_rows,
                  '%d' % stat.num_cols,
@@ -803,7 +799,17 @@ def setup_routes():
     d.connect('cluster', '/cluster/:iteration/:cluster', controller=main, action="view_cluster")
     return d
 
-if __name__ == '__main__':
+def run():
+    global outdir, outdb
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--out', default=DEFAULT_OUTDIR, help='output directory')
+    parser.add_argument('--port', type=int, default=8080, help='port to listen to web requests')
+    args = parser.parse_args()
+    outdir = os.path.join(os.getcwd(), args.out)
+    outdb = os.path.join(outdir, 'cmonkey_run.db')
+    print("connecting to database at ", outdb)
+
+
     conf = {'/': {'request.dispatch': setup_routes()},
             '/static': {'tools.staticdir.on': True,
                         'tools.staticdir.dir': os.path.join(current_dir, 'static')}}
@@ -812,3 +818,7 @@ if __name__ == '__main__':
     cherrypy.server.socket_host = '0.0.0.0'
     cherrypy.server.socket_port = args.port
     cherrypy.quickstart(app)
+
+
+if __name__ == '__main__':
+    run()

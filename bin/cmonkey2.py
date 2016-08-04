@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # vi: sw=4 ts=4 et:
-"""cmonkey.py - cMonkey top-level module
+"""cmonkey2.py - cMonkey top-level module
 
 This file is part of cMonkey Python. Please see README and LICENSE for
 more information and licensing details.
