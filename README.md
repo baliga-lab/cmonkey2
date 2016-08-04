@@ -67,7 +67,7 @@ system
 
 ### Start the python based monitoring application
 
-    python cmviewer/main.py
+    bin/cm2view [--out [output directory]]
 
 ### Another way is to run Halobacterium is specify the RSAT database
 
