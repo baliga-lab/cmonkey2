@@ -88,8 +88,8 @@ class Ratios:
             r = sorted(row)
             minval = r[0]
             maxval = r[-1]
-            median = r[len(r) / 2 + len(r) % 2]
-            quart = len(r) / 4
+            median = r[int(len(r) / 2) + len(r) % 2]
+            quart = int(len(r) / 4)
             lower_quartile = r[quart]
             upper_quartile = r[-(quart + 1)]
             return [normalize_js(minval), normalize_js(lower_quartile),
@@ -130,12 +130,12 @@ def read_ratios():
     ratios_file = os.path.join(outdir, 'ratios.tsv.gz')
     with gzip.open(ratios_file) as infile:
         column_titles = infile.readline().strip().split(b'\t')
-        print(column_titles)
+        column_titles = [s.decode('utf-8') for s in column_titles]
         row_titles = []
         data = []
         for line in infile:
             row = line.strip().split(b'\t')
-            row_titles.append(row[0])
+            row_titles.append(row[0].decode('utf-8'))
             data.append(list(map(to_float, row[1:])))
     return Ratios(row_titles, column_titles, np.array(data))
 
