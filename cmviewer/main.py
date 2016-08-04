@@ -135,7 +135,6 @@ def read_ratios():
 
     ratios_file = os.path.join(outdir, 'ratios.tsv.gz')
     with gzip.open(ratios_file) as infile:
-        line = infile.readline()
         column_titles = infile.readline().strip().split(b'\t')
         row_titles = []
         data = []
