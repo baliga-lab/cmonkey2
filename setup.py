@@ -1,7 +1,7 @@
 import os
 import re
 import codecs
-from setuptools import setup, find_packages
+from setuptools import setup
 
 NAME = 'cmonkey2'
 PACKAGES = ['cmonkey', 'cmviewer', 'config']
@@ -9,7 +9,7 @@ DESCRIPTION = 'cmonkey2 is an implementation of the cmonkey biclustering method 
 LICENSE = 'LGPL V3'
 URI = 'https://github.com/baliga-lab/cmonkey2'
 AUTHOR = 'Baliga Lab, Institute for Systems Biology'
-VERSION = '1.1.0'
+VERSION = '1.2.0'
 
 KEYWORDS = ['class', 'cmonkey2']
 CLASSIFIERS = [
