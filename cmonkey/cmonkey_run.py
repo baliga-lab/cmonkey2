@@ -11,7 +11,7 @@ import gzip
 import sqlite3
 from decimal import Decimal
 import bz2
-from pkg_resources import Requirement, resource_filename
+from pkg_resources import Requirement, resource_filename, DistributionNotFound
 
 import cmonkey.config as config
 import cmonkey.microarray as microarray
@@ -234,7 +234,12 @@ class CMonkeyRun:
     def __get_kegg_data(self):
         # determine the NCBI code
         organism_code = self['organism_code']
-        kegg_path = resource_filename(Requirement.parse("cmonkey2"), USER_KEGG_FILE_PATH)
+
+        try:
+            kegg_path = resource_filename(Requirement.parse("cmonkey2"), USER_KEGG_FILE_PATH)
+        except DistributionNotFound:
+            kegg_path = USER_KEGG_FILE_PATH
+
         keggfile = util.read_dfile(kegg_path, comment='#')
         kegg_map = util.make_dfile_map(keggfile, 1, 3)
         kegg2ncbi = util.make_dfile_map(keggfile, 1, 2)
@@ -247,7 +252,11 @@ class CMonkeyRun:
         self.__make_dirs_if_needed()
         ncbi_code, kegg_species = self.__get_kegg_data()
 
-        go_file_path = resource_filename(Requirement.parse("cmonkey2"), USER_GO_FILE_PATH)
+        try:
+            go_file_path = resource_filename(Requirement.parse("cmonkey2"), USER_GO_FILE_PATH)
+        except DistributionNotFound:
+            go_file_path = USER_GO_FILE_PATH
+
         gofile = util.read_dfile(go_file_path)
 
         if self['rsat_dir']:
@@ -404,8 +413,11 @@ class CMonkeyRun:
             else:
                 raise Exception("Pipeline file '%s' does not exist" % pipeline_file)
         else:
-            pipeline_path = resource_filename(Requirement.parse("cmonkey2"),
-                                              PIPELINE_USER_PATHS[pipeline_id])
+            try:
+                pipeline_path = resource_filename(Requirement.parse("cmonkey2"),
+                                                  PIPELINE_USER_PATHS[pipeline_id])
+            except DistributionNotFound:
+                pipeline_path = PIPELINE_USER_PATHS[pipeline_id]
 
             with open(pipeline_path) as infile:
                 self['pipeline'] = json.load(infile)

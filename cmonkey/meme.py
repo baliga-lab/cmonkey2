@@ -14,7 +14,7 @@ import shutil
 import re
 import collections
 import xml.etree.ElementTree as ET
-from pkg_resources import Requirement, resource_filename
+from pkg_resources import Requirement, resource_filename, DistributionNotFound
 
 import cmonkey.seqtools as st
 import cmonkey.util as util
@@ -771,7 +771,11 @@ USER_TEST_FASTA_PATH = 'config/fasta_test.fa'
 
 def check_meme_version():
     logging.info('checking MEME...')
-    test_fasta = resource_filename(Requirement.parse("cmonkey2"), USER_TEST_FASTA_PATH)
+    try:
+        test_fasta = resource_filename(Requirement.parse("cmonkey2"), USER_TEST_FASTA_PATH)
+    except DistributionNotFound:
+        test_fasta = USER_TEST_FASTA_PATH
+
     try:
         command = ['meme', '-nostatus', '-text', test_fasta]
         output = subprocess.check_output(command).decode('utf-8').split('\n')

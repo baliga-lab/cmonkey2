@@ -16,7 +16,7 @@ import logging
 import tempfile
 import json
 import random
-from pkg_resources import Requirement, resource_filename
+from pkg_resources import Requirement, resource_filename, DistributionNotFound
 
 from cmonkey.schedule import make_schedule
 import cmonkey.util as util
@@ -190,7 +190,11 @@ def set_config_motifs(config, params):
 def __get_config_parser():
     # read default configuration parameters
     config = ConfigParser()
-    config_path = resource_filename(Requirement.parse("cmonkey2"), USER_INI_PATH)
+    try:
+        config_path = resource_filename(Requirement.parse("cmonkey2"), USER_INI_PATH)
+    except DistributionNotFound:
+        config_path = USER_INI_PATH
+
     config.read(config_path)
     return config
 
