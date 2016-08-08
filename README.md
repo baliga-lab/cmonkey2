@@ -42,43 +42,43 @@ for running the interactive monitoring and visualization web application (option
 
 ### Running the Unit Tests
 
-    ./run_tests.sh
+    bin/run_tests.sh
 
 ### Running cmonkey2
 
 In general, you should be able to run cmonkey2 on microbial gene
 expression ratios with
 
-    bin/cmonkey2 --organism <organism-code> <tab separated file of gene expressions>
+    bin/cmonkey2.sh --organism <organism-code> <tab separated file of gene expressions>
 
 The file can be either in your file system or a web URL.
 
 After the program was started, a log file will be written in cmonkey.log. You
 can see all available options with
 
-    bin/cmonkey2 --help
+    bin/cmonkey2.sh --help
 
 ### Test Run with Halobacterium Salinarum
 
 There is a startup script for cMonkey to run the current integrated
 system
 
-    bin/cmonkey2 --organism hal example_data/hal/halo_ratios5.tsv
+    bin/cmonkey2.sh --organism hal example_data/hal/halo_ratios5.tsv
 
 ### Start the python based monitoring application
 
-    bin/cm2view [--out [output directory]]
+    bin/cm2view.sh [--out [output directory]]
 
 ### Another way is to run Halobacterium is specify the RSAT database
 
-    bin/cmonkey2 --organism hal --rsat_organism Halobacterium_NRC_1_uid57769 --rsat_base_url http://pedagogix-tagc.univ-mrs.fr/rsat --rsat_features gene --nooperons --use_BSCM example_data/hal/halo_ratios5.tsv
+    bin/cmonkey2.sh --organism hal --rsat_organism Halobacterium_NRC_1_uid57769 --rsat_base_url http://pedagogix-tagc.univ-mrs.fr/rsat --rsat_features gene --nooperons --use_BSCM example_data/hal/halo_ratios5.tsv
 
 
 ### Running cMonkey on Human
 
 To run cMonkey on human data, run the following code with your own `<ratios.tsv>` file
 
-    bin/cmonkey2 --organism hsa --string <stringFile> --rsat_organism Homo_sapiens_GRCh37 --rsat_URL http://rsat.sb-roscoff.fr/ --rsat_features protein_coding --nooperons <ratios.tsv>
+    bin/cmonkey2.sh --organism hsa --string <stringFile> --rsat_organism Homo_sapiens_GRCh37 --rsat_URL http://rsat.sb-roscoff.fr/ --rsat_features protein_coding --nooperons <ratios.tsv>
 
 #### More details for running cMonkey on human data
 

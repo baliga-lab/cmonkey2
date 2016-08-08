@@ -783,7 +783,7 @@ def check_meme_version():
             if line.startswith('MEME version'):
                 return line.split(' ')[2]
     except OSError:
-        logging.error("MEME does not exist")
+        logging.error("MEME does not exist in your PATH, please either install or check your PATH variable")
         return None
 
 ######################################################################

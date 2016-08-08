@@ -57,4 +57,4 @@ if __name__ == '__main__':
           classifiers=CLASSIFIERS,
           install_requires=INSTALL_REQUIRES,
           include_package_data=True, package_data=PACKAGE_DATA,
-          scripts=['bin/cmonkey2.py', 'bin/cm2view.py'])
+          scripts=['bin/cmonkey2', 'bin/cm2view'])

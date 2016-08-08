@@ -1,7 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env python3
 
-APP_ROOT="$(dirname "$(dirname "$(readlink "$0")")")"
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+import cmonkey.cmviewer.webapp as webapp
 
-PYTHONPATH=$APP_ROOT $DIR/cm2view.py "$@"
-
+if __name__ == '__main__':
+    webapp.run()

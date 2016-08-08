@@ -1,9 +1,38 @@
-#!/bin/bash
+#!/usr/bin/env python3
+# vi: sw=4 ts=4 et:
+"""cmonkey2.py - cMonkey top-level module
 
-#./cluster_viewer start
-#python -mwebbrowser http://localhost:8080
-APP_ROOT="$(dirname "$(dirname "$(readlink "$0")")")"
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+This file is part of cMonkey Python. Please see README and LICENSE for
+more information and licensing details.
+"""
+import os.path
+import cmonkey.cmonkey_run as cmr
+import cmonkey.config as conf
+import cmonkey.util as util
+import logging
+import cmonkey.scoring as scoring
+import random
 
-PYTHONPATH=$APP_ROOT $DIR/cmonkey2.py "$@"
+if __name__ == '__main__':
+    """process configuration"""
+    args, params, ratios = conf.setup()
 
+    cmonkey_run = cmr.CMonkeyRun(ratios, params)
+    proceed = True
+
+    if params['checkratios']:
+        thesaurus = cmonkey_run.organism().thesaurus()
+        logging.info("Checking the quality of the input matrix names...")
+        found = [name for name in ratios.row_names if name in thesaurus]
+        num_found = len(found)
+        total = len(ratios.row_names)
+        percent = (float(num_found) / float(total)) * 100.0
+        proceed = percent > 50.0
+
+    if not proceed:
+        logging.error("# genes found: %d, # total: %d, %f %% - please check your ratios file",
+                      num_found, total, percent)
+    else:
+        cmonkey_run.run()
+    if not args.interactive:
+        cmonkey_run.cleanup()
