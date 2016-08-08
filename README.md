@@ -14,6 +14,39 @@ A complete set of documentation for installation and running of cMonkey is on th
 
 Please report all bugs or other issues using the [issue tracker](https://github.com/baliga-lab/cmonkey2/issues). Please direct any and all questions to either the [developer](https://groups.google.com/d/forum/cmonkey-dev) or [user](https://groups.google.com/d/forum/cmonkey-users) discussion groups. 
 
+### Installation
+
+The recommended way is to install cmonkey2 through pip
+
+```
+pip install --upgrade cmonkey2
+```
+
+This will install the tools cmonkey2 and cm2view into your python environment. Please note that
+you will have to install MEME manually from http://meme-suite.org/
+
+### Running cmonkey2
+
+The simplest way to run the tool (if all data available in RSAT and STRING):
+
+```
+$ cmonkey2 --organism <organism-code> <tab separated file of gene expressions>
+```
+
+To display available options:
+```
+bin/cmonkey2.sh --help
+```
+
+To run the example organism:
+```
+bin/cmonkey2.sh --organism hal example_data/hal/halo_ratios5.tsv
+```
+
+### Using directly from the source repository
+
+Below are the instructions to use cmonkey2 directly in the source repository
+
 ### System requirements
 
 cMonkey<sub>2</sub> has been tested and runs on all tested recent versions of Linux (including debian-based [Ubuntu, Mint, Debian] and RPM-based [CentOS, Fedora]) and recent versions of Mac OS X. Additional dependencies include:
@@ -32,13 +65,14 @@ for the human setup, Weeder 1.4.2 is needed
 
 for running the unit tests (optional):
 
-* python-xmlrunner 
+* python-xmlrunner
 
 for running the interactive monitoring and visualization web application (optional):
 
 * CherryPy 3
 * Jinja2
 * python-routes
+
 
 ### Running the Unit Tests
 
@@ -88,3 +122,14 @@ Running cMonkey on Human data is somewhat difficult because neither the string d
 2.  Find an RSAT mirror that has .raw chromose files and feature files.  In the above example, we use Homo\_sapiens\_ensembl\_74\_GRCh37 from the main RSAT database.  To annotate these we use 'protein\_coding.tab' and 'protein\_coding\_names.tab'.  In principal, other annotation files such as 'processed\_transcript' would work just as well.
 3.  Adjust the upstream region searched, and perhaps modify the code to search for know TF and miRNA motifs rather than de-novo motifs.  NOTE: Modiyfing the motif search step is non-trivial.
 
+
+
+### Package maintainers
+
+#### Build distribution
+
+python3 setup.py sdist bdist_wheel
+
+#### Uploading to PyPI
+
+twine upload -r pypi dist/cmonkey2-<version>*

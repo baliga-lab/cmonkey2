@@ -12,11 +12,16 @@ AUTHOR = 'Baliga Lab, Institute for Systems Biology'
 VERSION = '1.2.0'
 
 KEYWORDS = ['class', 'cmonkey2']
+
+# See trove classifiers
+# https://testpypi.python.org/pypi?%3Aaction=list_classifiers
+
 CLASSIFIERS = [
     "Development Status :: 5 - Production/Stable",
-    "Intended Audience :: Scientists",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
     "Natural Language :: English",
-    "License :: OSI Approved :: GNU Lesser Public License",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 2",
@@ -24,6 +29,7 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.5",
     "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Topic :: Software Development :: Libraries :: Python Modules"
     ]
 INSTALL_REQUIRES = ['numpy', 'scipy',
