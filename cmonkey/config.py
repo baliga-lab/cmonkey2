@@ -31,7 +31,7 @@ This program is licensed under the General Public License V3.
 See README and LICENSE for details.\n"""
 
 # if we were installed through Debian package management, default.ini is found here
-USER_INI_PATH = 'config/default.ini'
+USER_INI_PATH = 'cmonkey/default_config/default.ini'
 
 """
 supported debug options:

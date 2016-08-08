@@ -767,7 +767,7 @@ def global_background_file(organism, gene_aliases, seqtype, bgorder=3,
     return make_background_file(global_seqs, use_revcomp, bgorder)
 
 
-USER_TEST_FASTA_PATH = 'config/fasta_test.fa'
+USER_TEST_FASTA_PATH = 'cmonkey/default_config/fasta_test.fa'
 
 def check_meme_version():
     logging.info('checking MEME...')

@@ -5,8 +5,8 @@ import cmonkey.stringdb as stringdb
 import cmonkey.microbes_online as microbes_online
 import cmonkey.organism as org
 
-KEGG_FILE_PATH = 'config/KEGG_taxonomy'
-GO_FILE_PATH = 'config/proteome2taxid'
+KEGG_FILE_PATH = 'cmonkey/default_config/KEGG_taxonomy'
+GO_FILE_PATH = 'cmonkey/default_config/proteome2taxid'
 CACHE_DIR = 'cache'
 RSAT_BASE_URL = 'http://rsat01.biologie.ens.fr/rsat'
 

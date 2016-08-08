@@ -42,15 +42,15 @@ except NameError:
     xrange = range
 
 
-USER_KEGG_FILE_PATH = 'config/KEGG_taxonomy'
-USER_GO_FILE_PATH = 'config/proteome2taxid'
+USER_KEGG_FILE_PATH = 'cmonkey/default_config/KEGG_taxonomy'
+USER_GO_FILE_PATH = 'cmonkey/default_config/proteome2taxid'
 
 # pipeline paths
 PIPELINE_USER_PATHS = {
-    'default': 'config/default_pipeline.json',
-    'rows': 'config/rows_pipeline.json',
-    'rowsandmotifs': 'config/rows_and_motifs_pipeline.json',
-    'rowsandnetworks': 'config/rows_and_networks_pipeline.json'
+    'default': 'cmonkey/default_config/default_pipeline.json',
+    'rows': 'cmonkey/default_config/rows_pipeline.json',
+    'rowsandmotifs': 'cmonkey/default_config/rows_and_motifs_pipeline.json',
+    'rowsandnetworks': 'cmonkey/default_config/rows_and_networks_pipeline.json'
 }
 
 
