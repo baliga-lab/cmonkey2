@@ -4,7 +4,7 @@ import codecs
 from setuptools import setup
 
 NAME = 'cmonkey2'
-PACKAGES = ['cmonkey', 'cmviewer', 'config']
+PACKAGES = ['cmonkey', 'cmonkey.cmviewer', 'config']
 DESCRIPTION = 'cmonkey2 is an implementation of the cmonkey biclustering method in Python'
 LICENSE = 'LGPL V3'
 URI = 'https://github.com/baliga-lab/cmonkey2'
@@ -31,14 +31,14 @@ INSTALL_REQUIRES = ['numpy', 'scipy',
                         'cherrypy', 'jinja2', 'routes']
 
 PACKAGE_DATA = {
-    '': ['*.json', '*.ini', '*.fa', 'KEGG_taxonomy', 'proteome2taxid'],
-    'cmviewer': ['static/images/*',
-                 'static/javascripts/*', 'static/javascripts/modules/*',
-                 'static/javascripts/jquery-ui-1.11.2.custom/*',
-                 'static/javascripts/jquery-ui-1.11.2.custom/external/jquery/*',
-                 'static/javascripts/jquery-ui-1.11.2.custom/images/*',
-                 'static/stylesheets/*',
-                 'templates/*']
+    '': ['config/*.json', 'config/*.ini', 'config/*.fa', 'config/KEGG_taxonomy', 'config/proteome2taxid'],
+    'cmonkey.cmviewer': ['static/images/*',
+                    'static/javascripts/*', 'static/javascripts/modules/*',
+                    'static/javascripts/jquery-ui-1.11.2.custom/*',
+                    'static/javascripts/jquery-ui-1.11.2.custom/external/jquery/*',
+                    'static/javascripts/jquery-ui-1.11.2.custom/images/*',
+                    'static/stylesheets/*',
+                    'templates/*']
     }
 
 if __name__ == '__main__':
