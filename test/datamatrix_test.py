@@ -8,6 +8,7 @@ import copy
 import cmonkey.datamatrix as dm
 import numpy as np
 import cmonkey.util as util
+import os
 import pandas
 
 
@@ -337,6 +338,38 @@ class NoChangeFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertTrue((filtered.values == [[-0.35], [0.42]]).all())
 
 
+class DataMatrixReadWriteTest(unittest.TestCase):  # pylint: disable-msg=R0904
+    """Test class for DataMatrix CSV reading/writing"""
+    def tearDown(self):
+        if os.path.exists('/tmp/simple_ratios.tsv'):
+            os.remove('/tmp/simple_ratios.tsv')
+
+    def test_read_csv(self):
+        ratios = dm.create_from_csv('testdata/simple_ratios.tsv')
+        self.assertEquals(ratios.row_names, ['Gene 1', 'Gene 2'])
+        self.assertEquals(ratios.column_names, ['Cond 1', 'Cond 2'])
+        self.assertAlmostEquals(ratios.values[0][0], 23.1)
+
+    def test_read_csv_numeric_rownames(self):
+        ratios = dm.create_from_csv('testdata/simple_ratios_numeric_rownames.tsv')
+        self.assertEquals(['12231245', '12344542'], ratios.row_names)
+        self.assertEquals(['Cond 1', 'Cond 2'], ratios.column_names)
+        print(ratios.row_names)
+        self.assertAlmostEquals(ratios.values[0][0], 54.1)
+
+
+    def test_write_csv(self):
+        ratios = dm.DataMatrix(2, 2, ['Gene 1', 'Gene 2'], ['Cond 1', 'Cond 2'],
+                                np.array([[1, 2], [3, 4]]))
+        ratios.write_tsv_file('/tmp/simple_ratios.tsv', compressed=False)
+
+        # check the written file
+        ratios = dm.create_from_csv('/tmp/simple_ratios.tsv')
+        self.assertEquals(ratios.row_names, ['Gene 1', 'Gene 2'])
+        self.assertEquals(ratios.column_names, ['Cond 1', 'Cond 2'])
+        self.assertAlmostEquals(ratios.values[0][0], 1.0)
+
+
 class CenterScaleFilterTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for center_median_filter"""
 
@@ -454,6 +487,7 @@ if __name__ == '__main__':
     SUITE = []
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(QuantileNormalizeTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DataMatrixTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(DataMatrixReadWriteTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(CenterScaleFilterTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(NoChangeFilterTest))
     unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(SUITE))

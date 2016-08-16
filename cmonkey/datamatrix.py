@@ -368,6 +368,9 @@ def create_from_csv(csvpath, filters=[], sep='\t', quotechar='"', case_sensitive
 
     if os.path.exists(csvpath):
         df = pandas.read_csv(csvpath, index_col=0, sep=sep, quotechar=quotechar)
+        df.index = map(str, df.index)
+    else:
+        raise Exception("File '%s' does not exist" % csvpath)
     for matrix_filter in filters:
         df = matrix_filter(df)
     if not case_sensitive:
@@ -481,13 +484,4 @@ def split_matrix(matrix, outdir, n, kmin, kmax):
         m.write_tsv_file(path)
 
 
-def prepare_ensemble_matrix(ratiofile, outdir, n, kmin):
-    matrix_factory = DataMatrixFactory([nochange_filter,
-                                        center_scale_filter])
-    if os.path.exists(ratiofile):
-        infile = util.read_dfile(ratiofile, has_header=True, quote='\"')
-        matrix = matrix_factory.create_from(infile)
-        split_matrix(matrix, outdir, n, kmin, matrix.num_columns)
-
-
-__all__ = ['DataMatrix', 'DataMatrixFactory', 'nochange_filter', 'center_scale_filter']
+__all__ = ['DataMatrix', 'nochange_filter', 'center_scale_filter']

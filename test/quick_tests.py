@@ -27,6 +27,7 @@ import sys
 if __name__ == '__main__':
     SUITE = []
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(dmtest.DataMatrixTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(dmtest.DataMatrixReadWriteTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(dmtest.NoChangeFilterTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(dmtest.CenterScaleFilterTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(dmtest.QuantileNormalizeTest))
