@@ -142,7 +142,12 @@ RankedAnchor = collections.namedtuple('RankedAnchor', ['score', 'anchor'])
 def best_matching_links(search_string, html):
     """given a search string and an HTML text, extract the best matching
     href"""
-    soup = bs4.BeautifulSoup(html, "lxml")
+    try:
+        soup = bs4.BeautifulSoup(html, "lxml")
+    except:
+        # this is a fallback for ancient sytems like CentOS
+        soup = bs4.BeautifulSoup(html)
+
     links = []
     for anchor in soup.findAll('a'):
         score = levenshtein_distance(search_string, anchor['href'])
