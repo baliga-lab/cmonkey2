@@ -107,6 +107,16 @@ class ScoringFunctionBase:
         else:
             return None
 
+    def store_result(self, result):
+        """store the result for later, either by pickling them or caching them"""
+        if self.cache_result:
+            self.cached_result = result
+        else:
+            # pickle the result for future use
+            logging.debug("pickle result to %s", self.pickle_path())
+            with open(self.pickle_path(), 'wb') as outfile:
+                pickle.dump(result, outfile)
+
     def current_score_means(self, result_matrix):
         """This function can be overridden by custom functions to provide their
         own score means. The default version computes the means of the result
@@ -130,25 +140,10 @@ class ScoringFunctionBase:
         if self.run_in_iteration(iteration):
             logging.debug("running '%s' in iteration %d with scaling: %f",
                           self.id, iteration, self.scaling(iteration))
-            computed_result = self.do_compute(iteration_result,
-                                              reference_matrix)
-            # store the result for later, either by pickling them
-            # or caching them
-            if self.cache_result:
-                self.cached_result = computed_result
-            else:
-                # pickle the result for future use
-                logging.debug("pickle result to %s", self.pickle_path())
-                with open(self.pickle_path(), 'wb') as outfile:
-                    pickle.dump(computed_result, outfile)
-
-        elif self.cache_result and ('cached_result' in dir(self)):
-            computed_result = self.cached_result
-        elif os.path.exists(self.pickle_path()):
-            with open(self.pickle_path(), 'rb') as infile:
-                computed_result = pickle.load(infile)
+            computed_result = self.do_compute(iteration_result, reference_matrix)
+            self.store_result(computed_result)
         else:
-            computed_result = None
+            computed_result = self.last_cached()
 
         self.run_log.log(iteration,
                          self.run_in_iteration(iteration),
