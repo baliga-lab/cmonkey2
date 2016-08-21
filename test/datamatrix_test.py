@@ -283,6 +283,25 @@ class DataMatrixTest(unittest.TestCase):  # pylint: disable-msg=R0904
                                            [-1.01, -19.9],
                                            [-19.9, -19.9]]).all())
 
+    def test_quantile(self):
+        """tests the quantile() method"""
+        matrix = dm.DataMatrix(3, 2, values=[[-1.01, -1.01], [-1.01, -19.9], [-19.9, -19.9]])
+        self.assertAlmostEquals(matrix.quantile(0.25), -19.9)
+
+    def test_subtract_with_quantile(self):
+        """create DataMatrix with an initialization value"""
+        matrix = dm.DataMatrix(3, 2, values=[[-1.01, -1.01], [-1.01, -19.9], [-19.9, -19.9]])
+        mean_before = matrix.mean()
+        matrix.subtract_with_quantile(0.25)
+        self.assertNotEquals(mean_before, matrix.mean())
+        self.assertAlmostEquals(matrix.values[0, 0], 18.89)
+        self.assertAlmostEquals(matrix.values[0, 1], 18.89)
+        self.assertAlmostEquals(matrix.values[1, 0], 18.89)
+        self.assertAlmostEquals(matrix.values[1, 1], 0.0)
+        self.assertAlmostEquals(matrix.values[2, 0], 0.0)
+        self.assertAlmostEquals(matrix.values[2, 1], 0.0)
+
+
 
 class MockDelimitedFile:  # pylint: disable-msg=R0903
     """Mock DelimitedFile"""

@@ -171,7 +171,7 @@ class DataMatrix:
 
     def subtract_with_quantile(self, quantile):
         """subtracts this matrix's values with the specified quantile of its values"""
-        self.values - self.quantile(quantile)
+        self.values -= self.quantile(quantile)
 
     def max(self):
         """return the maximum value in this matrix"""
