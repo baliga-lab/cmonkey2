@@ -188,7 +188,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 
     def bonferroni_cutoff(self):
         """Bonferroni cutoff value"""
-        return float(self.num_clusters()) / 0.05
+        return 0.05 / float(self.num_clusters())
 
     def do_compute(self, iteration_result, ref_matrix):
         """compute method
@@ -229,15 +229,16 @@ class ScoringFunction(scoring.ScoringFunctionBase):
             SET_SET_TYPE = set_type
             logging.info("PROCESSING SET TYPE '%s'", set_type.name)
             start1 = util.current_millis()
+            cutoff = self.bonferroni_cutoff()
             if use_multiprocessing:
                 with util.get_mp_pool(self.config_params) as pool:
                     results = pool.map(compute_cluster_score,
-                                       [(cluster, self.bonferroni_cutoff(), ref_min_score)
+                                       [(cluster, cutoff, ref_min_score)
                                         for cluster in xrange(1, self.num_clusters() + 1)])
             else:
                 results = []
                 for cluster in xrange(1, self.num_clusters() + 1):
-                    results.append(compute_cluster_score((cluster, self.bonferroni_cutoff(), ref_min_score)))
+                    results.append(compute_cluster_score((cluster, cutoff, ref_min_score)))
 
             elapsed1 = util.current_millis() - start1
             logging.info("ENRICHMENT SCORES COMPUTED in %f s, STORING...",

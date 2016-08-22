@@ -9,7 +9,7 @@ DESCRIPTION = 'cmonkey2 is an implementation of the cmonkey biclustering method 
 LICENSE = 'LGPL V3'
 URI = 'https://github.com/baliga-lab/cmonkey2'
 AUTHOR = 'Baliga Lab, Institute for Systems Biology'
-VERSION = '1.2.0'
+VERSION = '1.2.1'
 
 KEYWORDS = ['class', 'cmonkey2']
 

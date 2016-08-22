@@ -126,6 +126,14 @@ Running cMonkey on Human data is somewhat difficult because neither the string d
 
 ### Package maintainers
 
+#### General
+
+The distribution is built using setuptools and wheel format
+
+  - setup.py contains all information needed to build the distribution
+    increase the version number before making a distribution
+  - record user-relevant changes in CHANGELOG.rst
+
 #### Build distribution
 
 python3 setup.py sdist bdist_wheel
