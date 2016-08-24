@@ -50,7 +50,7 @@ init.env <- function(clusterStack) {
 }
 
 run.inferelator <- function(tfsfile=NULL, json=NULL, ratios=NULL,
-                            resultdir=NULL, rdata=NULL) {
+                            resultdir=NULL, rdata=NULL, boot=1) {
   if (length(script.dir) == 0) {
     source('cmonkey-python.R')
   } else {
@@ -84,7 +84,7 @@ run.inferelator <- function(tfsfile=NULL, json=NULL, ratios=NULL,
     message('Creating cluster stack from JSON...')
     ge$ratios <- data.matrix(read.delim(gzfile(ratios), header=T, row.names=1, as.is=T, check.names=F))
     ge$e <- init.env(fromJSON(json))
-    message('done.')    
+    message('done.')
   } else {
     message('Loading cluster stack and ratios from environment...')
     load(rdata, envir=ge)
@@ -97,7 +97,7 @@ run.inferelator <- function(tfsfile=NULL, json=NULL, ratios=NULL,
     message('done.')
   }
   coeffs <- runnit.wrapper.halo(e, cv.choose="min+4se", tf.groups=999, alpha=0.8,
-                                n.boot=1, tau=10,
+                                n.boot=boot, tau=10,
                                 r.cutoff=Inf, r.filter=Inf, weighted=T, aic.filter=Inf, plot=F)
   save(coeffs, file='inferelator-coeffs.RData')
   coeffs=coeffs
@@ -140,7 +140,8 @@ spec = matrix(c(
   'resultdir', 'res', 2, "character",
   'json',      'j',   2, "character",
   'ratios',    'r',   2, "character",
-  'rdata', 'rdat',    2, "character"
+  'rdata', 'rdat',    2, "character",
+  'boot', 'b',    2, "integer"
   ), byrow=TRUE, ncol=4)
 
 opt <- getopt(spec, usage=FALSE)
@@ -152,9 +153,13 @@ if (!is.null(opt$outfile) &&
      !is.null(opt$resultdir) ||
      !is.null(opt$json) && !is.null(opt$ratios))) {
     coeffs <- run.inferelator(opt$tfsfile,
-                              opt$json, opt$ratios, opt$resultdir, opt$rdata)
+                              opt$json, opt$ratios, opt$resultdir, opt$rdata, opt$boot)
     message('writing influences...')
     write.influences(coeffs, opt$outfile)
+    # We have to write the p-values network as well
+    if (opt$boot > 1) {
+        write.inf.network(coeffs, 'inferelator-out')
+    }
     message('writing conditions...')
     #write.conditions.clusters(coeffs)
     message('writing ss.ts.tsouts...')
