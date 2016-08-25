@@ -217,7 +217,7 @@ class ScoringFunction(scoring.ScoringFunctionBase):
                 else:
                     CANONICAL_ROW_INDEXES[row] = index
 
-        ref_min_score = ref_matrix.min()
+        ref_min_score = np.nanpercentile(ref_matrix.values, 10.0)
         logging.info('REF_MIN_SCORE: %f', ref_min_score)
 
         set_filepath = os.path.join(self.config_params['output_dir'],
@@ -286,8 +286,13 @@ class ScoringFunction(scoring.ScoringFunctionBase):
 def compute_cluster_score(args):
     """Computes the cluster score for a given set type"""
     global SET_MATRIX, SET_MEMBERSHIP, SET_SET_TYPE, SET_SYNONYMS, CANONICAL_ROWNAMES, CANONICAL_ROW_INDEXES
-
     cluster, cutoff, ref_min_score = args
+    return compute_cluster_score_plain(cluster, cutoff, ref_min_score, SET_MATRIX, SET_MEMBERSHIP,
+                                       SET_SET_TYPE, SET_SYNONYMS, CANONICAL_ROWNAMES, CANONICAL_ROW_INDEXES)
+
+def compute_cluster_score_plain(cluster, cutoff, ref_min_score, SET_MATRIX, SET_MEMBERSHIP, SET_SET_TYPE,
+                                SET_SYNONYMS, CANONICAL_ROWNAMES, CANONICAL_ROW_INDEXES):
+    """This version is the real implementation, that can be tested without using global variables"""
     set_type = SET_SET_TYPE
     matrix = SET_MATRIX
     cluster_rows = set()
@@ -349,7 +354,7 @@ def compute_cluster_score(args):
         else:
             dampened_pvalue = math.log10(min_pvalue) / math.log10(cutoff)
 
-        scores[scores != 0.0] = dampened_pvalue / scores[scores != 0.0]
+        scores[scores != 0.0] = scores[scores != 0.0] / dampened_pvalue
         scores *= ref_min_score
     else:
         min_set = 'NA'

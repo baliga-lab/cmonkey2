@@ -63,6 +63,7 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(se_test.DiscreteEnrichmentSetTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(se_test.CutoffEnrichmentSetTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(se_test.SetTypeTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(se_test.SetEnrichmentComputeClusterScoreTest))
 
     if len(sys.argv) > 1 and sys.argv[1] == 'xml':
       xmlrunner.XMLTestRunner(output='test-reports').run(unittest.TestSuite(SUITE))
