@@ -19,7 +19,7 @@ Please report all bugs or other issues using the [issue tracker](https://github.
 The recommended way is to install cmonkey2 through pip
 
 ```
-pip install --upgrade cmonkey2
+pip install cmonkey2
 ```
 
 This will install the tools cmonkey2 and cm2view into your python environment. Please note that
