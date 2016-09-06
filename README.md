@@ -55,12 +55,12 @@ cMonkey<sub>2</sub> has been tested and runs on all tested recent versions of Li
 * scipy >= 0.9.0
 * numpy >= 1.6.0
 * biopython >= 1.63
-* MySQLdb >= 1.2.3
 * BeautifulSoup >= 4
 * R >= 2.14.1
 * rpy2 >= 2.2.1
 * MEME 4.3.0 or >= 4.8.1
 * csh (for running MEME)
+* pandas
 for the human setup, Weeder 1.4.2 is needed
 
 for running the unit tests (optional):

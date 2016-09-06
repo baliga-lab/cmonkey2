@@ -9,7 +9,7 @@ DESCRIPTION = 'cmonkey2 is an implementation of the cmonkey biclustering method 
 LICENSE = 'LGPL V3'
 URI = 'https://github.com/baliga-lab/cmonkey2'
 AUTHOR = 'Baliga Lab, Institute for Systems Biology'
-VERSION = '1.2.1'
+VERSION = '1.2.2'
 
 KEYWORDS = ['class', 'cmonkey2']
 
@@ -63,4 +63,4 @@ if __name__ == '__main__':
           classifiers=CLASSIFIERS,
           install_requires=INSTALL_REQUIRES,
           include_package_data=True, package_data=PACKAGE_DATA,
-          scripts=['bin/cmonkey2', 'bin/cm2view'])
+          scripts=['bin/cmonkey2', 'bin/cm2view', 'bin/cm2plot'])
