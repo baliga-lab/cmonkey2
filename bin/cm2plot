@@ -10,6 +10,8 @@ import sqlite3
 
 import cmonkey.tools.plot_expressions as plot_exps
 import cmonkey.tools.plot_motifs as plot_motifs
+import cmonkey.tools.plot_motif_positions as plot_motif_pos
+
 
 DESCRIPTION = """cm2plot - generate cmonkey2 plots"""
 
@@ -19,7 +21,7 @@ if __name__ == '__main__':
                         help='directory to store the generated plots in')
     parser.add_argument('resultdir',
                         help='cmonkey2 result directory')
-    parser.add_argument('command', choices=['expressions', 'motif_logos'],
+    parser.add_argument('command', choices=['expressions', 'motif_logos', 'motif_pos'],
                         help='cmonkey2 result directory')
 
     args = parser.parse_args()
@@ -36,3 +38,5 @@ if __name__ == '__main__':
         plot_exps.generate_plots(conn, args.resultdir, output_dir)
     elif args.command == 'motif_logos':
         plot_motifs.generate_plots(conn, output_dir)
+    elif args.command == 'motif_pos':
+        plot_motif_pos.generate_plots(conn, output_dir)

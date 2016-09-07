@@ -1,11 +1,9 @@
+"""plot_expressions.py - make cluster gene expression plots"""
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 import numpy as np
-import pandas
-import sqlite3
 import os
-import gzip
 import math
+from cmonkey.tools.util import read_ratios
 
 
 def normalize_js(value):
@@ -13,13 +11,6 @@ def normalize_js(value):
         return 0.0
     else:
         return value
-
-
-def read_ratios(result_dir):
-    csvpath = os.path.join(result_dir, 'ratios.tsv.gz')
-    df = pandas.read_csv(csvpath, index_col=0, sep='\t')
-    df.index = map(str, df.index)
-    return df
 
 
 def generate_plots(conn, result_dir, output_dir):

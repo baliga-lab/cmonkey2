@@ -1,7 +1,6 @@
+"""plot_motifs.py - prints the cmonkey2 motifs as PNG images"""
 import os
-import sqlite3
 import subprocess
-import tempfile
 
 
 def make_weblogo(cursor, motif_id, inpath, outpath):

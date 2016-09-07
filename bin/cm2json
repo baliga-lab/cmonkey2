@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+
+import os
+import argparse
+import sqlite3
+
+import cmonkey.tools.export_expressions as export_exp
+
+
+DESCRIPTION = """cm2json - export cmonkey2 results as JSON"""
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=DESCRIPTION)
+    parser.add_argument('--output_dir', default=None,
+                        help='directory to store the generated plots in')
+    parser.add_argument('resultdir',
+                        help='cmonkey2 result directory')
+    args = parser.parse_args()
+    if not os.path.exists(args.resultdir):
+        raise Exception("cmonkey2 result directory '%s' does not exist" % args.resultdir)
+    if args.output_dir is None:
+        output_dir = args.resultdir
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+
+    conn = sqlite3.connect(os.path.join(args.resultdir, 'cmonkey_run.db'))
+    export_exp.to_json_file(conn, args.resultdir, output_dir)
