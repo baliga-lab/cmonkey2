@@ -21,7 +21,7 @@ if __name__ == '__main__':
                         help='directory to store the generated plots in')
     parser.add_argument('resultdir',
                         help='cmonkey2 result directory')
-    parser.add_argument('command', choices=['expressions', 'motif_logos', 'motif_pos'],
+    parser.add_argument('command', choices=['expressions', 'motif_logos', 'motif_pos', 'all'],
                         help='cmonkey2 result directory')
 
     args = parser.parse_args()
@@ -39,4 +39,8 @@ if __name__ == '__main__':
     elif args.command == 'motif_logos':
         plot_motifs.generate_plots(conn, output_dir)
     elif args.command == 'motif_pos':
+        plot_motif_pos.generate_plots(conn, output_dir)
+    elif args.command == 'all':
+        plot_exps.generate_plots(conn, args.resultdir, output_dir)
+        plot_motifs.generate_plots(conn, output_dir)
         plot_motif_pos.generate_plots(conn, output_dir)
