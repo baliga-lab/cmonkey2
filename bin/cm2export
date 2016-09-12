@@ -4,7 +4,7 @@ import os
 import argparse
 import sqlite3
 
-import cmonkey.tools.export_expressions as export_exp
+import cmonkey.tools.export as export
 
 
 DESCRIPTION = """cm2json - export cmonkey2 results as JSON"""
@@ -16,6 +16,8 @@ if __name__ == '__main__':
                         help='directory to store the generated plots in')
     parser.add_argument('resultdir',
                         help='cmonkey2 result directory')
+    parser.add_argument('command', choices=['expressions', 'microformats'],
+                        help='command')
     args = parser.parse_args()
     if not os.path.exists(args.resultdir):
         raise Exception("cmonkey2 result directory '%s' does not exist" % args.resultdir)
@@ -25,4 +27,7 @@ if __name__ == '__main__':
         os.mkdir(output_dir)
 
     conn = sqlite3.connect(os.path.join(args.resultdir, 'cmonkey_run.db'))
-    export_exp.to_json_file(conn, args.resultdir, output_dir)
+    if args.command == 'expressions':
+        export.cluster_expressions_to_json_file(conn, args.resultdir, output_dir)
+    elif args.command == 'microformats':
+        export.export_to_gaggle_microformats(conn, args.resultdir, output_dir)

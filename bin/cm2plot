@@ -22,7 +22,7 @@ if __name__ == '__main__':
     parser.add_argument('resultdir',
                         help='cmonkey2 result directory')
     parser.add_argument('command', choices=['expressions', 'motif_logos', 'motif_pos', 'all'],
-                        help='cmonkey2 result directory')
+                        help='command')
 
     args = parser.parse_args()
     if not os.path.exists(args.resultdir):

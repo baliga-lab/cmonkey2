@@ -9,4 +9,4 @@ else
     PYTHON=python
 fi
 
-PYTHONPATH=$APP_ROOT $PYTHON $DIR/cm2json "$@"
+PYTHONPATH=$APP_ROOT $PYTHON $DIR/cm2export "$@"
