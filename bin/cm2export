@@ -21,8 +21,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if not os.path.exists(args.resultdir):
         raise Exception("cmonkey2 result directory '%s' does not exist" % args.resultdir)
+
     if args.output_dir is None:
         output_dir = args.resultdir
+    else:
+        output_dir = args.output_dir
+
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 

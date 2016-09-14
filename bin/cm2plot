@@ -30,6 +30,9 @@ if __name__ == '__main__':
 
     if args.output_dir is None:
         output_dir = args.resultdir
+    else:
+        output_dir = args.output_dir
+
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 
