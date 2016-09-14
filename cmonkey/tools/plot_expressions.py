@@ -22,10 +22,10 @@ def generate_plots(conn, result_dir, output_dir):
 
     cursor.execute('select distinct cluster from row_members where iteration=?', [iteration])
     clusters = [row[0] for row in cursor.fetchall()]
+    figure = plt.figure(figsize=(6,3))
     for cluster in clusters:
         plt.clf()
         plt.cla()
-        plt.figure(figsize=(6,3))
         cursor.execute('select distinct name from row_members rm join row_names rn on rm.order_num=rn.order_num where cluster=? and iteration=?', [cluster, iteration])
         genes = [row[0] for row in cursor.fetchall()]
 
@@ -50,3 +50,4 @@ def generate_plots(conn, result_dir, output_dir):
         plt.plot([cut_line, cut_line], [min_value, max_value], color='red',
                  linestyle='--', linewidth=1)
         plt.savefig(os.path.join(output_dir, "exp-%d" % cluster))
+    plt.close(figure)

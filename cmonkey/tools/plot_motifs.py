@@ -13,7 +13,7 @@ def make_weblogo(cursor, motif_id, inpath, outpath):
                            [motif_id])
             for row in cursor.fetchall():
                 out.write("\t".join(map(str, row)) + "\n")
-        subprocess.call(["weblogo", "-a", "ACGT", "-f", inpath, "-F", "png", "-o", outpath])
+        subprocess.call(["weblogo", "-a", "ACGT", "-c", "classic", "-f", inpath, "-F", "png", "-o", outpath])
     finally:
         if os.path.exists(inpath):
             os.remove(inpath)
