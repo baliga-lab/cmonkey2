@@ -92,3 +92,15 @@ def cluster_expressions_to_json_file(conn, result_dir, output_dir):
     buffer = json.dumps(result)
     with open(os.path.join(output_dir, 'cluster_expressions.json'), 'w') as out:
         out.write(buffer)
+
+
+def export_motif_evalues_tsv(conn, result_dir, output_dir):
+    cursor = conn.cursor()
+    cursor.execute('select max(iteration) from motif_infos')
+    iteration = cursor.fetchone()[0]
+    query = """select m1.cluster,m1.seqtype,m1.evalue as evalue1,m2.evalue as evalue2 from (select distinct cluster,seqtype,evalue from motif_infos where iteration=? and motif_num=1) as m1 left outer join (select distinct cluster,seqtype,evalue from motif_infos where iteration=? and motif_num=2) as m2 on m1.cluster=m2.cluster and m1.seqtype=m2.seqtype"""
+    cursor.execute(query, [iteration, iteration])
+    with open(os.path.join(output_dir, 'motif_evalues.tsv'), 'w') as outfile:
+        for row in cursor.fetchall():
+            outfile.write("\t".join(map(str, row)) + '\n')
+
