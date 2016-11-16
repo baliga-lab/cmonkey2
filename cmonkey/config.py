@@ -403,7 +403,7 @@ def setup_default(args, config_parser):
     # Initial configuration from default + user config
     params = set_config(config_parser)
     ratios = read_ratios(params, args)
-    args.clusters_per_row = 2
+    args.clusters_per_row = params['memb.clusters_per_row']
 
     # debug options
     debug_options = set(args.debug.split(',')) if args.debug is not None else set()

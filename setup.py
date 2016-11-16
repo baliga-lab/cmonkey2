@@ -63,4 +63,4 @@ if __name__ == '__main__':
           classifiers=CLASSIFIERS,
           install_requires=INSTALL_REQUIRES,
           include_package_data=True, package_data=PACKAGE_DATA,
-          scripts=['bin/cmonkey2', 'bin/cm2view', 'bin/cm2plot'])
+          scripts=['bin/cmonkey2', 'bin/cm2view', 'bin/cm2plot', 'bin/cm2export'])
