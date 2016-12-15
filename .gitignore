@@ -20,3 +20,5 @@ pipeline_organisms
 *.txt
 checktools
 toport
+coverage.xml
+test-reports
