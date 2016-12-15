@@ -1,6 +1,12 @@
 Changes
 =======
 
+Version 1.2.3, 2016/11/17
+-------------------------
+
+  - tweaks to export and plotting
+  - fix for clusters_per_row option
+
 Version 1.2.2, 2016/09/06
 -------------------------
 
