@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 1.2.4, 2017/01/17
+-------------------------
+
+  - dependency update, missing packages included
+
 Version 1.2.3, 2016/11/17
 -------------------------
 
