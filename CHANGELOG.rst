@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 1.2.5, 2017/02/03
+-------------------------
+
+  - cm2view integrates the updated sequence logo viewer
+
 Version 1.2.4, 2017/01/17
 -------------------------
 

@@ -1,21 +1,20 @@
-/* isblogo.js - see README and LICENSE for details */
-var isblogo;
-if (!isblogo) {
-    isblogo = {};
+/* seqlogo.js - see README and LICENSE for details */
+var seqlogo;
+if (!seqlogo) {
+    seqlogo = {};
 }
 (function () {
     "use strict";
     // some default settings
-    var MARGIN_LEFT = 25, MARGIN_TOP = 20, MARGIN_RIGHT = 20,
-        MARGIN_BOTTOM = 30, DEFAULT_OPTIONS, SVG_NS, NUCLEOTIDE_COLORS,
-        AMINO_COLORS, MEASURE_CANVAS, STRETCH = 0.65;
-    SVG_NS = 'http://www.w3.org/2000/svg';
+    var MARGIN_LEFT = 40, MARGIN_TOP = 20, MARGIN_RIGHT = 20,
+        MARGIN_BOTTOM = 30, DEFAULT_OPTIONS, NUCLEOTIDE_COLORS,
+        AMINO_COLORS, MEASURE_CANVAS, STRETCH = 0.65, BASELINE = 6;
     NUCLEOTIDE_COLORS = {
-        'A': 'rgb(0, 200, 50)',
-        'G': 'rgb(230, 200, 0)',
+        'A': 'rgb(0, 128, 0)',
+        'G': 'rgb(255, 165, 0)',
         'T': 'rgb(255, 0, 0)',
         'U': 'rgb(255, 0, 0)',
-        'C': 'rgb(0, 0, 230)'
+        'C': 'rgb(0, 0, 255)'
     };
     AMINO_COLORS = {
         // polar amino acids
@@ -88,7 +87,7 @@ if (!isblogo) {
 
     // Generic PSSM drawing function
     function drawPSSM(pssm, scalex, y0, yHeight, drawFun) {
-        var x, y, motifPos, size, columnRanks, currentGlyph, row, maxWidth, rseq, oldy;
+        var x, y, motifPos, size, columnRanks, currentGlyph, row, maxWidth, rseq;
         x = MARGIN_LEFT;
 
         for (motifPos = 0; motifPos < pssm.values.length; motifPos += 1) {
@@ -98,37 +97,22 @@ if (!isblogo) {
             rseq = rsequence(pssm, motifPos);
             for (row = 0; row < columnRanks.length; row += 1) {
                 currentGlyph = pssm.alphabet[columnRanks[row][0]];
-                size = drawFun(currentGlyph, x, y, scalex, yHeight, rseq * columnRanks[row][1]);
+                size = drawFun(currentGlyph, x, y, scalex, yHeight,
+                               rseq * columnRanks[row][1]);
                 if (size.width > maxWidth) {
                     maxWidth = size.width;
                 }
-                oldy = y;
                 y -= size.height;
             }
             x += maxWidth;
         }
+        return x;
     }
 
     // **********************************************************************
     // ****** Canvas-based Implementation
     // **********************************************************************
-    /*
-     * This method works fine as a first approximation, but is not exact enough
-     * What we actually need to do is to print it out and measure after drawing
-     */
-/*
-    function textHeightCanvas(text) {
-        var body = document.getElementsByTagName("body")[0], dummy, dummyText, result;
-        dummy = document.createElement("div");
-        dummyText = document.createTextNode(text);
-        dummy.appendChild(dummyText);
-        dummy.setAttribute("style", 'Helvetica 20pt');
-        body.appendChild(dummy);
-        result = dummy.offsetHeight;
-        body.removeChild(dummy);
-        return result;
-    }
-*/
+
     function firstLine(imageData) {
         var pixels = imageData.data, row, col, index;
         for (row = 0; row < imageData.height; row += 1) {
@@ -139,6 +123,7 @@ if (!isblogo) {
                 }
             }
         }
+        return imageData.height;
     }
     function lastLine(imageData) {
         var pixels = imageData.data, row, col, index;
@@ -150,6 +135,7 @@ if (!isblogo) {
                 }
             }
         }
+        return imageData.height - 1;
     }
 
     function measureText(text, font, scalex, scaley) {
@@ -172,54 +158,64 @@ if (!isblogo) {
         return lastLine(imageData) - first + 1;
     }
 
-/*
-    function drawLabelsX(context, startx, y) {
-        context.font = '12pt Arial';
-        var intervalDistance, x, textHeight, i, label, labelWidth, transx, transy;
-        intervalDistance = 20;
-        x = startx;
-        textHeight = textHeightCanvas('M');
+    function drawLabelsY(context, numBits, x0, y0, yHeight) {
+        var i, label, ydist = yHeight / numBits, y = y0;
 
-        for (i = 10; i < 150; i += 10) {
-            context.save();
-            label = i.toString();
-            labelWidth = context.measureText(label).width;
-            transx = x + labelWidth / 2.0;
-            transy = y - textHeight / 2.0;
-            context.translate(transx, transy);
-            context.rotate(-Math.PI / 2);
-            context.translate(-transx, -transy);
-            context.fillText(label, x, y);
-            x += intervalDistance;
-            context.restore();
-        }
-    }
-*/
-    function drawLabelsY(context, pssm, x0, y0, yHeight) {
-        var i, label, x = x0, numBits = Math.ceil(log(pssm.alphabet.length, 2)), ydist = (yHeight - 10) / numBits, y = y0 - ydist;
         context.font = '12pt Arial';
-        context.fillText('bits', x + 10, MARGIN_TOP - 5);
+        context.fillText('bits', x0 + 10, MARGIN_TOP - 5);
+        var textHeight = measureText('M', context.font, 1.0, 1.0);
+        y += textHeight / 2;
 
-        for (i = 1; i <= numBits; i += 1) {
+        for (i = 0; i <= numBits; i += 1) {
             label = i.toString();
-            context.fillText(label, x, y);
+            context.fillText(label, x0, y);
             y -= ydist;
         }
     }
 
-    function drawScale(canvas, pssm) {
-        var context, right, bottom;
-        context = canvas.getContext('2d');
-        right = canvas.width - MARGIN_RIGHT;
-        bottom = canvas.height - MARGIN_BOTTOM;
+    function drawMinorTicksY(context, y0, y1, numDivisions) {
+        var interval = (y1 - y0) / numDivisions, y = y0;
+        for (var i = 0; i < numDivisions; i++) {
+            if (i > 0) {
+                context.beginPath();
+                context.moveTo(MARGIN_LEFT - 5, y);
+                context.lineTo(MARGIN_LEFT, y);
+                context.stroke();
+            }
+            y += interval;
+        }
+    }
 
-        //drawLabelsX(context, MARGIN_LEFT, canvas.height);
-        drawLabelsY(context, pssm, 5, bottom, bottom - MARGIN_TOP);
+    function drawTicksY(context, numBits, bottom) {
+        var mainIntervalY = (bottom - MARGIN_TOP) / numBits;
+        var y = MARGIN_TOP;
+        for (var i = 0; i <= numBits; i++) {
+            context.beginPath();
+            context.moveTo(MARGIN_LEFT - 10, y);
+            context.lineTo(MARGIN_LEFT, y);
+            context.stroke();
+            if (i < numBits) drawMinorTicksY(context, y, y + mainIntervalY, 5);
+            y += mainIntervalY;
+        }
+    }
+
+    function drawAxis(context, numBits, right, bottom) {
+        // main axis
         context.beginPath();
         context.moveTo(MARGIN_LEFT, MARGIN_TOP);
         context.lineTo(MARGIN_LEFT, bottom);
         context.lineTo(right, bottom);
         context.stroke();
+
+        drawTicksY(context, numBits, bottom);
+    }
+
+    function drawScale(canvas, pssm) {
+        var context = canvas.getContext('2d'), right = canvas.width - MARGIN_RIGHT,
+            numBits = Math.ceil(log(pssm.alphabet.length, 2)),
+            bottom = canvas.height - MARGIN_BOTTOM;
+        drawAxis(context, numBits, right, bottom);
+        drawLabelsY(context, numBits, MARGIN_LEFT - 25, bottom, bottom - MARGIN_TOP);
     }
 
     function drawGlyph(context, glyph, colors, x, y, scalex,
@@ -262,13 +258,38 @@ if (!isblogo) {
         sumColumnWidthsNormal = context.measureText('W').width * pssm.values.length;
         xWidth = canvas.width - (MARGIN_LEFT + MARGIN_RIGHT);
         scalex = xWidth / sumColumnWidthsNormal;
-        drawPSSM(pssm, scalex,
-                 canvas.height - MARGIN_BOTTOM, yHeight,
-                 function (currentGlyph, x, y, scalex, yHeight, weight) {
-                return drawGlyph(context, currentGlyph, colorTableFor(pssm), x, y,
-                                 scalex, yHeight,
-                                 maxFontHeightNormal, weight);
-            });
+        var lastX = drawPSSM(pssm, scalex,
+                             canvas.height - MARGIN_BOTTOM, yHeight,
+                             function (currentGlyph, x, y, scalex, yHeight, weight) {
+                                 return drawGlyph(context, currentGlyph,
+                                                  colorTableFor(pssm), x, y,
+                                                  scalex, yHeight,
+                                                  maxFontHeightNormal, weight);
+                             });
+        return (lastX - MARGIN_LEFT) / pssm.values.length;
+    }
+
+    function drawTicksX(canvas, pssm,  interval) {
+        var context = canvas.getContext('2d'), bottom = canvas.height - MARGIN_BOTTOM;
+        context.font = '12pt Arial';
+        context.fillStyle = 'black';
+        for (var i = 1; i <= pssm.values.length; i++) {
+            var x = MARGIN_LEFT + i * interval;
+            var xi = x - interval / 2;
+            var tickHeight = (i % 5 == 0) ? 10 : 5;
+            context.beginPath();
+            context.moveTo(xi, bottom);
+            context.lineTo(xi, bottom + tickHeight);
+            context.stroke();
+            if (i % 5 == 0) {
+                var label = i.toString();
+                var textdim = context.measureText(label);
+                // the TextMetrics object currently does not have any other attributes
+                // than width, so we simply specify a text height
+                var textHeight = 14;
+                context.fillText(label, xi - textdim.width / 2, bottom + tickHeight + textHeight);
+            }
+        }
     }
 
     function makeCanvas(id, options, pssm) {
@@ -280,18 +301,19 @@ if (!isblogo) {
         elem = document.getElementById(id);
         elem.parentNode.replaceChild(canvas, elem);
         drawScale(canvas, pssm);
-        drawGlyphs(canvas, options, pssm);
+        var interval = drawGlyphs(canvas, options, pssm);
+        drawTicksX(canvas, pssm, interval);
     }
 
     // **********************************************************************
     // ****** Public API
     // **********************************************************************
 
-    isblogo.makeLogo = function (id, pssm, options) {
+    seqlogo.makeLogo = function (id, pssm, options) {
         if (options === null) {
             options = DEFAULT_OPTIONS;
         }
-        // TODO: copy the options from DEFAULT_OPTIONS that are missing        
+        // TODO: copy the options from DEFAULT_OPTIONS that are missing
         makeCanvas(id, options, pssm);
     };
 }());

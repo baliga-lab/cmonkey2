@@ -63,7 +63,7 @@
 
 
       {% for seqtype in seqtypes %}{% for motif_info in motif_infos[seqtype] %}
-        isblogo.makeLogo('canvas{{seqtype}}_{{loop.index - 1}}', pssm{{seqtype}}_{{loop.index - 1}}, canvasOptions);{% endfor %}{% endfor %}
+        seqlogo.makeLogo('canvas{{seqtype}}_{{loop.index - 1}}', pssm{{seqtype}}_{{loop.index - 1}}, canvasOptions);{% endfor %}{% endfor %}
 
       {% for seqtype in seqtypes %}
         var annotations_{{seqtype}} = {{js_annotation_map[seqtype]}};
