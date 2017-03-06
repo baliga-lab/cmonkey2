@@ -33,8 +33,8 @@ CLASSIFIERS = [
     "Topic :: Software Development :: Libraries :: Python Modules"
     ]
 INSTALL_REQUIRES = ['numpy', 'scipy',
-                        'rpy2', 'beautifulsoup4', 'configparser', 'pandas', 'biopython', 'lxml',
-                        'cherrypy', 'jinja2', 'routes', 'svgwrite']
+                    'rpy2', 'beautifulsoup4', 'configparser', 'pandas', 'biopython', 'lxml',
+                    'cherrypy', 'jinja2', 'routes', 'svgwrite', 'sqlalchemy']
 
 PACKAGE_DATA = {
     'cmonkey': ['default_config/*.json', 'default_config/*.ini', 'default_config/*.fa',

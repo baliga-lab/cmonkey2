@@ -29,6 +29,7 @@ import cmonkey.debug as debug
 import cmonkey.sizes as sizes
 import cmonkey.thesaurus as thesaurus
 import cmonkey.BSCM as BSCM
+import cmonkey.database as cm2db
 
 # Python2/Python3 compatibility
 try:
@@ -106,83 +107,18 @@ class CMonkeyRun:
         return self.__conn
 
     def __create_output_database(self):
-        conn = self.__dbconn()
-        # these are the tables for storing cmonkey run information.
-        # run information
-        conn.execute('''create table run_infos (start_time timestamp,
-                        finish_time timestamp,
-                        num_iterations int, last_iteration int,
-                        organism text, species text,
-                        ncbi_code int,
-                        num_rows int,
-                        num_columns int, num_clusters int, git_sha text)''')
+        session = cm2db.make_session(self['out_database'])
+        row_names = [cm2db.RowName(order_num=index, name=self.ratios.row_names[index])
+                     for index in xrange(len(self.ratios.row_names))]
+        session.add_all(row_names)
 
-        # stats tables
-        # Note: there is some redundancy with the result tables here.
-        # ----- I measured the cost for creating those on the fly and
-        #       it is more expensive
-        #       than I expected, so I left the tables in-place
-        conn.execute('''create table cluster_stats (iteration int, cluster int,
-                        num_rows int, num_cols int, residual decimal)''')
-        conn.execute('create table statstypes (category text, name text)')
-        conn.execute("insert into statstypes values ('main', 'fuzzy_coeff')")
-        conn.execute("insert into statstypes values ('main', 'median_residual')")
-        conn.execute('''create table iteration_stats (statstype int, iteration int, score decimal)''')
-
-        conn.execute('''create table row_names (order_num int, name text)''')
-        conn.execute('''create table column_names (order_num int, name text)''')
-
-        # result tables
-        conn.execute('''create table row_members (iteration int, cluster int,
-                        order_num int)''')
-        conn.execute('''create table column_members (iteration int, cluster int,
-                        order_num int)''')
-        conn.execute('create table global_background (subsequence text, pvalue decimal)')
-
-        # in case you are wondering about the redundant iteration field here -
-        # it allows for much faster database access when selecting by iteration
-        conn.execute('''create table motif_infos (iteration int, cluster int,
-                        seqtype text, motif_num int, evalue decimal)''')
-        conn.execute('''create table motif_pssm_rows (motif_info_id int,
-                        iteration int, row int, a decimal, c decimal, g decimal,
-                        t decimal)''')
-
-        # Additional info: MEME generated top matching sites
-        conn.execute('''create table meme_motif_sites (motif_info_id int,
-                        seq_name text,
-                        reverse boolean, start int, pvalue decimal,
-                        flank_left text, seq text, flank_right text)''')
-        # Additional TomTom step
-        conn.execute('''create table tomtom_results (motif_info_id1 int,
-                        motif_info_id2 int, pvalue decimal)''')
-
-        conn.execute('''create table motif_annotations (motif_info_id int,
-                        iteration int, gene_num int,
-                        position int, reverse boolean, pvalue decimal)''')
-        conn.execute('''create index if not exists colmemb_iter_index
-                        on column_members (iteration)''')
-        conn.execute('''create index if not exists rowmemb_iter_index
-                        on row_members (iteration)''')
-        conn.execute('''create index if not exists cluststat_iter_index
-                        on cluster_stats (iteration)''')
-        conn.execute("create index if not exists rnames_name_index on row_names (name)")
-        conn.execute("create index if not exists rowmemb_order_index on row_members (order_num)")
-        conn.execute("create index if not exists rowmemb_clust_index on row_members (cluster)")
-        conn.execute("create index if not exists motinf_clust_index on motif_infos (cluster)")
-
-        logging.debug("created output database schema")
-
-        # all cluster members are stored relative to the base ratio matrix
-        with conn:
-            for index in xrange(len(self.ratios.row_names)):
-                conn.execute('''insert into row_names (order_num, name) values
-                                (?,?)''',
-                             (index, self.ratios.row_names[index]))
-            for index in xrange(len(self.ratios.column_names)):
-                conn.execute('''insert into column_names (order_num, name) values
-                                (?,?)''',
-                             (index, self.ratios.column_names[index]))
-        logging.debug("added row and column names to output database")
+        col_names = [cm2db.ColumnName(order_num=index, name=self.ratios.column_names[index])
+                     for index in xrange(len(self.ratios.column_names))]
+        session.add_all(col_names)
+        stats_types = [cm2db.StatsType(category='main', name='fuzzy_coeff'),
+                       cm2db.StatsType(category='main', name='median_residual')]
+        session.add_all(stats_types)
+        session.commit()
 
     def report_params(self):
         logging.info('cmonkey_run config_params:')
@@ -349,9 +285,9 @@ class CMonkeyRun:
         conn = self.__dbconn()
         with conn:
             for network in organism.networks():
-                conn.execute("insert into statstypes values ('network',?)", [network.name])
+                conn.execute("insert into statstypes (category,name) values ('network',?)", [network.name])
             for sequence_type in self['sequence_types']:
-                conn.execute("insert into statstypes values ('seqtype',?)", [sequence_type])
+                conn.execute("insert into statstypes (category,name) values ('seqtype',?)", [sequence_type])
 
         return organism
 
@@ -492,8 +428,8 @@ class CMonkeyRun:
         conn = self.__dbconn()
         with conn:
             for scoring_function in self.row_scoring.scoring_functions:
-                conn.execute("insert into statstypes values ('scoring',?)", [scoring_function.id])
-            conn.execute("insert into statstypes values ('scoring',?)", [self.column_scoring.id])
+                conn.execute("insert into statstypes (category,name) values ('scoring',?)", [scoring_function.id])
+            conn.execute("insert into statstypes (category,name) values ('scoring',?)", [self.column_scoring.id])
 
         if 'profile_mem' in self['debug']:
             with open(os.path.join(self['output_dir'], 'memprofile.tsv'), 'w') as outfile:
@@ -629,13 +565,13 @@ class CMonkeyRun:
             for network, score in network_scores.items():
                 cur.execute("select rowid from statstypes where category='network' and name=?", [network])
                 typeid = cur.fetchone()[0]
-                conn.execute("insert into iteration_stats values (?,?,?)",
+                conn.execute("insert into iteration_stats (statstype,iteration,score) values (?,?,?)",
                              (typeid, iteration, score))
         with conn:
             for seqtype, pval in motif_pvalues.items():
                 cur.execute("select rowid from statstypes where category='seqtype' and name=?", [seqtype])
                 typeid = cur.fetchone()[0]
-                conn.execute("insert into iteration_stats values (?,?,?)",
+                conn.execute("insert into iteration_stats (statstype,iteration,score) values (?,?,?)",
                              (typeid, iteration, pval))
         cur.close()
 
