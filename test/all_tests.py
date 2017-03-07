@@ -69,7 +69,7 @@ if __name__ == '__main__':
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(se_test.DiscreteEnrichmentSetTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(se_test.CutoffEnrichmentSetTest))
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(se_test.SetTypeTest))
-    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(se_test.SetEnrichmentComputerClusterScoreTest))
+    SUITE.append(unittest.TestLoader().loadTestsFromTestCase(se_test.SetEnrichmentComputeClusterScoreTest))
 
     # web based tests
     SUITE.append(unittest.TestLoader().loadTestsFromTestCase(

@@ -10,8 +10,8 @@ import cmonkey.rsat as rsat
 import cmonkey.util as util
 
 
-RSAT_BASE_URL = 'http://rsat01.biologie.ens.fr/rsat'
-
+#RSAT_BASE_URL = 'http://rsat01.biologie.ens.fr/rsat'
+RSAT_BASE_URL = 'http://embnet.ccg.unam.mx/rsa-tools'
 
 class RsatDatabaseTest(unittest.TestCase):  # pylint: disable-msg=R0904
     """Test class for RsatDatabase. These tests interacts with a real web

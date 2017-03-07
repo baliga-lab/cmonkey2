@@ -48,11 +48,8 @@ class Meme430Test(unittest.TestCase):  # pylint: disable-msg=R0904
         """tests the motif scoring in integration"""
         search_distances = {'upstream': (-20, 150)}
         scan_distances = {'upstream': (-30, 250)}
-
-        matrix_factory = dm.DataMatrixFactory([dm.nochange_filter, dm.center_scale_filter])
-        infile = util.read_dfile('example_data/hal/halo_ratios5.tsv',
-                                 has_header=True, quote='\"')
-        ratio_matrix = matrix_factory.create_from(infile)
+        ratio_matrix = dm.create_from_csv('example_data/hal/halo_ratios5.tsv',
+                                          filters=[dm.nochange_filter, dm.center_scale_filter])
         organism = testutil.make_halo(search_distances, scan_distances, ratio_matrix)
         membership = FakeMembership()
         config_params = {'memb.min_cluster_rows_allowed': 3,

@@ -61,10 +61,8 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.search_distances = {'upstream': (-20, 150)}
         self.scan_distances = {'upstream': (-30, 250)}
 
-        matrix_factory = dm.DataMatrixFactory([dm.nochange_filter, dm.center_scale_filter])
-        infile = util.read_dfile('example_data/hal/halo_ratios5.tsv',
-                                 has_header=True, quote='\"')
-        self.ratio_matrix = matrix_factory.create_from(infile)
+        self.ratio_matrix = dm.create_from_csv('example_data/hal/halo_ratios5.tsv',
+                                               filters=[dm.nochange_filter, dm.center_scale_filter])
         self.organism = testutil.make_halo(self.search_distances, self.scan_distances,
                                            self.ratio_matrix)
         self.config_params = {'memb.min_cluster_rows_allowed': 3,
@@ -220,8 +218,8 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
 def read_matrix(filename):
     """reads a matrix file"""
-    infile = util.read_dfile(filename, has_header=True, quote='\"')
-    return dm.DataMatrixFactory([]).create_from(infile, case_sensitive=True).sorted_by_row_name()
+    return dm.create_from_csv(filename, filters=[]).sorted_by_row_name()
+
 
 
 EPS = 1.0e-5
