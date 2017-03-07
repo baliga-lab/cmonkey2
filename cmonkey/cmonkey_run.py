@@ -479,44 +479,43 @@ class CMonkeyRun:
 
         if 'motifs' in iteration_result:
             motifs = iteration_result['motifs']
-            conn = self.__dbconn()
-            with conn:
-                for seqtype in motifs:
-                    for cluster in motifs[seqtype]:
-                        motif_infos = motifs[seqtype][cluster]['motif-info']
-                        for motif_info in motif_infos:
-                            c = conn.cursor()
-                            c.execute('''insert into motif_infos (iteration,cluster,seqtype,motif_num,evalue)
-                                        values (?,?,?,?,?)''',
-                                      (iteration, cluster, seqtype, motif_info['motif_num'],
-                                       motif_info['evalue']))
-                            motif_info_id = c.lastrowid
-                            c.close()
-                            pssm_rows = motif_info['pssm']
-                            for row in xrange(len(pssm_rows)):
-                                pssm_row = pssm_rows[row]
-                                conn.execute('''insert into motif_pssm_rows (motif_info_id,iteration,row,a,c,g,t)
-                                                values (?,?,?,?,?,?,?)''',
-                                             (motif_info_id, iteration, row, pssm_row[0], pssm_row[1],
-                                              pssm_row[2], pssm_row[3]))
-                            annotations = motif_info['annotations']
-                            for annotation in annotations:
-                                gene_num = self.gene_indexes[annotation['gene']]
-                                conn.execute('''insert into motif_annotations (motif_info_id,
-                                                iteration,gene_num,
-                                                position,reverse,pvalue) values (?,?,?,?,?,?)''',
-                                             (motif_info_id, iteration, gene_num,
-                                              annotation['position'],
-                                              annotation['reverse'], annotation['pvalue']))
+            session = self.__dbsession()
 
-                            sites = motif_info['sites']
-                            if len(sites) > 0 and isinstance(sites[0], tuple):
-                                for seqname, strand, start, pval, flank_left, seq, flank_right in sites:
-                                    conn.execute('''insert into meme_motif_sites (motif_info_id, seq_name, reverse, start, pvalue, flank_left, seq, flank_right)
-                                                    values (?,?,?,?,?,?,?,?)''',
-                                                 (motif_info_id, seqname, strand == '-',
-                                                  start, pval, flank_left, seq,
-                                                  flank_right))
+            for seqtype in motifs:
+                for cluster in motifs[seqtype]:
+                    motif_infos = motifs[seqtype][cluster]['motif-info']
+                    for motif_info in motif_infos:
+                        db_motif_info = cm2db.MotifInfo(iteration=iteration, cluster=cluster, seqtype=seqtype,
+                                                        motif_num=motif_info['motif_num'], evalue=motif_info['evalue'])
+                        session.add(db_motif_info)
+                        session.flush()
+
+                        pssm_rows = motif_info['pssm']
+                        db_pssm_rows = [cm2db.MotifPSSMRow(motif_info_id=db_motif_info.rowid, iteration=iteration, row=row,
+                                                            a=pssm_rows[row][0], c=pssm_rows[row][1],
+                                                            g=pssm_rows[row][2], t=pssm_rows[row][3])
+                                        for row in xrange(len(pssm_rows))]
+                        session.add_all(db_pssm_rows)
+
+                        annotations = motif_info['annotations']
+                        db_annotations = [cm2db.MotifAnnotation(motif_info_id=db_motif_info.rowid, iteration=iteration,
+                                                                gene_num=self.gene_indexes[annotation['gene']],
+                                                                position=annotation['position'],
+                                                                reverse=annotation['reverse'],
+                                                                pvalue=annotation['pvalue'])
+                                            for annotation in annotations]
+                        session.add_all(db_annotations)
+
+                        sites = motif_info['sites']
+                        if len(sites) > 0 and isinstance(sites[0], tuple):
+                            db_sites = [cm2db.MemeMotifSite(motif_info_id=db_motif_info.rowid,
+                                                            seq_name=seqname, reverse=(strand == '-'),
+                                                            start=start, pvalue=pval,
+                                                            flank_left=flank_left, seq=seq, flank_right=flank_right)
+                                for seqname, strand, start, pval, flank_left, seq, flank_right in sites]
+                            session.add_all(db_sites)
+
+            session.commit()
 
     def write_stats(self, iteration_result):
         # write stats for this iteration
