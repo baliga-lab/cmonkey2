@@ -79,6 +79,7 @@ class CMonkeyRun:
             self.row_seeder = memb.make_kmeans_row_seeder(args_in['num_clusters'])
             self.column_seeder = microarray.seed_column_members
         self.__conn = None
+        self.__session = None
 
         today = date.today()
         logging.info('Input matrix has # rows: %d, # columns: %d',
@@ -99,6 +100,10 @@ class CMonkeyRun:
             self.__conn.close()
             self.__conn = None
 
+        if self.__session is not None:
+            self.__session.close()
+            self.__session = None
+
     def __dbconn(self):
         """Returns an autocommit database connection. We maintain a single database
         connection throughout the life of this run objec"""
@@ -106,8 +111,13 @@ class CMonkeyRun:
             self.__conn = sqlite3.connect(self['out_database'], 15, isolation_level='DEFERRED')
         return self.__conn
 
+    def __dbsession(self):
+        if self.__session is None:
+            self.__session = cm2db.make_session(self['out_database'])
+        return self.__session
+
     def __create_output_database(self):
-        session = cm2db.make_session(self['out_database'])
+        session = self.__dbsession()
         row_names = [cm2db.RowName(order_num=index, name=self.ratios.row_names[index])
                      for index in xrange(len(self.ratios.row_names))]
         session.add_all(row_names)
@@ -148,9 +158,7 @@ class CMonkeyRun:
 
             # debug: write seed into an analytical file for iteration 0
             if 'random_seed' in self['debug']:
-                conn = self.__dbconn()
-                with conn:
-                    self.write_memberships(conn, 0)
+                self.write_memberships(0)
                 # write complete result into a cmresults.tsv
                 path =  os.path.join(self['output_dir'], 'cmresults-0000.tsv.bz2')
                 with bz2.BZ2File(path, 'w') as outfile:
@@ -282,12 +290,14 @@ class CMonkeyRun:
                                         self.ratios, synonyms,
                                         self['fasta_file'])
 
-        conn = self.__dbconn()
-        with conn:
-            for network in organism.networks():
-                conn.execute("insert into statstypes (category,name) values ('network',?)", [network.name])
-            for sequence_type in self['sequence_types']:
-                conn.execute("insert into statstypes (category,name) values ('seqtype',?)", [sequence_type])
+        session = self.__dbsession()
+        network_stats_types = [cm2db.StatsType(category='network', name=network.name)
+                               for network in organism.networks()]
+        sequence_stats_types = [cm2db.StatsType(category='seqtype', name=sequence_type)
+                                for sequence_type in self['sequence_types']]
+        session.add_all(network_stats_types)
+        session.add_all(sequence_stats_types)
+        session.commit()
 
         return organism
 
@@ -420,31 +430,24 @@ class CMonkeyRun:
 
         self.row_scoring = row_scoring
         self.column_scoring = col_scoring
-
-        ## MOVED FROM run_iterations()
         self.report_params()
         self.write_start_info()
 
-        conn = self.__dbconn()
-        with conn:
-            for scoring_function in self.row_scoring.scoring_functions:
-                conn.execute("insert into statstypes (category,name) values ('scoring',?)", [scoring_function.id])
-            conn.execute("insert into statstypes (category,name) values ('scoring',?)", [self.column_scoring.id])
+        session = self.__dbsession()
+        row_scoring_stats_types = [cm2db.StatsType(category='scoring', name=scoring_function.id)
+                                   for scoring_function in self.row_scoring.scoring_functions]
+        session.add_all(row_scoring_stats_types)
+        session.add(cm2db.StatsType(category='scoring', name=self.column_scoring.id))
+        session.commit()
 
         if 'profile_mem' in self['debug']:
             with open(os.path.join(self['output_dir'], 'memprofile.tsv'), 'w') as outfile:
                 outfile.write('Iteration\tMembership\tOrganism\tCol\tRow\tNetwork\tMotif\n')
-        ## end MOVED
 
         if self['resume']:
             self['start_iteration'] = self.get_last_iteration()
 
-        ##return row_scoring, col_scoring
-
     def run(self):
-        #row_scoring, col_scoring = self.prepare_run()
-        #self.row_scoring = row_scoring
-        #self.column_scoring = col_scoring
         self.prepare_run()
         self.run_iterations()
 
@@ -455,27 +458,28 @@ class CMonkeyRun:
             matrix = self.ratios.submatrix_by_name(row_names, column_names)
             return matrix.residual()
 
-    def write_memberships(self, conn, iteration):
+    def write_memberships(self, iteration):
+        session = self.__dbsession()
         for cluster in range(1, self['num_clusters'] + 1):
             column_names = self.membership().columns_for_cluster(cluster)
-            for order_num in self.ratios.column_indexes_for(column_names):
-                conn.execute('''insert into column_members (iteration,cluster,order_num)
-                                values (?,?,?)''', (iteration, cluster, order_num))
+            column_members = [cm2db.ColumnMember(iteration=iteration, cluster=cluster, order_num=order_num)
+                                  for order_num in self.ratios.column_indexes_for(column_names)]
+            session.add_all(column_members)
 
             row_names = self.membership().rows_for_cluster(cluster)
-            for order_num in self.ratios.row_indexes_for(row_names):
-                conn.execute('''insert into row_members (iteration,cluster,order_num)
-                                values (?,?,?)''', (iteration, cluster, order_num))
+            row_members = [cm2db.RowMember(iteration=iteration, cluster=cluster, order_num=order_num)
+                               for order_num in self.ratios.row_indexes_for(row_names)]
+            session.add_all(row_members)
+        session.commit()
 
     def write_results(self, iteration_result):
         """write iteration results to database"""
         iteration = iteration_result['iteration']
-        conn = self.__dbconn()
-        with conn:
-            self.write_memberships(conn, iteration)
+        self.write_memberships(iteration)
 
         if 'motifs' in iteration_result:
             motifs = iteration_result['motifs']
+            conn = self.__dbconn()
             with conn:
                 for seqtype in motifs:
                     for cluster in motifs[seqtype]:
