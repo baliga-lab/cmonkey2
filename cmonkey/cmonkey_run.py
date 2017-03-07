@@ -580,7 +580,6 @@ class CMonkeyRun:
         cur.close()
 
     def write_start_info(self):
-        conn = self.__dbconn()
         try:
             ncbi_code_int = int(self['ncbi_code'])
         except:
@@ -590,38 +589,32 @@ class CMonkeyRun:
             # not matter
             ncbi_code_int = 0
 
-        with conn:
-            conn.execute('''insert into run_infos (start_time, num_iterations, organism,
-                            species, ncbi_code, num_rows, num_columns, num_clusters, git_sha) values (?,?,?,?,?,?,?,?,?)''',
-                         (datetime.now(), self['num_iterations'], self.organism().code,
-                          self.organism().species(),
-                          ncbi_code_int,
-                          self.ratios.num_rows,
-                          self.ratios.num_columns, self['num_clusters'],
-                          '$Id$'))
+        session = self.__dbsession()
+        session.add(cm2db.RunInfo(start_time=datetime.now(), num_iterations=self['num_iterations'],
+                                organism=self.organism().code, species=self.organism().species(),
+                                ncbi_code=ncbi_code_int, num_rows=self.ratios.num_rows,
+                                num_columns=self.ratios.num_columns, num_clusters=self['num_clusters'],
+                                git_sha='$Id$'))
+        session.commit()
 
     def update_iteration(self, iteration):
-        conn = self.__dbconn()
-        with conn:
-            conn.execute('''update run_infos set last_iteration = ?''', (iteration,))
+        session = self.__dbsession()
+        session.query(cm2db.RunInfo).first().last_iteration = iteration
+        session.commit()
 
     def get_last_iteration(self):
         """Return the last iteration listed in cMonkey database.  This is intended to
             inform the '--resume' flag
         """
         try:
-            conn = self.__dbconn()
-            with conn:
-                cur = conn.execute('''select max(last_iteration) from run_infos''')
-                iteration = cur.fetchone()[0]
+            return self.__dbsession().query(cm2db.RunInfo).first().last_iteration
         except:
-            iteration = 1
-        return iteration
+            return 1
 
     def write_finish_info(self):
-        conn = self.__dbconn()
-        with conn:
-            conn.execute('''update run_infos set finish_time = ?''', (datetime.now(),))
+        session = self.__dbsession()
+        session.query(cm2db.RunInfo).first().finish_time = datetime.now()
+        session.commit()
 
     def combined_rscores_pickle_path(self):
         return "%s/combined_rscores_last.pkl" % self.config_params['output_dir']
