@@ -12,6 +12,7 @@ import sqlite3
 from decimal import Decimal
 import bz2
 from pkg_resources import Requirement, resource_filename, DistributionNotFound
+from sqlalchemy import and_
 
 import cmonkey.config as config
 import cmonkey.microarray as microarray
@@ -526,57 +527,41 @@ class CMonkeyRun:
         fuzzy_coeff = iteration_result['fuzzy-coeff'] if 'fuzzy-coeff' in iteration_result else 0.0
 
         residuals = []
-        conn = self.__dbconn()
-        cur = conn.cursor()
-        with conn:
-            for cluster in range(1, self['num_clusters'] + 1):
-                row_names = self.membership().rows_for_cluster(cluster)
-                column_names = self.membership().columns_for_cluster(cluster)
-                residual = self.residual_for(row_names, column_names)
-                residuals.append(residual)
-                try:
-                    conn.execute('''insert into cluster_stats (iteration, cluster, num_rows,
-                                    num_cols, residual) values (?,?,?,?,?)''',
-                                 (iteration, cluster, len(row_names), len(column_names),
-                                  residual))
-                except:
-                    # residual is messed up, insert with 1.0
-                    logging.warn('STATS: residual was messed up, insert with 1.0')
-                    conn.execute('''insert into cluster_stats (iteration, cluster, num_rows,
-                                    num_cols, residual) values (?,?,?,?,?)''',
-                                 (iteration, cluster, len(row_names), len(column_names),
-                                  1.0))
+        session = self.__dbsession()
+        for cluster in range(1, self['num_clusters'] + 1):
+            row_names = self.membership().rows_for_cluster(cluster)
+            column_names = self.membership().columns_for_cluster(cluster)
+            residual = self.residual_for(row_names, column_names)
+            residuals.append(residual)
+            if np.isnan(residual) or np.isinf(residual):
+                residual = 1.0
+            session.add(cm2db.ClusterStat(iteration=iteration, cluster=cluster, num_rows=len(row_names),
+                                          num_cols=len(column_names), residual=residual))
 
-            median_residual = np.median(residuals)
-            conn.execute("insert into iteration_stats (statstype,iteration,score) values (?,?,?)",
-                         (1, iteration, fuzzy_coeff))
+        session.add(cm2db.IterationStat(statstype=1, iteration=iteration, score=fuzzy_coeff))
 
-            try:
-                conn.execute("insert into iteration_stats (statstype,iteration,score) values (?,?,?)", (2, iteration, median_residual))
-            except:
-                logging.warn('STATS: median was messed up, insert with 1.0')
-                conn.execute("insert into iteration_stats (statstype,iteration,score) values (?,?,?)", (2, iteration, 1.0))
+        median_residual = np.median(residuals)
+        if np.isnan(residual) or np.isinf(residual):
+            medial_residual = 1.0
+        session.add(cm2db.IterationStat(statstype=2, iteration=iteration, score=median_residual))
 
-            # insert the score means
-            for fun_id in iteration_result['score_means']:
-                cur.execute("select rowid from statstypes where category='scoring' and name=?", [fun_id])
-                type_id = cur.fetchone()[0]
-                conn.execute('insert into iteration_stats (statstype,iteration,score) values (?,?,?)',
-                             [type_id, iteration, iteration_result['score_means'][fun_id]])
+        # insert the score means
+        for fun_id in iteration_result['score_means']:
+            statstype = session.query(cm2db.StatsType).filter(and_(cm2db.StatsType.category == 'scoring',
+                                                                   cm2db.StatsType.name == fun_id)).one()
+            session.add(cm2db.IterationStat(statstype=statstype.rowid, iteration=iteration,
+                                            score=iteration_result['score_means'][fun_id]))
 
-        with conn:
-            for network, score in network_scores.items():
-                cur.execute("select rowid from statstypes where category='network' and name=?", [network])
-                typeid = cur.fetchone()[0]
-                conn.execute("insert into iteration_stats (statstype,iteration,score) values (?,?,?)",
-                             (typeid, iteration, score))
-        with conn:
-            for seqtype, pval in motif_pvalues.items():
-                cur.execute("select rowid from statstypes where category='seqtype' and name=?", [seqtype])
-                typeid = cur.fetchone()[0]
-                conn.execute("insert into iteration_stats (statstype,iteration,score) values (?,?,?)",
-                             (typeid, iteration, pval))
-        cur.close()
+        for network, score in network_scores.items():
+            statstype = session.query(cm2db.StatsType).filter(and_(cm2db.StatsType.category == 'network',
+                                                                   cm2db.StatsType.name == network)).one()
+            session.add(cm2db.IterationStat(statstype=statstype.rowid, iteration=iteration, score=score))
+
+        for seqtype, pval in motif_pvalues.items():
+            statstype = session.query(cm2db.StatsType).filter(and_(cm2db.StatsType.category == 'seqtype',
+                                                                   cm2db.StatsType.name == seqtype)).one()
+            session.add(cm2db.IterationStat(statstype=statstype.rowid, iteration=iteration, score=pval))
+        session.commit()
 
     def write_start_info(self):
         try:
