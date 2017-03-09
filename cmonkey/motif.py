@@ -21,6 +21,7 @@ import cmonkey.weeder as weeder
 import cmonkey.meme as meme
 import cmonkey.seqtools as st
 import cmonkey.util as util
+import cmonkey.database as cm2db
 
 
 # Python2/Python3 compatibility
@@ -134,13 +135,12 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                 bgorder=int(self.config_params['MEME']['background_order']))
 
             # store background in results database
-            conn = sqlite3.connect(config_params['out_database'], 15, isolation_level='DEFERRED')
+            session = cm2db.make_session(config_params['out_database'])
             for order in bgmodel:
-                for subseq, pvalue in order.items():
-                    conn.execute('insert into global_background (subsequence, pvalue) values (?,?)',
-                                 (subseq, pvalue))
-                conn.commit()
-            conn.close()
+                session.add_all([cm2db.GlobalBackground(subsequence=subseq, pvalue=pvalue)
+                                 for subseq, pvalue in order.items()])
+                session.commit()
+            session.close()
 
         if meme_version == '4.3.0':
             self.meme_suite = meme.MemeSuite430(self.config_params,
