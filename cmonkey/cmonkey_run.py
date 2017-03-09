@@ -67,19 +67,19 @@ class CMonkeyRun:
     def __init__(self, ratios, args_in):
         self.__membership = None
         self.__organism = None
+        self.__session = None
         self.config_params = args_in
         self.ratios = ratios
         if args_in['resume']:
-            self.row_seeder = memb.make_db_row_seeder(args_in['out_database'])
+            self.row_seeder = memb.make_db_row_seeder(self.__dbsession())
 
             if args_in['new_data_file']:  # data file has changed
                 self.column_seeder = microarray.seed_column_members
             else:
-                self.column_seeder = memb.make_db_column_seeder(args_in['out_database'])
+                self.column_seeder = memb.make_db_column_seeder(self.__dbsession())
         else:
             self.row_seeder = memb.make_kmeans_row_seeder(args_in['num_clusters'])
             self.column_seeder = microarray.seed_column_members
-        self.__session = None
 
         today = date.today()
         logging.info('Input matrix has # rows: %d, # columns: %d',

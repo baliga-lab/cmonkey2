@@ -12,6 +12,7 @@ import logging
 import sys
 import numpy as np
 import rpy2.robjects as robjects
+from sqlalchemy import func
 
 import cmonkey.datamatrix as dm
 import cmonkey.util as util
@@ -712,84 +713,68 @@ def make_file_column_seeder(filename, sep=' '):
     return seed
 
 
-def make_db_row_seeder(outdb):
+def make_db_row_seeder(session):
     def seed(row_membership, matrix):
         row_map = {name: idx
                    for idx, name in enumerate(matrix.row_names)}
-        conn = sqlite3.connect(outdb)
-        cursor = conn.cursor()
-        try:
-            cursor.execute('select max(iteration) from row_members')
-            iteration = cursor.fetchone()[0]
-            cursor.execute('select cluster, name from row_members rm join row_names rn on rm.order_num=rn.order_num where iteration=?', [iteration])
-            row_clusters = defaultdict(list)
-            for cluster, row_name in cursor.fetchall():
-                row_clusters[row_name].append(cluster)
+        iteration = session.query(func.max(cm2db.RowMember.iteration))
+        row_clusters = defaultdict(list)
+        for row_memb in session.query(cm2db.RowMember).filter(cm2db.RowMember.iteration == iteration):
+            row_clusters[row_memb.row_name.name].append(row_memb.cluster)
 
-            # copy memberships
-            for row_name in row_clusters.keys():
-                #05-07-15 added '.upper' to fix a name mismatch in resume
-                if row_name in row_map.keys():
-                    cur_map = row_map[row_name]
-                elif row_name.upper() in row_map.keys():
-                    cur_map = row_map[row_name.upper()]
-                elif row_name.lower() in row_map.keys():
-                    cur_map = row_map[row_name.lower()]
-                else:
-                    continue
+        # copy memberships
+        for row_name in row_clusters.keys():
+            #05-07-15 added '.upper' to fix a name mismatch in resume
+            if row_name in row_map.keys():
+                cur_map = row_map[row_name]
+            elif row_name.upper() in row_map.keys():
+                cur_map = row_map[row_name.upper()]
+            elif row_name.lower() in row_map.keys():
+                cur_map = row_map[row_name.lower()]
+            else:
+                continue
 
-                for i, cluster in enumerate(row_clusters[row_name]):
-                    #logging.info('row_name = %s, cur_map = %d, cluster = %d, i = %d', row_name, cur_map, cluster, i)
-                    if i < len(row_membership[cur_map]):
-                        row_membership[cur_map][i] = cluster
-                    else:   #A resumed job that has been finalized may have genes in additional clusters
-                        logging.info('Making row_membership for gene %s bigger than %d', cur_map, len(row_membership[cur_map]))
-                        row_membership[cur_map].append(cluster)
+            for i, cluster in enumerate(row_clusters[row_name]):
+                #logging.info('row_name = %s, cur_map = %d, cluster = %d, i = %d', row_name, cur_map, cluster, i)
+                if i < len(row_membership[cur_map]):
+                    row_membership[cur_map][i] = cluster
+                else:   #A resumed job that has been finalized may have genes in additional clusters
+                    logging.info('Making row_membership for gene %s bigger than %d', cur_map, len(row_membership[cur_map]))
+                    row_membership[cur_map].append(cluster)
 
-        finally:
-            if cursor:
-                cursor.close()
-            if conn:
-                conn.close()
     return seed
 
 
-def make_db_column_seeder(outdb):
+def make_db_column_seeder(session):
     def seed(matrix, row_membership, num_clusters,
              num_clusters_per_column):
         column_map = {name: idx
                       for idx, name in enumerate(matrix.column_names)}
-        conn = sqlite3.connect(outdb)
-        cursor = conn.cursor()
-        try:
-            cursor.execute('select max(iteration) from column_members')
-            iteration = cursor.fetchone()[0]
-            cursor.execute('select cluster, name from column_members cm join column_names cn on cm.order_num=cn.order_num where iteration=?', [iteration])
-            col_clusters = defaultdict(list)
-            for cluster, col_name in cursor.fetchall():
-                col_clusters[col_name].append(cluster)
-            result = [[0] * num_clusters_per_column for col in matrix.column_names]
-            for col_name in matrix.column_names:
-                cur_map = column_map[col_name]
-                first_expand = True
-                for i, cluster in enumerate(col_clusters[col_name]):
-                    if i < len(result[cur_map]):
-                        result[cur_map][i] = cluster
-                    else:   #A resumed job that has been finalized may have extra columns in clusters
-                        if first_expand == True:
-                            logging.info('Making col_membership for condition %s bigger, probably due to resuming a finalized run', cur_map)
-                            first_expand = False
-                        # Make sure that a cluster cannot have the same condition twice
-                        if not cluster in result[cur_map]:
-                            if 0 in result[cur_map]:
-                                result[cur_map][result[cur_map].index(0)] = cluster
-                            else:
-                                result[cur_map].append(cluster)
 
-            return result
-        finally:
-            if conn:
-                conn.close()
+        iteration = session.query(func.max(cm2db.ColumnMember.iteration))
+        col_clusters = defaultdict(list)
+        for col_memb in session.query(cm2db.ColumnMember).filter(cm2db.ColumnMember.iteration == iteration):
+            col_clusters[col_memb.column_name.name].append(col_memb.cluster)
+
+        result = [[0] * num_clusters_per_column for col in matrix.column_names]
+        for col_name in matrix.column_names:
+            cur_map = column_map[col_name]
+            first_expand = True
+            for i, cluster in enumerate(col_clusters[col_name]):
+                if i < len(result[cur_map]):
+                    result[cur_map][i] = cluster
+                else:   #A resumed job that has been finalized may have extra columns in clusters
+                    if first_expand == True:
+                        logging.info('Making col_membership for condition %s bigger, probably due to resuming a finalized run', cur_map)
+                        first_expand = False
+                    # Make sure that a cluster cannot have the same condition twice
+                    if not cluster in result[cur_map]:
+                        if 0 in result[cur_map]:
+                            result[cur_map][result[cur_map].index(0)] = cluster
+                        else:
+                            result[cur_map].append(cluster)
+
+        return result
     return seed
 
 def fuzzify(membership, row_scores, column_scores, num_iterations, iteration_result,
