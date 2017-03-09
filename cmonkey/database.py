@@ -1,8 +1,9 @@
 """database.py - mapping cmonkey_run.db files with SQLAlchemy"""
-from sqlalchemy import Column, Integer, String, DateTime, Float, ForeignKey, Boolean, create_engine
+from sqlalchemy import Column, Integer, String, DateTime, Float, ForeignKey, Boolean, create_engine, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy_utils import aggregated
 
 # http://docs.sqlalchemy.org/en/latest/core/engines.html#sqlalchemy.create_engine
 
@@ -142,6 +143,17 @@ class MotifInfo(Base):
     motif_num = Column(Integer)
     evalue = Column(Float)
     pssm_rows = relationship("MotifPSSMRow")
+    sites = relationship("MemeMotifSite")
+    annotations = relationship("MotifAnnotation")
+
+    @aggregated('sites', Column(Integer))
+    def num_sites(self):
+        return func.count(MemeMotifSite.rowid)
+
+    @aggregated('annotations', Column(Integer))
+    def num_annotations(self):
+        return func.count(MotifAnnotation.rowid)
+
 
     def __repr__(self):
         return "MotifInfo(iteration: %d, cluster: %d seqtype: %s motif_num: %d evalue: %f)" % (self.iteration,

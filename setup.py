@@ -34,7 +34,7 @@ CLASSIFIERS = [
     ]
 INSTALL_REQUIRES = ['numpy', 'scipy',
                     'rpy2', 'beautifulsoup4', 'configparser', 'pandas', 'biopython', 'lxml',
-                    'cherrypy', 'jinja2', 'routes', 'svgwrite', 'sqlalchemy']
+                    'cherrypy', 'jinja2', 'routes', 'svgwrite', 'sqlalchemy', 'sqlalchemy-utils']
 
 PACKAGE_DATA = {
     'cmonkey': ['default_config/*.json', 'default_config/*.ini', 'default_config/*.fa',
