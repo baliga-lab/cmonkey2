@@ -1,5 +1,7 @@
 import re
 import os
+import cmonkey.database as cm2db
+from sqlalchemy import and_
 
 
 ############################################################
@@ -32,7 +34,7 @@ def meme_to_str(outdir, iteration, cluster):
     return ''.join(lines)
 
 
-def write_iteration(conn, outfile, iteration, num_clusters, outdir, as_binary=True):
+def write_iteration(session, outfile, iteration, num_clusters, outdir, as_binary=True):
     """writes the iteration into a debug file"""
     HEADER = '"cols"\t"dens_string"\t"k"\t"meanp_meme"\t"meme_out"\t"resid"\t"rows"\n'
     if as_binary:
@@ -41,41 +43,39 @@ def write_iteration(conn, outfile, iteration, num_clusters, outdir, as_binary=Tr
         outfile.write(HEADER)
 
     for cluster in range(1, num_clusters + 1):
-        cursor = conn.cursor()
-        cursor.execute('select name from column_members m join column_names c on m.order_num = c.order_num where m.cluster = ? and iteration = ?', [cluster, iteration])
-        colnames = [row[0] for row in cursor.fetchall()]
-        cols_out = ",".join(colnames)
-        cursor.close()
+        colnames = [colmemb.column_name.name
+                    for colmemb in session.query(cm2db.ColumnMember).filter(and_(cm2db.ColumnMember.cluster == cluster,
+                                                                                 cm2db.ColumnMember.iteration == iteration))]
+        cols_out = ','.join(colnames)
 
-        cursor = conn.cursor()
-        cursor.execute("select score from iteration_stats its join statstypes st on st.rowid=its.statstype where category='network' and name='STRING' and iteration=?",
-                       [iteration])
-        row = cursor.fetchone()
-        string_dens = row[0] if row != None else 1.0
-        cursor.close()
+        rownames = [rowmemb.row_name.name
+                    for rowmemb in session.query(cm2db.RowMember).filter(and_(cm2db.RowMember.cluster == cluster,
+                                                                              cm2db.RowMember.iteration == iteration))]
+        rows_out = ','.join(rownames)
 
-        cursor = conn.cursor()
-        cursor.execute("select score from iteration_stats its join statstypes st on st.rowid=its.statstype where category='seqtype' and name='upstream' and iteration=?",
-                       [iteration])
-        row = cursor.fetchone()
-        meme_pval = row[0] if row != None else 1.0
+        string_dens = session.query(cm2db.IterationStat).join(
+            cm2db.IterationStat.statstype_obj
+            ).filter(and_(cm2db.StatsType.category == 'network',
+                          cm2db.StatsType.name == 'STRING',
+                          cm2db.IterationStat.iteration == iteration)).one().score
+        if string_dens is None:
+            string_dens = 1.0
+
+        meme_pval = session.query(cm2db.IterationStat).join(
+            cm2db.IterationStat.statstype_obj
+            ).filter(and_(cm2db.StatsType.category == 'seqtype',
+                          cm2db.StatsType.name == 'upstream',
+                          cm2db.IterationStat.iteration == iteration)).one().score
+        if meme_pval is None:
+            meme_pval = 1.0
 
         last_meme_iteration = get_last_meme_iteration(outdir)
         meme_out = meme_to_str(outdir, last_meme_iteration, cluster)
-        cursor.close()
 
-        cursor = conn.cursor()
-        cursor.execute('select residual from cluster_stats where cluster = ? and iteration = ?',
-                       [cluster, iteration])
-        row = cursor.fetchone()
-        resid = row[0] if row != None else 1.0
-        cursor.close()
-
-        cursor = conn.cursor()
-        cursor.execute('select name from row_members m join row_names r on m.order_num = r.order_num where m.cluster = ? and iteration = ?', [cluster, iteration])
-        rownames = [row[0] for row in cursor.fetchall()]
-        rows_out = ",".join(rownames)
-        cursor.close()
+        resid = session.query(cm2db.ClusterStat).filter(and_(cm2db.ClusterStat.cluster == cluster,
+                                                             cm2db.ClusterStat.iteration == iteration)).one().residual
+        if resid is None:
+            resid = 1.0
 
         info_line = '"%s"\t%f\t%d\t%f\t"%s"\t%f\t"%s"\n' % (cols_out, string_dens, cluster, meme_pval, meme_out, resid, rows_out)
         if as_binary:

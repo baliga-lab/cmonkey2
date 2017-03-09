@@ -18,6 +18,7 @@ from pkg_resources import Requirement, resource_filename, DistributionNotFound
 
 import cmonkey.seqtools as st
 import cmonkey.util as util
+import cmonkey.database as cm2db
 
 try:
     xrange
@@ -855,7 +856,7 @@ Q_PSEUDO      = 0
 T_PSEUDO      = 0
 
 
-def run_tomtom(conn, targetdir, version, q_thresh=Q_THRESHOLD, dist_method=DIST_METHOD,
+def run_tomtom(session, targetdir, version, q_thresh=Q_THRESHOLD, dist_method=DIST_METHOD,
                min_overlap=MIN_OVERLAP, q_pseudo=Q_PSEUDO, t_pseudo=T_PSEUDO):
     """a wrapper around the tomtom script"""
     targetfile = os.path.join(targetdir, 'post.tomtom.meme')
@@ -887,8 +888,8 @@ def run_tomtom(conn, targetdir, version, q_thresh=Q_THRESHOLD, dist_method=DIST_
                     motif2 = int(row[1])
                     if motif1 != motif2:
                         pvalue = float(row[3])
-                        conn.execute('insert into tomtom_results (motif_info_id1,motif_info_id2,pvalue) values (?,?,?)',
-                                     [motif1, motif2, pvalue])
+                        session.add(cm2db.TomtomResult(motif_info_id1=motif1, motif_info_id2=motif2, pvalue=pvalue))
+            session.commit()
         except:
             raise
 

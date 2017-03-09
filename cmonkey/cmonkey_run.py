@@ -79,7 +79,6 @@ class CMonkeyRun:
         else:
             self.row_seeder = memb.make_kmeans_row_seeder(args_in['num_clusters'])
             self.column_seeder = microarray.seed_column_members
-        self.__conn = None
         self.__session = None
 
         today = date.today()
@@ -97,20 +96,9 @@ class CMonkeyRun:
 
     def cleanup(self):
         """cleanup this run object"""
-        if self.__conn is not None:
-            self.__conn.close()
-            self.__conn = None
-
         if self.__session is not None:
             self.__session.close()
             self.__session = None
-
-    def __dbconn(self):
-        """Returns an autocommit database connection. We maintain a single database
-        connection throughout the life of this run objec"""
-        if self.__conn is None:
-            self.__conn = sqlite3.connect(self['out_database'], 15, isolation_level='DEFERRED')
-        return self.__conn
 
     def __dbsession(self):
         if self.__session is None:
@@ -163,7 +151,7 @@ class CMonkeyRun:
                 # write complete result into a cmresults.tsv
                 path =  os.path.join(self['output_dir'], 'cmresults-0000.tsv.bz2')
                 with bz2.BZ2File(path, 'w') as outfile:
-                    debug.write_iteration(conn, outfile, 0,
+                    debug.write_iteration(self.__dbsession, outfile, 0,
                                           self['num_clusters'], self['output_dir'])
 
         return self.__membership
@@ -657,10 +645,10 @@ class CMonkeyRun:
         if 'dump_results' in self['debug'] and (iteration == 1 or
                                                 (iteration % self['debug_freq'] == 0)):
             # write complete result into a cmresults.tsv
-            conn = self.__dbconn()
+            session = self.__dbsession()
             path =  os.path.join(self['output_dir'], 'cmresults-%04d.tsv.bz2' % iteration)
             with bz2.BZ2File(path, 'w') as outfile:
-                debug.write_iteration(conn, outfile, iteration,
+                debug.write_iteration(session, outfile, iteration,
                                       self['num_clusters'], self['output_dir'])
 
     def write_mem_profile(self, outfile, iteration):
@@ -730,18 +718,17 @@ class CMonkeyRun:
             # default behaviour:
             # always write complete result into a cmresults.tsv for R/cmonkey
             # compatibility
-            conn = self.__dbconn()
+            session = self.__dbsession()
             path =  os.path.join(self['output_dir'], 'cmresults-postproc.tsv.bz2')
             with bz2.BZ2File(path, 'w') as outfile:
-                debug.write_iteration(conn, outfile,
+                debug.write_iteration(session, outfile,
                                       self['num_iterations'] + 1,
                                       self['num_clusters'], self['output_dir'])
-            # TODO: Why is conn never closed?  Where does it write to the db?
 
             # additionally: run tomtom on the motifs if requested
             if (self['MEME']['global_background'] == 'True' and
                 self['Postprocessing']['run_tomtom'] == 'True'):
-                meme.run_tomtom(conn, self['output_dir'], self['MEME']['version'])
+                meme.run_tomtom(session, self['output_dir'], self['MEME']['version'])
 
         self.write_finish_info()
         logging.info("Done !!!!")
