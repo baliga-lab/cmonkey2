@@ -12,6 +12,11 @@ import numpy as np
 import glob
 import math
 import argparse
+from sqlalchemy import func
+
+import sys
+import traceback as tb
+import cmonkey.database as cm2db
 
 
 DEFAULT_OUTDIR = 'out'
@@ -166,6 +171,11 @@ def dbconn():
     return sqlite3.connect(outdb, timeout=10, isolation_level=None)
 
 
+def dbsession():
+    global outdb
+    return cm2db.make_session(outdb)
+
+
 def make_int_histogram(counts):
     """input: list of counts
     output: xvalues (count), yvalues (# clusters)"""
@@ -226,21 +236,17 @@ class ClusterViewerApp:
     @cherrypy.expose
     def index(self):
         iteration = None
-        conn = None
-        cursor = None
+        session = None
         try:
-            conn = dbconn()
-            cursor = conn.cursor()
-            cursor.execute('select max(iteration) from row_members')
-            iteration = cursor.fetchone()[0]
+            session = dbsession()
+            iteration = session.query(func.max(cm2db.RowMember.iteration))
         except:
+            tb.print_last()
             tmpl = env.get_template('not_available.html')
             return tmpl.render(locals())
         finally:
-            if cursor is not None:
-                cursor.close()
-            if conn is not None:
-                conn.close()
+            if session is not None:
+                session.close
 
         if iteration is not None:
             return self.real_index()
@@ -368,12 +374,12 @@ class ClusterViewerApp:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def iterations(self):
-        conn = dbconn()
-        cursor = conn.cursor()
-        cursor.execute("select distinct iteration from row_members order by iteration")
-        result = [row[0] for row in cursor.fetchall()]
-        cursor.close()
-        conn.close()
+        session = dbsession()
+        try:
+            result = [rm.iteration for rm in session.query(cm2db.RowMember).order_by(cm2db.RowMember.iteration)]
+        finally:
+            if session is not None:
+                session.close()
         return result
 
     @cherrypy.expose
@@ -425,12 +431,13 @@ class ClusterViewerApp:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def fuzzy_coeffs(self):
-        conn = dbconn()
-        cursor = conn.cursor()
-        cursor.execute("select score from iteration_stats its join statstypes st on its.statstype = st.rowid where st.name = 'fuzzy_coeff' order by iteration")
-        result = [row[0] for row in cursor.fetchall()]
-        cursor.close()
-        conn.close()
+        session = dbsession()
+        try:
+            result = [stat.score for stat in session.query(cm2db.IterationStat).join(cm2db.StatsType).filter(
+                cm2db.StatsType.name == 'fuzzy_coeff').order_by(cm2db.IterationStat.iteration)]
+        finally:
+            if session is not None:
+                session.close()
         return result
 
     @cherrypy.expose
@@ -439,14 +446,14 @@ class ClusterViewerApp:
         """Note: this is actually iteration-specific, currently we lock this to the last
         iteration until it becomes an issue"""
         row_stats = defaultdict(list)
-        conn = dbconn()
-        cursor = conn.cursor()
-        cursor.execute('select iteration, cluster, num_rows from cluster_stats')
-        for iteration, cluster, nrows in cursor.fetchall():
-            row_stats[iteration].append(nrows)
-        nrows_x, nrows_y = make_int_histogram(row_stats[max(row_stats.keys())])
-        cursor.close()
-        conn.close()
+        session = dbsession()
+        try:
+            for cstat in session.query(cm2db.ClusterStat):
+                row_stats[cstat.iteration].append(cstat.num_rows)
+            nrows_x, nrows_y = make_int_histogram(row_stats[max(row_stats.keys())])
+        finally:
+            if session is not None:
+                session.close()
         return {'xvalues': nrows_x, 'yvalues': nrows_y}
 
     @cherrypy.expose
@@ -455,14 +462,14 @@ class ClusterViewerApp:
         """Note: this is actually iteration-specific, currently we lock this to the last
         iteration until it becomes an issue"""
         col_stats = defaultdict(list)
-        conn = dbconn()
-        cursor = conn.cursor()
-        cursor.execute('select iteration, cluster, num_cols from cluster_stats')
-        for iteration, cluster, ncols in cursor.fetchall():
-            col_stats[iteration].append(ncols)
-        ncols_x, ncols_y = make_int_histogram(col_stats[max(col_stats.keys())])
-        cursor.close()
-        conn.close()
+        session = dbsession()
+        try:
+            for cstat in session.query(cm2db.ClusterStat):
+                col_stats[cstat.iteration].append(cstat.num_cols)
+            ncols_x, ncols_y = make_int_histogram(col_stats[max(col_stats.keys())])
+        finally:
+            if session is not None:
+                session.close()
         return {'xvalues': ncols_x, 'yvalues': ncols_y}
 
     @cherrypy.expose
@@ -471,14 +478,14 @@ class ClusterViewerApp:
         """Note: this is actually iteration-specific, currently we lock this to the last
         iteration until it becomes an issue"""
         resid_stats = defaultdict(list)
-        conn = dbconn()
-        cursor = conn.cursor()
-        cursor.execute('select iteration, cluster, residual from cluster_stats')
-        for i, cluster, residual in cursor.fetchall():
-            resid_stats[i].append(residual)
-        resids_x, resids_y = make_float_histogram(resid_stats[max(resid_stats.keys())])
-        cursor.close()
-        conn.close()
+        session = dbsession()
+        try:
+            for cstat in session.query(cm2db.ClusterStat):
+                resid_stats[cstat.iteration].append(cstat.residual)
+            resids_x, resids_y = make_float_histogram(resid_stats[max(resid_stats.keys())])
+        finally:
+            if session is not None:
+                session.close()
         return {'xvalues': resids_x, 'yvalues': resids_y}
 
     @cherrypy.expose
