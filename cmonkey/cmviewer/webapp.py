@@ -624,102 +624,88 @@ class ClusterViewerApp:
     def view_cluster(self, **kw):
         cluster = int(kw['cluster'])
         iteration = int(kw['iteration'])
-        conn = dbconn()
+        session = dbsession()
 
-        cursor = conn.cursor()
-        cursor.execute('select species from run_infos')
-        species = cursor.fetchone()[0]
-        cursor.close()
+        try:
+            runinfo = session.query(cm2db.RunInfo).one()
+            species = runinfo.species
+            rows = [rm.row_name.name for rm in session.query(cm2db.RowMember).filter(
+                and_(cm2db.RowMember.iteration == iteration, cm2db.RowMember.cluster == cluster))]
+            columns = [cm.column_name.name for cm in session.query(cm2db.ColumnMember).filter(
+                and_(cm2db.ColumnMember.iteration == iteration, cm2db.ColumnMember.cluster == cluster))]
+            js_ratios = json.dumps(self.ratios().hs_subratios_for(rows, columns))
 
-        cursor = conn.cursor()
-        cursor.execute('select name from row_names rn join row_members rm on rn.order_num = rm.order_num where iteration = ? and cluster = ?', (iteration, cluster))
-        rows = [row[0] for row in cursor.fetchall()]
-        cursor.close()
+            # grouped by seqtype
+            motif_infos = defaultdict(list)
+            for row in session.query(cm2db.MotifInfo).filter(
+                    and_(cm2db.MotifInfo.iteration == iteration, cm2db.MotifInfo.cluster == cluster)):
+                motif_infos[row.seqtype].append(MotifInfo(row.rowid, row.cluster, row.seqtype, row.motif_num, row.evalue))
+            seqtypes = motif_infos.keys()
 
-        cursor = conn.cursor()
-        cursor.execute('select name from column_names cn join column_members cm on cn.order_num = cm.order_num where iteration = ? and cluster = ?', (iteration, cluster))
-        columns = [row[0] for row in cursor.fetchall()]
-        cursor.close()
+            motif_ids = map(lambda i: str(i.id),
+                            [mis for mismis in motif_infos.values() for mis in mismis])
+            motif_pssm_rows = defaultdict(list)
+            for row in session.query(cm2db.MotifPSSMRow).filter(
+                    cm2db.MotifPSSMRow.motif_info_id.in_(motif_ids)):
+                motif_pssm_rows[row.motif_info_id].append([row.a, row.c, row.g, row.t])
 
-        js_ratios = json.dumps(self.ratios().hs_subratios_for(rows, columns))
+            js_motif_pssms = {motif_id: json.dumps({'alphabet':['A','C','G','T'],
+                                                    'values':motif_pssm_rows[motif_id]})
+                              for motif_id in motif_pssm_rows}
+            motif_ids = sorted(js_motif_pssms.keys())
 
-        # extract motif information
-        conn.row_factory = motifinfo_factory
-        cursor = conn.cursor()
-        cursor.execute("select rowid, cluster, seqtype, motif_num, evalue from motif_infos where iteration = ? and cluster = ?", [iteration, cluster])
-        # grouped by seqtype
-        motif_infos = defaultdict(list)
-        for row in cursor.fetchall():
-            motif_infos[row.seqtype].append(row)
-        cursor.close()
-        seqtypes = motif_infos.keys()
+            if len(motif_ids) > 0:
+                motif1_length = len(motif_pssm_rows[motif_ids[0]])
+                motif1_pssm_tsv = "A\tC\tG\tT\n"
+                for a, c, g, t in motif_pssm_rows[motif_ids[0]]:
+                    motif1_pssm_tsv += "%.4f\t%.4f\t%.4f\t%.4f\n" % (a, c, g, t)
+            if len(motif_ids) > 1:
+                motif2_length = len(motif_pssm_rows[motif_ids[1]])
+                motif2_pssm_tsv = "A\tC\tG\tT\n"
+                for a, c, g, t in motif_pssm_rows[motif_ids[1]]:
+                    motif2_pssm_tsv += "%.4f\t%.4f\t%.4f\t%.4f\n" % (a, c, g, t)
 
-        conn.row_factory = motifpssmrow_factory
-        cursor = conn.cursor()
-        motif_ids = map(lambda i: str(i.id),
-                        [mis for mismis in motif_infos.values() for mis in mismis])
-        cursor.execute("select motif_info_id, row, a, c, g, t from motif_pssm_rows where motif_info_id in (%s)" % ','.join(motif_ids))
-        # grouped by motif info id
-        motif_pssm_rows = defaultdict(list)
-        for row in cursor.fetchall():
-            motif_pssm_rows[row.motif_id].append([row.a, row.c, row.g, row.t])
-        js_motif_pssms = {motif_id: json.dumps({'alphabet':['A','C','G','T'],
-                                                'values':motif_pssm_rows[motif_id]})
-                          for motif_id in motif_pssm_rows}
-        motif_ids = sorted(js_motif_pssms.keys())
+            # annotations
+            motif_lengths = { motif_info_id: count
+                for motif_info_id, count in session.query(cm2db.MotifPSSMRow.motif_info_id, func.count(cm2db.MotifPSSMRow.row)).filter(
+                    cm2db.MotifPSSMRow.iteration == iteration).group_by(cm2db.MotifPSSMRow.motif_info_id)}
 
-        if len(motif_ids) > 0:
-            motif1_length = len(motif_pssm_rows[motif_ids[0]])
-            motif1_pssm_tsv = "A\tC\tG\tT\n"
-            for a, c, g, t in motif_pssm_rows[motif_ids[0]]:
-                motif1_pssm_tsv += "%.4f\t%.4f\t%.4f\t%.4f\n" % (a, c, g, t)
-        if len(motif_ids) > 1:
-            motif2_length = len(motif_pssm_rows[motif_ids[1]])
-            motif2_pssm_tsv = "A\tC\tG\tT\n"
-            for a, c, g, t in motif_pssm_rows[motif_ids[1]]:
-                motif2_pssm_tsv += "%.4f\t%.4f\t%.4f\t%.4f\n" % (a, c, g, t)
+            annotations = []
+            for a in session.query(cm2db.MotifAnnotation).join(cm2db.MotifInfo).filter(
+                and_(cm2db.MotifInfo.iteration == iteration, cm2db.MotifInfo.cluster == cluster)):
+                annotations.append(MotifAnnotation(a.motif_info_id, a.motif_info.seqtype, a.motif_info.motif_num,
+                                   a.gene.name, a.position, a.reverse, a.pvalue))
 
-        cursor.close()
+            st_annots = defaultdict(list)  # group by seqtype
+            for annot in annotations:
+                st_annots[annot.seqtype].append(annot)
+            st_gene_annots = {}
+            for seqtype in st_annots:  # group by gene
+                gene_annots = defaultdict(list)
+                for annot in st_annots[seqtype]:
+                    gene_annots[annot.gene].append(annot)
+                st_gene_annots[seqtype] = gene_annots
 
-        # annotations
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute('select motif_info_id, count(row) from motif_pssm_rows where iteration = ? group by motif_info_id', [iteration])
-        motif_lengths = {row[0]: row[1] for row in cursor.fetchall()}
-        cursor.close()
+            js_annotation_map = {}
+            for seqtype, gene_annots in st_gene_annots.items():
+                st_annots = []
+                for gene, annots in gene_annots.items():
+                    matches = [{'motif': a.motif_num - 1, 'start': a.pos,
+                                'length': motif_lengths[a.motif_info_id],
+                                'reverse': a.reverse, 'score': a.pvalue}
+                               for a in annots]
+                    st_annots.append({'gene': gene, 'condition': '', 'log10': 0.17,
+                                      'boxColor': '#08f', 'lineColor': '#000',
+                                      'matches': matches})
+                js_annotation_map[seqtype] = json.dumps(st_annots)
 
-        conn.row_factory = motifannot_factory
-        cursor = conn.cursor()
-        cursor.execute('select a.motif_info_id, seqtype, motif_num, g.name, position, reverse, pvalue from motif_annotations a join motif_infos i on a.motif_info_id = i.rowid join row_names g on g.order_num = a.gene_num where i.iteration = ? and i.cluster = ?', [iteration, cluster])
-        annotations = [row for row in cursor.fetchall()]
-        cursor.close()
+            ratios_mean = normalize_js(self.ratios().subratios_for(rows, columns).mean())
+            js_boxplot_ratios = self.ratios().hs_boxplot_data_for(rows, columns)
 
-        st_annots = defaultdict(list)  # group by seqtype
-        for annot in annotations:
-            st_annots[annot.seqtype].append(annot)
-        st_gene_annots = {}
-        for seqtype in st_annots:  # group by gene
-            gene_annots = defaultdict(list)
-            for annot in st_annots[seqtype]:
-                gene_annots[annot.gene].append(annot)
-            st_gene_annots[seqtype] = gene_annots
+        finally:
+            if session is not None:
+                session.close()
 
-        js_annotation_map = {}
-        for seqtype, gene_annots in st_gene_annots.items():
-            st_annots = []
-            for gene, annots in gene_annots.items():
-                matches = [{'motif': a.motif_num - 1, 'start': a.pos,
-                            'length': motif_lengths[a.motif_info_id],
-                            'reverse': a.reverse, 'score': a.pvalue}
-                           for a in annots]
-                st_annots.append({'gene': gene, 'condition': '', 'log10': 0.17,
-                                  'boxColor': '#08f', 'lineColor': '#000',
-                                  'matches': matches})
-            js_annotation_map[seqtype] = json.dumps(st_annots)
-
-        conn.close()
-        ratios_mean = normalize_js(self.ratios().subratios_for(rows, columns).mean())
-        js_boxplot_ratios = self.ratios().hs_boxplot_data_for(rows, columns)
         tmpl = env.get_template('cluster.html')
         return tmpl.render(locals())
 
