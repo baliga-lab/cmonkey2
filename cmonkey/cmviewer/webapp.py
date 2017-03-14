@@ -25,10 +25,6 @@ env = Environment(loader=FileSystemLoader(os.path.join(current_dir, 'templates')
 outdir = DEFAULT_OUTDIR
 outdb = None
 
-RunInfo = namedtuple('RunInfo',
-                     ['species', 'orgcode', 'num_iters', 'last_iter',
-                      'num_rows', 'num_cols', 'num_clusters', 'start_time', 'finish_time',
-                      'run_secs'])
 
 ClusterStat = namedtuple('ClusterStat',
                          ['iter', 'cluster', 'num_rows', 'num_cols', 'residual'])
@@ -142,9 +138,6 @@ def read_ratios():
             data.append(list(map(to_float, row[1:])))
     return Ratios(row_titles, column_titles, np.array(data))
 
-
-def runinfo_factory(cursor, row):
-    return RunInfo(*row)
 
 def motifinfo_factory(cursor, row):
     return MotifInfo(*row)
@@ -346,22 +339,23 @@ class ClusterViewerApp:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def run_status(self):
-        conn = dbconn()
-        conn.row_factory = runinfo_factory
-        cursor = conn.cursor()
-        cursor.execute("select species, organism, num_iterations, last_iteration, num_rows, num_columns, num_clusters, start_time, finish_time, (strftime('%s', finish_time) - strftime('%s', start_time)) from run_infos")
-        runinfo = cursor.fetchone()
+        session = dbsession()
+        try:
+            runinfo = session.query(cm2db.RunInfo).one()
+        finally:
+            if session is not None:
+                session.close()
 
-        cursor.close()
-        conn.close()
-        progress = "%.2f" % min((float(runinfo.last_iter) / float(runinfo.num_iters) * 100.0),
+        progress = "%.2f" % min((float(runinfo.last_iteration) / float(runinfo.num_iterations) * 100.0),
                                 100.0)
         result = {'progress': progress, 'finished': False}
         if runinfo.finish_time:
-            elapsed_hours = runinfo.run_secs / 3600
-            elapsed_mins = (runinfo.run_secs - (elapsed_hours * 3600)) / 60
+            elapsed_secs = int((runinfo.finish_time - runinfo.start_time).total_seconds())
+            print("ELAPSED: ", elapsed_secs)
+            elapsed_hours = int(elapsed_secs / 3600)
+            elapsed_mins = int((elapsed_secs - (elapsed_hours * 3600)) / 60)
             result['elapsed_time'] = "(%d hours %d minutes)" % (elapsed_hours, elapsed_mins)
-            result['finish_time'] = runinfo.finish_time
+            result['finish_time'] = str(runinfo.finish_time)
             result['finished'] = True
         return result
 
