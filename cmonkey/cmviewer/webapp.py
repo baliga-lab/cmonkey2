@@ -351,7 +351,6 @@ class ClusterViewerApp:
         result = {'progress': progress, 'finished': False}
         if runinfo.finish_time:
             elapsed_secs = int((runinfo.finish_time - runinfo.start_time).total_seconds())
-            print("ELAPSED: ", elapsed_secs)
             elapsed_hours = int(elapsed_secs / 3600)
             elapsed_mins = int((elapsed_secs - (elapsed_hours * 3600)) / 60)
             result['elapsed_time'] = "(%d hours %d minutes)" % (elapsed_hours, elapsed_mins)
@@ -493,20 +492,21 @@ class ClusterViewerApp:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def slider_ranges(self, iteration):
-        conn = dbconn()
-        cursor = conn.cursor()
-        cursor.execute("select min(residual), max(residual) from cluster_stats where iteration=?", [iteration])
-        min_residual, max_residual = cursor.fetchone()
-        residual_step = (max_residual - min_residual) / 100.0
-        cursor.execute("select min(evalue), max(evalue) from motif_infos where iteration=?",
-                       [iteration])
+        session = dbsession()
+        try:
+            min_residual, max_residual = session.query(func.min(cm2db.ClusterStat.residual), func.max(cm2db.ClusterStat.residual)).filter(
+                cm2db.ClusterStat.iteration == iteration).one()
+            min_evalue, max_evalue = session.query(func.min(cm2db.MotifInfo.evalue), func.max(cm2db.MotifInfo.evalue)).filter(
+                cm2db.MotifInfo.iteration == iteration).one()
+            residual_step = (max_residual - min_residual) / 100.0
+        finally:
+            if session is not None:
+                session.close()
 
         # since the e-value range is tricky to use, we use the log scale instead
-        min_evalue, max_evalue = cursor.fetchone()
         min_evalue = math.log10(min_evalue)
         max_evalue = math.log10(max_evalue)
         evalue_step = (max_evalue - min_evalue) / 100.0
-        cursor.close()
         return {'residual': {'min': min_residual, 'max': max_residual, 'step': residual_step},
                 'evalue': {'min': min_evalue, 'max': max_evalue, 'step': evalue_step}}
 
