@@ -12,7 +12,7 @@ import numpy as np
 import glob
 import math
 import argparse
-from sqlalchemy import func
+from sqlalchemy import func, and_, or_
 
 import sys
 import traceback as tb
@@ -32,8 +32,6 @@ RunInfo = namedtuple('RunInfo',
 
 ClusterStat = namedtuple('ClusterStat',
                          ['iter', 'cluster', 'num_rows', 'num_cols', 'residual'])
-
-IterationStat = namedtuple('IterationStat', ['iter', 'label', 'score'])
 
 MotifInfo = namedtuple('MotifInfo', ['id', 'cluster', 'seqtype', 'num', 'evalue'])
 
@@ -162,10 +160,6 @@ def clusterstat_factory(cursor, row):
     return ClusterStat(*row)
 
 
-def iterationstat_factory(cursor, row):
-    return IterationStat(*row)
-
-
 def dbconn():
     global outdb
     return sqlite3.connect(outdb, timeout=10, isolation_level=None)
@@ -217,7 +211,7 @@ def make_series(stats):
         maxscore = 0.0
 
     for stat in stats:
-        groups[stat.label].append(stat.score)
+        groups[stat.statstype_obj.name].append(stat.score)
     minscore = math.floor(minscore)
     maxscore = math.ceil(maxscore)
     return [{'name': label, 'data': groups[label]} for label in groups], minscore, maxscore
@@ -385,13 +379,13 @@ class ClusterViewerApp:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def mean_residuals(self):
-        conn = dbconn()
-        cursor = conn.cursor()
-        cursor.execute("select score from iteration_stats its join statstypes st on its.statstype = st.rowid where st.name = 'median_residual' order by iteration")
-        resids = [row[0] for row in cursor.fetchall()]
-
-        cursor.close()
-        conn.close()
+        session = dbsession()
+        try:
+            resids = [s.score for s in session.query(cm2db.IterationStat).join(cm2db.StatsType).filter(
+                cm2db.StatsType.name == 'median_residual').order_by(cm2db.IterationStat.iteration)]
+        finally:
+            if session is not None:
+                session.close()
         return {'min': min(resids), 'max': max(resids), 'values': resids}
 
     @cherrypy.expose
@@ -399,18 +393,19 @@ class ClusterViewerApp:
     def mean_cluster_members(self):
         row_stats = defaultdict(list)
         col_stats = defaultdict(list)
-        conn = dbconn()
-        cursor = conn.cursor()
-        cursor.execute('select iteration, cluster, num_rows, num_cols from cluster_stats')
-        for iteration, cluster, nrows, ncols in cursor.fetchall():
-            row_stats[iteration].append(nrows)
-            col_stats[iteration].append(ncols)
+        session = dbsession()
+        try:
+            for cstat in session.query(cm2db.ClusterStat):
+                row_stats[cstat.iteration].append(cstat.num_rows)
+                col_stats[cstat.iteration].append(cstat.num_cols)
+        finally:
+            if session is not None:
+                session.close()
+
         mean_nrow = [float(sum(row_stats[i])) / len(row_stats[i])
                      for i in sorted(row_stats.keys())]
         mean_ncol = [float(sum(col_stats[i])) / len(col_stats[i])
                      for i in sorted(col_stats.keys())]
-        cursor.close()
-        conn.close()
         return {'meanNumRows': mean_nrow, 'meanNumCols': mean_ncol}
 
     @cherrypy.expose
@@ -491,13 +486,14 @@ class ClusterViewerApp:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def network_score_means(self):
-        conn = dbconn()
-        conn.row_factory = iterationstat_factory
-        cursor = conn.cursor()
-        cursor.execute("select iteration,name,score from iteration_stats its join statstypes st on its.statstype=st.rowid where category='network'")
-        series, min_score, max_score = make_series([row for row in cursor.fetchall()])
-        cursor.close()
-        conn.close()
+        session = dbsession()
+        try:
+            iter_stats = session.query(cm2db.IterationStat).join(cm2db.StatsType).filter(
+                cm2db.StatsType.category == 'network')
+            series, min_score, max_score = make_series(iter_stats)
+        finally:
+            if session is not None:
+                session.close()
         return {'min': min_score, 'max': max_score, 'series': series}
 
     @cherrypy.expose
@@ -523,40 +519,34 @@ class ClusterViewerApp:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def generic_score_means(self):
-        conn = dbconn()
-        cursor = conn.cursor()
-        cursor.execute("select rowid,name from statstypes where (category='scoring' or category='seqtype') and name not in ('Rows', 'Columns', 'Networks')")
-        types = [row[1] for row in cursor.fetchall()]
-        cursor.close()
-
-        conn.row_factory = iterationstat_factory
-        cursor = conn.cursor()
-        stats_scores = []
-        stats = []
-        for statstype in types:
-            cursor.execute("select iteration, name, score from iteration_stats its join statstypes st on its.statstype = st.rowid where st.name=?", [statstype])
-            mean_stats, min_score, max_score = make_series([row for row in cursor.fetchall()])
-            stats_scores.append(min_score)
-            stats_scores.append(max_score)
-            stats.extend(mean_stats)
-        min_stats_score = min(stats_scores)
-        max_stats_score = max(stats_scores)
-        cursor.close()
-        conn.close()
+        session = dbsession()
+        try:
+            stats_scores = []
+            stats = []
+            for statstype in session.query(cm2db.StatsType).filter(
+                and_(cm2db.StatsType.name.notin_(['Rows', 'Columns', 'Networks']),
+                         or_(cm2db.StatsType.category == 'scoring',
+                                 cm2db.StatsType.category == 'seqtype'))):
+                mean_stats, min_score, max_score = make_series(
+                    session.query(cm2db.IterationStat).join(cm2db.StatsType).filter(
+                        cm2db.StatsType.name == statstype.name))
+                stats_scores.append(min_score)
+                stats_scores.append(max_score)
+                stats.extend(mean_stats)
+            min_stats_score = min(stats_scores)
+            max_stats_score = max(stats_scores)
+        finally:
+            if session is not None:
+                session.close()
         return {'min': min_stats_score, 'max': max_stats_score, 'series': stats}
 
     def real_index(self):
-        conn = dbconn()
-
-        # extract general information about the run
-        conn.row_factory = runinfo_factory
-        cursor = conn.cursor()
-        cursor.execute("select species, organism, num_iterations, last_iteration, num_rows, num_columns, num_clusters, start_time, finish_time, (strftime('%s', finish_time) - strftime('%s', start_time)) from run_infos")
-        runinfo = cursor.fetchone()
-
-        cursor.close()
-        conn.close()
-
+        session = dbsession()
+        try:
+            runinfo = session.query(cm2db.RunInfo).one()
+        finally:
+            if session is not None:
+                session.close()
         tmpl = env.get_template('index.html')
         return tmpl.render(locals())
 
