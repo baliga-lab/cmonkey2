@@ -2,6 +2,8 @@
 import os
 import svgwrite
 from collections import defaultdict
+from sqlalchemy import func, and_
+import cmonkey.database as cm2db
 
 TEXT_STYLE = "font-size:%ipx; font-family:%s" % (10, "sans-serif")
 BOX_WIDTH = 100.0
@@ -60,19 +62,18 @@ def draw_annotation(dwg, annotation, base_x, annot_y, motif_lengths):
         dwg.add(dwg.rect((mx, my), (mlen, MATCH_HEIGHT), stroke="none", fill=mcolor, fill_opacity=mopacity))
 
 
-def draw_annotations(conn, output_dir, motif_lengths, iteration, cluster):
+def draw_annotations(session, output_dir, motif_lengths, iteration, cluster):
 
     # TODO: for multiple seqtypes, we need to outfactor the query to generate a graph
     # for each seqtype
-    cursor = conn.cursor()
-    cursor.execute('select a.motif_info_id, seqtype, motif_num, g.name, position, reverse, pvalue from motif_annotations a join motif_infos i on a.motif_info_id = i.rowid join row_names g on g.order_num = a.gene_num where i.iteration = ? and i.cluster = ?', [iteration, cluster])
+    motif_infos = session.query(cm2db.MotifInfo).filter(
+        and_(cm2db.MotifInfo.iteration == iteration, cm2db.MotifInfo.cluster == cluster))
 
-    #annotations = [("gene 1", "#00ff88"), ("gene 2", "#ff1245")]
-    annotations = []
     st_annots = defaultdict(list)  # group by seqtype
-    for motif_id, seqtype, motif_num, name, position, reverse, pvalue in cursor.fetchall():
-        annot = (motif_id, seqtype, motif_num, name, position, reverse, pvalue)
-        st_annots[seqtype].append(annot)
+    for m in motif_infos:
+        for a in m.annotations:
+            annot = (m.rowid, m.seqtype, m.motif_num, a.gene.name, a.position, a.reverse, a.pvalue)
+            st_annots[m.seqtype].append(annot)
 
     st_gene_annots = {}
     for seqtype in st_annots:  # group by gene
@@ -100,16 +101,10 @@ def draw_annotations(conn, output_dir, motif_lengths, iteration, cluster):
         dwg.save()
 
 
-
-def generate_plots(conn, output_dir):
-    cursor = conn.cursor()
-    cursor.execute('select max(iteration) from motif_infos')
-    max_iteration = cursor.fetchone()[0]
-    cursor.execute('select motif_info_id, count(row) from motif_pssm_rows where iteration = ? group by motif_info_id',
-                   [max_iteration])
-    motif_lengths = {row[0]: row[1] for row in cursor.fetchall()}
-
-    cursor.execute('select distinct cluster from motif_infos where iteration=?',
-                   [max_iteration])
-    for row in cursor.fetchall():
-        draw_annotations(conn, output_dir, motif_lengths, max_iteration, row[0])
+def generate_plots(session, output_dir):
+    iteration = session.query(func.max(cm2db.RowMember.iteration))
+    motif_lengths = {m_id: nrows for m_id, nrows in session.query(
+        cm2db.MotifPSSMRow.motif_info_id, func.count(cm2db.MotifPSSMRow.row)).filter(
+            cm2db.MotifPSSMRow.iteration == iteration).group_by(cm2db.MotifPSSMRow.motif_info_id)}
+    for row in session.query(cm2db.MotifInfo.cluster).distinct().filter(cm2db.MotifInfo.iteration == iteration):
+        draw_annotations(session, output_dir, motif_lengths, iteration, row[0])

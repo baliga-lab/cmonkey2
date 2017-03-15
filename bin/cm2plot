@@ -11,6 +11,7 @@ import sqlite3
 import cmonkey.tools.plot_expressions as plot_exps
 import cmonkey.tools.plot_motifs as plot_motifs
 import cmonkey.tools.plot_motif_positions as plot_motif_pos
+import cmonkey.database as cm2db
 
 
 DESCRIPTION = """cm2plot - generate cmonkey2 plots"""
@@ -36,14 +37,18 @@ if __name__ == '__main__':
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 
-    conn = sqlite3.connect(os.path.join(args.resultdir, 'cmonkey_run.db'))
-    if args.command == 'expressions':
-        plot_exps.generate_plots(conn, args.resultdir, output_dir)
-    elif args.command == 'motif_logos':
-        plot_motifs.generate_plots(conn, output_dir)
-    elif args.command == 'motif_pos':
-        plot_motif_pos.generate_plots(conn, output_dir)
-    elif args.command == 'all':
-        plot_exps.generate_plots(conn, args.resultdir, output_dir)
-        plot_motifs.generate_plots(conn, output_dir)
-        plot_motif_pos.generate_plots(conn, output_dir)
+    session = cm2db.make_session(os.path.join(args.resultdir, 'cmonkey_run.db'))
+    try:
+        if args.command == 'expressions':
+            plot_exps.generate_plots(session, args.resultdir, output_dir)
+        elif args.command == 'motif_logos':
+            plot_motifs.generate_plots(session, output_dir)
+        elif args.command == 'motif_pos':
+            plot_motif_pos.generate_plots(session, output_dir)
+        elif args.command == 'all':
+            plot_exps.generate_plots(session, args.resultdir, output_dir)
+            plot_motifs.generate_plots(session, output_dir)
+            plot_motif_pos.generate_plots(session, output_dir)
+    finally:
+        if session is not None:
+            session.close()

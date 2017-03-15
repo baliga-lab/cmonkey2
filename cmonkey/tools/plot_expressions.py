@@ -4,6 +4,8 @@ import numpy as np
 import os
 import math
 from cmonkey.tools.util import read_ratios
+import cmonkey.database as cm2db
+from sqlalchemy import func, and_
 
 
 def normalize_js(value):
@@ -13,27 +15,22 @@ def normalize_js(value):
         return value
 
 
-def generate_plots(conn, result_dir, output_dir):
+def generate_plots(session, result_dir, output_dir):
     ratios = read_ratios(result_dir)
 
-    cursor = conn.cursor()
-    cursor.execute('select max(iteration) from row_members')
-    iteration = cursor.fetchone()[0]
+    iteration = session.query(func.max(cm2db.RowMember.iteration))
+    clusters = [r[0] for r in session.query(cm2db.RowMember.cluster).distinct().filter(
+        cm2db.RowMember.iteration == iteration)]
 
-    cursor.execute('select distinct cluster from row_members where iteration=?', [iteration])
-    clusters = [row[0] for row in cursor.fetchall()]
     figure = plt.figure(figsize=(6,3))
     for cluster in clusters:
         plt.clf()
         plt.cla()
-        cursor.execute('select distinct name from row_members rm join row_names rn on rm.order_num=rn.order_num where cluster=? and iteration=?', [cluster, iteration])
-        genes = [row[0] for row in cursor.fetchall()]
-
-        cursor.execute('select distinct name from column_members cm join column_names cn on cm.order_num=cn.order_num where cluster=? and iteration=?', [cluster, iteration])
-        cluster_conds = [row[0] for row in cursor.fetchall()]
-
-        cursor.execute('select distinct name from column_names')
-        all_conds = [row[0] for row in cursor.fetchall()]
+        genes = [r.row_name.name for r in session.query(cm2db.RowMember).filter(
+            and_(cm2db.RowMember.cluster == cluster, cm2db.RowMember.iteration == iteration))]
+        cluster_conds = [c.column_name.name for c in session.query(cm2db.ColumnMember).filter(
+            and_(cm2db.ColumnMember.cluster == cluster, cm2db.ColumnMember.iteration == iteration))]
+        all_conds = [c[0] for c in session.query(cm2db.ColumnName.name).distinct()]
         non_cluster_conds = [cond for cond in all_conds if not cond in set(cluster_conds)]
 
         cluster_data = ratios.loc[genes, cluster_conds]
