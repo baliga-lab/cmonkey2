@@ -13,6 +13,7 @@ import glob
 import math
 import argparse
 from sqlalchemy import func, and_, or_
+from sqlalchemy.orm import aliased
 
 import sys
 import traceback as tb
@@ -33,6 +34,7 @@ MotifInfo = namedtuple('MotifInfo', ['id', 'cluster', 'seqtype', 'num', 'evalue'
 
 MotifPSSMRow = namedtuple('MotifPSSMRow', ['motif_id', 'row', 'a', 'c', 'g', 't'])
 
+# We create this to store temporary visualization objects
 MotifAnnotation = namedtuple('MotifAnnotation', ['motif_info_id', 'seqtype', 'motif_num',
                                                  'gene', 'pos', 'reverse', 'pvalue'])
 
@@ -145,10 +147,6 @@ def motifinfo_factory(cursor, row):
 def motifpssmrow_factory(cursor, row):
     return MotifPSSMRow(*row)
 
-def motifannot_factory(cursor, row):
-    return MotifAnnotation(*row)
-
-
 def clusterstat_factory(cursor, row):
     return ClusterStat(*row)
 
@@ -241,97 +239,96 @@ class ClusterViewerApp:
             tmpl = env.get_template('not_available.html')
             return tmpl.render(locals())
 
-    def filter_clusters(self, cursor, iteration, min_residual, max_residual):
-        # used clusters
-        query_params = [iteration]
-        query = "select distinct cluster from cluster_stats where iteration=?"
+    def filter_clusters(self, session, iteration, min_residual, max_residual):
+        """returns the clusters in the iteraion that have a residual within
+        the boundaries"""
+        q = session.query(cm2db.ClusterStat.cluster).distinct().filter(
+            cm2db.ClusterStat.iteration == iteration)
         if min_residual is not None:
-            query += ' and residual >= ?'
-            query_params.append(min_residual)
+            q = q.filter(cm2db.ClusterStat.residual >= min_residual)
         if max_residual is not None:
-            query += ' and residual <= ?'
-            query_params.append(max_residual)
-        cursor.execute(query, query_params)
-        return [row[0] for row in cursor.fetchall()]
+            q = q.filter(cm2db.ClusterStat.residual <= max_residual)
+        return [row[0] for row in q]
 
-    def filter_motifs(self, cursor, iteration, valid_clusters,
+    def filter_motifs(self, session, iteration, valid_clusters,
                       min_evalue, max_evalue):
-        query_params = [iteration]
-        query = "select rowid,cluster,motif_num from motif_infos where iteration=?"
+        q = session.query(cm2db.MotifInfo).filter(cm2db.MotifInfo.iteration == iteration)
         if min_evalue is not None:
-            query += ' and evalue >= ?'
-            query_params.append(min_evalue)
+            q = q.filter(cm2db.MotifInfo.evalue >= min_evalue)
         if max_evalue is not None:
-            query += ' and evalue <= ?'
-            query_params.append(max_evalue)
-        cursor.execute(query, query_params)
-        return [(mid, cluster, motif_num)
-                for mid,cluster,motif_num in cursor.fetchall()
-                if cluster in valid_clusters]
+            q = q.filter(cm2db.MotifInfo.evalue <= max_evalue)
+        return [(m.rowid, m.cluster, m.motif_num) for m in q if m.cluster in valid_clusters]
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def cytoscape_nodes(self, iteration, min_residual=None, max_residual=None,
                         min_evalue=None, max_evalue=None):
-        conn = dbconn()
-        cursor = conn.cursor()
+        session = dbsession()
+        try:
+            clusters = self.filter_clusters(session, iteration, min_residual, max_residual)
+            valid_clusters = set(clusters)
+            clusters_json = [{'classes': 'clusters',
+                              'data': {'id': '%d' % cluster, 'name': '%d' % cluster}}
+                             for cluster in clusters]
 
-        clusters = self.filter_clusters(cursor, iteration, min_residual, max_residual)
-        valid_clusters = set(clusters)
-        clusters_json = [{'classes': 'clusters',
-                          'data': {'id': '%d' % cluster, 'name': '%d' % cluster}}
-                         for cluster in clusters]
+            genes = [rm.row_name.name for rm in session.query(cm2db.RowMember).join(cm2db.RowName).filter(
+                cm2db.RowMember.iteration == iteration).order_by(cm2db.RowName.name)
+                         if rm.cluster in valid_clusters]
 
-        # used genes
-        cursor.execute("select distinct name,cluster from row_names rn join row_members rm on rn.order_num = rm.order_num where iteration=? order by name", [iteration])
-        genes = [row[0] for row in cursor.fetchall() if row[1] in valid_clusters]
-        genes_json = [{'classes': 'genes',
-                       'data': {'id': '%s' % gene, 'name': '%s' % gene}}
-                      for gene in genes]
+            genes_json = [{'classes': 'genes',
+                           'data': {'id': '%s' % gene, 'name': '%s' % gene}}
+                          for gene in genes]
 
-        # motifs, since we are operating on a log scale, we have to
-        # remap the values to the original scale
-        min_evalue = 10.0**float(min_evalue)
-        max_evalue = 10.0**float(max_evalue)
-        motifs = self.filter_motifs(cursor, iteration, valid_clusters,
-                                    min_evalue, max_evalue)
-        cursor.close()
-        conn.close()
+            # motifs, since we are operating on a log scale, we have to
+            # remap the values to the original scale
+            min_evalue = 10.0**float(min_evalue)
+            max_evalue = 10.0**float(max_evalue)
 
-        motifs_json = [{'classes': 'motifs',
-                        'data': {'id': 'm%d' % m[0],
-                                 'name': '%d_%d' % (m[1], m[2])}}
-                       for m in motifs]
-        return {'nodes': clusters_json + genes_json + motifs_json }
-
+            motifs = self.filter_motifs(session, iteration, valid_clusters,
+                                        min_evalue, max_evalue)
+            motifs_json = [{'classes': 'motifs',
+                            'data': {'id': 'm%d' % m[0],
+                                     'name': '%d_%d' % (m[1], m[2])}}
+                           for m in motifs]
+            return {'nodes': clusters_json + genes_json + motifs_json }
+        finally:
+            if session is not None:
+                session.close()
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def cytoscape_edges(self, iteration, min_residual=None, max_residual=None,
                         min_evalue=None, max_evalue=None):
-        conn = dbconn()
-        cursor = conn.cursor()
-        clusters = self.filter_clusters(cursor, iteration, min_residual, max_residual)
-        valid_clusters = set(clusters)
-        motifs = self.filter_motifs(cursor, iteration, valid_clusters,
-                                    min_evalue, max_evalue)
-        valid_motifs = {m[0] for m in motifs}
+        session = dbsession()
+        try:
+            clusters = self.filter_clusters(session, iteration, min_residual, max_residual)
+            valid_clusters = set(clusters)
+            motifs = self.filter_motifs(session, iteration, valid_clusters,
+                                        min_evalue, max_evalue)
+            valid_motifs = {m[0] for m in motifs}
 
-        # edges between clusters and genes
-        cursor.execute("select name, cluster from row_members rm join row_names rn on rm.order_num = rn.order_num where iteration=?", [iteration])
-        edges = [(row[0], row[1]) for row in cursor.fetchall() if row[1] in valid_clusters]
+            # edges between clusters and genes
+            edges = [(rm.row_name.name, rm.cluster) for rm in session.query(cm2db.RowMember).filter(
+                cm2db.RowMember.iteration == iteration) if rm.cluster in valid_clusters]
 
-        # add the edges between motifs and clusters
-        for motif in motifs:
-            edges.append(("m%d" % motif[0], motif[1]))
+            # add the edges between motifs and clusters
+            for motif in motifs:
+                edges.append(("m%d" % motif[0], motif[1]))
 
-        # tomtom (motif-motif) edges
-        cursor.execute("select motif_info_id1, motif_info_id2 from tomtom_results ttr join motif_infos mi on ttr.motif_info_id1=mi.rowid where motif_info_id1 <> motif_info_id2 and iteration=?", [iteration])
-        for mid1, mid2 in cursor.fetchall():
-            if mid1 in valid_motifs and mid2 in valid_motifs:
-                edges.append(("m%d" % mid1, "m%d" % mid2))
-        cursor.close()
-        conn.close()
+            motif1 = aliased(cm2db.MotifInfo)
+            motif2 = aliased(cm2db.MotifInfo)
+            query = session.query(cm2db.TomtomResult, motif1.rowid, motif2.rowid).join(
+                motif1, cm2db.TomtomResult.motif_info1).join(motif2, cm2db.TomtomResult.motif_info2).filter(
+                    motif1.iteration == iteration)
+            print("LAST ITERATION = ", iteration)
+            print(query)
+            for ttr, mid1, mid2 in query:
+                print("TOMTOM: mid1: ", mid1, " mid2: ", mid2)
+                if mid1 in valid_motifs and mid2 in valid_motifs:
+                    edges.append(("m%d" % mid1, "m%d" % mid2))
+        finally:
+            if session is not None:
+                session.close()
 
         return {'edges': [{'data': {'source': '%s' % id1, 'target': '%s' % id2} }
                           for id1, id2 in edges]}
@@ -363,7 +360,7 @@ class ClusterViewerApp:
     def iterations(self):
         session = dbsession()
         try:
-            result = [rm.iteration for rm in session.query(cm2db.RowMember).order_by(cm2db.RowMember.iteration)]
+            result = [r[0] for r in session.query(cm2db.RowMember.iteration).order_by(cm2db.RowMember.iteration).distinct()]
         finally:
             if session is not None:
                 session.close()
@@ -374,7 +371,7 @@ class ClusterViewerApp:
     def mean_residuals(self):
         session = dbsession()
         try:
-            resids = [s.score for s in session.query(cm2db.IterationStat).join(cm2db.StatsType).filter(
+            resids = [s[0] for s in session.query(cm2db.IterationStat.score).join(cm2db.StatsType).filter(
                 cm2db.StatsType.name == 'median_residual').order_by(cm2db.IterationStat.iteration)]
         finally:
             if session is not None:
@@ -421,7 +418,7 @@ class ClusterViewerApp:
     def fuzzy_coeffs(self):
         session = dbsession()
         try:
-            result = [stat.score for stat in session.query(cm2db.IterationStat).join(cm2db.StatsType).filter(
+            result = [s[0] for s in session.query(cm2db.IterationStat.score).join(cm2db.StatsType).filter(
                 cm2db.StatsType.name == 'fuzzy_coeff').order_by(cm2db.IterationStat.iteration)]
         finally:
             if session is not None:
