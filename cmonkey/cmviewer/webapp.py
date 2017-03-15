@@ -27,16 +27,14 @@ outdir = DEFAULT_OUTDIR
 outdb = None
 
 
+# We create this to store temporary visualization objects
+MotifAnnotation = namedtuple('MotifAnnotation', ['motif_info_id', 'seqtype', 'motif_num',
+                                                 'gene', 'pos', 'reverse', 'pvalue'])
+
 ClusterStat = namedtuple('ClusterStat',
                          ['iter', 'cluster', 'num_rows', 'num_cols', 'residual'])
 
 MotifInfo = namedtuple('MotifInfo', ['id', 'cluster', 'seqtype', 'num', 'evalue'])
-
-MotifPSSMRow = namedtuple('MotifPSSMRow', ['motif_id', 'row', 'a', 'c', 'g', 't'])
-
-# We create this to store temporary visualization objects
-MotifAnnotation = namedtuple('MotifAnnotation', ['motif_info_id', 'seqtype', 'motif_num',
-                                                 'gene', 'pos', 'reverse', 'pvalue'])
 
 def normalize_js(value):
     if math.isnan(value):
@@ -141,19 +139,8 @@ def read_ratios():
     return Ratios(row_titles, column_titles, np.array(data))
 
 
-def motifinfo_factory(cursor, row):
-    return MotifInfo(*row)
-
-def motifpssmrow_factory(cursor, row):
-    return MotifPSSMRow(*row)
-
 def clusterstat_factory(cursor, row):
     return ClusterStat(*row)
-
-
-def dbconn():
-    global outdb
-    return sqlite3.connect(outdb, timeout=10, isolation_level=None)
 
 
 def dbsession():
@@ -321,7 +308,6 @@ class ClusterViewerApp:
                 motif1, cm2db.TomtomResult.motif_info1).join(motif2, cm2db.TomtomResult.motif_info2).filter(
                     motif1.iteration == iteration)
             print("LAST ITERATION = ", iteration)
-            print(query)
             for ttr, mid1, mid2 in query:
                 print("TOMTOM: mid1: ", mid1, " mid2: ", mid2)
                 if mid1 in valid_motifs and mid2 in valid_motifs:
@@ -553,69 +539,60 @@ class ClusterViewerApp:
         sort_col = int(kw['iSortCol_0'])
         sort_reverse = kw['sSortDir_0'] == 'desc'
         search_string = kw['sSearch']
-        conn = dbconn()
-        conn.row_factory = motifinfo_factory
-        cursor = conn.cursor()
-        cursor.execute("select rowid, cluster, seqtype, motif_num, evalue from motif_infos where iteration = ?", [iteration])
-        # grouped by cluster
-        motif_infos = defaultdict(list)
-        for row in cursor.fetchall():
-            motif_infos[row.cluster].append(row)
-        cursor.close()
 
-        conn.row_factory = motifpssmrow_factory
+        session = dbsession()
+        try:
+            motif_infos = defaultdict(list)
+            for m in session.query(cm2db.MotifInfo).filter(cm2db.MotifInfo.iteration == iteration):
+                motif_infos[m.cluster].append(MotifInfo(m.rowid, m.cluster, m.seqtype, m.motif_num, m.evalue))
 
-        cursor = conn.cursor()
-        cursor.execute("select motif_info_id, row, a, c, g, t from motif_pssm_rows where iteration = ?", [iteration])
-        # grouped by motif info id
-        motif_pssm_rows = defaultdict(list)
-        for row in cursor.fetchall():
-            motif_pssm_rows[row.motif_id].append([row.a, row.c, row.g, row.t])
+            motif_pssm_rows = defaultdict(list)
+            for r in session.query(cm2db.MotifPSSMRow).filter(cm2db.MotifPSSMRow.iteration == iteration):
+                motif_pssm_rows[r.motif_info_id].append((r.a, r.c, r.g, r.t))
 
-        cursor.close()
-        if search_string is not None and len(search_string.strip()) > 0:
-            search_string = search_string.strip()
-            conn.row_factory = sqlite3.Row
-            cursor = conn.cursor()
-            cursor.execute("select distinct cluster from row_members rm join row_names rn on rn.order_num=rm.order_num where rm.iteration=? and rn.name like ?", [int(iteration), '%' + search_string + '%'])
-            valid_clusters = {row[0] for row in cursor.fetchall()}
-        else:
-            valid_clusters = None
-        cursor.close()
 
-        conn.row_factory = clusterstat_factory
-        cursor = conn.cursor()
-        cursor.execute("select iteration, cluster, num_rows, num_cols, residual from cluster_stats where iteration = ? order by residual", [iteration])
-        cluster_stats = [row for row in cursor.fetchall()]
-        if sort_col == 1:
-            cluster_stats = sorted(cluster_stats, key=lambda item: item.cluster,
-                                   reverse=sort_reverse)
-        elif sort_col == 2:
-            cluster_stats = sorted(cluster_stats, key=lambda item: item.num_rows,
-                                   reverse=sort_reverse)
-        elif sort_col == 3:
-            cluster_stats = sorted(cluster_stats, key=lambda item: item.num_cols,
-                                   reverse=sort_reverse)
-        elif sort_col == 4:
-            cluster_stats = sorted(cluster_stats, key=lambda item: item.residual,
-                                   reverse=sort_reverse)
-        elif sort_col == 5:
-            cluster_stats = sorted(cluster_stats, key=lambda item: min_evalue(motif_infos[item.cluster]),
-                                   reverse=sort_reverse)
+            if search_string is not None and len(search_string.strip()) > 0:
+                search_string = search_string.strip()
+                valid_clusters = [r[0] for r in session.query(cm2db.RowMember.cluster).distinct().join(cm2db.RowName).filter(
+                    cm2db.RowMember.iteration == iteration).filter(cm2db.RowName.name.ilike('%' + search_string + '%'))]
+            else:
+                valid_clusters = None
 
-        filtered_rows = [["<a class=\"clusterlink\" id=\"%d\"  href=\"javascript:void(0)\">%d</a>" % (stat.cluster, stat.cluster),
-                 '%d' % stat.num_rows,
-                 '%d' % stat.num_cols,
-                 format_float(stat.residual),
-                 make_motif_string(motif_infos[stat.cluster],
-                                   motif_pssm_rows)]
-                         for stat in cluster_stats
-                         if valid_clusters is None or stat.cluster in valid_clusters]
-        rows = [["%d" % (i + 1)] + row for i, row in enumerate(filtered_rows)]
+            cluster_stats = [ClusterStat(c.iteration, c.cluster, c.num_rows, c.num_cols, c.residual)
+                                 for c in session.query(cm2db.ClusterStat).filter(
+                                     cm2db.ClusterStat.iteration == iteration).order_by(cm2db.ClusterStat.residual)]
+            if sort_col == 1:
+                cluster_stats = sorted(cluster_stats, key=lambda item: item.cluster,
+                                       reverse=sort_reverse)
+            elif sort_col == 2:
+                cluster_stats = sorted(cluster_stats, key=lambda item: item.num_rows,
+                                       reverse=sort_reverse)
+            elif sort_col == 3:
+                cluster_stats = sorted(cluster_stats, key=lambda item: item.num_cols,
+                                       reverse=sort_reverse)
+            elif sort_col == 4:
+                cluster_stats = sorted(cluster_stats, key=lambda item: item.residual,
+                                       reverse=sort_reverse)
+            elif sort_col == 5:
+                cluster_stats = sorted(cluster_stats, key=lambda item: min_evalue(motif_infos[item.cluster]),
+                                       reverse=sort_reverse)
 
-        cursor.close()
-        conn.close()
-        return json.dumps({'aaData': rows})
+            filtered_rows = [["<a class=\"clusterlink\" id=\"%d\" href=\"javascript:void(0)\">%d</a>" % (stat.cluster, stat.cluster),
+                     '%d' % stat.num_rows,
+                     '%d' % stat.num_cols,
+                     format_float(stat.residual),
+                     make_motif_string(motif_infos[stat.cluster],
+                                       motif_pssm_rows)]
+                             for stat in cluster_stats
+                             if valid_clusters is None or stat.cluster in valid_clusters]
+            rows = [["%d" % (i + 1)] + row for i, row in enumerate(filtered_rows)]
+
+            return json.dumps({'aaData': rows})
+
+        finally:
+            if session is not None:
+                session.close()
+
 
     @cherrypy.expose
     def view_cluster(self, **kw):
