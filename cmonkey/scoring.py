@@ -15,7 +15,6 @@ import cmonkey.membership as memb
 import cmonkey.BSCM as BSCM
 import numpy as np
 import gc
-import sqlite3
 
 # Python2/Python3 compatibility
 try:

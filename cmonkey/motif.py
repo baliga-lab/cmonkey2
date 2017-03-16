@@ -13,7 +13,6 @@ import os
 import collections
 import sys
 import subprocess
-import sqlite3
 
 import cmonkey.scoring as scoring
 import cmonkey.datamatrix as dm

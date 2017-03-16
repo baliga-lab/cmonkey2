@@ -22,7 +22,7 @@ def make_weblogo(session, motif_id, inpath, outpath):
 
 
 def generate_plots(session, output_dir):
-    iteration = session.query(func.max(cm2db.RowMember.iteration))
+    iteration = session.query(func.max(cm2db.MotifInfo.iteration))
     for m in session.query(cm2db.MotifInfo).filter(cm2db.MotifInfo.iteration == iteration):
         infile = os.path.join(output_dir, "motif_%d.txt" % m.rowid)
         outfile = os.path.join(output_dir, "motif_%d_%d.png" % (m.cluster, m.motif_num))

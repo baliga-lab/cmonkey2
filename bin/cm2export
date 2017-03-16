@@ -2,9 +2,9 @@
 
 import os
 import argparse
-import sqlite3
 
 import cmonkey.tools.export as export
+import cmonkey.database as cm2db
 
 
 DESCRIPTION = """cm2json - export cmonkey2 results as JSON"""
@@ -30,10 +30,14 @@ if __name__ == '__main__':
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 
-    conn = sqlite3.connect(os.path.join(args.resultdir, 'cmonkey_run.db'))
-    if args.command == 'expressions':
-        export.cluster_expressions_to_json_file(conn, args.resultdir, output_dir)
-    elif args.command == 'microformats':
-        export.export_to_gaggle_microformats(conn, args.resultdir, output_dir)
-    elif args.command == 'motif_evalues':
-        export.export_motif_evalues_tsv(conn, args.resultdir, output_dir)
+    session = cm2db.make_session(os.path.join(args.resultdir, 'cmonkey_run.db'))
+    try:
+        if args.command == 'expressions':
+            export.cluster_expressions_to_json_file(session, args.resultdir, output_dir)
+        elif args.command == 'microformats':
+            export.export_to_gaggle_microformats(session, args.resultdir, output_dir)
+        elif args.command == 'motif_evalues':
+            export.export_motif_evalues_tsv(session, args.resultdir, output_dir)
+    finally:
+        if session is not None:
+            session.close()

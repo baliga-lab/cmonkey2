@@ -30,7 +30,6 @@ except NameError:
 
 import array
 from collections import defaultdict
-import sqlite3
 
 
 # Default values for membership creation

@@ -6,7 +6,6 @@ more information and licensing details.
 """
 import os
 import argparse
-import sqlite3
 
 import cmonkey.tools.plot_expressions as plot_exps
 import cmonkey.tools.plot_motifs as plot_motifs

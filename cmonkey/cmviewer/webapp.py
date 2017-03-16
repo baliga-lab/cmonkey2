@@ -4,7 +4,6 @@ import cherrypy
 from cherrypy import tools
 from jinja2 import Environment, FileSystemLoader
 import os
-import sqlite3
 from collections import namedtuple, defaultdict
 import json
 import gzip

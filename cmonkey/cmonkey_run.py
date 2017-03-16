@@ -8,7 +8,6 @@ import gc
 import re
 import logging
 import gzip
-import sqlite3
 from decimal import Decimal
 import bz2
 from pkg_resources import Requirement, resource_filename, DistributionNotFound
