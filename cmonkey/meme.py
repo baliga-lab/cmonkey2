@@ -512,12 +512,20 @@ def read_mast_output_xml(output_text, genes):
     Returns: a pair (pevalues, annotations)
     -------- - pevalues is [(gene, pval, eval)]
              - annotations is a dictionary gene -> [(pval, pos, motifnum)]"""
-    pevalues = []
-    annotations = {}
     if output_text is None:  # there was an error in mast, ignore its output
-        return pevalues, annotations
+        return [], {}
 
     root = ET.fromstring(output_text)
+    version = root.get('version')
+    if version.startswith('4.11'):
+        return __read_mast_output_xml_4_11(root, genes)
+    else:
+        return __read_mast_output_xml_4_8(root, genes)
+
+
+def __read_mast_output_xml_4_8(root, genes):
+    pevalues = []
+    annotations = {}
     for sequence in root.iter('sequence'):
         score = sequence.find('score')
         seqname = sequence.get('name')
@@ -530,6 +538,34 @@ def read_mast_output_xml(output_text, genes):
             for hit in sequence.iter('hit'):
                 strand = hit.get('strand')
                 motifnum = int(hit.get('motif').replace('motif_', ''))
+                if strand == 'reverse':
+                    motifnum = -motifnum
+                annot = (float(hit.get('pvalue')),
+                         int(hit.get('pos')) + 2,  # like R cmonkey
+                         motifnum)
+                annotations[seqname].append(annot)
+    return pevalues, annotations
+
+
+def __read_mast_output_xml_4_11(root, genes):
+    """Starting from 4.11.x, MAST generates a different output format"""
+    pevalues = []
+    annotations = {}
+    motif_nums = [int(motif.get('id')) for motif in root.iter('motif')]
+
+    for sequence in root.iter('sequence'):
+        score = sequence.find('score')
+        seqname = sequence.get('name')
+        if not seqname in annotations:
+            annotations[seqname] = []
+        pevalues.append((seqname,
+                         float(score.get('combined_pvalue')),
+                         float(score.get('evalue'))))
+        if seqname in genes:
+            for hit in sequence.iter('hit'):
+                strand = hit.get('strand')
+                # the motif number is now encoded in the motif database list
+                motifnum = motif_nums[int(hit.get('idx'))]
                 if strand == 'reverse':
                     motifnum = -motifnum
                 annot = (float(hit.get('pvalue')),

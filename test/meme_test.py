@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """meme_test.py - unit tests for meme module
 
 This file is part of cMonkey Python. Please see README and LICENSE for
@@ -115,3 +116,16 @@ class MemeTest(unittest.TestCase):  # pylint: disable-msg=R0904
         self.assertAlmostEquals(0.322, pev[0][1])
         self.assertAlmostEquals(130.0, pev[0][2])
         self.assertTrue('NP_280363.1' in annotations)
+
+    def test_read_mast_output_4_11_xml(self):
+        with open('testdata/mast-4.11_output.xml') as inputfile:
+            pevalues, annotations = meme.read_mast_output_xml(
+                inputfile.read(), ['NP_280363.1', 'NP_280692.1'])
+        pev = [pevalue for pevalue in pevalues if pevalue[0] == 'NP_280363.1']
+        self.assertAlmostEquals(1.0, pev[0][1])
+        self.assertAlmostEquals(400.0, pev[0][2])
+        self.assertTrue('NP_280363.1' in annotations)
+
+
+if __name__ == '__main__':
+    unittest.main()
