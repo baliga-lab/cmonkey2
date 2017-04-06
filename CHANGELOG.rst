@@ -1,6 +1,12 @@
 Changes
 =======
 
+Version 1.2.6, 2017/02/03
+-------------------------
+
+  - database aspects now handled with sqlalchemy
+  - support for MEME 4.11.x added
+
 Version 1.2.5, 2017/02/03
 -------------------------
 

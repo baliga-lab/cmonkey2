@@ -61,6 +61,9 @@ cMonkey<sub>2</sub> has been tested and runs on all tested recent versions of Li
 * MEME 4.3.0 or >= 4.8.1
 * csh (for running MEME)
 * pandas
+* sqlalchemy and sqlalchemy-utils
+* svgwrite
+
 for the human setup, Weeder 1.4.2 is needed
 
 for running the unit tests (optional):

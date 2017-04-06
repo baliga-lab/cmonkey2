@@ -296,7 +296,7 @@ class MemeSuite430(MemeSuite):
 
 
 class MemeSuite481(MemeSuite):
-    """Version 4.8.1 of MEME"""
+    """Supports versions 4.8.1 and greater of MEME"""
 
     def meme(self, infile_path, bgfile_path, num_motifs,
              previous_motif_infos=None,
@@ -882,24 +882,36 @@ RESID_CUTOFF  = 0.8
 DIST_METHOD   = "ed"
 Q_THRESHOLD   = 0.5
 MIN_OVERLAP   = 4
-Q_PSEUDO      = 0
-T_PSEUDO      = 0
+MOTIF_PSEUDO  = 0.0
 
 
 def run_tomtom(session, targetdir, version, q_thresh=Q_THRESHOLD, dist_method=DIST_METHOD,
-               min_overlap=MIN_OVERLAP, q_pseudo=Q_PSEUDO, t_pseudo=T_PSEUDO):
+               min_overlap=MIN_OVERLAP, motif_pseudo=MOTIF_PSEUDO):
     """a wrapper around the tomtom script"""
     targetfile = os.path.join(targetdir, 'post.tomtom.meme')
     queryfile = targetfile
     if write_motifs2meme(session, targetfile):
-        command = ['tomtom',
-                   '-verbosity', '1',
-                   '-q-thresh', '%.3f' % q_thresh,
-                   '-dist', dist_method,
-                   '-min-overlap', '%d' % min_overlap,
-                   '-text',
-                   '-query-pseudo', '%.3f' % q_pseudo,
-                   '-target-pseudo', '%.3f' % t_pseudo]
+        if version.startswith('4.11'):
+            # tomtom command parameter names changed in version 4.11.x:
+            #   - target-pseudo and query-pseudo merged into motif-pseudo
+            #   - q-thresh changed to thresh
+            command = ['tomtom',
+                       '-verbosity', '1',
+                       '-thresh', '%.3f' % q_thresh,
+                       '-dist', dist_method,
+                       '-min-overlap', '%d' % min_overlap,
+                       '-text',
+                       '-motif-pseudo', '%.3f' % motif_pseudo]
+        else:
+            command = ['tomtom',
+                       '-verbosity', '1',
+                       '-q-thresh', '%.3f' % q_thresh,
+                       '-dist', dist_method,
+                       '-min-overlap', '%d' % min_overlap,
+                       '-text',
+                       '-query-pseudo', '%.3f' % motif_pseudo,
+                       '-target-pseudo', '%.3f' % motif_pseudo]
+
         logging.debug(" ".join(command))
 
         # Tomtom versions > 4.8.x drop the target and query switches
