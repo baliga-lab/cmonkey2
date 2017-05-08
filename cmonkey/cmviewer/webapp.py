@@ -23,7 +23,7 @@ DEFAULT_OUTDIR = 'out'
 current_dir = os.path.dirname(os.path.abspath(__file__))
 env = Environment(loader=FileSystemLoader(os.path.join(current_dir, 'templates')))
 outdir = DEFAULT_OUTDIR
-outdb = None
+dburl = None
 
 
 # We create this to store temporary visualization objects
@@ -143,8 +143,8 @@ def clusterstat_factory(cursor, row):
 
 
 def dbsession():
-    global outdb
-    return cm2db.make_session(outdb)
+    global dburl
+    return cm2db.make_session(dburl)
 
 
 def make_int_histogram(counts):
@@ -750,15 +750,19 @@ def setup_routes():
     return d
 
 def run():
-    global outdir, outdb
+    global outdir, dburl
     parser = argparse.ArgumentParser()
     parser.add_argument('--out', default=DEFAULT_OUTDIR, help='output directory')
     parser.add_argument('--port', type=int, default=8080, help='port to listen to web requests')
+    parser.add_argument('--dburl', default=None, help='database URL')
     args = parser.parse_args()
     outdir = os.path.join(os.getcwd(), args.out)
-    outdb = os.path.join(outdir, 'cmonkey_run.db')
-    print("connecting to database at ", outdb)
-
+    if args.dburl is None:
+        outdb = os.path.join(outdir, 'cmonkey_run.db')
+        print("connecting to database at ", outdb)
+        dburl = cm2db.make_sqlite_url(outdb)
+    else:
+        dburl = args.dburl
 
     conf = {'/': {'request.dispatch': setup_routes()},
             '/static': {'tools.staticdir.on': True,

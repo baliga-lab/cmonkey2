@@ -99,6 +99,7 @@ def set_config_general(config, params):
     params['tmp_dir'] = tmp_dir
     params['pipeline_file'] = config.get('General', 'pipeline_file')
     params['dbfile_name'] = config.get('General', 'dbfile_name')
+    params['db_url'] = config.get('General', 'db_url')
     params['rsat_base_url'] = config.get('General', 'rsat_base_url')
     params['rsat_features'] = config.get('General', 'rsat_features')
     params['rsat_organism'] = config.get('General', 'rsat_organism')
@@ -263,6 +264,8 @@ dump_results, dump_scores, profile_mem, random_seed, keep_mastout, all or a comb
                         help="""Set the use Bicluster Sampled Coherence Metric""")
     parser.add_argument('--use_chi2', action='store_true', default=False,
                         help="""Set to save memory by estimating Chi2 parameters for BSCM rather than storing all sampled values""")
+
+    parser.add_argument('--dburl', default=None, help='database URL')
 
     if arg_ext is not None:
         arg_ext(parser)
@@ -446,7 +449,8 @@ def setup_default(args, config_parser):
                  'case_sensitive': args.case_sensitive,
                  'command_line': args.command_line,
                  'use_BSCM': args.use_BSCM,
-                 'use_chi2': args.use_chi2}
+                 'use_chi2': args.use_chi2,
+                 'db_url': args.dburl}
 
     if overrides['random_seed'] is None:
         del overrides['random_seed']
@@ -456,6 +460,8 @@ def setup_default(args, config_parser):
         del overrides['pipeline_file']
     if overrides['rsat_base_url'] is None:
         del overrides['rsat_base_url']
+    if overrides['db_url'] is None:
+        del overrides['db_url']
 
     # membership update default parameters
     # these come first, since a lot depends on clustering numbers

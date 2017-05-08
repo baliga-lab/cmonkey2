@@ -19,6 +19,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument('--output_dir', default=None,
                         help='directory to store the generated plots in')
+    parser.add_argument('--dburl', default=None, help='database URL')
     parser.add_argument('resultdir',
                         help='cmonkey2 result directory')
     parser.add_argument('command', choices=['expressions', 'motif_logos', 'motif_pos', 'all'],
@@ -36,7 +37,12 @@ if __name__ == '__main__':
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 
-    session = cm2db.make_session(os.path.join(args.resultdir, 'cmonkey_run.db'))
+    if args.dburl is None:
+        dburl = cm2db.make_sqlite_url(os.path.join(args.resultdir, 'cmonkey_run.db'))
+    else:
+        dburl = args.dburl
+    session = cm2db.make_session(dburl)
+
     try:
         if args.command == 'expressions':
             plot_exps.generate_plots(session, args.resultdir, output_dir)

@@ -101,7 +101,7 @@ class CMonkeyRun:
 
     def __dbsession(self):
         if self.__session is None:
-            self.__session = cm2db.make_session(self['out_database'])
+            self.__session = cm2db.make_session_from_config(self.config_params)
         return self.__session
 
     def __create_output_database(self):
@@ -123,15 +123,9 @@ class CMonkeyRun:
         for param, value in self.config_params.items():
             logging.info('%s=%s' % (param, str(value)))
 
-    def __getitem__(self, key):
-        return self.config_params[key]
-
-    def __setitem__(self, key, value):
-        self.config_params[key] = value
-
     def __make_membership(self):
         """returns the seeded membership on demand"""
-        if 'random_seed' in self['debug']:
+        if 'random_seed' in self.config_params['debug']:
             util.r_set_seed(10)
 
         new_membs = memb.create_membership(self.ratios,
@@ -145,13 +139,13 @@ class CMonkeyRun:
             self.__membership = self.__make_membership()
 
             # debug: write seed into an analytical file for iteration 0
-            if 'random_seed' in self['debug']:
+            if 'random_seed' in self.config_params['debug']:
                 self.write_memberships(0)
                 # write complete result into a cmresults.tsv
-                path =  os.path.join(self['output_dir'], 'cmresults-0000.tsv.bz2')
+                path =  os.path.join(self.config_params['output_dir'], 'cmresults-0000.tsv.bz2')
                 with bz2.BZ2File(path, 'w') as outfile:
                     debug.write_iteration(self.__dbsession, outfile, 0,
-                                          self['num_clusters'], self['output_dir'])
+                                          self.config_params['num_clusters'], self.config_params['output_dir'])
 
         return self.__membership
 
@@ -165,7 +159,7 @@ class CMonkeyRun:
 
     def __get_kegg_data(self):
         # determine the NCBI code
-        organism_code = self['organism_code']
+        organism_code = self.config_params['organism_code']
 
         try:
             kegg_path = resource_filename(Requirement.parse("cmonkey2"), USER_KEGG_FILE_PATH)
@@ -175,9 +169,9 @@ class CMonkeyRun:
         keggfile = util.read_dfile(kegg_path, comment='#')
         kegg_map = util.make_dfile_map(keggfile, 1, 3)
         kegg2ncbi = util.make_dfile_map(keggfile, 1, 2)
-        if self['ncbi_code'] is None and organism_code in kegg2ncbi:
-            self['ncbi_code'] = kegg2ncbi[organism_code]
-        return self['ncbi_code'], kegg_map[organism_code]
+        if self.config_params['ncbi_code'] is None and organism_code in kegg2ncbi:
+            self.config_params['ncbi_code'] = kegg2ncbi[organism_code]
+        return self.config_params['ncbi_code'], kegg_map[organism_code]
 
     def make_organism(self):
         """returns the organism object to work on"""
@@ -191,49 +185,54 @@ class CMonkeyRun:
 
         gofile = util.read_dfile(go_file_path)
 
-        if self['rsat_dir']:
-            if not self['rsat_organism']:
+        if self.config_params['rsat_dir']:
+            if not self.config_params['rsat_organism']:
                 raise Exception('override RSAT loading: please specify --rsat_organism')
-            logging.info("using RSAT files for '%s'", self['rsat_organism'])
-            rsatdb = rsat.RsatFiles(self['rsat_dir'], self['rsat_organism'], ncbi_code, self['rsat_features'], self['rsat_base_url'])
+            logging.info("using RSAT files for '%s'", self.config_params['rsat_organism'])
+            rsatdb = rsat.RsatFiles(self.config_params['rsat_dir'],
+                                    self.config_params['rsat_organism'], ncbi_code,
+                                    self.config_params['rsat_features'],
+                                    self.config_params['rsat_base_url'])
         else:
-            rsatdb = rsat.RsatDatabase(self['rsat_base_url'], self['cache_dir'], kegg_species, ncbi_code, self['rsat_features'])
+            rsatdb = rsat.RsatDatabase(self.config_params['rsat_base_url'],
+                                       self.config_params['cache_dir'], kegg_species, ncbi_code,
+                                       self.config_params['rsat_features'])
 
-        if self['operon_file']:
-            logging.info("using operon file at '%s'", self['operon_file'])
-            mo_db = microbes_online.MicrobesOnlineOperonFile(self['operon_file'])
+        if self.config_params['operon_file']:
+            logging.info("using operon file at '%s'", self.config_params['operon_file'])
+            mo_db = microbes_online.MicrobesOnlineOperonFile(self.config_params['operon_file'])
         else:
             logging.info("attempting automatic download of operons from Microbes Online")
-            mo_db = microbes_online.MicrobesOnline(self['cache_dir'])
+            mo_db = microbes_online.MicrobesOnline(self.config_params['cache_dir'])
 
-        stringfile = self['string_file']
+        stringfile = self.config_params['string_file']
         nw_factories = []
-        is_microbe = self['organism_code'] not in VERTEBRATES
+        is_microbe = self.config_params['organism_code'] not in VERTEBRATES
 
         # determine the final weights. note: for now, we will just check whether
         # we have 1 or 2 networks
         num_networks = 0
-        if not self['nonetworks'] and self['use_string']:
+        if not self.config_params['nonetworks'] and self.config_params['use_string']:
             num_networks += 1
-        if is_microbe and not self['nonetworks'] and self['use_operons']:
+        if is_microbe and not self.config_params['nonetworks'] and self.config_params['use_operons']:
             num_networks += 1
         network_weight = 0.0
         if num_networks > 0:
             network_weight = 1.0 / num_networks
 
         # do we use STRING ?
-        if not self['nonetworks'] and self['use_string']:
+        if not self.config_params['nonetworks'] and self.config_params['use_string']:
             # download if not provided
             if stringfile is None:
                 if ncbi_code is None:
                     rsat_info = org.RsatSpeciesInfo(rsatdb, kegg_species,
-                                                    self['rsat_organism'], None)
+                                                    self.config_params['rsat_organism'], None)
                     ncbi_code = rsat_info.taxonomy_id
 
                 logging.info("NCBI CODE IS: %s", ncbi_code)
                 url = STRING_URL_PATTERN % ncbi_code
-                stringfile = "%s/%s.gz" % (self['cache_dir'], ncbi_code)
-                self['string_file'] = stringfile
+                stringfile = "%s/%s.gz" % (self.config_params['cache_dir'], ncbi_code)
+                self.config_params['string_file'] = stringfile
                 logging.info("Automatically using STRING file in '%s' (URL: %s)",
                              stringfile, url)
                 util.get_url_cached(url, stringfile)
@@ -242,24 +241,24 @@ class CMonkeyRun:
 
             # create and add network
             nw_factories.append(stringdb.get_network_factory(
-                self['organism_code'], stringfile, network_weight))
+                self.config_params['organism_code'], stringfile, network_weight))
 
         # do we use operons ?
-        if is_microbe and not self['nonetworks'] and self['use_operons']:
+        if is_microbe and not self.config_params['nonetworks'] and self.config_params['use_operons']:
             logging.debug('adding operon network factory')
             nw_factories.append(microbes_online.get_network_factory(
                 mo_db, max_operon_size=self.ratios.num_rows / 20,
                 weight=network_weight))
 
-        orgcode = self['organism_code']
+        orgcode = self.config_params['organism_code']
         logging.debug("Creating Microbe object for '%s'", orgcode)
-        rsat_info = org.RsatSpeciesInfo(rsatdb, kegg_species, self['rsat_organism'],
+        rsat_info = org.RsatSpeciesInfo(rsatdb, kegg_species, self.config_params['rsat_organism'],
                                         ncbi_code)
         gotax = util.make_dfile_map(gofile, 0, 1)[rsat_info.go_species()]
         synonyms = None
-        if self['synonym_file'] is not None:
-            synonyms = thesaurus.create_from_delimited_file2(self['synonym_file'],
-                                                             self['case_sensitive'])
+        if self.config_params['synonym_file'] is not None:
+            synonyms = thesaurus.create_from_delimited_file2(self.config_params['synonym_file'],
+                                                             self.config_params['case_sensitive'])
 
         #New logic: test to see if there's a fastafile.  If not, then
         #Download it from rsat, process it, and then return the new file name
@@ -267,22 +266,24 @@ class CMonkeyRun:
         is_microbe = True
         if is_microbe:
            organism = org.Microbe(orgcode, kegg_species, rsat_info, gotax, mo_db,
-                                   nw_factories,
-                                   self['search_distances'], self['scan_distances'],
-                                   self['use_operons'], self.ratios, synonyms,
-                                   self['fasta_file'])
+                                  nw_factories,
+                                  self.config_params['search_distances'],
+                                  self.config_params['scan_distances'],
+                                  self.config_params['use_operons'], self.ratios, synonyms,
+                                  self.config_params['fasta_file'])
         else:
             organism = org.RSATOrganism(orgcode, kegg_species, rsat_info, gotax,
                                         nw_factories,
-                                        self['search_distances'], self['scan_distances'],
+                                        self.config_params['search_distances'],
+                                        self.config_params['scan_distances'],
                                         self.ratios, synonyms,
-                                        self['fasta_file'])
+                                        self.config_params['fasta_file'])
 
         session = self.__dbsession()
         network_stats_types = [cm2db.StatsType(category='network', name=network.name)
                                for network in organism.networks()]
         sequence_stats_types = [cm2db.StatsType(category='seqtype', name=sequence_type)
-                                for sequence_type in self['sequence_types']]
+                                for sequence_type in self.config_params['sequence_types']]
         session.add_all(network_stats_types)
         session.add_all(sequence_stats_types)
         session.commit()
@@ -292,16 +293,16 @@ class CMonkeyRun:
 
     def __make_dirs_if_needed(self):
         logging.debug('creating aux directories')
-        output_dir = self['output_dir']
+        output_dir = self.config_params['output_dir']
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
 
-        cache_dir = self['cache_dir']
+        cache_dir = self.config_params['cache_dir']
         if not os.path.exists(cache_dir):
             os.mkdir(cache_dir)
 
     def __clear_output_dir(self):
-        output_dir = self['output_dir']
+        output_dir = self.config_params['output_dir']
         if os.path.exists(output_dir):
             outfiles = os.listdir(output_dir)
             for filename in outfiles:
@@ -332,18 +333,18 @@ class CMonkeyRun:
         specified using the --pipeline switch on the command line
         """
         pipeline_id = 'default'
-        if self['nonetworks'] and self['nomotifs']:
+        if self.config_params['nonetworks'] and self.config_params['nomotifs']:
             pipeline_id = 'rows'
-        elif self['nonetworks']:
+        elif self.config_params['nonetworks']:
             pipeline_id = 'rowsandmotifs'
-        elif self['nomotifs']:
+        elif self.config_params['nomotifs']:
             pipeline_id = 'rowsandnetworks'
 
-        if self['pipeline_file']:
-            pipeline_file = self['pipeline_file']
+        if self.config_params['pipeline_file']:
+            pipeline_file = self.config_params['pipeline_file']
             if os.path.exists(pipeline_file):
                 with open(pipeline_file) as infile:
-                    self['pipeline'] = json.load(infile)
+                    self.config_params['pipeline'] = json.load(infile)
             else:
                 raise Exception("Pipeline file '%s' does not exist" % pipeline_file)
         else:
@@ -354,30 +355,30 @@ class CMonkeyRun:
                 pipeline_path = PIPELINE_USER_PATHS[pipeline_id]
 
             with open(pipeline_path) as infile:
-                self['pipeline'] = json.load(infile)
+                self.config_params['pipeline'] = json.load(infile)
 
         # TODO: for now, we always assume the top level of row scoring is a combiner
-        class_ = get_function_class(self['pipeline']['row-scoring']['function'])
+        class_ = get_function_class(self.config_params['pipeline']['row-scoring']['function'])
         if class_.__name__ == 'ScoringFunctionCombiner':
             funs = [get_function_class(fun['function'])(self.organism(),
                                                        self.membership(),
                                                        self.ratios,
                                                        self.config_params)
-                    for fun in self['pipeline']['row-scoring']['args']['functions']]
+                    for fun in self.config_params['pipeline']['row-scoring']['args']['functions']]
             row_scoring = class_(self.organism(), self.membership(), funs, self.config_params)
         else:
             raise Exception('Row scoring top level must be ScoringFunctionCombiner')
 
         # column scoring
-        class_ = get_function_class(self['pipeline']['column-scoring']['function'])
+        class_ = get_function_class(self.config_params['pipeline']['column-scoring']['function'])
         col_scoring = class_(self.organism(), self.membership(), self.ratios,
                              config_params=self.config_params)
         return row_scoring, col_scoring
 
     def use_dummy_organism(self):
         """check whether we use a dummy organism"""
-        return (self['organism_code'] is None and
-                self['nonetworks'] and self['nomotifs'])
+        return (self.config_params['organism_code'] is None and
+                self.config_params['nonetworks'] and self.config_params['nomotifs'])
 
     def prepare_run(self, check_params=True):
         """Setup output directories and scoring functions for the scoring.
@@ -385,23 +386,23 @@ class CMonkeyRun:
         if check_params:
             self.__check_parameters()
 
-        if not self['resume']:
+        if not self.config_params['resume']:
             self.__make_dirs_if_needed()
             self.__clear_output_dir()
             self.__create_output_database()
 
             # write the normalized ratio matrix for stats and visualization
-            output_dir = self['output_dir']
+            output_dir = self.config_params['output_dir']
             if not os.path.exists(os.path.join(output_dir, '/ratios.tsv')):
                 self.ratios.write_tsv_file(output_dir + '/ratios.tsv')
             # also copy the input matrix to the output
-            if (os.path.exists(self['ratios_file'])):
-                if self['ratios_file'].endswith('.gz'):
+            if (os.path.exists(self.config_params['ratios_file'])):
+                if self.config_params['ratios_file'].endswith('.gz'):
                     copy_name = 'ratios.original.tsv.gz'
                 else:
                     copy_name = 'ratios.original.tsv'
 
-                shutil.copyfile(self['ratios_file'],
+                shutil.copyfile(self.config_params['ratios_file'],
                                 os.path.join(output_dir, 'ratios.original.tsv'))
 
         # gene index map is used for writing statistics
@@ -428,12 +429,12 @@ class CMonkeyRun:
         session.add(cm2db.StatsType(category='scoring', name=self.column_scoring.id))
         session.commit()
 
-        if 'profile_mem' in self['debug']:
-            with open(os.path.join(self['output_dir'], 'memprofile.tsv'), 'w') as outfile:
+        if 'profile_mem' in self.config_params['debug']:
+            with open(os.path.join(self.config_params['output_dir'], 'memprofile.tsv'), 'w') as outfile:
                 outfile.write('Iteration\tMembership\tOrganism\tCol\tRow\tNetwork\tMotif\n')
 
-        if self['resume']:
-            self['start_iteration'] = self.get_last_iteration()
+        if self.config_params['resume']:
+            self.config_params['start_iteration'] = self.get_last_iteration()
 
     def run(self):
         self.prepare_run()
@@ -448,7 +449,7 @@ class CMonkeyRun:
 
     def write_memberships(self, iteration):
         session = self.__dbsession()
-        for cluster in range(1, self['num_clusters'] + 1):
+        for cluster in range(1, self.config_params['num_clusters'] + 1):
             column_names = self.membership().columns_for_cluster(cluster)
             column_members = [cm2db.ColumnMember(iteration=iteration, cluster=cluster, order_num=order_num)
                                   for order_num in self.ratios.column_indexes_for(column_names)]
@@ -515,7 +516,7 @@ class CMonkeyRun:
 
         residuals = []
         session = self.__dbsession()
-        for cluster in range(1, self['num_clusters'] + 1):
+        for cluster in range(1, self.config_params['num_clusters'] + 1):
             row_names = self.membership().rows_for_cluster(cluster)
             column_names = self.membership().columns_for_cluster(cluster)
             residual = self.residual_for(row_names, column_names)
@@ -552,7 +553,7 @@ class CMonkeyRun:
 
     def write_start_info(self):
         try:
-            ncbi_code_int = int(self['ncbi_code'])
+            ncbi_code_int = int(self.config_params['ncbi_code'])
         except:
             # this exception happens when ncbi_code is not specified, usually when
             # the data files are provided through the command line (e.g. KBase)
@@ -561,11 +562,12 @@ class CMonkeyRun:
             ncbi_code_int = 0
 
         session = self.__dbsession()
-        session.add(cm2db.RunInfo(start_time=datetime.now(), num_iterations=self['num_iterations'],
-                                organism=self.organism().code, species=self.organism().species(),
-                                ncbi_code=ncbi_code_int, num_rows=self.ratios.num_rows,
-                                num_columns=self.ratios.num_columns, num_clusters=self['num_clusters'],
-                                git_sha='$Id$'))
+        session.add(cm2db.RunInfo(start_time=datetime.now(), num_iterations=self.config_params['num_iterations'],
+                                  organism=self.organism().code, species=self.organism().species(),
+                                  ncbi_code=ncbi_code_int, num_rows=self.ratios.num_rows,
+                                  num_columns=self.ratios.num_columns,
+                                  num_clusters=self.config_params['num_clusters'],
+                                  git_sha='$Id$'))
         session.commit()
 
     def update_iteration(self, iteration):
@@ -615,7 +617,7 @@ class CMonkeyRun:
             logging.debug("computed column_scores in %f s.", elapsed / 1000.0)
 
         self.membership().update(self.ratios, rscores, cscores,
-                                 self['num_iterations'], iteration_result)
+                                 self.config_params['num_iterations'], iteration_result)
 
         mean_net_score = 0.0
         mean_mot_pvalue = 0.0
@@ -632,23 +634,23 @@ class CMonkeyRun:
         logging.debug('mean net = %s | mean mot = %s', str(mean_net_score), mean_mot_pvalue)
 
         # Reduce I/O, will write the results to database only on a debug run
-        if not self['minimize_io']:
-            if iteration == 1 or (iteration % self['result_freq'] == 0):
+        if not self.config_params['minimize_io']:
+            if iteration == 1 or (iteration % self.config_params['result_freq'] == 0):
                 self.write_results(iteration_result)
 
         # This should not be too much writing, so we can keep it OUT of minimize_io option...?
-        if iteration == 1 or (iteration % self['stats_freq'] == 0):
+        if iteration == 1 or (iteration % self.config_params['stats_freq'] == 0):
             self.write_stats(iteration_result)
             self.update_iteration(iteration)
 
-        if 'dump_results' in self['debug'] and (iteration == 1 or
-                                                (iteration % self['debug_freq'] == 0)):
+        if 'dump_results' in self.config_params['debug'] and (iteration == 1 or
+                                                              (iteration % self.config_params['debug_freq'] == 0)):
             # write complete result into a cmresults.tsv
             session = self.__dbsession()
-            path =  os.path.join(self['output_dir'], 'cmresults-%04d.tsv.bz2' % iteration)
+            path =  os.path.join(self.config_params['output_dir'], 'cmresults-%04d.tsv.bz2' % iteration)
             with bz2.BZ2File(path, 'w') as outfile:
                 debug.write_iteration(session, outfile, iteration,
-                                      self['num_clusters'], self['output_dir'])
+                                      self.config_params['num_clusters'], self.config_params['output_dir'])
 
     def write_mem_profile(self, outfile, iteration):
         membsize = sizes.asizeof(self.membership()) / 1000000.0
@@ -662,16 +664,16 @@ class CMonkeyRun:
 
     def run_iterations(self, start_iter=None, num_iter=None):
         if start_iter is None:
-            start_iter = self['start_iteration']
+            start_iter = self.config_params['start_iteration']
         if num_iter is None:
-            num_iter=self['num_iterations'] + 1
+            num_iter=self.config_params['num_iterations'] + 1
 
         if self.config_params['interactive']:  # stop here in interactive mode
             return
 
         for iteration in range(start_iter, num_iter):
             start_time = util.current_millis()
-            force = self['resume'] and iteration == start_iter
+            force = self.config_params['resume'] and iteration == start_iter
             self.run_iteration(iteration, force=force)
 
             # garbage collection after everything in iteration went out of scope
@@ -679,18 +681,18 @@ class CMonkeyRun:
             elapsed = util.current_millis() - start_time
             logging.debug("performed iteration %d in %f s.", iteration, elapsed / 1000.0)
 
-            if 'profile_mem' in self['debug'] and (iteration == 1 or iteration % 100 == 0):
-                with open(os.path.join(self['output_dir'], 'memprofile.tsv'), 'a') as outfile:
+            if 'profile_mem' in self.config_params['debug'] and (iteration == 1 or iteration % 100 == 0):
+                with open(os.path.join(self.config_params['output_dir'], 'memprofile.tsv'), 'a') as outfile:
                     self.write_mem_profile(outfile, iteration)
 
 
         """run post processing after the last iteration. We store the results in
         num_iterations + 1 to have a clean separation"""
-        if self['postadjust']:
+        if self.config_params['postadjust']:
             logging.info("Postprocessing: Adjusting the clusters....")
             # run combiner using the weights of the last iteration
 
-            rscores = self.row_scoring.combine_cached(self['num_iterations'])
+            rscores = self.row_scoring.combine_cached(self.config_params['num_iterations'])
             rd_scores = memb.get_row_density_scores(self.membership(), rscores)
             logging.info("Recomputed combined + density scores.")
             memb.postadjust(self.membership(), rd_scores)
@@ -700,8 +702,8 @@ class CMonkeyRun:
                 new_membership = BSCM_obj.resplit_clusters(self.membership(), cutoff=0.05)
 
             logging.info("Adjusted. Now re-run scoring (iteration: %d)",
-                         self['num_iterations'])
-            iteration_result = {'iteration': self['num_iterations'] + 1,
+                         self.config_params['num_iterations'])
+            iteration_result = {'iteration': self.config_params['num_iterations'] + 1,
                                 'score_means': {}}
 
             combined_scores = self.row_scoring.compute_force(iteration_result)
@@ -718,16 +720,16 @@ class CMonkeyRun:
             # always write complete result into a cmresults.tsv for R/cmonkey
             # compatibility
             session = self.__dbsession()
-            path =  os.path.join(self['output_dir'], 'cmresults-postproc.tsv.bz2')
+            path =  os.path.join(self.config_params['output_dir'], 'cmresults-postproc.tsv.bz2')
             with bz2.BZ2File(path, 'w') as outfile:
                 debug.write_iteration(session, outfile,
-                                      self['num_iterations'] + 1,
-                                      self['num_clusters'], self['output_dir'])
+                                      self.config_params['num_iterations'] + 1,
+                                      self.config_params['num_clusters'], self.config_params['output_dir'])
 
             # additionally: run tomtom on the motifs if requested
-            if (self['MEME']['global_background'] == 'True' and
-                self['Postprocessing']['run_tomtom'] == 'True'):
-                meme.run_tomtom(session, self['output_dir'], self['MEME']['version'])
+            if (self.config_params['MEME']['global_background'] == 'True' and
+                self.config_params['Postprocessing']['run_tomtom'] == 'True'):
+                meme.run_tomtom(session, self.config_params['output_dir'], self.config_params['MEME']['version'])
 
         self.write_finish_info()
         logging.info("Done !!!!")

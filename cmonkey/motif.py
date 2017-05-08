@@ -134,7 +134,7 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                 bgorder=int(self.config_params['MEME']['background_order']))
 
             # store background in results database
-            session = cm2db.make_session(config_params['out_database'])
+            session = cm2db.make_session_from_config(config_params)
             for order in bgmodel:
                 session.add_all([cm2db.GlobalBackground(subsequence=subseq, pvalue=pvalue)
                                  for subseq, pvalue in order.items()])

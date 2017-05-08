@@ -20,13 +20,13 @@ class RunInfo(Base):
     finish_time = Column(DateTime)
     num_iterations = Column(Integer)
     last_iteration = Column(Integer)
-    organism = Column(String)
-    species = Column(String)
+    organism = Column(String(10))
+    species = Column(String(100))
     ncbi_code = Column(Integer)
     num_rows = Column(Integer)
     num_columns = Column(Integer)
     num_clusters = Column(Integer)
-    git_sha = Column(String)
+    git_sha = Column(String(100))
 
     def __repr__(self):
         return "RunInfo(organism: '%s', # iter= %d, start: %s, finish: %s)" % (self.organism,
@@ -54,8 +54,8 @@ class StatsType(Base):
     __tablename__ = 'statstypes'
 
     rowid = Column(Integer, primary_key=True)
-    category = Column(String)
-    name = Column(String)
+    category = Column(String(50))
+    name = Column(String(50))
 
     def __repr__(self):
         return "StatsType(category = %s name: %s)" % (self.category, self.name)
@@ -78,8 +78,8 @@ class RowName(Base):
     __tablename__ = 'row_names'
 
     rowid = Column(Integer, primary_key=True)
-    order_num = Column(Integer)
-    name = Column(String, index=True, unique=True)
+    order_num = Column(Integer, index=True, unique=True)
+    name = Column(String(50), index=True, unique=True)
 
     def __repr__(self):
         return "RowName(order_num = %d name: %s)" % (self.order_num, self.name)
@@ -89,8 +89,8 @@ class ColumnName(Base):
     __tablename__ = 'column_names'
 
     rowid = Column(Integer, primary_key=True)
-    order_num = Column(Integer)
-    name = Column(String)
+    order_num = Column(Integer, index=True, unique=True)
+    name = Column(String(100))
 
     def __repr__(self):
         return "ColumnName(order_num = %d name: %s)" % (self.order_num, self.name)
@@ -126,7 +126,7 @@ class GlobalBackground(Base):
     __tablename__ = 'global_background'
 
     rowid = Column(Integer, primary_key=True)
-    subsequence = Column(String)
+    subsequence = Column(String(20))
     pvalue = Column(Float)
 
     def __repr__(self):
@@ -139,7 +139,7 @@ class MotifInfo(Base):
     rowid = Column(Integer, primary_key=True)
     iteration = Column(Integer)
     cluster = Column(Integer, index=True)
-    seqtype = Column(String)
+    seqtype = Column(String(30))
     motif_num = Column(Integer)
     evalue = Column(Float)
     pssm_rows = relationship("MotifPSSMRow")
@@ -189,13 +189,13 @@ class MemeMotifSite(Base):
     rowid = Column(Integer, primary_key=True)
     motif_info_id = Column(Integer, ForeignKey('motif_infos.rowid'))
     motif_info = relationship('MotifInfo')
-    seq_name = Column(String)
+    seq_name = Column(String(50))
     reverse = Column(Boolean)
     start = Column(Integer)
     pvalue = Column(Float)
-    flank_left = Column(String)
-    flank_right = Column(String)
-    seq = Column(String)
+    flank_left = Column(String(100))
+    flank_right = Column(String(100))
+    seq = Column(String(1000))
 
     def __repr__(self):
         return "MemeMotifSite(cluster: %d seqname: %s, reverse: %d, start: %d pvalue: %f flank_left: %s flank_right: %s seq: %s)" % (
@@ -237,10 +237,17 @@ class MotifAnnotation(Base):
             self.pvalue)
 
 
-def make_session(path):
-    dburl = make_sqlite_url(path)
+def make_session(dburl):
     engine = create_engine(dburl)
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
     session = Session()
     return session
+
+
+def make_session_from_config(config_params):
+    if config_params['db_url'] is not None and len(config_params['db_url']) > 0:
+        dburl = config_params['db_url']
+    else:
+        dburl = make_sqlite_url(config_params['out_database'])
+    return make_session(dburl)
