@@ -96,7 +96,7 @@ def get_network_factory(organism_code, filename, weight, sep='\t',
                         gene_lut[node] = node
                         if node in thesaurus:
                             gene_lut[thesaurus[node]] = node
-                total_nodes += 1
+                    total_nodes += 1
 
             score = float(line[2])
             max_score = max(score, max_score)
