@@ -60,13 +60,14 @@ def write_iteration(session, outfile, iteration, num_clusters, outdir, as_binary
                           cm2db.IterationStat.iteration == iteration)).one().score
         if string_dens is None:
             string_dens = 1.0
-
-        meme_pval = session.query(cm2db.IterationStat).join(
-            cm2db.IterationStat.statstype_obj
-            ).filter(and_(cm2db.StatsType.category == 'seqtype',
-                          cm2db.StatsType.name == 'upstream',
-                          cm2db.IterationStat.iteration == iteration)).one().score
-        if meme_pval is None:
+        try:
+            meme_pval = session.query(cm2db.IterationStat).join(
+                cm2db.IterationStat.statstype_obj
+                ).filter(and_(cm2db.StatsType.category == 'seqtype',
+                              cm2db.StatsType.name == 'upstream',
+                              cm2db.IterationStat.iteration == iteration)).one().score
+        except:
+            # no value found, set meme_pval to 1.0
             meme_pval = 1.0
 
         last_meme_iteration = get_last_meme_iteration(outdir)
