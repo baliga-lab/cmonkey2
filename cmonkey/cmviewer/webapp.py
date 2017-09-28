@@ -2,6 +2,8 @@
 
 import cherrypy
 from cherrypy import tools
+import cherrypy_cors
+
 from jinja2 import Environment, FileSystemLoader
 import os
 from collections import namedtuple, defaultdict
@@ -527,6 +529,42 @@ class ClusterViewerApp:
         return tmpl.render(locals())
 
     @cherrypy.expose
+    def clusters_dt(self, iteration):
+        session = dbsession()
+        try:
+            motif_infos = defaultdict(list)
+            for m in session.query(cm2db.MotifInfo).filter(cm2db.MotifInfo.iteration == iteration):
+                motif_infos[m.cluster].append(MotifInfo(m.rowid, m.cluster, m.seqtype, m.motif_num, m.evalue))
+
+            motif_pssm_rows = defaultdict(list)
+            for r in session.query(cm2db.MotifPSSMRow).filter(cm2db.MotifPSSMRow.iteration == iteration):
+                motif_pssm_rows[r.motif_info_id].append((r.a, r.c, r.g, r.t))
+
+            cluster_stats = [ClusterStat(c.iteration, c.cluster, c.num_rows, c.num_cols, c.residual)
+                                 for c in session.query(cm2db.ClusterStat).filter(
+                                     cm2db.ClusterStat.iteration == iteration).order_by(cm2db.ClusterStat.residual)]
+            """
+            filtered_rows = [["<a class=\"clusterlink\" id=\"%d\" href=\"javascript:void(0)\">%d</a>" % (stat.cluster, stat.cluster),
+                     '%d' % stat.num_rows,
+                     '%d' % stat.num_cols,
+                     format_float(stat.residual),
+                     make_motif_string(motif_infos[stat.cluster],
+                                       motif_pssm_rows)]
+                             for stat in cluster_stats
+                             if valid_clusters is None or stat.cluster in valid_clusters]
+            rows = [["%d" % (i + 1)] + row for i, row in enumerate(filtered_rows)]
+            """
+            result = [{'cluster': stat.cluster, 'num_rows': stat.num_rows,
+                       'num_cols': stat.num_cols, 'residual': stat.residual}
+                      for stat in cluster_stats]
+
+            return json.dumps(result)
+
+        finally:
+            if session is not None:
+                session.close()
+
+    @cherrypy.expose
     def clusters(self, iteration, *args, **kw):
         def min_evalue(motif_infos):
             """returns the minimum e-value of the given motif infos"""
@@ -745,6 +783,7 @@ def setup_routes():
               action="cytoscape_edges")
 
     # cluster list and details
+    d.connect('clusters_dt', '/clusters_dt/:iteration', controller=main, action="clusters_dt")
     d.connect('clusters', '/clusters/:iteration', controller=main, action="clusters")
     d.connect('cluster', '/cluster/:iteration/:cluster', controller=main, action="view_cluster")
     return d
@@ -764,7 +803,8 @@ def run():
     else:
         dburl = args.dburl
 
-    conf = {'/': {'request.dispatch': setup_routes()},
+    cherrypy_cors.install()
+    conf = {'/': {'request.dispatch': setup_routes(), 'cors.expose.on': True },
             '/static': {'tools.staticdir.on': True,
                         'tools.staticdir.dir': os.path.join(current_dir, 'static')}}
     cherrypy.config.update(conf)

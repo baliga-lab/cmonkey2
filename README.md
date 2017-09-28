@@ -40,7 +40,7 @@ bin/cmonkey2.sh --help
 
 To run the example organism:
 ```
-bin/cmonkey2.sh --organism hal example_data/hal/halo_ratios5.tsv
+bin/cmonkey2.sh --organism hal --rsat_base_url http://networks.systemsbiology.net/rsat example_data/hal/halo_ratios5.tsv
 ```
 
 ### Using directly from the source repository
