@@ -117,7 +117,7 @@ class Ratios:
                 outrows = [row for i, row in enumerate(outrows) if i % scale_out == 1]
 
         result = inrows + outrows
-        return json.dumps(result)
+        return result
 
 
 def read_ratios():
@@ -332,14 +332,21 @@ class ClusterViewerApp:
 
         progress = "%.2f" % min((float(runinfo.last_iteration) / float(runinfo.num_iterations) * 100.0),
                                 100.0)
-        result = {'progress': progress, 'finished': False}
+        result = {'progress': float(progress), 'finished': False}
         if runinfo.finish_time:
             elapsed_secs = int((runinfo.finish_time - runinfo.start_time).total_seconds())
             elapsed_hours = int(elapsed_secs / 3600)
             elapsed_mins = int((elapsed_secs - (elapsed_hours * 3600)) / 60)
-            result['elapsed_time'] = "(%d hours %d minutes)" % (elapsed_hours, elapsed_mins)
-            result['finish_time'] = str(runinfo.finish_time)
+            result['elapsedTime'] = "(%d hours %d minutes)" % (elapsed_hours, elapsed_mins)
+            result['startTime'] = str(runinfo.start_time)
+            result['finishTime'] = str(runinfo.finish_time)
             result['finished'] = True
+            result['species'] = runinfo.species
+            result['organism'] = runinfo.organism
+            result['numGenes'] = runinfo.num_rows
+            result['numConditions'] = runinfo.num_columns
+            result['numClusters'] = runinfo.num_clusters
+
         return result
 
     @cherrypy.expose
@@ -554,8 +561,8 @@ class ClusterViewerApp:
                              if valid_clusters is None or stat.cluster in valid_clusters]
             rows = [["%d" % (i + 1)] + row for i, row in enumerate(filtered_rows)]
             """
-            result = [{'cluster': stat.cluster, 'num_rows': stat.num_rows,
-                       'num_cols': stat.num_cols, 'residual': stat.residual}
+            result = [{'cluster': stat.cluster, 'numRows': stat.num_rows,
+                       'numCols': stat.num_cols, 'residual': stat.residual}
                       for stat in cluster_stats]
 
             return json.dumps(result)
@@ -626,6 +633,79 @@ class ClusterViewerApp:
 
             return json.dumps({'aaData': rows})
 
+        finally:
+            if session is not None:
+                session.close()
+
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def cluster_members(self, iteration, cluster):
+        session = dbsession()
+        try:
+            rows = [rm.row_name.name for rm in session.query(cm2db.RowMember).filter(
+                and_(cm2db.RowMember.iteration == iteration, cm2db.RowMember.cluster == cluster))]
+            columns = [cm.column_name.name for cm in session.query(cm2db.ColumnMember).filter(
+                and_(cm2db.ColumnMember.iteration == iteration, cm2db.ColumnMember.cluster == cluster))]
+            return {'rowMembers': sorted(rows), 'columnMembers': sorted(columns)}
+        finally:
+            if session is not None:
+                session.close()
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def cluster_expressions(self, iteration, cluster):
+        session = dbsession()
+        try:
+            rows = [rm.row_name.name for rm in session.query(cm2db.RowMember).filter(
+                and_(cm2db.RowMember.iteration == iteration, cm2db.RowMember.cluster == cluster))]
+            columns = [cm.column_name.name for cm in session.query(cm2db.ColumnMember).filter(
+                and_(cm2db.ColumnMember.iteration == iteration, cm2db.ColumnMember.cluster == cluster))]
+            return self.ratios().hs_subratios_for(rows, columns)
+        finally:
+            if session is not None:
+                session.close()
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def cluster_bpexpressions(self, iteration, cluster):
+        session = dbsession()
+        try:
+            rows = [rm.row_name.name for rm in session.query(cm2db.RowMember).filter(
+                and_(cm2db.RowMember.iteration == iteration, cm2db.RowMember.cluster == cluster))]
+            columns = [cm.column_name.name for cm in session.query(cm2db.ColumnMember).filter(
+                and_(cm2db.ColumnMember.iteration == iteration, cm2db.ColumnMember.cluster == cluster))]
+            ratios_mean = normalize_js(self.ratios().subratios_for(rows, columns).mean())
+            return {
+                'values': self.ratios().hs_boxplot_data_for(rows, columns),
+                'mean': ratios_mean
+            }
+        finally:
+            if session is not None:
+                session.close()
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def cluster_motif(self, iteration, cluster, motifnum):
+        session = dbsession()
+        try:
+            motif_infos = defaultdict(list)
+            for row in session.query(cm2db.MotifInfo).filter(
+                    and_(cm2db.MotifInfo.iteration == iteration, cm2db.MotifInfo.cluster == cluster), cm2db.MotifInfo.motif_num == motifnum):
+                motif_infos[row.seqtype].append(MotifInfo(row.rowid, row.cluster, row.seqtype, row.motif_num, row.evalue))
+            seqtypes = motif_infos.keys()
+            motif_ids = map(lambda i: i.id,
+                            [mis for mismis in motif_infos.values() for mis in mismis])
+            motif_pssm_rows = []
+            for row in session.query(cm2db.MotifPSSMRow).filter(
+                    cm2db.MotifPSSMRow.motif_info_id.in_(motif_ids)):
+                motif_pssm_rows.append([row.a, row.c, row.g, row.t])
+
+            result = {
+                'alphabet': ['A','C','G','T'],
+                'values': motif_pssm_rows
+            }
+            return result
         finally:
             if session is not None:
                 session.close()
@@ -711,7 +791,7 @@ class ClusterViewerApp:
                 js_annotation_map[seqtype] = json.dumps(st_annots)
 
             ratios_mean = normalize_js(self.ratios().subratios_for(rows, columns).mean())
-            js_boxplot_ratios = self.ratios().hs_boxplot_data_for(rows, columns)
+            js_boxplot_ratios = json.dumps(self.ratios().hs_boxplot_data_for(rows, columns))
 
         finally:
             if session is not None:
@@ -786,6 +866,15 @@ def setup_routes():
     d.connect('clusters_dt', '/clusters_dt/:iteration', controller=main, action="clusters_dt")
     d.connect('clusters', '/clusters/:iteration', controller=main, action="clusters")
     d.connect('cluster', '/cluster/:iteration/:cluster', controller=main, action="view_cluster")
+
+    d.connect('cluster_members', '/cluster_members/:iteration/:cluster', controller=main,
+              action="cluster_members")
+    d.connect('cluster_expressions', '/cluster_expressions/:iteration/:cluster', controller=main,
+              action="cluster_expressions")
+    d.connect('cluster_bpexpressions', '/cluster_bpexpressions/:iteration/:cluster',
+              controller=main, action="cluster_bpexpressions")
+    d.connect('cluster_motif', '/cluster_motif/:iteration/:cluster/:motifnum',
+              controller=main, action="cluster_motif")
     return d
 
 def run():

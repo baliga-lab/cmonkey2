@@ -277,7 +277,7 @@ function updateRunStatus() {
                  $('.progress-label').text(progress + "%");
                  var finishInfo = null;
                  if (data.finished) {
-                     finishInfo = $('<div id="finish-info" class="finish-info">Run finished at ' + data.finish_time + ' ' + data.elapsed_time + '</div>');
+                     finishInfo = $('<div id="finish-info" class="finish-info">Run finished at ' + data.finishTime + ' ' + data.elapsedTime + '</div>');
                  } else {
                      finishInfo = $('<div id="finish-info" class="inprogress-info">Run in progress...</div>');
                  }
