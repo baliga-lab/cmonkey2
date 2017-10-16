@@ -536,6 +536,7 @@ class ClusterViewerApp:
         return tmpl.render(locals())
 
     @cherrypy.expose
+    @cherrypy.tools.json_out()
     def clusters_dt(self, iteration):
         session = dbsession()
         try:
@@ -565,7 +566,7 @@ class ClusterViewerApp:
                        'numCols': stat.num_cols, 'residual': stat.residual}
                       for stat in cluster_stats]
 
-            return json.dumps(result)
+            return result
 
         finally:
             if session is not None:
@@ -833,26 +834,7 @@ def setup_routes():
     main = ClusterViewerApp()
     d.connect('main', '/', controller=main, action="index")
 
-    # run status
-    d.connect('run_status', '/run_status', controller=main, action="run_status")
-    d.connect('iterations', '/iterations', controller=main, action="iterations")
-
     # highcharts graph value routes
-    d.connect('mean_residuals', '/mean_residuals', controller=main, action="mean_residuals")
-    d.connect('mean_cluster_members',
-              '/mean_cluster_members', controller=main, action="mean_cluster_members")
-    d.connect('runlog', '/runlog', controller=main, action="runlog")
-    d.connect('fuzzy_coeffs', '/fuzzy_coeffs', controller=main, action="fuzzy_coeffs")
-    d.connect('cluster_row_hist', '/cluster_row_hist', controller=main,
-              action="cluster_row_hist")
-    d.connect('cluster_col_hist', '/cluster_col_hist', controller=main,
-              action="cluster_col_hist")
-    d.connect('cluster_residuals', '/cluster_residuals', controller=main,
-              action="cluster_residuals")
-    d.connect('network_score_means', '/network_score_means', controller=main,
-              action="network_score_means")
-    d.connect('generic_score_means', '/generic_score_means', controller=main,
-              action="generic_score_means")
     d.connect('slider_ranges', '/slider_ranges/:iteration', controller=main,
               action="slider_ranges")
 
@@ -863,17 +845,41 @@ def setup_routes():
               action="cytoscape_edges")
 
     # cluster list and details
-    d.connect('clusters_dt', '/clusters_dt/:iteration', controller=main, action="clusters_dt")
     d.connect('clusters', '/clusters/:iteration', controller=main, action="clusters")
     d.connect('cluster', '/cluster/:iteration/:cluster', controller=main, action="view_cluster")
 
-    d.connect('cluster_members', '/cluster_members/:iteration/:cluster', controller=main,
+    # JSON API
+    # general run information
+    d.connect('run_status', '/api/run_status', controller=main, action="run_status")
+    d.connect('iterations', '/api/iterations', controller=main, action="iterations")
+
+    # charts
+    d.connect('fuzzy_coeffs', '/api/fuzzy_coeffs', controller=main, action="fuzzy_coeffs")
+    d.connect('runlog', '/api/runlog', controller=main, action="runlog")
+    d.connect('mean_residuals', '/api/mean_residuals', controller=main, action="mean_residuals")
+    d.connect('cluster_residuals', '/api/cluster_residuals', controller=main,
+              action="cluster_residuals")
+    d.connect('generic_score_means', '/api/generic_score_means', controller=main,
+              action="generic_score_means")
+    d.connect('network_score_means', '/api/network_score_means', controller=main,
+              action="network_score_means")
+    d.connect('cluster_col_hist', '/api/cluster_col_hist', controller=main,
+              action="cluster_col_hist")
+    d.connect('cluster_row_hist', '/api/cluster_row_hist', controller=main,
+              action="cluster_row_hist")
+    d.connect('mean_cluster_members',
+              '/api/mean_cluster_members', controller=main, action="mean_cluster_members")
+
+    # cluster details
+    d.connect('clusters_dt', '/api/clusters_dt/:iteration', controller=main, action="clusters_dt")
+    d.connect('cluster_members', '/api/cluster_members/:iteration/:cluster', controller=main,
               action="cluster_members")
-    d.connect('cluster_expressions', '/cluster_expressions/:iteration/:cluster', controller=main,
+    d.connect('cluster_expressions', '/api/cluster_expressions/:iteration/:cluster',
+              controller=main,
               action="cluster_expressions")
-    d.connect('cluster_bpexpressions', '/cluster_bpexpressions/:iteration/:cluster',
+    d.connect('cluster_bpexpressions', '/api/cluster_bpexpressions/:iteration/:cluster',
               controller=main, action="cluster_bpexpressions")
-    d.connect('cluster_motif', '/cluster_motif/:iteration/:cluster/:motifnum',
+    d.connect('cluster_motif', '/api/cluster_motif/:iteration/:cluster/:motifnum',
               controller=main, action="cluster_motif")
     return d
 

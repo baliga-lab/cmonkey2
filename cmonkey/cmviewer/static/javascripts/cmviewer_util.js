@@ -267,7 +267,7 @@ function drawFuzzyCoeffGraph(selector, titleSize, iterations, series) {
 function updateRunStatus() {
 
     // progress bar
-    $.ajax({ url: '/run_status', success: function(data) {
+    $.ajax({ url: '/api/run_status', success: function(data) {
                  var progress = parseFloat(data.progress);
                  if (data.finished && interval != null) {
                      clearInterval(interval);
@@ -285,7 +285,7 @@ function updateRunStatus() {
              }});
 
     // update all stats graphs
-    $.ajax({ url: '/iterations', success: function(data) {
+    $.ajax({ url: '/api/iterations', success: function(data) {
                  if (data.length > iterations.length) {
                      iterations = data;
                      reloadResidualGraphValues('#residual-graph', iterations);
@@ -342,33 +342,33 @@ function startTimer() {
 }
 
 function reloadResidualGraphValues(selector, iterations) {
-    $.ajax({ url: '/mean_residuals', success: function(data) {
+    $.ajax({ url: '/api/mean_residuals', success: function(data) {
                  drawResidualGraph(selector, TITLE_SIZE,
                                    iterations, data.values);
              }});
 }
 
 function reloadClusterMemberGraphValues(selector, iterations) {
-    $.ajax({ url: '/mean_cluster_members', success: function(data) {
+    $.ajax({ url: '/api/mean_cluster_members', success: function(data) {
                  drawClusterMemberGraph(selector, TITLE_SIZE,
                                         iterations, data.meanNumRows, data.meanNumCols);
              }});
 }
 
 function reloadRunlogGraphValues(selector) {
-    $.ajax({ url: '/runlog', success: function(data) {
+    $.ajax({ url: '/api/runlog', success: function(data) {
                  drawRunlogGraph(selector, TITLE_SIZE, data);
              }});
 }
 
 function reloadFuzzyCoeffGraphValues(selector) {
-    $.ajax({ url: '/fuzzy_coeffs', success: function(data) {
+    $.ajax({ url: '/api/fuzzy_coeffs', success: function(data) {
                  drawFuzzyCoeffGraph(selector, TITLE_SIZE, iterations, data);
              }});
 }
 
 function reloadClusterRowGraphValues(selector) {
-    $.ajax({ url: '/cluster_row_hist', success: function(data) {
+    $.ajax({ url: '/api/cluster_row_hist', success: function(data) {
                  drawClusterMemberHistogram(selector, TITLE_SIZE, '# clusters -> # rows',
                                             '# rows',
                                             data.xvalues, data.yvalues);
@@ -376,7 +376,7 @@ function reloadClusterRowGraphValues(selector) {
 }
 
 function reloadClusterColGraphValues(selector) {
-    $.ajax({ url: '/cluster_col_hist', success: function(data) {
+    $.ajax({ url: '/api/cluster_col_hist', success: function(data) {
                  drawClusterMemberHistogram(selector, TITLE_SIZE, '# clusters -> # columns',
                                             '# columns',
                                             data.xvalues, data.yvalues);
@@ -384,13 +384,13 @@ function reloadClusterColGraphValues(selector) {
 }
 
 function reloadClusterResidualGraphValues(selector) {
-    $.ajax({ url: '/cluster_residuals', success: function(data) {
+    $.ajax({ url: '/api/cluster_residuals', success: function(data) {
                  drawClusterResidualGraph(selector, TITLE_SIZE, data.xvalues, data.yvalues);
              }});
 }
 
 function reloadNetworkScoreGraphValues(selector, iterations) {
-    $.ajax({ url: '/network_score_means', success: function(data) {
+    $.ajax({ url: '/api/network_score_means', success: function(data) {
                  drawMeanScoreGraph(selector, 'Mean network scores', 'mean net score',
                                     TITLE_SIZE, iterations, data.min, data.max,
                                     data.series);
@@ -398,7 +398,7 @@ function reloadNetworkScoreGraphValues(selector, iterations) {
 }
 
 function reloadMeanScoreGraphValues(selector, iterations) {
-    $.ajax({ url: '/generic_score_means', success: function(data) {
+    $.ajax({ url: '/api/generic_score_means', success: function(data) {
                  drawMeanScoreGraph(selector, 'Median scores', 'mean p-value',
                                     TITLE_SIZE, iterations, data.min, data.max,
                                     data.series);
