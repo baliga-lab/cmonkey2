@@ -758,38 +758,10 @@ class ClusterViewerApp:
                     motif2_pssm_tsv += "%.4f\t%.4f\t%.4f\t%.4f\n" % (a, c, g, t)
 
             # annotations
-            motif_lengths = { motif_info_id: count
-                for motif_info_id, count in session.query(cm2db.MotifPSSMRow.motif_info_id, func.count(cm2db.MotifPSSMRow.row)).filter(
-                    cm2db.MotifPSSMRow.iteration == iteration).group_by(cm2db.MotifPSSMRow.motif_info_id)}
-
-            annotations = []
-            for a in session.query(cm2db.MotifAnnotation).join(cm2db.MotifInfo).filter(
-                and_(cm2db.MotifInfo.iteration == iteration, cm2db.MotifInfo.cluster == cluster)):
-                annotations.append(MotifAnnotation(a.motif_info_id, a.motif_info.seqtype, a.motif_info.motif_num,
-                                   a.gene.name, a.position, a.reverse, a.pvalue))
-
-            st_annots = defaultdict(list)  # group by seqtype
-            for annot in annotations:
-                st_annots[annot.seqtype].append(annot)
-            st_gene_annots = {}
-            for seqtype in st_annots:  # group by gene
-                gene_annots = defaultdict(list)
-                for annot in st_annots[seqtype]:
-                    gene_annots[annot.gene].append(annot)
-                st_gene_annots[seqtype] = gene_annots
-
-            js_annotation_map = {}
-            for seqtype, gene_annots in st_gene_annots.items():
-                st_annots = []
-                for gene, annots in gene_annots.items():
-                    matches = [{'motif': a.motif_num - 1, 'start': a.pos,
-                                'length': motif_lengths[a.motif_info_id],
-                                'reverse': a.reverse, 'score': a.pvalue}
-                               for a in annots]
-                    st_annots.append({'gene': gene, 'condition': '', 'log10': 0.17,
-                                      'boxColor': '#08f', 'lineColor': '#000',
-                                      'matches': matches})
-                js_annotation_map[seqtype] = json.dumps(st_annots)
+            js_annotation_map = { seqtype: json.dumps(st_annots)
+                                  for seqtype, st_annots in
+                                  make_annotations(session, iteration, cluster).items()
+            }
 
             ratios_mean = normalize_js(self.ratios().subratios_for(rows, columns).mean())
             js_boxplot_ratios = json.dumps(self.ratios().hs_boxplot_data_for(rows, columns))
@@ -800,6 +772,52 @@ class ClusterViewerApp:
 
         tmpl = env.get_template('cluster.html')
         return tmpl.render(locals())
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def gene_annotations(self, iteration, cluster):
+        try:
+            session = dbsession()
+            return make_annotations(session, iteration, cluster)
+        finally:
+            if session is not None:
+                session.close()
+
+
+def make_annotations(session, iteration, cluster):
+    motif_lengths = { motif_info_id: count
+        for motif_info_id, count in session.query(cm2db.MotifPSSMRow.motif_info_id, func.count(cm2db.MotifPSSMRow.row)).filter(
+            cm2db.MotifPSSMRow.iteration == iteration).group_by(cm2db.MotifPSSMRow.motif_info_id)}
+
+    annotations = []
+    for a in session.query(cm2db.MotifAnnotation).join(cm2db.MotifInfo).filter(
+        and_(cm2db.MotifInfo.iteration == iteration, cm2db.MotifInfo.cluster == cluster)):
+        annotations.append(MotifAnnotation(a.motif_info_id, a.motif_info.seqtype, a.motif_info.motif_num,
+                           a.gene.name, a.position, a.reverse, a.pvalue))
+
+    st_annots = defaultdict(list)  # group by seqtype
+    for annot in annotations:
+        st_annots[annot.seqtype].append(annot)
+    st_gene_annots = {}
+    for seqtype in st_annots:  # group by gene
+        gene_annots = defaultdict(list)
+        for annot in st_annots[seqtype]:
+            gene_annots[annot.gene].append(annot)
+        st_gene_annots[seqtype] = gene_annots
+
+    js_annotation_map = {}
+    for seqtype, gene_annots in st_gene_annots.items():
+        st_annots = []
+        for gene, annots in gene_annots.items():
+            matches = [{'motif': a.motif_num - 1, 'start': a.pos,
+                        'length': motif_lengths[a.motif_info_id],
+                        'reverse': a.reverse, 'score': a.pvalue}
+                       for a in annots]
+            st_annots.append({'gene': gene, 'condition': '', 'log10': 0.17,
+                              'boxColor': '#08f', 'lineColor': '#000',
+                              'matches': matches})
+        js_annotation_map[seqtype] = st_annots
+    return js_annotation_map
 
 
 def consensus(rows):
@@ -832,17 +850,9 @@ def make_motif_string(motif_infos, motif_pssm_rows):
 def setup_routes():
     d = cherrypy.dispatch.RoutesDispatcher()
     main = ClusterViewerApp()
+
+    # Web pages
     d.connect('main', '/', controller=main, action="index")
-
-    # highcharts graph value routes
-    d.connect('slider_ranges', '/slider_ranges/:iteration', controller=main,
-              action="slider_ranges")
-
-    # cytoscape.js routes
-    d.connect('cytonodes', '/cytoscape_nodes/:iteration', controller=main,
-              action="cytoscape_nodes")
-    d.connect('cytoedges', '/cytoscape_edges/:iteration', controller=main,
-              action="cytoscape_edges")
 
     # cluster list and details
     d.connect('clusters', '/clusters/:iteration', controller=main, action="clusters")
@@ -881,6 +891,17 @@ def setup_routes():
               controller=main, action="cluster_bpexpressions")
     d.connect('cluster_motif', '/api/cluster_motif/:iteration/:cluster/:motifnum',
               controller=main, action="cluster_motif")
+    d.connect('gene_annotations', '/api/gene_annotations/:iteration/:cluster',
+              controller=main, action="gene_annotations")
+
+    # cytoscape.js routes
+    d.connect('cytonodes', '/api/cytoscape_nodes/:iteration', controller=main,
+              action="cytoscape_nodes")
+    d.connect('cytoedges', '/api/cytoscape_edges/:iteration', controller=main,
+              action="cytoscape_edges")
+    d.connect('slider_ranges', '/api/slider_ranges/:iteration', controller=main,
+              action="slider_ranges")
+
     return d
 
 def run():

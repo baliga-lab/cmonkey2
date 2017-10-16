@@ -116,7 +116,7 @@ function initCytoweb(iteration, minResidual, maxResidual, minEvalue, maxEvalue) 
             ready: function() {
                 var cy = this;
                 cy.startBatch();
-                jQuery.getJSON('/cytoscape_nodes/' + iteration,
+                jQuery.getJSON('/api/cytoscape_nodes/' + iteration,
                                {
                                    min_residual: minResidual,
                                    max_residual: maxResidual,
@@ -125,7 +125,7 @@ function initCytoweb(iteration, minResidual, maxResidual, minEvalue, maxEvalue) 
                                },
                                function(nodes) {
                                    cy.add(nodes);
-                                   jQuery.getJSON('/cytoscape_edges/' + iteration,
+                                   jQuery.getJSON('/api/cytoscape_edges/' + iteration,
                                                   {
                                                       min_residual: minResidual,
                                                       max_residual: maxResidual,
@@ -307,7 +307,7 @@ function updateRunStatus() {
     var iteration = $('#select_iteration').val();
     var firstTime = true;
     if (!iteration) iteration = 1;
-    $.ajax({url: '/slider_ranges/' + iteration, success: function(data) {
+    $.ajax({url: '/api/slider_ranges/' + iteration, success: function(data) {
                 var oldValues = $('#residual-slider').slider("values");
                 $('#residual-slider').slider('option',
                                              {min: data.residual.min,
