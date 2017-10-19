@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Welcome to cmonkey2 &#8212; cmonkey2 1.2.6 documentation</title>
+    <title>Quick Start &#8212; cmonkey2 1.2.6 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="install.html" />
+    <link rel="prev" title="Installation" href="install.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -39,28 +39,25 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="welcome-to-cmonkey2">
-<h1>Welcome to cmonkey2<a class="headerlink" href="#welcome-to-cmonkey2" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
-<p>This is the Python implementation of the cMonkey algorithm based on the original R
-implementation by David J. Reiss, Institute for Systems Biology.</p>
-<div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
-</ul>
+  <div class="section" id="quick-start">
+<h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h1>
+<p>After <a class="reference internal" href="install.html"><span class="doc">installing</span></a> the cmonkey2 package and ensuring that <a class="reference external" href="http://meme-suite.org/">MEME</a>
+is installed and in the search path, download the
+<a class="reference external" href="http://networks.systemsbiology.net/downloads/cmonkey2-examples/">example data</a>. This
+is a simple gene expression matrix in the format that cmonkey2 expects.</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>cmonkey2 --organism hal --rsat_base_url http://networks.systemsbiology.net/rsat halo_ratios5.tsv
+</pre></div>
 </div>
+<p>If everything is installed correctly, cmonkey2 will now take some time until
+the run finishes.</p>
+<p>You can see the progress of your run by running</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>cm2view
+</pre></div>
 </div>
-</div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
-<ul class="simple">
-<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
-<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
-<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
-</ul>
+<p>in the same directory as you started the run. This will start the web application
+“cmonkey2 viewer”, which can be accessed at the default address <a class="reference external" href="http://localhost:8080">http://localhost:8080</a>.
+The browser should display something similar to this:</p>
+<img alt="_images/cm2view-screenshot-01.png" src="_images/cm2view-screenshot-01.png" />
 </div>
 
 
@@ -70,7 +67,7 @@ implementation by David J. Reiss, Institute for Systems Biology.</p>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <p class="logo">
-  <a href="#">
+  <a href="index.html">
     <img class="logo" src="_static/logo.png" alt="Logo"/>
     
     <h1 class="logo logo-name">cmonkey2</h1>
@@ -96,16 +93,16 @@ implementation by David J. Reiss, Institute for Systems Biology.</p>
 
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
-  <li><a href="#">Documentation overview</a><ul>
-      <li>Next: <a href="install.html" title="next chapter">Installation</a></li>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="install.html" title="previous chapter">Installation</a></li>
   </ul></li>
 </ul>
 </div>
@@ -131,7 +128,7 @@ implementation by David J. Reiss, Institute for Systems Biology.</p>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |
-      <a href="_sources/index.rst.txt"
+      <a href="_sources/quickstart.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 
