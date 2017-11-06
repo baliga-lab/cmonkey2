@@ -89,7 +89,14 @@ html_theme = 'alabaster'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    'logo': 'logo.png',
+    'github_user': 'baliga-lab',
+    'github_repo': 'cmonkey2',
+    'github_banner': True,
+    'logo_name': True,
+    'description': 'A machine-learning based method for clustering'
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

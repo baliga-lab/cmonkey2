@@ -322,6 +322,59 @@ class ClusterViewerApp:
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
+    def cytoscape_nodes_new(self, iteration, min_residual=None, max_residual=None,
+                            min_evalue=None, max_evalue=None):
+        """Cytoscape has a new format for elements"""
+        session = dbsession()
+        try:
+            clusters = self.filter_clusters(session, iteration, min_residual, max_residual)
+            valid_clusters = set(clusters)
+            clusters_json = [{'classes': 'clusters',
+                              'data': {'id': '%d' % cluster, 'name': '%d' % cluster}}
+                             for cluster in clusters]
+
+            genes = [rm.row_name.name for rm in session.query(cm2db.RowMember).join(cm2db.RowName).filter(
+                cm2db.RowMember.iteration == iteration).order_by(cm2db.RowName.name)
+                         if rm.cluster in valid_clusters]
+
+            genes_json = [{'data': {'id': '%s' % gene, 'name': '%s' % gene,
+                                    'classes': 'genes'}}
+                          for gene in genes]
+
+            # motifs, since we are operating on a log scale, we have to
+            # remap the values to the original scale
+            min_evalue = 10.0**float(min_evalue)
+            max_evalue = 10.0**float(max_evalue)
+
+            motifs = self.filter_motifs(session, iteration, valid_clusters,
+                                        min_evalue, max_evalue)
+            motifs_json = [{'data': {'id': 'm%d' % m[0],
+                                     'name': '%d_%d' % (m[1], m[2]),
+                                     'classes': 'motifs'}}
+                           for m in motifs]
+            return {'nodes': clusters_json + genes_json + motifs_json }
+        finally:
+            if session is not None:
+                session.close()
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def cytoscape_data(self, iteration, min_residual=None, max_residual=None,
+                       min_evalue=None, max_evalue=None):
+        session = dbsession()
+        try:
+            nodes = self.cytoscape_nodes(iteration, min_residual, max_residual, min_evalue,
+                                         max_evalue)
+            edges = self.cytoscape_edges(iteration, min_residual, max_residual, min_evalue,
+                                         max_evalue)
+            return {'elements': nodes['nodes'] + edges['edges']}
+        finally:
+            if session is not None:
+                session.close()
+
+
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
     def run_status(self):
         session = dbsession()
         try:
@@ -889,6 +942,8 @@ def setup_routes():
               action="cluster_expressions")
     d.connect('cluster_bpexpressions', '/api/cluster_bpexpressions/:iteration/:cluster',
               controller=main, action="cluster_bpexpressions")
+
+    # These have to be revised for sequence types
     d.connect('cluster_motif', '/api/cluster_motif/:iteration/:cluster/:motifnum',
               controller=main, action="cluster_motif")
     d.connect('gene_annotations', '/api/gene_annotations/:iteration/:cluster',
@@ -899,6 +954,10 @@ def setup_routes():
               action="cytoscape_nodes")
     d.connect('cytoedges', '/api/cytoscape_edges/:iteration', controller=main,
               action="cytoscape_edges")
+
+    # this is the new data route for cytoscape, so we can save one network call
+    d.connect('cytodata', '/api/cytoscape_data/:iteration', controller=main,
+              action="cytoscape_data")
     d.connect('slider_ranges', '/api/slider_ranges/:iteration', controller=main,
               action="slider_ranges")
 

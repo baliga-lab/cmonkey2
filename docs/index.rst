@@ -3,13 +3,20 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to cmonkey2's documentation!
-====================================
+Welcome to cmonkey2
+===================
+
+This is the Python implementation of the cMonkey algorithm based on the original R
+implementation by David J. Reiss, Institute for Systems Biology.
+
+cmonkey2 supports Python 2.7.x and >= 3.3.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+   Installation <install>
+   Quick Start <quickstart>
 
 
 Indices and tables
