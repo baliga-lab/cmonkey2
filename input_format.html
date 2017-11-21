@@ -1,0 +1,253 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Input File Formats &#8212; cmonkey2 1.2.6 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.2.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Configuration and Run Options" href="configuration.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="input-file-formats">
+<h1>Input File Formats<a class="headerlink" href="#input-file-formats" title="Permalink to this headline">¶</a></h1>
+<p>cMonkey uses a number of input files to support its built in scoring functions.</p>
+<p><strong>Note:</strong> cMonkey-Python uses a cache directory for data files that are downloaded from the web. You can use this mechanism for specifying your own data, as long as it is in the same format as specified below.</p>
+<p>The path is by default <code class="docutils literal"><span class="pre">cache</span></code>, you can also specify a different location by providing the <code class="docutils literal"><span class="pre">--cachedir</span></code> option on the command line</p>
+<div class="section" id="gene-expressions-mandatory">
+<h2>Gene expressions (mandatory)<a class="headerlink" href="#gene-expressions-mandatory" title="Permalink to this headline">¶</a></h2>
+<p>The most basic and mandatory input is gene expression data. This should be specified as a tab-delimited text file, with the following specifications for a matrix with n genes and m conditions:</p>
+<blockquote>
+<div><ul class="simple">
+<li>first row: 1 dummy label + m condition titles</li>
+<li>n rows where each row starts with a gene name and m expression ratio values</li>
+</ul>
+</div></blockquote>
+<p>The expression file can either be uncompressed or in gzip format (in this case, it should have a .gz suffix).</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>X&lt;TAB&gt;Cond 1&lt;TAB&gt;Cond 2
+Gene1&lt;TAB&gt;1.213&lt;TAB&gt;-1.412
+...
+</pre></div>
+</div>
+</div>
+<div class="section" id="rsat-information">
+<h2>RSAT information<a class="headerlink" href="#rsat-information" title="Permalink to this headline">¶</a></h2>
+<p>The RSAT database is central to cMonkey’s automatic retrieval of organism information. It is used for several purposes:</p>
+<blockquote>
+<div><ul class="simple">
+<li>organism classification (eukaryote/prokaryote, NCBI taxonomy mapping)</li>
+<li>gene synonyms</li>
+<li>genomic information</li>
+</ul>
+</div></blockquote>
+<p>RSAT provides organism data on a number of sites, where there is usually a web directory under a URL that looks like <code class="docutils literal"><span class="pre">&lt;BASE_URL&gt;/data/genomes/</span></code></p>
+<p>This directory contains many organism directories. The user can specify this RSAT organism explicitly via the <code class="docutils literal"><span class="pre">--rsat_organism</span></code> parameter on the command line, otherwise, it will attempt to derive the name through the mandatory KEGG organism code. In addition the base url of the RSAT site to be searched can be defined with the <code class="docutils literal"><span class="pre">--rsat_base_url</span></code> parameter.</p>
+<p>cMonkey<sub>2</sub> expects the following files in an organism directory:</p>
+<div class="section" id="rsat-organism-file-organism-tab">
+<h3>RSAT organism file (“organism.tab”)<a class="headerlink" href="#rsat-organism-file-organism-tab" title="Permalink to this headline">¶</a></h3>
+<p>The contents of this file is used to look for the occurrence of the word “Eukaryota” and derive the NCBI taxonomy id. If the word “Eukaryota” is found, the organism will be marked as a eukaryote, otherwise, it will be assumed as prokaryote.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>64091&lt;TAB&gt;Archaea; Euryarchaeota; Halobacteria; Halobacteriales; Halobacteriaceae; Halobacterium
+</pre></div>
+</div>
+</div>
+<div class="section" id="rsat-feature-name-files-feature-names-tab">
+<h3>RSAT feature name files (“feature_names.tab”)<a class="headerlink" href="#rsat-feature-name-files-feature-names-tab" title="Permalink to this headline">¶</a></h3>
+<p>These files are used by cMonkey to create the synonym table for alternative gene names. Each line has the format</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>&lt;Accession ID&gt;&lt;TAB&gt;&lt;name&gt;&lt;primary|alternate&gt;
+</pre></div>
+</div>
+<p><strong>Example:</strong></p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>NP_045946.1&lt;TAB&gt;VNG7001&lt;TAB&gt;primary
+NP_045946.1&lt;TAB&gt;1446803&lt;TAB&gt;alternate
+NP_045946.1&lt;TAB&gt;10803548&lt;TAB&gt;alternate
+NP_045946.1&lt;TAB&gt;NP_045946.1&lt;TAB&gt;alternate
+...
+</pre></div>
+</div>
+</div>
+<div class="section" id="rsat-feature-files-feature-tab">
+<h3>RSAT feature files (“feature.tab”)<a class="headerlink" href="#rsat-feature-files-feature-tab" title="Permalink to this headline">¶</a></h3>
+<p>Each line in a feature file contains a gene location for an organism. The important information is are the id, name, contig, strand, start and end position. For each contig listed in this file, there must exist a corresponding contig file.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>-- id&lt;TAB&gt;type&lt;TAB&gt;name&lt;TAB&gt;contig&lt;TAB&gt;start&lt;TAB&gt;end&lt;TAB&gt;strand&lt;TAB&gt;description&lt;TAB&gt;chrom_pos&lt;TAB&gt;organism&lt;TAB&gt;GeneID
+NP_045946.1&lt;TAB&gt;CDS&lt;TAB&gt;VNG7001&lt;TAB&gt;NC_001869.1&lt;TAB&gt;363&lt;TAB&gt;812&lt;TAB&gt;R&lt;TAB&gt;hypothetical protein&lt;TAB&gt;complement(363..812)&lt;TAB&gt;Halobacterium sp. NRC-1&lt;TAB&gt;1446803
+NP_045947.1&lt;TAB&gt;CDS&lt;TAB&gt;VNG7002&lt;TAB&gt;NC_001869.1&lt;TAB&gt;834&lt;TAB&gt;1172&lt;TAB&gt;R&lt;TAB&gt;hypothetical protein&lt;TAB&gt;complement(834..1172)&lt;TAB&gt;Halobacterium sp. NRC-1&lt;TAB&gt;1446804
+...
+</pre></div>
+</div>
+</div>
+<div class="section" id="rsat-contig-files">
+<h3>RSAT contig files<a class="headerlink" href="#rsat-contig-files" title="Permalink to this headline">¶</a></h3>
+<p>These files contain the raw genomic sequence in lower case for a specific contig/chromosome that is referenced in the RSAT features file.</p>
+<p><strong>Example (file name “NC002607.1.tab”):</strong></p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>ttgacccactgaatcacgtctgaccgcgcgtacgcggtcacttgcggtgccgttttctttgttaccgacgaccgaccagcgacagccaccgcgcgctcactgccaccaaaagagtcatatcacagccgaccagtttctggaacgttcccgatactggaacggtcctaatgcagtatcccaccctccttccatcgacgccagtcgaatcacgccgccagccaccgtccgccagccggccagaataccgatgactcggcggtctcgtgtcggtgccggcctcgcagccattgtactggccctggccgcagtgtcggctgccgctcc
+</pre></div>
+</div>
+</div>
+<div class="section" id="rsat-mockup-directories">
+<h3>RSAT mockup directories<a class="headerlink" href="#rsat-mockup-directories" title="Permalink to this headline">¶</a></h3>
+<p>For a number of organisms, RSAT does not provide the necessary files for a cmonkey run. In this case, the user can provide their own local directory that mirrors the structure, so it contains the files described above and specify the directory using –rsat_dir &lt;your_rsat_directory&gt;</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>organism.tab
+feature_names.tab
+feature.tab
+&lt;contig1&gt;.tab
+&lt;contig2&gt;.tab
+...
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="string-protein-protein-interactions">
+<h2>STRING protein-protein interactions<a class="headerlink" href="#string-protein-protein-interactions" title="Permalink to this headline">¶</a></h2>
+<p>STRING is a database of known and predicted protein-protein interactions. cMonkey uses these interactions to improve its clustering results. In order to do so, it builds a network using the interactions for the genes for the current organism. This network can then be used in the network scoring component of cMonkey.</p>
+<p>STRING is an enormous database and so it is a good idea to prepare the input to provide only the necessary data for cMonkey’s network scoring algorithm, namely the names of the genes and their score.</p>
+<p>STRING files are tab-delimited files containing entries of the form</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>Gene1&lt;TAB&gt;Gene2&lt;TAB&gt;Normalized Score
+</pre></div>
+</div>
+<p>cmonkey-python provides the utility <code class="docutils literal"><span class="pre">extract_string_links.sh</span></code> to write the interactions for an organism, given the KEGG code and a database file (either gzip’ed or plain).</p>
+<p>Protein-protein interaction network files have a very simple structure, each line in the file defines a a network edge with a weight, and each file is compressed with gzip, so the naming scheme is &lt;NCBI code&gt;.gz.</p>
+<p><strong>Example (file name “64091.gz”):</strong></p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>VNG0001H&lt;TAB&gt;VNG0002G&lt;TAB&gt;865
+VNG0001H&lt;TAB&gt;VNG0003C&lt;TAB&gt;802
+VNG0001H&lt;TAB&gt;VNG0005H&lt;TAB&gt;561
+...
+</pre></div>
+</div>
+<div class="section" id="microbes-online-operon-files">
+<h3>Microbes Online operon files<a class="headerlink" href="#microbes-online-operon-files" title="Permalink to this headline">¶</a></h3>
+<p>These files are typically provided by Microbes Online and define operon relationships of genes. These are only used for prokaryotic organisms. The name scheme that cmonkey uses for such files is gnc&lt;NCBI code&gt;.named. See example for the format of the lines in a file.</p>
+<p><strong>Example (file name “gnc64091.named”):</strong></p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>Gene1&lt;TAB&gt;Gene2&lt;TAB&gt;SysName1&lt;TAB&gt;SysName2&lt;TAB&gt;Name1&lt;TAB&gt;Name2&lt;TAB&gt;bOp&lt;TAB&gt;pOp&lt;TAB&gt;Sep&lt;TAB&gt;MOGScore&lt;TAB&gt;GOScore&lt;TAB&gt;COGSim&lt;TAB&gt;ExprSim
+68130&lt;TAB&gt;68131&lt;TAB&gt;VNG0001H&lt;TAB&gt;VNG0002G&lt;TAB&gt;VNG0001H&lt;TAB&gt;yvrO&lt;TAB&gt;TRUE&lt;TAB&gt;0.950&lt;TAB&gt;-3.000&lt;TAB&gt;0.000&lt;TAB&gt;NA&lt;TAB&gt;N&lt;TAB&gt;0.791
+68131&lt;TAB&gt;68132&lt;TAB&gt;VNG0002G&lt;TAB&gt;VNG0003C&lt;TAB&gt;yvrO&lt;TAB&gt;VNG0003C&lt;TAB&gt;TRUE&lt;TAB&gt;0.920&lt;TAB&gt;30.000&lt;TAB&gt;0.600&lt;TAB&gt;1.000&lt;TAB&gt;Y&lt;TAB&gt;0.525
+...
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/logo.png" alt="Logo"/>
+    
+    <h1 class="logo logo-name">cmonkey2</h1>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">A machine-learning based method for clustering</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=baliga-lab&repo=cmonkey2&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="walkthrough.html">Walkthrough of a Complete cMonkey2 Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="principles.html">cMonkey Principles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration and Run Options</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Input File Formats</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#gene-expressions-mandatory">Gene expressions (mandatory)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rsat-information">RSAT information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#string-protein-protein-interactions">STRING protein-protein interactions</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="configuration.html" title="previous chapter">Configuration and Run Options</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Wei-ju Wu.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/input_format.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/baliga-lab/cmonkey2" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

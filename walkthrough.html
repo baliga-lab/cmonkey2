@@ -1,0 +1,242 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Walkthrough of a Complete cMonkey2 Run &#8212; cmonkey2 1.2.6 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.2.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="cMonkey Principles" href="principles.html" />
+    <link rel="prev" title="Quick Start" href="quickstart.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="walkthrough-of-a-complete-cmonkey2-run">
+<h1>Walkthrough of a Complete cMonkey<sub>2</sub> Run<a class="headerlink" href="#walkthrough-of-a-complete-cmonkey2-run" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="setting-up-for-a-cmonkey2-run">
+<h2>Setting up for a cMonkey<sub>2</sub> run<a class="headerlink" href="#setting-up-for-a-cmonkey2-run" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li>Input required The only required input are<ol class="arabic">
+<li>The gene expression matrix file (tab-separated values file)</li>
+<li>The KEGG organism code (e.g., eco for E. coli; hal for H. salinarum)</li>
+</ol>
+</li>
+<li>Input automatically downloaded Given the KEGG organism code, cMonkey<sub>2</sub> downloads the following data from various online databases and caches them locally:<ol class="arabic">
+<li>Genome sequences and annotations (currently from RSAT)</li>
+<li>Operon membership predictions (for prokaryotes)</li>
+<li>STRING functional gene associations</li>
+</ol>
+</li>
+<li>Input optional Custom files may be use as additional input (or to replace downloaded files):<ol class="arabic">
+<li>Network</li>
+<li>Genome</li>
+<li>Annotation</li>
+</ol>
+</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="starting-the-run">
+<h2>Starting the run<a class="headerlink" href="#starting-the-run" title="Permalink to this headline">¶</a></h2>
+<p>cMonkey<sub>2</sub> is typically started by running the front-end cmonkey2 with additional parameters.</p>
+<p>Example:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>cmonkey2 --organism hal --rsat_base_url http://networks.systemsbiology.net/rsat ratios.tsv
+</pre></div>
+</div>
+<p>The following phases will be executed:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Initialization</li>
+<li>Scoring</li>
+<li>Post-processing</li>
+</ol>
+</div></blockquote>
+</div>
+<div class="section" id="initialization-steps">
+<h2>Initialization steps<a class="headerlink" href="#initialization-steps" title="Permalink to this headline">¶</a></h2>
+<p>Before cMonkey<sub>2</sub> runs the scoring iterations, it ensures that the required data is in place via the following steps:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>normalize the ratio matrix</li>
+<li>retrieve organism information and data from RSAT</li>
+<li>build gene synonym lookup table</li>
+<li>retrieve gene locations and parse promoter sequences</li>
+<li>download and normalize operon network from Microbes Online (if necessary)</li>
+<li>download and normalize STRING network (if necessary)</li>
+<li>initialize the starting biclusters</li>
+</ol>
+</div></blockquote>
+</div>
+<div class="section" id="what-is-happening-at-each-iteration">
+<h2>What is happening at each iteration<a class="headerlink" href="#what-is-happening-at-each-iteration" title="Permalink to this headline">¶</a></h2>
+<p>These are the essential steps in a cMonkey<sub>2</sub> iteration:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>run row scoring functions</li>
+<li>run column scoring function</li>
+<li>combine the scores via the combiner</li>
+<li>use scores to update cluster membership</li>
+</ol>
+</div></blockquote>
+<p>Each scoring function can be individually configured to follow a specific schedule and the weights which define how much its results contribute to the final combined score can be updated following that schedule as well.</p>
+<p>It should be noted that motif scoring has two schedules, one for running the MEME suite pipeline (typically every 100 iterations) and another one to apply the results of the MEME suite pipeline step to the current clusters memberships.</p>
+</div>
+<div class="section" id="inside-a-scoring-module">
+<h2>Inside a scoring module<a class="headerlink" href="#inside-a-scoring-module" title="Permalink to this headline">¶</a></h2>
+<p>The building blocks of a cMonkey<sub>2</sub> run are scoring modules. A scoring module is a Python class that implements the methods</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iteration_result</span><span class="p">,</span> <span class="n">reference_matrix</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">compute_force</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iteration_result</span><span class="p">,</span> <span class="n">reference_matrix</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The only difference between these do functions is that <code class="docutils literal"><span class="pre">compute_force()</span></code> always performs a computation, while <code class="docutils literal"><span class="pre">compute()</span></code> only runs in the iterations it is scheduled for.</p>
+<p>The result of these calls is a DataMatrix object, where the columns represent the clusters, and the rows represent the genes or conditions, depending on whether the scoring function is a row or a column scoring function. Each cell in the matrix contains the corresponding score for a gene/condition in a specific cluster.</p>
+<p>cMonkey<sub>2</sub> comes with a number of built-in scoring modules, which are part of the standard scoring setup. It is possible to create user-defined scoring modules; in this case it is recommended to inherit from the ScoringFunctionBase class, which provides a lot of useful functionality.</p>
+</div>
+<div class="section" id="monitoring-progress">
+<h2>Monitoring progress<a class="headerlink" href="#monitoring-progress" title="Permalink to this headline">¶</a></h2>
+<p>Throughout the computation, cMonkey<sub>2</sub> writes out its progress into its result database. Users can directly query the data contained in the database using regular data extraction tools. cMonkey<sub>2</sub> also comes with a web browser-based monitoring application that can be used to view a graphical representation of the run.</p>
+</div>
+<div class="section" id="post-processing-steps">
+<h2>Post-processing steps<a class="headerlink" href="#post-processing-steps" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="results-data-format">
+<h2>Results data format<a class="headerlink" href="#results-data-format" title="Permalink to this headline">¶</a></h2>
+<p>Please see details about the result database schema here</p>
+</div>
+<div class="section" id="viewing-results">
+<h2>Viewing results<a class="headerlink" href="#viewing-results" title="Permalink to this headline">¶</a></h2>
+<p>Please see details about how to view results here</p>
+</div>
+<div class="section" id="plugging-in-cmonkey-results-for-downstream-analysis">
+<h2>Plugging in cMonkey Results for downstream analysis<a class="headerlink" href="#plugging-in-cmonkey-results-for-downstream-analysis" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/logo.png" alt="Logo"/>
+    
+    <h1 class="logo logo-name">cmonkey2</h1>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">A machine-learning based method for clustering</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=baliga-lab&repo=cmonkey2&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Walkthrough of a Complete cMonkey2 Run</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-for-a-cmonkey2-run">Setting up for a cMonkey<sub>2</sub> run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#starting-the-run">Starting the run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#initialization-steps">Initialization steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#what-is-happening-at-each-iteration">What is happening at each iteration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inside-a-scoring-module">Inside a scoring module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#monitoring-progress">Monitoring progress</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#post-processing-steps">Post-processing steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#results-data-format">Results data format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#viewing-results">Viewing results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#plugging-in-cmonkey-results-for-downstream-analysis">Plugging in cMonkey Results for downstream analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="principles.html">cMonkey Principles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration and Run Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input_format.html">Input File Formats</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="quickstart.html" title="previous chapter">Quick Start</a></li>
+      <li>Next: <a href="principles.html" title="next chapter">cMonkey Principles</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Wei-ju Wu.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/walkthrough.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/baliga-lab/cmonkey2" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

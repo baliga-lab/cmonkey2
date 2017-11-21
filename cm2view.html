@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Quick Start &#8212; cmonkey2 1.2.6 documentation</title>
+    <title>Visualize Results in cMonkey2 Viewer &#8212; cmonkey2 1.2.6 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -23,8 +23,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Walkthrough of a Complete cMonkey2 Run" href="walkthrough.html" />
-    <link rel="prev" title="Installation" href="install.html" />
+    <link rel="prev" title="Set Enrichment Setup" href="setenrichment_setup.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -40,32 +39,30 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="quick-start">
-<h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h1>
-<p>After <a class="reference internal" href="install.html"><span class="doc">installing</span></a> the cmonkey2 package and ensuring that <a class="reference external" href="http://meme-suite.org/">MEME</a>
-is installed and in the search path, download the
-<a class="reference external" href="http://networks.systemsbiology.net/downloads/cmonkey2-examples/">example data</a>. This
-is a simple gene expression matrix in the format that cmonkey2 expects.</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>cmonkey2 --organism hal --rsat_base_url http://networks.systemsbiology.net/rsat halo_ratios5.tsv
+  <div class="section" id="visualize-results-in-cmonkey2-viewer">
+<h1>Visualize Results in cMonkey2 Viewer<a class="headerlink" href="#visualize-results-in-cmonkey2-viewer" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="description">
+<h2>Description<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
+<p>You can view your current running or completed cMonkey2 run using cm2view. This is a web application that reads the output directory and generates a graphical representation from the data currently presiding there. As described in the (quickstart)[quickstart], cmviewer may be initialized by running</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>cm2view --out &lt;your result directory&gt;
 </pre></div>
 </div>
-<p>If everything is installed correctly, cmonkey2 will now take some time until
-the run finishes.</p>
-<p>You can see the progress of your run by running</p>
-<div class="highlight-none"><div class="highlight"><pre><span></span>cm2view
-</pre></div>
+<p>The monitoring application will be started and can be viewed by opening a web browser to the address <a class="reference external" href="http://localhost:8080">http://localhost:8080</a>.</p>
 </div>
-<p>in the same directory as you started the run. This will start the web application
-“cmonkey2 viewer”, which can be accessed at the default address <a class="reference external" href="http://localhost:8080">http://localhost:8080</a>.
-The browser should display something similar to this:</p>
-<img alt="_images/cm2view-screenshot-01.png" src="_images/cm2view-screenshot-01.png" />
-<p>After cmonkey2 has finished the run, the results will be available in the <code class="docutils literal"><span class="pre">out</span></code> directory:</p>
+<div class="section" id="views">
+<h2>Views<a class="headerlink" href="#views" title="Permalink to this headline">¶</a></h2>
+<p>The views provided are:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal"><span class="pre">ratios.tsv.gz</span></code> - the normalized input matrix</li>
-<li><code class="docutils literal"><span class="pre">cmonkey_run.db</span></code> - the results of the run as a sqlite3 database file</li>
+<li>Run statistics: Mean scores, cluster membership distributions etc.</li>
+<li>Network view</li>
+<li>List of clusters with their residuals and motif e-values</li>
+<li>Cluster statistics: Genes and conditions in the cluster as well as motifs and their locations</li>
 </ul>
 </div></blockquote>
+<p>Moreover, individual clusters in the cluster list may be clicked to visualize their data (including gene expression, motifs, motif positions, etc.).</p>
+<p>Gaggle microformats for integration with FireGoose/ChromeGoose are included in each page.</p>
+</div>
 </div>
 
 
@@ -103,16 +100,26 @@ The browser should display something similar to this:</p>
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="walkthrough.html">Walkthrough of a Complete cMonkey2 Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="principles.html">cMonkey Principles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration and Run Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input_format.html">Input File Formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="database_schema.html">Result Database Schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="meme_setup.html">MEME Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setenrichment_setup.html">Set Enrichment Setup</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Visualize Results in cMonkey2 Viewer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#description">Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#views">Views</a></li>
+</ul>
+</li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="install.html" title="previous chapter">Installation</a></li>
-      <li>Next: <a href="walkthrough.html" title="next chapter">Walkthrough of a Complete cMonkey<sub>2</sub> Run</a></li>
+      <li>Previous: <a href="setenrichment_setup.html" title="previous chapter">Set Enrichment Setup</a></li>
   </ul></li>
 </ul>
 </div>
@@ -138,7 +145,7 @@ The browser should display something similar to this:</p>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |
-      <a href="_sources/quickstart.rst.txt"
+      <a href="_sources/cm2view.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 

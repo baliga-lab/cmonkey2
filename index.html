@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Welcome to cmonkey2 &#8212; cmonkey2 1.2.6 documentation</title>
+    <title>Welcome to cMonkey2 &#8212; cmonkey2 1.2.6 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -40,18 +40,77 @@
           <div class="body" role="main">
             
   <div class="section" id="welcome-to-cmonkey2">
-<h1>Welcome to cmonkey2<a class="headerlink" href="#welcome-to-cmonkey2" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<h1>Welcome to cMonkey<sub>2</sub><a class="headerlink" href="#welcome-to-cmonkey2" title="Permalink to this headline">¶</a></h1>
 <p>This is the Python implementation of the cMonkey algorithm based on the original R
 implementation by David J. Reiss, Institute for Systems Biology.</p>
+<p>cMonkey<sub>2</sub> supports Python 2.7.x and &gt;= 3.3.</p>
 <div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="walkthrough.html">Walkthrough of a Complete cMonkey2 Run</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="walkthrough.html#setting-up-for-a-cmonkey2-run">Setting up for a cMonkey<sub>2</sub> run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="walkthrough.html#starting-the-run">Starting the run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="walkthrough.html#initialization-steps">Initialization steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="walkthrough.html#what-is-happening-at-each-iteration">What is happening at each iteration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="walkthrough.html#inside-a-scoring-module">Inside a scoring module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="walkthrough.html#monitoring-progress">Monitoring progress</a></li>
+<li class="toctree-l2"><a class="reference internal" href="walkthrough.html#post-processing-steps">Post-processing steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="walkthrough.html#results-data-format">Results data format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="walkthrough.html#viewing-results">Viewing results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="walkthrough.html#plugging-in-cmonkey-results-for-downstream-analysis">Plugging in cMonkey Results for downstream analysis</a></li>
 </ul>
-</div>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="principles.html">cMonkey Principles</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="principles.html#core-algorithm">Core algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="principles.html#anatomy-of-a-scoring-module">Anatomy of a scoring module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="principles.html#system-defined-scoring-modules">System defined scoring modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="principles.html#how-to-implement-your-own-scoring-module">How to implement your own scoring module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration and Run Options</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#command-line-options">Command line options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#configuration-ini-files">Configuration (.ini) files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#useful-configuration-constructs">Useful configuration constructs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#scoring-pipeline-configuration-json-files">Scoring pipeline configuration (.json) files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#tricky-topics">Tricky topics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="input_format.html">Input File Formats</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="input_format.html#gene-expressions-mandatory">Gene expressions (mandatory)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="input_format.html#rsat-information">RSAT information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="input_format.html#string-protein-protein-interactions">STRING protein-protein interactions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="database_schema.html">Result Database Schema</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="database_schema.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="database_schema.html#tables">Tables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="meme_setup.html">MEME Setup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="meme_setup.html#meme-suite-notes">MEME Suite notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meme_setup.html#installation-script">Installation script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meme_setup.html#meme-4-3-0">MEME 4.3.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="meme_setup.html#meme-4-8-x-and-later">MEME 4.8.x and later</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="setenrichment_setup.html">Set Enrichment Setup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="setenrichment_setup.html#how-to-setup-set-enrichment">How to setup set enrichment</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cm2view.html">Visualize Results in cMonkey2 Viewer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="cm2view.html#description">Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cm2view.html#views">Views</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="more_tips.html">More Tips for Running, Debugging, Developing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="more_tips.html#interactive-exploration-of-results">Interactive exploration of results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="more_tips.html#debugging">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="more_tips.html#data-exchange">Data exchange</a></li>
+</ul>
+</li>
+</ul>
 </div>
 </div>
 <div class="section" id="indices-and-tables">
@@ -99,6 +158,15 @@ implementation by David J. Reiss, Institute for Systems Biology.</p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="walkthrough.html">Walkthrough of a Complete cMonkey2 Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="principles.html">cMonkey Principles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration and Run Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input_format.html">Input File Formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="database_schema.html">Result Database Schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="meme_setup.html">MEME Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setenrichment_setup.html">Set Enrichment Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cm2view.html">Visualize Results in cMonkey2 Viewer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="more_tips.html">More Tips for Running, Debugging, Developing</a></li>
 </ul>
 
 <div class="relations">

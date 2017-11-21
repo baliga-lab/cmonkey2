@@ -1,0 +1,273 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Result Database Schema &#8212; cmonkey2 1.2.6 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.2.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Input File Formats" href="input_format.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="result-database-schema">
+<h1>Result Database Schema<a class="headerlink" href="#result-database-schema" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>cmonkey-python writes the results of its computation to an SQLite database. This choice was made, because SQLite is a free, open source and portable data store which is available on many systems and has programming interfaces to a large number of programming languages. Another important aspect is that the entire database is stored in a single file, which can be easily copied, archived and analyzed. In this section the database structure and its function is explained in further detail.</p>
+</div>
+<div class="section" id="tables">
+<h2>Tables<a class="headerlink" href="#tables" title="Permalink to this headline">¶</a></h2>
+<p><strong>Note 1:</strong> <em>The tables ending in _stats are only used in the cluster_viewer application and are subject to change.</em></p>
+<p><strong>Note 2:</strong> <em>SQLite is different from other RDBMS in that each table has an implicit column rowid that acts like an auto incremented integer valued primary key. It is normally not shown in the frontend, but we will add it here for clarity</em></p>
+<div class="section" id="run-infos">
+<h3>run_infos<a class="headerlink" href="#run-infos" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-sql"><div class="highlight"><pre><span></span><span class="n">rowid</span>          <span class="nb">int</span>
+<span class="n">start_time</span>     <span class="k">timestamp</span>
+<span class="n">finish_time</span>    <span class="k">timestamp</span>
+<span class="n">num_iterations</span> <span class="nb">int</span>
+<span class="n">last_iteration</span> <span class="nb">int</span>
+<span class="n">organism</span>       <span class="nb">text</span>
+<span class="n">species</span>        <span class="nb">text</span>
+<span class="n">ncbi_code</span>      <span class="nb">int</span>
+<span class="n">num_rows</span>       <span class="nb">int</span>
+<span class="n">num_columns</span>    <span class="nb">int</span>
+<span class="n">num_clusters</span>   <span class="nb">int</span>
+<span class="n">git_sha</span>        <span class="nb">text</span>
+</pre></div>
+</div>
+<p>This table represents the current information about a cmonkey run and only stores a single entry that is continuously updated until a run is finished.</p>
+</div>
+<div class="section" id="row-names-column-names">
+<h3>row_names, column_names<a class="headerlink" href="#row-names-column-names" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-sql"><div class="highlight"><pre><span></span><span class="n">rowid</span>     <span class="nb">int</span>
+<span class="n">order_num</span> <span class="nb">int</span>
+<span class="n">name</span>      <span class="nb">text</span>
+</pre></div>
+</div>
+<p>These two tables are structurally identical. They reflect the structure of the input gene expression matrix, to preserve the order of the rows and columns, their order is stored as well.</p>
+</div>
+<div class="section" id="row-members-column-members">
+<h3>row_members, column_members<a class="headerlink" href="#row-members-column-members" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-sql"><div class="highlight"><pre><span></span><span class="n">rowid</span>     <span class="nb">int</span>
+<span class="n">iteration</span> <span class="nb">int</span>
+<span class="k">cluster</span>   <span class="nb">int</span>
+<span class="n">order_num</span> <span class="nb">int</span>
+</pre></div>
+</div>
+<p>These tables contain the row and column members for each iteration and cluster. The element order_num references an order_num in its respective row_names/column_names table.</p>
+</div>
+<div class="section" id="cluster-stats">
+<h3>cluster_stats<a class="headerlink" href="#cluster-stats" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-sql"><div class="highlight"><pre><span></span><span class="n">rowid</span>     <span class="nb">int</span>
+<span class="n">iteration</span> <span class="nb">int</span>
+<span class="k">cluster</span>   <span class="nb">int</span>
+<span class="n">num_rows</span>  <span class="nb">int</span>
+<span class="n">num_cols</span>  <span class="nb">int</span>
+<span class="n">residual</span>  <span class="nb">decimal</span>
+</pre></div>
+</div>
+<p>Stores the residual values, number of rows and columns for each iteration and cluster.</p>
+</div>
+<div class="section" id="motif-infos">
+<h3>motif_infos<a class="headerlink" href="#motif-infos" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-sql"><div class="highlight"><pre><span></span><span class="n">rowid</span>     <span class="nb">int</span>
+<span class="n">iteration</span> <span class="nb">int</span>
+<span class="k">cluster</span>   <span class="nb">int</span>
+<span class="n">seqtype</span>   <span class="nb">text</span>
+<span class="n">motif_num</span> <span class="nb">int</span>
+<span class="n">evalue</span>    <span class="nb">decimal</span>
+</pre></div>
+</div>
+<p>Basic information about a motif that cmonkey thinks is associated with a specific cluster.</p>
+</div>
+<div class="section" id="meme-motif-sites">
+<h3>meme_motif_sites<a class="headerlink" href="#meme-motif-sites" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-sql"><div class="highlight"><pre><span></span><span class="n">rowid</span>         <span class="nb">int</span>
+<span class="n">motif_info_id</span> <span class="nb">int</span>  <span class="cm">/* references motif_infos.rowid */</span>
+<span class="n">seq_name</span>      <span class="nb">int</span>
+<span class="n">reverse</span>       <span class="nb">boolean</span>
+<span class="k">start</span>         <span class="nb">int</span>
+<span class="n">pvalue</span>        <span class="nb">decimal</span>
+<span class="n">flank_left</span>    <span class="nb">text</span>
+<span class="n">seq</span>           <span class="nb">text</span>
+<span class="n">flank_right</span>   <span class="nb">text</span>
+</pre></div>
+</div>
+<p>Detailed positional MEME information for a motif.</p>
+</div>
+<div class="section" id="motif-annotations">
+<h3>motif_annotations<a class="headerlink" href="#motif-annotations" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-sql"><div class="highlight"><pre><span></span><span class="n">rowid</span>         <span class="nb">int</span>
+<span class="n">motif_info_id</span> <span class="nb">int</span>  <span class="cm">/* references motif_infos.rowid */</span>
+<span class="n">iteration</span>     <span class="nb">int</span>
+<span class="n">gene_num</span>      <span class="nb">int</span>
+<span class="k">position</span>      <span class="nb">int</span>
+<span class="n">reverse</span>       <span class="nb">boolean</span>
+<span class="n">pvalue</span>        <span class="nb">decimal</span>
+</pre></div>
+</div>
+<p>Positional information for a motif that was obtained from MAST.</p>
+</div>
+<div class="section" id="motif-pssm-rows">
+<h3>motif_pssm_rows<a class="headerlink" href="#motif-pssm-rows" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-sql"><div class="highlight"><pre><span></span><span class="n">rowid</span>         <span class="nb">int</span>
+<span class="n">motif_info_id</span> <span class="nb">int</span>  <span class="cm">/* references motif_infos.rowid */</span>
+<span class="n">iteration</span>     <span class="nb">int</span>
+<span class="k">row</span>           <span class="nb">int</span>
+<span class="n">a</span>             <span class="nb">decimal</span>
+<span class="k">c</span>             <span class="nb">decimal</span>
+<span class="k">g</span>             <span class="nb">decimal</span>
+<span class="n">t</span>             <span class="nb">decimal</span>
+</pre></div>
+</div>
+<p>Rows of the PSSM for a motif.</p>
+</div>
+<div class="section" id="global-background">
+<h3>global_background<a class="headerlink" href="#global-background" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-sql"><div class="highlight"><pre><span></span><span class="n">rowid</span>       <span class="nb">int</span>
+<span class="n">subsequence</span> <span class="nb">text</span>
+<span class="n">pvalue</span>      <span class="nb">decimal</span>
+</pre></div>
+</div>
+<p>If the run uses a global background file, this table stores the entries that were generated.</p>
+</div>
+<div class="section" id="statstypes">
+<h3>statstypes<a class="headerlink" href="#statstypes" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-sql"><div class="highlight"><pre><span></span><span class="n">rowid</span>      <span class="nb">int</span>
+<span class="n">category</span>   <span class="nb">text</span>
+<span class="n">name</span>       <span class="nb">text</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="iteration-stats">
+<h3>iteration_stats<a class="headerlink" href="#iteration-stats" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-sql"><div class="highlight"><pre><span></span><span class="n">rowid</span>      <span class="nb">int</span>
+<span class="n">statstype</span>  <span class="nb">int</span>
+<span class="n">iteration</span>  <span class="nb">int</span>
+<span class="n">score</span>      <span class="nb">decimal</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/logo.png" alt="Logo"/>
+    
+    <h1 class="logo logo-name">cmonkey2</h1>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">A machine-learning based method for clustering</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=baliga-lab&repo=cmonkey2&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="walkthrough.html">Walkthrough of a Complete cMonkey2 Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="principles.html">cMonkey Principles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration and Run Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input_format.html">Input File Formats</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Result Database Schema</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tables">Tables</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="input_format.html" title="previous chapter">Input File Formats</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Wei-ju Wu.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/database_schema.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/baliga-lab/cmonkey2" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

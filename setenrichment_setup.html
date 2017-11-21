@@ -1,0 +1,196 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Set Enrichment Setup &#8212; cmonkey2 1.2.6 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.2.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Visualize Results in cMonkey2 Viewer" href="cm2view.html" />
+    <link rel="prev" title="MEME Setup" href="meme_setup.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="set-enrichment-setup">
+<h1>Set Enrichment Setup<a class="headerlink" href="#set-enrichment-setup" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="how-to-setup-set-enrichment">
+<h2>How to setup set enrichment<a class="headerlink" href="#how-to-setup-set-enrichment" title="Permalink to this headline">¶</a></h2>
+<p>Set Enrichment is an optional scoring mechanism where the user can provide input files containing genes that are grouped in sets.</p>
+<div class="section" id="input-file-formats">
+<h3>Input file Formats<a class="headerlink" href="#input-file-formats" title="Permalink to this headline">¶</a></h3>
+<p>Supported set file formats are either JSON or CSV.</p>
+<p>The JSON format is as follows:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>{
+    &quot;set1&quot;: [&quot;&lt;gene1&gt;&quot;, &quot;&lt;gene2&gt;&quot;, ...],
+    &quot;set2&quot;: [&quot;&lt;gene1&gt;&quot;, &quot;&lt;gene2&gt;&quot;, ...],
+    ...
+}
+</pre></div>
+</div>
+<p>The CSV format is specified like this:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>set1,&lt;gene1&gt;;&lt;gene2&gt;;...
+set2,&lt;gene1&gt;;&lt;gene2&gt;;...
+</pre></div>
+</div>
+</div>
+<div class="section" id="configuration">
+<h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h3>
+<p>Users who want to use the set enrichment function need to specify it in a custom pipeline file</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>{
+    &quot;row-scoring&quot;: {
+        &quot;id&quot;: &quot;combiner&quot;,
+        &quot;function&quot;: { &quot;module&quot;: &quot;cmonkey.scoring&quot;, &quot;class&quot;: &quot;ScoringFunctionCombiner&quot; },
+        &quot;args&quot;: {
+            &quot;functions&quot;: [
+                { &quot;id&quot;: &quot;Rows&quot;,
+                    &quot;function&quot;: { &quot;module&quot;: &quot;cmonkey.microarray&quot;, &quot;class&quot;: &quot;RowScoringFunction&quot; }
+                },
+                { &quot;id&quot;: &quot;SetEnrichment&quot;,
+                    &quot;function&quot;: { &quot;module&quot;: &quot;cmonkey.set_enrichment&quot;, &quot;class&quot;: &quot;ScoringFunction&quot; }
+                },
+                ...
+            ]
+        }
+    },
+    ...
+}
+</pre></div>
+</div>
+<p>In addition, the user needs to provide the Enrichment settings in an .ini file:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[SetEnrichment]
+schedule = 1,7
+scaling_rvec=seq(1e-5, 0.5, length=num_iterations*3/4)
+set_types = settype1
+
+[SetEnrichment-settype1]
+set_file = example_data/eco/eco-merged-set.json
+weight = 1.0
+</pre></div>
+</div>
+<p>As shown, the <code class="docutils literal"><span class="pre">SetEnrichment</span></code> section specifies the schedule and the scaling within the row scoring functions as well as a single set type. The user can specify any number of set types, by providing a list of names in the set_types setting, separated by comma. Set type specific settings are then made in the section <code class="docutils literal"><span class="pre">&quot;SetEnrichment-&quot;</span></code>, currently these are the set file and the weight that indicates the percentage that scoring on a set type contributes to set enrichment scoring.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/logo.png" alt="Logo"/>
+    
+    <h1 class="logo logo-name">cmonkey2</h1>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">A machine-learning based method for clustering</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=baliga-lab&repo=cmonkey2&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="walkthrough.html">Walkthrough of a Complete cMonkey2 Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="principles.html">cMonkey Principles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration and Run Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input_format.html">Input File Formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="database_schema.html">Result Database Schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="meme_setup.html">MEME Setup</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Set Enrichment Setup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-setup-set-enrichment">How to setup set enrichment</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cm2view.html">Visualize Results in cMonkey2 Viewer</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="meme_setup.html" title="previous chapter">MEME Setup</a></li>
+      <li>Next: <a href="cm2view.html" title="next chapter">Visualize Results in cMonkey2 Viewer</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Wei-ju Wu.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/setenrichment_setup.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/baliga-lab/cmonkey2" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

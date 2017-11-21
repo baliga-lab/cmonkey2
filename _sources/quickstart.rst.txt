@@ -30,4 +30,7 @@ The browser should display something similar to this:
 
 .. image:: _static/cm2view-screenshot-01.png
 
+After cmonkey2 has finished the run, the results will be available in the ``out`` directory:
 
+  * ``ratios.tsv.gz`` - the normalized input matrix
+  * ``cmonkey_run.db`` - the results of the run as a sqlite3 database file

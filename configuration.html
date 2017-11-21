@@ -1,0 +1,227 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Configuration and Run Options &#8212; cmonkey2 1.2.6 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.2.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="cMonkey Principles" href="principles.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="configuration-and-run-options">
+<h1>Configuration and Run Options<a class="headerlink" href="#configuration-and-run-options" title="Permalink to this headline">¶</a></h1>
+<p>cMonkey<sub>2</sub> retrieves its configuration parameters through 2 mechanisms:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>a hierarchy of configuration files</li>
+<li>command line options</li>
+</ol>
+</div></blockquote>
+<p>When the application is started, it will load its default configuration file <code class="docutils literal"><span class="pre">default.ini</span></code>. It is recommended to leave the settings in this file unmodified.</p>
+<p>Default configuration settings may be overridden by the user with a custom (set of) configuration file(s) and providing the <code class="docutils literal"><span class="pre">--config</span> <span class="pre">&lt;config</span> <span class="pre">file</span> <span class="pre">1&gt;</span> <span class="pre">&lt;config</span> <span class="pre">file</span> <span class="pre">2&gt;...</span></code> command-line option. Only the settings that should be changed need to be provided. Note that it is possible to specify multiple configuration files. In this case, the settings contained in the separate configuration files will be merged.</p>
+<p>Some parameters can also be provided on the command line. In general, the settings in the user provided configuration file override the default parameters and command line parameters override configuration file parameters.</p>
+<div class="section" id="command-line-options">
+<h2>Command line options<a class="headerlink" href="#command-line-options" title="Permalink to this headline">¶</a></h2>
+<p>A current list of available command line options and their meaning in <code class="docutils literal"><span class="pre">cmonkey.py</span></code> can be retrieved by entering</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>cmonkey2 --help
+</pre></div>
+</div>
+</div>
+<div class="section" id="configuration-ini-files">
+<h2>Configuration (.ini) files<a class="headerlink" href="#configuration-ini-files" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal"><span class="pre">cmonkey.py</span></code> uses <code class="docutils literal"><span class="pre">.ini</span></code> files as a generic configuration mechanism for global and scoring specific settings. Global settings are defined in the <code class="docutils literal"><span class="pre">[General]</span></code>, <code class="docutils literal"><span class="pre">[Membership]</span></code> and <code class="docutils literal"><span class="pre">[Scoring]</span></code> sections while each scoring function can implement its own set of specific configuration settings. The specific sections for each scoring functions are typically named after the name of the scoring functions.</p>
+</div>
+<div class="section" id="useful-configuration-constructs">
+<h2>Useful configuration constructs<a class="headerlink" href="#useful-configuration-constructs" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="scheduling">
+<h3>Scheduling<a class="headerlink" href="#scheduling" title="Permalink to this headline">¶</a></h3>
+<p>Scheduling is a central part of cMonkey<sub>2</sub>. It defines in which iterations certain parts of the scoring algorithm will be active. For example, MEME is not run in every iteration, because its invocation is very costly. Instead, it is usually defined to run every 100 iterations or so. In order to define MEME to run every 100 iterations starting from iteration 300, we would define it like this:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[MEME]
+schedule=300:100
+</pre></div>
+</div>
+<p>Or the user might only want to call MEME in iteration 42:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[MEME]
+schedule=42
+</pre></div>
+</div>
+<p>We can define even more flexible schedules by combining a set of sub-schedules within a schedule by separating the sub-schedules with the ‘<code class="docutils literal"><span class="pre">:</span></code>’ character.</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[MEME]
+schedule=15:42:300,100
+</pre></div>
+</div>
+<p>The above schedule says “run MEME in iteration 15, 42 and starting from 300, every 100 iterations”. These principles can be applied to any setting that defines a schedule, e.g. network scoring, row scoring etc.</p>
+</div>
+<div class="section" id="scaling">
+<h3>Scaling<a class="headerlink" href="#scaling" title="Permalink to this headline">¶</a></h3>
+<p>The user can specify the strength of the contribution of each scoring module’s scores to in each iteration. This can be done through the scaling setting. Currently two ways are allowed:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><code class="docutils literal"><span class="pre">scaling_const</span></code> specifies a constant weight, given as a number in each iteration over the entire time of the run</li>
+<li><code class="docutils literal"><span class="pre">scaling_rvec</span></code> allows the user to specify an R expression that can use the num_iterations variable to generate a vector of weights for each iteration</li>
+</ol>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="scoring-pipeline-configuration-json-files">
+<h2>Scoring pipeline configuration (.json) files<a class="headerlink" href="#scoring-pipeline-configuration-json-files" title="Permalink to this headline">¶</a></h2>
+<p>By default, cmonkey uses the default_pipeline.json file to setup a standard scoring pipeline. Users can choose to override the scoring functions used (e.g. for using user-defined scoring functions) by providing their own configuration files.</p>
+<p>The general structure of a pipeline configuration file is as documented below:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>{
+  &quot;row-scoring&quot;: {
+    &quot;id&quot;: &quot;combiner&quot;,
+    &quot;function&quot;: { &quot;module&quot;: &quot;cmonkey.scoring&quot;, &quot;class&quot;: &quot;ScoringFunctionCombiner&quot; },
+    &quot;args&quot;: {
+      &quot;functions&quot;: [
+        { &quot;id&quot;: &quot;Rows&quot;,
+          &quot;function&quot;: { &quot;module&quot;: &quot;cmonkey.microarray&quot;, &quot;class&quot;: &quot;RowScoringFunction&quot; }
+        },
+        ...
+      ]
+    }
+   },
+   &quot;column-scoring&quot;: { &quot;id&quot;: &quot;Columns&quot;,
+                       &quot;function&quot;: { &quot;module&quot;: &quot;cmonkey.scoring&quot;,
+                                     &quot;class&quot;: &quot;ColumnScoringFunction&quot;} }
+ }
+</pre></div>
+</div>
+<p>The current version of the software is tested using a combiner function for row scoring and and a single scoring function for column scoring and this is the recommended setup. It is left to the users to pick the set of scoring functions most suitable to the problem and to provide this in their own .json files. With the –pipeline switch, the the path to the user-defined configuration file can be specified on the command line.</p>
+</div>
+<div class="section" id="tricky-topics">
+<h2>Tricky topics<a class="headerlink" href="#tricky-topics" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="the-cluster-is-scored-very-good-but-there-are-no-motifs">
+<h3>The cluster is scored very good, but there are no motifs<a class="headerlink" href="#the-cluster-is-scored-very-good-but-there-are-no-motifs" title="Permalink to this headline">¶</a></h3>
+<p>cmonkey2 will not run MEME if the number of unique sequences for a cluster is less than a certain threshold value. This value is by default configured as</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>[Membership]
+...
+min_cluster_rows_allowed = 3
+</pre></div>
+</div>
+<p>If this hides good motifs that otherwise should be there, this number can be set to a lower value to ensure MEME is run on these cluster sequences.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/logo.png" alt="Logo"/>
+    
+    <h1 class="logo logo-name">cmonkey2</h1>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">A machine-learning based method for clustering</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=baliga-lab&repo=cmonkey2&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="walkthrough.html">Walkthrough of a Complete cMonkey2 Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="principles.html">cMonkey Principles</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration and Run Options</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#command-line-options">Command line options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-ini-files">Configuration (.ini) files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#useful-configuration-constructs">Useful configuration constructs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scoring-pipeline-configuration-json-files">Scoring pipeline configuration (.json) files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tricky-topics">Tricky topics</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="principles.html" title="previous chapter">cMonkey Principles</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Wei-ju Wu.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/configuration.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/baliga-lab/cmonkey2" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

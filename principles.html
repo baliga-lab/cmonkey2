@@ -1,0 +1,188 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>cMonkey Principles &#8212; cmonkey2 1.2.6 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.2.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Walkthrough of a Complete cMonkey2 Run" href="walkthrough.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="cmonkey-principles">
+<h1>cMonkey Principles<a class="headerlink" href="#cmonkey-principles" title="Permalink to this headline">¶</a></h1>
+<p>In order to use cMonkey for a computation, a user needs to setup a <strong>cMonkey run</strong>. A run is a set of specific input data and configuration parameters and a set of scoring algorithms that are activated at certain iterations and combined using user-specified weights.</p>
+<p>cMonkey Python supports the user by providing the CMonkeyRun class which contains a framework for executing a run. The user can override certain configuration parameters or its methods to customize the run.</p>
+<div class="section" id="core-algorithm">
+<h2>Core algorithm<a class="headerlink" href="#core-algorithm" title="Permalink to this headline">¶</a></h2>
+<p>At the heart of the cMonkey algorithm is a scheduler that executes specific scoring modules at user-defined iterations and with a user-defined scoring weight. There are two distinct classes of scoring modules:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Row scoring modules are based on the input matrix’s rows (or genes). The user may define an arbitrary number of row scoring modules in a run.</li>
+<li>Column scoring modules are based on the input matrix’s columns (or conditions). Currently, only a single column scoring function per run is supported</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="anatomy-of-a-scoring-module">
+<h2>Anatomy of a scoring module<a class="headerlink" href="#anatomy-of-a-scoring-module" title="Permalink to this headline">¶</a></h2>
+<p>A cMonkey scoring module is a class that implements the method</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iteration_result</span><span class="p">,</span> <span class="n">reference_matrix</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>which returns a DataMatrix object with</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">num_genes</span></code> rows and <code class="docutils literal"><span class="pre">num_clusters</span></code> columns for a row scoring module where each cell contains the score for each gene-cluster combination</li>
+<li><code class="docutils literal"><span class="pre">num_conditions</span></code> rows and <code class="docutils literal"><span class="pre">num_clusters</span></code> columns for a column scoring module where each cell contains the score for each condition-cluster combination</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="system-defined-scoring-modules">
+<h2>System defined scoring modules<a class="headerlink" href="#system-defined-scoring-modules" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="row-scoring-modules">
+<h3>Row scoring modules<a class="headerlink" href="#row-scoring-modules" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">microarray.RowScoringFunction</span></code>: This is the standard row scoring function</li>
+<li><code class="docutils literal"><span class="pre">network.ScoringFunction</span></code>: Uses a list of weighted networks to calculate scores</li>
+<li><code class="docutils literal"><span class="pre">motif.MemeScoringFunction</span></code>: Calculates scores based on an external tool pipeline of meme and mast</li>
+<li><code class="docutils literal"><span class="pre">motif.WeederScoringFunction</span></code>: Calculates scores based on an external tool pipeline of weeder and mast</li>
+<li><code class="docutils literal"><span class="pre">scoring.ScoringFunctionCombiner</span></code>: A function module that represents an aggregate of one or more functions that are weighted and combined.</li>
+</ul>
+</div></blockquote>
+<p>It is recommended to extend the base class <code class="docutils literal"><span class="pre">scoring.ScoringFunctionBase</span></code>, to automatically inherit access to some useful and commonly used functionality.</p>
+</div>
+<div class="section" id="column-scoring-modules">
+<h3>Column scoring modules<a class="headerlink" href="#column-scoring-modules" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">scoring.ColumnScoringFunction</span></code>: This is the default condition scoring function</li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="how-to-implement-your-own-scoring-module">
+<h2>How to implement your own scoring module<a class="headerlink" href="#how-to-implement-your-own-scoring-module" title="Permalink to this headline">¶</a></h2>
+<p>The simplest way to implement your own scoring module is to derive from <code class="docutils literal"><span class="pre">scoring.ScoringFunctionBase</span></code>. This base class provides all necessary infrastructure for scheduling and basic configuration.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/logo.png" alt="Logo"/>
+    
+    <h1 class="logo logo-name">cmonkey2</h1>
+    
+  </a>
+</p>
+
+
+
+<p class="blurb">A machine-learning based method for clustering</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=baliga-lab&repo=cmonkey2&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="walkthrough.html">Walkthrough of a Complete cMonkey2 Run</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">cMonkey Principles</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#core-algorithm">Core algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#anatomy-of-a-scoring-module">Anatomy of a scoring module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#system-defined-scoring-modules">System defined scoring modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-implement-your-own-scoring-module">How to implement your own scoring module</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="walkthrough.html" title="previous chapter">Walkthrough of a Complete cMonkey<sub>2</sub> Run</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Wei-ju Wu.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/principles.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/baliga-lab/cmonkey2" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

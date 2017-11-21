@@ -1,12 +1,11 @@
 
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Index &#8212; cmonkey2 1.2.6 documentation</title>
+    <title>More Tips for Running, Debugging, Developing &#8212; cmonkey2 1.2.6 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -22,8 +21,9 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="index" title="Index" href="#" />
+    <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Visualize Results in cMonkey2 Viewer" href="cm2view.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -39,11 +39,41 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-
-<h1 id="index">Index</h1>
-
-<div class="genindex-jumpbox">
- 
+  <div class="section" id="more-tips-for-running-debugging-developing">
+<h1>More Tips for Running, Debugging, Developing<a class="headerlink" href="#more-tips-for-running-debugging-developing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="interactive-exploration-of-results">
+<h2>Interactive exploration of results<a class="headerlink" href="#interactive-exploration-of-results" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="via-cm2view">
+<h3>Via cm2view<a class="headerlink" href="#via-cm2view" title="Permalink to this headline">¶</a></h3>
+<p>Run statistics, bicluster statistics, views of individual biclusters, and a network visualization are available using the interactive cMonkey2 viewer.</p>
+</div>
+<div class="section" id="via-ipython-notebook">
+<h3>Via IPython notebook<a class="headerlink" href="#via-ipython-notebook" title="Permalink to this headline">¶</a></h3>
+<p>The IPython interactive Python console enables interactive exploration of cMonkey2 results via an interactive notebook-style interface. This is further facilitated by a cmonkeyobj python module (still in development).</p>
+<p>For an example of what is possible, check out this example IPython notebook.</p>
+<p>Note that cMonkey2 may also be run in an IPython notebook. While this can take a long time, it will also (eventually) enable cMonkey2 input and output to be captured and recalled. We have a preliminary example of this capability here.</p>
+</div>
+</div>
+<div class="section" id="debugging">
+<h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="interactive-debugging">
+<h3>Interactive Debugging<a class="headerlink" href="#interactive-debugging" title="Permalink to this headline">¶</a></h3>
+<p>The IPython interactive Python console also provides a variety features that do not exist in the default Python console. It can be useful for interactive work, debugging, testing, or developing with cmonkey-python. It provides an interactive environment that is similar to the R console for cMonkeyR.</p>
+<p>If either python or ipython are called with the -i switch, cmonkey will remain in the interpreter after running, which can facilitate debugging. This can be combined with cmonkey’s <code class="docutils literal"><span class="pre">--interactive</span></code> switch, e.g.</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>ipython -i bin/cmonkey2 -- --organism hal example_data/hal/halo_ratios5.tsv --interactive.
+</pre></div>
+</div>
+<p>This will initialize the run, but stop before scoring, making the object cmonkey_run available for interactive access.</p>
+</div>
+</div>
+<div class="section" id="data-exchange">
+<h2>Data exchange<a class="headerlink" href="#data-exchange" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li>A utility for importing JSON output into R: <a class="reference external" href="http://cran.r-project.org/web/packages/RJSONIO/index.html">http://cran.r-project.org/web/packages/RJSONIO/index.html</a></li>
+</ul>
+</div></blockquote>
+</div>
 </div>
 
 
@@ -79,7 +109,7 @@
 
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="walkthrough.html">Walkthrough of a Complete cMonkey2 Run</a></li>
@@ -90,13 +120,19 @@
 <li class="toctree-l1"><a class="reference internal" href="meme_setup.html">MEME Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setenrichment_setup.html">Set Enrichment Setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cm2view.html">Visualize Results in cMonkey2 Viewer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="more_tips.html">More Tips for Running, Debugging, Developing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">More Tips for Running, Debugging, Developing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#interactive-exploration-of-results">Interactive exploration of results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#debugging">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-exchange">Data exchange</a></li>
+</ul>
+</li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="cm2view.html" title="previous chapter">Visualize Results in cMonkey2 Viewer</a></li>
   </ul></li>
 </ul>
 </div>
@@ -121,6 +157,9 @@
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
+      |
+      <a href="_sources/more_tips.rst.txt"
+          rel="nofollow">Page source</a>
     </div>
 
     

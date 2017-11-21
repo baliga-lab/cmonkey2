@@ -1,12 +1,11 @@
 
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Index &#8212; cmonkey2 1.2.6 documentation</title>
+    <title>MEME Setup &#8212; cmonkey2 1.2.6 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -22,8 +21,9 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="index" title="Index" href="#" />
+    <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Result Database Schema" href="database_schema.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -39,11 +39,43 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-
-<h1 id="index">Index</h1>
-
-<div class="genindex-jumpbox">
- 
+  <div class="section" id="meme-setup">
+<h1>MEME Setup<a class="headerlink" href="#meme-setup" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="meme-suite-notes">
+<h2>MEME Suite notes<a class="headerlink" href="#meme-suite-notes" title="Permalink to this headline">¶</a></h2>
+<p>The tested and supported MEME versions are 4.3.0, 4.8.x, 4.9.0 and 4.10.x. cmonkey-python can automatically detect the installed version, provided it is in the executable search path. It is recommended to apply all available patches for the used MEME suite to ensure maximum stability. Please see the installation instructions for MEME for further details.</p>
+</div>
+<div class="section" id="installation-script">
+<h2>Installation script<a class="headerlink" href="#installation-script" title="Permalink to this headline">¶</a></h2>
+<p>There is a small shell script that will download, compile and install MEME 4.10.0_2 (the latest as of this writing) in a local <code class="docutils literal"><span class="pre">./progs</span></code> directory, and make symlinks to the relevant tools in the current directory. This will enable local installation without requiring root. To run:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>cmonkey2/tools/install_meme.sh
+</pre></div>
+</div>
+</div>
+<div class="section" id="meme-4-3-0">
+<h2>MEME 4.3.0<a class="headerlink" href="#meme-4-3-0" title="Permalink to this headline">¶</a></h2>
+<p>To install this MEME version, the following procedure was used:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>wget http://ebi.edu.au/ftp/software/MEME/4.3.0/meme_4.3.0.tar.gz
+tar -xvzf meme_4.3.0.tar.gz; cd meme_4.3.0
+./configure --prefix=&lt;your prefix&gt; --enable-dependency-tracking --enable-opt --disable-shared --disable-fast-install --enable-serial --enable-build-libxml2 --enable-build-libxslt --enable-static --with-gnu-ld
+make
+make test
+sudo make install
+</pre></div>
+</div>
+</div>
+<div class="section" id="meme-4-8-x-and-later">
+<h2>MEME 4.8.x and later<a class="headerlink" href="#meme-4-8-x-and-later" title="Permalink to this headline">¶</a></h2>
+<p>Starting from MEME versions 4.8.x, output data formats and switches are slightly different and the settings for building and installation are simpler:</p>
+<div class="highlight-none"><div class="highlight"><pre><span></span>tar -xvzf meme_&lt;version&gt;.tar.gz; cd meme_&lt;version&gt;
+./configure --prefix=&lt;your prefix&gt;
+make
+make test
+sudo make install
+</pre></div>
+</div>
+<p>Place <code class="docutils literal"><span class="pre">&lt;your</span> <span class="pre">prefix&gt;/bin</span></code> in your search path so cmonkey can find the MEME tools. You can of course, set the prefix to be anywhere else, as long as you make sure that the MEME tools can be found in the search path later.</p>
+</div>
 </div>
 
 
@@ -79,7 +111,7 @@
 
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="walkthrough.html">Walkthrough of a Complete cMonkey2 Run</a></li>
@@ -87,16 +119,20 @@
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration and Run Options</a></li>
 <li class="toctree-l1"><a class="reference internal" href="input_format.html">Input File Formats</a></li>
 <li class="toctree-l1"><a class="reference internal" href="database_schema.html">Result Database Schema</a></li>
-<li class="toctree-l1"><a class="reference internal" href="meme_setup.html">MEME Setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="setenrichment_setup.html">Set Enrichment Setup</a></li>
-<li class="toctree-l1"><a class="reference internal" href="cm2view.html">Visualize Results in cMonkey2 Viewer</a></li>
-<li class="toctree-l1"><a class="reference internal" href="more_tips.html">More Tips for Running, Debugging, Developing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MEME Setup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#meme-suite-notes">MEME Suite notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation-script">Installation script</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#meme-4-3-0">MEME 4.3.0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#meme-4-8-x-and-later">MEME 4.8.x and later</a></li>
+</ul>
+</li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="database_schema.html" title="previous chapter">Result Database Schema</a></li>
   </ul></li>
 </ul>
 </div>
@@ -121,6 +157,9 @@
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
+      |
+      <a href="_sources/meme_setup.rst.txt"
+          rel="nofollow">Page source</a>
     </div>
 
     
