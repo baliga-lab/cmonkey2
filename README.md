@@ -8,7 +8,9 @@ This is the Python implementation of the cMonkey algorithm based on the original
 
 ### Documentation
 
-A complete set of documentation for installation and running of cMonkey is on the [wiki](https://github.com/baliga-lab/cmonkey2/wiki). There are also [developer](https://groups.google.com/d/forum/cmonkey-dev) and [user](https://groups.google.com/d/forum/cmonkey-users) discussion groups. 
+A complete set of documentation for installation and running of cMonkey is on the [project's Github Pages](http://baliga-lab.github.io/cmonkey2/).
+
+There are also [developer](https://groups.google.com/d/forum/cmonkey-dev) and [user](https://groups.google.com/d/forum/cmonkey-users) discussion groups. 
 
 ### Contact
 

@@ -223,9 +223,9 @@ class ColumnScoringFunction(ScoringFunctionBase):
     def do_compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""
         return compute_column_scores(self.membership, self.ratios,
-                                     self.num_clusters(), self.config_params, 
+                                     self.num_clusters(), self.config_params,
                                      self.BSCM_obj)
-                                     
+
     def get_BSCM(self):
         """Return the background sampled coherence matrix object"""
         return self.BSCM_obj
@@ -274,8 +274,8 @@ def compute_column_scores(membership, matrix, num_clusters,
                 cluster_column_scores.append(None)
             else:
                 cur_column_scores = BSCM_obj.getPvals(make_submatrix(cluster).row_names, num_cores=num_cores)
-                exp_names = cur_column_scores.keys()
-                exp_scores = np.array(cur_column_scores.values() )
+                exp_names = list(cur_column_scores.keys())
+                exp_scores = np.array(list(cur_column_scores.values()))
                 cluster_column_scores.append((exp_names, exp_scores))
 
     substitution = compute_substitution(cluster_column_scores)
