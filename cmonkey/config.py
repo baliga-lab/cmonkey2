@@ -99,7 +99,7 @@ def set_config_general(config, params):
     params['tmp_dir'] = tmp_dir
     params['pipeline_file'] = config.get('General', 'pipeline_file')
     params['dbfile_name'] = config.get('General', 'dbfile_name')
-    params['db_url'] = config.get('General', 'db_url')
+    params['db_url'] = get_config_str(config, 'General', 'db_url', None)
     params['rsat_base_url'] = config.get('General', 'rsat_base_url')
     params['rsat_features'] = config.get('General', 'rsat_features')
     params['rsat_organism'] = config.get('General', 'rsat_organism')

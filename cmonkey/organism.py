@@ -335,7 +335,17 @@ class RSATOrganismSequenceSource:
             shifted_pairs = [(gene, gene) for gene in valid_genes]
 
         unique_seqs = unique_sequences(shifted_pairs)
-        return {gene: unique_seqs[head] for gene, head in shifted_pairs}
+        result = {}
+        skipped = set()
+        for gene, head in shifted_pairs:
+            if head in unique_seqs:
+                result[gene] = unique_seqs[head]
+            else:
+                skipped.add(head)
+        #return {gene: unique_seqs[head] for gene, head in shifted_pairs}
+        if len(skipped) > 0:
+            logging.warn("%d genes were skipped while reading their sequences from the RSAT files", len(skipped))
+        return result
 
 
 __all__ = ['RSATOrganism', 'Microbe']

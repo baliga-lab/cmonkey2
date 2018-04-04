@@ -60,8 +60,8 @@ class RsatFiles:
             path = os.path.join(self.dirname, contig + '.tab')
         else:
             path = os.path.join(self.dirname, organism + '_' + contig)
-        with open(path) as infile:
-            seqstr = infile.read().upper().decode('utf-8')
+        with open(path, 'r') as infile:
+            seqstr = infile.read().upper()
             return join_contig_sequence(seqstr)
 
 
