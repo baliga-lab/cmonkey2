@@ -391,14 +391,14 @@ class ClusterViewerApp:
             elapsed_hours = int(elapsed_secs / 3600)
             elapsed_mins = int((elapsed_secs - (elapsed_hours * 3600)) / 60)
             result['elapsedTime'] = "(%d hours %d minutes)" % (elapsed_hours, elapsed_mins)
-            result['startTime'] = str(runinfo.start_time)
             result['finishTime'] = str(runinfo.finish_time)
             result['finished'] = True
-            result['species'] = runinfo.species
-            result['organism'] = runinfo.organism
-            result['numGenes'] = runinfo.num_rows
-            result['numConditions'] = runinfo.num_columns
-            result['numClusters'] = runinfo.num_clusters
+        result['startTime'] = str(runinfo.start_time)
+        result['species'] = runinfo.species
+        result['organism'] = runinfo.organism
+        result['numGenes'] = runinfo.num_rows
+        result['numConditions'] = runinfo.num_columns
+        result['numClusters'] = runinfo.num_clusters
 
         return result
 
