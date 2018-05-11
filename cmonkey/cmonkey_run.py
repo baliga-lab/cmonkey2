@@ -70,12 +70,12 @@ class CMonkeyRun:
         self.config_params = args_in
         self.ratios = ratios
         if args_in['resume']:
-            self.row_seeder = memb.make_db_row_seeder(self.__dbsession())
+            self.row_seeder = memb.make_db_row_seeder(self.dbsession())
 
             if args_in['new_data_file']:  # data file has changed
                 self.column_seeder = microarray.seed_column_members
             else:
-                self.column_seeder = memb.make_db_column_seeder(self.__dbsession())
+                self.column_seeder = memb.make_db_column_seeder(self.dbsession())
         else:
             self.row_seeder = memb.make_kmeans_row_seeder(args_in['num_clusters'])
             self.column_seeder = microarray.seed_column_members
@@ -99,13 +99,13 @@ class CMonkeyRun:
             self.__session.close()
             self.__session = None
 
-    def __dbsession(self):
+    def dbsession(self):
         if self.__session is None:
             self.__session = cm2db.make_session_from_config(self.config_params)
         return self.__session
 
     def __create_output_database(self):
-        session = self.__dbsession()
+        session = self.dbsession()
         row_names = [cm2db.RowName(order_num=index, name=self.ratios.row_names[index])
                      for index in xrange(len(self.ratios.row_names))]
         session.add_all(row_names)
@@ -144,7 +144,7 @@ class CMonkeyRun:
                 # write complete result into a cmresults.tsv
                 path =  os.path.join(self.config_params['output_dir'], 'cmresults-0000.tsv.bz2')
                 with bz2.BZ2File(path, 'w') as outfile:
-                    debug.write_iteration(self.__dbsession, outfile, 0,
+                    debug.write_iteration(self.dbsession(), outfile, 0,
                                           self.config_params['num_clusters'], self.config_params['output_dir'])
 
         return self.__membership
@@ -279,7 +279,7 @@ class CMonkeyRun:
                                         self.ratios, synonyms,
                                         self.config_params['fasta_file'])
 
-        session = self.__dbsession()
+        session = self.dbsession()
         network_stats_types = [cm2db.StatsType(category='network', name=network.name)
                                for network in organism.networks()]
         sequence_stats_types = [cm2db.StatsType(category='seqtype', name=sequence_type)
@@ -360,10 +360,7 @@ class CMonkeyRun:
         # TODO: for now, we always assume the top level of row scoring is a combiner
         class_ = get_function_class(self.config_params['pipeline']['row-scoring']['function'])
         if class_.__name__ == 'ScoringFunctionCombiner':
-            funs = [get_function_class(fun['function'])(self.organism(),
-                                                       self.membership(),
-                                                       self.ratios,
-                                                       self.config_params)
+            funs = [get_function_class(fun['function'])(fun['id'], self)
                     for fun in self.config_params['pipeline']['row-scoring']['args']['functions']]
             row_scoring = class_(self.organism(), self.membership(), funs, self.config_params)
         else:
@@ -371,8 +368,8 @@ class CMonkeyRun:
 
         # column scoring
         class_ = get_function_class(self.config_params['pipeline']['column-scoring']['function'])
-        col_scoring = class_(self.organism(), self.membership(), self.ratios,
-                             config_params=self.config_params)
+        colfun_id = self.config_params['pipeline']['column-scoring']['id']
+        col_scoring = class_(colfun_id, self)
         return row_scoring, col_scoring
 
     def use_dummy_organism(self):
@@ -422,7 +419,7 @@ class CMonkeyRun:
         self.report_params()
         self.write_start_info()
 
-        session = self.__dbsession()
+        session = self.dbsession()
         row_scoring_stats_types = [cm2db.StatsType(category='scoring', name=scoring_function.id)
                                    for scoring_function in self.row_scoring.scoring_functions]
         session.add_all(row_scoring_stats_types)
@@ -448,7 +445,7 @@ class CMonkeyRun:
             return matrix.residual()
 
     def write_memberships(self, iteration):
-        session = self.__dbsession()
+        session = self.dbsession()
         for cluster in range(1, self.config_params['num_clusters'] + 1):
             column_names = self.membership().columns_for_cluster(cluster)
             column_members = [cm2db.ColumnMember(iteration=iteration, cluster=cluster, order_num=order_num)
@@ -468,7 +465,7 @@ class CMonkeyRun:
 
         if 'motifs' in iteration_result:
             motifs = iteration_result['motifs']
-            session = self.__dbsession()
+            session = self.dbsession()
 
             for seqtype in motifs:
                 for cluster in motifs[seqtype]:
@@ -515,7 +512,7 @@ class CMonkeyRun:
         fuzzy_coeff = iteration_result['fuzzy-coeff'] if 'fuzzy-coeff' in iteration_result else 0.0
 
         residuals = []
-        session = self.__dbsession()
+        session = self.dbsession()
         for cluster in range(1, self.config_params['num_clusters'] + 1):
             row_names = self.membership().rows_for_cluster(cluster)
             column_names = self.membership().columns_for_cluster(cluster)
@@ -561,7 +558,7 @@ class CMonkeyRun:
             # not matter
             ncbi_code_int = 0
 
-        session = self.__dbsession()
+        session = self.dbsession()
         session.add(cm2db.RunInfo(start_time=datetime.now(), num_iterations=self.config_params['num_iterations'],
                                   organism=self.organism().code, species=self.organism().species(),
                                   ncbi_code=ncbi_code_int, num_rows=self.ratios.num_rows,
@@ -571,7 +568,7 @@ class CMonkeyRun:
         session.commit()
 
     def update_iteration(self, iteration):
-        session = self.__dbsession()
+        session = self.dbsession()
         session.query(cm2db.RunInfo).first().last_iteration = iteration
         session.commit()
 
@@ -580,12 +577,12 @@ class CMonkeyRun:
             inform the '--resume' flag
         """
         try:
-            return self.__dbsession().query(cm2db.RunInfo).first().last_iteration
+            return self.dbsession().query(cm2db.RunInfo).first().last_iteration
         except:
             return 1
 
     def write_finish_info(self):
-        session = self.__dbsession()
+        session = self.dbsession()
         session.query(cm2db.RunInfo).first().finish_time = datetime.now()
         session.commit()
 
@@ -646,7 +643,7 @@ class CMonkeyRun:
         if 'dump_results' in self.config_params['debug'] and (iteration == 1 or
                                                               (iteration % self.config_params['debug_freq'] == 0)):
             # write complete result into a cmresults.tsv
-            session = self.__dbsession()
+            session = self.dbsession()
             path =  os.path.join(self.config_params['output_dir'], 'cmresults-%04d.tsv.bz2' % iteration)
             with bz2.BZ2File(path, 'w') as outfile:
                 debug.write_iteration(session, outfile, iteration,
@@ -719,7 +716,7 @@ class CMonkeyRun:
             # default behaviour:
             # always write complete result into a cmresults.tsv for R/cmonkey
             # compatibility
-            session = self.__dbsession()
+            session = self.dbsession()
             path =  os.path.join(self.config_params['output_dir'], 'cmresults-postproc.tsv.bz2')
             with bz2.BZ2File(path, 'w') as outfile:
                 debug.write_iteration(session, outfile,

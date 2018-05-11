@@ -261,7 +261,7 @@ function drawFuzzyCoeffGraph(selector, titleSize, iterations, series) {
             xAxis: {categories: iterations, tickInterval: 30},
             yAxis: { title: { text: 'fuzzy coeff' } },
             series: [{name: 'fuzzy coeff', data: series}]
-        });    
+        });
 }
 
 function updateRunStatus() {
@@ -286,8 +286,8 @@ function updateRunStatus() {
 
     // update all stats graphs
     $.ajax({ url: '/api/iterations', success: function(data) {
-                 if (data.length > iterations.length) {
-                     iterations = data;
+                 if (data.iterations.length > iterations.length) {
+                     iterations = data.iterations;
                      reloadResidualGraphValues('#residual-graph', iterations);
                      reloadClusterMemberGraphValues('#cluster-member-graph', iterations);
                      reloadRunlogGraphValues('#runlog-graph');

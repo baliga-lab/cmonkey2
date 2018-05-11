@@ -157,31 +157,32 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         self.__sequence_filters = [unique_filter, get_remove_low_complexity_filter(self.meme_suite),
                                    get_remove_atgs_filter(search_distance)]
 
-    def __init__(self, id, organism, membership, ratios, seqtype, config_params=None):
+    def __init__(self, function_id, cmrun, seqtype):
         """creates a ScoringFunction"""
-        scoring.ScoringFunctionBase.__init__(self, id, organism, membership,
-                                             ratios, config_params=config_params)
+        scoring.ScoringFunctionBase.__init__(self, function_id, cmrun)
         # attributes accessible by subclasses
         self.seqtype = seqtype
-        self.__setup_meme_suite(config_params)
-        self.num_motif_func = util.get_iter_fun(config_params['MEME'], "nmotifs",
-                                                config_params['num_iterations'])
+        self.__setup_meme_suite(cmrun.config_params)
+        self.num_motif_func = util.get_iter_fun(cmrun.config_params['MEME'], "nmotifs",
+                                                cmrun.config_params['num_iterations'])
 
         self.__last_motif_infos = None
         self.__last_iteration_result = {}
         self.all_pvalues = None
         self.last_result = None
 
-        self.update_log = scoring.RunLog("motif-score-" + seqtype, config_params)
-        self.motif_log = scoring.RunLog("motif-motif-" + seqtype, config_params)
+        self.update_log = scoring.RunLog(("%s-score-" % function_id) + seqtype,
+                                         cmrun.dbsession(), cmrun.config_params)
+        self.motif_log = scoring.RunLog(("%s-motif-" % function_id) + seqtype,
+                                        cmrun.dbsession(), cmrun.config_params)
 
-        used_genes = sorted(ratios.row_names)
-        self.used_seqs = organism.sequences_for_genes_scan(
+        used_genes = sorted(cmrun.ratios.row_names)
+        self.used_seqs = cmrun.organism().sequences_for_genes_scan(
             used_genes, seqtype=self.seqtype)
 
         logging.debug("building reverse map...")
         start_time = util.current_millis()
-        self.reverse_map = self.__build_reverse_map(ratios)
+        self.reverse_map = self.__build_reverse_map(cmrun.ratios)
         logging.debug("reverse map built in %d ms.",
                       util.current_millis() - start_time)
 
@@ -468,10 +469,9 @@ def compute_cluster_score(params):
 class MemeScoringFunction(MotifScoringFunctionBase):
     """Scoring function for motifs"""
 
-    def __init__(self, organism, membership, ratios, config_params=None):
+    def __init__(self, function_id, cmrun):
         """creates a ScoringFunction"""
-        MotifScoringFunctionBase.__init__(self, "Motifs", organism, membership,
-                                          ratios, 'upstream', config_params)
+        MotifScoringFunctionBase.__init__(self, function_id, cmrun, 'upstream')
 
     def initialize(self, args):
         """process additional parameters"""
@@ -485,10 +485,9 @@ class MemeScoringFunction(MotifScoringFunctionBase):
 class WeederScoringFunction(MotifScoringFunctionBase):
     """Motif scoring function that runs Weeder instead of MEME"""
 
-    def __init__(self, organism, membership, ratios, config_params=None):
+    def __init__(self, function_id, cmrun):
         """creates a scoring function"""
-        MotifScoringFunctionBase.__init__(self, "Motifs", organism, membership, ratios,
-                                          'upstream', config_params)
+        MotifScoringFunctionBase.__init__(self, function_id, cmrun, 'upstream')
 
     def check_requirements(self):
         freqfile_dir = self.config_params['Weeder']['freqfile_dir']

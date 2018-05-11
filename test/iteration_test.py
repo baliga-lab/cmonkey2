@@ -63,6 +63,7 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
 
         self.ratio_matrix = dm.create_from_csv('example_data/hal/halo_ratios5.tsv',
                                                filters=[dm.nochange_filter, dm.center_scale_filter])
+        self.ratios = self.ratio_matrix
         self.organism = testutil.make_halo(self.search_distances, self.scan_distances,
                                            self.ratio_matrix)
         self.config_params = {'memb.min_cluster_rows_allowed': 3,
@@ -95,28 +96,21 @@ class IterationTest(unittest.TestCase):  # pylint: disable-msg=R0904
     def test_row_scoring(self):
         # tests the row scoring by itself, which combines scoring and fixing
         # extreme values
-        row_scoring = microarray.RowScoringFunction(self.organism,
-            self.membership, self.ratio_matrix,
-            config_params=self.config_params)
+        row_scoring = microarray.RowScoringFunction("Rows", self)
         rowscores = row_scoring.compute(self.iteration_result)
         ref_rowscores = read_matrix('testdata/rowscores_fixed.tsv')
         self.assertTrue(check_matrix_values(rowscores, ref_rowscores))
 
     def test_col_scoring(self):
         # tests the column scoring by itself
-        colscoring = scoring.ColumnScoringFunction(self.organism,
-            self.membership, self.ratio_matrix,
-            config_params=self.config_params)
+        colscoring = scoring.ColumnScoringFunction("Columns", self)
         colscores = colscoring.compute(self.iteration_result)
         ref_colscores = read_matrix('testdata/colscores_fixed.tsv')
         self.assertTrue(check_matrix_values(colscores, ref_colscores))
 
     def test_net_scoring(self):
         #tests the network scoring by itself#
-        network_scoring = nw.ScoringFunction(self.organism,
-                                             self.membership,
-                                             self.ratio_matrix,
-                                             config_params=self.config_params)
+        network_scoring = nw.ScoringFunction("Networks", self)
         netscores = network_scoring.compute(self.iteration_result).sorted_by_row_name()
         ref_netscores = read_matrix('testdata/netscores_fixed.tsv')
         self.assertTrue(check_matrix_values(netscores, ref_netscores))

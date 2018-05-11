@@ -133,6 +133,21 @@ class GlobalBackground(Base):
         return "GlobalBackground(subsequence: %s, pvalue: %f)" % (self.subsequence, self.pvalue)
 
 
+class RunLog(Base):
+    __tablename__ = 'run_logs'
+
+    rowid = Column(Integer, primary_key=True)
+    logtype = Column(String(30))
+    iteration = Column(Integer)
+    active = Column(Integer)
+    scaling = Column(Float)
+
+    def __repr__(self):
+        return "RunLog(logtype: %d, iteration: %d, active: %d, scaling: %f)" % (self.logtype,
+                                                                                self.iteration,
+                                                                                self.active,
+                                                                                self.scaling)
+
 class MotifInfo(Base):
     __tablename__ = 'motif_infos'
 

@@ -178,13 +178,12 @@ def read_sets_csv(infile, sep1=',', sep2=';'):
 
 class ScoringFunction(scoring.ScoringFunctionBase):
     """Set enrichment scoring function"""
-    def __init__(self, organism, membership, ratios, config_params=None):
+    def __init__(self, function_id, cmrun):
         """Create scoring function instance"""
-        scoring.ScoringFunctionBase.__init__(self, "SetEnrichment", organism, membership,
-                                             ratios, config_params)
+        scoring.ScoringFunctionBase.__init__(self, function_id, cmrun)
         self.__set_types = read_set_types(config_params, organism.thesaurus(),
                                           ratios.row_names)
-        self.run_log = scoring.RunLog('set_enrichment', config_params)
+        self.run_log = scoring.RunLog(function_id, cmrun.dbsession(), cmrun.config_params)
 
     def bonferroni_cutoff(self):
         """Bonferroni cutoff value"""

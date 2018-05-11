@@ -192,12 +192,12 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     since the scores are computed through weighted addition rather than
     quantile normalization"""
 
-    def __init__(self, organism, membership, ratios, config_params):
+    def __init__(self, function_id, cmrun):
         """Create scoring function instance"""
-        scoring.ScoringFunctionBase.__init__(self, "Networks", organism, membership,
-                                             ratios, config_params)
+        scoring.ScoringFunctionBase.__init__(self, function_id, cmrun)
         self.__networks = None
-        self.run_log = scoring.RunLog("network", config_params)
+        self.run_log = scoring.RunLog(function_id, cmrun.dbsession(),
+                                      self.config_params)
 
     def initialize(self, args):
         """process additional parameters"""

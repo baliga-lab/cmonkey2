@@ -16,6 +16,8 @@ import cmonkey.BSCM as BSCM
 import numpy as np
 import gc
 
+import cmonkey.database as cm2db
+
 # Python2/Python3 compatibility
 try:
     import cPickle as pickle
@@ -55,25 +57,29 @@ class RunLog:
     It simply appends log entries to a file to keep I/O and database load
     low.
     """
-    def __init__(self, name, config_params):
+    def __init__(self, name, session, config_params):
         self.name = name
-        self.output_file = '%s/%s.runlog' % (config_params['output_dir'], name)
+        self.session = session
 
     def log(self, iteration, was_active, scaling):
-        with open(self.output_file, 'a') as logfile:
-            logfile.write('%d:%d:%f\n' % (iteration, 1 if was_active else 0, scaling))
+        # Write to database. Note: This can easily lock up sqlite
+        # That's why I don't call the commit method here to make
+        # it getting called less often
+        active_value = 1 if was_active else 0
+        entry = cm2db.RunLog(logtype=self.name, iteration=iteration,
+                             active=active_value, scaling=scaling)
+        self.session.add(entry)
 
 
 class ScoringFunctionBase:
     """Base class for scoring functions"""
 
-    def __init__(self, id, organism, membership, ratios,
-                 config_params={}):
+    def __init__(self, id, cmrun):
         """creates a function instance"""
         self.id = id
-        self.organism = organism
-        self.membership = membership
-        self.ratios = ratios
+        self.organism = cmrun.organism()
+        self.membership = cmrun.membership()
+        self.ratios = cmrun.ratios
 
         # the cache_result parameter can be used by scoring functions
         # or users to fine-tune the behavior during non-compute operations
@@ -81,8 +87,8 @@ class ScoringFunctionBase:
         # state. In general, setting this to True will be the best, but
         # if your environment has little memory, set this to False
         self.cache_result = True
-        self.config_params = config_params
-        if config_params is None:
+        self.config_params = cmrun.config_params
+        if self.config_params is None:
             raise Exception('NO CONFIG PARAMS !!!')
 
     def check_requirements(self):
@@ -208,17 +214,18 @@ class ColumnScoringFunction(ScoringFunctionBase):
     function output format and can therefore not be combined in
     a generic way (the format is |condition x cluster|)"""
 
-    def __init__(self, organism, membership, ratios, config_params):
+    def __init__(self, function_id, cmrun):
         """create scoring function instance"""
-        ScoringFunctionBase.__init__(self, "Columns", organism, membership,
-                                     ratios, config_params=config_params)
+        ScoringFunctionBase.__init__(self, function_id, cmrun)
 
         #BSCM.  Danziger et al. 2015
         self.BSCM_obj = None
-        if config_params['use_BSCM']:
-            self.BSCM_obj = BSCM.BSCM(ratios, verbose=False, useChi2=config_params['use_chi2']) #How to pass verbose and so on? More parameters?
+        if cmrun.config_params['use_BSCM']:
+            # How to pass verbose and so on? More parameters?
+            self.BSCM_obj = BSCM.BSCM(ratios, verbose=False,
+                                      useChi2=cmrun.config_params['use_chi2'])
             #Note: Ratios normalized upstream during loading by config.py module
-        self.run_log = RunLog("column_scoring", config_params)
+        self.run_log = RunLog(function_id, cmrun.dbsession(), cmrun.config_params)
 
     def do_compute(self, iteration_result, ref_matrix=None):
         """compute method, iteration is the 0-based iteration number"""

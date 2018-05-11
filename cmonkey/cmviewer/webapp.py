@@ -411,7 +411,8 @@ class ClusterViewerApp:
         finally:
             if session is not None:
                 session.close()
-        return result
+        return {"iterations": result}
+
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
@@ -448,17 +449,19 @@ class ClusterViewerApp:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def runlog(self):
-        global outdir
-        def read_runlog(fname):
-            with open(fname) as infile:
-                entries = list(map(lambda l: 0.0 if l[1] == '1' else float(l[2]),
-                                   [line.strip().split(':') for line in infile]))
-            return {'name': os.path.basename(fname).replace('.runlog', ''), 'data': entries}
-
-        return [read_runlog(fname)
-                for fname in glob.glob(os.path.join(outdir, '*.runlog'))
-                if os.path.basename(fname) not in ['row_scoring.runlog',
-                                                   'column_scoring.runlog']]
+        result = defaultdict(list)
+        session = dbsession()
+        try:
+            res = session.query(cm2db.RunLog).all()
+            for row in res:
+                if row.active == 1:
+                    result[row.logtype].append(row.scaling)
+                else:
+                    result[row.logtype].append(0.0)
+        finally:
+            session.close()
+        return [{"name": key, "data": values} for key, values in result.items()
+                if key not in ['Rows', 'Columns']]
 
     @cherrypy.expose
     @cherrypy.tools.json_out()
