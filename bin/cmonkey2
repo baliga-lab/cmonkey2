@@ -9,6 +9,7 @@ import os.path
 import cmonkey.cmonkey_run as cmr
 import cmonkey.config as conf
 import cmonkey.util as util
+import cmonkey.meme_suite as meme_suite
 import logging
 import cmonkey.scoring as scoring
 import random
@@ -16,23 +17,28 @@ import random
 if __name__ == '__main__':
     """process configuration"""
     args, params, ratios = conf.setup()
+    if meme_suite.is_meme_version_supported(params['MEME']['version']):
+        proceed = True
+        cmonkey_run = cmr.CMonkeyRun(ratios, params)
 
-    cmonkey_run = cmr.CMonkeyRun(ratios, params)
-    proceed = True
+        if params['checkratios']:
+            thesaurus = cmonkey_run.organism().thesaurus()
+            logging.info("Checking the quality of the input matrix names...")
+            found = [name for name in ratios.row_names if name in thesaurus]
+            num_found = len(found)
+            total = len(ratios.row_names)
+            percent = (float(num_found) / float(total)) * 100.0
+            proceed = percent > 50.0
+            if not proceed:
+                logging.error("# genes found: %d, # total: %d, %f %% - please check your ratios file",
+                              num_found, total, percent)
 
-    if params['checkratios']:
-        thesaurus = cmonkey_run.organism().thesaurus()
-        logging.info("Checking the quality of the input matrix names...")
-        found = [name for name in ratios.row_names if name in thesaurus]
-        num_found = len(found)
-        total = len(ratios.row_names)
-        percent = (float(num_found) / float(total)) * 100.0
-        proceed = percent > 50.0
+        if proceed:
+            cmonkey_run.run()
 
-    if not proceed:
-        logging.error("# genes found: %d, # total: %d, %f %% - please check your ratios file",
-                      num_found, total, percent)
+        if not args.interactive:
+            cmonkey_run.cleanup()
+
     else:
-        cmonkey_run.run()
-    if not args.interactive:
-        cmonkey_run.cleanup()
+        print("MEME version '%s' is currently not supported" % params['MEME']['version'])
+

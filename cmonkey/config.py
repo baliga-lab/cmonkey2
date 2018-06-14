@@ -21,7 +21,7 @@ from pkg_resources import Requirement, resource_filename, DistributionNotFound
 from cmonkey.schedule import make_schedule
 import cmonkey.util as util
 import cmonkey.datamatrix as dm
-import cmonkey.meme as meme
+import cmonkey.meme_suite as meme
 
 LOG_FORMAT = '%(asctime)s %(levelname)-8s %(message)s'
 

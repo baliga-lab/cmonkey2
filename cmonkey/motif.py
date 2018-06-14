@@ -17,7 +17,7 @@ import subprocess
 import cmonkey.scoring as scoring
 import cmonkey.datamatrix as dm
 import cmonkey.weeder as weeder
-import cmonkey.meme as meme
+import cmonkey.meme_suite as meme
 import cmonkey.seqtools as st
 import cmonkey.util as util
 import cmonkey.database as cm2db
@@ -141,13 +141,16 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
                 session.commit()
             session.close()
 
+        # Version check. In principle almost all version >= 4.3.0 should work
+        # but we enable only what we have tested
         if meme_version == '4.3.0':
             self.meme_suite = meme.MemeSuite430(self.config_params,
                                                 background_file=background_file,
                                                 bgmodel=bgmodel)
         elif meme_version and (
                 meme_version.startswith('4.8') or meme_version.startswith('4.9') or
-                meme_version.startswith('4.10') or meme_version.startswith('4.11')):
+                meme_version.startswith('4.10') or meme_version.startswith('4.11') or
+                meme_version.startswith('4.12')):
             self.meme_suite = meme.MemeSuite481(self.config_params,
                                                 background_file=background_file,
                                                 bgmodel=bgmodel)

@@ -22,3 +22,7 @@ checktools
 toport
 coverage.xml
 test-reports
+dist
+build
+*.egg-info
+_build

@@ -19,6 +19,11 @@ from pkg_resources import Requirement, resource_filename, DistributionNotFound
 import cmonkey.seqtools as st
 import cmonkey.util as util
 import cmonkey.database as cm2db
+
+# For now until we integrate these better
+import cmonkey.meme.meme as meme_formats
+import cmonkey.meme.mast as mast_formats
+
 from sqlalchemy import func
 
 try:
@@ -275,7 +280,7 @@ class MemeSuite430(MemeSuite):
 
         #logging.info("running: %s", " ".join(command))
         output = subprocess.check_output(command).decode('utf-8')
-        return (read_meme_output(output, num_motifs), output)
+        return (meme_formats.from_test(output, num_motifs), output)
 
     def mast(self, meme_outfile_path, database_file_path,
              bgfile_path):
@@ -292,7 +297,7 @@ class MemeSuite430(MemeSuite):
 
     def read_mast_output(self, mast_output, genes):
         """old-style MAST output"""
-        return read_mast_output_oldstyle(mast_output, genes)
+        return mast_formats.from_430_text(mast_output, genes)
 
 
 class MemeSuite481(MemeSuite):
@@ -318,7 +323,7 @@ class MemeSuite481(MemeSuite):
         # if determine the seed sequence (-cons parameter) for this MEME run
         # uses the PSSM with the smallest score that has an e-value lower
         # than 0.1
-        if previous_motif_infos != None:
+        if previous_motif_infos is not None:
             max_evalue = 0.1
             min_evalue = 10000000.0
             min_motif_info = None
@@ -337,7 +342,7 @@ class MemeSuite481(MemeSuite):
         #logging.info("running: %s", " ".join(command))
         try:
             output = subprocess.check_output(command).decode('utf-8')
-            return (read_meme_output(output, num_motifs), output)
+            return (meme_formats.from_text(output, num_motifs), output)
         except:
             logging.error("MEME execution error, command: %s", str(command))
             raise
@@ -371,394 +376,7 @@ class MemeSuite481(MemeSuite):
 
     def read_mast_output(self, mast_output, genes):
         """XML MAST output"""
-        return read_mast_output_xml(mast_output, genes)
-
-
-class MemeMotifInfo:
-    """Only a motif's info line, the
-    probability matrix and the site information is relevant"""
-    # pylint: disable-msg=R0913
-    def __init__(self, pssm, motif_num, width, num_sites, llr, evalue, sites):
-        """Creates a MemeMotifInfo instance"""
-        self.pssm = pssm
-        self.motif_num = motif_num
-        self.width = width
-        self.num_sites = num_sites
-        self.llr = llr
-        self.evalue = evalue
-        self.sites = sites
-
-    def consensus_string(self, cutoff1=0.7, cutoff2=0.4):
-        """returns the consensus string from the pssm table
-        remember: letter order is ACGT"""
-        alphabet = 'ACGT'
-        result = ""
-        for row in xrange(len(self.pssm)):
-            rowvals = self.pssm[row]
-            max_index = rowvals.index(max(rowvals))
-            score = rowvals[max_index]
-            if score < cutoff2:
-                result += 'n'
-            elif score < cutoff1:
-                result += alphabet[max_index].lower()
-            else:
-                result += alphabet[max_index]
-        return result
-
-    def __repr__(self):
-        """returns the string representation"""
-        return ("Motif width: %s sites: %s llr: %s e-value: %s" %
-                (str(self.width), str(self.num_sites), str(self.llr),
-                 str(self.evalue)))
-
-
-def read_meme_output(output_text, num_motifs):
-    """Reads meme output file into a list of MotifInfo objects"""
-
-    def extract_width(infoline):
-        """extract the width value from the info line"""
-        return int(__extract_regex('width =\s+\d+', infoline))
-
-    def extract_num_sites(infoline):
-        """extract the sites value from the info line"""
-        return int(__extract_regex('sites =\s+\d+', infoline))
-
-    def extract_llr(infoline):
-        """extract the llr value from the info line"""
-        return int(__extract_regex('llr =\s+\d+', infoline))
-
-    def extract_evalue(infoline):
-        """extract the e-value from the info line"""
-        return float(__extract_regex('E-value =\s+\S+', infoline))
-
-    def next_info_line(motif_number, lines):
-        """finds the index of the next info line for the specified motif number
-        1-based """
-        return __next_regex_index('MOTIF\s+' + str(motif_number) + '.*',
-                                  0, lines)
-
-    def next_sites_index(start_index, lines):
-        """returns the next sites index"""
-        return __next_regex_index('[\t]Motif \d+ sites sorted by position ' +
-                                  'p-value', start_index, lines)
-
-    def read_sites(start_index, lines):
-        """reads the sites"""
-        sites_index = next_sites_index(start_index, lines)
-        pattern = re.compile(
-            "(\S+)\s+([+-])\s+(\d+)\s+(\S+)\s+(\S+) (\S+) (\S+)?")
-        current_index = sites_index + 4
-        line = lines[current_index]
-        sites = []
-        while not line.startswith('----------------------'):
-            match = pattern.match(line)
-            if match is None:
-                logging.error("ERROR in read_sites(), line(#%d) is: '%s'", current_index, line)
-            sites.append((match.group(1), match.group(2), int(match.group(3)),
-                          float(match.group(4)),
-                          match.group(5), match.group(6), match.group(7)))
-            current_index += 1
-            line = lines[current_index]
-        return sites
-
-    def read_pssm(start_index, lines):
-        """reads the PSSM, in this case it's what is called the probability
-        matrix in the meme output"""
-        pssm_index = next_pssm_index(start_index, lines)
-        current_index = pssm_index + 3
-        line = lines[current_index]
-        pattern = re.compile("\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)")
-        rows = []
-        while not line.startswith('----------------------'):
-            match = pattern.match(line)
-            if match is None:
-                logging.error("ERROR in read_pssm(), line(#%d) is: '%s'", current_index, line)
-            rows.append([float(match.group(1)), float(match.group(2)),
-                         float(match.group(3)), float(match.group(4))])
-            current_index += 1
-            line = lines[current_index]
-        return rows
-
-    def next_pssm_index(start_index, lines):
-        """determines the next PSSM start index"""
-        return __next_regex_index('[\t]Motif \d+ position-specific ' +
-                                  'probability matrix', start_index, lines)
-
-    def read_motif_info(motif_number, lines):
-        """Reads the MemeMotifInfo with the specified number from the input"""
-        info_line_index = next_info_line(motif_number, lines)
-        info_line = lines[info_line_index]
-        return MemeMotifInfo(read_pssm(info_line_index + 1, lines),
-                             motif_number,
-                             extract_width(info_line),
-                             extract_num_sites(info_line),
-                             extract_llr(info_line),
-                             extract_evalue(info_line),
-                             read_sites(info_line_index + 1, lines))
-
-    lines = output_text.split('\n')
-    result = []
-    for motif_number in xrange(1, num_motifs + 1):
-        result.append(read_motif_info(motif_number, lines))
-    return result
-
-
-def read_mast_output_xml(output_text, genes):
-    """Reads p/e values and gene annotations from a MAST output file
-    in XML format.
-    Inputs: - output_text: a string in MAST XML output format
-    ------- - genes: a list of genes that were used as input to
-              the previous MEME run
-    Returns: a pair (pevalues, annotations)
-    -------- - pevalues is [(gene, pval, eval)]
-             - annotations is a dictionary gene -> [(pval, pos, motifnum)]"""
-    if output_text is None:  # there was an error in mast, ignore its output
-        return [], {}
-
-    root = ET.fromstring(output_text)
-    version = root.get('version')
-    if version.startswith('4.11'):
-        return __read_mast_output_xml_4_11(root, genes)
-    else:
-        return __read_mast_output_xml_4_8(root, genes)
-
-
-def __read_mast_output_xml_4_8(root, genes):
-    pevalues = []
-    annotations = {}
-    for sequence in root.iter('sequence'):
-        score = sequence.find('score')
-        seqname = sequence.get('name')
-        if not seqname in annotations:
-            annotations[seqname] = []
-        pevalues.append((seqname,
-                         float(score.get('combined_pvalue')),
-                         float(score.get('evalue'))))
-        if seqname in genes:
-            for hit in sequence.iter('hit'):
-                strand = hit.get('strand')
-                motifnum = int(hit.get('motif').replace('motif_', ''))
-                if strand == 'reverse':
-                    motifnum = -motifnum
-                annot = (float(hit.get('pvalue')),
-                         int(hit.get('pos')) + 2,  # like R cmonkey
-                         motifnum)
-                annotations[seqname].append(annot)
-    return pevalues, annotations
-
-
-def __read_mast_output_xml_4_11(root, genes):
-    """Starting from 4.11.x, MAST generates a different output format"""
-    pevalues = []
-    annotations = {}
-    motif_nums = [int(motif.get('id')) for motif in root.iter('motif')]
-
-    for sequence in root.iter('sequence'):
-        score = sequence.find('score')
-        seqname = sequence.get('name')
-        if not seqname in annotations:
-            annotations[seqname] = []
-        pevalues.append((seqname,
-                         float(score.get('combined_pvalue')),
-                         float(score.get('evalue'))))
-        if seqname in genes:
-            for hit in sequence.iter('hit'):
-                strand = hit.get('strand')
-                # the motif number is now encoded in the motif database list
-                motifnum = motif_nums[int(hit.get('idx'))]
-                if strand == 'reverse':
-                    motifnum = -motifnum
-                annot = (float(hit.get('pvalue')),
-                         int(hit.get('pos')) + 2,  # like R cmonkey
-                         motifnum)
-                annotations[seqname].append(annot)
-    return pevalues, annotations
-
-
-def read_mast_output_oldstyle(output_text, genes):
-    """Reads out the p-values and e-values and the gene annotations
-    from a mast output file. This format is generated by
-    MAST 4.30 and is only here to support the legacy format.
-    Use the XML version instead, it is more reliable.
-    """
-    def next_pe_value_line(start_index, lines):
-        """Find the next combined p-value and e-value line"""
-        return __next_regex_index('.*COMBINED P-VALUE.*',
-                                  start_index, lines)
-
-    def read_pe_values(lines):
-        """read all combined p-values and e-values"""
-        result = []
-        current_index = next_pe_value_line(0, lines)
-        while current_index != -1:
-            gene = lines[current_index - 2].strip()
-            line = lines[current_index]
-            pvalue = float(__extract_regex('P-VALUE\s+=\s+(\S+)', line))
-            evalue = float(__extract_regex('E-VALUE\s+=\s+(\S+)', line))
-            result.append((gene, pvalue, evalue))
-            current_index = next_pe_value_line(current_index + 1, lines)
-        return result
-
-    def read_seqalign_blocks(lines, start_index, seqlen):
-        """Read the sequence alignment blocks starting at start_index
-        a block has the format:
-        1. motif number line (+/- = forward/reverse)
-        2. pvalue line
-        3. motif sequence line
-        4. alignment/match line
-        5. gene sequence line
-        6. blank line (separator)
-        -> Repeat this pattern until the whole database sequence printed
-
-        While the mast output is easily human-readable, it
-        is hard to parse programmatically.
-        This method does it as follows:
-        - read all motif numbers in sequence
-        - read all p-values in sequencs
-        - the motif number opening brackets are regarded as position markers
-
-        for each block, we only need to keep track in which column the gene
-        sequence starts and at which relative position we are
-        """
-        current_index = start_index
-        is_last = False
-
-        # global lines
-        motifnum_line = ""
-        pvalue_line = ""
-        seq_line = ""
-        while not is_last:
-            is_last = is_last_block(lines, current_index, seqlen)
-            # append to the motif number line, the p-value line, and seq line
-            motifnum_line += lines[current_index].rstrip().ljust(80)[5:]
-            pvalue_line += lines[current_index + 1].rstrip().ljust(80)[5:]
-            seq_line += lines[current_index + 4].rstrip().ljust(80)[5:]
-            current_index += 6
-
-        motif_nums = read_motif_numbers(motifnum_line)
-        positions = read_positions(motifnum_line, seq_line)
-        pvalues = read_pvalues(pvalue_line, [(pos - 2) for pos in positions])
-        return zip(pvalues, positions, motif_nums)
-
-    def read_motifnum_line(line):
-        """format and pad a motif number line"""
-        return line.rstrip().ljust(80)[5:]
-
-    def is_last_block(lines, index, seqlen):
-        """determines whether the specified block is the last one for
-        the current gene"""
-        seqline = None
-        try:
-            seqline = lines[index + 4]
-            seqstart_index = int(re.match('(\d+).*', seqline).group(1))
-            seq_start = re.match('\d+\s+(\S+)', seqline).start(1)
-            return ((len(seqline) - seq_start) + seqstart_index >= seqlen or
-                    not re.match('(\d+).*', lines[index + 10]))
-        except:
-            if seqline is not None:
-                print("ERROR IN SEQLINE: [%s]" % seqline)
-
-    def read_motif_numbers(motifnum_line):
-        """reads the motif numbers contained in a motif number line"""
-        return [int(re.sub('\[|\]', '', motifnum))
-                for motifnum in re.split(' +', motifnum_line)
-                if len(motifnum.strip()) > 0]
-
-    def read_pvalues(pvalue_line, indexes):
-        """reads the p-values contained in a p-value line"""
-        def make_float(s):
-          """unfortunately, MEME result lines can have weird float formats"""
-          return float(s.replace(' ', ''))
-        pvalues = []
-        for index_num in xrange(len(indexes)):
-            if index_num < len(indexes) - 1:
-                pvalues.append(
-                    make_float(pvalue_line[indexes[index_num]:
-                                      indexes[index_num + 1]]))
-            else:
-                pvalues.append(make_float(pvalue_line[indexes[index_num]:]))
-        return pvalues
-
-    def read_positions(motifnum_line, seqline):
-        """we only need the motif number line and the sequence line
-        to retrieve the position"""
-        # offset +2 for compatibility with cMonkey R, don't really
-        # know why we need this
-        try:
-            return [(m.start() + 2)
-                    for m in re.finditer('\[', motifnum_line)]
-        except:
-            logging.error("ERROR in read_positions(), motifnum_line: '%s'",
-                          str(motifnum_line))
-
-    def read_annotations(lines, genes):
-        """extract annotations, genes are given as refseq ids"""
-        result = {}
-        current_index = next_pe_value_line(0, lines)
-        while current_index != -1:
-            gene = lines[current_index - 2].strip()
-            if gene in genes:
-                info_line = lines[current_index]
-                length = int(__extract_regex('LENGTH\s+=\s+(\d+)', info_line))
-                has_seqalign_block = True
-                diagram_match = re.match('^\s+DIAGRAM:\s+(\d+)$',
-                                         lines[current_index + 1])
-                if diagram_match is not None:
-                    diagram = int(diagram_match.group(1))
-                    if diagram == length:
-                        has_seqalign_block = False
-
-                if has_seqalign_block:
-                    # the diagram line can span several lines and the blank
-                    # line after those can span several, so search for the
-                    # first non-blank line after the block of blank lines
-                    blank_index = current_index + 2
-                    while len(lines[blank_index].strip()) > 0:
-                        blank_index += 1
-                    non_blank_index = blank_index + 1
-                    while len(lines[non_blank_index].strip()) == 0:
-                        non_blank_index += 1
-                    result[gene] = read_seqalign_blocks(lines,
-                                                        non_blank_index,
-                                                        length)
-
-            current_index = next_pe_value_line(current_index + 1, lines)
-        return result
-
-    # Make sure MAST returns a meaningful result
-    if output_text.startswith("Error reading log-odds matrix file"):
-        logging.warn("MAST returned the famous 'Error reading log-odds " +
-                     "matrix file, provide empty result...'")
-        return ([], {})
-    else:
-        lines = output_text.split('\n')
-        pe_values = read_pe_values(lines)
-        annotations = read_annotations(lines, genes)
-        return (pe_values, annotations)
-
-
-# extraction helpers
-def __extract_regex(pattern, infoline):
-    """generic info line field extraction based on regex"""
-    try:
-        match = re.search(pattern, infoline)
-        return infoline[match.start():match.end()].split('=')[1].strip()
-    except:
-        logging.error("ERROR in __extract_regex(), pattern: '%s', infoline: '%s'",
-                      str(pattern), str(infoline))
-
-
-def __next_regex_index(pat, start_index, lines):
-    """finds the line index of the first occurrence of the pattern"""
-    line_index = start_index
-    pattern = re.compile(pat)
-    current_line = lines[line_index]
-    while not pattern.match(current_line):
-        line_index += 1
-        if line_index >= len(lines):
-            return -1
-        current_line = lines[line_index]
-    return line_index
+        return mast_formats.from_xml_text(mast_output, genes)
 
 
 def make_background_file(bgseqs, use_revcomp, bgorder):
@@ -806,6 +424,15 @@ def global_background_file(organism, gene_aliases, seqtype, bgorder=3,
 
 
 USER_TEST_FASTA_PATH = 'cmonkey/default_config/fasta_test.fa'
+
+def is_meme_version_supported(version):
+    if version is not None:
+        major, minor, patch = map(int, version.split('.'))
+        if major == 4:
+            return True
+        else:
+            return False
+    return True
 
 def check_meme_version():
     logging.info('checking MEME...')
@@ -934,5 +561,3 @@ def run_tomtom(session, targetdir, version, q_thresh=Q_THRESHOLD, dist_method=DI
             session.commit()
         except:
             raise
-
-__all__ = ['read_meme_output']
