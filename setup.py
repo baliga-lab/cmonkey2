@@ -4,12 +4,12 @@ import codecs
 from setuptools import setup
 
 NAME = 'cmonkey2'
-PACKAGES = ['cmonkey', 'cmonkey.cmviewer', 'cmonkey.tools']
+PACKAGES = ['cmonkey', 'cmonkey.cmviewer', 'cmonkey.tools', 'cmonkey.meme']
 DESCRIPTION = 'cmonkey2 is an implementation of the cmonkey biclustering method in Python'
 LICENSE = 'LGPL V3'
 URI = 'https://github.com/baliga-lab/cmonkey2'
 AUTHOR = 'Baliga Lab, Institute for Systems Biology'
-VERSION = '1.2.6'
+VERSION = '1.2.7'
 
 KEYWORDS = ['class', 'cmonkey2']
 
@@ -33,7 +33,7 @@ CLASSIFIERS = [
     "Topic :: Software Development :: Libraries :: Python Modules"
     ]
 INSTALL_REQUIRES = ['numpy', 'scipy',
-                    'rpy2', 'beautifulsoup4', 'configparser', 'pandas', 'biopython', 'lxml',
+                    'rpy2<=2.8.6', 'beautifulsoup4', 'configparser', 'pandas', 'biopython', 'lxml',
                     'cherrypy', 'cherrypy_cors', 'jinja2', 'routes', 'svgwrite', 'sqlalchemy', 'sqlalchemy-utils']
 
 PACKAGE_DATA = {

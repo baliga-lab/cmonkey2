@@ -1,6 +1,12 @@
 Changes
 =======
 
+Version 1.2.7, 2018/06/19
+-------------------------
+
+  - support for MEME versions 4.11.4 and 4.12.0
+  - run log data now stored in database for consistency
+
 Version 1.2.6, 2017/02/03
 -------------------------
 
