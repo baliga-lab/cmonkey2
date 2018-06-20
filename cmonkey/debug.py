@@ -53,11 +53,15 @@ def write_iteration(session, outfile, iteration, num_clusters, outdir, as_binary
                                                                               cm2db.RowMember.iteration == iteration))]
         rows_out = ','.join(rownames)
 
-        string_dens = session.query(cm2db.IterationStat).join(
-            cm2db.IterationStat.statstype_obj
-            ).filter(and_(cm2db.StatsType.category == 'network',
-                          cm2db.StatsType.name == 'STRING',
-                          cm2db.IterationStat.iteration == iteration)).one().score
+        try:
+            string_dens = session.query(cm2db.IterationStat).join(
+                cm2db.IterationStat.statstype_obj
+                ).filter(and_(cm2db.StatsType.category == 'network',
+                              cm2db.StatsType.name == 'STRING',
+                              cm2db.IterationStat.iteration == iteration)).one().score
+        except:
+            string_dens = None
+
         if string_dens is None:
             string_dens = 1.0
         try:
@@ -73,8 +77,11 @@ def write_iteration(session, outfile, iteration, num_clusters, outdir, as_binary
         last_meme_iteration = get_last_meme_iteration(outdir)
         meme_out = meme_to_str(outdir, last_meme_iteration, cluster)
 
-        resid = session.query(cm2db.ClusterStat).filter(and_(cm2db.ClusterStat.cluster == cluster,
-                                                             cm2db.ClusterStat.iteration == iteration)).one().residual
+        try:
+            resid = session.query(cm2db.ClusterStat).filter(and_(cm2db.ClusterStat.cluster == cluster,
+                                                                 cm2db.ClusterStat.iteration == iteration)).one().residual
+        except:
+            resid = None
         if resid is None:
             resid = 1.0
 

@@ -40,10 +40,9 @@ supported debug options:
   - keep_memeout: keeps meme output files
   - dump_results: dump results into cmresults files, implies keep_memeout
   - dump_scores: dumps score matrices as received from the individual scoring functions
-  - profile_mem: write memory profile
   - random_seed: fixed random seed
 """
-ALL_DEBUG_OPTIONS = {'keep_memeout', 'dump_results', 'dump_scores', 'profile_mem',
+ALL_DEBUG_OPTIONS = {'keep_memeout', 'dump_results', 'dump_scores',
                      'random_seed', 'keep_mastout'}
 
 
@@ -228,7 +227,7 @@ def __get_arg_parser(arg_ext):
     parser.add_argument('--nooperons', action="store_true", help="deactivate operon network scoring")
     parser.add_argument('--config', default=None, nargs='*', help="additional configuration file(s)")
     parser.add_argument('--debug', default=None,  help="""run in debug mode, can be keep_memeout,
-dump_results, dump_scores, profile_mem, random_seed, keep_mastout, all or a combination""")
+dump_results, dump_scores, random_seed, keep_mastout, all or a combination""")
     parser.add_argument('--random_seed', type=int)
     parser.add_argument('--num_cores', type=int, default=None)
     parser.add_argument('--minimize_io', action="store_true",

@@ -26,7 +26,6 @@ import cmonkey.scoring as scoring
 import cmonkey.network as nw
 import cmonkey.stringdb as stringdb
 import cmonkey.debug as debug
-import cmonkey.sizes as sizes
 import cmonkey.thesaurus as thesaurus
 import cmonkey.BSCM as BSCM
 import cmonkey.database as cm2db
@@ -649,16 +648,6 @@ class CMonkeyRun:
                 debug.write_iteration(session, outfile, iteration,
                                       self.config_params['num_clusters'], self.config_params['output_dir'])
 
-    def write_mem_profile(self, outfile, iteration):
-        membsize = sizes.asizeof(self.membership()) / 1000000.0
-        orgsize = sizes.asizeof(self.organism()) / 1000000.0
-        colsize = sizes.asizeof(self.column_scoring) / 1000000.0
-        funs = self.row_scoring.scoring_functions
-        rowsize = sizes.asizeof(funs[0]) / 1000000.0
-        netsize = sizes.asizeof(funs[1]) / 1000000.0
-        motsize = sizes.asizeof(funs[2]) / 1000000.0
-        outfile.write('%d\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\n' % (iteration, membsize, orgsize, colsize, rowsize, netsize, motsize))
-
     def run_iterations(self, start_iter=None, num_iter=None):
         if start_iter is None:
             start_iter = self.config_params['start_iteration']
@@ -677,10 +666,6 @@ class CMonkeyRun:
             gc.collect()
             elapsed = util.current_millis() - start_time
             logging.debug("performed iteration %d in %f s.", iteration, elapsed / 1000.0)
-
-            if 'profile_mem' in self.config_params['debug'] and (iteration == 1 or iteration % 100 == 0):
-                with open(os.path.join(self.config_params['output_dir'], 'memprofile.tsv'), 'a') as outfile:
-                    self.write_mem_profile(outfile, iteration)
 
 
         """run post processing after the last iteration. We store the results in

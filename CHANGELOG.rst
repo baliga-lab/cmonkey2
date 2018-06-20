@@ -1,6 +1,12 @@
 Changes
 =======
 
+Version 1.2.8, 2018/06/20
+-------------------------
+
+  - removed memory profiling debug (can cause problems)
+  - more tolerant debug score writing
+
 Version 1.2.7, 2018/06/19
 -------------------------
 
