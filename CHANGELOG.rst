@@ -1,6 +1,12 @@
 Changes
 =======
 
+Version 1.2.9, 2018/06/20
+-------------------------
+
+  - bug fix: set enrichment some parameters not
+    referenced correctly
+
 Version 1.2.8, 2018/06/20
 -------------------------
 

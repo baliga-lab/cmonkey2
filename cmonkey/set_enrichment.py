@@ -181,9 +181,9 @@ class ScoringFunction(scoring.ScoringFunctionBase):
     def __init__(self, function_id, cmrun):
         """Create scoring function instance"""
         scoring.ScoringFunctionBase.__init__(self, function_id, cmrun)
-        self.__set_types = read_set_types(config_params, organism.thesaurus(),
-                                          ratios.row_names)
-        self.run_log = scoring.RunLog(function_id, cmrun.dbsession(), cmrun.config_params)
+        self.__set_types = read_set_types(self.config_params, self.organism.thesaurus(),
+                                          self.ratios.row_names)
+        self.run_log = scoring.RunLog(function_id, cmrun.dbsession(), self.config_params)
 
     def bonferroni_cutoff(self):
         """Bonferroni cutoff value"""
