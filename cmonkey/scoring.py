@@ -222,7 +222,7 @@ class ColumnScoringFunction(ScoringFunctionBase):
         self.BSCM_obj = None
         if cmrun.config_params['use_BSCM']:
             # How to pass verbose and so on? More parameters?
-            self.BSCM_obj = BSCM.BSCM(ratios, verbose=False,
+            self.BSCM_obj = BSCM.BSCM(self.ratios, verbose=False,
                                       useChi2=cmrun.config_params['use_chi2'])
             #Note: Ratios normalized upstream during loading by config.py module
         self.run_log = RunLog(function_id, cmrun.dbsession(), cmrun.config_params)
