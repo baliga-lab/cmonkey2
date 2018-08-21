@@ -1,6 +1,11 @@
 Changes
 =======
 
+Version 1.2.10, 2018/07/16
+--------------------------
+
+  - bug fix: BSCM switch ratios reference
+
 Version 1.2.9, 2018/06/20
 -------------------------
 

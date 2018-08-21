@@ -30,6 +30,7 @@ except NameError:
 
 import array
 from collections import defaultdict
+import cmonkey.database as cm2db
 
 
 # Default values for membership creation
