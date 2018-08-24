@@ -278,14 +278,16 @@ class CMonkeyRun:
                                         self.ratios, synonyms,
                                         self.config_params['fasta_file'])
 
-        session = self.dbsession()
-        network_stats_types = [cm2db.StatsType(category='network', name=network.name)
-                               for network in organism.networks()]
-        sequence_stats_types = [cm2db.StatsType(category='seqtype', name=sequence_type)
-                                for sequence_type in self.config_params['sequence_types']]
-        session.add_all(network_stats_types)
-        session.add_all(sequence_stats_types)
-        session.commit()
+        # only write the stats types if this is a new (non-resumed) run
+        if not self.config_params['resume']:
+            session = self.dbsession()
+            network_stats_types = [cm2db.StatsType(category='network', name=network.name)
+                                   for network in organism.networks()]
+            sequence_stats_types = [cm2db.StatsType(category='seqtype', name=sequence_type)
+                                    for sequence_type in self.config_params['sequence_types']]
+            session.add_all(network_stats_types)
+            session.add_all(sequence_stats_types)
+            session.commit()
 
         return organism
 
@@ -411,26 +413,29 @@ class CMonkeyRun:
         row_scoring.check_requirements()
         col_scoring.check_requirements()
 
-        config.write_setup(self.config_params)
-
         self.row_scoring = row_scoring
         self.column_scoring = col_scoring
-        self.report_params()
-        self.write_start_info()
-
-        session = self.dbsession()
-        row_scoring_stats_types = [cm2db.StatsType(category='scoring', name=scoring_function.id)
-                                   for scoring_function in self.row_scoring.scoring_functions]
-        session.add_all(row_scoring_stats_types)
-        session.add(cm2db.StatsType(category='scoring', name=self.column_scoring.id))
-        session.commit()
-
-        if 'profile_mem' in self.config_params['debug']:
-            with open(os.path.join(self.config_params['output_dir'], 'memprofile.tsv'), 'w') as outfile:
-                outfile.write('Iteration\tMembership\tOrganism\tCol\tRow\tNetwork\tMotif\n')
 
         if self.config_params['resume']:
-            self.config_params['start_iteration'] = self.get_last_iteration()
+            # pick up from where we left off
+            start_iteration = self.get_last_iteration()
+            self.config_params['start_iteration'] = start_iteration
+            logging.info('retrieved the last successful iteration (%d)', start_iteration)
+        else:
+            config.write_setup(self.config_params)
+            self.report_params()
+            self.write_start_info()
+
+            session = self.dbsession()
+            row_scoring_stats_types = [cm2db.StatsType(category='scoring', name=scoring_function.id)
+                                       for scoring_function in self.row_scoring.scoring_functions]
+            session.add_all(row_scoring_stats_types)
+            session.add(cm2db.StatsType(category='scoring', name=self.column_scoring.id))
+            session.commit()
+
+            if 'profile_mem' in self.config_params['debug']:
+                with open(os.path.join(self.config_params['output_dir'], 'memprofile.tsv'), 'w') as outfile:
+                    outfile.write('Iteration\tMembership\tOrganism\tCol\tRow\tNetwork\tMotif\n')
 
     def run(self):
         self.prepare_run()
