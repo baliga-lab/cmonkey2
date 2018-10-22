@@ -49,6 +49,13 @@ bin/cmonkey2.sh --organism hal --rsat_base_url http://networks.systemsbiology.ne
 
 Below are the instructions to use cmonkey2 directly in the source repository
 
+### Using a Docker Image
+
+PreCyte made a Docker image based on cmonkey2 available on their github account
+
+https://github.com/PreCyte/cMonkey2-docker/
+
+
 ### System requirements
 
 cMonkey<sub>2</sub> has been tested and runs on all tested recent versions of Linux (including debian-based [Ubuntu, Mint, Debian] and RPM-based [CentOS, Fedora]) and recent versions of Mac OS X. Additional dependencies include:
