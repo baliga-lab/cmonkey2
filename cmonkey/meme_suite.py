@@ -428,7 +428,7 @@ USER_TEST_FASTA_PATH = 'cmonkey/default_config/fasta_test.fa'
 def is_meme_version_supported(version):
     if version is not None:
         major, minor, patch = map(int, version.split('.'))
-        if major == 4:
+        if major == 4 or major == 5:
             return True
         else:
             return False

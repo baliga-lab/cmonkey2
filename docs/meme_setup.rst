@@ -4,7 +4,7 @@ MEME Setup
 MEME Suite notes
 ----------------
 
-The tested and supported MEME versions are 4.3.0, 4.8.x, 4.9.0 and 4.10.x. cmonkey-python can automatically detect the installed version, provided it is in the executable search path. It is recommended to apply all available patches for the used MEME suite to ensure maximum stability. Please see the installation instructions for MEME for further details.
+The tested and supported MEME versions are 4.3.0, and versions >= 4.8.0. cmonkey-python can automatically detect the installed version, provided it is in the executable search path. It is recommended to apply all available patches for the used MEME suite to ensure maximum stability. Please see the installation instructions for MEME for further details.
 
 Installation script
 -------------------

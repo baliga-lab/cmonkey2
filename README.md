@@ -67,7 +67,7 @@ cMonkey<sub>2</sub> has been tested and runs on all tested recent versions of Li
 * BeautifulSoup >= 4
 * R >= 2.14.1
 * rpy2 >= 2.2.1
-* MEME 4.3.0 or >= 4.8.1 (4.12.0 not yet supported, currently worked on)
+* MEME 4.3.0 or >= 4.8.1 (all version up to 5.3.3 tested)
 * csh (for running MEME)
 * pandas
 * sqlalchemy and sqlalchemy-utils
