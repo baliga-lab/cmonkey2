@@ -25,11 +25,15 @@ except NameError:
 
 import os
 import rpy2.robjects as robjects
+from rpy2.robjects import numpy2ri
+from rpy2.robjects import default_converter
 import gzip
 import shelve
 import time
 import logging
 import multiprocessing as mp
+
+np_cv_rules = default_converter + numpy2ri.converter
 
 # RSAT organism finding is an optional feature, which we can skip in case that
 # the user imports all the features through own text files
@@ -333,16 +337,19 @@ def trim_mean(values, trim):
 ######################################################################
 def density(kvalues, cluster_values, bandwidth, dmin, dmax):
     """generic function to compute density scores"""
-    kwargs = {'bw': bandwidth, 'adjust': 2, 'from': dmin,
-              'to': dmax, 'n': 256, 'na.rm': True}
-    rdens = robjects.r("""
-      rdens <- function(cluster_values, kvalues, ...) {
-        d <- density(cluster_values, ...);
-        p <- approx(d$x, rev(cumsum(rev(d$y))), kvalues)$y
-        p / sum(p, na.rm=T)
-      }""")
-    return rdens(robjects.FloatVector(cluster_values),
-                 robjects.FloatVector(kvalues), **kwargs)
+    with np_cv_rules.context():
+        kwargs = {'bw': bandwidth, 'adjust': 2, 'from': dmin,
+                  'to': dmax, 'n': 256, 'na.rm': True}
+        rdens = robjects.r("""
+        rdens <- function(cluster_values, kvalues, ...) {
+          d <- density(cluster_values, ...);
+          p <- approx(d$x, rev(cumsum(rev(d$y))), kvalues)$y
+          p / sum(p, na.rm=T)
+        }
+        rdens
+        """)
+        return rdens(robjects.FloatVector(cluster_values),
+                     robjects.FloatVector(kvalues), **kwargs)
 
 
 def r_set_seed(value):
@@ -397,6 +404,7 @@ def sd_rnorm(values, num_rnorm_values, fuzzy_coeff):
         sdval <- sd(values, na.rm=T) * fuzzy_coeff
         rnorm(num_out_values, sd=sdval)
       }
+      sd_rnorm
     """)
     return func(robjects.FloatVector(values), num_rnorm_values,
                 fuzzy_coeff)
@@ -408,6 +416,7 @@ def rrank_matrix(npmatrix):
         xr <- t(matrix(values, nrow=nrow, ncol=ncol, byrow=T))
         return (rank(xr, ties='min', na='keep') - 1)
       }
+      rank_mat
     """)
     num_rows, num_cols = npmatrix.shape
     xvec = robjects.FloatVector(npmatrix.ravel())

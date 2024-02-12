@@ -422,7 +422,7 @@ def replace_delta_column_member(membership, col, cm, cd_scores):
     deltas = cds_values[index, cm_clusters] - cds_values[index, curr_clusters]
 
     if len(deltas[deltas != 0.0]) > 0:
-        maxidx = deltas.argmax(axis=0)
+        maxidx = int(deltas.argmax(axis=0))
         #print "replace_delta col.change ", maxidx, " -> ", cm[maxidx]
         # Note: columns allow multiple cluster assignment !!!
         membership.replace_column_cluster(col, maxidx, cm[maxidx])
