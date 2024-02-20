@@ -15,6 +15,7 @@ import re
 import collections
 import xml.etree.ElementTree as ET
 from pkg_resources import Requirement, resource_filename, DistributionNotFound
+import multiprocessing
 
 import cmonkey.seqtools as st
 import cmonkey.util as util
@@ -58,6 +59,11 @@ class MemeSuite:
         self.bgmodel = bgmodel
         self.__remove_tempfiles = remove_tempfiles
         self.arg_mod = config_params['MEME']['arg_mod']
+        self.multiprocessing = config_params['multiprocessing']
+        self.num_cores = config_params['num_cores']
+        if self.num_cores is None:
+            self.num_cores = multiprocessing.cpu_count()
+        logging.info("# OF CORES USED FOR MEME: %d" % self.num_cores)
 
     def global_background_file(self):
         """returns the global background file used with this meme suite
@@ -315,6 +321,8 @@ class MemeSuite481(MemeSuite):
                    '-maxsize', '9999999', '-nmotifs', str(num_motifs),
                    '-evt', '1e9', '-minw', '6', '-maxw', str(self.max_width),
                    '-mod',  self.arg_mod, '-nostatus', '-text']
+        if self.multiprocessing:
+            command.extend(["-p", str(self.num_cores)])
 
         ### NOTE: There is a bug in current MEME 4.9.0, that can cause the
         ### -cons option to crash
@@ -339,7 +347,7 @@ class MemeSuite481(MemeSuite):
         if pspfile_path:
             command.extend(['-psp', pspfile_path])
 
-        #logging.info("running: %s", " ".join(command))
+        logging.info("running: %s", " ".join(command))
         try:
             output = subprocess.check_output(command).decode('utf-8')
             return (meme_formats.from_text(output, num_motifs), output)
