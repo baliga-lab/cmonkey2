@@ -59,7 +59,7 @@ class MemeSuite:
         self.bgmodel = bgmodel
         self.__remove_tempfiles = remove_tempfiles
         self.arg_mod = config_params['MEME']['arg_mod']
-        self.multiprocessing = config_params['multiprocessing']
+        self.multiprocessing = config_params['MEME']['multiprocessing'] == 'True'
         self.num_cores = config_params['num_cores']
         if self.num_cores is None:
             self.num_cores = multiprocessing.cpu_count()
