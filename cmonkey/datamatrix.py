@@ -352,7 +352,7 @@ def center_scale_filter(dataframe):
     def center_scale(row):
         """centers the provided row around the median"""
         filtered = row[np.isfinite(row)]
-        center = scipy.median(filtered)
+        center = np.median(filtered)
         scale = util.r_stddev(filtered)
         nurow = [((value - center) / scale)
                  if not np.isnan(value) else value for value in row]
