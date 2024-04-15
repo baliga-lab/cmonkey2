@@ -13,9 +13,18 @@ import cmonkey.meme_suite as meme_suite
 import logging
 import cmonkey.scoring as scoring
 import random
+import multiprocessing
+import platform
+
 
 if __name__ == '__main__':
     """process configuration"""
+    # MacOS's standard multiprocessing doesn't support fork, and global variables are not
+    # shared across processes, so we need to use fork instead
+    if platform.system() == 'Darwin':
+        print("Looks like you are running on MacOS, setting multiprocessing into 'fork' mode")
+        multiprocessing.set_start_method('fork')
+
     args, params, ratios = conf.setup()
     if meme_suite.is_meme_version_supported(params['MEME']['version']):
         proceed = True

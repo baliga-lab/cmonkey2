@@ -101,7 +101,9 @@ class DataMatrix:
     def submatrix_by_rows(self, row_indexes):
         """extract a submatrix with the specified rows.
         row_indexes needs to be sorted"""
-        new_values = self.values[[row_indexes]]
+        row_indexes = sorted(row_indexes)
+        new_values = self.values[row_indexes]
+
         return DataMatrix(len(row_indexes), self.num_columns,
                           row_names=[self.row_names[index] for index in row_indexes],
                           col_names=self.column_names,

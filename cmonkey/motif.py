@@ -301,7 +301,8 @@ class MotifScoringFunctionBase(scoring.ScoringFunctionBase):
         cluster_pvalues = {}
         min_cluster_rows_allowed = self.config_params['memb.min_cluster_rows_allowed']
         max_cluster_rows_allowed = self.config_params['memb.max_cluster_rows_allowed']
-        use_multiprocessing = self.config_params[scoring.KEY_MULTIPROCESSING]
+        use_multiprocessing = (self.config_params[scoring.KEY_MULTIPROCESSING] and
+                               not self.config_params['MEME'][scoring.KEY_MULTIPROCESSING])
 
         # extract the sequences for each cluster, slow
         start_time = util.current_millis()
